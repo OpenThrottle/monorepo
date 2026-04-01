@@ -1,5 +1,5 @@
 # Service accounts for staging automation (CI / GitHub Actions).
-# JSON keys are not managed here; create and rotate keys via gcloud (see repo docs).
+# JSON keys are not managed here; create and rotate keys via gcloud — see docs/infra/staging-gcs-workflow-service-account.md.
 
 resource "google_service_account" "gcs_workflow" {
   account_id   = "staging-gcs-workflow"

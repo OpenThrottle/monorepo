@@ -164,6 +164,7 @@ gsutil lifecycle set lifecycle.json gs://monorepo-nx-cache-staging
 
 ## References
 
+- **OpenThrottle staging CI credentials** (GCS workflow service account key and GitHub secret): [staging-gcs-workflow-service-account.md](./staging-gcs-workflow-service-account.md)
 - [Nx GCS Cache Documentation](https://nx.dev/nx-api/gcs-cache/documents/overview)
 - [Google Cloud Storage Documentation](https://cloud.google.com/storage/docs)
 - [Nx Remote Caching Guide](https://nx.dev/core-features/remote-cache)

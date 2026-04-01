@@ -103,6 +103,7 @@ These are exposed as Terraform outputs in `environments/staging/outputs.tf` (e.g
 
 - **OpenThrottle GCP estimate**: `infra/gcp-estimate.csv` — Pricing Calculator spec; modules above align to this CSV.
 - **Nx GCS cache setup**: [docs/infra/nx-gcs-cache-setup.md](../docs/infra/nx-gcs-cache-setup.md) — Nx remote cache bucket
+- **Staging GCS workflow SA (CI key + GitHub secret)**: [docs/infra/staging-gcs-workflow-service-account.md](../docs/infra/staging-gcs-workflow-service-account.md) — JSON key via `gcloud`, `GOOGLE_CREDENTIALS_STAGING`, rotation
 - **Infrastructure notes**: [docs/infra/NOTES.md](../docs/infra/NOTES.md) — learning resources and operational notes
 - **Infrastructure ideas**: [docs/infra/IDEAS.md](../docs/infra/IDEAS.md) — future infrastructure improvements
 
