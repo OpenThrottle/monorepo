@@ -36,6 +36,7 @@ PRODUCTION="${PRODUCTION:-false}"
 resolve_project_id() {
   local normalized
   normalized="$(printf '%s' "${PRODUCTION}" | tr '[:upper:]' '[:lower:]')"
+
   case "${normalized}" in
     true | 1 | yes)
       if [[ "${OPENTHROTTLE_CONFIRM_PRODUCTION:-}" != "yes" ]]; then
