@@ -1,0 +1,40 @@
+#############################################################################
+# Files
+#############################################################################
+*.log
+*.tsbuildinfo
+
+#############################################################################
+# Folders
+#############################################################################
+# .npmrc
+
+.claude
+.codex
+.cursor
+.gemini
+.git
+.github
+.gitignore
+.husky
+.nx
+.pnpm-store
+.venv
+.vscode
+coverage
+databases
+node_modules
+services
+tmp
+
+#############################################################################
+# Artifacts
+#############################################################################
+applications/**/build/
+applications/**/dist/
+applications/**/node_modules/
+applications/**/public/build/
+packages/**/dist/
+packages/**/node_modules/
+tools/**/dist/
+tools/**/node_modules/

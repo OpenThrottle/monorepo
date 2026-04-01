@@ -1,0 +1,94 @@
+{
+  "name": "@tools/workflows",
+  "description": "TypeScript workflow CLIs for this monorepo: Ralph (OpenThrottle plan/task execution), link-merge for post-merge squash commits, Nx validation, and Lighthouse audits.",
+  "version": "1.0.0",
+  "bin": {
+    "workflow-link-merge": "./dist/src/bin/link-merge.js",
+    "workflow-lighthouse": "./dist/src/bin/lighthouse.js",
+    "workflow-nx-validate": "./dist/src/bin/nx-validate.js",
+    "workflow-ralph": "./dist/src/bin/ralph.js"
+  },
+  "dependencies": {
+    "@nx/devkit": "22.5.4",
+    "@tools/generators": "workspace:*",
+    "commander": "^14.0.2",
+    "pg": "^8.17.1",
+    "pidusage": "^4.0.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    },
+    "./cortex": {
+      "types": "./dist/src/utils/cortex-ralph.d.ts",
+      "import": "./dist/src/utils/cortex-ralph.js",
+      "require": "./dist/src/utils/cortex-ralph.js"
+    },
+    "./doc-ingestion": {
+      "types": "./dist/src/doc-ingestion/index.d.ts",
+      "import": "./dist/src/doc-ingestion/index.js",
+      "require": "./dist/src/doc-ingestion/index.js"
+    },
+    "./ralph-debug": {
+      "types": "./dist/src/utils/ralph-debug-logger.d.ts",
+      "import": "./dist/src/utils/ralph-debug-logger.js",
+      "require": "./dist/src/utils/ralph-debug-logger.js"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@tools/workflows",
+      "production:true",
+      "technology:typescript",
+      "type:tool"
+    ],
+    "targets": {
+      "build": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "commands": [
+            "nx run @tools/workflows:build:tsc --skip-nx-cache",
+            "chmod +x ./dist/src/bin/*.js"
+          ],
+          "parallel": false
+        }
+      },
+      "build:tsc": {
+        "cache": false,
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "scripts": {
+    "postbuild": "chmod +x ./dist/src/bin/*.js"
+  },
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "@types/pidusage": "^2.0.5"
+  }
+}

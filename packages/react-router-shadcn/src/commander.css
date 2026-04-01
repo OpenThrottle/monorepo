@@ -1,0 +1,155 @@
+[cmdk-root] {
+  max-width: 640px;
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--background);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transition: transform 100ms ease;
+  outline: none;
+}
+
+.dark [cmdk-root] {
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.2),
+    0 4px 6px -4px rgb(0 0 0 / 0.2);
+}
+
+[cmdk-input] {
+  font-family: inherit;
+  border: none;
+  width: 100%;
+  font-size: 1.0625rem;
+  padding: 0.5rem 0.5rem 1rem 0.5rem;
+  outline: none;
+  background: var(--background);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+  border-radius: 0;
+}
+
+[cmdk-input]::placeholder {
+  color: var(--muted-foreground);
+}
+
+[cmdk-vercel-badge] {
+  height: 1.25rem;
+  background: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  border-radius: calc(var(--radius) - 4px);
+  margin: 0.25rem 0 0.25rem 0.25rem;
+  user-select: none;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+[cmdk-item] {
+  content-visibility: auto;
+  cursor: pointer;
+  height: 3rem;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem;
+  color: var(--foreground);
+  user-select: none;
+  will-change: background, color;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+[cmdk-item][data-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+[cmdk-item][data-disabled='true'] {
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
+[cmdk-item]:active {
+  background: var(--muted);
+}
+
+[cmdk-item] + [cmdk-item] {
+  margin-top: 0.25rem;
+}
+
+[cmdk-item] svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+[cmdk-list] {
+  height: 330px;
+  max-height: 400px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  transition: height 100ms ease;
+}
+
+[cmdk-vercel-shortcuts] {
+  display: flex;
+  margin-left: auto;
+  gap: 0.5rem;
+}
+
+[cmdk-vercel-shortcuts] kbd {
+  font-family: inherit;
+  font-size: 0.75rem;
+  min-width: 1.25rem;
+  padding: 0.25rem;
+  height: 1.25rem;
+  border-radius: calc(var(--radius) - 4px);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+[cmdk-separator] {
+  height: 1px;
+  width: 100%;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+*:not([hidden]) + [cmdk-group] {
+  margin-top: 0.5rem;
+}
+
+[cmdk-group-heading] {
+  user-select: none;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+[cmdk-empty] {
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  white-space: pre-wrap;
+  color: var(--muted-foreground);
+}

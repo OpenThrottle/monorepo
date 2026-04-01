@@ -1,0 +1,37 @@
+query getPrompt($id: ID!) {
+  customPrompt(id: $id) {
+    content
+    createdAt
+    description
+    filePath
+    id
+    labels
+    projectId
+    promptType
+    title
+    updatedAt
+    userId
+  }
+}
+
+mutation updatePrompt($input: UpdateCustomPromptInput!) {
+  updateCustomPrompt(input: $input) {
+    content
+    createdAt
+    description
+    filePath
+    id
+    labels
+    promptType
+    title
+    updatedAt
+  }
+}
+
+mutation deletePrompt($id: ID!) {
+  deleteCustomPrompt(id: $id)
+}
+
+mutation writePromptToFileSystem($id: ID!) {
+  writeCustomPromptToFileSystem(id: $id)
+}

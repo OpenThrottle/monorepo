@@ -1,0 +1,1 @@
+export const ANOTHER_VALUE = 'ANOTHER_VALUE';

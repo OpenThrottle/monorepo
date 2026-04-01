@@ -1,0 +1,16 @@
+# plans.$planId.edit
+mutation updatePlan($input: UpdatePlanInput!) {
+  updatePlan(input: $input) {
+    id
+    title
+    author
+    category
+    status
+    createdAt
+    updatedAt
+    description
+    assignee
+    projectId
+    summary
+  }
+}

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+echo "💬 Pre Commit $1"
+echo "  - Lint Staged"
+
+#
+# https://github.com/okonet/lint-staged#command-line-flags
+#
+pnpm exec lint-staged --allow-empty --relative --verbose --no-stash --concurrent false

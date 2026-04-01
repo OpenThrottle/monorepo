@@ -1,0 +1,3025 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CommitsPerPrRowObject {
+  """
+  Number of commits in the PR.
+  """
+  commits: Int!
+
+  """
+  ISO 8601 merged_at; null if not merged.
+  """
+  mergedAt: String
+
+  """
+  Period bucket (e.g. YYYY-MM or YYYY-Www in UTC); null if no period requested.
+  """
+  period: String
+
+  """
+  Pull request number.
+  """
+  prNumber: Int!
+}
+
+type LinesAddedDeletedRowObject {
+  """
+  Total lines added across PRs in this bucket.
+  """
+  additions: Int!
+
+  """
+  GitHub author login.
+  """
+  author: String!
+
+  """
+  Total changed files across PRs in this bucket.
+  """
+  changedFiles: Int!
+
+  """
+  Total lines deleted across PRs in this bucket.
+  """
+  deletions: Int!
+
+  """
+  Period bucket (e.g. YYYY-MM or YYYY-Www in UTC).
+  """
+  period: String!
+
+  """
+  Number of merged PRs in this bucket.
+  """
+  prCount: Int!
+}
+
+type OpenPrCountByAuthorObject {
+  """
+  GitHub author login.
+  """
+  author: String!
+
+  """
+  Number of open PRs by this author for the repo.
+  """
+  openCount: Int!
+}
+
+type OpenToMergedCycleTimeObject {
+  """
+  Median number of days from PR open to merge.
+  """
+  medianDays: Float
+
+  """
+  90th percentile of days from PR open to merge.
+  """
+  p90Days: Float
+
+  """
+  Period bucket (e.g. YYYY-MM or YYYY-Www in UTC), or null for repo-wide.
+  """
+  period: String
+
+  """
+  Number of merged PRs in this bucket.
+  """
+  prCount: Int!
+}
+
+type PrCountByLabelObject {
+  """
+  Number of PRs that have this label (a PR with multiple labels is counted under each).
+  """
+  count: Int!
+
+  """
+  Label name (e.g. bug, feature, docs).
+  """
+  label: String!
+}
+
+type PrsMergedPerPeriodObject {
+  """
+  Number of PRs merged in this period.
+  """
+  count: Int!
+
+  """
+  Period bucket in UTC (e.g. YYYY-MM or YYYY-Www).
+  """
+  period: String!
+}
+
+type PrTimeInStateSummaryObject {
+  """
+  PR state (e.g. open, closed, merged).
+  """
+  state: String!
+
+  """
+  Count of PRs in this state.
+  """
+  count: Int!
+
+  """
+  Average number of days PRs spent in this state.
+  """
+  avgDaysInState: Float
+}
+
+type ReviewCycleTimeObject {
+  """
+  Median number of days from last changes requested to first subsequent approval or merge.
+  """
+  medianDays: Float
+
+  """
+  90th percentile of days from last changes requested to first subsequent approval or merge.
+  """
+  p90Days: Float
+
+  """
+  Period bucket (e.g. YYYY-MM or YYYY-Www in UTC), or null for repo-wide.
+  """
+  period: String
+
+  """
+  Number of merged PRs in this bucket that had at least one CHANGES_REQUESTED and then an APPROVED or merge.
+  """
+  prCount: Int!
+}
+
+type PullListItemObject {
+  author: String!
+  createdAt: String!
+  htmlUrl: String!
+  mergedAt: String
+  number: Int!
+  state: String!
+  title: String!
+  updatedAt: String!
+}
+
+type ProjectObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+  name: String!
+
+  """
+  NX project name (e.g. applications/openthrottle-server)
+  """
+  nxProjectName: String
+
+  """
+  Plans linked to this project; resolved via ResolveField.
+  """
+  plans: [PlanObject!]
+
+  """
+  Tasks linked to this project; resolved via ResolveField.
+  """
+  tasks: [TaskObject!]
+  updatedAt: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type PlanObject {
+  assignee: String
+  author: String!
+  category: String!
+  createdAt: DateTime!
+  description: String
+  id: String!
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Null when plan is not linked to a project.
+  """
+  projectId: String
+
+  """
+  Resolved project entity when projectId is set; null when projectId is unset.
+  """
+  projectRelation: ProjectObject
+  status: String!
+  summary: String
+
+  """
+  Number of tasks belonging to this plan. Resolved from tasks table.
+  """
+  taskCount: Int!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type PlanStatusCountObject {
+  count: Int!
+  status: String!
+}
+
+type ListPlansByStatusResultObject {
+  plans: [PlanObject!]!
+  totalCount: Int!
+}
+
+type EnqueuePlanRunResultObject {
+  """
+  BullMQ job id
+  """
+  jobId: String!
+
+  """
+  Plan id that was enqueued
+  """
+  planId: String!
+
+  """
+  Position of this job in the waiting queue (1-based). E.g., 1 means next to be processed.
+  """
+  queuePosition: Int!
+
+  """
+  Total number of jobs waiting in the queue (including this one).
+  """
+  queueTotal: Int!
+}
+
+type TaskObject {
+  assignee: String
+  category: String
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+  project: String
+
+  """
+  Project UUID (FK to projects table)
+  """
+  projectId: String
+
+  """
+  Resolved project entity when projectId is set
+  """
+  projectRelation: ProjectObject
+
+  """
+  JSON string of requirements array
+  """
+  requirementsJson: String!
+  status: String!
+  summary: String
+  title: String!
+  updatedAt: DateTime!
+}
+
+type TasksByProjectIdResultObject {
+  tasks: [TaskObject!]!
+  totalCount: Int!
+}
+
+type ActivityCommitRowObject {
+  createdAt: DateTime!
+  id: String!
+  message: String
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+  planTitle: String!
+  repo: String!
+  sha: String!
+
+  """
+  Resolved task entity when taskId is set
+  """
+  task: TaskObject
+  taskId: String
+  taskTitle: String
+}
+
+type ActivityOutputChunkRowObject {
+  content: String!
+  createdAt: DateTime!
+  id: String!
+  iteration: Int
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+  planTitle: String!
+}
+
+type ActivityTaskUpdatedRowObject {
+  id: String!
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+  planTitle: String!
+  status: String!
+
+  """
+  Resolved task entity (id is the task id)
+  """
+  task: TaskObject
+  title: String!
+  updatedAt: DateTime!
+}
+
+type ActivityByDateResultObject {
+  commits: [ActivityCommitRowObject!]!
+
+  """
+  True when limit/offset pagination has more items after this page.
+  """
+  hasNext: Boolean!
+  outputChunks: [ActivityOutputChunkRowObject!]!
+  tasksUpdated: [ActivityTaskUpdatedRowObject!]!
+
+  """
+  Total number of activity items in the date range (before pagination).
+  """
+  totalCount: Int!
+}
+
+type LastActivityCommitPartObject {
+  message: String
+  repo: String!
+  sha: String!
+}
+
+type LastActivityOutputChunkPartObject {
+  content: String!
+  iteration: Int
+}
+
+type LastActivityTaskUpdatePartObject {
+  status: String!
+  taskId: String!
+  taskTitle: String!
+}
+
+type LastActivityResultObject {
+  """
+  Timestamp of the activity.
+  """
+  at: DateTime!
+
+  """
+  One of: commit, output_chunk, task_update.
+  """
+  kind: String!
+  planId: String!
+  taskId: String
+
+  """
+  Human-readable summary for the answer.
+  """
+  summary: String!
+  commit: LastActivityCommitPartObject
+  outputChunk: LastActivityOutputChunkPartObject
+  taskUpdate: LastActivityTaskUpdatePartObject
+}
+
+type LoginResultObject {
+  """
+  JWT access token to send in Authorization header or cookie
+  """
+  accessToken: String!
+}
+
+type RegisterResultObject {
+  """
+  Created user id (UUID)
+  """
+  id: String!
+
+  """
+  Registered email
+  """
+  email: String!
+
+  """
+  JWT access token so the client can stay logged in without calling login
+  """
+  accessToken: String!
+}
+
+type SignoutResultObject {
+  """
+  Whether signout completed successfully
+  """
+  success: Boolean!
+}
+
+type CommitLinkObject {
+  createdAt: DateTime!
+  id: String!
+  message: String
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+  repo: String!
+  sha: String!
+
+  """
+  Resolved task entity when taskId is set
+  """
+  task: TaskObject
+  taskId: String
+}
+
+"""
+A custom prompt document for AI workflow customization
+"""
+type CustomPromptObject {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  title: String!
+  content: String!
+  description: String
+  promptType: CustomPromptType!
+  labels: [String!]!
+  filePath: String
+  userId: String
+  projectId: String
+  deletedAt: DateTime
+}
+
+"""
+Type of custom prompt document
+"""
+enum CustomPromptType {
+  AGENTS
+  COMMANDS
+  PROMPTS
+  RULES
+  SKILLS
+}
+
+type DailyStatsObject {
+  """
+  Row created_at.
+  """
+  createdAt: DateTime!
+
+  """
+  Stats date (YYYY-MM-DD).
+  """
+  date: String!
+
+  """
+  JSON object of plan status -> count for this date.
+  """
+  plansByStatusJson: String!
+
+  """
+  Plans created on this date.
+  """
+  plansCreated: Int!
+
+  """
+  Plans completed on this date.
+  """
+  plansCompleted: Int!
+
+  """
+  Plans updated on this date.
+  """
+  plansUpdated: Int!
+
+  """
+  JSON object of task status -> count for this date.
+  """
+  tasksByStatusJson: String!
+
+  """
+  Tasks created on this date.
+  """
+  tasksCreated: Int!
+
+  """
+  Tasks completed on this date.
+  """
+  tasksCompleted: Int!
+
+  """
+  Tasks updated on this date.
+  """
+  tasksUpdated: Int!
+}
+
+type DailyStatsRangeResultObject {
+  """
+  Daily stats rows in the range, ordered by date ascending.
+  """
+  items: [DailyStatsObject!]!
+}
+
+type GeneratorObject {
+  description: String!
+  name: String!
+}
+
+type GeneratorDetailObject {
+  description: String!
+  name: String!
+  schemaJson: String
+}
+
+"""
+Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.
+"""
+type ServerHealthObject {
+  """
+  API status. "ok" when the resolver runs.
+  """
+  api: String!
+
+  """
+  OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic.
+  """
+  database: String!
+
+  """
+  Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING.
+  """
+  redis: String!
+
+  """
+  WebSocket (Socket.IO) status: ok when server process is running.
+  """
+  websocket: String!
+}
+
+"""
+Current process metrics: memory (RSS, heap, external in MB) and CPU (user/system in ms).
+"""
+type ServerMetricsObject {
+  """
+  Resident set size (total process memory) in MB.
+  """
+  rssMb: Float!
+
+  """
+  V8 heap used in MB.
+  """
+  heapUsedMb: Float!
+
+  """
+  V8 heap total in MB.
+  """
+  heapTotalMb: Float!
+
+  """
+  External (C++ objects bound to JS, e.g. Buffers) in MB.
+  """
+  externalMb: Float!
+
+  """
+  User CPU time in milliseconds (cumulative).
+  """
+  cpuUserMs: Float!
+
+  """
+  System CPU time in milliseconds (cumulative).
+  """
+  cpuSystemMs: Float!
+}
+
+type CreateQueueResultObject {
+  """
+  Whether the queue was created (or accepted for registration).
+  """
+  success: Boolean!
+
+  """
+  Queue name when success is true.
+  """
+  queueName: String
+
+  """
+  Error message when success is false.
+  """
+  error: String
+}
+
+type DuplicateJobResultObject {
+  """
+  Whether the duplicate was accepted.
+  """
+  success: Boolean!
+
+  """
+  New job id when success is true.
+  """
+  jobId: String
+
+  """
+  Error message when success is false.
+  """
+  error: String
+}
+
+type EnqueueDocIngestionResultObject {
+  """
+  Whether the job was enqueued.
+  """
+  success: Boolean!
+
+  """
+  BullMQ job id when success is true.
+  """
+  jobId: String
+
+  """
+  Error message when success is false.
+  """
+  error: String
+}
+
+"""
+Aggregated CPU and memory metrics for a child process over its lifetime.
+"""
+type ChildProcessMetrics {
+  """
+  Average CPU percentage across all samples.
+  """
+  avgCpuPercent: Float!
+
+  """
+  Average RSS in MB across all samples.
+  """
+  avgRssMb: Float!
+
+  """
+  Peak CPU percentage observed across all samples.
+  """
+  peakCpuPercent: Float!
+
+  """
+  Peak RSS in MB observed across all samples.
+  """
+  peakRssMb: Float!
+
+  """
+  Process ID of the child that was monitored.
+  """
+  pid: Int!
+
+  """
+  Polling interval in milliseconds.
+  """
+  pollIntervalMs: Int!
+
+  """
+  Number of samples taken.
+  """
+  sampleCount: Int!
+}
+
+"""
+Process metrics snapshot: memory (RSS, heap, external in MB) and CPU (user/system in ms).
+"""
+type ProcessMetricsSnapshot {
+  """
+  User CPU time in milliseconds (cumulative).
+  """
+  cpuUserMs: Float!
+
+  """
+  External (C++ objects bound to JS, e.g. Buffers) in MB.
+  """
+  externalMb: Float!
+
+  """
+  V8 heap total in MB.
+  """
+  heapTotalMb: Float!
+
+  """
+  V8 heap used in MB.
+  """
+  heapUsedMb: Float!
+
+  """
+  Resident set size (total process memory) in MB.
+  """
+  rssMb: Float!
+}
+
+"""
+Linux Pressure Stall Information (PSI) for CPU. Null fields on non-Linux platforms.
+"""
+type PsiCpuMetrics {
+  """
+  Percentage of time all runnable tasks stalled (10s avg).
+  """
+  full10s: Float
+
+  """
+  Percentage of time all runnable tasks stalled (300s avg).
+  """
+  full300s: Float
+
+  """
+  Percentage of time all runnable tasks stalled (60s avg).
+  """
+  full60s: Float
+
+  """
+  Total full stall time in microseconds (cumulative since boot).
+  """
+  fullTotalUs: Float
+
+  """
+  Percentage of time at least one task stalled (10s avg).
+  """
+  some10s: Float
+
+  """
+  Percentage of time at least one task stalled (300s avg).
+  """
+  some300s: Float
+
+  """
+  Percentage of time at least one task stalled (60s avg).
+  """
+  some60s: Float
+
+  """
+  Total some stall time in microseconds (cumulative since boot).
+  """
+  someTotalUs: Float
+}
+
+"""
+System load average from os.loadavg().
+"""
+type LoadAverageMetrics {
+  """
+  Number of logical CPUs.
+  """
+  cpuCount: Int!
+
+  """
+  15-minute load average.
+  """
+  load15m: Float!
+
+  """
+  1-minute load average.
+  """
+  load1m: Float!
+
+  """
+  5-minute load average.
+  """
+  load5m: Float!
+
+  """
+  Per-core load (load1m / cpuCount). > 1 means oversubscribed.
+  """
+  perCoreLoad1m: Float!
+}
+
+"""
+System-level CPU metrics snapshot at a point in time.
+"""
+type SystemCpuSnapshot {
+  """
+  Load average at snapshot time.
+  """
+  loadAverage: LoadAverageMetrics!
+
+  """
+  PSI metrics at snapshot time (Linux only).
+  """
+  psi: PsiCpuMetrics!
+
+  """
+  Timestamp when snapshot was taken (Unix ms).
+  """
+  timestamp: Float!
+}
+
+"""
+Complete system CPU metrics for a job, including start/end snapshots and pressure interpretation.
+"""
+type SystemCpuMetrics {
+  """
+  Snapshot at job end.
+  """
+  atEnd: SystemCpuSnapshot!
+
+  """
+  Snapshot at job start.
+  """
+  atStart: SystemCpuSnapshot!
+
+  """
+  Platform: linux, darwin, win32, etc.
+  """
+  platform: String!
+
+  """
+  Interpretation of system CPU pressure: low, moderate, high, or unknown.
+  """
+  pressureLevel: PressureLevel!
+
+  """
+  Delta in PSI full stall time (microseconds) during the job.
+  """
+  psiFullDeltaUs: Float
+
+  """
+  Delta in PSI some stall time (microseconds) during the job.
+  """
+  psiSomeDeltaUs: Float
+
+  """
+  Whether PSI metrics are available (Linux with cgroup v2).
+  """
+  psiAvailable: Boolean!
+}
+
+"""
+System CPU pressure level interpretation.
+"""
+enum PressureLevel {
+  high
+  low
+  moderate
+  unknown
+}
+
+"""
+Wall-clock and CPU time metrics for determining job workload characteristics.
+"""
+type WallClockMetrics {
+  """
+  CPU system time delta in milliseconds.
+  """
+  cpuSystemMs: Float!
+
+  """
+  Total CPU time (user + system) in milliseconds.
+  """
+  cpuTimeMs: Float!
+
+  """
+  CPU user time delta in milliseconds.
+  """
+  cpuUserMs: Float!
+
+  """
+  End timestamp (Unix ms) when job completed.
+  """
+  endTimestamp: Float!
+
+  """
+  Interpretation hint: cpu_bound (ratio <= 1.5), mixed (1.5-5), io_bound (> 5), idle (no CPU time).
+  """
+  interpretation: WallClockInterpretation!
+
+  """
+  Start timestamp (Unix ms) when job began.
+  """
+  startTimestamp: Float!
+
+  """
+  Wall-clock duration in milliseconds.
+  """
+  wallClockMs: Float!
+
+  """
+  Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound.
+  """
+  wallClockToCpuRatio: Float!
+}
+
+"""
+Interpretation of wall-clock to CPU time ratio.
+"""
+enum WallClockInterpretation {
+  cpu_bound
+  idle
+  io_bound
+  mixed
+}
+
+"""
+Metrics captured at job start and end for a plan/task run, including process snapshots, child process resource usage, wall-clock analysis, and system CPU pressure.
+"""
+type TaskRunMetrics {
+  """
+  Process metrics at the end of the task run.
+  """
+  atEnd: ProcessMetricsSnapshot!
+
+  """
+  Process metrics at the start of the task run.
+  """
+  atStart: ProcessMetricsSnapshot!
+
+  """
+  Aggregated CPU and memory metrics for spawned child processes.
+  """
+  childProcessMetrics: ChildProcessMetrics
+
+  """
+  System-level CPU metrics including load average and PSI.
+  """
+  systemCpuMetrics: SystemCpuMetrics
+
+  """
+  Wall-clock vs CPU time metrics for workload characterization.
+  """
+  wallClockMetrics: WallClockMetrics
+}
+
+type JobObject {
+  """
+  BullMQ job id.
+  """
+  id: String!
+
+  """
+  JSON string of job data (e.g. { planId } for run-plan).
+  """
+  data: String
+
+  """
+  Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.
+  """
+  name: String
+
+  """
+  Unix timestamp when the job was created.
+  """
+  timestamp: Float
+
+  """
+  Unix timestamp when the job started processing.
+  """
+  processedOn: Float
+
+  """
+  Unix timestamp when the job finished.
+  """
+  finishedOn: Float
+
+  """
+  Error message if the job failed.
+  """
+  failedReason: String
+
+  """
+  Return value from the processor (if completed).
+  """
+  returnvalue: String
+
+  """
+  Job progress (0-100 or custom).
+  """
+  progress: Int
+
+  """
+  Job state: waiting, active, completed, failed, delayed.
+  """
+  state: String!
+
+  """
+  Task-run metrics (process memory/CPU at start and end). Present only for plans-queue jobs that completed with metrics.
+  """
+  taskRunMetrics: TaskRunMetrics
+}
+
+type QueueStatsObject {
+  """
+  Queue name (e.g. plans).
+  """
+  name: String!
+
+  """
+  Number of jobs waiting to be processed.
+  """
+  waitingCount: Int!
+
+  """
+  Number of jobs currently being processed.
+  """
+  activeCount: Int!
+
+  """
+  Number of completed jobs.
+  """
+  completedCount: Int!
+
+  """
+  Number of failed jobs.
+  """
+  failedCount: Int!
+
+  """
+  Number of delayed jobs.
+  """
+  delayedCount: Int!
+}
+
+type JobsResultObject {
+  """
+  Paginated list of jobs for the queue.
+  """
+  jobs: [JobObject!]!
+
+  """
+  Whether more jobs exist after this page.
+  """
+  hasNext: Boolean!
+}
+
+type QueueDetailsObject {
+  """
+  Queue name (e.g. plans).
+  """
+  name: String!
+
+  """
+  Number of jobs waiting to be processed.
+  """
+  waitingCount: Int!
+
+  """
+  Number of jobs currently being processed.
+  """
+  activeCount: Int!
+
+  """
+  Number of completed jobs.
+  """
+  completedCount: Int!
+
+  """
+  Number of failed jobs.
+  """
+  failedCount: Int!
+
+  """
+  Number of delayed jobs.
+  """
+  delayedCount: Int!
+
+  """
+  Paginated jobs for this queue (optional; omit for stats-only).
+  """
+  jobs: JobsResultObject
+}
+
+type RemoveRepeatableJobResultObject {
+  """
+  Whether the repeatable job was removed.
+  """
+  success: Boolean!
+
+  """
+  Error message when success is false.
+  """
+  error: String
+}
+
+type RepeatableJobObject {
+  """
+  Unique key for the repeatable job (use with removeRepeatableJob).
+  """
+  key: String!
+
+  """
+  Job type name (e.g. run-plan).
+  """
+  name: String!
+
+  """
+  Optional job id for the next scheduled run.
+  """
+  id: String
+
+  """
+  Unix timestamp when the repeat ends, or null if no end.
+  """
+  endDate: Float
+
+  """
+  Timezone for cron (e.g. Europe/London), or null.
+  """
+  tz: String
+
+  """
+  Cron pattern (e.g. "0 9 * * 1-5"), or null for every-based.
+  """
+  pattern: String
+
+  """
+  Interval string (e.g. "1 hour", "2 days"), or null for cron.
+  """
+  every: String
+
+  """
+  Unix timestamp of the next run.
+  """
+  next: Float
+}
+
+type RetryJobResultObject {
+  """
+  Whether the retry was accepted.
+  """
+  success: Boolean!
+
+  """
+  Job id when success is true.
+  """
+  jobId: String
+
+  """
+  Error message when success is false.
+  """
+  error: String
+}
+
+"""
+A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end).
+"""
+type PlanRunMetricsEntry {
+  """
+  BullMQ job id for this run.
+  """
+  jobId: String!
+
+  """
+  Unix timestamp when the job finished.
+  """
+  finishedOn: Float
+
+  """
+  Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.
+  """
+  taskRunMetrics: TaskRunMetrics
+}
+
+"""
+Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility.
+"""
+type MetricsObject {
+  """
+  Last N completed plan runs with task-run metrics for the given plan. Ordered newest first. Use for plan-level metrics visualization.
+  """
+  recentPlanRunsMetrics(planId: ID!, limit: Int = 10): [PlanRunMetricsEntry!]!
+
+  """
+  Current process CPU and memory snapshot. Same data as root serverMetrics query.
+  """
+  serverSnapshot: ServerMetricsObject!
+}
+
+type NoteObject {
+  author: String
+  content: String!
+  createdAt: DateTime!
+  id: String!
+  updatedAt: DateTime!
+}
+
+"""
+Recurring billing details when a Stripe price is recurring.
+"""
+type StripePriceRecurringObject {
+  """
+  Billing interval (e.g. month, year).
+  """
+  interval: String!
+
+  """
+  Number of intervals between billings.
+  """
+  intervalCount: Int!
+}
+
+"""
+Stripe price for catalog or checkout.
+"""
+type StripePriceObject {
+  id: String!
+  active: Boolean!
+
+  """
+  Three-letter ISO currency code.
+  """
+  currency: String!
+
+  """
+  Unit amount in the smallest currency unit (e.g. cents). Null for some metered or custom schemes.
+  """
+  unitAmount: Int
+
+  """
+  Stripe price type: one_time or recurring.
+  """
+  type: String!
+
+  """
+  Present when type is recurring.
+  """
+  recurring: StripePriceRecurringObject
+}
+
+"""
+Stripe catalog product.
+"""
+type StripeProductObject {
+  id: String!
+  name: String!
+  description: String
+  active: Boolean!
+  images: [String!]!
+
+  """
+  Default Stripe Price ID when set on the product.
+  """
+  defaultPriceId: String
+
+  """
+  Active prices for this product. Populated by resolvers that batch-fetch prices to avoid N+1 queries.
+  """
+  prices: [StripePriceObject!]!
+}
+
+type StripeWebhookProcessedPayload {
+  """
+  True when the webhook was verified and handled (including ignored event types).
+  """
+  received: Boolean!
+}
+
+type PlanEmbeddingObject {
+  content: String!
+  createdAt: DateTime!
+  id: String!
+
+  """
+  JSON string of metadata object
+  """
+  metadataJson: String!
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+}
+
+type PlanOutputStreamChunkObject {
+  content: String!
+  createdAt: DateTime!
+  id: String!
+
+  """
+  Optional iteration number for the output chunk
+  """
+  iteration: Int
+
+  """
+  Resolved plan entity when planId is set
+  """
+  plan: PlanObject
+  planId: String!
+}
+
+type SubscriptionObject {
+  cancelAtPeriodEnd: Boolean!
+  createdAt: DateTime!
+  currentPeriodEnd: DateTime
+  currentPeriodStart: DateTime
+  id: String!
+  status: String!
+  stripeCustomerId: String
+  stripePriceId: String!
+  stripeSubscriptionId: String
+  updatedAt: DateTime!
+  userId: String!
+}
+
+type CreateCheckoutSessionPayload {
+  """
+  Redirect URL to Stripe Checkout. Null if user not found or session creation failed.
+  """
+  url: String
+}
+
+type PermissionObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """
+  Permission identifier (e.g. users:read, settings:write)
+  """
+  name: String!
+}
+
+type RoleObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """
+  Role identifier (e.g. admin, user, viewer)
+  """
+  name: String!
+
+  """
+  Permissions assigned to this role
+  """
+  permissions: [PermissionObject!]!
+  updatedAt: DateTime!
+}
+
+type SearchChunk {
+  """
+  Chunk content (plan or task text).
+  """
+  content: String!
+
+  """
+  Chunk UUID from plan_embeddings or task_embeddings.
+  """
+  id: String!
+
+  """
+  Plan UUID when chunk is from a plan or a plan's task.
+  """
+  planId: String
+
+  """
+  Plan title for display and linking.
+  """
+  planTitle: String
+
+  """
+  Cosine similarity score (0–1, higher is more relevant).
+  """
+  similarity: Float!
+
+  """
+  Source of the chunk: "plan", "task", or "documentation".
+  """
+  source: String!
+
+  """
+  When source is documentation: file path in the repo (e.g. docs/foo.md).
+  """
+  sourcePath: String
+
+  """
+  When source is documentation: GitHub repo (e.g. owner/repo).
+  """
+  sourceRepo: String
+
+  """
+  When source is documentation: Git SHA for a precise blob link; omit for main.
+  """
+  sourceSha: String
+
+  """
+  Task UUID when chunk is from a task.
+  """
+  taskId: String
+
+  """
+  Task title for display and linking.
+  """
+  taskTitle: String
+}
+
+type SearchResult {
+  """
+  Ranked search chunks (plans and tasks) by similarity.
+  """
+  chunks: [SearchChunk!]!
+}
+
+type ListSourceInfoObject {
+  """
+  Source name (e.g. plan, task, documentation).
+  """
+  name: String!
+
+  """
+  Human-readable description.
+  """
+  description: String!
+}
+
+type ListPlanSourceObject {
+  """
+  Plan UUID.
+  """
+  id: String!
+
+  """
+  Plan title.
+  """
+  title: String!
+}
+
+type ListSourcesResultObject {
+  """
+  Knowledge-base source types and descriptions.
+  """
+  sources: [ListSourceInfoObject!]!
+
+  """
+  All plans (id, title) for discovery.
+  """
+  plans: [ListPlanSourceObject!]!
+}
+
+type TaskEmbeddingObject {
+  content: String!
+  createdAt: DateTime!
+  id: String!
+
+  """
+  JSON string of metadata object
+  """
+  metadataJson: String!
+
+  """
+  Resolved task entity when taskId is set
+  """
+  task: TaskObject
+  taskId: String!
+}
+
+type UserObject {
+  createdAt: DateTime!
+
+  """
+  When set, user is disabled and cannot log in.
+  """
+  disabledAt: DateTime
+  email: String
+
+  """
+  GitHub username (e.g. visormatt)
+  """
+  githubUsername: String!
+  id: String!
+  updatedAt: DateTime!
+}
+
+type Query {
+  """
+  Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page.
+  """
+  cortexHealth: String!
+
+  """
+  Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.
+  """
+  serverHealth: ServerHealthObject!
+
+  """
+  Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics.
+  """
+  serverMetrics: ServerMetricsObject!
+
+  """
+  Development ping. Returns "pong" when the development GraphQL API is reachable.
+  """
+  developmentPing: String!
+
+  """
+  Activity for a single date (YYYY-MM-DD) or last N days. Provide exactly one of date or daysBack. Optional limit/offset for pagination.
+  """
+  activityByDate(input: ActivityByDateInput!): ActivityByDateResultObject!
+
+  """
+  Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination.
+  """
+  activityByDateRange(
+    input: ActivityByDateRangeInput!
+  ): ActivityByDateResultObject!
+
+  """
+  Single most recent activity (commit, plan output chunk, or task update) for a plan or task. Use for "What was the last thing we did for <plan> or <task>?".
+  """
+  lastActivity(input: LastActivityInput!): LastActivityResultObject
+
+  """
+  Get a commit link by ID
+  """
+  commitLink(input: GetCommitLinkInput!): CommitLinkObject
+
+  """
+  List all commit links, ordered by createdAt descending
+  """
+  commitLinks: [CommitLinkObject!]!
+
+  """
+  List commit links for a plan (plan-level and task-level), ordered by createdAt descending
+  """
+  commitLinksByPlanId(input: CommitLinksByPlanIdInput!): [CommitLinkObject!]!
+
+  """
+  List commit links for a task, ordered by createdAt descending
+  """
+  commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]!
+
+  """
+  Get a custom prompt by ID
+  """
+  customPrompt(id: ID!): CustomPromptObject
+
+  """
+  List custom prompts with optional filters
+  """
+  customPrompts(input: ListCustomPromptsInput): [CustomPromptObject!]!
+
+  """
+  Aggregated plan and task stats for a single date (YYYY-MM-DD). Returns null if no row for that date.
+  """
+  dailyStats(
+    """
+    Date in YYYY-MM-DD format
+    """
+    date: String!
+  ): DailyStatsObject
+
+  """
+  Aggregated plan and task stats for a date range (start and end inclusive, YYYY-MM-DD).
+  """
+  dailyStatsRange(
+    """
+    Start date (inclusive), YYYY-MM-DD
+    """
+    start: String!
+
+    """
+    End date (inclusive), YYYY-MM-DD
+    """
+    end: String!
+  ): DailyStatsRangeResultObject!
+
+  """
+  List available NX generators from @tools/generators
+  """
+  generators: [GeneratorObject!]!
+
+  """
+  Get a generator by name (includes schema JSON)
+  """
+  generator(input: GetGeneratorInput!): GeneratorDetailObject
+
+  """
+  List pull requests for a repository (GitHub API)
+  """
+  pulls(input: ListPullsInput!): [PullListItemObject!]!
+
+  """
+  Open PR count per author for a repository (GitHub stats).
+  """
+  openPrCountByAuthor(input: GitHubRepoInput!): [OpenPrCountByAuthorObject!]!
+
+  """
+  PR time-in-state summary (count and avg days per state: open, closed, merged).
+  """
+  prTimeInStateSummary(input: GitHubRepoInput!): [PrTimeInStateSummaryObject!]!
+
+  """
+  Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests.
+  """
+  linesAddedDeleted(
+    input: LinesAddedDeletedInput!
+  ): [LinesAddedDeletedRowObject!]!
+
+  """
+  Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC).
+  """
+  openToMergedCycleTime(
+    input: OpenToMergedCycleTimeInput!
+  ): [OpenToMergedCycleTimeObject!]!
+
+  """
+  PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all).
+  """
+  prCountByLabel(input: PrCountByLabelInput!): [PrCountByLabelObject!]!
+
+  """
+  PRs merged per week or month (throughput trend). Buckets by merged_at in UTC.
+  """
+  prsMergedPerPeriod(
+    input: PrsMergedPerPeriodInput!
+  ): [PrsMergedPerPeriodObject!]!
+
+  """
+  Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls.
+  """
+  reviewCycleTime(input: ReviewCycleTimeInput!): [ReviewCycleTimeObject!]!
+
+  """
+  Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC).
+  """
+  commitsPerPr(input: CommitsPerPrInput!): [CommitsPerPrRowObject!]!
+
+  """
+  Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged.
+  """
+  metrics: MetricsObject!
+
+  """
+  Single queue by name with optional paginated jobs (limit/offset/states/asc).
+  """
+  queue(input: QueueDetailsInput!): QueueDetailsObject
+
+  """
+  Single job by id and queue name. Returns null if not found.
+  """
+  job(jobId: ID!, queueName: String!): JobObject
+
+  """
+  List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject.
+  """
+  repeatableJobs(input: RepeatableJobsInput!): [RepeatableJobObject!]!
+
+  """
+  List registered BullMQ queues with job counts (waiting, active, completed, failed, delayed).
+  """
+  queues: [QueueStatsObject!]!
+
+  """
+  Get a note by ID
+  """
+  note(id: ID!): NoteObject
+
+  """
+  List all notes, ordered by createdAt descending
+  """
+  notes: [NoteObject!]!
+
+  """
+  Get a plan embedding by ID
+  """
+  planEmbedding(input: GetPlanEmbeddingInput!): PlanEmbeddingObject
+
+  """
+  List plan embeddings by plan ID, ordered by createdAt ascending
+  """
+  planEmbeddings(input: PlanEmbeddingsByPlanInput!): [PlanEmbeddingObject!]!
+
+  """
+  Get a plan output stream chunk by ID
+  """
+  planOutputStreamChunk(
+    input: GetPlanOutputStreamChunkInput!
+  ): PlanOutputStreamChunkObject
+
+  """
+  List plan output stream chunks by plan ID, ordered by createdAt ascending
+  """
+  planOutputStreamChunks(
+    input: ListPlanOutputStreamChunksInput!
+  ): [PlanOutputStreamChunkObject!]!
+
+  """
+  Active Stripe products (catalog). Does not require authentication.
+  """
+  stripeProducts: [StripeProductObject!]!
+
+  """
+  A single Stripe product by ID, or null if not found.
+  """
+  stripeProduct(id: String!): StripeProductObject
+
+  """
+  Current user's active subscription (entitlement). Null if none.
+  """
+  mySubscription: SubscriptionObject
+
+  """
+  Get a plan by ID
+  """
+  plan(id: ID!): PlanObject
+
+  """
+  List all plans
+  """
+  plans: [PlanObject!]!
+
+  """
+  List plans filtered by status(es), assignee(s), project, title; sorted and paginated. Pass statuses/assignees arrays; empty or "all" in statuses means no status filter.
+  """
+  listPlansByStatus(
+    input: ListPlansByStatusInput!
+  ): ListPlansByStatusResultObject!
+
+  """
+  Plan count per status for sidebar/filters (alias: use planCountsByStatus)
+  """
+  listPlanCountsByStatus: [PlanStatusCountObject!]!
+
+  """
+  Plan count per status for sidebar/filters
+  """
+  planCountsByStatus: [PlanStatusCountObject!]!
+
+  """
+  Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id.
+  """
+  searchPlans(input: SearchPlansInput!): ListPlansByStatusResultObject!
+
+  """
+  Distinct category values from plans for filters
+  """
+  listDistinctCategories: [String!]!
+
+  """
+  Distinct author and assignee values from plans and tasks for filters
+  """
+  listDistinctAuthorsAndAssignees: [String!]!
+
+  """
+  Get a project by ID
+  """
+  project(id: ID!): ProjectObject
+
+  """
+  List all projects, ordered by createdAt descending
+  """
+  projects: [ProjectObject!]!
+
+  """
+  List all roles with their permissions
+  """
+  roles: [RoleObject!]!
+
+  """
+  Get a role by ID
+  """
+  role(id: ID!): RoleObject
+
+  """
+  List all permissions
+  """
+  permissions: [PermissionObject!]!
+
+  """
+  Get roles assigned to a user
+  """
+  rolesForUser(userId: ID!): [RoleObject!]!
+
+  """
+  Get permission names for a user (union of all their roles' permissions)
+  """
+  permissionsForUser(userId: ID!): [String!]!
+
+  """
+  Get permission names for the current user
+  """
+  myPermissions: [String!]!
+
+  """
+  Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
+  """
+  search(input: SearchInput!): SearchResult!
+
+  """
+  Fetch a single document chunk by id (UUID from plan_embeddings, task_embeddings, or documentation_embeddings). Use after semantic search to read full chunk content.
+  """
+  getDocument(id: String!): SearchChunk
+
+  """
+  List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.
+  """
+  listSources: ListSourcesResultObject!
+
+  """
+  Get a task embedding by ID
+  """
+  taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject
+
+  """
+  List task embeddings by task ID, ordered by createdAt ascending
+  """
+  taskEmbeddings(input: TaskEmbeddingsByTaskInput!): [TaskEmbeddingObject!]!
+
+  """
+  Get a task by ID
+  """
+  task(id: ID!): TaskObject
+
+  """
+  List all tasks, ordered by createdAt ascending
+  """
+  tasks: [TaskObject!]!
+
+  """
+  List tasks for a plan by plan ID
+  """
+  tasksByPlanId(input: TasksByPlanIdInput!): [TaskObject!]!
+
+  """
+  List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount.
+  """
+  tasksByProjectId(input: TasksByProjectIdInput!): TasksByProjectIdResultObject!
+
+  """
+  List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED)
+  """
+  remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
+
+  """
+  Get a user by ID
+  """
+  user(id: ID!): UserObject
+
+  """
+  Get the currently authenticated user
+  """
+  me: UserObject
+
+  """
+  List all users, ordered by createdAt descending
+  """
+  users: [UserObject!]!
+}
+
+input ActivityByDateInput {
+  """
+  Single date (YYYY-MM-DD). Provide exactly one of date or daysBack.
+  """
+  date: String
+
+  """
+  Last N days (1-365). Provide exactly one of date or daysBack.
+  """
+  daysBack: Int
+  limit: Int
+  offset: Int
+}
+
+input ActivityByDateRangeInput {
+  """
+  Start of range (ISO 8601).
+  """
+  startIso: String!
+
+  """
+  End of range (ISO 8601).
+  """
+  endIso: String!
+  limit: Int
+  offset: Int
+}
+
+input LastActivityInput {
+  """
+  Plan ID (UUID). Returns the single most recent activity for this plan.
+  """
+  planId: String!
+
+  """
+  Optional task ID to scope the last activity to that task.
+  """
+  taskId: String
+}
+
+input GetCommitLinkInput {
+  """
+  Commit link id
+  """
+  id: ID!
+}
+
+input CommitLinksByPlanIdInput {
+  """
+  Plan id to list commit links for
+  """
+  planId: ID!
+}
+
+input CommitLinksByTaskIdInput {
+  """
+  Task id to list commit links for
+  """
+  taskId: ID!
+}
+
+"""
+Input for listing custom prompts with optional filters
+"""
+input ListCustomPromptsInput {
+  """
+  Filter by prompt type
+  """
+  promptType: CustomPromptType
+
+  """
+  Filter by labels (matches any)
+  """
+  labels: [String!]
+
+  """
+  Search by title (case-insensitive partial match)
+  """
+  search: String
+
+  """
+  Filter by project ID
+  """
+  projectId: ID
+
+  """
+  Filter by user ID
+  """
+  userId: ID
+
+  """
+  Include soft-deleted prompts
+  """
+  includeDeleted: Boolean! = false
+}
+
+input GetGeneratorInput {
+  """
+  Generator name (e.g. from @tools/generators)
+  """
+  name: String!
+}
+
+input ListPullsInput {
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Repository name
+  """
+  repo: String!
+
+  """
+  Filter by state: open, closed, or all
+  """
+  state: String
+
+  """
+  Filter by base branch
+  """
+  base: String
+
+  """
+  Filter by merged (true/false); omit for no filter
+  """
+  merged: Boolean
+}
+
+input GitHubRepoInput {
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Repository name
+  """
+  repo: String!
+
+  """
+  Filter by state: open, closed, or all
+  """
+  state: String!
+}
+
+input LinesAddedDeletedInput {
+  """
+  Max merged PRs to fetch for diff stats (default 100); caps API calls.
+  """
+  maxPrs: Int
+
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Bucket by week (YYYY-Www) or month (YYYY-MM); default month.
+  """
+  period: String
+
+  """
+  Repository name
+  """
+  repo: String!
+}
+
+input OpenToMergedCycleTimeInput {
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Bucket by week (YYYY-Www) or month (YYYY-MM); omit for repo-wide summary.
+  """
+  period: String
+
+  """
+  Repository name
+  """
+  repo: String!
+}
+
+input PrCountByLabelInput {
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Repository name
+  """
+  repo: String!
+
+  """
+  Filter PRs by state: open, closed, or all (default).
+  """
+  state: String
+}
+
+input PrsMergedPerPeriodInput {
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Period bucket: week (YYYY-Www) or month (YYYY-MM) in UTC.
+  """
+  period: String!
+
+  """
+  Repository name
+  """
+  repo: String!
+}
+
+input ReviewCycleTimeInput {
+  """
+  Max merged PRs to fetch reviews for (default 100); caps API calls.
+  """
+  maxPrs: Int
+
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Bucket by week (YYYY-Www) or month (YYYY-MM); omit for repo-wide summary.
+  """
+  period: String
+
+  """
+  Repository name
+  """
+  repo: String!
+}
+
+input CommitsPerPrInput {
+  """
+  Max merged PRs to fetch commit count for (default 100); caps API calls.
+  """
+  maxPrs: Int
+
+  """
+  Repository owner (e.g. GitHub username or org)
+  """
+  owner: String!
+
+  """
+  Bucket by week (YYYY-Www) or month (YYYY-MM); omit for no period.
+  """
+  period: String
+
+  """
+  Repository name
+  """
+  repo: String!
+}
+
+input QueueDetailsInput {
+  """
+  Queue name (e.g. plans).
+  """
+  name: String!
+
+  """
+  Max jobs to return. Omit or 0 to skip loading jobs.
+  """
+  limit: Int
+
+  """
+  Offset for job pagination.
+  """
+  offset: Int
+
+  """
+  Sort jobs ascending by timestamp.
+  """
+  asc: Boolean
+
+  """
+  Job states to include (e.g. waiting, active, completed, failed, delayed). Defaults to all if empty.
+  """
+  states: [String!]
+}
+
+input RepeatableJobsInput {
+  """
+  Queue name (e.g. plans).
+  """
+  queueName: String!
+
+  """
+  Start index for pagination.
+  """
+  start: Int
+
+  """
+  End index for pagination.
+  """
+  end: Int
+
+  """
+  Sort repeatable jobs ascending.
+  """
+  asc: Boolean
+}
+
+input GetPlanEmbeddingInput {
+  """
+  Plan embedding id
+  """
+  id: ID!
+}
+
+input PlanEmbeddingsByPlanInput {
+  """
+  Plan id to list embeddings for
+  """
+  planId: ID!
+}
+
+input GetPlanOutputStreamChunkInput {
+  """
+  Chunk id
+  """
+  id: ID!
+}
+
+input ListPlanOutputStreamChunksInput {
+  """
+  Plan id to list chunks for
+  """
+  planId: ID!
+}
+
+input ListPlansByStatusInput {
+  """
+  Filter by author or assignee (any match). Empty means no assignee filter.
+  """
+  assignees: [String]
+  limit: Int
+  offset: Int
+  project: String
+  projectId: ID
+
+  """
+  Sort by "created" or "updated"
+  """
+  sortBy: String
+
+  """
+  Sort order "asc" or "desc"
+  """
+  sortOrder: String
+
+  """
+  Filter by plan status. Empty or including "all" means no status filter.
+  """
+  statuses: [String]
+
+  """
+  Filter plans whose title contains this substring (case-insensitive)
+  """
+  titleSubstring: String
+}
+
+input SearchPlansInput {
+  limit: Int
+
+  """
+  Semantic search query (embedded for vector similarity)
+  """
+  query: String!
+}
+
+input SearchInput {
+  """
+  Max number of chunks to return (default 20).
+  """
+  limit: Int
+
+  """
+  Text query to embed and search by vector similarity.
+  """
+  query: String!
+}
+
+input GetTaskEmbeddingInput {
+  """
+  Task embedding id
+  """
+  id: ID!
+}
+
+input TaskEmbeddingsByTaskInput {
+  """
+  Task id to list embeddings for
+  """
+  taskId: ID!
+}
+
+input TasksByPlanIdInput {
+  """
+  Plan id to list tasks for
+  """
+  planId: ID!
+}
+
+input TasksByProjectIdInput {
+  """
+  Max number of tasks to return. Omit for no limit.
+  """
+  limit: Float
+
+  """
+  Number of tasks to skip. Omit or 0 for first page.
+  """
+  offset: Float
+
+  """
+  Project id (FK) to list tasks for
+  """
+  projectId: ID!
+}
+
+input RemainingTasksByPlanIdInput {
+  """
+  Plan id; returns tasks with status in PENDING, IN_PROGRESS, BLOCKED
+  """
+  planId: ID!
+}
+
+type Mutation {
+  """
+  Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end.
+  """
+  triggerWebsocketNotification: Boolean!
+
+  """
+  Verify and process a Stripe webhook. Pass the exact raw body bytes as base64 and the Stripe-Signature header value.
+  """
+  processStripeWebhook(
+    input: ProcessStripeWebhookInput!
+  ): StripeWebhookProcessedPayload!
+
+  """
+  Sign in with email and password. Returns JWT access token for Authorization header or cookie.
+  """
+  login(input: LoginInput!): LoginResultObject!
+
+  """
+  Sign out. Returns success; client is responsible for clearing the auth cookie.
+  """
+  signout: SignoutResultObject!
+
+  """
+  Register a new user. Returns id, email, and JWT access token.
+  """
+  register(input: RegisterInput!): RegisterResultObject!
+
+  """
+  Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA.
+  """
+  linkCommit(input: LinkCommitInput!): CommitLinkObject!
+
+  """
+  Create a new custom prompt
+  """
+  createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
+
+  """
+  Update an existing custom prompt
+  """
+  updateCustomPrompt(input: UpdateCustomPromptInput!): CustomPromptObject
+
+  """
+  Soft delete a custom prompt by ID
+  """
+  deleteCustomPrompt(id: ID!): Boolean!
+
+  """
+  Permanently delete a custom prompt by ID
+  """
+  hardDeleteCustomPrompt(id: ID!): Boolean!
+
+  """
+  Restore a soft-deleted custom prompt
+  """
+  restoreCustomPrompt(id: ID!): CustomPromptObject
+
+  """
+  Write a custom prompt to the file system at its configured filePath
+  """
+  writeCustomPromptToFileSystem(id: ID!): Boolean!
+
+  """
+  Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error.
+  """
+  createQueue(input: CreateQueueInput!): CreateQueueResultObject!
+
+  """
+  Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error.
+  """
+  retryJob(input: RetryJobInput!): RetryJobResultObject!
+
+  """
+  Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error.
+  """
+  enqueueDocIngestion(
+    input: EnqueueDocIngestionInput!
+  ): EnqueueDocIngestionResultObject!
+
+  """
+  Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error.
+  """
+  duplicateJob(input: DuplicateJobInput!): DuplicateJobResultObject!
+
+  """
+  Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName).
+  """
+  removeRepeatableJob(
+    input: RemoveRepeatableJobInput!
+  ): RemoveRepeatableJobResultObject!
+
+  """
+  Create a note
+  """
+  createNote(input: CreateNoteInput!): NoteObject!
+
+  """
+  Update a note
+  """
+  updateNote(input: UpdateNoteInput!): NoteObject
+
+  """
+  Delete a note by ID
+  """
+  deleteNote(id: ID!): Boolean!
+
+  """
+  Append a chunk to a plan's output stream (e.g. agent iteration log).
+  """
+  appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
+
+  """
+  Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup.
+  """
+  createCheckoutSession(
+    input: CreateCheckoutSessionInput!
+  ): CreateCheckoutSessionPayload!
+
+  """
+  Create a plan
+  """
+  createPlan(input: CreatePlanInput!): PlanObject!
+
+  """
+  Update a plan
+  """
+  updatePlan(input: UpdatePlanInput!): PlanObject
+
+  """
+  Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }.
+  """
+  setPlanStatus(input: SetPlanStatusInput!): PlanObject
+
+  """
+  Delete a plan by ID
+  """
+  deletePlan(input: DeletePlanInput!): Boolean!
+
+  """
+  Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
+  """
+  enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
+
+  """
+  Create a project
+  """
+  createProject(input: CreateProjectInput!): ProjectObject!
+
+  """
+  Update a project
+  """
+  updateProject(input: UpdateProjectInput!): ProjectObject
+
+  """
+  Create a role
+  """
+  createRole(input: CreateRoleInput!): RoleObject!
+
+  """
+  Update a role
+  """
+  updateRole(input: UpdateRoleInput!): RoleObject
+
+  """
+  Delete a role
+  """
+  deleteRole(id: ID!): Boolean!
+
+  """
+  Assign a role to a user
+  """
+  assignRoleToUser(input: AssignRoleToUserInput!): Boolean!
+
+  """
+  Remove a role from a user
+  """
+  removeRoleFromUser(input: RemoveRoleFromUserInput!): Boolean!
+
+  """
+  Add a permission to a role
+  """
+  addPermissionToRole(input: AddPermissionToRoleInput!): Boolean!
+
+  """
+  Remove a permission from a role
+  """
+  removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
+
+  """
+  Create a task
+  """
+  createTask(input: CreateTaskInput!): TaskObject!
+
+  """
+  Update a task
+  """
+  updateTask(input: UpdateTaskInput!): TaskObject
+
+  """
+  Delete a task by ID
+  """
+  deleteTask(input: DeleteTaskInput!): Boolean!
+
+  """
+  Create a user
+  """
+  createUser(input: CreateUserInput!): UserObject!
+
+  """
+  Update a user
+  """
+  updateUser(input: UpdateUserInput!): UserObject
+
+  """
+  Disable a user; they will not be able to log in.
+  """
+  disableUser(id: ID!): UserObject
+
+  """
+  Re-enable a disabled user.
+  """
+  enableUser(id: ID!): UserObject
+}
+
+input ProcessStripeWebhookInput {
+  """
+  Canonical raw request body encoded as standard base64. Must match the bytes Stripe signed.
+  """
+  rawPayloadBase64: String!
+
+  """
+  Value of the Stripe-Signature header from the original HTTP request.
+  """
+  stripeSignature: String!
+}
+
+input LoginInput {
+  """
+  User email
+  """
+  email: String!
+
+  """
+  User password
+  """
+  password: String!
+}
+
+input RegisterInput {
+  """
+  User email (must be unique)
+  """
+  email: String!
+
+  """
+  User password (stored hashed with bcrypt)
+  """
+  password: String!
+
+  """
+  GitHub username for display; defaults to email local part if omitted
+  """
+  githubUsername: String
+}
+
+input LinkCommitInput {
+  """
+  Plan id to link the commit to
+  """
+  planId: ID!
+
+  """
+  Repository (e.g. owner/repo)
+  """
+  repo: String!
+
+  """
+  Git commit SHA (squash commit after PR merge)
+  """
+  sha: String!
+
+  """
+  Optional task id to link the commit to
+  """
+  taskId: ID
+
+  """
+  Optional commit or PR message
+  """
+  message: String
+}
+
+"""
+Input for creating a new custom prompt
+"""
+input CreateCustomPromptInput {
+  title: String!
+  content: String!
+  description: String
+  promptType: CustomPromptType!
+  labels: [String!]! = []
+
+  """
+  File path relative to workspace root for file system persistence
+  """
+  filePath: String
+  userId: ID
+  projectId: ID
+
+  """
+  Write content to the file system at filePath if provided
+  """
+  writeToFileSystem: Boolean! = false
+}
+
+"""
+Input for updating an existing custom prompt
+"""
+input UpdateCustomPromptInput {
+  """
+  Custom prompt id to update
+  """
+  id: ID!
+  title: String
+  content: String
+  description: String
+  promptType: CustomPromptType
+  labels: [String!]
+  filePath: String
+  userId: ID
+  projectId: ID
+
+  """
+  Write content to the file system at filePath if provided
+  """
+  writeToFileSystem: Boolean! = false
+}
+
+input CreateQueueInput {
+  """
+  Name of the queue to create.
+  """
+  name: String!
+}
+
+input RetryJobInput {
+  """
+  BullMQ job id to retry.
+  """
+  jobId: ID!
+
+  """
+  Queue name (e.g. plans).
+  """
+  queueName: String!
+}
+
+input EnqueueDocIngestionInput {
+  """
+  Paths relative to workspace root; each directory is expanded to all .md files (recursive).
+  """
+  directories: [String!]
+
+  """
+  Individual markdown file paths relative to workspace root.
+  """
+  files: [String!]
+
+  """
+  Ingestion scope for prior-state (default: "default"). Use different scopes to keep state separate.
+  """
+  scope: String
+
+  """
+  Source repo for metadata (e.g. owner/repo).
+  """
+  repo: String
+
+  """
+  Source commit SHA for metadata.
+  """
+  sha: String
+}
+
+input DuplicateJobInput {
+  """
+  BullMQ job id to duplicate.
+  """
+  jobId: ID!
+
+  """
+  Queue name (e.g. plans).
+  """
+  queueName: String!
+}
+
+input RemoveRepeatableJobInput {
+  """
+  Queue name (e.g. plans).
+  """
+  queueName: String!
+
+  """
+  Repeatable job key (from repeatableJobs query). Required to remove a repeatable job.
+  """
+  key: String!
+}
+
+input CreateNoteInput {
+  author: String
+  content: String!
+}
+
+input UpdateNoteInput {
+  author: String
+  content: String
+
+  """
+  Note id to update
+  """
+  id: ID!
+}
+
+input AppendPlanOutputInput {
+  """
+  Content of the output chunk
+  """
+  content: String!
+
+  """
+  Optional iteration number for the output chunk
+  """
+  iteration: Int
+
+  """
+  Plan id to append output to
+  """
+  planId: ID!
+}
+
+input CreateCheckoutSessionInput {
+  """
+  URL to redirect to if the user cancels checkout.
+  """
+  cancelUrl: String!
+
+  """
+  Stripe Price ID (e.g. price_xxx) for the subscription.
+  """
+  priceId: String!
+
+  """
+  URL to redirect to after successful payment.
+  """
+  successUrl: String!
+}
+
+input CreatePlanInput {
+  assignee: String
+  author: String!
+  category: String!
+  description: String
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
+  """
+  projectId: ID
+  status: String
+  summary: String
+  title: String!
+}
+
+input UpdatePlanInput {
+  assignee: String
+  author: String
+  category: String
+  description: String
+
+  """
+  Plan id to update
+  """
+  id: ID!
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Pass null to clear; omit to leave unchanged.
+  """
+  projectId: ID
+  status: String
+  summary: String
+  title: String
+}
+
+input SetPlanStatusInput {
+  """
+  Plan id to update status for
+  """
+  planId: ID!
+
+  """
+  New status (e.g. COMPLETED, IN_PROGRESS, PENDING, QUEUED). Normalized to uppercase.
+  """
+  status: String!
+}
+
+input DeletePlanInput {
+  """
+  Plan id to delete
+  """
+  id: ID!
+}
+
+input EnqueuePlanRunInput {
+  """
+  Plan id to enqueue a run for
+  """
+  planId: ID!
+
+  """
+  Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority.
+  """
+  priority: Int
+}
+
+input CreateProjectInput {
+  description: String
+  name: String!
+
+  """
+  NX project name (e.g. applications/openthrottle-server)
+  """
+  nxProjectName: String
+}
+
+input UpdateProjectInput {
+  description: String
+
+  """
+  Project id to update
+  """
+  id: ID!
+  name: String
+
+  """
+  NX project name (e.g. applications/openthrottle-server)
+  """
+  nxProjectName: String
+}
+
+input CreateRoleInput {
+  description: String
+
+  """
+  Role name (e.g. admin, user, viewer). Must be unique.
+  """
+  name: String!
+}
+
+input UpdateRoleInput {
+  description: String
+
+  """
+  Role id to update
+  """
+  id: ID!
+
+  """
+  Role name. Pass null to leave unchanged.
+  """
+  name: String
+}
+
+input AssignRoleToUserInput {
+  """
+  Role id to assign
+  """
+  roleId: ID!
+
+  """
+  User id to assign the role to
+  """
+  userId: ID!
+}
+
+input RemoveRoleFromUserInput {
+  """
+  Role id to remove
+  """
+  roleId: ID!
+
+  """
+  User id to remove the role from
+  """
+  userId: ID!
+}
+
+input AddPermissionToRoleInput {
+  """
+  Permission id to add
+  """
+  permissionId: ID!
+
+  """
+  Role id to add the permission to
+  """
+  roleId: ID!
+}
+
+input RemovePermissionFromRoleInput {
+  """
+  Permission id to remove
+  """
+  permissionId: ID!
+
+  """
+  Role id to remove the permission from
+  """
+  roleId: ID!
+}
+
+input CreateTaskInput {
+  assignee: String
+  category: String
+  description: String
+
+  """
+  Plan id the task belongs to
+  """
+  planId: ID!
+  project: String
+
+  """
+  Project UUID (FK to projects table). Omit or pass null when task is not linked to a project.
+  """
+  projectId: ID
+
+  """
+  JSON string of requirements array
+  """
+  requirements: String
+  status: String
+  summary: String
+  title: String!
+}
+
+input UpdateTaskInput {
+  assignee: String
+  category: String
+  description: String
+
+  """
+  Task id to update
+  """
+  id: ID!
+  planId: ID
+  project: String
+
+  """
+  Optional. Project UUID. Pass null to clear; omit to leave unchanged.
+  """
+  projectId: ID
+
+  """
+  JSON string of requirements array
+  """
+  requirements: String
+  status: String
+  summary: String
+  title: String
+}
+
+input DeleteTaskInput {
+  """
+  Task id to delete
+  """
+  id: ID!
+}
+
+input CreateUserInput {
+  email: String
+
+  """
+  GitHub username (e.g. visormatt)
+  """
+  githubUsername: String!
+}
+
+input UpdateUserInput {
+  """
+  Set to null to re-enable a disabled user; omit to leave unchanged.
+  """
+  disabledAt: DateTime
+  email: String
+
+  """
+  GitHub username. Pass null to leave unchanged.
+  """
+  githubUsername: String
+
+  """
+  User id to update
+  """
+  id: ID!
+}

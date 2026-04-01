@@ -1,0 +1,64 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# 🚦 MANDATORY: Always Use Generators First
+
+**CRITICAL RULE:** Before writing ANY new code, components, hooks, services, or files, you MUST check if a generator exists and use it.
+
+## Required Workflow (Non-Negotiable)
+
+1. **ALWAYS check for generators FIRST:**
+
+   ```bash
+   NX_ISOLATE_PLUGINS=false nx list @tools/generators
+   ```
+
+2. **Get generator schema:**
+
+   ```bash
+   NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --describe
+   ```
+
+3. **List available targets/destinations:**
+
+   ```bash
+   NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --list=<key>
+   ```
+
+4. **Generate using the generator:**
+
+   ```bash
+   NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --type=<type> --target=<target> --name=<Name>
+   ```
+
+5. **ONLY THEN** add custom logic to the generated files
+
+## Available Generators
+
+- `react-native` - For React Native components (use `--type=component`)
+- `react` - For React components
+- `remix` - For Remix components/routes
+- `nestjs` - For NestJS services/modules
+- `package` - For new packages
+- `folders` - For folder structures
+
+## Important Notes
+
+- **ALL generator commands MUST use `NX_ISOLATE_PLUGINS=false` prefix**
+- React Native uses `--type` (not `--subGenerator`)
+- React/Remix/NestJS use `--subGenerator`
+- Check `docs/tools/generators/AGENT_USAGE.md` for detailed documentation
+- If NO generator exists, state this clearly before writing custom code
+
+## What Went Wrong Previously
+
+We manually created `ScheduleSummary` and `ScheduleEmptyState` components instead of:
+
+1. Checking `NX_ISOLATE_PLUGINS=false nx list @tools/generators`
+2. Using `NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-native --type=component --target=intouch --destination=routes/schedules/components --name=ScheduleSummary,ScheduleEmptyState`
+3. Then adding the custom logic
+
+**This must NEVER happen again.**

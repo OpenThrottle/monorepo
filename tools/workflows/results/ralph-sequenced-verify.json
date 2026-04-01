@@ -1,0 +1,9 @@
+{
+  "planId": "effc1e15-0fac-4341-ab9a-2aac9349f09b",
+  "taskId": "9626db74-75fa-4801-9361-bcc6edc89d27",
+  "step": "verify",
+  "completedAt": "2026-02-11T00:00:00Z",
+  "description": "Step 3: Verify — setup and execute artifacts present and valid for plan",
+  "verifiedSetupPath": "tools/workflows/results/ralph-sequenced-setup.json",
+  "verifiedExecutePath": "tools/workflows/results/ralph-sequenced-execute.json"
+}

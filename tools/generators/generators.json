@@ -1,0 +1,29 @@
+{
+  "generators": {
+    "folders": {
+      "description": "Generate a new set of folders for a project route or service.",
+      "factory": "./src/generators/folders/generator",
+      "schema": "./src/generators/folders/schema.json"
+    },
+    "nestjs": {
+      "description": "Generate new NestJS application, service, or controller.",
+      "factory": "./src/generators/nestjs/generator",
+      "schema": "./src/generators/nestjs/schema.json"
+    },
+    "package": {
+      "description": "Generate a new package for use across packages and applications.",
+      "factory": "./src/generators/package/generator",
+      "schema": "./src/generators/package/schema.json"
+    },
+    "react": {
+      "description": "Generate a new React component, or hook for an application or package.",
+      "factory": "./src/generators/react/generator",
+      "schema": "./src/generators/react/schema.json"
+    },
+    "remix": {
+      "description": "Generate a new Remix application, component, or route.",
+      "factory": "./src/generators/remix/generator",
+      "schema": "./src/generators/remix/schema.json"
+    }
+  }
+}

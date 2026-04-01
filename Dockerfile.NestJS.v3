@@ -1,0 +1,140 @@
+# OpenThrottle server — multi-stage build from monorepo root.
+# v3: branch for @nx/docker integration; copied from Dockerfile.NestJS.v2. v2 unchanged.
+# Build: docker build -f Dockerfile.NestJS.v3 [--build-arg ...] .
+# See docs/openthrottle/docker-image-build-strategy.md.
+###########################################################################
+#
+#     👀 https://pnpm.io/docker using NX for the monorepo build
+#
+###########################################################################
+ARG NODE_VERSION="22"
+FROM node:${NODE_VERSION}-alpine AS base
+# FROM node:${NODE_VERSION}-slim AS base
+
+WORKDIR /app
+
+ARG APP_ENV="production"
+ARG APP_NAME="__REQUIRED_ARG__"
+ARG APP_VERSION="__REQUIRED_ARG__"
+ARG GITHUB_TOKEN="__REQUIRED_ARG__"
+ARG NX_VERSION="__REQUIRED_ARG__"
+ARG NX_KEY="__REQUIRED_ARG__"
+# Pin the same major-line pnpm that produced pnpm-lock.yaml. `pnpm@11` tracks the
+# latest 11.x prerelease (often beta) and can disagree with a lockfile from alpha on
+# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH / overrides vs lockfile.
+ARG PNPM_VERSION="10.32.1"
+
+ENV APP_ENV="${APP_ENV}"
+ENV APP_NAME="${APP_NAME}"
+ENV APP_VERSION="${APP_VERSION}"
+ENV CI="true"
+ENV NX_DAEMON="false"
+
+# Enable pnpm via npm
+RUN npm install --global pnpm@${PNPM_VERSION}
+
+# Avoid gid/uid 1000 — node:alpine already has node:1000:1000
+RUN addgroup --system --gid 1001 appuser
+RUN adduser --system --uid 1001 --ingroup appuser appuser
+
+################################################################################
+#
+#   BUILDER ~ Everything needed to build the application(s)
+#
+################################################################################
+FROM base AS builder
+
+# We limit the token to this layer, which is disposed of in the final build
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+ENV NODE_ENV="development"
+
+# Only copy what's needed to install our dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.json
+COPY ./packages ./packages
+COPY ./tools ./tools
+
+# Python tools are required to build
+RUN apk add --update build-base python3 make g++\
+  && rm -rf /var/cache/apk/*
+
+# General best practice, keep it up to date
+RUN apk update && apk upgrade
+
+# Install "all" dependencies from NPM + Github Packages
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+
+################################################################################
+#
+#   BUILD - This layer builds the application and we grab the artifacts from
+#
+################################################################################
+FROM builder AS build
+
+# Set the environment to production for the build
+ENV NODE_ENV="production"
+ENV NX_DAEMON="false"
+ENV NX_KEY=${NX_KEY}
+ENV NX_SWC="true"
+
+# Now we copy over all the source code
+COPY . .
+
+# Install dependencies
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Build the application using GCS cache for Nx (secret is not persisted in final image)
+RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
+  export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json && \
+  npx nx@${NX_VERSION} run ${APP_NAME}:build && \
+  mkdir -p /app/applications/${APP_NAME}/i18n
+
+
+################################################################################
+#
+#   DEPENDENCIES ~ Trim the non-production dependencies - used in production
+#
+################################################################################
+FROM build AS dependencies
+
+# Set the environment to production for the build
+ENV NODE_ENV="production"
+
+# Trim those packages down to what we need for production
+RUN pnpm install --frozen-lockfile --ignore-scripts --prod
+
+# Prune the store to reduce image size
+RUN pnpm store prune
+
+# Remove Expo and React modules (not needed for NestJS server)
+RUN rm -rf /app/node_modules/.pnpm/@react /app/node_modules/.pnpm/react*
+
+
+################################################################################
+#
+#   PRODUCTION - Finally, build the production image with a "minimal" footprint
+#
+################################################################################
+FROM base AS production
+
+# Set the environment explicitly
+ENV NODE_ENV="production"
+
+# Take what we need from the appropriate stage(s)
+COPY --from=dependencies /app/node_modules /app/node_modules
+COPY --from=build /app/applications/${APP_NAME}/build /app/build
+COPY --from=build /app/applications/${APP_NAME}/i18n /app/i18n
+COPY --from=build /app/applications/${APP_NAME}/package.json /app/package.json
+COPY --from=build /app/packages /app/packages
+COPY --from=build /app/tools /app/tools
+
+# 🚧 MOVE TO DEVELOPMENT ONLY - Used for docker compose healthchecks
+RUN apk --update --no-cache add curl
+
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# And our startup command
+CMD ["node", "/app/build/src/main.js"]

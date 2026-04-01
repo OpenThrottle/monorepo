@@ -1,0 +1,49 @@
+{
+  "issues": [
+    {
+      "auditId": "unsized-images",
+      "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+      "deviceType": "mobile",
+      "savings": {},
+      "score": 0.5,
+      "title": "Image elements do not have explicit `width` and `height`",
+      "url": "https://mattscholta.com"
+    },
+    {
+      "auditId": "unsized-images",
+      "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+      "deviceType": "desktop",
+      "savings": {},
+      "score": 0.5,
+      "title": "Image elements do not have explicit `width` and `height`",
+      "url": "https://mattscholta.com"
+    },
+    {
+      "auditId": "unsized-images",
+      "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+      "deviceType": "mobile",
+      "savings": {},
+      "score": 0.5,
+      "title": "Image elements do not have explicit `width` and `height`",
+      "url": "https://mattscholta.com/blog/boilerplate-to-generators"
+    },
+    {
+      "auditId": "unsized-images",
+      "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+      "deviceType": "desktop",
+      "savings": {},
+      "score": 0.5,
+      "title": "Image elements do not have explicit `width` and `height`",
+      "url": "https://mattscholta.com/blog/boilerplate-to-generators"
+    }
+  ],
+  "summary": {
+    "formatIssues": 0,
+    "lazyLoadingIssues": 0,
+    "optimizationIssues": 0,
+    "responsiveIssues": 0,
+    "sizingIssues": 4,
+    "total": 4
+  },
+  "timestamp": "2026-01-12T02:56:31.526Z"
+}

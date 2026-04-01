@@ -1,0 +1,11 @@
+query getNoteById($id: ID!) {
+  note(id: $id) {
+    ...NoteCard
+  }
+}
+
+mutation updateNote($input: UpdateNoteInput!) {
+  updateNote(input: $input) {
+    ...NoteCard
+  }
+}

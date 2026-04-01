@@ -1,0 +1,39 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./build",
+    "rootDir": "./"
+  },
+  "include": ["src/**/*.json", "src/**/*.ts"],
+  "exclude": ["build", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../packages/mattscholta/nestjs-throttler/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-devtools/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-bullmq-board/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-redis/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-bullmq/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-langchain/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Caddy reverse proxy for local development (Option A: path-based on localhost).
+# Single origin https://localhost with paths; no /etc/hosts changes.
+# See docs/monorepo/local-services-and-ports.md and this directory's README.
+#
+# Run: caddy run --config tools/caddy/Caddyfile.path-based (from repo root)
+#
+# Apps may need base path config (e.g. Vite base: '/developer/'). OLLAMA_BASE_URL can be https://localhost/ollama.
+
+localhost {
+	# openthrottle-server: /api/* -> localhost:6010 (path prefix stripped). WebSocket passthrough is automatic.
+	handle_path /api/* {
+		reverse_proxy localhost:6010
+	}
+	# Ollama: /ollama/* -> localhost:11434 (path prefix stripped).
+	handle_path /ollama/* {
+		reverse_proxy localhost:11434
+	}
+	# openthrottle-developer: /developer/* and / -> localhost:5173.
+	handle_path /developer/* {
+		reverse_proxy localhost:5173
+	}
+	handle {
+		reverse_proxy localhost:5173
+	}
+}

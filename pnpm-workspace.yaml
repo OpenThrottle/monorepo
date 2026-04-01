@@ -1,0 +1,18 @@
+#
+#
+#
+#     https://pnpm.io/docker
+#
+#
+#
+# injectWorkspacePackages: true
+# syncInjectedDepsAfterScripts:
+# - build
+
+packages:
+  - 'applications/*'
+  - 'infra/'
+  - 'packages/*'
+  - 'tools/*'
+  - '!packages/*/dist/**/*'
+  - '!services/**/*'

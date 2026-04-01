@@ -1,0 +1,17 @@
+# plans.$planId.create
+mutation createPlan($input: CreatePlanInput!) {
+  createPlan(input: $input) {
+    id
+    title
+    author
+    category
+    status
+    createdAt
+    updatedAt
+    description
+    assignee
+    project
+    projectId
+    summary
+  }
+}

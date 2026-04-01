@@ -1,0 +1,4478 @@
+{
+  "metadata": {
+    "createdAt": "2026-01-12T02:55:50.656Z",
+    "lastUpdated": "2026-01-12T02:56:31.489Z",
+    "totalAudits": 6
+  },
+  "results": [
+    {
+      "audits": [
+        {
+          "auditId": "first-contentful-paint",
+          "description": "First Contentful Paint marks the time at which the first text or image is painted. [Learn more about the First Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/).",
+          "displayValue": "2.8 s",
+          "score": 0.56,
+          "title": "First Contentful Paint"
+        },
+        {
+          "auditId": "largest-contentful-paint",
+          "description": "Largest Contentful Paint marks the time at which the largest text or image is painted. [Learn more about the Largest Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/)",
+          "displayValue": "3.9 s",
+          "score": 0.53,
+          "title": "Largest Contentful Paint"
+        },
+        {
+          "auditId": "speed-index",
+          "description": "Speed Index shows how quickly the contents of a page are visibly populated. [Learn more about the Speed Index metric](https://developer.chrome.com/docs/lighthouse/performance/speed-index/).",
+          "displayValue": "4.3 s",
+          "score": 0.75,
+          "title": "Speed Index"
+        },
+        {
+          "auditId": "max-potential-fid",
+          "description": "The maximum potential First Input Delay that your users could experience is the duration of the longest task. [Learn more about the Maximum Potential First Input Delay metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-max-potential-fid/).",
+          "displayValue": "70 ms",
+          "score": 0.99,
+          "title": "Max Potential First Input Delay"
+        },
+        {
+          "auditId": "interactive",
+          "description": "Time to Interactive is the amount of time it takes for the page to become fully interactive. [Learn more about the Time to Interactive metric](https://developer.chrome.com/docs/lighthouse/performance/interactive/).",
+          "displayValue": "3.9 s",
+          "score": 0.89,
+          "title": "Time to Interactive"
+        },
+        {
+          "auditId": "user-timings",
+          "description": "Consider instrumenting your app with the User Timing API to measure your app's real-world performance during key user experiences. [Learn more about User Timing marks](https://developer.chrome.com/docs/lighthouse/performance/user-timings/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "name",
+                "valueType": "text",
+                "label": "Name"
+              },
+              {
+                "key": "timingType",
+                "valueType": "text",
+                "label": "Type"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Duration"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "User Timing marks and measures"
+        },
+        {
+          "auditId": "layout-shifts",
+          "description": "These are the largest layout shifts observed on the page. Each table item represents a single layout shift, and shows the element that shifted the most. Below each item are possible root causes that led to the layout shift. Some of these layout shifts may not be included in the CLS metric value due to [windowing](https://web.dev/articles/cls#what_is_cls). [Learn how to improve CLS](https://web.dev/articles/optimize-cls)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "extra"
+                },
+                "label": "Element"
+              },
+              {
+                "key": "score",
+                "valueType": "numeric",
+                "subItemsHeading": {
+                  "key": "cause",
+                  "valueType": "text"
+                },
+                "granularity": 0.001,
+                "label": "Layout shift score"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid large layout shifts"
+        },
+        {
+          "auditId": "non-composited-animations",
+          "description": "Animations which are not composited can be janky and increase CLS. [Learn how to avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "failureReason",
+                  "valueType": "text"
+                },
+                "label": "Element"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid non-composited animations"
+        },
+        {
+          "auditId": "unsized-images",
+          "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/images/svg/facebook.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-7-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,6,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2344,
+                    "bottom": 2360,
+                    "left": 288,
+                    "right": 369,
+                    "width": 81,
+                    "height": 16
+                  },
+                  "snippet": "<img alt=\"Meta (Facebook)\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/facebook.svg\" width=\"auto\">",
+                  "nodeLabel": "Meta (Facebook)"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/google.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-5-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,4,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2342,
+                    "bottom": 2362,
+                    "left": 127,
+                    "right": 188,
+                    "width": 61,
+                    "height": 20
+                  },
+                  "snippet": "<img alt=\"Alphabet (Google)\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/google.svg\" width=\"auto\">",
+                  "nodeLabel": "Alphabet (Google)"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/hotwire.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-8-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,7,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2406,
+                    "bottom": 2422,
+                    "left": 90,
+                    "right": 167,
+                    "width": 77,
+                    "height": 16
+                  },
+                  "snippet": "<img alt=\"Hotwire\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/hotwire.svg\" width=\"auto\">",
+                  "nodeLabel": "Hotwire"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/thredup.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-2-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,1,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2284,
+                    "bottom": 2300,
+                    "left": 190,
+                    "right": 260,
+                    "width": 70,
+                    "height": 16
+                  },
+                  "snippet": "<img alt=\"thredUP\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/thredup.svg\" width=\"auto\">",
+                  "nodeLabel": "thredUP"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/apple.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-6-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,5,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-6",
+                  "boundingRect": {
+                    "top": 2340,
+                    "bottom": 2364,
+                    "left": 228,
+                    "right": 248,
+                    "width": 20,
+                    "height": 24
+                  },
+                  "snippet": "<img alt=\"Apple\" class=\"h-6 md:h-12 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/apple.svg\" width=\"auto\">",
+                  "nodeLabel": "Apple"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/mcdonalds.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-9-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,8,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2404,
+                    "bottom": 2424,
+                    "left": 207,
+                    "right": 230,
+                    "width": 23,
+                    "height": 20
+                  },
+                  "snippet": "<img alt=\"McDonalds\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/mcdonalds.svg\" width=\"auto\">",
+                  "nodeLabel": "McDonalds"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/army.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-14-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,13,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-8",
+                  "boundingRect": {
+                    "top": 2464,
+                    "bottom": 2496,
+                    "left": 325,
+                    "right": 349,
+                    "width": 24,
+                    "height": 32
+                  },
+                  "snippet": "<img alt=\"US Army\" class=\"h-8 md:h-16 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/army.svg\" width=\"auto\">",
+                  "nodeLabel": "US Army"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/census.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-13-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,12,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2470,
+                    "bottom": 2490,
+                    "left": 234,
+                    "right": 285,
+                    "width": 50,
+                    "height": 20
+                  },
+                  "snippet": "<img alt=\"US Census\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/census.svg\" width=\"auto\">",
+                  "nodeLabel": "US Census"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/haldi.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-3-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,2,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-3",
+                  "boundingRect": {
+                    "top": 2286,
+                    "bottom": 2298,
+                    "left": 300,
+                    "right": 351,
+                    "width": 51,
+                    "height": 12
+                  },
+                  "snippet": "<img alt=\"Haldi\" class=\"h-3 md:h-6 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/haldi.svg\" width=\"auto\">",
+                  "nodeLabel": "Haldi"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/fedex.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-10-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,9,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2406,
+                    "bottom": 2422,
+                    "left": 270,
+                    "right": 322,
+                    "width": 52,
+                    "height": 16
+                  },
+                  "snippet": "<img alt=\"FedEx\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/fedex.svg\" width=\"auto\">",
+                  "nodeLabel": "FedEx"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/pge.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-12-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,11,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-7",
+                  "boundingRect": {
+                    "top": 2466,
+                    "bottom": 2494,
+                    "left": 166,
+                    "right": 194,
+                    "width": 28,
+                    "height": 28
+                  },
+                  "snippet": "<img alt=\"PG&amp;E\" class=\"h-7 md:h-14 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/pge.svg\" width=\"auto\">",
+                  "nodeLabel": "PG&E"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/shiftsmart.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-1-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,0,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2284,
+                    "bottom": 2300,
+                    "left": 61,
+                    "right": 150,
+                    "width": 89,
+                    "height": 16
+                  },
+                  "snippet": "<img alt=\"shiftsmart\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/shiftsmart.svg\" width=\"auto\">",
+                  "nodeLabel": "shiftsmart"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/charter.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-11-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,10,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2470,
+                    "bottom": 2490,
+                    "left": 63,
+                    "right": 126,
+                    "width": 63,
+                    "height": 20
+                  },
+                  "snippet": "<img alt=\"Charter\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/charter.svg\" width=\"auto\">",
+                  "nodeLabel": "Charter"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/bynd.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-4-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,3,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2342,
+                    "bottom": 2362,
+                    "left": 43,
+                    "right": 87,
+                    "width": 44,
+                    "height": 20
+                  },
+                  "snippet": "<img alt=\"Beyond\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/bynd.svg\" width=\"auto\">",
+                  "nodeLabel": "Beyond"
+                }
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Image elements do not have explicit `width` and `height`"
+        },
+        {
+          "auditId": "unused-javascript",
+          "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+          "details": {
+            "type": "opportunity",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "subItemsHeading": {
+                  "key": "source",
+                  "valueType": "code"
+                },
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceBytes"
+                },
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceWastedBytes"
+                },
+                "label": "Est Savings"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 140785,
+                "wastedBytes": 56428,
+                "wastedPercent": 40.08077723461108
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 42894,
+                "wastedBytes": 25406,
+                "wastedPercent": 59.23088185056854
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61650,
+                "wastedBytes": 22727,
+                "wastedPercent": 36.86403761979238
+              }
+            ],
+            "overallSavingsMs": 600,
+            "overallSavingsBytes": 104561,
+            "sortedBy": ["wastedBytes"],
+            "debugData": {
+              "type": "debugdata",
+              "metricSavings": {
+                "FCP": 450,
+                "LCP": 600
+              }
+            }
+          },
+          "displayValue": "Est savings of 102 KiB",
+          "score": 0,
+          "title": "Reduce unused JavaScript"
+        },
+        {
+          "auditId": "image-delivery-insight",
+          "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL",
+                "subItemsHeading": {
+                  "key": "reason",
+                  "valueType": "text"
+                }
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Resource Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "label": "Est Savings",
+                "subItemsHeading": {
+                  "key": "wastedBytes",
+                  "valueType": "bytes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-1-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,0,DIV,0,SECTION,1,DIV,0,IMG",
+                  "selector": "div.relative > section.relative > div > img.image-rounded",
+                  "boundingRect": {
+                    "top": 136,
+                    "bottom": 264,
+                    "left": 142,
+                    "right": 270,
+                    "width": 128,
+                    "height": 128
+                  },
+                  "snippet": "<img alt=\"Matthew Scholta\" class=\"image-rounded\" height=\"auto\" loading=\"lazy\" src=\"/images/assets/matt-scaled.webp\" style=\"view-transition-name:profile-image\" width=\"auto\">",
+                  "nodeLabel": "Matthew Scholta"
+                },
+                "url": "https://mattscholta.com/images/assets/matt-scaled.webp",
+                "totalBytes": 7704,
+                "wastedBytes": 4747,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "This image file is larger than it needs to be (500x500) for its displayed dimensions (310x310). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 4747
+                    }
+                  ]
+                }
+              }
+            ],
+            "debugData": {
+              "type": "debugdata",
+              "wastedBytes": 4747
+            }
+          },
+          "displayValue": "Est savings of 5 KiB",
+          "score": 0.5,
+          "title": "Improve image delivery"
+        },
+        {
+          "auditId": "inp-breakdown-insight",
+          "description": "Start investigating [how to improve INP](https://developer.chrome.com/docs/performance/insights/inp-breakdown) by looking at the longest subpart.",
+          "score": null,
+          "title": "INP breakdown"
+        },
+        {
+          "auditId": "lcp-discovery-insight",
+          "description": "[Optimize LCP](https://developer.chrome.com/docs/performance/insights/lcp-discovery) by making the LCP image discoverable from the HTML immediately, and avoiding lazy-loading",
+          "score": null,
+          "title": "LCP request discovery"
+        },
+        {
+          "auditId": "network-dependency-tree-insight",
+          "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "list-section",
+                "value": {
+                  "type": "network-tree",
+                  "chains": {
+                    "28559C50171F78D4766A487784013833": {
+                      "url": "https://mattscholta.com/",
+                      "navStartToEndTime": 165,
+                      "transferSize": 7814,
+                      "isLongest": true,
+                      "children": {
+                        "86901.4": {
+                          "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                          "navStartToEndTime": 227,
+                          "transferSize": 61771,
+                          "isLongest": true,
+                          "children": {
+                            "86901.33": {
+                              "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-H3ZTX4FSWT&gtm=45je6171v873489730za200zd873489730&_p=1768186543591&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=59308398.1768186544&ul=en-us&sr=412x823&uaa=&uab=&uafvl=&uamb=1&uam=moto%20g%20power%20(2022)&uap=Android&uapv=11.0&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~105391253~115938466~115938468~116514483&sid=1768186543&sct=1&seg=0&dl=https%3A%2F%2Fmattscholta.com%2F&dt=Matthew%20Scholta%20-%20Software%20Engineer%20%7C%20Architecture%20%26%20Technical%20Leadership&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=388",
+                              "navStartToEndTime": 487,
+                              "transferSize": 0,
+                              "isLongest": true,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "86901.6": {
+                          "url": "https://mattscholta.com/assets/root-CSnhE4kI.js",
+                          "navStartToEndTime": 199,
+                          "transferSize": 35614,
+                          "children": {
+                            "86901.31": {
+                              "url": "https://mattscholta.com/__manifest?paths=%2F%2C%2Fportfolio%2C%2Fresume%2C%2Fuses&version=6a349b99",
+                              "navStartToEndTime": 350,
+                              "transferSize": 570,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "86901.29": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 273,
+                          "transferSize": 691,
+                          "children": {}
+                        },
+                        "86901.5": {
+                          "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                          "navStartToEndTime": 243,
+                          "transferSize": 43021,
+                          "children": {}
+                        },
+                        "86901.13": {
+                          "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                          "navStartToEndTime": 242,
+                          "transferSize": 10330,
+                          "children": {}
+                        },
+                        "86901.9": {
+                          "url": "https://mattscholta.com/assets/index-CllUoT4f.js",
+                          "navStartToEndTime": 223,
+                          "transferSize": 850,
+                          "children": {}
+                        },
+                        "86901.8": {
+                          "url": "https://mattscholta.com/assets/LinkedinLogo.es-J4hm6l3m.js",
+                          "navStartToEndTime": 222,
+                          "transferSize": 4640,
+                          "children": {}
+                        },
+                        "86901.11": {
+                          "url": "https://mattscholta.com/assets/_index-D1RTNg3M.js",
+                          "navStartToEndTime": 222,
+                          "transferSize": 10654,
+                          "children": {}
+                        },
+                        "86901.10": {
+                          "url": "https://mattscholta.com/assets/SSRBase.es-B42ZkjNf.js",
+                          "navStartToEndTime": 222,
+                          "transferSize": 566,
+                          "children": {}
+                        },
+                        "86901.12": {
+                          "url": "https://mattscholta.com/assets/AppHero-BcNYqYuj.js",
+                          "navStartToEndTime": 221,
+                          "transferSize": 719,
+                          "children": {}
+                        },
+                        "86901.7": {
+                          "url": "https://mattscholta.com/assets/metadata-AhGr4xOj.js",
+                          "navStartToEndTime": 221,
+                          "transferSize": 1537,
+                          "children": {}
+                        }
+                      }
+                    }
+                  },
+                  "longestChain": {
+                    "duration": 487
+                  }
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnected origins",
+                "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+                "value": {
+                  "type": "text",
+                  "value": "no origins were preconnected"
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnect candidates",
+                "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+                "value": {
+                  "type": "table",
+                  "headings": [
+                    {
+                      "key": "origin",
+                      "valueType": "text",
+                      "label": "Origin"
+                    },
+                    {
+                      "key": "wastedMs",
+                      "valueType": "ms",
+                      "label": "Est LCP savings"
+                    }
+                  ],
+                  "items": [
+                    {
+                      "origin": "https://www.google-analytics.com",
+                      "wastedMs": 298.7579999961853
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Network dependency tree"
+        },
+        {
+          "auditId": "render-blocking-insight",
+          "description": "Requests are blocking the page's initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedMs",
+                "valueType": "timespanMs",
+                "label": "Duration"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                "totalBytes": 10330,
+                "wastedMs": 150
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Render blocking requests"
+        }
+      ],
+      "deviceType": "mobile",
+      "metrics": {
+        "cls": 0,
+        "inp": null,
+        "lcp": 3.8707555
+      },
+      "performanceScore": 81,
+      "timestamp": "2026-01-12T02:55:50.655Z",
+      "url": "https://mattscholta.com"
+    },
+    {
+      "audits": [
+        {
+          "auditId": "user-timings",
+          "description": "Consider instrumenting your app with the User Timing API to measure your app's real-world performance during key user experiences. [Learn more about User Timing marks](https://developer.chrome.com/docs/lighthouse/performance/user-timings/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "name",
+                "valueType": "text",
+                "label": "Name"
+              },
+              {
+                "key": "timingType",
+                "valueType": "text",
+                "label": "Type"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Duration"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "User Timing marks and measures"
+        },
+        {
+          "auditId": "bootup-time",
+          "description": "Consider reducing the time spent parsing, compiling, and executing JS. You may find delivering smaller JS payloads helps with this. [Learn how to reduce Javascript execution time](https://developer.chrome.com/docs/lighthouse/performance/bootup-time/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "total",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Total CPU Time"
+              },
+              {
+                "key": "scripting",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Script Evaluation"
+              },
+              {
+                "key": "scriptParseCompile",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Script Parse"
+              }
+            ],
+            "items": []
+          },
+          "displayValue": "",
+          "score": null,
+          "title": "JavaScript execution time"
+        },
+        {
+          "auditId": "layout-shifts",
+          "description": "These are the largest layout shifts observed on the page. Each table item represents a single layout shift, and shows the element that shifted the most. Below each item are possible root causes that led to the layout shift. Some of these layout shifts may not be included in the CLS metric value due to [windowing](https://web.dev/articles/cls#what_is_cls). [Learn how to improve CLS](https://web.dev/articles/optimize-cls)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "extra"
+                },
+                "label": "Element"
+              },
+              {
+                "key": "score",
+                "valueType": "numeric",
+                "subItemsHeading": {
+                  "key": "cause",
+                  "valueType": "text"
+                },
+                "granularity": 0.001,
+                "label": "Layout shift score"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid large layout shifts"
+        },
+        {
+          "auditId": "long-tasks",
+          "description": "Lists the longest tasks on the main thread, useful for identifying worst contributors to input delay. [Learn how to avoid long main-thread tasks](https://web.dev/articles/optimize-long-tasks)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 1,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 1,
+                "label": "Duration"
+              }
+            ],
+            "items": [],
+            "debugData": {
+              "type": "debugdata",
+              "urls": [],
+              "tasks": []
+            }
+          },
+          "score": null,
+          "title": "Avoid long main-thread tasks"
+        },
+        {
+          "auditId": "non-composited-animations",
+          "description": "Animations which are not composited can be janky and increase CLS. [Learn how to avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "failureReason",
+                  "valueType": "text"
+                },
+                "label": "Element"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid non-composited animations"
+        },
+        {
+          "auditId": "unsized-images",
+          "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/images/svg/facebook.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-7-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,6,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2387,
+                    "bottom": 2419,
+                    "left": 381,
+                    "right": 543,
+                    "width": 162,
+                    "height": 32
+                  },
+                  "snippet": "<img alt=\"Meta (Facebook)\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/facebook.svg\" width=\"auto\">",
+                  "nodeLabel": "Meta (Facebook)"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/google.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-5-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,4,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2259,
+                    "bottom": 2299,
+                    "left": 1028,
+                    "right": 1149,
+                    "width": 122,
+                    "height": 40
+                  },
+                  "snippet": "<img alt=\"Alphabet (Google)\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/google.svg\" width=\"auto\">",
+                  "nodeLabel": "Alphabet (Google)"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/hotwire.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-8-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,7,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2387,
+                    "bottom": 2419,
+                    "left": 623,
+                    "right": 778,
+                    "width": 155,
+                    "height": 32
+                  },
+                  "snippet": "<img alt=\"Hotwire\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/hotwire.svg\" width=\"auto\">",
+                  "nodeLabel": "Hotwire"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/thredup.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-2-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,1,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2263,
+                    "bottom": 2295,
+                    "left": 458,
+                    "right": 598,
+                    "width": 139,
+                    "height": 32
+                  },
+                  "snippet": "<img alt=\"thredUP\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/thredup.svg\" width=\"auto\">",
+                  "nodeLabel": "thredUP"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/apple.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-6-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,5,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-6",
+                  "boundingRect": {
+                    "top": 2379,
+                    "bottom": 2427,
+                    "left": 262,
+                    "right": 301,
+                    "width": 39,
+                    "height": 48
+                  },
+                  "snippet": "<img alt=\"Apple\" class=\"h-6 md:h-12 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/apple.svg\" width=\"auto\">",
+                  "nodeLabel": "Apple"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/mcdonalds.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-9-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,8,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2383,
+                    "bottom": 2423,
+                    "left": 858,
+                    "right": 903,
+                    "width": 46,
+                    "height": 40
+                  },
+                  "snippet": "<img alt=\"McDonalds\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/mcdonalds.svg\" width=\"auto\">",
+                  "nodeLabel": "McDonalds"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/army.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-14-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,13,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-8",
+                  "boundingRect": {
+                    "top": 2507,
+                    "bottom": 2571,
+                    "left": 912,
+                    "right": 960,
+                    "width": 48,
+                    "height": 64
+                  },
+                  "snippet": "<img alt=\"US Army\" class=\"h-8 md:h-16 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/army.svg\" width=\"auto\">",
+                  "nodeLabel": "US Army"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/census.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-13-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,12,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2519,
+                    "bottom": 2559,
+                    "left": 731,
+                    "right": 832,
+                    "width": 101,
+                    "height": 40
+                  },
+                  "snippet": "<img alt=\"US Census\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/census.svg\" width=\"auto\">",
+                  "nodeLabel": "US Census"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/haldi.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-3-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,2,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-3",
+                  "boundingRect": {
+                    "top": 2267,
+                    "bottom": 2291,
+                    "left": 678,
+                    "right": 780,
+                    "width": 102,
+                    "height": 24
+                  },
+                  "snippet": "<img alt=\"Haldi\" class=\"h-3 md:h-6 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/haldi.svg\" width=\"auto\">",
+                  "nodeLabel": "Haldi"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/fedex.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-10-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,9,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2387,
+                    "bottom": 2419,
+                    "left": 983,
+                    "right": 1088,
+                    "width": 105,
+                    "height": 32
+                  },
+                  "snippet": "<img alt=\"FedEx\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/fedex.svg\" width=\"auto\">",
+                  "nodeLabel": "FedEx"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/pge.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-12-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,11,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-7",
+                  "boundingRect": {
+                    "top": 2511,
+                    "bottom": 2567,
+                    "left": 595,
+                    "right": 651,
+                    "width": 56,
+                    "height": 56
+                  },
+                  "snippet": "<img alt=\"PG&amp;E\" class=\"h-7 md:h-14 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/pge.svg\" width=\"auto\">",
+                  "nodeLabel": "PG&E"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/shiftsmart.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-1-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,0,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-4",
+                  "boundingRect": {
+                    "top": 2263,
+                    "bottom": 2295,
+                    "left": 201,
+                    "right": 378,
+                    "width": 178,
+                    "height": 32
+                  },
+                  "snippet": "<img alt=\"shiftsmart\" class=\"h-4 md:h-8 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/shiftsmart.svg\" width=\"auto\">",
+                  "nodeLabel": "shiftsmart"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/charter.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-11-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,10,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2519,
+                    "bottom": 2559,
+                    "left": 390,
+                    "right": 515,
+                    "width": 125,
+                    "height": 40
+                  },
+                  "snippet": "<img alt=\"Charter\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/charter.svg\" width=\"auto\">",
+                  "nodeLabel": "Charter"
+                }
+              },
+              {
+                "url": "https://mattscholta.com/images/svg/bynd.svg",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-4-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,4,SECTION,0,DIV,1,DIV,3,A,0,IMG",
+                  "selector": "div.flex-1 > div.mx:mx-20 > a > img.h-5",
+                  "boundingRect": {
+                    "top": 2259,
+                    "bottom": 2299,
+                    "left": 860,
+                    "right": 948,
+                    "width": 88,
+                    "height": 40
+                  },
+                  "snippet": "<img alt=\"Beyond\" class=\"h-5 md:h-10 opacity-50 transition-opacity duration-500 hover:opacity-100\" height=\"auto\" loading=\"lazy\" src=\"/images/svg/bynd.svg\" width=\"auto\">",
+                  "nodeLabel": "Beyond"
+                }
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Image elements do not have explicit `width` and `height`"
+        },
+        {
+          "auditId": "unused-javascript",
+          "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+          "details": {
+            "type": "opportunity",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "subItemsHeading": {
+                  "key": "source",
+                  "valueType": "code"
+                },
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceBytes"
+                },
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceWastedBytes"
+                },
+                "label": "Est Savings"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 140790,
+                "wastedBytes": 56428,
+                "wastedPercent": 40.079790181374904
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 42894,
+                "wastedBytes": 25406,
+                "wastedPercent": 59.23088185056854
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61641,
+                "wastedBytes": 22609,
+                "wastedPercent": 36.67929756793921
+              }
+            ],
+            "overallSavingsMs": 40,
+            "overallSavingsBytes": 104443,
+            "sortedBy": ["wastedBytes"],
+            "debugData": {
+              "type": "debugdata",
+              "metricSavings": {
+                "FCP": 40,
+                "LCP": 40
+              }
+            }
+          },
+          "displayValue": "Est savings of 102 KiB",
+          "score": 0,
+          "title": "Reduce unused JavaScript"
+        },
+        {
+          "auditId": "image-delivery-insight",
+          "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL",
+                "subItemsHeading": {
+                  "key": "reason",
+                  "valueType": "text"
+                }
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Resource Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "label": "Est Savings",
+                "subItemsHeading": {
+                  "key": "wastedBytes",
+                  "valueType": "bytes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-1-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,0,DIV,0,SECTION,1,DIV,0,IMG",
+                  "selector": "div.relative > section.relative > div > img.image-rounded",
+                  "boundingRect": {
+                    "top": 224,
+                    "bottom": 416,
+                    "left": 791,
+                    "right": 983,
+                    "width": 192,
+                    "height": 192
+                  },
+                  "snippet": "<img alt=\"Matthew Scholta\" class=\"image-rounded\" height=\"auto\" loading=\"lazy\" src=\"/images/assets/matt-scaled.webp\" style=\"view-transition-name:profile-image\" width=\"auto\">",
+                  "nodeLabel": "Matthew Scholta"
+                },
+                "url": "https://mattscholta.com/images/assets/matt-scaled.webp",
+                "totalBytes": 7704,
+                "wastedBytes": 6683,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "This image file is larger than it needs to be (500x500) for its displayed dimensions (182x182). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 6683
+                    }
+                  ]
+                }
+              }
+            ],
+            "debugData": {
+              "type": "debugdata",
+              "wastedBytes": 6683
+            }
+          },
+          "displayValue": "Est savings of 7 KiB",
+          "score": 0.5,
+          "title": "Improve image delivery"
+        },
+        {
+          "auditId": "inp-breakdown-insight",
+          "description": "Start investigating [how to improve INP](https://developer.chrome.com/docs/performance/insights/inp-breakdown) by looking at the longest subpart.",
+          "score": null,
+          "title": "INP breakdown"
+        },
+        {
+          "auditId": "lcp-discovery-insight",
+          "description": "[Optimize LCP](https://developer.chrome.com/docs/performance/insights/lcp-discovery) by making the LCP image discoverable from the HTML immediately, and avoiding lazy-loading",
+          "score": null,
+          "title": "LCP request discovery"
+        },
+        {
+          "auditId": "network-dependency-tree-insight",
+          "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "list-section",
+                "value": {
+                  "type": "network-tree",
+                  "chains": {
+                    "14105E23B34110B1310E79ECD0B582C8": {
+                      "url": "https://mattscholta.com/",
+                      "navStartToEndTime": 150,
+                      "transferSize": 7876,
+                      "isLongest": true,
+                      "children": {
+                        "87086.4": {
+                          "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                          "navStartToEndTime": 217,
+                          "transferSize": 61763,
+                          "isLongest": true,
+                          "children": {
+                            "87086.48": {
+                              "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-H3ZTX4FSWT&gtm=45je6171v873489730za200zd873489730&_p=1768186552761&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=812209859.1768186553&ul=en-us&sr=800x600&uaa=x86&uab=&uafvl=&uamb=0&uam=&uap=macOS&uapv=10.15.7&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~105391253~115938465~115938468~116514482~116682875~116744867~116988315&sid=1768186552&sct=1&seg=0&dl=https%3A%2F%2Fmattscholta.com%2F&dt=Matthew%20Scholta%20-%20Software%20Engineer%20%7C%20Architecture%20%26%20Technical%20Leadership&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=356",
+                              "navStartToEndTime": 464,
+                              "transferSize": 0,
+                              "isLongest": true,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87086.6": {
+                          "url": "https://mattscholta.com/assets/root-CSnhE4kI.js",
+                          "navStartToEndTime": 215,
+                          "transferSize": 35521,
+                          "children": {
+                            "87086.46": {
+                              "url": "https://mattscholta.com/__manifest?paths=%2F%2C%2Fportfolio%2C%2Fresume%2C%2Fuses&version=6a349b99",
+                              "navStartToEndTime": 301,
+                              "transferSize": 572,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87086.29": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 269,
+                          "transferSize": 691,
+                          "children": {}
+                        },
+                        "87086.5": {
+                          "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                          "navStartToEndTime": 217,
+                          "transferSize": 43021,
+                          "children": {}
+                        },
+                        "87086.11": {
+                          "url": "https://mattscholta.com/assets/_index-D1RTNg3M.js",
+                          "navStartToEndTime": 215,
+                          "transferSize": 10654,
+                          "children": {}
+                        },
+                        "87086.12": {
+                          "url": "https://mattscholta.com/assets/AppHero-BcNYqYuj.js",
+                          "navStartToEndTime": 196,
+                          "transferSize": 719,
+                          "children": {}
+                        },
+                        "87086.13": {
+                          "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                          "navStartToEndTime": 196,
+                          "transferSize": 10330,
+                          "children": {}
+                        },
+                        "87086.7": {
+                          "url": "https://mattscholta.com/assets/metadata-AhGr4xOj.js",
+                          "navStartToEndTime": 195,
+                          "transferSize": 1536,
+                          "children": {}
+                        },
+                        "87086.9": {
+                          "url": "https://mattscholta.com/assets/index-CllUoT4f.js",
+                          "navStartToEndTime": 195,
+                          "transferSize": 850,
+                          "children": {}
+                        },
+                        "87086.10": {
+                          "url": "https://mattscholta.com/assets/SSRBase.es-B42ZkjNf.js",
+                          "navStartToEndTime": 194,
+                          "transferSize": 566,
+                          "children": {}
+                        },
+                        "87086.8": {
+                          "url": "https://mattscholta.com/assets/LinkedinLogo.es-J4hm6l3m.js",
+                          "navStartToEndTime": 181,
+                          "transferSize": 4734,
+                          "children": {}
+                        }
+                      }
+                    }
+                  },
+                  "longestChain": {
+                    "duration": 464
+                  }
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnected origins",
+                "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+                "value": {
+                  "type": "text",
+                  "value": "no origins were preconnected"
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnect candidates",
+                "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+                "value": {
+                  "type": "text",
+                  "value": "No additional origins are good candidates for preconnecting"
+                }
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Network dependency tree"
+        },
+        {
+          "auditId": "render-blocking-insight",
+          "description": "Requests are blocking the page's initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedMs",
+                "valueType": "timespanMs",
+                "label": "Duration"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                "totalBytes": 10330
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Render blocking requests"
+        }
+      ],
+      "deviceType": "desktop",
+      "metrics": {
+        "cls": 0,
+        "inp": null,
+        "lcp": 0.3961594999999999
+      },
+      "performanceScore": 100,
+      "timestamp": "2026-01-12T02:55:58.078Z",
+      "url": "https://mattscholta.com"
+    },
+    {
+      "audits": [
+        {
+          "auditId": "first-contentful-paint",
+          "description": "First Contentful Paint marks the time at which the first text or image is painted. [Learn more about the First Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/).",
+          "displayValue": "3.0 s",
+          "score": 0.51,
+          "title": "First Contentful Paint"
+        },
+        {
+          "auditId": "largest-contentful-paint",
+          "description": "Largest Contentful Paint marks the time at which the largest text or image is painted. [Learn more about the Largest Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/)",
+          "displayValue": "17.6 s",
+          "score": 0,
+          "title": "Largest Contentful Paint"
+        },
+        {
+          "auditId": "speed-index",
+          "description": "Speed Index shows how quickly the contents of a page are visibly populated. [Learn more about the Speed Index metric](https://developer.chrome.com/docs/lighthouse/performance/speed-index/).",
+          "displayValue": "4.8 s",
+          "score": 0.67,
+          "title": "Speed Index"
+        },
+        {
+          "auditId": "max-potential-fid",
+          "description": "The maximum potential First Input Delay that your users could experience is the duration of the longest task. [Learn more about the Maximum Potential First Input Delay metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-max-potential-fid/).",
+          "displayValue": "70 ms",
+          "score": 0.99,
+          "title": "Max Potential First Input Delay"
+        },
+        {
+          "auditId": "interactive",
+          "description": "Time to Interactive is the amount of time it takes for the page to become fully interactive. [Learn more about the Time to Interactive metric](https://developer.chrome.com/docs/lighthouse/performance/interactive/).",
+          "displayValue": "17.6 s",
+          "score": 0.04,
+          "title": "Time to Interactive"
+        },
+        {
+          "auditId": "user-timings",
+          "description": "Consider instrumenting your app with the User Timing API to measure your app's real-world performance during key user experiences. [Learn more about User Timing marks](https://developer.chrome.com/docs/lighthouse/performance/user-timings/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "name",
+                "valueType": "text",
+                "label": "Name"
+              },
+              {
+                "key": "timingType",
+                "valueType": "text",
+                "label": "Type"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Duration"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "User Timing marks and measures"
+        },
+        {
+          "auditId": "layout-shifts",
+          "description": "These are the largest layout shifts observed on the page. Each table item represents a single layout shift, and shows the element that shifted the most. Below each item are possible root causes that led to the layout shift. Some of these layout shifts may not be included in the CLS metric value due to [windowing](https://web.dev/articles/cls#what_is_cls). [Learn how to improve CLS](https://web.dev/articles/optimize-cls)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "extra"
+                },
+                "label": "Element"
+              },
+              {
+                "key": "score",
+                "valueType": "numeric",
+                "subItemsHeading": {
+                  "key": "cause",
+                  "valueType": "text"
+                },
+                "granularity": 0.001,
+                "label": "Layout shift score"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid large layout shifts"
+        },
+        {
+          "auditId": "non-composited-animations",
+          "description": "Animations which are not composited can be janky and increase CLS. [Learn how to avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "failureReason",
+                  "valueType": "text"
+                },
+                "label": "Element"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid non-composited animations"
+        },
+        {
+          "auditId": "total-byte-weight",
+          "description": "Large network payloads cost users real money and are highly correlated with long load times. [Learn how to reduce payload sizes](https://developer.chrome.com/docs/lighthouse/performance/total-byte-weight/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsmnaeo07n76witl8py",
+                "totalBytes": 2244234
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2k8nsdx07n21kimr0xh",
+                "totalBytes": 1911900
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "totalBytes": 1612215
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41cyj2n9yv07n7j5dn6uso",
+                "totalBytes": 1368534
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc40tuhbna6807n2xa4tq4fc",
+                "totalBytes": 1269707
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtspnm2007n2z0wpj5fw",
+                "totalBytes": 1235254
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2dongjl07n7di1jnx96",
+                "totalBytes": 1220177
+              },
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 141117
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61762
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 43021
+              }
+            ],
+            "sortedBy": ["totalBytes"]
+          },
+          "displayValue": "Total size was 10,968 KiB",
+          "score": 0.5,
+          "title": "Avoid enormous network payloads"
+        },
+        {
+          "auditId": "unused-javascript",
+          "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+          "details": {
+            "type": "opportunity",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "subItemsHeading": {
+                  "key": "source",
+                  "valueType": "code"
+                },
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceBytes"
+                },
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceWastedBytes"
+                },
+                "label": "Est Savings"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 140785,
+                "wastedBytes": 56424,
+                "wastedPercent": 40.0780136080555
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 42894,
+                "wastedBytes": 25366,
+                "wastedPercent": 59.1357181201503
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61641,
+                "wastedBytes": 21048,
+                "wastedPercent": 34.14699430034954
+              }
+            ],
+            "overallSavingsMs": 710,
+            "overallSavingsBytes": 102838,
+            "sortedBy": ["wastedBytes"],
+            "debugData": {
+              "type": "debugdata",
+              "metricSavings": {
+                "FCP": 460,
+                "LCP": 710
+              }
+            }
+          },
+          "displayValue": "Est savings of 100 KiB",
+          "score": 0,
+          "title": "Reduce unused JavaScript"
+        },
+        {
+          "auditId": "image-delivery-insight",
+          "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL",
+                "subItemsHeading": {
+                  "key": "reason",
+                  "valueType": "text"
+                }
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Resource Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "label": "Est Savings",
+                "subItemsHeading": {
+                  "key": "wastedBytes",
+                  "valueType": "bytes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-0-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,3,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 1362,
+                    "bottom": 1568,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"Throwaway Code\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Throwaway Code"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsmnaeo07n76witl8py",
+                "totalBytes": 2241036,
+                "wastedBytes": 2144039,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 1520140
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1939503
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-1-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,7,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 2794,
+                    "bottom": 3000,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"Writing better CSS\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Writing better CSS"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2k8nsdx07n21kimr0xh",
+                "totalBytes": 1908949,
+                "wastedBytes": 1811952,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 1188053
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1652099
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-2-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,0,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 277,
+                    "bottom": 483,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"Boilerplate to Generators\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Boilerplate to Generators"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "totalBytes": 1609701,
+                "wastedBytes": 1512704,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 888805
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1393115
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-3-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,2,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 1015,
+                    "bottom": 1221,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"Github CoPilot\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Github CoPilot"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41cyj2n9yv07n7j5dn6uso",
+                "totalBytes": 1366300,
+                "wastedBytes": 1269303,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 645404
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1182463
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-4-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,4,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 1731,
+                    "bottom": 1937,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"Improving code quality\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Improving code quality"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc40tuhbna6807n2xa4tq4fc",
+                "totalBytes": 1267590,
+                "wastedBytes": 1170593,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 546694
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1097035
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-5-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,6,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 2447,
+                    "bottom": 2653,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"CSS Overhaul\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "CSS Overhaul"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtspnm2007n2z0wpj5fw",
+                "totalBytes": 1233184,
+                "wastedBytes": 1136187,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 512288
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1067258
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-6-IMG",
+                  "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,1,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 646,
+                    "bottom": 852,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 206
+                  },
+                  "snippet": "<img alt=\"Building Debug Tools\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Building Debug Tools"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2dongjl07n7di1jnx96",
+                "totalBytes": 1218127,
+                "wastedBytes": 1121130,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 497231
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x538). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1054227
+                    }
+                  ]
+                }
+              }
+            ],
+            "debugData": {
+              "type": "debugdata",
+              "wastedBytes": 10165908
+            }
+          },
+          "displayValue": "Est savings of 9,928 KiB",
+          "score": 0,
+          "title": "Improve image delivery"
+        },
+        {
+          "auditId": "inp-breakdown-insight",
+          "description": "Start investigating [how to improve INP](https://developer.chrome.com/docs/performance/insights/inp-breakdown) by looking at the longest subpart.",
+          "score": null,
+          "title": "INP breakdown"
+        },
+        {
+          "auditId": "lcp-discovery-insight",
+          "description": "[Optimize LCP](https://developer.chrome.com/docs/performance/insights/lcp-discovery) by making the LCP image discoverable from the HTML immediately, and avoiding lazy-loading",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "checklist",
+                "items": {
+                  "priorityHinted": {
+                    "label": "fetchpriority=high should be applied",
+                    "value": false
+                  },
+                  "requestDiscoverable": {
+                    "label": "Request is discoverable in initial document",
+                    "value": true
+                  },
+                  "eagerlyLoaded": {
+                    "label": "lazy load not applied",
+                    "value": true
+                  }
+                }
+              },
+              {
+                "type": "node",
+                "lhId": "page-2-IMG",
+                "path": "1,HTML,1,BODY,9,MAIN,1,SECTION,0,DIV,0,A,0,DIV,0,IMG",
+                "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                "boundingRect": {
+                  "top": 277,
+                  "bottom": 483,
+                  "left": 0,
+                  "right": 412,
+                  "width": 412,
+                  "height": 206
+                },
+                "snippet": "<img alt=\"Boilerplate to Generators\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                "nodeLabel": "Boilerplate to Generators"
+              }
+            ]
+          },
+          "score": 0,
+          "title": "LCP request discovery"
+        },
+        {
+          "auditId": "network-dependency-tree-insight",
+          "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "list-section",
+                "value": {
+                  "type": "network-tree",
+                  "chains": {
+                    "D91FB64714B126BDDD7B9A4454178C0E": {
+                      "url": "https://mattscholta.com/blog",
+                      "navStartToEndTime": 309,
+                      "transferSize": 22322,
+                      "isLongest": true,
+                      "children": {
+                        "87285.20": {
+                          "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                          "navStartToEndTime": 361,
+                          "transferSize": 61762,
+                          "isLongest": true,
+                          "children": {
+                            "87285.59": {
+                              "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-H3ZTX4FSWT&gtm=45je6171h1v873489730za200zd873489730&_p=1768186560330&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=522446231.1768186561&ul=en-us&sr=412x823&uaa=&uab=&uafvl=&uamb=1&uam=moto%20g%20power%20(2022)&uap=Android&uapv=11.0&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~105391253~115938465~115938469~116184927~116184929~116514482&sid=1768186560&sct=1&seg=0&dl=https%3A%2F%2Fmattscholta.com%2Fblog&dt=Developer%20ramblings%20%7C%20Matthew%20Scholta%20-%20Software%20Engineer%20%7C%20Architecture%20%26%20Technical%20Leadership&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=612",
+                              "navStartToEndTime": 835,
+                              "transferSize": 0,
+                              "isLongest": true,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87285.22": {
+                          "url": "https://mattscholta.com/assets/root-CSnhE4kI.js",
+                          "navStartToEndTime": 345,
+                          "transferSize": 35525,
+                          "children": {
+                            "87285.57": {
+                              "url": "https://mattscholta.com/__manifest?paths=%2F%2C%2Fblog%2Fapollo-or-recoil%2C%2Fblog%2Fboilerplate-to-generators%2C%2Fblog%2Fbuilding-debug-tools%2C%2Fblog%2Fcss-overhaul%2C%2Fblog%2Fgithub-copilot%2C%2Fblog%2Fimproving-code-quality%2C%2Fblog%2Fthrowaway-code%2C%2Fblog%2Fwriting-better-css%2C%2Fportfolio%2C%2Fresume%2C%2Fuses&version=6a349b99",
+                              "navStartToEndTime": 461,
+                              "transferSize": 678,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87285.38": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 431,
+                          "transferSize": 691,
+                          "children": {}
+                        },
+                        "87285.21": {
+                          "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                          "navStartToEndTime": 366,
+                          "transferSize": 43021,
+                          "children": {}
+                        },
+                        "87285.23": {
+                          "url": "https://mattscholta.com/assets/metadata-AhGr4xOj.js",
+                          "navStartToEndTime": 362,
+                          "transferSize": 1537,
+                          "children": {}
+                        },
+                        "87285.28": {
+                          "url": "https://mattscholta.com/assets/AppHero-BcNYqYuj.js",
+                          "navStartToEndTime": 360,
+                          "transferSize": 719,
+                          "children": {}
+                        },
+                        "87285.29": {
+                          "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                          "navStartToEndTime": 360,
+                          "transferSize": 10330,
+                          "children": {}
+                        },
+                        "87285.26": {
+                          "url": "https://mattscholta.com/assets/SSRBase.es-B42ZkjNf.js",
+                          "navStartToEndTime": 345,
+                          "transferSize": 566,
+                          "children": {}
+                        },
+                        "87285.27": {
+                          "url": "https://mattscholta.com/assets/blog-Cfz-qmYW.js",
+                          "navStartToEndTime": 345,
+                          "transferSize": 1450,
+                          "children": {}
+                        },
+                        "87285.25": {
+                          "url": "https://mattscholta.com/assets/index-CllUoT4f.js",
+                          "navStartToEndTime": 344,
+                          "transferSize": 850,
+                          "children": {}
+                        },
+                        "87285.24": {
+                          "url": "https://mattscholta.com/assets/LinkedinLogo.es-J4hm6l3m.js",
+                          "navStartToEndTime": 341,
+                          "transferSize": 4734,
+                          "children": {}
+                        }
+                      }
+                    }
+                  },
+                  "longestChain": {
+                    "duration": 835
+                  }
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnected origins",
+                "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+                "value": {
+                  "type": "text",
+                  "value": "no origins were preconnected"
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnect candidates",
+                "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+                "value": {
+                  "type": "table",
+                  "headings": [
+                    {
+                      "key": "origin",
+                      "valueType": "text",
+                      "label": "Origin"
+                    },
+                    {
+                      "key": "wastedMs",
+                      "valueType": "ms",
+                      "label": "Est LCP savings"
+                    }
+                  ],
+                  "items": [
+                    {
+                      "origin": "https://www.google-analytics.com",
+                      "wastedMs": 300
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Network dependency tree"
+        },
+        {
+          "auditId": "render-blocking-insight",
+          "description": "Requests are blocking the page's initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedMs",
+                "valueType": "timespanMs",
+                "label": "Duration"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                "totalBytes": 10330
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Render blocking requests"
+        }
+      ],
+      "deviceType": "mobile",
+      "metrics": {
+        "cls": 0,
+        "inp": null,
+        "lcp": 17.5509785
+      },
+      "performanceScore": 67,
+      "timestamp": "2026-01-12T02:56:07.244Z",
+      "url": "https://mattscholta.com/blog"
+    },
+    {
+      "audits": [
+        {
+          "auditId": "largest-contentful-paint",
+          "description": "Largest Contentful Paint marks the time at which the largest text or image is painted. [Learn more about the Largest Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/)",
+          "displayValue": "4.0 s",
+          "score": 0.17,
+          "title": "Largest Contentful Paint"
+        },
+        {
+          "auditId": "interactive",
+          "description": "Time to Interactive is the amount of time it takes for the page to become fully interactive. [Learn more about the Time to Interactive metric](https://developer.chrome.com/docs/lighthouse/performance/interactive/).",
+          "displayValue": "4.0 s",
+          "score": 0.6,
+          "title": "Time to Interactive"
+        },
+        {
+          "auditId": "user-timings",
+          "description": "Consider instrumenting your app with the User Timing API to measure your app's real-world performance during key user experiences. [Learn more about User Timing marks](https://developer.chrome.com/docs/lighthouse/performance/user-timings/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "name",
+                "valueType": "text",
+                "label": "Name"
+              },
+              {
+                "key": "timingType",
+                "valueType": "text",
+                "label": "Type"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Duration"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "User Timing marks and measures"
+        },
+        {
+          "auditId": "bootup-time",
+          "description": "Consider reducing the time spent parsing, compiling, and executing JS. You may find delivering smaller JS payloads helps with this. [Learn how to reduce Javascript execution time](https://developer.chrome.com/docs/lighthouse/performance/bootup-time/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "total",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Total CPU Time"
+              },
+              {
+                "key": "scripting",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Script Evaluation"
+              },
+              {
+                "key": "scriptParseCompile",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Script Parse"
+              }
+            ],
+            "items": []
+          },
+          "displayValue": "",
+          "score": null,
+          "title": "JavaScript execution time"
+        },
+        {
+          "auditId": "layout-shifts",
+          "description": "These are the largest layout shifts observed on the page. Each table item represents a single layout shift, and shows the element that shifted the most. Below each item are possible root causes that led to the layout shift. Some of these layout shifts may not be included in the CLS metric value due to [windowing](https://web.dev/articles/cls#what_is_cls). [Learn how to improve CLS](https://web.dev/articles/optimize-cls)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "extra"
+                },
+                "label": "Element"
+              },
+              {
+                "key": "score",
+                "valueType": "numeric",
+                "subItemsHeading": {
+                  "key": "cause",
+                  "valueType": "text"
+                },
+                "granularity": 0.001,
+                "label": "Layout shift score"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid large layout shifts"
+        },
+        {
+          "auditId": "long-tasks",
+          "description": "Lists the longest tasks on the main thread, useful for identifying worst contributors to input delay. [Learn how to avoid long main-thread tasks](https://web.dev/articles/optimize-long-tasks)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 1,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 1,
+                "label": "Duration"
+              }
+            ],
+            "items": [],
+            "debugData": {
+              "type": "debugdata",
+              "urls": [],
+              "tasks": []
+            }
+          },
+          "score": null,
+          "title": "Avoid long main-thread tasks"
+        },
+        {
+          "auditId": "non-composited-animations",
+          "description": "Animations which are not composited can be janky and increase CLS. [Learn how to avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "failureReason",
+                  "valueType": "text"
+                },
+                "label": "Element"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid non-composited animations"
+        },
+        {
+          "auditId": "total-byte-weight",
+          "description": "Large network payloads cost users real money and are highly correlated with long load times. [Learn how to reduce payload sizes](https://developer.chrome.com/docs/lighthouse/performance/total-byte-weight/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsmnaeo07n76witl8py",
+                "totalBytes": 2244206
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2k8nsdx07n21kimr0xh",
+                "totalBytes": 1911759
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "totalBytes": 1612180
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41cyj2n9yv07n7j5dn6uso",
+                "totalBytes": 1368515
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc40tuhbna6807n2xa4tq4fc",
+                "totalBytes": 1269689
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtspnm2007n2z0wpj5fw",
+                "totalBytes": 1235245
+              },
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2dongjl07n7di1jnx96",
+                "totalBytes": 1220169
+              },
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 141128
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61763
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 43021
+              }
+            ],
+            "sortedBy": ["totalBytes"]
+          },
+          "displayValue": "Total size was 10,968 KiB",
+          "score": 0.5,
+          "title": "Avoid enormous network payloads"
+        },
+        {
+          "auditId": "unused-javascript",
+          "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+          "details": {
+            "type": "opportunity",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "subItemsHeading": {
+                  "key": "source",
+                  "valueType": "code"
+                },
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceBytes"
+                },
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceWastedBytes"
+                },
+                "label": "Est Savings"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 140796,
+                "wastedBytes": 56428,
+                "wastedPercent": 40.0780136080555
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 42894,
+                "wastedBytes": 25366,
+                "wastedPercent": 59.1357181201503
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61641,
+                "wastedBytes": 21048,
+                "wastedPercent": 34.14699430034954
+              }
+            ],
+            "overallSavingsMs": 90,
+            "overallSavingsBytes": 102842,
+            "sortedBy": ["wastedBytes"],
+            "debugData": {
+              "type": "debugdata",
+              "metricSavings": {
+                "FCP": 0,
+                "LCP": 90
+              }
+            }
+          },
+          "displayValue": "Est savings of 100 KiB",
+          "score": 0,
+          "title": "Reduce unused JavaScript"
+        },
+        {
+          "auditId": "image-delivery-insight",
+          "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL",
+                "subItemsHeading": {
+                  "key": "reason",
+                  "valueType": "text"
+                }
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Resource Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "label": "Est Savings",
+                "subItemsHeading": {
+                  "key": "wastedBytes",
+                  "valueType": "bytes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-0-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,3,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 862,
+                    "bottom": 1032,
+                    "left": 132,
+                    "right": 471,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Throwaway Code\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Throwaway Code"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsmnaeo07n76witl8py",
+                "totalBytes": 2241036,
+                "wastedBytes": 2231498,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 1520140
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 2211384
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-1-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,7,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 1249,
+                    "bottom": 1419,
+                    "left": 505,
+                    "right": 845,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Writing better CSS\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Writing better CSS"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2k8nsdx07n21kimr0xh",
+                "totalBytes": 1908949,
+                "wastedBytes": 1899411,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 1188053
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1883691
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-2-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,0,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 497,
+                    "bottom": 667,
+                    "left": 132,
+                    "right": 471,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Boilerplate to Generators\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Boilerplate to Generators"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "totalBytes": 1609701,
+                "wastedBytes": 1600163,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 888805
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1588403
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-3-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,2,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 497,
+                    "bottom": 667,
+                    "left": 879,
+                    "right": 1218,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Github CoPilot\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Github CoPilot"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41cyj2n9yv07n7j5dn6uso",
+                "totalBytes": 1366300,
+                "wastedBytes": 1356760,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 645404
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1348220
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-4-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,4,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 862,
+                    "bottom": 1032,
+                    "left": 505,
+                    "right": 845,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Improving code quality\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Improving code quality"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc40tuhbna6807n2xa4tq4fc",
+                "totalBytes": 1267590,
+                "wastedBytes": 1258052,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 546694
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1250818
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-5-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,6,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 1249,
+                    "bottom": 1419,
+                    "left": 132,
+                    "right": 471,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"CSS Overhaul\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "CSS Overhaul"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtspnm2007n2z0wpj5fw",
+                "totalBytes": 1233184,
+                "wastedBytes": 1223646,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 512288
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1216868
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-6-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,1,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 497,
+                    "bottom": 667,
+                    "left": 505,
+                    "right": 845,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Building Debug Tools\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Building Debug Tools"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41n2dongjl07n7di1jnx96",
+                "totalBytes": 1218127,
+                "wastedBytes": 1208589,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 497231
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1202010
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-7-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,5,A,0,DIV,0,IMG",
+                  "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                  "boundingRect": {
+                    "top": 862,
+                    "bottom": 1032,
+                    "left": 879,
+                    "right": 1218,
+                    "width": 339,
+                    "height": 170
+                  },
+                  "snippet": "<img alt=\"Apollo or Recoil?\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                  "nodeLabel": "Apollo or Recoil?"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/resize=width:830/cmc41n27ynsdj07n23sz7lo0n",
+                "totalBytes": 36896,
+                "wastedBytes": 31279,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "This image file is larger than it needs to be (830x453) for its displayed dimensions (339x169). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 31279
+                    }
+                  ]
+                }
+              }
+            ],
+            "debugData": {
+              "type": "debugdata",
+              "wastedBytes": 10809398
+            }
+          },
+          "displayValue": "Est savings of 10,556 KiB",
+          "score": 0,
+          "title": "Improve image delivery"
+        },
+        {
+          "auditId": "inp-breakdown-insight",
+          "description": "Start investigating [how to improve INP](https://developer.chrome.com/docs/performance/insights/inp-breakdown) by looking at the longest subpart.",
+          "score": null,
+          "title": "INP breakdown"
+        },
+        {
+          "auditId": "lcp-discovery-insight",
+          "description": "[Optimize LCP](https://developer.chrome.com/docs/performance/insights/lcp-discovery) by making the LCP image discoverable from the HTML immediately, and avoiding lazy-loading",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "checklist",
+                "items": {
+                  "priorityHinted": {
+                    "label": "fetchpriority=high should be applied",
+                    "value": false
+                  },
+                  "requestDiscoverable": {
+                    "label": "Request is discoverable in initial document",
+                    "value": true
+                  },
+                  "eagerlyLoaded": {
+                    "label": "lazy load not applied",
+                    "value": true
+                  }
+                }
+              },
+              {
+                "type": "node",
+                "lhId": "page-6-IMG",
+                "path": "1,HTML,1,BODY,11,MAIN,1,SECTION,0,DIV,1,A,0,DIV,0,IMG",
+                "selector": "div.md:gap-6 > a.group > div.w-full > img.ui-border",
+                "boundingRect": {
+                  "top": 497,
+                  "bottom": 667,
+                  "left": 505,
+                  "right": 845,
+                  "width": 339,
+                  "height": 170
+                },
+                "snippet": "<img alt=\"Building Debug Tools\" class=\"ui-border border-b w-full transition-all\" height=\"auto\" width=\"auto\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" style=\"aspect-ratio: 2 / 1;\">",
+                "nodeLabel": "Building Debug Tools"
+              }
+            ]
+          },
+          "score": 0,
+          "title": "LCP request discovery"
+        },
+        {
+          "auditId": "network-dependency-tree-insight",
+          "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "list-section",
+                "value": {
+                  "type": "network-tree",
+                  "chains": {
+                    "C2D362E243B575FDB915A8E24968397D": {
+                      "url": "https://mattscholta.com/blog",
+                      "navStartToEndTime": 243,
+                      "transferSize": 22254,
+                      "isLongest": true,
+                      "children": {
+                        "87500.20": {
+                          "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                          "navStartToEndTime": 311,
+                          "transferSize": 61763,
+                          "isLongest": true,
+                          "children": {
+                            "87500.59": {
+                              "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-H3ZTX4FSWT&gtm=45je6171v873489730za200zd873489730&_p=1768186569440&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=615715178.1768186570&ul=en-us&sr=800x600&uaa=x86&uab=&uafvl=&uamb=0&uam=&uap=macOS&uapv=10.15.7&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~105391253~115938465~115938469~116184927~116184929~116514483~116682875&sid=1768186569&sct=1&seg=0&dl=https%3A%2F%2Fmattscholta.com%2Fblog&dt=Developer%20ramblings%20%7C%20Matthew%20Scholta%20-%20Software%20Engineer%20%7C%20Architecture%20%26%20Technical%20Leadership&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=538",
+                              "navStartToEndTime": 943,
+                              "transferSize": 0,
+                              "isLongest": true,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87500.22": {
+                          "url": "https://mattscholta.com/assets/root-CSnhE4kI.js",
+                          "navStartToEndTime": 276,
+                          "transferSize": 35520,
+                          "children": {
+                            "87500.57": {
+                              "url": "https://mattscholta.com/__manifest?paths=%2F%2C%2Fblog%2Fapollo-or-recoil%2C%2Fblog%2Fboilerplate-to-generators%2C%2Fblog%2Fbuilding-debug-tools%2C%2Fblog%2Fcss-overhaul%2C%2Fblog%2Fgithub-copilot%2C%2Fblog%2Fimproving-code-quality%2C%2Fblog%2Fthrowaway-code%2C%2Fblog%2Fwriting-better-css%2C%2Fportfolio%2C%2Fresume%2C%2Fuses&version=6a349b99",
+                              "navStartToEndTime": 383,
+                              "transferSize": 638,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87500.38": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 368,
+                          "transferSize": 691,
+                          "children": {}
+                        },
+                        "87500.26": {
+                          "url": "https://mattscholta.com/assets/SSRBase.es-B42ZkjNf.js",
+                          "navStartToEndTime": 305,
+                          "transferSize": 566,
+                          "children": {}
+                        },
+                        "87500.21": {
+                          "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                          "navStartToEndTime": 304,
+                          "transferSize": 43021,
+                          "children": {}
+                        },
+                        "87500.28": {
+                          "url": "https://mattscholta.com/assets/AppHero-BcNYqYuj.js",
+                          "navStartToEndTime": 304,
+                          "transferSize": 718,
+                          "children": {}
+                        },
+                        "87500.24": {
+                          "url": "https://mattscholta.com/assets/LinkedinLogo.es-J4hm6l3m.js",
+                          "navStartToEndTime": 303,
+                          "transferSize": 4641,
+                          "children": {}
+                        },
+                        "87500.27": {
+                          "url": "https://mattscholta.com/assets/blog-Cfz-qmYW.js",
+                          "navStartToEndTime": 299,
+                          "transferSize": 1450,
+                          "children": {}
+                        },
+                        "87500.25": {
+                          "url": "https://mattscholta.com/assets/index-CllUoT4f.js",
+                          "navStartToEndTime": 299,
+                          "transferSize": 850,
+                          "children": {}
+                        },
+                        "87500.29": {
+                          "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                          "navStartToEndTime": 284,
+                          "transferSize": 10330,
+                          "children": {}
+                        },
+                        "87500.23": {
+                          "url": "https://mattscholta.com/assets/metadata-AhGr4xOj.js",
+                          "navStartToEndTime": 273,
+                          "transferSize": 1630,
+                          "children": {}
+                        }
+                      }
+                    }
+                  },
+                  "longestChain": {
+                    "duration": 943
+                  }
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnected origins",
+                "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+                "value": {
+                  "type": "text",
+                  "value": "no origins were preconnected"
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnect candidates",
+                "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+                "value": {
+                  "type": "text",
+                  "value": "No additional origins are good candidates for preconnecting"
+                }
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Network dependency tree"
+        },
+        {
+          "auditId": "render-blocking-insight",
+          "description": "Requests are blocking the page's initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedMs",
+                "valueType": "timespanMs",
+                "label": "Duration"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                "totalBytes": 10330
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Render blocking requests"
+        }
+      ],
+      "deviceType": "desktop",
+      "metrics": {
+        "cls": 0,
+        "inp": null,
+        "lcp": 3.9691219999999996
+      },
+      "performanceScore": 79,
+      "timestamp": "2026-01-12T02:56:15.131Z",
+      "url": "https://mattscholta.com/blog"
+    },
+    {
+      "audits": [
+        {
+          "auditId": "first-contentful-paint",
+          "description": "First Contentful Paint marks the time at which the first text or image is painted. [Learn more about the First Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/).",
+          "displayValue": "3.0 s",
+          "score": 0.51,
+          "title": "First Contentful Paint"
+        },
+        {
+          "auditId": "largest-contentful-paint",
+          "description": "Largest Contentful Paint marks the time at which the largest text or image is painted. [Learn more about the Largest Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/)",
+          "displayValue": "4.2 s",
+          "score": 0.45,
+          "title": "Largest Contentful Paint"
+        },
+        {
+          "auditId": "speed-index",
+          "description": "Speed Index shows how quickly the contents of a page are visibly populated. [Learn more about the Speed Index metric](https://developer.chrome.com/docs/lighthouse/performance/speed-index/).",
+          "displayValue": "4.4 s",
+          "score": 0.73,
+          "title": "Speed Index"
+        },
+        {
+          "auditId": "max-potential-fid",
+          "description": "The maximum potential First Input Delay that your users could experience is the duration of the longest task. [Learn more about the Maximum Potential First Input Delay metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-max-potential-fid/).",
+          "displayValue": "70 ms",
+          "score": 0.99,
+          "title": "Max Potential First Input Delay"
+        },
+        {
+          "auditId": "interactive",
+          "description": "Time to Interactive is the amount of time it takes for the page to become fully interactive. [Learn more about the Time to Interactive metric](https://developer.chrome.com/docs/lighthouse/performance/interactive/).",
+          "displayValue": "4.2 s",
+          "score": 0.86,
+          "title": "Time to Interactive"
+        },
+        {
+          "auditId": "user-timings",
+          "description": "Consider instrumenting your app with the User Timing API to measure your app's real-world performance during key user experiences. [Learn more about User Timing marks](https://developer.chrome.com/docs/lighthouse/performance/user-timings/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "name",
+                "valueType": "text",
+                "label": "Name"
+              },
+              {
+                "key": "timingType",
+                "valueType": "text",
+                "label": "Type"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Duration"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "User Timing marks and measures"
+        },
+        {
+          "auditId": "layout-shifts",
+          "description": "These are the largest layout shifts observed on the page. Each table item represents a single layout shift, and shows the element that shifted the most. Below each item are possible root causes that led to the layout shift. Some of these layout shifts may not be included in the CLS metric value due to [windowing](https://web.dev/articles/cls#what_is_cls). [Learn how to improve CLS](https://web.dev/articles/optimize-cls)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "extra"
+                },
+                "label": "Element"
+              },
+              {
+                "key": "score",
+                "valueType": "numeric",
+                "subItemsHeading": {
+                  "key": "cause",
+                  "valueType": "text"
+                },
+                "granularity": 0.001,
+                "label": "Layout shift score"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid large layout shifts"
+        },
+        {
+          "auditId": "non-composited-animations",
+          "description": "Animations which are not composited can be janky and increase CLS. [Learn how to avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "failureReason",
+                  "valueType": "text"
+                },
+                "label": "Element"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid non-composited animations"
+        },
+        {
+          "auditId": "unsized-images",
+          "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-0-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,1,DIV,1,IMG",
+                  "selector": "body > main > div.relative > img.w-full",
+                  "boundingRect": {
+                    "top": 56,
+                    "bottom": 283,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 227
+                  },
+                  "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" width=\"100%\">",
+                  "nodeLabel": "Boilerplate to Generators"
+                }
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Image elements do not have explicit `width` and `height`"
+        },
+        {
+          "auditId": "unused-javascript",
+          "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+          "details": {
+            "type": "opportunity",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "subItemsHeading": {
+                  "key": "source",
+                  "valueType": "code"
+                },
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceBytes"
+                },
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceWastedBytes"
+                },
+                "label": "Est Savings"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 140784,
+                "wastedBytes": 56426,
+                "wastedPercent": 40.079790181374904
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 42894,
+                "wastedBytes": 25308,
+                "wastedPercent": 59.001512859304086
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61641,
+                "wastedBytes": 22457,
+                "wastedPercent": 36.431577952954264
+              }
+            ],
+            "overallSavingsMs": 610,
+            "overallSavingsBytes": 104191,
+            "sortedBy": ["wastedBytes"],
+            "debugData": {
+              "type": "debugdata",
+              "metricSavings": {
+                "FCP": 460,
+                "LCP": 610
+              }
+            }
+          },
+          "displayValue": "Est savings of 102 KiB",
+          "score": 0,
+          "title": "Reduce unused JavaScript"
+        },
+        {
+          "auditId": "image-delivery-insight",
+          "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL",
+                "subItemsHeading": {
+                  "key": "reason",
+                  "valueType": "text"
+                }
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Resource Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "label": "Est Savings",
+                "subItemsHeading": {
+                  "key": "wastedBytes",
+                  "valueType": "bytes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-0-IMG",
+                  "path": "1,HTML,1,BODY,2,MAIN,1,DIV,1,IMG",
+                  "selector": "body > main > div.relative > img.w-full",
+                  "boundingRect": {
+                    "top": 56,
+                    "bottom": 283,
+                    "left": 0,
+                    "right": 412,
+                    "width": 412,
+                    "height": 227
+                  },
+                  "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" width=\"100%\">",
+                  "nodeLabel": "Boilerplate to Generators"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "totalBytes": 1609701,
+                "wastedBytes": 1503374,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 888805
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1082x590). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1372281
+                    }
+                  ]
+                }
+              }
+            ],
+            "debugData": {
+              "type": "debugdata",
+              "wastedBytes": 1503374
+            }
+          },
+          "displayValue": "Est savings of 1,468 KiB",
+          "score": 0.5,
+          "title": "Improve image delivery"
+        },
+        {
+          "auditId": "inp-breakdown-insight",
+          "description": "Start investigating [how to improve INP](https://developer.chrome.com/docs/performance/insights/inp-breakdown) by looking at the longest subpart.",
+          "score": null,
+          "title": "INP breakdown"
+        },
+        {
+          "auditId": "lcp-discovery-insight",
+          "description": "[Optimize LCP](https://developer.chrome.com/docs/performance/insights/lcp-discovery) by making the LCP image discoverable from the HTML immediately, and avoiding lazy-loading",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "checklist",
+                "items": {
+                  "priorityHinted": {
+                    "label": "fetchpriority=high should be applied",
+                    "value": false
+                  },
+                  "requestDiscoverable": {
+                    "label": "Request is discoverable in initial document",
+                    "value": true
+                  },
+                  "eagerlyLoaded": {
+                    "label": "lazy load not applied",
+                    "value": true
+                  }
+                }
+              },
+              {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,2,MAIN,1,DIV,1,IMG",
+                "selector": "body > main > div.relative > img.w-full",
+                "boundingRect": {
+                  "top": 56,
+                  "bottom": 283,
+                  "left": 0,
+                  "right": 412,
+                  "width": 412,
+                  "height": 227
+                },
+                "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" width=\"100%\">",
+                "nodeLabel": "Boilerplate to Generators"
+              }
+            ]
+          },
+          "score": 0,
+          "title": "LCP request discovery"
+        },
+        {
+          "auditId": "network-dependency-tree-insight",
+          "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "list-section",
+                "value": {
+                  "type": "network-tree",
+                  "chains": {
+                    "B26E5259F3C83E16106E18D79F120A54": {
+                      "url": "https://mattscholta.com/blog/boilerplate-to-generators",
+                      "navStartToEndTime": 165,
+                      "transferSize": 13842,
+                      "isLongest": true,
+                      "children": {
+                        "87709.6": {
+                          "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                          "navStartToEndTime": 216,
+                          "transferSize": 61856,
+                          "isLongest": true,
+                          "children": {
+                            "87709.22": {
+                              "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-H3ZTX4FSWT&gtm=45je6171h1v873489730za200zd873489730&_p=1768186577269&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=138937906.1768186578&ul=en-us&sr=412x823&uaa=&uab=&uafvl=&uamb=1&uam=moto%20g%20power%20(2022)&uap=Android&uapv=11.0&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~105391253~115938466~115938469~116514483~116988315&sid=1768186577&sct=1&seg=0&dl=https%3A%2F%2Fmattscholta.com%2Fblog%2Fboilerplate-to-generators&dt=Boilerplate%20to%20Generators%20%7C%20Matthew%20Scholta%20-%20Software%20Engineer%20%7C%20Architecture%20%26%20Technical%20Leadership&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=467",
+                              "navStartToEndTime": 550,
+                              "transferSize": 0,
+                              "isLongest": true,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87709.13": {
+                          "url": "https://mattscholta.com/assets/blog_._slug-DeXfLtBa.js",
+                          "navStartToEndTime": 218,
+                          "transferSize": 12614,
+                          "children": {
+                            "87709.20": {
+                              "url": "https://mattscholta.com/__manifest?paths=%2F%2C%2Fblog%2C%2Fportfolio%2C%2Fresume%2C%2Fuses&version=6a349b99",
+                              "navStartToEndTime": 310,
+                              "transferSize": 602,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87709.18": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 260,
+                          "transferSize": 691,
+                          "children": {}
+                        },
+                        "87709.8": {
+                          "url": "https://mattscholta.com/assets/root-CSnhE4kI.js",
+                          "navStartToEndTime": 233,
+                          "transferSize": 35522,
+                          "children": {}
+                        },
+                        "87709.10": {
+                          "url": "https://mattscholta.com/assets/LinkedinLogo.es-J4hm6l3m.js",
+                          "navStartToEndTime": 232,
+                          "transferSize": 4646,
+                          "children": {}
+                        },
+                        "87709.12": {
+                          "url": "https://mattscholta.com/assets/SSRBase.es-B42ZkjNf.js",
+                          "navStartToEndTime": 231,
+                          "transferSize": 566,
+                          "children": {}
+                        },
+                        "87709.9": {
+                          "url": "https://mattscholta.com/assets/metadata-AhGr4xOj.js",
+                          "navStartToEndTime": 231,
+                          "transferSize": 1537,
+                          "children": {}
+                        },
+                        "87709.7": {
+                          "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                          "navStartToEndTime": 230,
+                          "transferSize": 43021,
+                          "children": {}
+                        },
+                        "87709.11": {
+                          "url": "https://mattscholta.com/assets/index-CllUoT4f.js",
+                          "navStartToEndTime": 217,
+                          "transferSize": 854,
+                          "children": {}
+                        },
+                        "87709.16": {
+                          "url": "https://mattscholta.com/assets/prism-tomorrow-C6uyB5YP.css",
+                          "navStartToEndTime": 216,
+                          "transferSize": 701,
+                          "children": {}
+                        },
+                        "87709.14": {
+                          "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                          "navStartToEndTime": 216,
+                          "transferSize": 10312,
+                          "children": {}
+                        },
+                        "87709.15": {
+                          "url": "https://mattscholta.com/assets/prism-line-numbers-fxUasOm7.css",
+                          "navStartToEndTime": 213,
+                          "transferSize": 752,
+                          "children": {}
+                        }
+                      }
+                    }
+                  },
+                  "longestChain": {
+                    "duration": 550
+                  }
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnected origins",
+                "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+                "value": {
+                  "type": "text",
+                  "value": "no origins were preconnected"
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnect candidates",
+                "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+                "value": {
+                  "type": "table",
+                  "headings": [
+                    {
+                      "key": "origin",
+                      "valueType": "text",
+                      "label": "Origin"
+                    },
+                    {
+                      "key": "wastedMs",
+                      "valueType": "ms",
+                      "label": "Est LCP savings"
+                    }
+                  ],
+                  "items": [
+                    {
+                      "origin": "https://www.google-analytics.com",
+                      "wastedMs": 300
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Network dependency tree"
+        },
+        {
+          "auditId": "render-blocking-insight",
+          "description": "Requests are blocking the page's initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedMs",
+                "valueType": "timespanMs",
+                "label": "Duration"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/assets/prism-tomorrow-C6uyB5YP.css",
+                "totalBytes": 701
+              },
+              {
+                "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                "totalBytes": 10312,
+                "wastedMs": 150
+              },
+              {
+                "url": "https://mattscholta.com/assets/prism-line-numbers-fxUasOm7.css",
+                "totalBytes": 752
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Render blocking requests"
+        }
+      ],
+      "deviceType": "mobile",
+      "metrics": {
+        "cls": 0,
+        "inp": null,
+        "lcp": 4.165306
+      },
+      "performanceScore": 79,
+      "timestamp": "2026-01-12T02:56:24.031Z",
+      "url": "https://mattscholta.com/blog/boilerplate-to-generators"
+    },
+    {
+      "audits": [
+        {
+          "auditId": "largest-contentful-paint",
+          "description": "Largest Contentful Paint marks the time at which the largest text or image is painted. [Learn more about the Largest Contentful Paint metric](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/)",
+          "displayValue": "1.9 s",
+          "score": 0.65,
+          "title": "Largest Contentful Paint"
+        },
+        {
+          "auditId": "cumulative-layout-shift",
+          "description": "Cumulative Layout Shift measures the movement of visible elements within the viewport. [Learn more about the Cumulative Layout Shift metric](https://web.dev/articles/cls).",
+          "details": {
+            "type": "debugdata",
+            "items": [
+              {
+                "cumulativeLayoutShiftMainFrame": 0.44261166595525786,
+                "newEngineResult": {
+                  "cumulativeLayoutShift": 0.44261166595525786,
+                  "cumulativeLayoutShiftMainFrame": 0.44261166595525786
+                },
+                "newEngineResultDiffered": false
+              }
+            ]
+          },
+          "displayValue": "0.443",
+          "score": 0.21,
+          "title": "Cumulative Layout Shift"
+        },
+        {
+          "auditId": "interactive",
+          "description": "Time to Interactive is the amount of time it takes for the page to become fully interactive. [Learn more about the Time to Interactive metric](https://developer.chrome.com/docs/lighthouse/performance/interactive/).",
+          "displayValue": "1.9 s",
+          "score": 0.96,
+          "title": "Time to Interactive"
+        },
+        {
+          "auditId": "user-timings",
+          "description": "Consider instrumenting your app with the User Timing API to measure your app's real-world performance during key user experiences. [Learn more about User Timing marks](https://developer.chrome.com/docs/lighthouse/performance/user-timings/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "name",
+                "valueType": "text",
+                "label": "Name"
+              },
+              {
+                "key": "timingType",
+                "valueType": "text",
+                "label": "Type"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 0.01,
+                "label": "Duration"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "User Timing marks and measures"
+        },
+        {
+          "auditId": "bootup-time",
+          "description": "Consider reducing the time spent parsing, compiling, and executing JS. You may find delivering smaller JS payloads helps with this. [Learn how to reduce Javascript execution time](https://developer.chrome.com/docs/lighthouse/performance/bootup-time/).",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "total",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Total CPU Time"
+              },
+              {
+                "key": "scripting",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Script Evaluation"
+              },
+              {
+                "key": "scriptParseCompile",
+                "granularity": 1,
+                "valueType": "ms",
+                "label": "Script Parse"
+              }
+            ],
+            "items": []
+          },
+          "displayValue": "",
+          "score": null,
+          "title": "JavaScript execution time"
+        },
+        {
+          "auditId": "layout-shifts",
+          "description": "These are the largest layout shifts observed on the page. Each table item represents a single layout shift, and shows the element that shifted the most. Below each item are possible root causes that led to the layout shift. Some of these layout shifts may not be included in the CLS metric value due to [windowing](https://web.dev/articles/cls#what_is_cls). [Learn how to improve CLS](https://web.dev/articles/optimize-cls)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "extra"
+                },
+                "label": "Element"
+              },
+              {
+                "key": "score",
+                "valueType": "numeric",
+                "subItemsHeading": {
+                  "key": "cause",
+                  "valueType": "text"
+                },
+                "granularity": 0.001,
+                "label": "Layout shift score"
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-1-SECTION",
+                  "path": "2,SECTION",
+                  "selector": "main > section.m-auto",
+                  "boundingRect": {
+                    "top": 0,
+                    "bottom": 0,
+                    "left": 0,
+                    "right": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "snippet": "<section class=\"m-auto max-w-4xl\">",
+                  "nodeLabel": "How custom generators transformed our development workflow from inconsistent sn…"
+                },
+                "score": 0.44261166595525786,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "extra": {
+                        "type": "node",
+                        "lhId": "page-5-IMG",
+                        "path": "1,DIV,1,IMG",
+                        "selector": "main > div.relative > img.w-full",
+                        "boundingRect": {
+                          "top": 0,
+                          "bottom": 0,
+                          "left": 0,
+                          "right": 0,
+                          "width": 0,
+                          "height": 0
+                        },
+                        "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" width=\"100%\">",
+                        "nodeLabel": "Boilerplate to Generators"
+                      },
+                      "cause": "Media element lacking an explicit size"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "displayValue": "1 layout shift found",
+          "score": 0,
+          "title": "Avoid large layout shifts"
+        },
+        {
+          "auditId": "long-tasks",
+          "description": "Lists the longest tasks on the main thread, useful for identifying worst contributors to input delay. [Learn how to avoid long main-thread tasks](https://web.dev/articles/optimize-long-tasks)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "startTime",
+                "valueType": "ms",
+                "granularity": 1,
+                "label": "Start Time"
+              },
+              {
+                "key": "duration",
+                "valueType": "ms",
+                "granularity": 1,
+                "label": "Duration"
+              }
+            ],
+            "items": [],
+            "debugData": {
+              "type": "debugdata",
+              "urls": [],
+              "tasks": []
+            }
+          },
+          "score": null,
+          "title": "Avoid long main-thread tasks"
+        },
+        {
+          "auditId": "non-composited-animations",
+          "description": "Animations which are not composited can be janky and increase CLS. [Learn how to avoid non-composited animations](https://developer.chrome.com/docs/lighthouse/performance/non-composited-animations/)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "subItemsHeading": {
+                  "key": "failureReason",
+                  "valueType": "text"
+                },
+                "label": "Element"
+              }
+            ],
+            "items": []
+          },
+          "score": null,
+          "title": "Avoid non-composited animations"
+        },
+        {
+          "auditId": "unsized-images",
+          "description": "Set an explicit width and height on image elements to reduce layout shifts and improve CLS. [Learn how to set image dimensions](https://web.dev/articles/optimize-cls#images_without_dimensions)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "node": {
+                  "type": "node",
+                  "lhId": "1-0-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,DIV,1,IMG",
+                  "selector": "body > main > div.relative > img.w-full",
+                  "boundingRect": {
+                    "top": 64,
+                    "bottom": 802,
+                    "left": 0,
+                    "right": 1350,
+                    "width": 1350,
+                    "height": 738
+                  },
+                  "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" width=\"100%\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\">",
+                  "nodeLabel": "Boilerplate to Generators"
+                }
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Image elements do not have explicit `width` and `height`"
+        },
+        {
+          "auditId": "unused-javascript",
+          "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+          "details": {
+            "type": "opportunity",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "subItemsHeading": {
+                  "key": "source",
+                  "valueType": "code"
+                },
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceBytes"
+                },
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "subItemsHeading": {
+                  "key": "sourceWastedBytes"
+                },
+                "label": "Est Savings"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://www.googletagmanager.com/gtag/js?id=G-H3ZTX4FSWT",
+                "totalBytes": 140785,
+                "wastedBytes": 56093,
+                "wastedPercent": 39.84312469985593
+              },
+              {
+                "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                "totalBytes": 42894,
+                "wastedBytes": 25308,
+                "wastedPercent": 59.001512859304086
+              },
+              {
+                "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                "totalBytes": 61641,
+                "wastedBytes": 20955,
+                "wastedPercent": 33.995843348833304
+              }
+            ],
+            "overallSavingsMs": 50,
+            "overallSavingsBytes": 102356,
+            "sortedBy": ["wastedBytes"],
+            "debugData": {
+              "type": "debugdata",
+              "metricSavings": {
+                "FCP": 40,
+                "LCP": 50
+              }
+            }
+          },
+          "displayValue": "Est savings of 100 KiB",
+          "score": 0,
+          "title": "Reduce unused JavaScript"
+        },
+        {
+          "auditId": "cls-culprits-insight",
+          "description": "Layout shifts occur when elements move absent any user interaction. [Investigate the causes of layout shifts](https://developer.chrome.com/docs/performance/insights/cls-culprit), such as elements being added, removed, or their fonts changing as the page loads.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "table",
+                "headings": [
+                  {
+                    "key": "node",
+                    "valueType": "node",
+                    "subItemsHeading": {
+                      "key": "extra"
+                    },
+                    "label": "Element"
+                  },
+                  {
+                    "key": "score",
+                    "valueType": "numeric",
+                    "subItemsHeading": {
+                      "key": "cause",
+                      "valueType": "text"
+                    },
+                    "granularity": 0.001,
+                    "label": "Layout shift score"
+                  }
+                ],
+                "items": [
+                  {
+                    "node": {
+                      "type": "text",
+                      "value": "Total"
+                    },
+                    "score": 0.44261166595525786
+                  },
+                  {
+                    "node": {
+                      "type": "node",
+                      "lhId": "page-1-SECTION",
+                      "path": "2,SECTION",
+                      "selector": "main > section.m-auto",
+                      "boundingRect": {
+                        "top": 0,
+                        "bottom": 0,
+                        "left": 0,
+                        "right": 0,
+                        "width": 0,
+                        "height": 0
+                      },
+                      "snippet": "<section class=\"m-auto max-w-4xl\">",
+                      "nodeLabel": "How custom generators transformed our development workflow from inconsistent sn…"
+                    },
+                    "score": 0.44261166595525786,
+                    "subItems": {
+                      "type": "subitems",
+                      "items": [
+                        {
+                          "extra": {
+                            "type": "node",
+                            "lhId": "page-5-IMG",
+                            "path": "1,DIV,1,IMG",
+                            "selector": "main > div.relative > img.w-full",
+                            "boundingRect": {
+                              "top": 0,
+                              "bottom": 0,
+                              "left": 0,
+                              "right": 0,
+                              "width": 0,
+                              "height": 0
+                            },
+                            "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\" width=\"100%\">",
+                            "nodeLabel": "Boilerplate to Generators"
+                          },
+                          "cause": "Unsized image element"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Layout shift culprits"
+        },
+        {
+          "auditId": "image-delivery-insight",
+          "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery)",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "node",
+                "valueType": "node",
+                "label": ""
+              },
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL",
+                "subItemsHeading": {
+                  "key": "reason",
+                  "valueType": "text"
+                }
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Resource Size"
+              },
+              {
+                "key": "wastedBytes",
+                "valueType": "bytes",
+                "label": "Est Savings",
+                "subItemsHeading": {
+                  "key": "wastedBytes",
+                  "valueType": "bytes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "node": {
+                  "type": "node",
+                  "lhId": "page-0-IMG",
+                  "path": "1,HTML,1,BODY,11,MAIN,1,DIV,1,IMG",
+                  "selector": "body > main > div.relative > img.w-full",
+                  "boundingRect": {
+                    "top": 64,
+                    "bottom": 802,
+                    "left": 0,
+                    "right": 1350,
+                    "width": 1350,
+                    "height": 738
+                  },
+                  "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" width=\"100%\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\">",
+                  "nodeLabel": "Boilerplate to Generators"
+                },
+                "url": "https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg/cmc41dtsonm1y07n20oqs6cg5",
+                "totalBytes": 1609701,
+                "wastedBytes": 1444020,
+                "subItems": {
+                  "type": "subitems",
+                  "items": [
+                    {
+                      "reason": "Using a modern image format (WebP, AVIF) or increasing the image compression could improve this image's download size.",
+                      "wastedBytes": 888805
+                    },
+                    {
+                      "reason": "This image file is larger than it needs to be (2816x1536) for its displayed dimensions (1350x736). Use responsive images to reduce the image download size.",
+                      "wastedBytes": 1239749
+                    }
+                  ]
+                }
+              }
+            ],
+            "debugData": {
+              "type": "debugdata",
+              "wastedBytes": 1444020
+            }
+          },
+          "displayValue": "Est savings of 1,410 KiB",
+          "score": 0,
+          "title": "Improve image delivery"
+        },
+        {
+          "auditId": "inp-breakdown-insight",
+          "description": "Start investigating [how to improve INP](https://developer.chrome.com/docs/performance/insights/inp-breakdown) by looking at the longest subpart.",
+          "score": null,
+          "title": "INP breakdown"
+        },
+        {
+          "auditId": "lcp-discovery-insight",
+          "description": "[Optimize LCP](https://developer.chrome.com/docs/performance/insights/lcp-discovery) by making the LCP image discoverable from the HTML immediately, and avoiding lazy-loading",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "checklist",
+                "items": {
+                  "priorityHinted": {
+                    "label": "fetchpriority=high should be applied",
+                    "value": false
+                  },
+                  "requestDiscoverable": {
+                    "label": "Request is discoverable in initial document",
+                    "value": true
+                  },
+                  "eagerlyLoaded": {
+                    "label": "lazy load not applied",
+                    "value": true
+                  }
+                }
+              },
+              {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,11,MAIN,1,DIV,1,IMG",
+                "selector": "body > main > div.relative > img.w-full",
+                "boundingRect": {
+                  "top": 64,
+                  "bottom": 802,
+                  "left": 0,
+                  "right": 1350,
+                  "width": 1350,
+                  "height": 738
+                },
+                "snippet": "<img alt=\"Boilerplate to Generators\" class=\"w-full z-0 ui-border border-y\" height=\"auto\" loading=\"eager\" width=\"100%\" src=\"https://us-west-2.graphassets.com/A8O4hAsR7QOmAlk6hfcLhz/output=format:jpg…\">",
+                "nodeLabel": "Boilerplate to Generators"
+              }
+            ]
+          },
+          "score": 0,
+          "title": "LCP request discovery"
+        },
+        {
+          "auditId": "network-dependency-tree-insight",
+          "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load.",
+          "details": {
+            "type": "list",
+            "items": [
+              {
+                "type": "list-section",
+                "value": {
+                  "type": "network-tree",
+                  "chains": {
+                    "B73D8D711DD31EE7D58A9787C1F91CEA": {
+                      "url": "https://mattscholta.com/blog/boilerplate-to-generators",
+                      "navStartToEndTime": 196,
+                      "transferSize": 13842,
+                      "isLongest": true,
+                      "children": {
+                        "87927.6": {
+                          "url": "https://mattscholta.com/assets/entry.client-DIlGYvJI.js",
+                          "navStartToEndTime": 237,
+                          "transferSize": 61856,
+                          "isLongest": true,
+                          "children": {
+                            "87927.27": {
+                              "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-H3ZTX4FSWT&gtm=45je6171v873489730za200zd873489730&_p=1768186586191&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=25311976.1768186586&ul=en-us&sr=800x600&uaa=x86&uab=&uafvl=&uamb=0&uam=&uap=macOS&uapv=10.15.7&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~105391252~115616985~115938465~115938469~116514482~116682875~116744867&sid=1768186586&sct=1&seg=0&dl=https%3A%2F%2Fmattscholta.com%2Fblog%2Fboilerplate-to-generators&dt=Boilerplate%20to%20Generators%20%7C%20Matthew%20Scholta%20-%20Software%20Engineer%20%7C%20Architecture%20%26%20Technical%20Leadership&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=398",
+                              "navStartToEndTime": 475,
+                              "transferSize": 0,
+                              "isLongest": true,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87927.26": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 402,
+                          "transferSize": 44,
+                          "children": {}
+                        },
+                        "87927.13": {
+                          "url": "https://mattscholta.com/assets/blog_._slug-DeXfLtBa.js",
+                          "navStartToEndTime": 277,
+                          "transferSize": 12614,
+                          "children": {
+                            "87927.25": {
+                              "url": "https://mattscholta.com/__manifest?paths=%2F%2C%2Fblog%2C%2Fportfolio%2C%2Fresume%2C%2Fuses&version=6a349b99",
+                              "navStartToEndTime": 402,
+                              "transferSize": 602,
+                              "children": {}
+                            }
+                          }
+                        },
+                        "87927.18": {
+                          "url": "https://mattscholta.com/manifest.json",
+                          "navStartToEndTime": 286,
+                          "transferSize": 692,
+                          "children": {}
+                        },
+                        "87927.16": {
+                          "url": "https://mattscholta.com/assets/prism-tomorrow-C6uyB5YP.css",
+                          "navStartToEndTime": 251,
+                          "transferSize": 707,
+                          "children": {}
+                        },
+                        "87927.11": {
+                          "url": "https://mattscholta.com/assets/index-CllUoT4f.js",
+                          "navStartToEndTime": 250,
+                          "transferSize": 850,
+                          "children": {}
+                        },
+                        "87927.10": {
+                          "url": "https://mattscholta.com/assets/LinkedinLogo.es-J4hm6l3m.js",
+                          "navStartToEndTime": 250,
+                          "transferSize": 4641,
+                          "children": {}
+                        },
+                        "87927.12": {
+                          "url": "https://mattscholta.com/assets/SSRBase.es-B42ZkjNf.js",
+                          "navStartToEndTime": 250,
+                          "transferSize": 566,
+                          "children": {}
+                        },
+                        "87927.15": {
+                          "url": "https://mattscholta.com/assets/prism-line-numbers-fxUasOm7.css",
+                          "navStartToEndTime": 250,
+                          "transferSize": 734,
+                          "children": {}
+                        },
+                        "87927.14": {
+                          "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                          "navStartToEndTime": 249,
+                          "transferSize": 10330,
+                          "children": {}
+                        },
+                        "87927.7": {
+                          "url": "https://mattscholta.com/assets/chunk-JMJ3UQ3L-Cf4yF7gF.js",
+                          "navStartToEndTime": 248,
+                          "transferSize": 43021,
+                          "children": {}
+                        },
+                        "87927.8": {
+                          "url": "https://mattscholta.com/assets/root-CSnhE4kI.js",
+                          "navStartToEndTime": 240,
+                          "transferSize": 35521,
+                          "children": {}
+                        },
+                        "87927.9": {
+                          "url": "https://mattscholta.com/assets/metadata-AhGr4xOj.js",
+                          "navStartToEndTime": 235,
+                          "transferSize": 1537,
+                          "children": {}
+                        }
+                      }
+                    }
+                  },
+                  "longestChain": {
+                    "duration": 475
+                  }
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnected origins",
+                "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+                "value": {
+                  "type": "text",
+                  "value": "no origins were preconnected"
+                }
+              },
+              {
+                "type": "list-section",
+                "title": "Preconnect candidates",
+                "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4.",
+                "value": {
+                  "type": "text",
+                  "value": "No additional origins are good candidates for preconnecting"
+                }
+              }
+            ]
+          },
+          "score": 0,
+          "title": "Network dependency tree"
+        },
+        {
+          "auditId": "render-blocking-insight",
+          "description": "Requests are blocking the page's initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+          "details": {
+            "type": "table",
+            "headings": [
+              {
+                "key": "url",
+                "valueType": "url",
+                "label": "URL"
+              },
+              {
+                "key": "totalBytes",
+                "valueType": "bytes",
+                "label": "Transfer Size"
+              },
+              {
+                "key": "wastedMs",
+                "valueType": "timespanMs",
+                "label": "Duration"
+              }
+            ],
+            "items": [
+              {
+                "url": "https://mattscholta.com/assets/prism-tomorrow-C6uyB5YP.css",
+                "totalBytes": 707
+              },
+              {
+                "url": "https://mattscholta.com/assets/prism-line-numbers-fxUasOm7.css",
+                "totalBytes": 734
+              },
+              {
+                "url": "https://mattscholta.com/assets/index-BEJqXKAm.css",
+                "totalBytes": 10330
+              }
+            ]
+          },
+          "score": 0.5,
+          "title": "Render blocking requests"
+        }
+      ],
+      "deviceType": "desktop",
+      "metrics": {
+        "cls": 0.44261166595525786,
+        "inp": null,
+        "lcp": 1.9277910000000003
+      },
+      "performanceScore": 72,
+      "timestamp": "2026-01-12T02:56:31.488Z",
+      "url": "https://mattscholta.com/blog/boilerplate-to-generators"
+    }
+  ]
+}

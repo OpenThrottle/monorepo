@@ -1,0 +1,25 @@
+# @openthrottle/openthrottle-notifications
+
+Add a short description of this package (purpose, main exports, and who consumes it).
+
+## Installation
+
+Install with your preferred package manager (list pnpm first in this monorepo):
+
+**pnpm:**
+
+```bash
+pnpm add @openthrottle/openthrottle-notifications
+```
+
+**npm:**
+
+```bash
+npm install @openthrottle/openthrottle-notifications
+```
+
+**yarn:**
+
+```bash
+yarn add @openthrottle/openthrottle-notifications
+```

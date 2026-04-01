@@ -1,0 +1,25 @@
+import { createCookieSessionStorage } from 'react-router';
+import { IS_PRODUCTION } from '@openthrottle/react-router-utils';
+import { SITE_DOMAIN, SITE_NAME } from '~/global/config/settings';
+
+const COOKIE_SECRET = process.env.COOKIE_SECRET ?? 'OpenThrottleSecret';
+
+/**
+ * @description lifted directly from the remix documentation
+ * @link https://remix.run/docs/en/v1/api/remix#sessions
+ */
+export const { getSession, commitSession, destroySession } =
+  createCookieSessionStorage({
+    // a Cookie from `createCookie` or the CookieOptions to create one
+    cookie: {
+      domain: IS_PRODUCTION ? SITE_DOMAIN : 'localhost',
+      expires: new Date(Date.now() + 60 * 60 * 24 * 7),
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 7,
+      name: `${SITE_NAME.toLowerCase()}_session`,
+      path: '/',
+      sameSite: 'lax',
+      secrets: [COOKIE_SECRET],
+      secure: IS_PRODUCTION,
+    },
+  });

@@ -1,0 +1,243 @@
+import * as React from 'react';
+import {
+  Badge,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Card,
+  CardContent,
+  CardHeader,
+  Empty,
+  EmptyDescription,
+  EmptyTitle,
+  Separator,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
+import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
+import { formatProjectDate } from '~/routing/projects/utils/format';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { Route } from '@/app/routes/+types/projects.$projectId';
+import { GetProjectByIdDocument } from '~/__generated__/graphql';
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+
+export const loader = async (args: Route.LoaderArgs) => {
+  const projectId = args.params.projectId;
+  const url = args.request.url ? new URL(args.request.url) : null;
+  const pageRaw = url?.searchParams.get('page');
+  const page = Math.max(
+    1,
+    Number.isFinite(Number(pageRaw)) ? Number(pageRaw) : DEFAULT_PAGE,
+  );
+  const limitRaw = url?.searchParams.get('limit');
+  const limitParsed =
+    limitRaw != null && limitRaw !== '' ? Number(limitRaw) : NaN;
+  const limit = Math.max(
+    1,
+    Number.isFinite(limitParsed) && limitParsed >= 1
+      ? limitParsed
+      : DEFAULT_LIMIT,
+  );
+  const offset = (page - 1) * limit;
+
+  const { project, projectTasksResult } = await executeGraphqlWithAuth(
+    args.request,
+    GetProjectByIdDocument,
+    { id: projectId, limit, offset },
+  );
+
+  const projectTasks = projectTasksResult.tasks;
+  const totalTaskCount = projectTasksResult.totalCount;
+
+  return {
+    limit,
+    page,
+    project,
+    projectTasks,
+    totalTaskCount,
+  };
+};
+
+export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
+  const project = args.loaderData?.project;
+  const title = project?.name
+    ? `${project.name} | Projects | ${SITE_TITLE}`
+    : `Project Details | ${SITE_TITLE}`;
+
+  return [{ title }];
+});
+
+type ProjectTabValue = 'overview' | 'tasks';
+
+export default function ProjectDetail(props: Route.ComponentProps) {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
+  // Hooks
+  const [activeTab, setActiveTab] = React.useState<ProjectTabValue>('overview');
+
+  // Setup
+  const { limit, page, project, projectTasks, totalTaskCount } = loaderData;
+  const tasks = projectTasks ?? [];
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  if (!project) return <ProjectNotFound />;
+
+  return (
+    <main
+      aria-label="Project details"
+      className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full"
+    >
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild={true}>
+              <Link to="/projects" viewTransition={true}>
+                Projects
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{project.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <Tabs className="w-full">
+        <TabsList aria-label="Project sections" className="mb-4">
+          <TabsTrigger
+            aria-controls="project-overview-panel"
+            aria-selected={activeTab === 'overview'}
+            data-state={activeTab === 'overview' ? 'active' : 'inactive'}
+            id="project-overview-tab"
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            aria-controls="project-tasks-panel"
+            aria-selected={activeTab === 'tasks'}
+            data-state={activeTab === 'tasks' ? 'active' : 'inactive'}
+            id="project-tasks-tab"
+            onClick={() => setActiveTab('tasks')}
+          >
+            Tasks
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent
+          aria-hidden={activeTab !== 'overview'}
+          aria-labelledby="project-overview-tab"
+          className="mt-0"
+          hidden={activeTab !== 'overview'}
+          id="project-overview-panel"
+        >
+          <Card aria-labelledby="project-overview-heading" className="mb-6">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1
+                  className="text-2xl font-semibold leading-none tracking-tight"
+                  id="project-overview-heading"
+                >
+                  {project.name}
+                </h1>
+                {project.nxProjectName != null &&
+                  project.nxProjectName !== '' && (
+                    <Badge variant="secondary">{project.nxProjectName}</Badge>
+                  )}
+              </div>
+              <Badge className="shrink-0" variant="secondary">
+                {project.id}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {project.description != null && project.description !== '' && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    {project.description}
+                  </p>
+                  <Separator />
+                </>
+              )}
+
+              <dl className="grid gap-2 text-sm">
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="text-muted-foreground">Created</dt>
+                  <dd>{formatProjectDate(project.createdAt)}</dd>
+                </div>
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="text-muted-foreground">Updated</dt>
+                  <dd>{formatProjectDate(project.updatedAt)}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent
+          aria-hidden={activeTab !== 'tasks'}
+          aria-labelledby="project-tasks-tab"
+          className="mt-0"
+          hidden={activeTab !== 'tasks'}
+          id="project-tasks-panel"
+        >
+          <section
+            aria-labelledby="project-tasks-heading"
+            className="space-y-3"
+          >
+            <h2 className="text-lg font-semibold" id="project-tasks-heading">
+              Tasks
+            </h2>
+            {tasks.length > 0 ? (
+              <>
+                <ProjectTasksTable tasks={tasks} />
+                {totalTaskCount > limit && (
+                  <OpenThrottlePagination
+                    basePath={`/projects/${project.id}`}
+                    className="mt-6"
+                    limit={limit}
+                    page={page}
+                    total={totalTaskCount}
+                  />
+                )}
+              </>
+            ) : (
+              <Empty className="py-8">
+                <EmptyTitle>No tasks</EmptyTitle>
+                <EmptyDescription>
+                  This project has no tasks yet.
+                </EmptyDescription>
+              </Empty>
+            )}
+          </section>
+        </TabsContent>
+      </Tabs>
+    </main>
+  );
+}
+
+// export const action = async (_args: Route.ActionArgs) => {
+//   return {};
+// };
+
+export const ErrorBoundary = GlobalErrorBoundary;

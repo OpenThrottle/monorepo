@@ -1,0 +1,13 @@
+fragment NoteCard on NoteObject {
+  author
+  content
+  createdAt
+  id
+  updatedAt
+}
+
+query getNotes {
+  notes {
+    ...NoteCard
+  }
+}

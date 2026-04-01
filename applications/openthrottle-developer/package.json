@@ -1,0 +1,47 @@
+{
+  "name": "openthrottle-developer",
+  "description": "OpenThrottle developer portal: dashboard for plans, projects, notes, generators, and pull requests (Cortex and OpenThrottle API).",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://developer.openthrottle.ai"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=22"
+  },
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [
+      "openthrottle-server"
+    ],
+    "sourceRoot": "./",
+    "projectType": "application",
+    "tags": [
+      "name:openthrottle-developer",
+      "production:true",
+      "technology:react",
+      "technology:react-router",
+      "type:application"
+    ],
+    "targets": {
+      "codegen-graphql": {},
+      "codegen-graphql-watch": {},
+      "codegen-react-router": {},
+      "codegen-react-router-watch": {},
+      "lint": {},
+      "test": {},
+      "test-e2e": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/developer.git",
+  "sideEffects": false,
+  "scripts": {
+    "start:docker": "react-router-serve ./build/server/index.js"
+  },
+  "type": "module"
+}

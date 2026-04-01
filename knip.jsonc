@@ -1,0 +1,71 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    // "applications/**/*.{ts,tsx,js,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           jsx}", // Uncomment this to include all applications
+    // NestJS applications
+    "applications/**/main.ts",
+    // React Router applications
+    "applications/**/entry.client.tsx",
+    "applications/**/entry.server.tsx",
+    "applications/**/root.tsx",
+    // Packages
+    "packages/**/src/index.{ts,tsx,js,jsx}",
+    "packages/**/src/bin.{ts,js}",
+    "packages/**/src/cortex-server.{ts,js}",
+    // Tools
+    "tools/**/*.{ts,tsx,js,jsx}",
+  ],
+  "ignore": [
+    "**/__snapshots__/**",
+    "**/__tests__/**",
+    "**/.cache/**",
+    "**/.expo/**",
+    "**/.nx/**",
+    "**/.venv/**",
+    "**/*.config.{ts,js}",
+    "**/*.spec.{ts,tsx,js,jsx}",
+    "**/*.test.{ts,tsx,js,jsx}",
+    "**/*.workspace.{ts,js}",
+    "**/build/**",
+    "**/codegen.{ts,js}",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "tools/generators/src/generators/*/files/**",
+    "vitest.workspace.ts",
+  ],
+  "ignoreDependencies": [
+    // Internal
+    "@barguide/*",
+    "@intouch/*",
+    "@openthrottle/*",
+    "@rocketcms/*",
+    "@visormatt/*",
+
+    // External
+    "@nx/*",
+    "@testing-library/*",
+    "@types/*",
+    "@typescript-eslint/*",
+    "@vitest/*",
+    "eslint-*",
+    "prettier",
+    "typescript",
+    "vitest",
+  ],
+  "project": [
+    "applications/**/*.{ts,tsx,js,jsx}",
+    "packages/**/*.{ts,tsx,js,jsx}",
+    "scripts/**/*.{ts,tsx,js,jsx}",
+    "tools/**/*.{ts,tsx,js,jsx}",
+    "!**/build/**",
+    "!**/codegen.{ts,js}",
+    "!**/coverage/**",
+    "!**/dist/**",
+    "!**/node_modules/**",
+  ],
+  "nx": {
+    "config": "nx.json",
+  },
+  "vitest": false,
+}

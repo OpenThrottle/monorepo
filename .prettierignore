@@ -1,0 +1,18 @@
+#############################################################################
+# Files
+#############################################################################
+**/applications/**/vite.config.ts.timestamp-*.mjs
+**/applications/**/vitest.config.ts.timestamp-*.mjs
+
+#############################################################################
+# Folders
+#############################################################################
+__generated__/
+.react-router/
+.nx/
+coverage/
+dist/
+tools/generators/src/generators/*/files/**
+
+/.nx/cache
+/.nx/workspace-data

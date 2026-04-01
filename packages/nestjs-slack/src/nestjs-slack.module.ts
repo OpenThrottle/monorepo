@@ -1,0 +1,31 @@
+import { DynamicModule, Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import type { NestjsSlackModuleOptions } from './nestjs-slack.options';
+import { NESTJS_SLACK_OPTIONS, validateNestjsSlackOptions } from './nestjs-slack.options';
+import { NestjsSlackService } from './nestjs-slack.service';
+
+@Module({
+  controllers: [],
+  exports: [NestjsSlackService],
+  imports: [LoggerModule],
+  providers: [NestjsSlackService],
+})
+export class NestjsSlackModule {
+  /**
+   * Registers the module with required options. Validation runs in the dynamic module factory;
+   * missing or invalid options (e.g. webhookUrl) cause the app to fail at bootstrap.
+   */
+  static forRoot(options: NestjsSlackModuleOptions): DynamicModule {
+    validateNestjsSlackOptions(options);
+    return {
+      exports: [NestjsSlackService],
+      global: false,
+      imports: [LoggerModule],
+      module: NestjsSlackModule,
+      providers: [
+        { provide: NESTJS_SLACK_OPTIONS, useValue: options },
+        NestjsSlackService,
+      ],
+    };
+  }
+}

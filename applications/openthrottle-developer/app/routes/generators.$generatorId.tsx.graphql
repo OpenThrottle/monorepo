@@ -1,0 +1,11 @@
+fragment GeneratorDetailCard on GeneratorDetailObject {
+  description
+  name
+  schemaJson
+}
+
+query getGeneratorByName($name: String!) {
+  generator(input: { name: $name }) {
+    ...GeneratorDetailCard
+  }
+}

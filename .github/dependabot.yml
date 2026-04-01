@@ -1,0 +1,50 @@
+########################################################################
+#
+#   Used to help automate the process of updating packages. While the
+#   example below is for Javascript, it supports much more. Check the docs.
+#
+#       @link https://github.com/security/advanced-security
+#       @link https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+########################################################################
+version: 2
+updates:
+  - directories:
+      - '/'
+      - '/applications/*'
+      - '/packages/*'
+      - '!/learning/*'
+    # groups:
+    #   dependencies-graphql-codegen:
+    #     patterns:
+    #       - "@graphql-codegen/*"
+    #       - "@graphql-typed-document-node"
+    #   dependencies-nx:
+    #     patterns:
+    #       - "nx"
+    #       - "@nx/*"
+    #   dependencies-react-router:
+    #     patterns:
+    #       - "react-router"
+    #       - "@react-router/*"
+    #   dependencies-survey:
+    #     patterns:
+    #       - "survey-core"
+    #       - "survey-creator-core"
+    #       - "survey-creator-react"
+    #       - "survey-react-ui"
+    #   dependencies-vitest:
+    #     patterns:
+    #       - "vitest"
+    #       - "@vitest/*"
+    labels:
+      - 'dependencies'
+    open-pull-requests-limit: 1
+    package-ecosystem: 'npm'
+    rebase-strategy: 'auto'
+    schedule:
+      # day: "sunday"
+      interval: weekly
+      time: '07:00'
+      timezone: 'America/Los_Angeles'
+    target-branch: 'main'

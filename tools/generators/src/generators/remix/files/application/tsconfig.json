@@ -1,0 +1,50 @@
+{
+  "extends": "../../tsconfig.react-router.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "~/*": ["app/*"],
+      "@/*": [".react-router/types/*"],
+      "#/*": ["*"]
+    },
+    "rootDirs": ["./", ".react-router/types"]
+  },
+  "exclude": ["build", "dist", "node_modules"],
+  "files": [],
+  "include": ["**/*", "**/*.json", ".react-router/types"],
+  "references": [
+    {
+      "path": "../../../../../../../packages/react-router-shadcn"
+    },
+    {
+      "path": "../../../../../../../packages/react-router-utils"
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-throttler"
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-devtools"
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-bullmq-board"
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-graphql"
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-redis"
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-bullmq"
+    },
+    {
+      "path": "../../../../.."
+    },
+    {
+      "path": "../../../../../../../packages/nestjs-modules"
+    },
+    {
+      "path": "../../../../../../dotfiles"
+    }
+  ]
+}

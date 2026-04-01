@@ -1,0 +1,187 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "openthrottle.createPlanFromText",
+        "category": "OpenThrottle",
+        "title": "Create plan from text"
+      },
+      {
+        "command": "openthrottle.openIntegrationDoc",
+        "category": "OpenThrottle",
+        "title": "Open INTEGRATION doc"
+      },
+      {
+        "command": "openthrottle.refresh",
+        "category": "OpenThrottle",
+        "title": "Refresh"
+      },
+      {
+        "command": "openthrottle.login",
+        "category": "OpenThrottle",
+        "title": "Sign in"
+      },
+      {
+        "command": "openthrottle.logout",
+        "category": "OpenThrottle",
+        "title": "Sign out"
+      }
+    ],
+    "configuration": {
+      "properties": {
+        "openthrottle.apiBaseUrl": {
+          "default": "http://localhost:6021",
+          "description": "Base URL for openthrottle-server (GraphQL at /graphql).",
+          "type": "string"
+        }
+      },
+      "title": "OpenThrottle"
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "openthrottle",
+          "title": "OpenThrottle",
+          "icon": "$(remote-explorer)"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "openthrottle.submenu",
+        "label": "OpenThrottle",
+        "icon": "$(list-flat)",
+        "items": [
+          {
+            "command": "openthrottle.refresh",
+            "label": "Refresh",
+            "icon": "$(list-flat)"
+          }
+        ]
+      }
+    ],
+    "views": {
+      "openthrottle": [
+        {
+          "id": "openthrottle.plans",
+          "name": "Plans",
+          "contextualTitle": "OpenThrottle Plans"
+        },
+        {
+          "id": "openthrottle.welcome",
+          "name": "Welcome",
+          "contextualTitle": "OpenThrottle Welcome"
+        },
+        {
+          "id": "openthrottle.login",
+          "name": "Login",
+          "contextualTitle": "OpenThrottle Login"
+        },
+        {
+          "id": "openthrottle.docs",
+          "name": "Docs",
+          "contextualTitle": "OpenThrottle Docs"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@vscode/vsce": "^3.2.1",
+    "graphql": "^16.13.1"
+  },
+  "description": "VS Code and Cursor extension for OpenThrottle plans and tasks, backed by openthrottle-server GraphQL.",
+  "devDependencies": {},
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
+  "name": "vscode-openthrottle",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:vscode-openthrottle",
+      "production:true",
+      "publish:false",
+      "technology:react",
+      "technology:react-router",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "dependsOn": [
+          "project:build"
+        ]
+      },
+      "codegen-graphql": {},
+      "codegen-graphql-watch": {},
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {},
+      "_____________________PROJECT_SPECIFIC_____________________": {},
+      "project:build": {
+        "dependsOn": [
+          "project:typescript"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm exec vsce package --allow-package-env-file --no-dependencies --out openthrottle.vsix --skip-license",
+          "cwd": "{projectRoot}"
+        }
+      },
+      "project:install": {
+        "dependsOn": [
+          "project:build"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "cursor --install-extension ./packages/vscode-openthrottle/openthrottle.vsix",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "project:typescript": {
+        "executor": "@nx/js:tsc"
+      }
+    }
+  },
+  "private": true,
+  "publisher": "visormatt",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}

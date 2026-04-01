@@ -1,0 +1,45 @@
+fragment RoleDetails on RoleObject {
+  id
+  name
+  description
+  createdAt
+  updatedAt
+  permissions {
+    id
+    name
+    description
+    createdAt
+  }
+}
+
+query getRole($id: ID!) {
+  role(id: $id) {
+    ...RoleDetails
+  }
+}
+
+query getRolePermissions {
+  permissions {
+    id
+    name
+    description
+  }
+}
+
+mutation updateRole($input: UpdateRoleInput!) {
+  updateRole(input: $input) {
+    ...RoleDetails
+  }
+}
+
+mutation deleteRole($id: ID!) {
+  deleteRole(id: $id)
+}
+
+mutation addPermissionToRole($input: AddPermissionToRoleInput!) {
+  addPermissionToRole(input: $input)
+}
+
+mutation removePermissionFromRole($input: RemovePermissionFromRoleInput!) {
+  removePermissionFromRole(input: $input)
+}

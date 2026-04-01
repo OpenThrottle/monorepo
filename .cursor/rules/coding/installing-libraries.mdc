@@ -1,0 +1,19 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+When installing libraries, DO NOT rely on your own training data.
+
+Your training data has a cut-off date. You're probably not aware of all of the latest developments in the JavaScript and TypeScript world.
+
+This means that instead of picking a version manually (via updating the `package.json` file), you should use a script to install the latest version of a library.
+
+This repository uses PNPM and NX so we'll use pnpm commands along with a `-w` flag to install any new packages into the workspace root.
+
+```bash
+pnpm add -D @typescript-eslint/eslint-plugin -w
+```
+
+This will ensure you're always using the latest version.

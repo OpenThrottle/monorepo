@@ -1,0 +1,72 @@
+################################################################################
+#
+#   Daily summary of merged pull requests.
+#   Queries the GitHub API for PRs merged that day and outputs count and details.
+#
+#   Initially disabled (job has if: false). To enable: remove or set the job's
+#   `if` to true.
+#
+#   Schedule: daily at 6:00 AM UTC (cron below).
+#   Manual run: Actions → "Daily merged PRs summary" → Run workflow.
+#   Summary output: Job summary (Summary tab) for each run; see docs/workflows/daily-merged-prs-summary.md.
+#
+################################################################################
+name: 'Daily merged PRs summary'
+
+on:
+  schedule:
+    # Daily at 6:00 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  summary:
+    # Disabled until we enable this workflow. Remove this line or set to true to enable.
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: '📦 Checkout'
+        uses: actions/checkout@v4
+
+      - name: 'Query merged PRs'
+        id: query
+        run: |
+          # Yesterday in UTC (workflow runs at 6 AM UTC; full previous day of merges)
+          DATE_START=$(date -u -d 'yesterday' +%Y-%m-%d)
+          DATE_END=$(date -u -d 'yesterday + 1 day' +%Y-%m-%d)
+          echo "date_start=$DATE_START" >> $GITHUB_OUTPUT
+          echo "date_end=$DATE_END" >> $GITHUB_OUTPUT
+          echo "Querying PRs merged in $DATE_START..$DATE_END (repo: ${{ github.repository }})"
+          gh search prs \
+            --repo "${{ github.repository }}" \
+            --merged \
+            --merged-at "${DATE_START}..${DATE_END}" \
+            --json number,title,url,closedAt,author \
+            --limit 100 \
+            > merged-prs.json
+          COUNT=$(jq length merged-prs.json)
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "Merged PRs count: $COUNT"
+
+      - name: 'Produce summary'
+        run: |
+          COUNT="${{ steps.query.outputs.count }}"
+          DATE_START="${{ steps.query.outputs.date_start }}"
+          echo "## Daily merged PRs summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $DATE_START" >> $GITHUB_STEP_SUMMARY
+          echo "**Merged PRs:** $COUNT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$COUNT" -gt 0 ]; then
+            echo "### PRs merged" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| # | Title | Author |" >> $GITHUB_STEP_SUMMARY
+            echo "|---|-------|--------|" >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | "| [\(.number)](\(.url)) | \(.title | gsub("\n"; " ") | gsub("|"; "\\|")) | \(.author.login) |"' merged-prs.json >> $GITHUB_STEP_SUMMARY
+          fi

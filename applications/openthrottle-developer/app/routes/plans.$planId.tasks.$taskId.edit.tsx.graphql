@@ -1,0 +1,35 @@
+# plans.$planId.tasks.edit.$taskId
+query getTaskById($id: ID!) {
+  task(id: $id) {
+    assignee
+    category
+    createdAt
+    description
+    id
+    planId
+    projectRelation {
+      id
+      name
+    }
+    requirementsJson
+    status
+    summary
+    title
+    updatedAt
+  }
+}
+
+mutation updateTask($input: UpdateTaskInput!) {
+  updateTask(input: $input) {
+    id
+    title
+    planId
+    status
+    assignee
+    category
+    description
+    summary
+    createdAt
+    updatedAt
+  }
+}

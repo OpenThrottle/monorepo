@@ -1,0 +1,69 @@
+{
+  "name": "@tools/ollama-proxy",
+  "description": "Local OpenAI-compatible HTTP proxy for Cursor and other clients: rewrites chat model names and forwards requests to Ollama.",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ollama-proxy": "./dist/server.js"
+  },
+  "scripts": {
+    "start": "node ./dist/server.js",
+    "build": "nx run @tools/ollama-proxy:build:tsc --skip-nx-cache",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@tools/ollama-proxy",
+      "type:tool",
+      "technology:typescript"
+    ],
+    "targets": {
+      "build": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "commands": [
+            "nx run @tools/ollama-proxy:build:tsc --skip-nx-cache"
+          ]
+        },
+        "parallel": false
+      },
+      "build:tsc": {
+        "cache": false,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "outputPath": "{projectRoot}/dist",
+          "rootDir": "{projectRoot}/src",
+          "tsConfig": "{projectRoot}/tsconfig.lib.json"
+        }
+      },
+      "serve": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "commands": [
+            "nx run @tools/ollama-proxy:build:tsc --skip-nx-cache",
+            "node --env-file=.env.default --env-file=.env ./dist/server.js"
+          ],
+          "parallel": false
+        }
+      },
+      "e2e": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "commands": [
+            "node scripts/e2e.mjs"
+          ]
+        }
+      }
+    }
+  }
+}

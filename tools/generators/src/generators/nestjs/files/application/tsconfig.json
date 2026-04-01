@@ -1,0 +1,37 @@
+{
+  "extends": "../../tsconfig.nestjs.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../packages/mattscholta/nestjs-throttler"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-devtools"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-bullmq-board"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-graphql"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-redis"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-bullmq"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-langchain"
+    },
+    {
+      "path": "../../packages/mattscholta/nestjs-modules"
+    },
+    {
+      "path": "../../tools/dotfiles"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}

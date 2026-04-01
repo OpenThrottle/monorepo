@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "compilerOptions": {
+    "builder": "tsc",
+    "deleteOutDir": true,
+    "tsConfigPath": "applications/nestjs-rest-api/tsconfig.app.json",
+    "typeCheck": false,
+    "webpack": false
+  },
+  "generateOptions": {
+    "caseNaming": "camel",
+    "flat": false,
+    "spec": true,
+    "specFileSuffix": "test"
+  },
+  "language": "ts",
+  "projects": {
+    "nestjs-rest-api": {
+      "compilerOptions": {
+        "tsConfigPath": "applications/nestjs-rest-api/tsconfig.app.json"
+      },
+      "root": "applications/nestjs-rest-api",
+      "sourceRoot": "applications/nestjs-rest-api/src",
+      "type": "application"
+    }
+  },
+  "monorepo": true,
+  "root": "applications/nestjs-rest-api"
+}
