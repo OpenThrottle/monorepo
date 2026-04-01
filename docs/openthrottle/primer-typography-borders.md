@@ -1,6 +1,6 @@
 # GitHub/Primer typography and border patterns
 
-Research for Cortex app styles. Source: [Primer Primitives](https://github.com/primer/primitives) (`src/tokens/base/typography/typography.json5`, `src/tokens/functional/color/borderColor.json5`) and [Primer foundations – Typography](https://primer.style/foundations/typography).
+Research for OpenThrottle developer UI (openthrottle-developer, shared `react-router-shadcn` theme). Source: [Primer Primitives](https://github.com/primer/primitives) (`src/tokens/base/typography/typography.json5`, `src/tokens/functional/color/borderColor.json5`) and [Primer foundations – Typography](https://primer.style/foundations/typography).
 
 ## Typography
 
@@ -34,7 +34,7 @@ Research for Cortex app styles. Source: [Primer Primitives](https://github.com/p
 | `text.lineHeight.relaxed` | 1.625           | Long-form, smaller text               |
 | `text.lineHeight.loose`   | 1.75            | Footnotes, high readability           |
 
-### Heading scale (mapping for Cortex)
+### Heading scale (mapping for developer UI)
 
 Map Primer sizes to a heading scale (h1–h6):
 
@@ -47,7 +47,7 @@ Body/copy: primary = default text color (e.g. `color-copy`); secondary/muted = s
 
 ### Light vs dark
 
-Foreground/background and semantic colors (e.g. `fgColor`, `bgColor` in Primer) have light and dark values. Cortex already uses `@media (prefers-color-scheme: dark)` in `index.css` for gray and semantic colors; typography utilities should use semantic colors (e.g. `color-copy`) so they follow light/dark automatically.
+Foreground/background and semantic colors (e.g. `fgColor`, `bgColor` in Primer) have light and dark values. The shared theme uses `@media (prefers-color-scheme: dark)` in `packages/react-router-shadcn/src/theme.css` for semantic tokens; typography should use Tailwind semantic utilities so light/dark follow the theme.
 
 ---
 
@@ -64,9 +64,9 @@ Foreground/background and semantic colors (e.g. `fgColor`, `bgColor` in Primer) 
 
 Additional: `transparent`, `translucent` for overlays.
 
-### Cortex mapping
+### Border token mapping (theme)
 
-- **Default:** `color-border` (already in `index.css`: light `#d1d9e0`, dark from gray scale).
+- **Default:** borders use semantic tokens from the shared theme (see `packages/react-router-shadcn/src/theme.css`); align with [gray-mapping.md](./gray-mapping.md) for grays.
 - **Muted (lighter):** `color-border-light` — default with reduced opacity or lighter gray (e.g. light: `#eff2f5`, dark: one step lighter than default).
 - **Emphasis (darker):** `color-border-dark` — stronger separator (e.g. light: `#818b98`, dark: align to neutral.8).
 
@@ -85,5 +85,5 @@ See `docs/openthrottle/gray-mapping.md` for gray scale; border colors should ref
 - Primer Primitives: <https://github.com/primer/primitives>
 - Primer typography foundations: <https://primer.style/foundations/typography>
 - Primer design tokens (color, typography, spacing): <https://primer.style/foundations>
-- Cortex gray mapping: `docs/openthrottle/gray-mapping.md`
-- Cortex app theme: `applications/cortex/app/styles/index.css`
+- Gray mapping: [gray-mapping.md](./gray-mapping.md)
+- Shared app theme: `packages/react-router-shadcn/src/theme.css`; app entry: `applications/openthrottle-developer/app/styles.css`

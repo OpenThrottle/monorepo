@@ -88,7 +88,7 @@ If you have GCP credentials configured locally, you can test the cache:
 gcloud auth application-default login
 
 # Run a build task (will use cache if available)
-nx run-many -t build --skip-nx-cache=false
+pnpm nx run-many -t build --skip-nx-cache=false
 
 # Verify cache entries were created
 gsutil ls gs://monorepo-nx-cache-staging

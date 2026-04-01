@@ -7,19 +7,19 @@
 # Apps may need base path config (e.g. Vite base: '/developer/'). OLLAMA_BASE_URL can be https://localhost/ollama.
 
 localhost {
-	# openthrottle-server: /api/* -> localhost:6010 (path prefix stripped). WebSocket passthrough is automatic.
+	# openthrottle-server: /api/* -> localhost:6021 (path prefix stripped). WebSocket passthrough is automatic.
 	handle_path /api/* {
-		reverse_proxy localhost:6010
+		reverse_proxy localhost:6021
 	}
 	# Ollama: /ollama/* -> localhost:11434 (path prefix stripped).
 	handle_path /ollama/* {
 		reverse_proxy localhost:11434
 	}
-	# openthrottle-developer: /developer/* and / -> localhost:5173.
+	# openthrottle-developer: /developer/* and / -> localhost:6020 (match applications/openthrottle-developer/.env.default PORT).
 	handle_path /developer/* {
-		reverse_proxy localhost:5173
+		reverse_proxy localhost:6020
 	}
 	handle {
-		reverse_proxy localhost:5173
+		reverse_proxy localhost:6020
 	}
 }

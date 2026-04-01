@@ -51,4 +51,4 @@ Add these as child tasks of plan `84bf03c3-81d8-43e1-8b2d-0a2026a1e798` via Cort
 | User entity            | `packages/cortex/nestjs-repositories/src/modules/users/user.entity.ts`                                           |
 | UsersService           | `packages/cortex/nestjs-repositories/src/modules/users/users.service.ts`                                         |
 | Auth module            | `applications/openthrottle-server/src/graphql/auth/` (auth.service.ts, auth.resolver.ts, auth-graphql.module.ts) |
-| JWT strategy           | `packages/mattscholta/nestjs-auth/src/strategies/jwt.strategy.ts`                                                |
+| JWT strategy           | `packages/nestjs-auth/src/strategies/jwt.strategy.ts`                                                            |
