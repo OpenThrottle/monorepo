@@ -39,6 +39,14 @@ resource "google_storage_bucket" "terraform_state" {
   }
 }
 
+# Least-privilege IAM for CI workflows: object read/write on the Nx remote cache bucket only.
+# The terraform state bucket is not granted here; operators use their own credentials.
+resource "google_storage_bucket_iam_member" "nx_cache_gcs_workflow_object_admin" {
+  bucket = google_storage_bucket.nx_cache.name
+  member = "serviceAccount:${google_service_account.gcs_workflow.email}"
+  role   = "roles/storage.objectAdmin"
+}
+
 # # Upload a text file as an object to the storage bucket
 # resource "google_storage_bucket_object" "default" {
 #   bucket       = google_storage_bucket.terraform_state.id
