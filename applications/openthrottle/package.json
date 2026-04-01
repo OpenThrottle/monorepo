@@ -14,14 +14,7 @@
   },
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [
-      "openthrottle-cms",
-      "openthrottle-admin",
-      "openthrottle-developer",
-      "openthrottle-email",
-      "openthrottle-server",
-      "openthrottle-website"
-    ],
+    "implicitDependencies": [],
     "sourceRoot": "./",
     "projectType": "application",
     "tags": [
@@ -30,12 +23,7 @@
       "type:application"
     ],
     "targets": {
-      "dev": {
-        "continuous": true,
-        "dependsOn": [
-          "^dev"
-        ]
-      },
+      "dev": {},
       "lint": {},
       "test": {},
       "test-e2e": {},
