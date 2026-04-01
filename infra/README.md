@@ -12,7 +12,7 @@ This directory contains Infrastructure as Code (IaC) configurations for managing
 **Current Setup:**
 
 - **Provider**: Google Cloud Platform (GCP)
-- **Environments**: Staging is implemented under `environments/staging/`; additional envs (development, production) can be added using the same pattern.
+- **Environments**: Staging (`environments/staging/`) and production (`environments/production/`) each have their own Terraform root and GCS state; see [environments/README.md](environments/README.md). Additional envs (e.g. development) can follow the same pattern.
 - **Modules**: Cloudflare (`modules/cloudflare/`) and OpenThrottle-oriented GCP building blocks (`gcp_compute_e2`, `gcp_memorystore_redis`, `gcp_cloud_sql_mysql`, `gcp_cloud_sql_postgres`). Environment stacks may also define one-off resources (for example a Terraform state bucket in staging).
 - **Resources**: Compute instances, Cloud SQL, Memorystore, Cloud Storage, and other GCP services as defined per environment.
 
@@ -57,7 +57,7 @@ terraform apply
 ### Directory structure
 
 - **`applications/`**: Reusable application modules (e.g. `openthrottle`). See [applications/README.md](applications/README.md).
-- **`environments/`**: Environment-specific configurations (currently **`staging/`**; add `development/` or `production/` by copying the staging layout and adjusting locals).
+- **`environments/`**: Environment-specific configurations (`staging/`, `production/`); add other envs by copying the layout and adjusting locals. See [environments/README.md](environments/README.md) for separate roots vs workspaces.
 - **`modules/`**: Reusable Terraform building-block modules
   - `cloudflare/`: Cloudflare configuration module
   - **OpenThrottle GCP** (aligned to `infra/gcp-estimate.csv`):
