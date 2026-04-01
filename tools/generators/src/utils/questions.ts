@@ -144,16 +144,7 @@ export const getConfigConfirmation = async (
 };
 
 export const getOrganizationName = async (): Promise<string> => {
-  const options: string[] = [
-    '@barguide',
-    // '@cortex', // FIXME: Need to fully deprecate this project
-    '@intouch',
-    '@openthrottle',
-    '@openthrottle',
-    '@rocketcms',
-    '@tools',
-    '@visormatt',
-  ];
+  const options: string[] = ['@openthrottle', '@tools'];
 
   const { organization } = await prompts<string>({
     choices: options.map((option) => ({ title: option, value: option })),

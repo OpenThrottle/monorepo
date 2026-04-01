@@ -20,25 +20,12 @@
     },
     "type": {
       "type": "string",
-      "enum": [
-        "nestjs",
-        "node",
-        "react",
-        "tools"
-      ],
+      "enum": ["nestjs", "node", "react", "tools"],
       "description": "Package type."
     },
     "organization": {
       "type": "string",
-      "enum": [
-        "@barguide",
-        "@intouch",
-        "@openthrottle",
-        "@openthrottle",
-        "@rocketcms",
-        "@tools",
-        "@visormatt"
-      ],
+      "enum": ["@openthrottle", "@tools"],
       "description": "Package organization scope."
     },
     "name": {
