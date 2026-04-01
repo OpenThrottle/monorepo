@@ -1,7 +1,7 @@
 /**
  * @description Flags .tsx files that may need alignment with generator templates and
  * .cursor/rules (default exports in component paths, missing React import).
- * See docs/tools/generators/AUDIT_CHECKLIST.md. Does not modify files.
+ * See docs/tools/templates/AUDIT_CHECKLIST.md. Does not modify files.
  */
 
 import { readFileSync } from 'fs';
@@ -92,7 +92,7 @@ function run(): void {
 
   if (flags.length === 0) {
     console.log(
-      'No files flagged. See docs/tools/generators/AUDIT_CHECKLIST.md for full checklist.',
+      'No files flagged. See docs/tools/templates/AUDIT_CHECKLIST.md for full checklist.',
     );
     return;
   }
@@ -105,7 +105,7 @@ function run(): void {
   }
   console.log('');
   console.log(
-    `Total: ${flags.length} flag(s). See docs/tools/generators/AUDIT_CHECKLIST.md.`,
+    `Total: ${flags.length} flag(s). See docs/tools/templates/AUDIT_CHECKLIST.md.`,
   );
 }
 

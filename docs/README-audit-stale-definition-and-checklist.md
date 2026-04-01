@@ -73,6 +73,6 @@ Prefer **in-repo updates** for stale content; if deferred, open a tracked issue 
 
 - **AGENTS.md** — pnpm, Nx usage, workspace guidelines.
 - **.cursor/rules/commands/cursor-commands.mdc** — “ALWAYS use PNPM”, “ALWAYS use NX”.
-- **docs/tools/generators/AUDIT_CHECKLIST.md** — Similar checklist pattern for code/template audits.
+- **docs/tools/templates/AUDIT_CHECKLIST.md** — Similar checklist pattern for code/template audits.
 
 This checklist supports task **Define 'stale' and checklist** (Task-Id: `fea3504f-82d8-49ec-a0c0-dbdd03642269`).

@@ -116,7 +116,7 @@ After creating new `app/routing/<name>/` folders (via the folders generator), re
 | **@tools/generators:remix** (form)      | Create forms                          | `--subGenerator=form`, `--application=openthrottle-email`, `--folder=<folder>`, `--name=<FormName>`  |
 | **@tools/generators:remix** (table)     | Create tables                         | `--subGenerator=table`, same application/folder/name pattern if supported                            |
 
-Always prefix with **`NX_ISOLATE_PLUGINS=false`**. Discover schemas and dynamic values with `--describe` and `--list=<key>` (e.g. `--list=applications`, `--list=componentFolders --application=openthrottle-email`). See **docs/tools/generators/AGENT_USAGE.md** for full workflow.
+Always prefix with **`NX_ISOLATE_PLUGINS=false`**. Discover schemas and dynamic values with `--describe` and `--list=<key>` (e.g. `--list=applications`, `--list=componentFolders --application=openthrottle-email`). See **docs/tools/templates/AGENT_USAGE.md** for full workflow.
 
 ---
 

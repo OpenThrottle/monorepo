@@ -98,7 +98,7 @@ nx g @tools/generators:remix --describe
 # Check the "list" object in the output
 
 # Some list keys require additional params
-nx g @tools/generators:remix --list=componentFolders --application=rocketcms
+nx g @tools/generators:remix --list=componentFolders --application=openthrottle-cms
 ```
 
 ### Issue: "Target not found" or "Invalid destination"
@@ -186,7 +186,7 @@ This workspace is configured to automatically set `NX_ISOLATE_PLUGINS=false` in 
 # For generator execution
 NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=mattscholta \
+  --application=openthrottle-website \
   --folder=routing/sandbox/components \
   --name=ExampleAgentComponent
 

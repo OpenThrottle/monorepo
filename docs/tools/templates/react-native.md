@@ -1,89 +1,17 @@
-# React Native Generator Reference
+# React Native generator (not in this workspace)
 
-Generate React Native components, hooks, routes, packages, and applications.
+The `@tools/generators` package in this repo registers **`folders`**, **`nestjs`**, **`package`**, **`react`**, and **`remix`** only. See `tools/generators/generators.json`.
 
-## Quick Start
+There is **no** `react-native` generator registered here today, so commands like `nx g @tools/generators:react-native` will fail.
 
-```bash
-# Get schema
-nx g @tools/generators:react-native --describe
+## What to do instead
 
-# List targets
-nx g @tools/generators:react-native --list=targets
+1. List what exists:
 
-# Generate component
-nx g @tools/generators:react-native \
-  --type=component \
-  --target=barguide-app \
-  --name=Button
-```
+   ```bash
+   NX_ISOLATE_PLUGINS=false nx list @tools/generators
+   ```
 
-## Available Types
+2. Use **`react`** for shared UI in `@openthrottle/*` packages (see [react.md](./react.md)) and **`remix`** for React Router apps under `applications/` (see [remix.md](./remix.md)).
 
-- `component` - Generate a React Native component
-- `package` - Generate a React Native package
-
-## Parameters
-
-| Parameter      | Type     | Required                        | Description                                                                      | Constraints                                                                                                                       |
-| -------------- | -------- | ------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `type`         | `string` | ✅                              | Type of artifact to generate                                                     | `"component" \| "package"` (note: uses `--type` not `--subGenerator`)                                                             |
-| `name`         | `string` | ✅ (for `component`, `package`) | Name(s) of artifact(s). Multiple comma-separated names supported for components. | PascalCase for components. Min 3 chars.                                                                                           |
-| `target`       | `string` | ✅ (for `component`)            | Destination package or application                                               | Min 1 char. Use `--list=targets` to enumerate valid values.                                                                       |
-| `destination`  | `string` | Optional (for `component`)      | Destination folder path within application                                       | Pattern: `^(global/components\|routes/[^/]+/components\|services/[^/]+/components)$`                                              |
-| `organization` | `string` | ✅ (for `package`)              | Organization scope                                                               | `"@barguide" \| "@intouch" \| "@openthrottle" \| "@rocketcms" \| "@tools" \| "@visormatt"`                                        |
-| `packageType`  | `string` | ✅ (for `package`)              | Type of package                                                                  | `"feature" \| "package"`. Feature packages must start with `"feature-"`, React Native packages must start with `"react-native-"`. |
-
-## Conditional Requirements
-
-- For `component`: `target` and `name` required
-- For `package`: `name`, `organization`, and `packageType` required. Name must match pattern based on `packageType`:
-  - If `packageType` is `"feature"`: name must match `^feature-`
-  - If `packageType` is `"package"`: name must match `^react-native-`
-
-## Examples
-
-### Component
-
-```bash
-nx g @tools/generators:react-native \
-  --type=component \
-  --target=barguide-app \
-  --name=Button
-```
-
-### Component with Destination
-
-```bash
-nx g @tools/generators:react-native \
-  --type=component \
-  --target=barguide-app \
-  --destination=global/components \
-  --name=UserCard
-```
-
-### Feature Package
-
-```bash
-nx g @tools/generators:react-native \
-  --type=package \
-  --name=feature-auth \
-  --organization=@rocketcms \
-  --packageType=feature
-```
-
-### React Native Package
-
-```bash
-nx g @tools/generators:react-native \
-  --type=package \
-  --name=react-native-ui \
-  --organization=@rocketcms \
-  --packageType=package
-```
-
-## Naming Conventions
-
-- **Components**: PascalCase (e.g., `Button`, `UserCard`)
-- **Feature Packages**: Must start with `feature-` (e.g., `feature-auth`)
-- **React Native Packages**: Must start with `react-native-` (e.g., `react-native-ui`)
+3. If React Native scaffolding is added later, the repo should register a generator in `generators.json` and document `--list=targets` (or equivalent) for valid destinations; organization scopes should match the package generator (`@openthrottle`, `@tools` per [package.md](./package.md)).

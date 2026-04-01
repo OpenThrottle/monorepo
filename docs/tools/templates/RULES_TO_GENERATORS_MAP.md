@@ -105,7 +105,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 - **personal-general.mdc** still documents **yarn** and old generator CLI:
   - `yarn generate:remix --generator=... --name=... --project=... --folder=...`
   - `yarn generate:nestjs --generator=... --name=... --project=...`
-  - **Gap:** Agents and humans following personal-general.mdc may use the wrong entrypoint. **Recommendation:** Update personal-general.mdc to point to @tools/generators and AGENT_USAGE.md (e.g. “Use Nx generators: see personal-generators.mdc and docs/tools/generators/AGENT_USAGE.md”).
+  - **Gap:** Agents and humans following personal-general.mdc may use the wrong entrypoint. **Recommendation:** Update personal-general.mdc to point to @tools/generators and AGENT_USAGE.md (e.g. “Use Nx generators: see personal-generators.mdc and docs/tools/templates/AGENT_USAGE.md”).
 - **personal-generators.mdc** example uses `--type`, `--target`, `--name` generically; React uses `--subGenerator` and `--destination`, React Native uses `--type` and `--target`. **Gap:** One example doesn’t fit all. **Recommendation:** Keep one canonical “discover then generate” flow in personal-generators.mdc and link to AGENT_USAGE.md (and generator docs) for exact flags per generator.
 
 ### 4.2 Generator coverage
@@ -122,7 +122,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 
 ### 4.4 Cross-references
 
-- **AGENTS.md / AGENT_USAGE.md:** AGENT_USAGE.md is the canonical generator-first guide; AGENTS.md references Nx and templates at a high level. **Recommendation:** Ensure AGENTS.md explicitly points to docs/tools/generators/AGENT_USAGE.md and personal-generators.mdc so “generator-first” is discoverable in one place.
+- **AGENTS.md / AGENT_USAGE.md:** AGENT_USAGE.md is the canonical generator-first guide; AGENTS.md references Nx and templates at a high level. **Recommendation:** Ensure AGENTS.md explicitly points to docs/tools/templates/AGENT_USAGE.md and personal-generators.mdc so “generator-first” is discoverable in one place.
 
 ---
 

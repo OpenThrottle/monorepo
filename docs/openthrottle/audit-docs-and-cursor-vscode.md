@@ -72,9 +72,9 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 
 ### 2.4 Tools
 
-| Doc                                    | Cortex references                                          |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `docs/tools/generators/AGENT_USAGE.md` | Example `--destination=@openthrottle/nestjs-repositories`. |
+| Doc                                   | Cortex references                                          |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `docs/tools/templates/AGENT_USAGE.md` | Example `--destination=@openthrottle/nestjs-repositories`. |
 
 ---
 

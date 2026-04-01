@@ -17,7 +17,7 @@ nx g @tools/generators:package --list=types
 # Generate React package
 nx g @tools/generators:package \
   --type=react \
-  --organization=@rocketcms \
+  --organization=@openthrottle \
   --name=ui-components
 ```
 
@@ -30,11 +30,11 @@ nx g @tools/generators:package \
 
 ## Parameters
 
-| Parameter      | Type     | Required | Description                 | Constraints                                                                                                   |
-| -------------- | -------- | -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `type`         | `string` | ✅       | Type of package to generate | `"nestjs" \| "node" \| "react" \| "tools"`                                                                    |
-| `organization` | `string` | ✅       | Organization scope          | `"@barguide" \| "@intouch" \| "@openthrottle" \| "@openthrottle" \| "@rocketcms" \| "@tools" \| "@visormatt"` |
-| `name`         | `string` | ✅       | Package name                | Valid slug (lowercase, hyphen-separated). Pattern: `^[a-z0-9]+(?:-[a-z0-9]+)*$`. Min 3 chars.                 |
+| Parameter      | Type     | Required | Description                 | Constraints                                                                                   |
+| -------------- | -------- | -------- | --------------------------- | --------------------------------------------------------------------------------------------- |
+| `type`         | `string` | ✅       | Type of package to generate | `"nestjs" \| "node" \| "react" \| "tools"`                                                    |
+| `organization` | `string` | ✅       | Organization scope          | `"@openthrottle" \| "@tools"`                                                                 |
+| `name`         | `string` | ✅       | Package name                | Valid slug (lowercase, hyphen-separated). Pattern: `^[a-z0-9]+(?:-[a-z0-9]+)*$`. Min 3 chars. |
 
 ## Examples
 
@@ -44,7 +44,7 @@ nx g @tools/generators:package \
 nx g @tools/generators:package \
   --type=react \
   --name=ui-components \
-  --organization=@rocketcms
+  --organization=@openthrottle
 ```
 
 ### NestJS Package
@@ -62,7 +62,7 @@ nx g @tools/generators:package \
 nx g @tools/generators:package \
   --type=node \
   --name=shared-utils \
-  --organization=@rocketcms
+  --organization=@openthrottle
 ```
 
 ### Tools Package

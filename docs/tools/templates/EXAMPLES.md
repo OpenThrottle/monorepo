@@ -15,7 +15,7 @@ nx g @tools/generators:react --list=destinations
 # 2. Execute generator
 nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=UserCard
 ```
 
@@ -26,7 +26,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select
 ```
 
@@ -35,7 +35,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=hook \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=useUser
 ```
 
@@ -44,7 +44,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=util \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=formatDate
 ```
 
@@ -57,12 +57,12 @@ nx g @tools/generators:react \
 nx g @tools/generators:remix --list=applications
 
 # 2. List available folders
-nx g @tools/generators:remix --list=componentFolders --application=rocketcms
+nx g @tools/generators:remix --list=componentFolders --application=openthrottle-cms
 
 # 3. Generate component
 nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=global/components \
   --name=UserProfile
 ```
@@ -72,7 +72,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=form \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing/users/components \
   --name=UserForm
 ```
@@ -82,7 +82,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=route \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --name=api.users
 ```
 
@@ -97,7 +97,7 @@ nx g @tools/generators:nestjs --list=graphqlApplications
 # 2. Generate service
 nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=users
 ```
 
@@ -115,34 +115,13 @@ nx g @tools/generators:nestjs \
 ```bash
 nx g @tools/generators:nestjs \
   --subGenerator=queue \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=email-queue
 ```
 
-## React Native Generator Examples
+## React Native
 
-### Creating a Component
-
-```bash
-# 1. List available targets
-nx g @tools/generators:react-native --list=targets
-
-# 2. Generate component
-nx g @tools/generators:react-native \
-  --type=component \
-  --target=@barguide/app \
-  --name=Button
-```
-
-### Creating a Feature Package
-
-```bash
-nx g @tools/generators:react-native \
-  --type=package \
-  --name=feature-auth \
-  --organization=@rocketcms \
-  --packageType=feature
-```
+There is no `@tools/generators:react-native` entry in this workspace (`tools/generators/generators.json`). See [react-native.md](./react-native.md).
 
 ## Package Generator Examples
 
@@ -152,7 +131,7 @@ nx g @tools/generators:react-native \
 nx g @tools/generators:package \
   --type=react \
   --name=ui-components \
-  --organization=@rocketcms
+  --organization=@openthrottle
 ```
 
 ### Creating a NestJS Package
@@ -170,7 +149,7 @@ nx g @tools/generators:package \
 
 ```bash
 nx g @tools/generators:folders \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing \
   --name=users
 ```
@@ -179,7 +158,7 @@ nx g @tools/generators:folders \
 
 ```bash
 nx g @tools/generators:folders \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=services \
   --name=email-service
 ```
@@ -192,7 +171,7 @@ Many generators support comma-separated names for generating multiple artifacts:
 # Generate multiple React components
 nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select,Textarea
 ```
 
@@ -203,34 +182,34 @@ Here's a complete workflow for creating a new feature:
 ```bash
 # 1. Create routing folder structure
 nx g @tools/generators:folders \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing \
   --name=users
 
 # 2. Create a route
 nx g @tools/generators:remix \
   --subGenerator=route \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --name=users
 
 # 3. Create components
 nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing/users/components \
   --name=UserList,UserCard
 
 # 4. Create a form
 nx g @tools/generators:remix \
   --subGenerator=form \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing/users/components \
   --name=UserForm
 
 # 5. Create a table
 nx g @tools/generators:remix \
   --subGenerator=table \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing/users/components \
   --name=UsersTable
 ```

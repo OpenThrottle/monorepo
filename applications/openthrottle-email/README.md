@@ -1,6 +1,6 @@
 # openthrottle-email
 
-Web-based email client (React Router v7, flat routes). Uses **@openthrottle/react-router-shadcn** for all UI. Routes and components are scaffolded via **@tools/generators** (see monorepo `docs/tools/generators/AGENT_USAGE.md`).
+Web-based email client (React Router v7, flat routes). Uses **@openthrottle/react-router-shadcn** for all UI. Routes and components are scaffolded via **@tools/generators** (see monorepo `docs/tools/templates/AGENT_USAGE.md`).
 
 **Technology:**
 
