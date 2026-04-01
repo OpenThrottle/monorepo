@@ -26,15 +26,15 @@ export async function runServer(): Promise<void> {
     { capabilities: { resources: {}, tools: {} } },
   );
 
-  registerSearchTools(server);
-  registerPlanTools(server);
-  registerTaskTools(server);
-  registerNoteTools(server);
   registerActivityTools(server);
   registerCommitTools(server);
-  registerOutputTools(server);
   registerHealthTool(server);
   registerKnowledgeBaseResource(server);
+  registerNoteTools(server);
+  registerOutputTools(server);
+  registerPlanTools(server);
+  registerSearchTools(server);
+  registerTaskTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

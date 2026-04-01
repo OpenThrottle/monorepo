@@ -17,16 +17,17 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
     return { connectionString: url.trim() };
   }
 
-  // const testing = process.env.MOCK_ENV ?? '__UNSET__';
-  // console.log('🔍 🔍 🔍 MOCK_ENV 🔍 🔍 🔍', testing, process.env);
+  const db = process.env.POSTGRES_DB;
+  const host = process.env.POSTGRES_HOST;
+  const password = process.env.POSTGRES_PASSWORD;
+  const user = process.env.POSTGRES_USER;
+  const port = Number(process.env.POSTGRES_PORT);
 
-  const db = process.env.POSTGRES_DB ?? 'cortex';
-  const host = process.env.POSTGRES_HOST ?? 'localhost';
-  const password = process.env.POSTGRES_PASSWORD ?? 'cortex_password';
-  const user = process.env.POSTGRES_USER ?? 'cortex_user';
-  const port = process.env.POSTGRES_PORT
-    ? Number(process.env.POSTGRES_PORT)
-    : '6010';
+  if (!db || !host || !password || !port || !user) {
+    throw new Error(
+      '🚨 ai-mcp - Required Postgres environment variables are not set',
+    );
+  }
 
   const encodedPassword = encodeURIComponent(password);
 

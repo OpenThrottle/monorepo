@@ -11,7 +11,7 @@ Great stuff! You've successfully generated a new package 🎉 Now, lets quickly 
 ## Manual Steps
 
 - [ ] Add this new package to the root `package.json`
-  - We add it under the `devDependencies`
+  - We add it under the `dependencies`
   - `"<%= org %>/<%= name %>": "workspace:*",`
 - [ ] Now we install to update the PNPM workspace
   - `pnpm install --no-frozen-lockfile`

@@ -191,8 +191,7 @@ Applications and packages can reference each other directly:
 ```json
 {
   "dependencies": {
-    "@visormatt/react-goodies": "workspace:*",
-    "@barguide/react-native-ui": "workspace:*"
+    "@openthrottle/xxxxxx": "workspace:*"
   }
 }
 ```

@@ -7,6 +7,16 @@ resource "google_storage_bucket" "nx_cache" {
   lifecycle {
     prevent_destroy = true
   }
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age                = 90
+      num_newer_versions = 10 # Keep the last 10 versions
+    }
+  }
 }
 
 resource "google_storage_bucket" "terraform_state" {
@@ -17,6 +27,15 @@ resource "google_storage_bucket" "terraform_state" {
 
   lifecycle {
     prevent_destroy = true
+  }
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = 90
+    }
   }
 }
 

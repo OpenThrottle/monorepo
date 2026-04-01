@@ -62,6 +62,7 @@ export const main = async (): Promise<void> => {
     const errorMessage = isError ? error.message : String(error);
 
     showRalphUsage(errorMessage);
+
     process.exit(1);
   }
 
