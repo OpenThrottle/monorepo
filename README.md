@@ -3,9 +3,7 @@
 [![Continuous Integration](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
 [![NX Release](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
 <br>
-[![BarGuide](https://img.shields.io/badge/🍺_BarGuide-.io-30c653)](https://barguide.io)
-[![MattScholta](https://img.shields.io/badge/👨‍💻_MattScholta-.com-30c653)](https://mattscholta.com)
-[![RocketCMS](https://img.shields.io/badge/🚀_RocketCMS-.org-30c653)](https://rocketcms.org)
+[![OpenThrottle | Developer](https://img.shields.io/badge/🍺_OpenThrottle-.ai-30c653)](https://openthrottle-developer.io)
 <br>
 [![Rollbar - Error Tracking](https://img.shields.io/badge/🚨_Rollbar-.com-yellow)](https://app.rollbar.com/a/BarGuide.io?duration=7d&prj=719306&prj=719305&prj=737974)
 
@@ -13,13 +11,17 @@ After years of development, I've refined my tech stack to focus on a core set of
 
 **See also:** [docs/](./docs/) for detailed guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
-- [🏠 Architecture](#-architecture)
-- [⚙️ Installation](#️-installation)
-- [🧑‍💻 Development](#-development)
-- [📱 Builds](#-builds)
-- [🌳 Reserved Worktrees](#-reserved-worktrees)
-- [☁️ GCP Auth](#️-gcp-auth)
-- [🛟 Troubleshooting](#-troubleshooting)
+- [🐙 Monorepo](#-monorepo)
+  - [🏠 Architecture](#-architecture)
+  - [⚙️ Installation](#️-installation)
+  - [🧑‍💻 Development](#-development)
+    - [Common Commands](#common-commands)
+    - [TypeScript Execution (SWC)](#typescript-execution-swc)
+    - [Python Applications](#python-applications)
+  - [🌳 Reserved Worktrees](#-reserved-worktrees)
+    - [Using Reserved Worktrees](#using-reserved-worktrees)
+  - [☁️ GCP Auth | gcloud CLI](#️-gcp-auth--gcloud-cli)
+  - [🛟 Troubleshooting](#-troubleshooting)
 
 ## 🏠 Architecture
 
@@ -57,22 +59,14 @@ While many [NX](https://nx.dev/) monorepo implementations specialize in either `
 Monorepos streamline our development process by centralizing code management, enabling faster feedback cycles, and promoting code reuse. With shared tooling, consistent standards, and atomic commits, we can maintain high velocity while ensuring quality. The unified build system and dependency management reduce context switching and eliminate version conflicts, making the development experience both efficient and enjoyable.
 
 ```bash
-# 🍺 MySQL / Postgres (optional; services may be commented in docker-compose.yml)
-docker compose up mysql --force-recreate
-docker compose up postgres --force-recreate
-
-# 🤖 Cortex Postgres (plans ingestion, pgvector) — see databases/cortex/README.md and .env.default (CORTEX_POSTGRES_*)
-# Note: cortex service may be commented in docker-compose-databases.yml; uncomment to use.
-docker compose -f docker-compose-databases.yml up -d cortex
-
-# 🧱 Supabase provides the infrastructure (primary workflow)
-pnpm start
+# 🧠 Postgres and Redis databases
+docker compose up openthrottle-redis openthrottle-postgres --detach
 
 # 🚀 A React Router application
-nx run barguide:dev
+nx run openthrottle-developer:dev
 
 # 📱 If we need to access it over our local network
-nx run barguide:dev -- --host
+nx run openthrottle-developer:dev -- --host
 ```
 
 ### Common Commands
@@ -113,52 +107,6 @@ source .venv/bin/activate
 
 # Turn it off
 deactivate
-```
-
-## 📱 Builds
-
-We currently run a nightly development build for iOS and Android devices. Head over to [EAS](https://expo.dev/accounts/visormatt/projects/intouch/development-builds) to see the latest builds.
-
-### Manual Builds
-
-We can easily build any variation of device and platform via EAS or locally.
-
-```bash
-# 👀 See what's available
-nx run intouch:build --help
-
-# 🤖 EAS builds
-nx run intouch:build --profile development
-nx run intouch:build --profile preview
-
-# 💻 Local builds (--local flag)
-nx run intouch:build --profile development-simulator --local
-nx run intouch:build --profile preview --local
-```
-
-### EAS Workflows
-
-We can dispatch a workflow to create a build for a specific platform and profile.
-
-```bash
-# 📱 cd into the application we want to build
-cd applications/intouch
-
-# 🤖 Dispatch a workflow
-eas workflow:run .eas/workflows/create-builds.yml
-eas workflow:run .eas/workflows/deploy-to-production.yml
-
-# 🤖 Run it with parameters, e.g. simulator build for iOS
-eas workflow:run .eas/workflows/create-builds.yml \
-  -F branch=main \
-  -F platform=ios \
-  -F profile=development-simulator
-
-# 📲 e.g. A one-off build of a feature branch for a demo/preview?
-eas workflow:run .eas/workflows/create-builds.yml \
-  -F branch=feat/amazing-demo-branch \
-  -F platform=all \
-  -F profile=preview
 ```
 
 ## 🌳 Reserved Worktrees
@@ -211,7 +159,7 @@ git worktree list
 
 **Note:** The main `monorepo` directory is reserved for the `main` branch. Each branch can only be checked out in one worktree at a time.
 
-## ☁️ GCP Auth
+## ☁️ GCP Auth | gcloud CLI
 
 - Good stuff in our [doc here](./docs/infra/gcloud-two-profiles.md)
 
@@ -240,23 +188,17 @@ We can always re-run the setup script `./scripts/setup.sh`
 
 **2. Database Issues?**
 
-Try stopping any running project(s) with our pnpm scripts:
+Try stopping and starting the Database with our pnpm scripts:
 
-- `pnpm database:barguide:stop`
-- `pnpm database:rocketcms:stop`
+- `pnpm database:stop`
+- `pnpm database:start`
 
-**3. Expo Builds?**
-
-An error like `"Provisioning profile ... doesn't include signing certificate ..."`
-
-- [This thread may be relevant](https://github.com/expo/eas-cli/issues/1201#issuecomment-1446997753)
-
-**4. Version mismatches?**
+**3. Version mismatches?**
 
 To see what versions of a package are installed we can use `pnpm list`. From there we typically need to set a specific resolution in our package.json.
 
 - e.g. `pnpm list react`
 
-**5. Other issues?**
+**4. Other issues?**s
 
 Let me know and we'll get to the bottom of things 🤷
