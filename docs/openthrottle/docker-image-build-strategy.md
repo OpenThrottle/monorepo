@@ -142,6 +142,26 @@ To confirm the openthrottle-server image builds and runs with Dockerfile.NestJS.
    `docker compose -f applications/openthrottle/docker-compose.yml up --build`
    builds and runs openthrottle-server and openthrottle-developer together for full stack verification.
 
+### 8.2. Local push to Artifact Registry (same names as CI)
+
+Pushing images built on a developer machine must use the **same registry prefix and image names** as CI (`.github/workflows/openthrottle-docker.yml` and `.github/actions/docker-build-push`) so staging or automation can pull the same refs.
+
+| Item                             | Value                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Artifact Registry region**     | `us-west2` (`ARTIFACT_REGISTRY_REGION` in the workflow). This is the region where the Docker repository lives; it is **not** necessarily the same as other GCP resource regions you use elsewhere.                                                                                                                               |
+| **Registry / repository prefix** | `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle` (no trailing slash). `<GCP_PROJECT>` is `vars.GOOGLE_PROJECT_ID_STAGING` for non-`main` workflows and `vars.GOOGLE_PROJECT_ID_PRODUCTION` when the workflow targets production on `main`. Staging is typically `openthrottle-staging` (see `infra/environments/README.md`). |
+| **Image names**                  | `openthrottle-server` and `openthrottle-developer` — same as the Nx app names and the `INPUT_APP` input to `docker-build-push`. Full references: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/openthrottle-server:<tag>` and `.../openthrottle-developer:<tag>`.                                                          |
+| **CI tag format**                | `sha-<GITHUB_SHA>` (full Git SHA from GitHub, prefixed with `sha-`).                                                                                                                                                                                                                                                             |
+
+**Local machine: authenticate before `docker push`**
+
+1. Sign in: `gcloud auth login`, or `gcloud auth activate-service-account --key-file=...` for automation.
+2. Select project: `gcloud config set project <GCP_PROJECT>` (match the project whose Artifact Registry you are pushing to).
+3. IAM: the principal needs **`roles/artifactregistry.writer`** (or a role that includes Artifact Registry write) on that project.
+4. Configure Docker for the registry host: `gcloud auth configure-docker us-west2-docker.pkg.dev`
+
+**Distinction:** Artifact Registry hosts container images at `*.pkg.dev` and is used with `docker push`. **Nx remote cache** uses **GCS buckets** (for example `openthrottle-staging-nx-cache`) and `gsutil`; do not confuse the two.
+
 ## 9. References
 
 - Current run/build and existing Docker usage: [run-build-and-docker-current-state.md](./run-build-and-docker-current-state.md).
