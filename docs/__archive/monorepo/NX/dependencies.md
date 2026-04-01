@@ -21,11 +21,7 @@ The monorepo contains **63 projects** organized into:
 
 Packages are organized by domain/scope:
 
-- `@barguide/*`: 14 packages for BarGuide application
-- `@rocketcms/*`: 7 packages for RocketCMS application
-- `@intouch/*`: 3 packages for InTouch application
 - `@openthrottle/*`: 12 packages (NestJS utilities, React Native, utilities)
-- `@visormatt/*`: 5 packages (React utilities, testing)
 - `@tools/*`: 4 packages (build tools, generators)
 
 ## Key Dependency Patterns

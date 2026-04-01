@@ -1,6 +1,6 @@
 {
   "name": "monorepo",
-  "description": "Monorepo of many different applications... BarGuide + InTouch + RocketCMS + Portfolio + ALL OF IT",
+  "description": "Monorepo of many different applications... OpenThrottle + ALL OF IT",
   "version": "4.5.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -312,7 +312,7 @@
     "projectType": "application",
     "sourceRoot": "./",
     "tags": [
-      "name:@rocketcms/monorepo",
+      "name:@openthrottle/monorepo",
       "production:true",
       "type:package"
     ],
@@ -384,6 +384,11 @@
       "keytar",
       "msgpackr-extract",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ]
   },
@@ -434,7 +439,8 @@
     "audit:templates-compliance": "tsx ./scripts/audit-templates-compliance.ts",
     "nx:validate-tags": "tsx ./scripts/nx-validate-tags.ts",
     "preinstall": "npx only-allow pnpm",
-    "prepare": "husky",
+    "__prepare": "husky",
+    "__prepare-skip": "[[ -z \"$HUSKY\" || \"$HUSKY\" = \"1\" ]] && husky || :",
     "start": "pnpm run start:databases",
     "sync:openthrottle": "pnpm run \"/^sync:openthrottle:.*/\"",
     "sync:openthrottle:developer": "git subtree push --prefix=applications/openthrottle-developer openthrottle-developer main",

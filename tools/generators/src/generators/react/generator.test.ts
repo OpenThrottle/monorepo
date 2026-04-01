@@ -11,7 +11,7 @@ describe('reactGenerator', () => {
   });
 
   const type = 'component';
-  const target = '@rocketcms/shared-ui';
+  const target = '@openthrottle/shared-ui';
   const name = 'TestComponentName';
 
   test('should run successfully', async () => {

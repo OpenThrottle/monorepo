@@ -76,7 +76,7 @@ nx run openthrottle-developer:dev -- --host
 pnpm add __SOME_PACKAGE__ -w -S
 
 # 📦 Adding a package to a specific project
-pnpm add __SOME_PACKAGE__ --filter intouch -S
+pnpm add __SOME_PACKAGE__ --filter openthrottle-developer -S
 
 # 🧪 Run only the changed tests and watch for changes
 nx run @tools/generators:test --changed --watch

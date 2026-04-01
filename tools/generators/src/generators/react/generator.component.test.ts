@@ -11,7 +11,7 @@ describe('componentGenerator', () => {
   });
 
   const packageName = `shared-ui`;
-  const target = `@rocketcms/${packageName}`;
+  const target = `@openthrottle/${packageName}`;
   const name = 'TestComponent';
 
   test('should run successfully', async () => {

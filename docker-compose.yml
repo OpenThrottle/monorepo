@@ -71,7 +71,7 @@ services:
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
-    # user: "appuser"
+    user: 'appuser'
 
   #############################################################################
   #
@@ -180,6 +180,7 @@ services:
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
+    user: 'appuser'
 
 #############################################################################
 #

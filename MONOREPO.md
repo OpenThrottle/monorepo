@@ -120,7 +120,7 @@ Before creating a new package, check if similar functionality exists:
 ### Applications
 
 - **Format**: `kebab-case`
-- **Examples**: `barguide`, `nestjs-rest-api`, `intouch`
+- **Examples**: `openthrottle-admin`, `openthrottle-developer`, `openthrottle-server`
 - **Location**: `applications/<name>/`
 
 ### Code-Level Conventions
@@ -269,7 +269,7 @@ nx run <project-name>:test --watch
 
 ### React Native/Expo Application
 
-**Example**: `applications/intouch/`
+**Example**: `applications/openthrottle-developer/`
 
 **Key Files:**
 
@@ -283,7 +283,7 @@ nx run <project-name>:test --watch
 ```json
 {
   "tags": [
-    "name:intouch",
+    "name:openthrottle-developer",
     "production:true",
     "technology:expo",
     "technology:react-native",
