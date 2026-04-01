@@ -129,10 +129,13 @@ process_app() {
   echo "Tagging ${source_ref} → ${latest_ref} and ${sha_ref}"
   run_cmd docker tag "${source_ref}" "${latest_ref}"
   run_cmd docker tag "${source_ref}" "${sha_ref}"
+
   echo "Pushing ${latest_ref}"
   run_cmd docker push "${latest_ref}"
+
   echo "Pushing ${sha_ref}"
   run_cmd docker push "${sha_ref}"
+
   echo ""
 }
 
