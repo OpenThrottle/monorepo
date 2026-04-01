@@ -5,4 +5,11 @@ docker compose up openthrottle-server --build
 docker compose up openthrottle-developer --build
 
 docker images | grep openthrottle
+
+```
+
+**Publishing Images (manually):**
+
+```bash
+OPENTHROTTLE_DRY_RUN=1 ./scripts/gcs-docker-upload.sh
 ```
