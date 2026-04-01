@@ -1,4 +1,4 @@
-import { ENV_SOURCE, IS_BROWSER } from '../config/environment';
+import { ENV_SOURCE } from '../config/environment';
 import type { OpenThrottleEnv } from '../types';
 
 export const getEnvironment = (): OpenThrottleEnv => {

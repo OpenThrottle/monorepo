@@ -19,7 +19,7 @@ on:
       - 'databases/cortex/**'
       - 'nx.json'
       - 'package.json'
-      - 'packages/openthrottle/**'
+      - 'packages/**'
       - 'pnpm-lock.yaml'
       - 'tools/workflows/**'
   pull_request:
@@ -29,7 +29,7 @@ on:
       - 'databases/cortex/**'
       - 'nx.json'
       - 'package.json'
-      - 'packages/openthrottle/**'
+      - 'packages/**'
       - 'pnpm-lock.yaml'
       - 'tools/workflows/**'
 
@@ -83,7 +83,7 @@ jobs:
         id: affected
         uses: ./.github/actions/nx-affected-docker-apps
         with:
-          apps: openthrottle-server,openthrottle-developer
+          apps: openthrottle-developer,openthrottle-server
           nx-version: ${{ env.NX_VERSION }}
 
       - name: '🐳 Build (and push on main) openthrottle-server'
@@ -91,17 +91,17 @@ jobs:
         uses: ./.github/actions/docker-build-push
         with:
           app: openthrottle-server
-          registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
-          tag: sha-${{ github.sha }}
           github-token: ${{ env.GITHUB_TOKEN }}
           push: ${{ github.ref == 'refs/heads/main' }}
+          registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
+          tag: sha-${{ github.sha }}
 
       - name: '🐳 Build (and push on main) openthrottle-developer'
         if: steps.affected.outputs.build-openthrottle-developer == 'true'
         uses: ./.github/actions/docker-build-push
         with:
           app: openthrottle-developer
-          registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
-          tag: sha-${{ github.sha }}
           github-token: ${{ env.GITHUB_TOKEN }}
           push: ${{ github.ref == 'refs/heads/main' }}
+          registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
+          tag: sha-${{ github.sha }}

@@ -2,7 +2,7 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "main",
   "gcs": {
-    "bucket": "monorepo-nx-cache-staging",
+    "bucket": "openthrottle-staging-nx-cache",
     "localMode": "read-only"
   },
   "generators": {
@@ -13,9 +13,7 @@
     }
   },
   "namedInputs": {
-    "noMarkdown": [
-      "!{projectRoot}/**/*.md"
-    ]
+    "noMarkdown": ["!{projectRoot}/**/*.md"]
   },
   "plugins": [
     {
@@ -97,10 +95,7 @@
       "commit": true,
       "commitMessage": "chore(monorepo): [skip ci] release {version}"
     },
-    "projects": [
-      "tag:publish:true",
-      "!tag:production:false"
-    ],
+    "projects": ["tag:publish:true", "!tag:production:false"],
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,
@@ -146,9 +141,7 @@
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "@nx/vitest:test": {
       "executor": "@nx/vitest:test",
@@ -159,20 +152,14 @@
           "coverage": true
         }
       },
-      "inputs": [
-        "default",
-        "^default",
-        "^production"
-      ],
+      "inputs": ["default", "^default", "^production"],
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
         "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
         "watch": false
       },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ]
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "build": {
       "cache": true,
@@ -184,10 +171,7 @@
         "^codegen-supabase-expo",
         "^codegen-supabase-web"
       ],
-      "inputs": [
-        "noMarkdown",
-        "^noMarkdown"
-      ],
+      "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
         "buildLibsFromSource": true,
         "emptyOutDir": true,
@@ -197,46 +181,34 @@
     },
     "build-package": {
       "cache": true,
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "{workspaceRoot}",
         "command": "node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}"
       },
-      "outputs": [
-        "{projectRoot}/dist/package.json"
-      ]
+      "outputs": ["{projectRoot}/dist/package.json"]
     },
     "codegen": {
       "executor": "nx:run-commands",
       "configurations": {
         "graphql": {
           "command": "graphql-codegen",
-          "dependsOn": [
-            "^build"
-          ]
+          "dependsOn": ["^build"]
         },
         "graphql-watch": {
           "command": "graphql-codegen --watch",
           "continuous": true,
-          "dependsOn": [
-            "^build"
-          ]
+          "dependsOn": ["^build"]
         },
         "react-router": {
           "command": "react-router typegen",
-          "dependsOn": [
-            "^build"
-          ]
+          "dependsOn": ["^build"]
         },
         "react-router-watch": {
           "command": "react-router typegen --watch",
           "continuous": true,
-          "dependsOn": [
-            "^build"
-          ]
+          "dependsOn": ["^build"]
         }
       },
       "options": {
@@ -325,23 +297,17 @@
       "configurations": {
         "build": {
           "command": "nest build --path ./tsconfig.app.json",
-          "dependsOn": [
-            "^build"
-          ]
+          "dependsOn": ["^build"]
         },
         "debug": {
           "continuous": true,
           "command": "NEST_DEBUG nest start --debug --path ./tsconfig.app.json --watch",
-          "dependsOn": [
-            "^dev"
-          ]
+          "dependsOn": ["^dev"]
         },
         "dev": {
           "continuous": true,
           "command": "nest start --path ./tsconfig.app.json --watch",
-          "dependsOn": [
-            "^dev"
-          ]
+          "dependsOn": ["^dev"]
         },
         "repl": {
           "command": "nest start --entryFile ./src/repl.js --path ./tsconfig.app.json --watch"
@@ -356,10 +322,7 @@
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",
-      "dependsOn": [
-        "build-package",
-        "^build-package"
-      ],
+      "dependsOn": ["build-package", "^build-package"],
       "options": {
         "packageRoot": "{projectRoot}/dist"
       }
@@ -367,10 +330,7 @@
     "test": {
       "cache": true,
       "executor": "@nx/vitest:test",
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "inputs": ["default", "^default"],
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
