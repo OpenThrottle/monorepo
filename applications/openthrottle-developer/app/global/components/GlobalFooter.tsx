@@ -67,7 +67,7 @@ export const GlobalFooter = (props: GlobalFooterProps) => {
       <Link
         className="flex items-center justify-center gap-2 text-muted-foreground text-sm mb-8"
         target="_blank"
-        to={`${ENV_SOURCE.API_URL}/health`}
+        to={`${ENV_SOURCE.API_URL_EXTERNAL}/health`}
       >
         <div>{renderStatus('api')} &nbsp;API</div>
         <div className="opacity-50">&bull;</div>

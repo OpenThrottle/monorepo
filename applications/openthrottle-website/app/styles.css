@@ -3,7 +3,6 @@
 
 @import '@openthrottle/react-router-shadcn/src/theme.css';
 
-@source "../../../packages/mattscholta/**/*.{css,ts,tsx}";
 @source "../../../packages/**/*.{css,ts,tsx}";
 
 :root {

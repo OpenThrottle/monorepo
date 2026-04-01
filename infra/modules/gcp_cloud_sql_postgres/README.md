@@ -43,7 +43,7 @@ Terraform module for **Cloud SQL for PostgreSQL** (Zonal Micro instance with low
 module "openthrottle_postgres" {
   source = "../../modules/gcp_cloud_sql_postgres"
 
-  name       = "openthrottle-staging-postgres"
+  name       = ${local.project_name}-postgres"
   project_id = local.project_id
   region     = "us-west1"
   tier       = "db-f1-micro"

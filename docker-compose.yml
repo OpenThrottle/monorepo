@@ -23,6 +23,12 @@ x-openthrottle-developer: &openthrottle-developer
   APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
   APP_NAME: ${OPENTHROTTLE_DEVELOPER_APP_NAME}
   APP_URL: ${OPENTHROTTLE_DEVELOPER_APP_URL}
+  APP_URL_ADMIN: ${OPENTHROTTLE_DEVELOPER_APP_URL_ADMIN}
+  APP_URL_CMS: ${OPENTHROTTLE_DEVELOPER_APP_URL_CMS}
+  APP_URL_DEVELOPER: ${OPENTHROTTLE_DEVELOPER_APP_URL_DEVELOPER}
+  APP_URL_EMAIL: ${OPENTHROTTLE_DEVELOPER_APP_URL_EMAIL}
+  APP_URL_SERVER: ${OPENTHROTTLE_DEVELOPER_APP_URL_SERVER}
+  APP_URL_WEBSITE: ${OPENTHROTTLE_DEVELOPER_APP_URL_WEBSITE}
   APP_VERSION: ${OPENTHROTTLE_DEVELOPER_APP_VERSION}
   PORT: ${OPENTHROTTLE_DEVELOPER_PORT}
 
@@ -43,7 +49,7 @@ services:
   #     🤖 openthrottle-developer | React Router (MCP developer UI)
   #
   #     Built from monorepo root per docs/openthrottle/docker-image-build-strategy.md.
-  #     Depends on openthrottle-server for GraphQL/Cortex; run compose from repo root:
+  #     Depends on openthrottle-server for GraphQL/OpenThrottle; run compose from repo root:
   #     docker compose -f applications/openthrottle/docker-compose.yml up --build
   #
   openthrottle-developer:
@@ -51,11 +57,10 @@ services:
       args:
         <<: *openthrottle-developer
       context: ./
-      dockerfile: Dockerfile.ReactRouter.v2
+      dockerfile: Dockerfile.ReactRouter
       secrets: *build-secrets
       target: production-alpine
     container_name: openthrottle-developer
-    # command: echo "Hello, world!"
     depends_on:
       openthrottle-server:
         condition: service_healthy
@@ -86,6 +91,12 @@ services:
       context: ./
       dockerfile: Dockerfile.Postgres
     container_name: openthrottle-postgres
+    environment:
+      POSTGRES_DB: ${OPENTHROTTLE_POSTGRES_DB}
+      POSTGRES_PASSWORD: ${OPENTHROTTLE_POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${OPENTHROTTLE_POSTGRES_PORT}
+      POSTGRES_USER: ${OPENTHROTTLE_POSTGRES_USER}
+      POSTGRES_VERSION: ${OPENTHROTTLE_POSTGRES_VERSION}
     healthcheck:
       interval: 1s
       retries: 10
@@ -100,7 +111,7 @@ services:
     restart: always
     shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
     volumes:
-      - cortex_postgres_data:/var/lib/postgresql/data
+      - openthrottle_postgres_data:/var/lib/postgresql/data
 
   #############################################################################
   #
@@ -135,14 +146,14 @@ services:
       args:
         <<: *openthrottle-server
       context: ./
-      dockerfile: Dockerfile.NestJS.v2
+      dockerfile: Dockerfile.NestJS
       secrets: *build-secrets
     container_name: openthrottle-server
-    # depends_on:
-    #   openthrottle-postgres:
-    #     condition: service_healthy
-    #   openthrottle-redis:
-    #     condition: service_healthy
+    depends_on:
+      openthrottle-postgres:
+        condition: service_healthy
+      openthrottle-redis:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -183,4 +194,4 @@ secrets:
 #     🎧 Volumes | Persistent "named" volumes
 #
 volumes:
-  cortex_postgres_data:
+  openthrottle_postgres_data:

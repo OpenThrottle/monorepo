@@ -1,8 +1,7 @@
 export type OpenThrottleEnv = {
   // API endpoints
-  API_URL: string;
-  API_URL_GRAPHQL: string;
-  API_URL_WEBSOCKET: string;
+  API_URL_EXTERNAL: string;
+  API_URL_INTERNAL: string;
 
   // This application
   APP_ENV: 'development' | 'production' | 'staging' | 'test';

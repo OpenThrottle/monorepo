@@ -9,9 +9,8 @@ afterEach(() => {
 // Satisfy react-router-utils environment.ts in jsdom (IS_BROWSER true, window.env used)
 if (typeof window !== 'undefined') {
   window.env = {
-    API_URL: 'http://localhost:6021',
-    API_URL_GRAPHQL: 'http://localhost:6021/graphql',
-    API_URL_WEBSOCKET: 'http://localhost:6021',
+    API_URL_EXTERNAL: 'http://localhost:6021',
+    API_URL_INTERNAL: 'http://localhost:6021',
     APP_ENV: 'test',
     APP_NAME: 'openthrottle-developer',
     APP_URL: 'http://localhost',

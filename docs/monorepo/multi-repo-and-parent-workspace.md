@@ -67,11 +67,13 @@ Result: clone the parent → init submodules → you have one root with private 
 
 1. **Stop ignoring `repositories/`** in `.gitignore`: remove `repositories/*` (or adjust so only the submodule **dirs** are not ignored; the contents are managed by git submodules).
 2. **Add submodules** (from repo root):
+
    ```bash
    git submodule add https://github.com/barguide/<repo-name> repositories/barguide
    git submodule add https://github.com/rocketscms/<repo-name> repositories/rocketcms
    git submodule add https://github.com/mattscholta/<repo-name> repositories/mattscholta
    ```
+
 3. **Commit** the `.gitmodules` and the new `repositories/<name>` entries (the committed SHA for each submodule).
 4. **Document** in this repo’s README or `docs/`:
    - Clone with submodules: `git clone --recurse-submodules <parent-repo-url>` or after clone: `git submodule update --init --recursive`.

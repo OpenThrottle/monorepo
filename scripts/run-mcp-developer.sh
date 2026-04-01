@@ -5,6 +5,8 @@
 # Sets WORKTREE_ID from git worktree root basename so each worktree advertises a distinct MCP server name.
 set -e
 
+echo "🔍 Using Node.js version: $(node -v)" > /dev/stderr
+
 cd "$(dirname "$0")/.."
 
 # Worktree-aware identity: basename of git root (e.g. monorepo-worktree-one). Unset if not in a git repo.
@@ -26,5 +28,5 @@ fi
 
 export OPENAI_API_KEY
 
-pnpm nx run @openthrottle/mcp-developer:build 1>&2
+# pnpm nx run @openthrottle/mcp-developer:build 1>&2
 exec node packages/mcp-developer/dist/src/bin.js
