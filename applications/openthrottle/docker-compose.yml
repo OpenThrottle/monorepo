@@ -59,7 +59,7 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       context: ../../
-      dockerfile: applications/openthrottle-developer/Dockerfile
+      dockerfile: Dockerfile.ReactRouter
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
@@ -164,7 +164,7 @@ services:
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       context: ../../
-      dockerfile: applications/openthrottle-server/Dockerfile
+      dockerfile: Dockerfile.NestJS
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always

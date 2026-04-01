@@ -9,7 +9,7 @@ This document records the chosen **image build strategy** and **registry** for *
 | Decision             | Choice                                                                                                                                                                                                             |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Build context**    | Monorepo root. Images are built with `docker build -f applications/<app>/Dockerfile .` so Nx and pnpm can resolve workspace dependencies.                                                                          |
-| **Dockerfiles**      | One Dockerfile per app: `applications/openthrottle-server/Dockerfile`, `applications/openthrottle-developer/Dockerfile`. Both are multi-stage and parameterized via build args.                                    |
+| **Dockerfiles**      | One Dockerfile per app: `Dockerfile.NestJS`, `Dockerfile.ReactRouter`. Both are multi-stage and parameterized via build args.                                                                                      |
 | **Stages**           | Base → dependencies (pnpm install) → builder (Nx build + pnpm deploy pruned) → production (copy pruned app only, non-root user, `CMD start:docker`).                                                               |
 | **Tooling in image** | Node 22, pnpm (version pinned), Nx via `pnpm dlx nx@<version>`. No global Nx install; lockfile and workspace define deps.                                                                                          |
 | **Registry**         | **Google Artifact Registry** in region `us-west2`: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`. Aligns with existing monorepo pattern (see [Google-Cloud.md](../monorepo/Google-Cloud.md)). |
@@ -57,13 +57,13 @@ This document records the chosen **image build strategy** and **registry** for *
 
 ## 5. Dockerfiles added
 
-- **`applications/openthrottle-server/Dockerfile`** — Multi-stage (base → dependencies → builder → production), mirrors the uncommented NestJS pattern from root `Dockerfile.NestJS`, with `APP_NAME=openthrottle-server` and `CMD ["pnpm", "start:docker"]`.
-- **`applications/openthrottle-developer/Dockerfile`** — Same pattern as root `Dockerfile.ReactRouter`; `APP_NAME=openthrottle-developer`; requires `start:docker` in `package.json` (see below).
+- **`Dockerfile.NestJS`** — Multi-stage (base → dependencies → builder → production), mirrors the uncommented NestJS pattern from root `Dockerfile.NestJS`, with `APP_NAME=openthrottle-server` and `CMD ["pnpm", "start:docker"]`.
+- **`Dockerfile.ReactRouter`** — Same pattern as root `Dockerfile.ReactRouter`; `APP_NAME=openthrottle-developer`; requires `start:docker` in `package.json` (see below).
 
 Both are intended to be built from the repo root, e.g.:
 
 ```bash
-docker build -f applications/openthrottle-server/Dockerfile \
+docker build -f Dockerfile.NestJS \
   --build-arg APP_NAME=openthrottle-server \
   --build-arg APP_VERSION=1.3.0 \
   --build-arg NX_VERSION=22.5.4 \
