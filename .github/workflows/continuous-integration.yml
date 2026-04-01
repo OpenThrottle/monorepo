@@ -30,15 +30,18 @@ concurrency:
   group: continuous-integration-${{ github.ref }}
 
 env:
-  BARGUIDE_SUPABASE_URI: ${{ vars.BARGUIDE_SUPABASE_URI }}
   BRANCH_NAME: ${{ github.head_ref || github.ref_name || 'main' }}
-  EXPO_PUBLIC_SUPABASE_JWT: ${{ vars.EXPO_PUBLIC_SUPABASE_JWT }}
-  EXPO_PUBLIC_SUPABASE_URI: ${{ vars.EXPO_PUBLIC_SUPABASE_URI }}
-  EXPO_PUBLIC_SUPABASE_URL_GRAPHQL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL_GRAPHQL }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GOOGLE_CREDENTIALS: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && secrets.GOOGLE_CREDENTIALS_PRODUCTION || secrets.GOOGLE_CREDENTIALS_STAGING }}
-  GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_PRODUCTION || vars.GOOGLE_PROJECT_ID_STAGING }}
-  NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'monorepo-nx-cache-production' || 'monorepo-nx-cache-staging' }}
+
+  # FIXME: Currently we're only making use of the staging project and resources
+  GOOGLE_CREDENTIALS: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && secrets.GOOGLE_CREDENTIALS_STAGING || secrets.GOOGLE_CREDENTIALS_STAGING }}
+
+  # FIXME: Currently we're only making use of the staging project and resources
+  GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_STAGING || vars.GOOGLE_PROJECT_ID_STAGING }}
+
+  # FIXME: Currently we're only making use of the staging project and resources
+  NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
+
   NX_KEY: ${{ vars.NX_KEY }}
   NX_SWC: 'true'
   NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
@@ -46,9 +49,6 @@ env:
   OUTPUT_FILE: dependency-graph.html
   RELEASE_DRY_RUN: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--verbose' || '--dry-run --verbose' }}
   RELEASE_PUBLISH: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--yes' || '--skip-publish' }}
-  ROCKETCMS_SUPABASE_URI: ${{ vars.ROCKETCMS_SUPABASE_URI }}
-  # PROJECT_ID: "rjqioqfeqrkmvazrdtuk"
-  # SUPABASE_ACCESS_TOKEN: ${{ vars.EXPO_PUBLIC_SUPABASE_JWT }}
 
 permissions:
   actions: write
