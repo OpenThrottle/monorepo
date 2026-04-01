@@ -55,11 +55,6 @@ services:
     environment:
       <<: *openthrottle-developer
     image: openthrottle-developer:latest
-    build:
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      context: ../../
-      dockerfile: Dockerfile.ReactRouter
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
@@ -160,11 +155,6 @@ services:
         ]
       timeout: 10s
     image: openthrottle-server:latest
-    build:
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
-      context: ../../
-      dockerfile: Dockerfile.NestJS
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always

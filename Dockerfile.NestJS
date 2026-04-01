@@ -78,7 +78,9 @@ FROM builder AS dependencies
 ENV NODE_ENV="production"
 
 # Trim those packages down to what we need for production
-RUN pnpm install --frozen-lockfile --ignore-scripts --prod
+# RUN pnpm install --frozen-lockfile --ignore-scripts --prod
+# RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 # Prune the store to reduce image size
 RUN pnpm store prune

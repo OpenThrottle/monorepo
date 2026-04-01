@@ -140,6 +140,6 @@ process_app() {
 }
 
 process_app openthrottle-server "${SOURCE_OPENTHROTTLE_SERVER}"
-process_app openthrottle-developer "${SOURCE_OPENTHROTTLE_DEVELOPER}"
+# process_app openthrottle-developer "${SOURCE_OPENTHROTTLE_DEVELOPER}"
 
 echo "Done. Images available at ${REGISTRY_PREFIX}/<app>:latest and :${SHA_TAG}"
