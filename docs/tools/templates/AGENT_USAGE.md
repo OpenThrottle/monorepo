@@ -152,12 +152,12 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
 
 ## Generator References
 
-- **[React Generator](./docs/react.md)** – Components, hooks, utils, etc.
-- **[Remix Generator](./docs/remix.md)** – Apps, components, forms, modals, etc.
-- **[NestJS Generator](./docs/nestjs.md)** – Apps, services, modules, agents, etc.
-- **[React Native](./docs/react-native.md)** — not registered in this repo; see file
-- **[Package Generator](./docs/package.md)**
-- **[Folders Generator](./docs/folders.md)**
+- **[React Generator](./react.md)** – Components, hooks, utils, etc.
+- **[Remix Generator](./remix.md)** – Apps, components, forms, modals, etc.
+- **[NestJS Generator](./nestjs.md)** – Apps, services, modules, agents, etc.
+- **[React Native](./react-native.md)** — not registered in this repo; see file
+- **[Package Generator](./package.md)**
+- **[Folders Generator](./folders.md)**
 
 ---
 
@@ -231,8 +231,8 @@ export NX_ISOLATE_PLUGINS=false
 
 or always explicitly prefix every generator command.
 
-For detailed troubleshooting, see [NX_ISOLATE_PLUGINS Documentation](./docs/NX_ISOLATE_PLUGINS.md)
-and [Troubleshooting Guide](./docs/TROUBLESHOOTING.md#issue-plugin-worker-fails)
+For detailed troubleshooting, see [NX_ISOLATE_PLUGINS Documentation](./NX_ISOLATE_PLUGINS.md)
+and [Troubleshooting Guide](./TROUBLESHOOTING.md#issue-plugin-worker-fails)
 
 ---
 
@@ -355,7 +355,7 @@ executeGenerator(
 
 ## Additional Resources
 
-- [Main README](./README.md) – General guidance and generator policies
+- [Generators README](../../../tools/generators/README.md) – General guidance and generator policies
 - [Nx Generator Documentation](https://nx.dev/extending-nx/recipes/local-generators)
 - **Find generator source code:** [`tools/generators/src/generators/`](tools/generators/src/generators/)
 
