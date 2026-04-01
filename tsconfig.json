@@ -1,0 +1,159 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "include": ["**/*.json", "**/*.ts", "**/*.tsx"],
+  "exclude": ["applications/**/*", "packages/**/*"],
+  "files": [],
+  "references": [
+    {
+      "path": "./tools/dotfiles"
+    },
+    {
+      "path": "./tools/workflows"
+    },
+    {
+      "path": "./packages/vscode-openthrottle"
+    },
+    {
+      "path": "./applications/openthrottle-developer"
+    },
+    {
+      "path": "./applications/openthrottle-website"
+    },
+    {
+      "path": "./applications/openthrottle-server"
+    },
+    {
+      "path": "./packages/react-router-graphql"
+    },
+    {
+      "path": "./packages/react-router-ui"
+    },
+    {
+      "path": "./applications/openthrottle-cms"
+    },
+    {
+      "path": "./packages/react-router-profiling"
+    },
+    {
+      "path": "./packages/react-router-chat"
+    },
+    {
+      "path": "./applications/openthrottle-email"
+    },
+    {
+      "path": "./packages/react-router-auth"
+    },
+    {
+      "path": "./applications/openthrottle-admin"
+    },
+    {
+      "path": "./tools/ollama-proxy"
+    },
+    {
+      "path": "./packages/react-router-utils"
+    },
+    {
+      "path": "./packages/nestjs-github"
+    },
+    {
+      "path": "./packages/nestjs-repositories"
+    },
+    {
+      "path": "./packages/react-router-editor"
+    },
+    {
+      "path": "./packages/mcp-developer"
+    },
+    {
+      "path": "./packages/nodejs-graphql"
+    },
+    {
+      "path": "./packages/nestjs-stripe"
+    },
+    {
+      "path": "./packages/react-router-notifications"
+    },
+    {
+      "path": "./packages/openthrottle-notifications"
+    },
+    {
+      "path": "./packages/openthrottle-vscode"
+    },
+    {
+      "path": "./packages/openthrottle-mcp"
+    },
+    {
+      "path": "./packages/openthrottle-postgres"
+    },
+    {
+      "path": "./packages/nestjs-bullmq-board"
+    },
+    {
+      "path": "./packages/react-router-shadcn"
+    },
+    {
+      "path": "./packages/nestjs-websockets"
+    },
+    {
+      "path": "./packages/nestjs-langchain"
+    },
+    {
+      "path": "./packages/nestjs-profiling"
+    },
+    {
+      "path": "./packages/nestjs-throttler"
+    },
+    {
+      "path": "./packages/nestjs-worktrees"
+    },
+    {
+      "path": "./packages/graphql-codegen"
+    },
+    {
+      "path": "./packages/nestjs-devtools"
+    },
+    {
+      "path": "./packages/nestjs-express"
+    },
+    {
+      "path": "./packages/nestjs-graphql"
+    },
+    {
+      "path": "./packages/nestjs-modules"
+    },
+    {
+      "path": "./packages/nestjs-typeorm"
+    },
+    {
+      "path": "./packages/nestjs-bullmq"
+    },
+    {
+      "path": "./packages/nestjs-tester"
+    },
+    {
+      "path": "./packages/nestjs-redis"
+    },
+    {
+      "path": "./packages/nestjs-slack"
+    },
+    {
+      "path": "./packages/nestjs-utils"
+    },
+    {
+      "path": "./packages/nestjs-auth"
+    },
+    {
+      "path": "./packages/nestjs-rbac"
+    },
+    {
+      "path": "./packages/docs-mcp"
+    },
+    {
+      "path": "./packages/ai-mcp"
+    },
+    {
+      "path": "./tools/generators"
+    }
+  ]
+}

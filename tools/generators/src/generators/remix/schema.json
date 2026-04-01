@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Remix",
+  "title": "@tools/generators:remix",
+  "type": "object",
+  "properties": {
+    "describe": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print a machine-readable description of this generator and exit (no files are written)."
+    },
+    "subGenerator": {
+      "type": "string",
+      "description": "Which Remix generator to run."
+    },
+    "withPrompts": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable interactive prompts as a fallback when options are missing."
+    },
+    "list": {
+      "type": "string",
+      "description": "List dynamic values (JSON) and exit (no files are written)."
+    },
+    "application": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target application name (dynamic; use --list=applications to enumerate)."
+    },
+    "folder": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Destination folder under `applications/<application>/app` (dynamic; use --list for folder options)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Name or comma-separated names (strict validation depends on generator)."
+    }
+  },
+  "anyOf": [
+    {
+      "description": "Allow invocation without subGenerator (e.g. to support CLI-driven prompting).",
+      "not": {
+        "required": [
+          "subGenerator"
+        ]
+      }
+    },
+    {
+      "properties": {
+        "describe": {
+          "const": true
+        }
+      },
+      "required": [
+        "describe"
+      ]
+    },
+    {
+      "required": [
+        "list"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "application"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "component"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "folder",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "form"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "folder",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "modal"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "folder",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "route"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "table"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "folder",
+        "name"
+      ]
+    }
+  ]
+}

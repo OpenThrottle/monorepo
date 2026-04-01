@@ -1,0 +1,75 @@
+{
+  "author": "openthrottle-admin",
+  "background_color": "#ffffff",
+  "default_locale": "en",
+  "display": "standalone",
+  "dir": "ltr",
+  "description": "openthrottle-admin",
+  "id": "/",
+  "icons": [
+    {
+      "purpose": "any",
+      "sizes": "48x48",
+      "src": "/branding/icon-48.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "96x96",
+      "src": "/branding/icon-96.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "144x144",
+      "src": "/branding/icon-144.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "192x192",
+      "src": "/branding/icon-192.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "256x256",
+      "src": "/branding/icon-256.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "384x384",
+      "src": "/branding/icon-384.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "/branding/icon-512.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any maskable",
+      "sizes": "256x256",
+      "src": "/branding/icon-256.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any maskable",
+      "sizes": "512x512",
+      "src": "/branding/icon-512.png",
+      "type": "image/png"
+    }
+  ],
+  "lang": "en-US",
+  "manifest_version": 2,
+  "name": "openthrottle-admin",
+  "orientation": "portrait",
+  "scope": "/",
+  "shortcuts": [],
+  "short_name": "Design",
+  "start_url": "/",
+  "theme_color": "#e0f0ff",
+  "version": "1.0"
+}

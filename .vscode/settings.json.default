@@ -1,0 +1,30 @@
+{
+  "cSpell.words": ["Pressable", "revalidator", "supabase", "Swiper"],
+  "editor.codeActionsOnSave": {
+    "eslint.experimental.useFlatConfig": "always",
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.fontFamily": "'DroidSansM Nerd Font', 'Jetbrains mono', 'Inter V', 'Fira Mono for Powerline', 'Courier New', monospaceex",
+  "editor.fontSize": 15,
+  "editor.formatOnSave": true,
+  "eslint.useFlatConfig": true,
+  "openthrottle.apiBaseUrl": "http://localhost:6021",
+  "terminal.integrated.env.osx": {
+    "NX_ISOLATE_PLUGINS": "false"
+  },
+  "terminal.integrated.env.linux": {
+    "NX_ISOLATE_PLUGINS": "false"
+  },
+  "terminal.integrated.env.windows": {
+    "NX_ISOLATE_PLUGINS": "false"
+  },
+  "terminal.integrated.shellArgs.osx": ["-l"],
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#42fd9f",
+    "titleBar.activeForeground": "#333",
+    "titleBar.inactiveBackground": "#42fd9f",
+    "titleBar.inactiveForeground": "#333"
+  },
+  "workbench.sideBar.location": "right"
+}

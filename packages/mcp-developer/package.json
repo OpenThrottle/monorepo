@@ -1,0 +1,92 @@
+{
+  "name": "@openthrottle/mcp-developer",
+  "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "bin": {
+    "mcp-developer": "./dist/src/bin.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@openthrottle/nodejs-graphql": "workspace:*"
+  },
+  "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/mcp-developer",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "technology:typescript",
+      "type:tool",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "dependsOn": [
+          "^build",
+          "codegen-graphql"
+        ],
+        "executor": "@nx/js:tsc"
+      },
+      "__dev": {
+        "continuous": true,
+        "dependsOn": [
+          "codegen-graphql-watch"
+        ],
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "codegen-graphql": {},
+      "__codegen-graphql-watch": {},
+      "lint": {},
+      "serve": {
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ./dist/src/bin.js",
+          "cwd": "{projectRoot}"
+        }
+      },
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

@@ -1,0 +1,35 @@
+{
+  "extends": "../../tsconfig.react-router.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "~/*": ["app/*"],
+      "@/*": [".react-router/types/*"],
+      "#/*": ["*"]
+    },
+    "rootDirs": ["./", ".react-router/types"]
+  },
+  "exclude": ["build", "dist", "node_modules"],
+  "files": [],
+  "include": ["**/*", "**/*.json", ".react-router/types"],
+  "references": [
+    {
+      "path": "../../tools/dotfiles"
+    },
+    {
+      "path": "../../packages/react-router-auth"
+    },
+    {
+      "path": "../../packages/react-router-graphql"
+    },
+    {
+      "path": "../../packages/react-router-ui"
+    },
+    {
+      "path": "../../packages/react-router-shadcn"
+    },
+    {
+      "path": "../../packages/react-router-utils"
+    }
+  ]
+}

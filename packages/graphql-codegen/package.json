@@ -1,0 +1,62 @@
+{
+  "name": "@openthrottle/graphql-codegen",
+  "description": "GraphQL code generation presets and utilities for TypeScript projects.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@graphql-codegen/cli": "^6.2.1",
+    "@graphql-codegen/client-preset": "^5.2.4",
+    "@graphql-codegen/fragment-matcher": "^6.0.0",
+    "@graphql-codegen/introspection": "^5.0.1",
+    "@graphql-codegen/typescript": "^5.0.9",
+    "@graphql-codegen/typescript-apollo-client-helpers": "^4.0.0",
+    "@graphql-codegen/typescript-document-nodes": "^5.0.9",
+    "@graphql-codegen/typescript-generic-sdk": "^5.0.0",
+    "@graphql-codegen/typescript-graphql-files-modules": "^4.0.0",
+    "@graphql-codegen/typescript-graphql-request": "^7.0.0",
+    "@graphql-codegen/typescript-operations": "^5.0.9",
+    "@graphql-codegen/typescript-react-apollo": "^4.4.1",
+    "@graphql-codegen/typescript-resolvers": "^5.1.7",
+    "@graphql-codegen/typescript-urql": "^5.0.0",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "graphql-codegen-typescript-mock-data": "^5.0.2",
+    "graphql-codegen-typescript-validation-schema": "^0.18.1"
+  },
+  "devDependencies": {},
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/graphql-codegen",
+      "production:true",
+      "publish:false",
+      "technology:react",
+      "technology:react-router",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

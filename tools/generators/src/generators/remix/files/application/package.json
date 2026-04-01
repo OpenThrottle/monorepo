@@ -1,0 +1,43 @@
+{
+  "name": "<%= name %>",
+  "description": "FIXME: Add a description...",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://<%= name %>.com"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=22"
+  },
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "sourceRoot": "./",
+    "projectType": "application",
+    "tags": [
+      "name:<%= name %>",
+      "production:true",
+      "technology:react",
+      "technology:react-router",
+      "type:application"
+    ],
+    "targets": {
+      "codegen-graphql": {},
+      "codegen-graphql-watch": {},
+      "codegen-react-router": {},
+      "codegen-react-router-watch": {},
+      "lint": {},
+      "test": {},
+      "test-e2e": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "sideEffects": false,
+  "scripts": {},
+  "type": "module"
+}

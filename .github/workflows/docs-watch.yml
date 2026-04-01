@@ -1,0 +1,34 @@
+# When docs/ changes land on main (e.g. after PR merge), output the squash commit SHA
+# and changed paths under docs/ for the documentation ingest pipeline.
+# See plan "Docs folder watch and re-index on main"
+name: '📚 Docs watch (main)'
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+
+jobs:
+  docs-changed:
+    if: false # FIXME: 💰 Re-enable when we want to spend more
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.vars.outputs.sha }}
+      paths: ${{ steps.vars.outputs.paths }}
+    steps:
+      - name: '📦 Checkout'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: '📤 Set SHA and changed paths'
+        id: vars
+        run: |
+          SHA="${{ github.sha }}"
+          PATHS=$(git diff-tree --no-commit-id --name-only -r "$SHA" -- docs/ | jq -R -s -c 'map(select(length > 0))')
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "paths=$PATHS" >> "$GITHUB_OUTPUT"
+          echo "Commit: $SHA"
+          echo "Paths under docs/: $PATHS"

@@ -1,0 +1,31 @@
+################################################################################
+#
+#   This "action" determines which GraphQL api is needed for an application.
+#   We do this so that our React Router (client) applications can introspect
+#   that API and generate strongly typed code for us 🤖.
+#
+#     - https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+#
+################################################################################
+
+name: "🧠 Get GraphQL URL"
+description: "Get the appropriate GraphQL URL(s) for introspection."
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        if [[ "$BRANCH_NAME" == "main" ]];
+        then
+          echo "BARGUIDE_ADMIN_API_URI=https://localhost:5100" >> "$GITHUB_ENV"
+          echo "ROCKETCMS_ADMIN_API_URI=https://localhost:3100" >> "$GITHUB_ENV"
+        else
+          echo "BARGUIDE_ADMIN_API_URI=https://localhost:5100" >> "$GITHUB_ENV"
+          echo "ROCKETCMS_ADMIN_API_URI=https://localhost:3100" >> "$GITHUB_ENV"
+        fi
+
+    - shell: bash
+      run: |
+        echo "🧠 BARGUIDE_ADMIN_API_URI: ${BARGUIDE_ADMIN_API_URI}"
+        echo "🧠 ROCKETCMS_ADMIN_API_URI: ${ROCKETCMS_ADMIN_API_URI}"

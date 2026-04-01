@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+#
+# https://stackoverflow.com/questions/53726982/setup-pre-push-hook-with-husky-to-prevent-pushing-to-master-branch
+# A Husky pre-push hook to prevent pushing to any "protected" branch like "main"
+#
+echo "🛫 Pre Push: Checking branch name"
+
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+PROTECTED_BRANCHES="^(main)"
+# PROTECTED_BRANCHES="^(main|chore/pre-push-hook)"
+
+if [[ "$BRANCH" =~ $PROTECTED_BRANCHES ]]
+then
+  echo "\n\n 🚫 Cannot push to the protected branch \"$BRANCH\", please create a PR. \n\n"
+
+  # Exit with a non-zero status code to stop the push
+  exit 1;
+fi
+
+# We're good to go here
+exit 0

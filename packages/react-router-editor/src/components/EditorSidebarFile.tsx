@@ -1,0 +1,61 @@
+import * as React from 'react';
+import classnames from 'classnames';
+import { useEditor } from '../hooks/useEditor';
+import { isHiddenFile } from '../utils';
+
+export interface EditorSidebarFileProps {
+  readonly basePath?: string;
+  readonly filename: string;
+  readonly id?: string;
+}
+
+/**
+ * @description Individual file item in the editor sidebar.
+ */
+export const EditorSidebarFile = (props: EditorSidebarFileProps) => {
+  const { basePath = '/prompts', filename, id } = props;
+
+  // Hooks
+  const { editor, openFile } = useEditor({ basePath });
+
+  // Setup
+  const parts = filename.split('/');
+  const name = parts[parts.length - 1] ?? filename;
+  const isHidden = isHiddenFile(filename);
+  const isActive = editor.filename === filename;
+
+  // Handlers
+  const onClick = (): void => {
+    openFile(filename, id);
+  };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames(
+        'py-1 px-2 cursor-pointer rounded-sm transition-colors',
+        'hover:bg-white/10',
+        {
+          'bg-white/15': isActive,
+          'text-gray-500': isHidden,
+        },
+      )}
+      data-testid="EditorSidebarFile"
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
+      {name}
+    </div>
+  );
+};

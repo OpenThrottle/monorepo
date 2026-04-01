@@ -1,0 +1,12 @@
+fragment PullRequestCard on PullListItemObject {
+  createdAt
+  number
+  title
+  updatedAt
+}
+
+query getPullRequests {
+  pulls(input: { owner: "visormatt", repo: "monorepo" }) {
+    ...PullRequestCard
+  }
+}

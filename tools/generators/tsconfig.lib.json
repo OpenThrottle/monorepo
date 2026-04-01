@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "rootDirs": ["./src", "./tests"]
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": [
+    "dist",
+    "src/generators/*/files/" // We don't test the templates "files"
+    // "**/*.test.ts",
+    // "**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

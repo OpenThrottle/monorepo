@@ -1,0 +1,118 @@
+{
+  "pagesNeedingImprovement": {
+    "cls": ["https://mattscholta.com/blog/boilerplate-to-generators (desktop)"],
+    "inp": [
+      "https://mattscholta.com (mobile)",
+      "https://mattscholta.com (desktop)",
+      "https://mattscholta.com/blog (mobile)",
+      "https://mattscholta.com/blog (desktop)",
+      "https://mattscholta.com/blog/boilerplate-to-generators (mobile)",
+      "https://mattscholta.com/blog/boilerplate-to-generators (desktop)"
+    ],
+    "lcp": [
+      "https://mattscholta.com (mobile)",
+      "https://mattscholta.com/blog (mobile)",
+      "https://mattscholta.com/blog (desktop)",
+      "https://mattscholta.com/blog/boilerplate-to-generators (mobile)"
+    ]
+  },
+  "reports": [
+    {
+      "cls": {
+        "status": "good",
+        "value": 0
+      },
+      "deviceType": "mobile",
+      "inp": {
+        "status": "poor",
+        "value": null
+      },
+      "lcp": {
+        "status": "needs-improvement",
+        "value": 3.8707555
+      },
+      "url": "https://mattscholta.com"
+    },
+    {
+      "cls": {
+        "status": "good",
+        "value": 0
+      },
+      "deviceType": "desktop",
+      "inp": {
+        "status": "poor",
+        "value": null
+      },
+      "lcp": {
+        "status": "good",
+        "value": 0.3961594999999999
+      },
+      "url": "https://mattscholta.com"
+    },
+    {
+      "cls": {
+        "status": "good",
+        "value": 0
+      },
+      "deviceType": "mobile",
+      "inp": {
+        "status": "poor",
+        "value": null
+      },
+      "lcp": {
+        "status": "poor",
+        "value": 17.5509785
+      },
+      "url": "https://mattscholta.com/blog"
+    },
+    {
+      "cls": {
+        "status": "good",
+        "value": 0
+      },
+      "deviceType": "desktop",
+      "inp": {
+        "status": "poor",
+        "value": null
+      },
+      "lcp": {
+        "status": "needs-improvement",
+        "value": 3.9691219999999996
+      },
+      "url": "https://mattscholta.com/blog"
+    },
+    {
+      "cls": {
+        "status": "good",
+        "value": 0
+      },
+      "deviceType": "mobile",
+      "inp": {
+        "status": "poor",
+        "value": null
+      },
+      "lcp": {
+        "status": "poor",
+        "value": 4.165306
+      },
+      "url": "https://mattscholta.com/blog/boilerplate-to-generators"
+    },
+    {
+      "cls": {
+        "status": "poor",
+        "value": 0.44261166595525786
+      },
+      "deviceType": "desktop",
+      "inp": {
+        "status": "poor",
+        "value": null
+      },
+      "lcp": {
+        "status": "good",
+        "value": 1.9277910000000003
+      },
+      "url": "https://mattscholta.com/blog/boilerplate-to-generators"
+    }
+  ],
+  "timestamp": "2026-01-12T02:56:31.521Z"
+}

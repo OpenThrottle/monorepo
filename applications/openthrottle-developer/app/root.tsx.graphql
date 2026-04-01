@@ -1,0 +1,50 @@
+fragment HealthCard on ServerHealthObject {
+  api
+  database
+  redis
+  websocket
+}
+
+mutation register($input: RegisterInput!) {
+  register(input: $input) {
+    accessToken
+    email
+    id
+  }
+}
+
+mutation login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+  }
+}
+
+query getRootHealth {
+  serverHealth {
+    ...HealthCard
+  }
+}
+
+query getSubscription {
+  mySubscription {
+    cancelAtPeriodEnd
+    status
+    stripeCustomerId
+    stripePriceId
+  }
+}
+
+fragment RootMetrics on ServerMetricsObject {
+  cpuSystemMs
+  cpuUserMs
+  externalMb
+  heapTotalMb
+  heapUsedMb
+  rssMb
+}
+
+query getRootMetrics {
+  serverMetrics {
+    ...RootMetrics
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "description": "Terraform IaC for GCP and Cloudflare—environment stacks (dev, staging, production) and reusable modules for OpenThrottle and related workloads.",
+  "name": "infra",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:infra",
+      "type:infrastructure",
+      "technology:terraform"
+    ],
+    "targets": {}
+  },
+  "private": true,
+  "scripts": {},
+  "type": "module",
+  "version": "1.0.0"
+}

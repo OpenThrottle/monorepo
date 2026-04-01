@@ -1,0 +1,73 @@
+{
+  "name": "@openthrottle/nestjs-repositories",
+  "description": "NestJS TypeORM data access for Cortex (OpenThrottle): plans, tasks, embeddings, roles, and related entities.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@nestjs/typeorm": "^11.0.0",
+    "bcrypt": "^6.0.0",
+    "dataloader": "^2.2.3",
+    "pg": "^8.17.1",
+    "typeorm": "^0.3.28"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.0.0",
+    "@types/bcrypt": "^6.0.0",
+    "fishery": "^2.4.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-repositories",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "commonjs",
+  "types": "./src/index.ts"
+}

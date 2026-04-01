@@ -1,0 +1,420 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultBase": "main",
+  "gcs": {
+    "bucket": "monorepo-nx-cache-staging",
+    "localMode": "read-only"
+  },
+  "generators": {
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "vitest"
+      }
+    }
+  },
+  "namedInputs": {
+    "noMarkdown": [
+      "!{projectRoot}/**/*.md"
+    ]
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": "docker:build",
+        "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    },
+    {
+      "plugin": "@nx/react/router-plugin",
+      "options": {
+        "buildDepsTargetName": "build-deps",
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "typecheckTargetName": "__NOT_USED__typecheck",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ],
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": true
+    }
+  },
+  "release": {
+    "changelog": {
+      "automaticFromRef": true,
+      "enabled": true,
+      "file": "CHANGELOG.md",
+      "projectChangelogs": {
+        "createRelease": "github",
+        "renderOptions": {
+          "authors": true,
+          "applyUsernameToAuthors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      },
+      "workspaceChangelog": false
+    },
+    "conventionalCommits": {
+      "types": {
+        "build": true,
+        "chore": {
+          "semverBump": "patch"
+        },
+        "ci": true,
+        "docs": {
+          "semverBump": "patch"
+        },
+        "feat": true,
+        "fix": true,
+        "perf": true,
+        "refactor": true,
+        "revert": true,
+        "test": true,
+        "style": {
+          "semverBump": "patch"
+        }
+      }
+    },
+    "git": {
+      "commit": true,
+      "commitMessage": "chore(monorepo): [skip ci] release {version}"
+    },
+    "projects": [
+      "tag:publish:true",
+      "!tag:production:false"
+    ],
+    "projectsRelationship": "independent",
+    "version": {
+      "conventionalCommits": true,
+      "preVersionCommand": "nx run-many -t build-package",
+      "fallbackCurrentVersionResolver": "disk",
+      "versionActionsOptions": {
+        "gitCommit": true,
+        "gitCommitMessage": "chore(version): [skip ci] {version}",
+        "skipLockFileUpdate": true
+      }
+    },
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
+    }
+  },
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "^codegen-react-router",
+        "^codegen-supabase-expo",
+        "^codegen-supabase-web"
+      ],
+      "options": {
+        "generateExportsField": false,
+        "generatePackageJson": false,
+        "main": "{projectRoot}/src/index.ts",
+        "module": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "rootDir": "{projectRoot}",
+        "tsConfig": "{projectRoot}/tsconfig.lib.json"
+      }
+    },
+    "@nx/vite:build": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "buildLibsFromSource": true,
+        "configFile": "{projectRoot}/vite.config.ts",
+        "emptyOutDir": true,
+        "generatePackageJson": false,
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.lib.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "@nx/vitest:test": {
+      "executor": "@nx/vitest:test",
+      "cache": true,
+      "configurations": {
+        "coverage": {
+          "ci": true,
+          "coverage": true
+        }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "^production"
+      ],
+      "options": {
+        "configFile": "{projectRoot}/vitest.config.ts",
+        "passWithNoTests": true,
+        "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
+        "watch": false
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ]
+    },
+    "build": {
+      "cache": true,
+      "executor": "@nx/vite:build",
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "^codegen-react-router",
+        "^codegen-supabase-expo",
+        "^codegen-supabase-web"
+      ],
+      "inputs": [
+        "noMarkdown",
+        "^noMarkdown"
+      ],
+      "options": {
+        "buildLibsFromSource": true,
+        "emptyOutDir": true,
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.lib.json"
+      }
+    },
+    "build-package": {
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}"
+      },
+      "outputs": [
+        "{projectRoot}/dist/package.json"
+      ]
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "configurations": {
+        "graphql": {
+          "command": "graphql-codegen",
+          "dependsOn": [
+            "^build"
+          ]
+        },
+        "graphql-watch": {
+          "command": "graphql-codegen --watch",
+          "continuous": true,
+          "dependsOn": [
+            "^build"
+          ]
+        },
+        "react-router": {
+          "command": "react-router typegen",
+          "dependsOn": [
+            "^build"
+          ]
+        },
+        "react-router-watch": {
+          "command": "react-router typegen --watch",
+          "continuous": true,
+          "dependsOn": [
+            "^build"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "codegen-graphql": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "graphql-codegen",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "codegen-graphql-watch": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "graphql-codegen --watch",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "codegen-react-router": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "react-router typegen",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "codegen-react-router-watch": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "react-router typegen --watch",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "codegen-supabase-expo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm dlx supabase gen types typescript --db-url $EXPO_PUBLIC_SUPABASE_URI > src/__generated__/generated.supabase.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "codegen-supabase-web": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm dlx supabase gen types typescript --db-url $SUPABASE_URI > app/__generated__/generated.supabase.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "dev": {
+      "dependsOn": [
+        "^dev",
+        "^generate",
+        "^codegen-graphql-watch",
+        "^codegen-react-router-watch",
+        "codegen-deep-linking",
+        "codegen-graphql-watch",
+        "codegen-react-router-watch",
+        "codegen-supabase-expo",
+        "codegen-supabase-web"
+      ]
+    },
+    "knip": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "knip --config knip.jsonc",
+        "cwd": "{workspaceRoot}",
+        "env": {
+          "EXPO_PUBLIC_SUPABASE_JWT": "dummy",
+          "EXPO_PUBLIC_SUPABASE_URL_GRAPHQL": "http://dummy"
+        }
+      }
+    },
+    "lint": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec eslint -c ./eslint.config.ts .",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "nestjs": {
+      "executor": "nx:run-commands",
+      "configurations": {
+        "build": {
+          "command": "nest build --path ./tsconfig.app.json",
+          "dependsOn": [
+            "^build"
+          ]
+        },
+        "debug": {
+          "continuous": true,
+          "command": "NEST_DEBUG nest start --debug --path ./tsconfig.app.json --watch",
+          "dependsOn": [
+            "^dev"
+          ]
+        },
+        "dev": {
+          "continuous": true,
+          "command": "nest start --path ./tsconfig.app.json --watch",
+          "dependsOn": [
+            "^dev"
+          ]
+        },
+        "repl": {
+          "command": "nest start --entryFile ./src/repl.js --path ./tsconfig.app.json --watch"
+        },
+        "start": {
+          "command": "nest start --path ./tsconfig.app.json"
+        }
+      },
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "dependsOn": [
+        "build-package",
+        "^build-package"
+      ],
+      "options": {
+        "packageRoot": "{projectRoot}/dist"
+      }
+    },
+    "test": {
+      "cache": true,
+      "executor": "@nx/vitest:test",
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "configFile": "{projectRoot}/vitest.config.ts",
+        "passWithNoTests": true,
+        "watch": false
+      }
+    },
+    "test-e2e": {
+      "configurations": {
+        "record": {
+          "command": "maestro record --local"
+        },
+        "studio": {
+          "command": "maestro studio"
+        },
+        "watch": {
+          "command": "maestro test --config tests/maestro.yml -c"
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "maestro test --config tests/maestro.yml",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": [
+        "^codegen-graphql",
+        "^codegen-supabase-expo",
+        "^codegen-supabase-web",
+        "codegen-deep-linking",
+        "codegen-graphql",
+        "codegen-react-router",
+        "codegen-supabase-expo",
+        "codegen-supabase-web"
+      ]
+    }
+  },
+  "tui": {
+    "autoExit": 3,
+    "enabled": true
+  },
+  "useInferencePlugins": false,
+  "sync": {
+    "applyChanges": true
+  }
+}

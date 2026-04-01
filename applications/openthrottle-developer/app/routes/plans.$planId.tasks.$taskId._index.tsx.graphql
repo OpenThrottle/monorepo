@@ -1,0 +1,21 @@
+# plans.$planId.tasks.$taskId
+
+query getTaskById($id: ID!) {
+  task(id: $id) {
+    assignee
+    category
+    createdAt
+    description
+    id
+    planId
+    projectRelation {
+      id
+      name
+    }
+    requirementsJson
+    status
+    summary
+    title
+    updatedAt
+  }
+}

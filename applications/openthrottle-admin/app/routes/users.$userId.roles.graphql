@@ -1,0 +1,23 @@
+# Used by users.$userId for roles section
+query getRolesForUser($userId: ID!) {
+  rolesForUser(userId: $userId) {
+    id
+    name
+    description
+  }
+}
+
+query listRolesForAssign {
+  roles {
+    id
+    name
+  }
+}
+
+mutation assignRoleToUser($input: AssignRoleToUserInput!) {
+  assignRoleToUser(input: $input)
+}
+
+mutation removeRoleFromUser($input: RemoveRoleFromUserInput!) {
+  removeRoleFromUser(input: $input)
+}

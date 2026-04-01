@@ -1,0 +1,100 @@
+# totalCount and hasNext support "Showing N" and future Load more.
+fragment DashboardActivityCard on ActivityByDateResultObject {
+  commits {
+    createdAt
+    id
+    message
+    planId
+    planTitle
+    repo
+    sha
+    taskId
+    taskTitle
+  }
+  hasNext
+  outputChunks {
+    content
+    createdAt
+    id
+    iteration
+    planId
+    planTitle
+  }
+  tasksUpdated {
+    id
+    planId
+    planTitle
+    status
+    title
+    updatedAt
+  }
+  totalCount
+}
+
+fragment DashboardQueueStatsCard on QueueStatsObject {
+  activeCount
+  completedCount
+  delayedCount
+  failedCount
+  name
+  waitingCount
+}
+
+fragment DashboardDailyStatsCard on DailyStatsObject {
+  date
+  plansCompleted
+  plansCreated
+  plansUpdated
+  tasksCompleted
+  tasksCreated
+  tasksUpdated
+}
+
+query getDashboard(
+  $input: ActivityByDateInput!
+  $start: String!
+  $end: String!
+) {
+  activityByDate(input: $input) {
+    ...DashboardActivityCard
+  }
+
+  dailyStatsRange(start: $start, end: $end) {
+    items {
+      ...DashboardDailyStatsCard
+    }
+  }
+
+  queues {
+    ...DashboardQueueStatsCard
+  }
+
+  # users {
+  #   createdAt
+  #   email
+  #   id
+  #   updatedAt
+  # }
+}
+
+query getDashboardGithubStats($input: GitHubRepoInput!) {
+  # closedPrCountByAuthor(input: $input) {
+  #   author
+  #   openCount
+  # }
+
+  openPrCountByAuthor(input: $input) {
+    author
+    openCount
+  }
+
+  prTimeInStateSummary(input: $input) {
+    state
+    count
+    avgDaysInState
+  }
+}
+
+mutation triggerNotification {
+  triggerWebsocketNotification
+}

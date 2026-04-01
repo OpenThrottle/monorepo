@@ -1,0 +1,15 @@
+# plans.$planId.tasks.create
+mutation createTask($input: CreateTaskInput!) {
+  createTask(input: $input) {
+    id
+    title
+    planId
+    status
+    assignee
+    category
+    description
+    summary
+    createdAt
+    updatedAt
+  }
+}

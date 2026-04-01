@@ -1,0 +1,111 @@
+import * as React from 'react';
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Separator,
+} from '@openthrottle/react-router-shadcn';
+import type { SearchChunk } from '~/__generated__/graphql';
+
+export interface SearchDocumentationCardProps {
+  className?: string;
+  result: SearchChunk;
+}
+
+/**
+ * @description Builds GitHub blob URL for documentation source (e.g. owner/repo, path, optional sha).
+ */
+function githubBlobHref(
+  repo: string,
+  path: string,
+  sha?: string | null,
+): string {
+  const ref = sha != null && sha !== '' ? sha : 'main';
+  return `https://github.com/${repo}/blob/${ref}/${path}`;
+}
+
+export const SearchDocumentationCard = (
+  props: SearchDocumentationCardProps,
+) => {
+  const { className, result } = props;
+
+  // Hooks
+
+  // Setup
+  const hasBlobLink =
+    result.sourceRepo != null &&
+    result.sourceRepo !== '' &&
+    result.sourcePath != null &&
+    result.sourcePath !== '';
+
+  // Handlers
+
+  // Markup
+  const sourceBadge = (
+    <Badge
+      data-testid="SearchDocumentationCard-sourceBadge"
+      variant="secondary"
+    >
+      {result.source}
+    </Badge>
+  );
+
+  const similarityBlock =
+    result.similarity != null ? (
+      <p
+        className="text-xs text-muted-foreground"
+        data-testid="SearchDocumentationCard-similarity"
+      >
+        Relevance: {Math.round(result.similarity * 100)}%
+      </p>
+    ) : null;
+
+  const blobLink =
+    hasBlobLink && result.sourceRepo != null && result.sourcePath != null ? (
+      <a
+        className="text-sm text-primary underline-offset-4 hover:underline"
+        data-testid="SearchDocumentationCard-blobLink"
+        href={githubBlobHref(
+          result.sourceRepo,
+          result.sourcePath,
+          result.sourceSha,
+        )}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        {result.sourceRepo}/{result.sourcePath}
+      </a>
+    ) : null;
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <Card
+      className={className}
+      data-testid="SearchDocumentationCard"
+      key={result.id}
+    >
+      <CardHeader className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
+        {blobLink != null ? (
+          <CardTitle className="text-lg font-semibold leading-tight tracking-tight">
+            {blobLink}
+          </CardTitle>
+        ) : null}
+      </CardHeader>
+      <Separator />
+      <CardContent className="space-y-3 pt-4">
+        <pre className="text-sm text-muted-foreground leading-relaxed overflow-auto line-clamp-6">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {result.content}
+          </p>
+        </pre>
+        {similarityBlock}
+      </CardContent>
+    </Card>
+  );
+};

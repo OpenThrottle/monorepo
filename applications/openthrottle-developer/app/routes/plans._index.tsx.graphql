@@ -1,0 +1,37 @@
+fragment PlanCard on PlanObject {
+  assignee
+  author
+  category
+  createdAt
+  description
+  id
+  projectRelation {
+    id
+    name
+  }
+  status
+  summary
+  taskCount
+  title
+  updatedAt
+}
+
+query getPlanAssigneeOptions {
+  listDistinctAuthorsAndAssignees
+}
+
+query getPlanCountsByStatus {
+  planCountsByStatus {
+    count
+    status
+  }
+}
+
+query getPlansByStatus($input: ListPlansByStatusInput!) {
+  listPlansByStatus(input: $input) {
+    plans {
+      ...PlanCard
+    }
+    totalCount
+  }
+}

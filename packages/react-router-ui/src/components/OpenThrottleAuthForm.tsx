@@ -1,0 +1,152 @@
+import * as React from 'react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  cn,
+  Input,
+  Label,
+} from '@openthrottle/react-router-shadcn';
+
+export interface OpenThrottleAuthFormProps {
+  /** Optional form action URL (e.g. for React Router action). Defaults to current path. */
+  readonly action?: string;
+  /** Optional classnames to apply to the card. */
+  readonly className?: string;
+  /** Server or client error message to display (e.g. from actionData or fetcher.data). */
+  readonly error?: string;
+  /** When true, disables the submit button (e.g. fetcher.state === 'loading'). */
+  readonly isLoading?: boolean;
+  /** Called after form submit with email and password. Use when handling submit client-side or via fetcher. */
+  readonly onSubmit?: (payload: { email: string; password: string }) => void;
+  /** Title text for the card header. */
+  readonly title?: string;
+}
+
+/**
+ * @description Simple login form with email/password using shadcn-ui.
+ * Submits via form action (name/intent) or optional onSubmit callback.
+ */
+export const OpenThrottleAuthForm = (props: OpenThrottleAuthFormProps) => {
+  const {
+    action = '/',
+    className,
+    error,
+    isLoading = false,
+    onSubmit,
+    title = 'Sign in',
+  } = props;
+
+  // Hooks
+  const [email, setEmail] = React.useState('matt@domain.com');
+  const [intent, setIntent] = React.useState<'login' | 'register'>('login');
+  const [password, setPassword] = React.useState('Test1234!');
+
+  // Setup
+  const isLogin = intent === 'login';
+
+  // Handlers
+  const handleSubmit = React.useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      if (onSubmit) {
+        onSubmit({ email, password });
+        return;
+      }
+      // Let the form submit natively to action (e.g. root route action)
+
+      // FIXME: Tighten this up
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      (e.target as HTMLFormElement).submit();
+    },
+
+    // 🪝 (re)create our submit handler when our state changes
+    [email, onSubmit, password],
+  );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <>
+      <Card
+        className={cn('w-full max-w-sm mx-auto', className)}
+        data-testid="OpenThrottleAuthForm"
+      >
+        <form action={action} method="POST" onSubmit={handleSubmit}>
+          <input name="intent" type="hidden" value={intent} />
+
+          <CardHeader>
+            <CardTitle className="text-lg">{title}</CardTitle>
+            <CardDescription>
+              {isLogin
+                ? 'Enter your email and password to sign in.'
+                : 'Enter your email and password to register.'}
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="flex flex-col gap-4">
+            {error ? (
+              <p className="text-destructive text-sm" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div className="grid gap-2">
+              <Label htmlFor="auth-email">Email</Label>
+              <Input
+                autoComplete="email"
+                id="auth-email"
+                name="email"
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required={true}
+                type="email"
+                value={email}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="auth-password">Password</Label>
+              <Input
+                autoComplete="current-password"
+                id="auth-password"
+                name="password"
+                onChange={(e) => setPassword(e.target.value)}
+                required={true}
+                type="password"
+                value={password}
+              />
+            </div>
+          </CardContent>
+
+          <CardFooter>
+            <Button
+              className="w-full"
+              disabled={isLoading}
+              type="submit"
+              variant="secondary"
+            >
+              {isLoading ? 'Signing in…' : isLogin ? 'Sign in' : 'Sign up'}
+            </Button>
+          </CardFooter>
+          <Button
+            className="w-full font-normal mb-4 text-xs text-muted-foreground"
+            disabled={isLoading}
+            onClick={() => setIntent(isLogin ? 'register' : 'login')}
+            type="button"
+            variant="link"
+          >
+            Click here to {isLogin ? 'Sign up' : 'Sign in'}
+          </Button>
+        </form>
+      </Card>
+    </>
+  );
+};

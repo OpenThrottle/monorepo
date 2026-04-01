@@ -1,0 +1,67 @@
+{
+  "name": "@openthrottle/nestjs-modules",
+  "description": "NestJS shared modules: global CLS (request-scoped context via nestjs-cls) and Winston-based structured logging.",
+  "version": "2.2.25",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "logform": "^2.7.0",
+    "nestjs-cls": "^6.2.0",
+    "winston": "^3.19.0",
+    "winston-transport": "^4.9.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-modules",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "commonjs",
+  "types": "./src/index.ts"
+}

@@ -1,0 +1,43 @@
+# Caddy reverse proxy for local development (Option B: local domains).
+# Requires api.local, developer.local, ollama.local in /etc/hosts pointing to 127.0.0.1.
+# See docs/monorepo/local-services-and-ports.md and this directory's README.
+#
+# Run: caddy run --config tools/caddy/Caddyfile (from repo root)
+# Or:  docker run -v $(pwd)/tools/caddy/Caddyfile:/etc/caddy/Caddyfile -p 443:443 -p 80:80 caddy
+#
+# Caddy uses its internal PKI for .local; browsers/agents may need the local CA trusted
+# (see Optional: local HTTPS and trust store in the plan / docs).
+{
+	# Optional: use Caddy's local trust store for HTTPS on .local (reduces cert warnings).
+	# local_certs
+}
+
+# openthrottle-server (NestJS: GraphQL, REST, Socket.IO). WebSocket passthrough is automatic.
+api.local {
+	reverse_proxy localhost:6010
+}
+
+# openthrottle-admin (React Router + Vite).
+admin.local {
+	reverse_proxy localhost:6020
+}
+
+# openthrottle-developer (React Router + Vite).
+developer.local {
+	reverse_proxy localhost:6012
+}
+
+# openthrottle-email (React Router + Vite).
+email.local {
+	reverse_proxy localhost:6018
+}
+
+# openthrottle-website (React Router + Vite).
+website.local {
+	reverse_proxy localhost:6014
+}
+
+# Ollama (LLM/embedding server for ai-mcp, cortex:import, etc.). Set OLLAMA_BASE_URL to https://ollama.local when using this.
+ollama.local {
+	reverse_proxy localhost:11434
+}

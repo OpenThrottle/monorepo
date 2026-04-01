@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Nestjs",
+  "title": "@tools/generators:nestjs",
+  "type": "object",
+  "properties": {
+    "describe": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print a machine-readable description of this generator and exit (no files are written)."
+    },
+    "subGenerator": {
+      "type": "string",
+      "description": "Which NestJS generator to run."
+    },
+    "withPrompts": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable interactive prompts as a fallback when options are missing."
+    },
+    "list": {
+      "type": "string",
+      "description": "List dynamic values (JSON) and exit (no files are written)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Slug name. Some generators accept comma-separated values."
+    },
+    "application": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target application name (dynamic; use --list to enumerate valid values)."
+    },
+    "destination": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target NestJS package or application by Nx project name (e.g. @openthrottle/nestjs-repositories). Use --list=nestjsPackages to enumerate valid package targets."
+    },
+    "port": {
+      "type": "number",
+      "minimum": 4000,
+      "maximum": 9999,
+      "description": "Application port (4000-9999)."
+    },
+    "username": {
+      "type": "string",
+      "minLength": 1,
+      "description": "GitHub username. Defaults to current `gh api user` login if omitted."
+    }
+  },
+  "anyOf": [
+    {
+      "description": "Allow invocation without subGenerator (e.g. to support CLI-driven prompting).",
+      "not": {
+        "required": [
+          "subGenerator"
+        ]
+      }
+    },
+    {
+      "properties": {
+        "describe": {
+          "const": true
+        }
+      },
+      "required": [
+        "describe"
+      ]
+    },
+    {
+      "required": [
+        "list"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "ai-agent"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "application"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "name",
+        "port"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "graphql-service"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "module"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "name"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "application"
+          ]
+        },
+        {
+          "required": [
+            "destination"
+          ]
+        }
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "queue"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "simple-service"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "application",
+        "name"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "contextFileName": "AGENTS.md",
+  "mcpServers": {
+    "expo-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "expo-mcp"]
+    },
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx", "mcp"]
+    }
+  }
+}

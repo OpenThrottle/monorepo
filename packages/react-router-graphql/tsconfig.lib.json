@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "rootDirs": ["./src", "./tests"]
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../react-router-auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../nodejs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

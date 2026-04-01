@@ -1,0 +1,86 @@
+{
+  "name": "@openthrottle/nestjs-langchain",
+  "description": "LangChain and LangGraph integration for NestJS APIs—embeddings, checkpoints, document loaders (PDF, URL, YouTube), models, and vector stores.",
+  "version": "2.2.25",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@langchain/classic": "^1.0.9",
+    "@langchain/community": "^1.1.4",
+    "@langchain/core": "^1.1.15",
+    "@langchain/google-vertexai": "^2.1.10",
+    "@langchain/langgraph": "^1.1.0",
+    "@langchain/langgraph-checkpoint-postgres": "^1.0.0",
+    "@langchain/langgraph-cli": "^1.1.11",
+    "@langchain/ollama": "^1.2.0",
+    "@langchain/openai": "^1.2.2",
+    "@langchain/textsplitters": "^1.0.1",
+    "cheerio": "^1.1.2",
+    "glob": "^13.0.0",
+    "ignore": "^7.0.5",
+    "langchain": "^1.2.10",
+    "ml-distance": "^4.0.1",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.17.1",
+    "uuid": "^13.0.0",
+    "youtubei.js": "^16.0.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0",
+    "typescript": "^5.9.3"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-langchain",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "__dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "commonjs",
+  "types": "./src/index.ts"
+}

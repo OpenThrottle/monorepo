@@ -1,0 +1,73 @@
+fragment PlanTaskRow on TaskObject {
+  assignee
+  category
+  createdAt
+  description
+  id
+  planId
+  projectRelation {
+    id
+    name
+  }
+  requirementsJson
+  status
+  summary
+  title
+  updatedAt
+}
+
+fragment ProjectDetails on ProjectObject {
+  id
+  name
+}
+
+fragment PlanDetails on PlanObject {
+  assignee
+  author
+  category
+  createdAt
+  description
+  id
+  projectId
+  projectRelation {
+    ...ProjectDetails
+  }
+  status
+  summary
+  title
+  updatedAt
+}
+
+query getPlanById($id: ID!) {
+  plan(id: $id) {
+    ...PlanDetails
+  }
+}
+
+query getTasksByPlanId($input: TasksByPlanIdInput!) {
+  tasksByPlanId(input: $input) {
+    ...PlanTaskRow
+  }
+}
+
+mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
+  enqueuePlanRun(input: $input) {
+    jobId
+    planId
+  }
+}
+
+mutation PlanDetailSetPlanStatus($input: SetPlanStatusInput!) {
+  setPlanStatus(input: $input) {
+    id
+    status
+    title
+    updatedAt
+  }
+}
+
+mutation PlanDetailUpdateTask($input: UpdateTaskInput!) {
+  updateTask(input: $input) {
+    ...PlanTaskRow
+  }
+}

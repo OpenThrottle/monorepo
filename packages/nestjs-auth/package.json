@@ -1,0 +1,73 @@
+{
+  "name": "@openthrottle/nestjs-auth",
+  "description": "NestJS JWT authentication with Passport: dynamic module, JwtStrategy, JwtAuthGuard, and decorators (CurrentUser, Public).",
+  "version": "2.2.25",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/passport": "^11.0.5",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/passport-jwt": "^4.0.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-auth",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {
+    "@nestjs/graphql": ">=10.0.0"
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "commonjs",
+  "types": "./src/index.ts"
+}

@@ -1,0 +1,13 @@
+mutation createPrompt($input: CreateCustomPromptInput!) {
+  createCustomPrompt(input: $input) {
+    content
+    createdAt
+    description
+    filePath
+    id
+    labels
+    promptType
+    title
+    updatedAt
+  }
+}

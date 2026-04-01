@@ -1,0 +1,73 @@
+################################################################################
+#
+#   Computes which Nx app projects from a caller-provided list are affected
+#   (via `nx show projects --affected`). Use for Docker or other per-app CI.
+#
+#   Location: .github/actions/nx-affected-docker-apps
+#
+#     - https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+#
+################################################################################
+
+name: '📋 Nx affected Docker apps'
+description: >-
+  Intersects `nx show projects --affected` with a configurable list of Nx
+  project names. Exposes JSON for extensibility and per-app boolean outputs for
+  known apps (see outputs).
+
+inputs:
+  apps:
+    description: >-
+      Nx project names to consider: either a comma-separated list (e.g.
+      openthrottle-server,openthrottle-developer) or a one-line JSON array
+      (e.g. ["openthrottle-server","openthrottle-developer"]). Whitespace around
+      comma-separated names is trimmed.
+    required: true
+  nx-version:
+    description: >-
+      Nx CLI version for `pnpm dlx nx@<version>` (e.g. from vars.NX_VERSION).
+      If empty, callers should set NX in the environment or extend this action
+      to use a default.
+    required: false
+    default: ''
+
+outputs:
+  affected-apps-json:
+    description: >-
+      JSON array of project names from `apps` that are in the affected set
+      (e.g. ["openthrottle-server"]). Primary extensible output for new apps.
+    value: ${{ steps.compute.outputs.affected-apps-json }}
+  matrix-json:
+    description: >-
+      JSON object suitable for a job matrix: {"include":[{"app":"..."},...]}.
+      Empty include when none affected.
+    value: ${{ steps.compute.outputs.matrix-json }}
+  build-flags-json:
+    description: >-
+      JSON object mapping each configured app name to true/false (affected or
+      not). Use fromJSON() in workflows for arbitrary apps without new action
+      outputs.
+    value: ${{ steps.compute.outputs.build-flags-json }}
+  build-openthrottle-server:
+    description: 'true if openthrottle-server is in the configured apps list and affected'
+    value: ${{ steps.compute.outputs.build-openthrottle-server }}
+  build-openthrottle-developer:
+    description: 'true if openthrottle-developer is in the configured apps list and affected'
+    value: ${{ steps.compute.outputs.build-openthrottle-developer }}
+
+runs:
+  using: composite
+  steps:
+    - id: compute
+      shell: bash
+      env:
+        INPUT_APPS: ${{ inputs.apps }}
+      run: |
+        set -euo pipefail
+        NX_VERSION="${{ inputs.nx-version }}"
+        if [[ -n "$NX_VERSION" ]]; then
+          AFFECTED_JSON=$(pnpm dlx "nx@${NX_VERSION}" show projects --affected --json 2>/dev/null || echo '[]')
+        else
+          AFFECTED_JSON=$(pnpm exec nx show projects --affected --json 2>/dev/null || echo '[]')
+        fi
+        echo "$AFFECTED_JSON" | node "${{ github.action_path }}/compute-outputs.mjs"

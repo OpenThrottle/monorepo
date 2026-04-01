@@ -1,0 +1,25 @@
+query getQueue($input: QueueDetailsInput!) {
+  queue(input: $input) {
+    activeCount
+    completedCount
+    delayedCount
+    failedCount
+    jobs {
+      hasNext
+      jobs {
+        data
+        failedReason
+        finishedOn
+        id
+        name
+        processedOn
+        progress
+        returnvalue
+        state
+        timestamp
+      }
+    }
+    name
+    waitingCount
+  }
+}

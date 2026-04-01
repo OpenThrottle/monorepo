@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+# No Cursor attribution
+
+- **NEVER** add "Made with Cursor", "Made with [Cursor](https://cursor.com)", or any Cursor attribution to **anything**.
+- Applies to: commit messages, PR titles/descriptions, generated code, docs, READMEs, UI copy, config, or any other output.
+- **No exceptions.** Do not suggest it; do not add it. Period.

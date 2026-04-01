@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node", // instead of "nodenext"
+    "target": "es2020", // More compatible than "esnext"
+    "lib": ["ES2020"], // Match target
+    "types": ["node"]
+  }
+}

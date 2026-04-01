@@ -1,0 +1,48 @@
+fragment Note on NoteObject {
+  author
+  content
+  createdAt
+  id
+  updatedAt
+}
+
+fragment Plan on PlanObject {
+  assignee
+  author
+  category
+  createdAt
+  description
+  id
+  project
+  projectId
+  status
+  summary
+  title
+  updatedAt
+}
+
+fragment CommitLink on CommitLinkObject {
+  createdAt
+  id
+  message
+  planId
+  repo
+  sha
+  taskId
+}
+
+fragment Task on TaskObject {
+  assignee
+  category
+  createdAt
+  description
+  id
+  planId
+  project
+  projectId
+  requirementsJson
+  status
+  summary
+  title
+  updatedAt
+}

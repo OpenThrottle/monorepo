@@ -1,0 +1,71 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./build",
+    "paths": {
+      "@tools/workflows/doc-ingestion": [
+        "../../tools/workflows/src/doc-ingestion/index.ts"
+      ]
+    },
+    "rootDir": "./"
+  },
+  "include": ["src/**/*.json", "src/**/*.ts"],
+  "exclude": ["build", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../tools/generators/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-worktrees/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/workflows/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-stripe/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/ai-mcp/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-websockets/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-rbac/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-profiling/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-bullmq/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-bullmq-board/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-github/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

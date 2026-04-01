@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+# When Running "Cursor Commands"
+
+- **ALWAYS** use `PNPM` in this codebase
+- **ALWAYS** Use `NX` to run commands when ever possible as we are in a `monorepo`
+- **ALWAYS** Use GitHub Issues to track `Plans` instead of `Markdown` files
+  - This gives me something to track historically without littering the codebase
+- **ALWAYS** use `import * as React from 'react';` when importing React
+
+## Coding Conventions
+
+## Personal Preferences

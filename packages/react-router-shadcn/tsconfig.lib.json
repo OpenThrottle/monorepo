@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "rootDirs": ["./src", "./tests"]
+  },
+  "include": ["**/*.json", "src/**/*", "tests/**/*"],
+  "exclude": [
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/components/shadcn-raw"
+  ],
+  "references": [
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

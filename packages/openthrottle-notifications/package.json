@@ -1,0 +1,71 @@
+{
+  "name": "@openthrottle/openthrottle-notifications",
+  "description": "Shared WebSocket notification event names and payload types for OpenThrottle server and openthrottle-developer.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./dist/src/index.js"
+    },
+    "./*": {
+      "import": "./src/index.ts",
+      "require": "./dist/*.js"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/openthrottle-notifications",
+      "production:true",
+      "publish:false",
+      "technology:react",
+      "technology:react-router",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

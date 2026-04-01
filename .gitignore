@@ -1,0 +1,54 @@
+#############################################################################
+# FIXME: Figure out a better solution for scrapping our markdown
+#############################################################################
+**/*/ios/Pods/
+
+#############################################################################
+# Folders
+#############################################################################
+.cache
+databases/cortex/backups
+.langgraph_api
+.nx
+.pnpm-store
+.vercel
+build
+coverage
+design/*
+dist
+node_modules
+repositories/*
+services/*
+tmp
+
+#############################################################################
+# Files
+#############################################################################
+.cursor/rules/nx-rules.mdc
+.DS_Store
+.env*
+.github/instructions/nx.instructions.md
+.vscode/settings.json
+*.cpuprofile
+applications/*/app/**/*.d.ts
+applications/*/src/**/*.d.ts
+applications/**/*.d.ts
+*.d.ts.map
+*.tsbuildinfo
+**/__generated__/**/*
+vite.config.*.timestamp*
+vite.config.ts.timestamp*
+vitest.config.*.timestamp*
+vitest.config.ts.timestamp*
+
+#############################################################################
+# Includes
+#############################################################################
+!.cursor/commands
+!.cursor/rules/cursor-commands-github.mdc
+!.env.default
+!.gitkeep
+
+# Tracking these in here as we flush the workflows out
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

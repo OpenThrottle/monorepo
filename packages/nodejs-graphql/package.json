@@ -1,0 +1,68 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "graphql": "^16.13.1",
+    "zod": "^4.3.6"
+  },
+  "description": "Fetch-based GraphQL client for React Router loaders and actions against openthrottle-server, using TypedDocumentNode from codegen.",
+  "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "name": "@openthrottle/nodejs-graphql",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nodejs-graphql",
+      "production:true",
+      "publish:false",
+      "technology:react",
+      "technology:react-router",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "__dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}
