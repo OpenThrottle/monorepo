@@ -26,3 +26,9 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "repository_writer_members" {
+  description = "IAM members granted roles/artifactregistry.writer on this repository only (e.g. serviceAccount:ci@project.iam.gserviceaccount.com for GitHub Actions docker push)."
+  type        = list(string)
+  default     = []
+}
