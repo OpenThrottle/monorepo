@@ -49,6 +49,10 @@ vitest.config.ts.timestamp*
 !.env.default
 !.gitkeep
 
+!applications/*/app/**/*/global.d.ts
+!applications/*/src/**/*/global.d.ts
+
+
 # Tracking these in here as we flush the workflows out
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md

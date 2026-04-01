@@ -56,7 +56,7 @@ services:
       <<: *openthrottle-developer
     image: openthrottle-developer:latest
     ports:
-      - "${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}"
+      - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
     # user: "appuser"
 
@@ -86,8 +86,8 @@ services:
       retries: 10
       test:
         [
-          "CMD-SHELL",
-          "pg_isready -U ${OPENTHROTTLE_POSTGRES_USER} -d ${OPENTHROTTLE_POSTGRES_DB}",
+          'CMD-SHELL',
+          'pg_isready -U ${OPENTHROTTLE_POSTGRES_USER} -d ${OPENTHROTTLE_POSTGRES_DB}',
         ]
       timeout: 5s
     ports:
@@ -110,7 +110,7 @@ services:
     healthcheck:
       interval: 10s
       retries: 3
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       timeout: 5s
     image: redis:${OPENTHROTTLE_REDIS_VERSION}-alpine
     ports:
@@ -150,13 +150,13 @@ services:
       start_period: 40s
       test:
         [
-          "CMD-SHELL",
-          "wget -q --spider http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1",
+          'CMD-SHELL',
+          'wget -q --spider http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1',
         ]
       timeout: 10s
     image: openthrottle-server:latest
     ports:
-      - "${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}"
+      - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
 
 #############################################################################

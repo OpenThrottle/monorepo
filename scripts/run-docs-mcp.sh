@@ -23,5 +23,5 @@ then
   exit 1
 fi
 
-pnpm nx run @openthrottle/docs-mcp:build 1>&2
+# pnpm nx run @openthrottle/docs-mcp:build 1>&2
 exec node packages/mattscholta/docs-mcp/dist/src/bin.js
