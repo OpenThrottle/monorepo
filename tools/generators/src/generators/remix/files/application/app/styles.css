@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@import '@openthrottle/react-router-shadcn/src/theme.css';
+
+@source "../../../packages/mattscholta/**/*.{css,ts,tsx}";
+@source "../../../packages/**/*.{css,ts,tsx}";
+
+:root {
+  --brand: hsl(304, 100%, 50%);
+  --accent: var(--brand);
+}
+
+@utility text-highlight {
+  animation: gradient 4s ease infinite;
+  background-size: 250% 250%;
+
+  @apply bg-linear-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent;
+}

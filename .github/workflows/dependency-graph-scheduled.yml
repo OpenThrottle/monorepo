@@ -1,0 +1,75 @@
+################################################################################
+#
+#   This workflow generates dependency graph visualizations on a regular schedule
+#   to help the team track dependency changes over time.
+#
+#   Runs: Weekly on Mondays at 9 AM UTC, and can be manually triggered
+#
+################################################################################
+name: "📊 Scheduled Dependency Graph Generation"
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write # Needed to commit the graph to the repository
+  actions: read
+
+env:
+  NX_VERSION: ${{ vars.NX_VERSION }}
+  OUTPUT_DIR: docs/nx/dependency-graphs
+  OUTPUT_FILE: dependency-graph.html
+
+jobs:
+  nx-dependency-graph:
+    if: false # FIXME: 💰 Re-enable when we want to spend more
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: "📦 Checkout the code"
+        uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "🤖 Node Setup"
+        uses: ./.github/actions/node-setup
+
+      - name: "📊 Generate dependency graph visualization"
+        run: |
+          pnpm exec tsx ./scripts/nx-dependency-graph.ts
+
+      - name: "📤 Upload dependency graph artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-graph-${{ github.run_number }}
+          path: |
+            ${{ env.OUTPUT_FILE }}
+            static/
+          retention-days: 90 # Keep scheduled graphs longer than PR graphs
+
+      - name: "💾 Commit dependency graph to repository"
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Create docs directory if it doesn't exist
+          mkdir -p ${{ env.OUTPUT_DIR }}
+
+          # Copy the generated graph with timestamp
+          TIMESTAMP=$(date +%Y%m%d)
+
+          cp ${{ env.OUTPUT_FILE }} ${{ env.OUTPUT_DIR }}/dependency-graph-${TIMESTAMP}.html
+          cp -r static ${{ env.OUTPUT_DIR }}/static-${TIMESTAMP} || true
+
+          # Also update the latest version
+          cp ${{ env.OUTPUT_FILE }} ${{ env.OUTPUT_DIR }}/dependency-graph-latest.html
+          cp -r static ${{ env.OUTPUT_DIR }}/static-latest || true
+
+          git add ${{ env.OUTPUT_DIR }}/
+          git diff --staged --quiet || git commit -m "chore: update dependency graph visualization [skip ci]"
+          git push || echo "No changes to commit"

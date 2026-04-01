@@ -1,0 +1,58 @@
+fragment HealthCard on ServerHealthObject {
+  api
+  database
+  redis
+  websocket
+}
+
+query getRootHealth {
+  serverHealth {
+    ...HealthCard
+  }
+}
+
+fragment RootMetrics on ServerMetricsObject {
+  cpuSystemMs
+  cpuUserMs
+  externalMb
+  heapTotalMb
+  heapUsedMb
+  rssMb
+}
+
+query getRootMetrics {
+  serverMetrics {
+    ...RootMetrics
+  }
+}
+
+query getMe {
+  me {
+    createdAt
+    disabledAt
+    email
+    githubUsername
+    id
+    updatedAt
+  }
+}
+
+mutation register($input: RegisterInput!) {
+  register(input: $input) {
+    accessToken
+    email
+    id
+  }
+}
+
+mutation login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+  }
+}
+
+mutation signout {
+  signout {
+    success
+  }
+}

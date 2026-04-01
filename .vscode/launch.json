@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "🚀 RocketCMS.org",
+      "configurations": ["RocketCMS:dev", "RocketCMS:test"]
+    }
+  ],
+
+  "configurations": [
+    {
+      "command": "npx ts-node-dev --transpile-only --respawn --inspect=4321 ${relativeFile}",
+      "cwd": "${workspaceRoot}",
+      "name": "File / TypeScript",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+
+    {
+      "command": "nx run RocketCMS:dev",
+      "name": "RocketCMS:dev",
+      "request": "launch",
+      "sourceMapPathOverrides": { "route:*": "*" },
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "command": "nx run RocketCMS:test",
+      "name": "RocketCMS:test",
+      "request": "launch",
+      "sourceMapPathOverrides": { "route:*": "*" },
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

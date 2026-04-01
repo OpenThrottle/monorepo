@@ -1,0 +1,89 @@
+###############################################################################
+#   Shared configuration
+###############################################################################
+DefaultConfig: &defaultConfig
+  avoidOptionals: true
+  enumsAsTypes: true
+  immutableTypes: true
+  # noExport: true
+  strictScalars: true
+  useImplementingTypes: true
+  useIndexSignature: true
+  useTypeImports: true
+
+###############################################################################
+#   CODE GENERATOR 🤖 https://the-guild.dev/graphql/codegen 🤖
+###############################################################################
+config:
+  scalars:
+    Date: Date
+    DateTime: Date
+    EmailAddress: 'string'
+    IP: 'string'
+    JSON: '{ [key: string]: any }'
+    JSONObject: '{ [key: string]: any }'
+    JWT: 'string'
+    Latitude: 'number'
+    Longitude: 'number'
+    PhoneNumber: 'string'
+    Timestamp: Date
+    Upload: 'any'
+    URL: 'string'
+    UUID: 'string'
+documents: 'src/**/*.graphql'
+overwrite: true
+schema:
+  # - 'http://localhost:3070/graphql'
+  - ${API_GRAPHQL_EXTERNAL}
+
+generates:
+  src/__generated__/apollo-client-helpers.ts:
+    config:
+      useTypeImports: true
+    plugins:
+      - typescript-apollo-client-helpers
+
+  src/__generated__/enums.ts:
+    config:
+      <<: *defaultConfig
+    plugins:
+      - typescript
+
+  src/__generated__/generic-sdk.ts:
+    config:
+      <<: *defaultConfig
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-generic-sdk
+
+  src/__generated__/graphql-request.ts:
+    config:
+      <<: *defaultConfig
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-graphql-request
+  src/__generated__/graphql.schema.json:
+    plugins:
+      - introspection
+
+  src/__generated__/react-apollo-hooks.ts:
+    config:
+      <<: *defaultConfig
+      enumsAsTypes: true
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+      - typescript-resolvers
+
+  src/__generated__/types.d.ts:
+    config:
+      <<: *defaultConfig
+    plugins:
+      - fragment-matcher
+      - typescript
+      - typescript-document-nodes
+      - typescript-graphql-files-modules
+      - typescript-resolvers

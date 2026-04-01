@@ -1,0 +1,7 @@
+mutation createQueue($input: CreateQueueInput!) {
+  createQueue(input: $input) {
+    success
+    queueName
+    error
+  }
+}

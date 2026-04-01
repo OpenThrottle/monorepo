@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "React",
+  "title": "@tools/generators:react",
+  "type": "object",
+  "properties": {
+    "describe": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print a machine-readable description of this generator and exit (no files are written)."
+    },
+    "subGenerator": {
+      "type": "string",
+      "description": "Which React generator to run."
+    },
+    "withPrompts": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable interactive prompts as a fallback when options are missing."
+    },
+    "list": {
+      "type": "string",
+      "description": "List dynamic values (JSON) and exit (no files are written)."
+    },
+    "destination": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Nx project name to generate into (dynamic; use --list=destinations to enumerate valid values)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Name or comma-separated names (validation depends on generator)."
+    }
+  },
+  "anyOf": [
+    {
+      "description": "Allow invocation without subGenerator (e.g. to support CLI-driven prompting).",
+      "not": {
+        "required": [
+          "subGenerator"
+        ]
+      }
+    },
+    {
+      "properties": {
+        "describe": {
+          "const": true
+        }
+      },
+      "required": [
+        "describe"
+      ]
+    },
+    {
+      "required": [
+        "list"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "component"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "destination",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "hook"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "destination",
+        "name"
+      ]
+    },
+    {
+      "properties": {
+        "subGenerator": {
+          "const": "util"
+        }
+      },
+      "required": [
+        "subGenerator",
+        "destination",
+        "name"
+      ]
+    }
+  ]
+}

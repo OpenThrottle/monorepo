@@ -1,0 +1,14 @@
+fragment QueueCard on QueueStatsObject {
+  activeCount
+  completedCount
+  delayedCount
+  failedCount
+  name
+  waitingCount
+}
+
+query getQueues {
+  queues {
+    ...QueueCard
+  }
+}

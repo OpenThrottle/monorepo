@@ -1,0 +1,61 @@
+#!/usr/bin/env sh
+
+#
+# Strip Co-authored-by and Made-with lines (e.g. from Cursor) so only conventional footers remain.
+#
+if [ -n "$1" ] && [ -f "$1" ]; then
+  sed -i.bak \
+    -e '/^[[:space:]]*Co-authored-by:/d' \
+    -e '/^[[:space:]]*Made-with:/d' \
+    "$1"
+  rm -f "$1.bak"
+fi
+
+#
+# Propose a better commit type than "chore"
+#
+proposeBetterCommitType () {
+  GIT_DIR=$(git rev-parse --git-dir)
+  THE_COMMIT_MESSAGE=$(cat "$GIT_DIR/COMMIT_EDITMSG")
+  # echo "💬 THE_COMMIT_MESSAGE: $THE_COMMIT_MESSAGE"
+
+  if [[ $THE_COMMIT_MESSAGE = chore* ]];
+  then
+    echo "
+  ⚠️  The \"chore\" type of commit is not allowed.
+
+  Please use one of the following types:
+    build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+
+  Feel free to cancel and update the type of commit, or wait 5 seconds and the script will pass.
+    "
+
+    # proposeBetterCommitTypeDelay;
+  fi
+}
+
+#
+# Add a slight delay (friction) to encourage better commit types. Why?
+# Well we use these commit messages to generate change logs and to automate
+# the versioning of our packages and applications.
+#
+proposeBetterCommitTypeDelay () {
+  TIMER=$((5 * 1))
+
+  while [ $TIMER -gt 0 ];
+  do
+    printf "  ... $TIMER \033[0K\r";
+    sleep 1;
+    TIMER=$((TIMER - 1))
+  done
+}
+
+#
+# Now we run the commit linting and propose a better commit type if needed.
+#
+echo "💬 Commit Lint"
+
+pnpm exec commitlint --edit $1
+proposeBetterCommitType;
+
+echo "✅ Commit Lint Passed"

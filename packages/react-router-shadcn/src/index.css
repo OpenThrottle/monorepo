@@ -1,0 +1,6 @@
+/**
+ * Main CSS entry for @openthrottle/react-router-shadcn.
+ * Theme only (no Tailwind). Consuming apps must @import 'tailwindcss' once
+ * before importing this file or theme.css, then override :root / @theme as needed.
+ */
+@import './theme.css';

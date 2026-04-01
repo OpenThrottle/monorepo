@@ -1,0 +1,85 @@
+{
+  "name": "@openthrottle/ai-mcp",
+  "description": "Legacy MCP server for OpenThrottle Cortex plans and tasks (direct Postgres and embeddings); prefer @openthrottle/mcp-developer for new use.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "bin": {
+    "ai-mcp": "./dist/src/bin.js"
+  },
+  "dependencies": {
+    "@openthrottle/nestjs-repositories": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "openai": "^6.16.0",
+    "pg": "^8.17.1",
+    "typeorm": "^0.3.28",
+    "zod": "^4.3.6"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/ai-mcp",
+      "production:true",
+      "publish:false",
+      "technology:typescript",
+      "type:tool",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "__dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "serve": {
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ./dist/src/bin.js",
+          "cwd": "{projectRoot}"
+        }
+      },
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

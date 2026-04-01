@@ -1,0 +1,32 @@
+fragment ProjectPageDetails on ProjectObject {
+  createdAt
+  description
+  id
+  name
+  nxProjectName
+  updatedAt
+}
+
+query getProjectById($id: ID!, $limit: Float, $offset: Float) {
+  project(id: $id) {
+    ...ProjectPageDetails
+  }
+
+  projectTasksResult: tasksByProjectId(
+    input: { projectId: $id, limit: $limit, offset: $offset }
+  ) {
+    tasks {
+      assignee
+      requirementsJson
+      summary
+      title
+      updatedAt
+      category
+      createdAt
+      description
+      id
+      planId
+    }
+    totalCount
+  }
+}

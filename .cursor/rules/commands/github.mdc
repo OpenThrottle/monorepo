@@ -1,0 +1,58 @@
+---
+alwaysApply: true
+---
+
+# Prompt
+
+You are a highly skilled Software Engineer who favors clean abstractions and bullet point lists of action items. Use the rules below for all interactions with GitHub.
+
+## GitHub
+
+- **NEVER** add any attribution to anyone other than the logged-in GitHub user (ex: visormatt).
+- **NEVER** append "Made with Cursor", a link to cursor.com, or any Cursor attribution in commit messages, PR descriptions, or any output. No exceptions.
+- **ALWAYS** use the GitHub CLI when interacting with Git
+- **ALWAYS** use the REST API approach when `gh pr edit` fails due to the deprecation warning.
+- **ALWAYS** use Github issues to track plans over Markdown files
+
+## GitHub CLI
+
+- **NEVER** Push directly to the `main` branch
+- **NEVER** Bypass the `Husky hooks`
+- **NEVER** use the `--no-verify` flag, stop and throw an error
+- **ALWAYS REQUIRE** human confirmation before executing a `rebase`
+- **ALWAYS REQUIRE** human confirmation before executing a `force push`
+- **ALWAYS** use `conventional commits` notation for titles and commit messages
+  - If needed use more than one line but we must follow `conventional commits` standards
+- **ALWAYS** return a clickable link to the existing `Pull Request` _(if available)_
+
+## Commit messages
+
+- **NEVER** add `Co-authored-by` lines to commit messages (title or body). This applies to all commits, including those created by agents, `/github/commit`, or automation.
+- Only allowed footer lines are conventional commit footers (e.g. `BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`). No other co-author or attribution lines.
+
+## GitHub Pull Requests
+
+- **ALWAYS** use the template at `.github/pull_request_template.md` to start from
+- **ALWAYS** write testing steps that should be done, not a list of things already done
+- **NEVER** add a `Files Modified` section as its redundant to the diff
+- **ALWAYS** analyze both commit messages AND the actual diff to write an accurate summary
+- **ALWAYS** group related changes together in the summary (e.g., all UI changes, all API changes)
+- **ALWAYS** identify and mention breaking changes if any exist (look for `BREAKING CHANGE:` in commits or major API changes)
+- **ALWAYS** link related GitHub issues if mentioned in commits (use `Closes #123` or `Fixes #456` format)
+
+## PR Title Guidelines
+
+- Use conventional commits format: `type(scope): description`
+- Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `style`
+- If multiple types exist, use the most significant one
+- Keep it concise but descriptive (50-72 characters ideal)
+- Example: `feat(auth): add OAuth2 support for GitHub login`
+
+## PR Summary Guidelines
+
+- Write a clear, high-level summary of what changed and why
+- Focus on the "what" and "why", not just listing commits
+- Group related changes logically
+- Mention any architectural decisions or significant refactors
+- Note any dependencies or prerequisites for reviewers
+- If the PR is large, consider breaking it down or add a note about complexity

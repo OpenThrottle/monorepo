@@ -1,0 +1,94 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+## General Instructions
+
+### Updating Existing Files
+
+- Alphabetize arrays and object keys when their order doesn't matter.
+- Avoid type casing using `as` and using `any` as much as possible.
+- Use enums for structured data that must be hardcoded.
+- Use `const` instead of `let` or `var` when possible.
+- Use `async/await` instead of `.then()` for asynchronous code.
+
+# Monorepo Instructions
+
+## UI Applications
+
+Our UI Applications use Remix and React.
+
+### Creating New Files
+
+**Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/generators/AGENT_USAGE.md](../../docs/tools/generators/AGENT_USAGE.md). Use Nx `@tools/generators` (e.g. `remix`, `react`) with `NX_ISOLATE_PLUGINS=false`; do not use the legacy `yarn generate:*` commands for new code.
+
+Create new Remix routes, React components, Formik forms, and more with our custom generator:
+
+```bash
+yarn generate:remix --generator=<GENERATOR_NAME> --name=<COMPONENT_NAME> --project=<APPLICATION_NAME> --folder=<FOLDER_NAME>
+```
+
+- `<GENERATOR_NAME>` is the name of the generator, which is one of the following:
+  - `component` for a new component.
+  - `route` for a new route. When using this generator the `folder` parameter is not required.
+  - `form` for a new form.
+  - `modal` for a new modal.
+  - `table` for a new table.
+- `<COMPONENT_NAME>` is the name of the new component. It should be PascalCase.
+- `<APPLICATION_NAME>` is the name of one of our Remix UI applications, e.g. `oneteam`, `accounts-central`, `platform`, etc.
+- `<FOLDER_NAME>` name is the name of the folder within the application where the component will be created. It is generally prefixed with `routing/`, e.g. `routing/forecasting`, `routing/platformShift`, etc. This parameter is not required for generating a new `route`.
+
+### Updating Existing Files
+
+- Use components from `@rocketcms/shared-ui` when possible. These components are located in the `packages/shared-ui/src/components` folder of the monorepo if they ever need to be updated.
+
+### Testing
+
+- Test all new components and functions.
+- Always use `component`, not `screen`, to get elements in tests.
+- Use `userEvent` instead of `fireEvent` for simulating user interactions.
+- Use `waitFor` to wait for asynchronous updates in the DOM.
+- Generate mock data from GraphQL in the `mocks.ts` file of the given application.
+- Each if statement in the logic should have its own `describe` block.
+- Always include tests for edge cases to ensure robustness.
+
+## API Applications
+
+Our API applications powered by React Router will typically use Supabase, Postgres. NestJS applications will use GraphQL and Postgres.
+
+### Creating New Files
+
+**Agents:** Use the generator-first workflow (see [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/generators/AGENT_USAGE.md](../../docs/tools/generators/AGENT_USAGE.md)). Use Nx `@tools/generators:nestjs` with `NX_ISOLATE_PLUGINS=false` for new services/modules.
+
+Create new GraphQL/NestJS services, NestJS repositories, and more with our custom generator:
+
+```bash
+yarn generate:nestjs --generator=<GENERATOR_NAME> --name=<SERVICE_NAME> --project=<APPLICATION_NAME>
+```
+
+- `<GENERATOR_NAME>` is the name of the generator, which one of the following:
+  - `graphql-service` for a new GraphQL service to route requests and handle business logic.
+  - `simple-service` for a new simple service to hold business logic.
+  - `core-repository` for a new core repository to handle data access to a specific collection. When using this generator the `project` parameter is not required.
+- `<SERVICE_NAME>` is the name of the new component. It should be kebab-case and plural.
+- `<APPLICATION_NAME>` is the name of one of our NestJS API applications, e.g. `oneteam-api`, `accounts-central-api`,`platform-api`, etc. This parameter is not required for generating a new `core-repository`.
+
+### Updating Existing Files
+
+- When updating `.entity` files the GraphQL schema must be backwards compatible, so avoid removing fields or changing types. If a field is no longer needed, it should be marked as deprecated instead.
+- Resolver methods should return an ObjectType created using `PaginatedResult()`, `ListResult()`, or `Result()`, i.e. instead of returning `PlatformShift`, return:
+
+```typescript
+@ObjectType()
+export class PlatformShiftListResult extends ListResult(PlatformShift) {}
+```
+
+### Testing
+
+- Test all new methods added to resolvers, services, and repositories.
+- Mock any NestJS providers in the `beforeEach` block of the test.
+- Use model factories from the repository and entity factories from the service when necessary.
+- Each if statement in the logic should have its own `describe` block.
+- Always include tests for edge cases to ensure robustness.

@@ -1,0 +1,18 @@
+fragment JobDetailsCard on JobObject {
+  data
+  failedReason
+  finishedOn
+  id
+  name
+  processedOn
+  progress
+  returnvalue
+  state
+  timestamp
+}
+
+query getQueueJobDetails($jobId: ID!, $queueName: String!) {
+  job(jobId: $jobId, queueName: $queueName) {
+    ...JobDetailsCard
+  }
+}

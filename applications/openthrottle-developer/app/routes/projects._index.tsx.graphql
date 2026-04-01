@@ -1,0 +1,20 @@
+fragment ProjectCard on ProjectObject {
+  createdAt
+  description
+  id
+  name
+  nxProjectName
+  plans {
+    title
+  }
+  tasks {
+    title
+  }
+  updatedAt
+}
+
+query getProjects {
+  projects {
+    ...ProjectCard
+  }
+}

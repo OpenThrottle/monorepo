@@ -1,0 +1,11 @@
+fragment GeneratorCard on GeneratorObject {
+  description
+  name
+}
+
+query getGenerators {
+  generators {
+    description
+    name
+  }
+}

@@ -1,0 +1,10 @@
+input CreateNoteInput {
+  content: String!
+  author: String
+}
+
+mutation createNote($input: CreateNoteInput!) {
+  createNote(input: $input) {
+    ...NoteCard
+  }
+}

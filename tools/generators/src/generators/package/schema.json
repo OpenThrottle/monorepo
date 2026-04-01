@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Package",
+  "title": "@tools/generators:package",
+  "type": "object",
+  "properties": {
+    "describe": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print a machine-readable description of this generator and exit (no files are written)."
+    },
+    "interactive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable interactive prompts as a fallback when options are missing."
+    },
+    "list": {
+      "type": "string",
+      "description": "List values (JSON) and exit (no files are written)."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "nestjs",
+        "node",
+        "react",
+        "tools"
+      ],
+      "description": "Package type."
+    },
+    "organization": {
+      "type": "string",
+      "enum": [
+        "@barguide",
+        "@intouch",
+        "@openthrottle",
+        "@openthrottle",
+        "@rocketcms",
+        "@tools",
+        "@visormatt"
+      ],
+      "description": "Package organization scope."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Package name slug."
+    }
+  }
+}

@@ -1,0 +1,63 @@
+fragment TaskByPlanResponse on TaskObject {
+  assignee
+  category
+  createdAt
+  description
+  id
+  planId
+  requirementsJson
+  status
+  summary
+  title
+  updatedAt
+}
+
+fragment PlanResponse on PlanObject {
+  assignee
+  author
+  category
+  createdAt
+  description
+  id
+  status
+  summary
+  title
+  updatedAt
+}
+
+query GetListDistinctCategories {
+  listDistinctCategories
+}
+
+query GetPlan($id: ID!) {
+  plan(id: $id) {
+    ...PlanResponse
+  }
+}
+
+query GetPlansByStatus($input: ListPlansByStatusInput!) {
+  listPlansByStatus(input: $input) {
+    plans {
+      ...PlanResponse
+    }
+    totalCount
+  }
+}
+
+query GetTasksByPlanId($input: TasksByPlanIdInput!) {
+  tasksByPlanId(input: $input) {
+    ...TaskByPlanResponse
+  }
+}
+
+mutation CreatePlan($input: CreatePlanInput!) {
+  createPlan(input: $input) {
+    ...PlanResponse
+  }
+}
+
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+  }
+}

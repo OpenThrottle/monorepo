@@ -1,0 +1,17 @@
+query getSearchResults($input: SearchInput!) {
+  search(input: $input) {
+    chunks {
+      content
+      id
+      planId
+      planTitle
+      similarity
+      source
+      sourcePath
+      sourceRepo
+      sourceSha
+      taskId
+      taskTitle
+    }
+  }
+}

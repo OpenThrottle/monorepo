@@ -1,0 +1,53 @@
+{
+  "name": "@openthrottle/react-router-editor",
+  "description": "Monaco-based editor for OpenThrottle custom prompts: tabbed files, searchable sidebar, and React Router integration.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@phosphor-icons/react": "^2.1.7",
+    "classnames": "^2.5.1",
+    "jotai": "^2.11.3"
+  },
+  "devDependencies": {},
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/react-router-editor",
+      "production:true",
+      "publish:false",
+      "technology:react",
+      "technology:react-router",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {
+    "@openthrottle/react-router-utils": "workspace:*",
+    "react": "^19.0.0",
+    "react-router": "^7.13.1"
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

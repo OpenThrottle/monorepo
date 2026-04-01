@@ -1,0 +1,46 @@
+################################################################################
+#
+#   This "action" connects to our GCP infrastructure via the Google Cloud SDK
+#
+#     - https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+#
+################################################################################
+
+name: "🌥️ Google Cloud Provider (GCP)"
+description: "Configure the runner with GCP credentials so we can build, push, and deploy via CI/CD."
+inputs:
+  branch:
+    description: 'What branch are we deploying with "main" going to production'
+    required: true
+  credentials_json:
+    description: "Actions don't support the parents secrets, so we have to pass it down."
+    required: true
+  google_cloud_project:
+    description: "The Google Cloud project to use"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "🔐 GCP Authentication"
+      uses: "google-github-actions/auth@v2"
+      with:
+        credentials_json: ${{ inputs.credentials_json }}
+
+    - name: "⚙️ GCP SDK Installation"
+      uses: "google-github-actions/setup-gcloud@v1"
+      with:
+        install_components: "gke-gcloud-auth-plugin"
+
+    - name: "🔧 GCP Configuration"
+      # if: ${{ (inputs.branch != "main") }}
+      shell: bash
+      run: |
+
+        export CLOUDSDK_CORE_PROJECT="${{ inputs.google_cloud_project }}"
+        gcloud config set project ${CLOUDSDK_CORE_PROJECT}
+
+        # FIXME: DISABLED FOR NOW
+        # gcloud auth configure-docker -q
+        # gcloud auth configure-docker us-west2-docker.pkg.dev
+        # gcloud container clusters get-credentials monorepo-cluster --region us-west2

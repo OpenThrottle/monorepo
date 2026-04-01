@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Folders",
+  "title": "@tools/generators:folders",
+  "type": "object",
+  "properties": {
+    "describe": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print a machine-readable description of this generator and exit (no files are written)."
+    },
+    "interactive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable interactive prompts as a fallback when options are missing."
+    },
+    "list": {
+      "type": "string",
+      "description": "List dynamic values (JSON) and exit (no files are written)."
+    },
+    "application": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target application name (dynamic; use --list=applications to enumerate)."
+    },
+    "folder": {
+      "type": "string",
+      "enum": [
+        "routing",
+        "services"
+      ],
+      "description": "Which folder area to create under."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Folder name slug."
+    }
+  }
+}

@@ -1,0 +1,61 @@
+################################################################################
+#
+#   This "action" breaks out the common steps for installing PNPM and caching
+#   node modules.
+#
+#     - https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+#
+################################################################################
+
+name: "🤖 Node Setup"
+description: "Setup NodeJS and PNPM."
+
+runs:
+  using: "composite"
+  steps:
+    - name: "⚙️ Setup NodeJS"
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - name: "📦 Install PNPM"
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.15.4
+
+    - name: "💾 Cache Nx local cache"
+      uses: actions/cache@v4
+      id: nx-cache
+      with:
+        key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}
+        path: .nx/cache
+        restore-keys: |
+          cache-nx-${{ runner.os }}-
+
+    - name: "💾 Cache pnpm store"
+      uses: actions/cache@v4
+      id: pnpm-store-cache
+      with:
+        key: cache-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+        path: ~/.local/share/pnpm/store
+        restore-keys: |
+          cache-pnpm-store-
+
+    - name: "💾 Cache node modules"
+      uses: actions/cache@v4
+      id: node-modules-cache
+      with:
+        key: cache-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
+        path: node_modules
+        restore-keys: |
+          cache-node-modules-
+
+    - name: "📦 Install packages"
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      run: pnpm install
+      shell: bash
+
+    # - name: '🔍 Setup Supabase CLI'
+    #   uses: supabase/setup-cli@v1
+    #   with:
+    #     version: latest

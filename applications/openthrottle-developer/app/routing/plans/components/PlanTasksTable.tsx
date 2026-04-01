@@ -1,0 +1,169 @@
+import * as React from 'react';
+import classnames from 'classnames';
+import {
+  DataTable,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
+import type { ColumnDef } from '@tanstack/react-table';
+import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  formatDateShort,
+  formatUpdatedAt,
+  getRequirementsCount,
+} from '~/routing/plans/utils/formatters';
+import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
+import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
+
+export interface PlanTasksTableProps {
+  readonly className?: string;
+  readonly tasks: PlanTaskRowFragment[];
+}
+
+function buildPlanTaskTableColumns(): ColumnDef<
+  PlanTaskRowFragment,
+  string | null | undefined
+>[] {
+  return [
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <PlanStatusBadge
+            status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
+          />
+        );
+      },
+      header: () => (
+        <span className="inline-block w-full text-center">Status</span>
+      ),
+    },
+    {
+      accessorKey: 'title',
+      cell: ({ row }) => <PlanTasksTableCellTitle row={row} />,
+      header: () => 'Title / Context',
+    },
+    {
+      accessorKey: 'category',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.original.category ?? '—'}
+        </span>
+      ),
+      header: () => 'Category',
+    },
+    {
+      accessorKey: 'projectRelation',
+      cell: ({ row }) => {
+        const project = row.original.projectRelation;
+        if (project == null) {
+          return <span className="text-muted-foreground">—</span>;
+        }
+        return (
+          <Link
+            className="text-xs underline underline-offset-2 hover:text-primary"
+            to={`/projects/${project.id}`}
+            viewTransition={true}
+          >
+            {project.name}
+          </Link>
+        );
+      },
+      header: () => 'Project',
+    },
+    {
+      accessorKey: 'requirementsJson',
+      cell: ({ row }) => {
+        const count = getRequirementsCount(row.original.requirementsJson);
+        return (
+          <span className="text-muted-foreground tabular-nums">
+            {count === 0 ? '—' : count}
+          </span>
+        );
+      },
+      header: () => (
+        <span className="inline-block w-full text-center">Requirements</span>
+      ),
+    },
+    {
+      accessorKey: 'updatedAt',
+      cell: ({ row }) => {
+        const task = row.original;
+        const relative = formatUpdatedAt(task.updatedAt);
+        const exact = formatDateShort(task.updatedAt);
+
+        if (relative == null) {
+          return <span className="text-muted-foreground text-xs">—</span>;
+        }
+
+        const content = (
+          <span className="text-muted-foreground text-xs whitespace-nowrap">
+            {relative}
+          </span>
+        );
+
+        if (exact != null) {
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild={true}>
+                <span className="cursor-default">{content}</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                Updated {exact}
+                {formatDateShort(task.createdAt) != null
+                  ? ` · Created ${formatDateShort(task.createdAt)}`
+                  : ''}
+              </TooltipContent>
+            </Tooltip>
+          );
+        }
+        return content;
+      },
+      header: () => (
+        <span className="inline-block w-full text-right">Updated</span>
+      ),
+    },
+    {
+      cell: ({ row }) => <PlanTasksTableCellActions row={row} />,
+      header: () => 'Actions',
+      id: 'actions',
+    },
+  ];
+}
+
+export const PlanTasksTable = (
+  props: PlanTasksTableProps,
+): React.ReactElement => {
+  const { className, tasks } = props;
+
+  const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);
+
+  const getRowId = React.useCallback(
+    (task: PlanTaskRowFragment) => task.id,
+    [],
+  );
+  const getRowProps = React.useCallback(
+    (row: { original: PlanTaskRowFragment }) => ({
+      id: `task-${row.original.id}`,
+    }),
+    [],
+  );
+
+  return (
+    <div className={classnames(className)} data-testid="PlanTasksTable">
+      <TooltipProvider>
+        <DataTable<PlanTaskRowFragment, string | null | undefined>
+          columns={columns}
+          data={tasks}
+          getRowId={getRowId}
+          getRowProps={getRowProps}
+        />
+      </TooltipProvider>
+    </div>
+  );
+};

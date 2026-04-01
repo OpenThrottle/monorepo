@@ -1,0 +1,72 @@
+{
+  "name": "@openthrottle/nestjs-typeorm",
+  "description": "NestJS module with Joi-validated Postgres env config (POSTGRES_*), TypeORM DataSource async providers, NestjsTypeormService, and package scripts for migrations.",
+  "version": "2.2.25",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@nestjs/typeorm": "^11.0.0",
+    "joi": "^18.0.2",
+    "pg": "^8.17.1",
+    "typeorm": "^0.3.28"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-typeorm",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/visormatt/monorepo.git",
+  "scripts": {
+    "typeorm": "ts-node ./node_modules/typeorm/cli.js",
+    "typeorm:generate-migration": "npm run typeorm -- -d ./dataSource.ts migration:generate ./migrations/$npm_config_name",
+    "typeorm:run-migrations": "npm run typeorm -- -d ./dataSource.ts migration:run",
+    "typeorm:revert-migration": "npm run typeorm -- -d ./dataSource.ts migration:revert"
+  },
+  "type": "commonjs",
+  "types": "./src/index.ts"
+}

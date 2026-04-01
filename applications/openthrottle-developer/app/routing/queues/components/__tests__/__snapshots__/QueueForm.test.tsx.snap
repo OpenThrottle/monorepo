@@ -1,0 +1,58 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`QueueForm Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="QueueForm"
+    >
+      <form
+        action="/"
+        class="w-full space-y-4"
+        data-discover="true"
+        method="post"
+      >
+        <div>
+          <label
+            class="mb-1 block text-sm font-medium"
+            for="queue-name"
+          >
+            Queue name
+          </label>
+          <input
+            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            id="queue-name"
+            name="name"
+            placeholder="e.g. my-queue"
+            required=""
+            type="text"
+          />
+          <p
+            class="mt-1 text-xs text-muted-foreground"
+          >
+            Letters, numbers, hyphens, and underscores only. Max 128 characters.
+          </p>
+        </div>
+        <div
+          class="flex gap-3"
+        >
+          <button
+            class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            type="submit"
+          >
+            Create queue
+          </button>
+          <a
+            class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
+            data-discover="true"
+            href="/queues"
+          >
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+`;

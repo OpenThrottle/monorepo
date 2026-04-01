@@ -1,0 +1,17 @@
+fragment PromptCard on CustomPromptObject {
+  content
+  createdAt
+  description
+  filePath
+  id
+  labels
+  promptType
+  title
+  updatedAt
+}
+
+query getPrompts($input: ListCustomPromptsInput) {
+  customPrompts(input: $input) {
+    ...PromptCard
+  }
+}
