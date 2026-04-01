@@ -85,7 +85,7 @@ const main = async (): Promise<void> => {
       console.error('The following circular dependencies were found:\n');
       console.error(formatCycles(cycles));
       console.error(
-        '\n📚 For more information, see: docs/monorepo/NX/dependencies.md',
+        '\n📚 For more information, see: docs/monorepo/nx-graph.md',
       );
       console.error(
         '\n💡 To visualize the dependency graph, run: pnpm exec nx graph',
