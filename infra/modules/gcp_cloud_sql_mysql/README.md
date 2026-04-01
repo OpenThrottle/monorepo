@@ -40,7 +40,7 @@ Terraform module for **Cloud SQL for MySQL** (Zonal Micro instance with low-cost
 ## Example
 
 ```hcl
-module "openthrottle_mysql" {
+module "mysql" {
   source = "../../modules/gcp_cloud_sql_mysql"
 
   name       = "openthrottle-mysql"

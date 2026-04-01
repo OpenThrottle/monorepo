@@ -49,7 +49,7 @@
       "build": {
         "executor": "@nx/js:tsc"
       },
-      "dev": {
+      "__dev": {
         "continuous": true,
         "executor": "@nx/js:tsc",
         "options": {

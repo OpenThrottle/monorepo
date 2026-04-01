@@ -7,13 +7,13 @@
 # Folders
 #############################################################################
 .cache
-databases/cortex/backups
 .langgraph_api
 .nx
 .pnpm-store
 .vercel
 build
 coverage
+databases/backups
 design/*
 dist
 node_modules
@@ -30,12 +30,12 @@ tmp
 .github/instructions/nx.instructions.md
 .vscode/settings.json
 *.cpuprofile
-applications/*/app/**/*.d.ts
-applications/*/src/**/*.d.ts
-applications/**/*.d.ts
 *.d.ts.map
 *.tsbuildinfo
 **/__generated__/**/*
+applications/**/*.d.ts
+applications/*/app/**/*.d.ts
+applications/*/src/**/*.d.ts
 vite.config.*.timestamp*
 vite.config.ts.timestamp*
 vitest.config.*.timestamp*

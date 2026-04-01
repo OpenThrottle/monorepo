@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Analytics } from '@vercel/analytics/react';
+// import { Analytics } from '@vercel/analytics/react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import { executeGraphql } from '@openthrottle/react-router-graphql';
 import {
@@ -255,7 +255,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {FEATURE_BETA_PREVIEW ? (
           <NotificationsStoreProvider>
             <NotificationsSocketBridge
-              webSocketUrl={data?.env.API_URL_WEBSOCKET ?? ''}
+              webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
             >
               {data?.serverHealth?.database !== 'ok' && (
                 <GlobalServerHealthBanner health={data?.serverHealth} />
@@ -279,13 +279,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <>
             <GlobalHeader />
             <main className="flex flex-1 flex-col">{children}</main>
-            {/* <GlobalFooter health={data?.serverHealth} /> */}
-            {/* {!isAuthRoute && } */}
           </>
         )}
 
         <ScrollRestoration />
-        <Analytics />
+
+        {/* FIXME: Uncomment this when we have a production environment */}
+        {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />

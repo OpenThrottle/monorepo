@@ -36,7 +36,7 @@ module "openthrottle" {
   source = "../../applications/openthrottle"
 
   env_name   = "staging"
-  network    = local.ot_network
+  network    = local.openthrottle_network
   project_id = local.project_id
   region     = "us-west1"
   zone       = "us-west1-a"

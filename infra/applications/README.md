@@ -4,10 +4,10 @@ Application modules in `infra/applications/` are **reusable Terraform compositio
 
 ## Applications vs environments
 
-| Layer                     | Purpose                                                                                                                                                                                                                                                    |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`applications/<app>/`** | Reusable app composition: which resources and modules make up the app (e.g. OpenThrottle = reserved IP + Cloud SQL Postgres + Compute E2 + Memorystore Redis). Same implementation is used across staging, production, and future environments.            |
-| **`environments/<env>/`** | Env-specific wiring: project, region, zone, network, and env name. An environment calls one or more application modules and passes `local.project_id`, `local.ot_region`, `local.ot_zone`, `local.ot_network`, `local.project_env` (or equivalent locals). |
+| Layer                     | Purpose                                                                                                                                                                                                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`applications/<app>/`** | Reusable app composition: which resources and modules make up the app (e.g. OpenThrottle = reserved IP + Cloud SQL Postgres + Compute E2 + Memorystore Redis). Same implementation is used across staging, production, and future environments.                           |
+| **`environments/<env>/`** | Env-specific wiring: project, region, zone, network, and env name. An environment calls one or more application modules and passes `local.project_id`, `local.project_region`, `local.project_zone`, `local.project_network`, `local.project_env` (or equivalent locals). |
 
 Environments do **not** inline the app’s resources; they invoke the application module and optionally override variables (e.g. disk size, machine type) when needed.
 

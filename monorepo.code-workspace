@@ -13,40 +13,8 @@
       "name": "🐙 Monorepo",
       "path": "./",
     },
-    // {
-    //   "name": "🦸‍♂️ Supabase",
-    //   "path": "./supabase",
-    // },
 
     // 📦 All our applications
-    // {
-    //   "name": "👨‍💻 BarGuide",
-    //   "path": "./applications/barguide",
-    // },
-    // {
-    //   "name": "👨‍💻 Charlize Scholta",
-    //   "path": "./applications/charlizescholta",
-    // },
-    // {
-    //   "name": "👨‍💻 Iron Sights",
-    //   "path": "./applications/iron-sights",
-    // },
-    // {
-    //   "name": "👨‍💻 Jax Scholta",
-    //   "path": "./applications/jaxscholta",
-    // },
-    // {
-    //   "name": "👨‍💻 Kelli Scholta",
-    //   "path": "./applications/kellischolta",
-    // },
-    // {
-    //   "name": "👨‍💻 Matthew Scholta",
-    //   "path": "./applications/mattscholta",
-    // },
-    // {
-    //   "name": "🚀 RocketCMS",
-    //   "path": "./applications/rocketcms",
-    // },
     {
       "name": "🚀 OpenThrottle",
       "path": "./applications/openthrottle",
@@ -54,12 +22,8 @@
 
     // 📦 All our packages
     {
-      "name": "📦 mattscholta",
-      "path": "./packages/mattscholta",
-    },
-    {
-      "name": "📦 openthrottle",
-      "path": "./packages/openthrottle",
+      "name": "📦 packages",
+      "path": "./packages",
     },
   ],
   "settings": {
@@ -68,22 +32,13 @@
 
       // 🧑‍💻 All our applications
       "./applications": true,
-      "./applications/barguide": true,
-      "./applications/charlizescholta": true,
-      "./applications/iron-sights": true,
-      "./applications/jaxscholta": true,
-      "./applications/kellischolta": true,
-      "./applications/mattscholta": true,
-      "./applications/rocketcms": false,
 
       // 📦 All our packages
       "./packages": false,
-      "./packages/dotfiles": false,
       "./packages/shared-ui": false,
 
       // 📦 All our tools
-      "./tools": false,
-      "./tools/generators": false,
+      "./tools": true,
 
       "./monorepo.code-workspace": false,
     },

@@ -1,5 +1,5 @@
 import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
-import { Analytics } from '@vercel/analytics/react';
+// import { Analytics } from '@vercel/analytics/react';
 import { APP_URL } from '@openthrottle/react-router-utils';
 import {
   Links,
@@ -119,7 +119,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <GlobalFooter /> */}
 
         <ScrollRestoration />
-        <Analytics />
+        {/* FIXME: Uncomment this when we have a production environment */}
+        {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />

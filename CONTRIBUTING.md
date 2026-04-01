@@ -86,36 +86,6 @@ Every project must have:
 }
 ```
 
-**React Component Library Package:**
-
-```json
-{
-  "nx": {
-    "tags": [
-      "name:@visormatt/react-goodies",
-      "type:package",
-      "production:true",
-      "technology:react"
-    ]
-  }
-}
-```
-
-**Development/Experimental Package:**
-
-```json
-{
-  "nx": {
-    "tags": [
-      "name:@experimental/new-package",
-      "type:package",
-      "production:false",
-      "technology:typescript"
-    ]
-  }
-}
-```
-
 ### Tag Combinations
 
 Projects can have multiple tags of the same type when appropriate:

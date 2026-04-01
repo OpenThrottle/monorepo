@@ -1,7 +1,7 @@
 terraform {
+  # NOTE: This bucket must be created first, then we can migrate the state into it
   backend "gcs" {
-    bucket = "mattscholta-terraform-state"
-    # prefix = "staging"
+    bucket = "openthrottle-staging-terraform-state"
   }
 
   # https://registry.terraform.io/browse/providers

@@ -2,15 +2,11 @@ import { ENV_SOURCE, IS_BROWSER } from '../config/environment';
 import type { OpenThrottleEnv } from '../types';
 
 export const getEnvironment = (): OpenThrottleEnv => {
-  const apiUrl = IS_BROWSER
-    ? ENV_SOURCE['API_URL']
-    : process.env.API_URL_INTERNAL;
-
-  const apiUrlGraphql = `${apiUrl}/graphql`;
-  const apiUrlWebsocket = ENV_SOURCE['API_URL_WEBSOCKET'];
   const appEnv = ENV_SOURCE['APP_ENV'];
   const appName = ENV_SOURCE['APP_NAME'];
   const appUrl = ENV_SOURCE['APP_URL'];
+  const apiUrlExternal = ENV_SOURCE['API_URL_EXTERNAL'];
+  const apiUrlInternal = ENV_SOURCE['API_URL_EXTERNAL'];
   const appUrlAdmin = ENV_SOURCE['APP_URL_ADMIN'];
   const appUrlCms = ENV_SOURCE['APP_URL_CMS'];
   const appUrlDeveloper = ENV_SOURCE['APP_URL_DEVELOPER'];
@@ -21,8 +17,8 @@ export const getEnvironment = (): OpenThrottleEnv => {
   const nodeEnv = ENV_SOURCE['NODE_ENV'];
   const rollbarToken = ENV_SOURCE['ROLLBAR_TOKEN'];
 
-  if (!apiUrl) throw new Error('API_URL is not set');
-  if (!apiUrlWebsocket) throw new Error('API_URL_WEBSOCKET is not set');
+  if (!apiUrlExternal) throw new Error('API_URL_EXTERNAL is not set');
+  if (!apiUrlInternal) throw new Error('API_URL_INTERNAL is not set');
   if (!appEnv) throw new Error('APP_ENV is not set');
   if (!appName) throw new Error('APP_NAME is not set');
   if (!appUrl) throw new Error('APP_URL is not set');
@@ -37,9 +33,8 @@ export const getEnvironment = (): OpenThrottleEnv => {
   if (!rollbarToken) throw new Error('ROLLBAR_TOKEN is not set');
 
   const env: OpenThrottleEnv = {
-    API_URL: apiUrl,
-    API_URL_GRAPHQL: apiUrlGraphql,
-    API_URL_WEBSOCKET: apiUrlWebsocket,
+    API_URL_EXTERNAL: apiUrlExternal,
+    API_URL_INTERNAL: apiUrlInternal,
     APP_ENV: appEnv,
     APP_NAME: appName,
     APP_URL: appUrl,

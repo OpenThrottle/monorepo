@@ -18,7 +18,7 @@ import {
   usePollServerMetrics,
 } from '@openthrottle/react-router-ui';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
-import { ENV_SOURCE } from '@openthrottle/react-router-utils';
+import { ENV_SOURCE, IS_PRODUCTION } from '@openthrottle/react-router-utils';
 import {
   GetRootMetricsDocument,
   type GetRootMetricsQuery,
@@ -109,7 +109,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   // Setup
   const query = print(GetRootMetricsDocument);
   const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hdHRAZG9tYWluLmNvbSIsInN1YiI6IjI5ZTNmOWY0LTNhMzEtNDM2OC05MTE1LTc1YjA3NjQ4YjA2YSIsImlhdCI6MTc3MTU3NTgyNiwiZXhwIjoxNzcxNjYyMjI2fQ.BA3W_-b-GUZGvGJm0n0SJGEdedqrqlIoMzp74H1YR48`;
-  const url = ENV_SOURCE.API_URL_GRAPHQL;
+  const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
 
   // Handlers
   const handleIntervalChange = React.useCallback(
@@ -152,6 +152,9 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   }, [serverMetrics]);
 
   // 🔌 Short Circuit
+  if (!IS_PRODUCTION) {
+    return null;
+  }
 
   return (
     <div className={classnames('p-4', className)} data-testid="GlobalMetrics">

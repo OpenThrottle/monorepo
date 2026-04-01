@@ -3,9 +3,6 @@
 #     🧩 Fragments | https://docs.docker.com/compose/compose-file/11-extension/
 #
 #############################################################################
-x-build-secrets: &build-secrets
-  - gcs_credentials
-
 x-openthrottle-common: &openthrottle-common
   GITHUB_TOKEN: ${GITHUB_TOKEN}
   NODE_ENV: ${NODE_ENV}
@@ -23,6 +20,12 @@ x-openthrottle-developer: &openthrottle-developer
   APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
   APP_NAME: ${OPENTHROTTLE_DEVELOPER_APP_NAME}
   APP_URL: ${OPENTHROTTLE_DEVELOPER_APP_URL}
+  APP_URL_ADMIN: ${OPENTHROTTLE_DEVELOPER_APP_URL_ADMIN}
+  APP_URL_CMS: ${OPENTHROTTLE_DEVELOPER_APP_URL_CMS}
+  APP_URL_DEVELOPER: ${OPENTHROTTLE_DEVELOPER_APP_URL_DEVELOPER}
+  APP_URL_EMAIL: ${OPENTHROTTLE_DEVELOPER_APP_URL_EMAIL}
+  APP_URL_SERVER: ${OPENTHROTTLE_DEVELOPER_APP_URL_SERVER}
+  APP_URL_WEBSITE: ${OPENTHROTTLE_DEVELOPER_APP_URL_WEBSITE}
   APP_VERSION: ${OPENTHROTTLE_DEVELOPER_APP_VERSION}
   PORT: ${OPENTHROTTLE_DEVELOPER_PORT}
 
@@ -36,25 +39,14 @@ x-openthrottle-server: &openthrottle-server
   CORS_ORIGINS: ${OPENTHROTTLE_SERVER_CORS_ORIGINS}
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
+name: OT
 services:
   #############################################################################
   #
-  #     🤖 openthrottle-developer | React Router (MCP developer UI)
-  #
-  #     Built from monorepo root per docs/openthrottle/docker-image-build-strategy.md.
-  #     Depends on openthrottle-server for GraphQL/Cortex; run compose from repo root:
-  #     docker compose -f applications/openthrottle/docker-compose.yml up --build
+  #     🤖 openthrottle-developer
   #
   openthrottle-developer:
-    build:
-      args:
-        <<: *openthrottle-developer
-      context: ../../
-      dockerfile: Dockerfile.ReactRouter.v2
-      secrets: *build-secrets
-      target: production-alpine
     container_name: openthrottle-developer
-    # command: echo "Hello, world!"
     depends_on:
       openthrottle-server:
         condition: service_healthy
@@ -62,17 +54,15 @@ services:
       - .env
     environment:
       <<: *openthrottle-developer
+    image: openthrottle-developer:latest
     ports:
-      - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
+      - "${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}"
     restart: always
     # user: "appuser"
 
   #############################################################################
   #
   #     🤖 Postgres | https://hub.docker.com/_/postgres
-  #
-  #     A relational database for plans ingestion with Vector Search
-  #     (pgvector) enabled
   #
   openthrottle-postgres:
     build:
@@ -82,16 +72,22 @@ services:
         POSTGRES_PORT: ${OPENTHROTTLE_POSTGRES_PORT}
         POSTGRES_USER: ${OPENTHROTTLE_POSTGRES_USER}
         POSTGRES_VERSION: ${OPENTHROTTLE_POSTGRES_VERSION}
-      context: ./
+      context: ../../
       dockerfile: Dockerfile.Postgres
     container_name: openthrottle-postgres
+    environment:
+      POSTGRES_DB: ${OPENTHROTTLE_POSTGRES_DB}
+      POSTGRES_PASSWORD: ${OPENTHROTTLE_POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${OPENTHROTTLE_POSTGRES_PORT}
+      POSTGRES_USER: ${OPENTHROTTLE_POSTGRES_USER}
+      POSTGRES_VERSION: ${OPENTHROTTLE_POSTGRES_VERSION}
     healthcheck:
       interval: 1s
       retries: 10
       test:
         [
-          'CMD-SHELL',
-          'pg_isready -U ${OPENTHROTTLE_POSTGRES_USER} -d ${OPENTHROTTLE_POSTGRES_DB}',
+          "CMD-SHELL",
+          "pg_isready -U ${OPENTHROTTLE_POSTGRES_USER} -d ${OPENTHROTTLE_POSTGRES_DB}",
         ]
       timeout: 5s
     ports:
@@ -99,7 +95,7 @@ services:
     restart: always
     shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
     volumes:
-      - cortex_postgres_data:/var/lib/postgresql/data
+      - openthrottle_postgres_data:/var/lib/postgresql/data
 
   #############################################################################
   #
@@ -114,7 +110,7 @@ services:
     healthcheck:
       interval: 10s
       retries: 3
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       timeout: 5s
     image: redis:${OPENTHROTTLE_REDIS_VERSION}-alpine
     ports:
@@ -130,12 +126,6 @@ services:
   #     docker compose -f applications/openthrottle/docker-compose.yml up openthrottle-server --build
   #
   openthrottle-server:
-    build:
-      args:
-        <<: *openthrottle-server
-      context: ../../
-      dockerfile: Dockerfile.NestJS.v3
-      secrets: *build-secrets
     container_name: openthrottle-server
     depends_on:
       openthrottle-postgres:
@@ -160,26 +150,18 @@ services:
       start_period: 40s
       test:
         [
-          'CMD-SHELL',
-          'wget -q --spider http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1',
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1",
         ]
       timeout: 10s
+    image: openthrottle-server:latest
     ports:
-      - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
+      - "${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}"
     restart: always
-
-#############################################################################
-#
-#     🔐 Secrets | Build secrets for Docker builds
-#
-#############################################################################
-secrets:
-  gcs_credentials:
-    file: ${GCS_CREDENTIALS_PATH:-~/.config/gcloud/application_default_credentials.json}
 
 #############################################################################
 #
 #     🎧 Volumes | Persistent "named" volumes
 #
 volumes:
-  cortex_postgres_data:
+  openthrottle_postgres_data:
