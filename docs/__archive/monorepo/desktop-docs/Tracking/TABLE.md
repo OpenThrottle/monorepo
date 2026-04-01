@@ -22,7 +22,7 @@
 
 <!-- Links -->
 
-[link-fbb]: https://business.facebook.com/settings/pixels "Facebook Pixel"
-[link-ga]: https://analytics.google.com "Google Analytics"
-[link-ads]: https://ads.google.com "Google Ads"
-[link-gtm]: https://tagmanager.google.com "Google Tag Manager"
+[link-fbb]: https://business.facebook.com/settings/pixels 'Facebook Pixel'
+[link-ga]: https://analytics.google.com 'Google Analytics'
+[link-ads]: https://ads.google.com 'Google Ads'
+[link-gtm]: https://tagmanager.google.com 'Google Tag Manager'
