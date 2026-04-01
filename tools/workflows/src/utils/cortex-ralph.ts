@@ -25,6 +25,13 @@ export const CORTEX_FATAL_UNREACHABLE_SUFFIX =
   '\n   Check CORTEX_POSTGRES_URL (or CORTEX_POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
 
 /**
+ * @description Normalizes JSONB task requirements from Postgres to a readonly array.
+ */
+function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
+  return Array.isArray(raw) ? raw : [];
+}
+
+/**
  * @description Returns Cortex config or exits with {@link CORTEX_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
  */
 export function getCortexConfigOrExit(): CortexRalphConfig {
@@ -149,6 +156,27 @@ export async function updatePlanSummary(
 }
 
 /**
+ * @description Updates a task's summary (PRD summarization, close-out notes). Returns true if a row was updated.
+ */
+export async function updateTaskSummary(
+  config: CortexRalphConfig,
+  taskId: string,
+  summary: string,
+): Promise<boolean> {
+  const client = new pg.Client({ connectionString: config.connectionString });
+  await client.connect();
+  try {
+    const res = await client.query(
+      `UPDATE tasks SET summary = $1, updated_at = NOW() WHERE id = $2`,
+      [summary, taskId],
+    );
+    return res.rowCount === 1;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
  * @description Fetches a task by id, or null if not found.
  */
 export async function getTaskById(
@@ -174,14 +202,13 @@ export async function getTaskById(
     );
     const row = res.rows[0];
     if (!row) return null;
-    const requirements = row.requirements as readonly unknown[];
     return {
       category: row.category,
       createdAt: row.created_at,
       description: row.description,
       id: row.id,
       planId: row.plan_id,
-      requirements: Array.isArray(requirements) ? requirements : [],
+      requirements: taskRequirementsFromRow(row.requirements),
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
@@ -367,20 +394,17 @@ export async function getTasksByPlanId(
       `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY created_at`,
       [planId],
     );
-    return res.rows.map((row) => {
-      const requirements = row.requirements as readonly unknown[];
-      return {
-        category: row.category,
-        createdAt: row.created_at,
-        description: row.description,
-        id: row.id,
-        planId: row.plan_id,
-        requirements: Array.isArray(requirements) ? requirements : [],
-        status: row.status,
-        title: row.title,
-        updatedAt: row.updated_at,
-      };
-    });
+    return res.rows.map((row) => ({
+      category: row.category,
+      createdAt: row.created_at,
+      description: row.description,
+      id: row.id,
+      planId: row.plan_id,
+      requirements: taskRequirementsFromRow(row.requirements),
+      status: row.status,
+      title: row.title,
+      updatedAt: row.updated_at,
+    }));
   } finally {
     await client.end();
   }
@@ -446,14 +470,13 @@ export async function updateTaskStatus(
     );
     const row = res.rows[0];
     if (!row) return null;
-    const requirements = row.requirements as readonly unknown[];
     return {
       category: row.category,
       createdAt: row.created_at,
       description: row.description,
       id: row.id,
       planId: row.plan_id,
-      requirements: Array.isArray(requirements) ? requirements : [],
+      requirements: taskRequirementsFromRow(row.requirements),
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
