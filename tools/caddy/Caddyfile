@@ -13,28 +13,29 @@
 }
 
 # openthrottle-server (NestJS: GraphQL, REST, Socket.IO). WebSocket passthrough is automatic.
+# Ports align with applications/*/ .env.default (see docs/monorepo/local-services-and-ports.md).
 api.local {
-	reverse_proxy localhost:6010
+	reverse_proxy localhost:6021
 }
 
 # openthrottle-admin (React Router + Vite).
 admin.local {
-	reverse_proxy localhost:6020
+	reverse_proxy localhost:6022
 }
 
 # openthrottle-developer (React Router + Vite).
 developer.local {
-	reverse_proxy localhost:6012
+	reverse_proxy localhost:6020
 }
 
 # openthrottle-email (React Router + Vite).
 email.local {
-	reverse_proxy localhost:6018
+	reverse_proxy localhost:6024
 }
 
 # openthrottle-website (React Router + Vite).
 website.local {
-	reverse_proxy localhost:6014
+	reverse_proxy localhost:6025
 }
 
 # Ollama (LLM/embedding server for ai-mcp, cortex:import, etc.). Set OLLAMA_BASE_URL to https://ollama.local when using this.

@@ -4,17 +4,17 @@ This document lists local development services and their ports so they can be ex
 
 ## Services to expose
 
-| Service                    | Port                    | Description                                                                                            | Env / config                                                                                                                                 |
-| -------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **openthrottle-server**    | **6010**                | NestJS API: GraphQL, REST, Socket.IO (WebSockets). Used by openthrottle-developer and Cortex tooling.  | `applications/openthrottle-server/.env.default`: `PORT="6010"`. GraphQL at `/graphql`; Socket.IO at `/socket.io`; BullMQ Board at `/queues`. |
-| **openthrottle-developer** | **5173** (Vite default) | React Router + Vite frontend. Connects to openthrottle-server for API and WebSocket.                   | `API_URL` / `API_URL_WEBSOCKET` default `http://localhost:6021`. Dev server port is Vite default unless overridden (e.g. `--port`).          |
-| **Ollama**                 | **11434**               | Local LLM/embedding server. Used by `cortex:import`, LangChain, openthrottle-server, and other agents. | `OLLAMA_BASE_URL` default `http://localhost:11434`. See `scripts/ollama.sh`, `databases/cortex/README.md`, `.env.default`.                   |
+| Service                    | Port                | Description                                                                                            | Env / config                                                                                                                                             |
+| -------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **openthrottle-server**    | **6021**            | NestJS API: GraphQL, REST, Socket.IO (WebSockets). Used by openthrottle-developer and tooling.         | `applications/openthrottle-server/.env.default`: `PORT="6021"`. GraphQL at `/graphql`; Socket.IO at `/socket.io`; BullMQ Board at `/queues`.             |
+| **openthrottle-developer** | **6020** (template) | React Router + Vite frontend. Connects to openthrottle-server for API and WebSocket.                   | `applications/openthrottle-developer/.env.default`: `PORT="6020"`, `API_URL_*` → `http://localhost:6021`. If `PORT` is unset, Vite defaults to **3000**. |
+| **Ollama**                 | **11434**           | Local LLM/embedding server. Used by `cortex:import`, LangChain, openthrottle-server, and other agents. | `OLLAMA_BASE_URL` default `http://localhost:11434`. See `scripts/ollama.sh`, `databases/cortex/README.md`, `.env.default`.                               |
 
 ## Optional / related services
 
-- **Postgres (Cortex)** — `localhost:5556` (from `applications/openthrottle-server/.env.default`). Typically not exposed through Caddy; used by openthrottle-server and Cortex tooling.
-- **Redis** — `localhost:6379`. Used by openthrottle-server (BullMQ). Not normally exposed through Caddy.
-- **cortex-api URL** — The Cortex app and VS Code extension use `CORTEX_API_URI` / `cortex.apiBaseUrl` (e.g. `http://localhost:6021/graphql`). When running the same backend as openthrottle-server, that backend can be on 6010; codegen/docs that mention `6021` assume a separate or differently configured run. Behind Caddy, the single API entry point (e.g. `https://api.local` or `https://localhost/api`) replaces direct port references.
+- **Postgres (OpenThrottle)** — `localhost:6010` (from `applications/openthrottle-server/.env.default`: `POSTGRES_PORT`). Typically not exposed through Caddy; used by openthrottle-server and Cortex tooling.
+- **Redis** — `localhost:6011` (from the same `POSTGRES_*` / Redis block in the server `.env.default`; matches root `docker-compose-databases.yml` conventions). Used by openthrottle-server (BullMQ). Not normally exposed through Caddy.
+- **GraphQL URL** — `http://localhost:6021/graphql` when using the server template on `6021`. Tools and MCP clients should use the same base URL as `openthrottle-server`. Behind Caddy, use a single API entry point (e.g. `https://api.local` or `https://localhost/api`) instead of raw port references.
 
 ## Recommended hostnames and Caddy layout
 
@@ -25,7 +25,7 @@ Two workable approaches:
 Single origin `https://localhost` with paths:
 
 - `https://localhost/api` → reverse_proxy to `localhost:6021` (openthrottle-server)
-- `https://localhost/developer` or `https://localhost/` → reverse_proxy to `localhost:5173` (openthrottle-developer)
+- `https://localhost/developer` or `https://localhost/` → reverse_proxy to the developer dev port (e.g. `localhost:6020` from app `.env.default`, or `3000` / `5173` depending on your Vite config)
 - `https://localhost/ollama` → reverse_proxy to `localhost:11434` (Ollama)
 
 Pros: One host, no `/etc/hosts` changes. Cons: Apps may need base path config (e.g. Vite `base: '/developer/'`), and WebSocket/GraphQL paths must be consistent with the base path.
@@ -35,7 +35,7 @@ Pros: One host, no `/etc/hosts` changes. Cons: Apps may need base path config (e
 Use a small set of hostnames and point them at `127.0.0.1` via `/etc/hosts` (or similar). Caddy can obtain and trust certs for these:
 
 - **api.local** → `localhost:6021` (openthrottle-server)
-- **developer.local** → `localhost:5173` (openthrottle-developer)
+- **developer.local** → `localhost:6020` (or your configured `PORT`; match `vite.config.ts` and `applications/openthrottle-developer/.env.default`)
 - **ollama.local** → `localhost:11434` (Ollama)
 
 Pros: No path rewriting; each app thinks it’s at the root. Clear separation for API, developer UI, and Ollama. Caddy’s automatic HTTPS works with locally-trusted certs (e.g. Caddy can install its CA into the system trust store). Cons: Requires editing `/etc/hosts` (or using a local DNS like dnsmasq).

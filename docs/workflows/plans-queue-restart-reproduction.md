@@ -169,7 +169,7 @@ This section documents the behavior that is relevant to "job does not pick back 
 
 ### Default BullMQ job options
 
-- **Root-level defaults:** In `packages/mattscholta/nestjs-bullmq/src/nestjs-bullmq.module.ts`, `BullModule.forRoot` sets **defaultJobOptions**: `attempts: 3`, `backoff: { type: 'exponential', delay: 2000 }`, `delay: 1000`, `keepLogs: 100`. These apply to all queues unless overridden per job or per queue. Worker-level options (lockDuration, stalledInterval) are not set in forRoot; each queue uses **defaultWorkerOptionsForRecovery** from `@openthrottle/nestjs-bullmq` (or queue-specific constants like plans) in its `@Processor` so jobs recover after restart.
+- **Root-level defaults:** In `packages/nestjs-bullmq/src/nestjs-bullmq.module.ts`, `BullModule.forRoot` sets **defaultJobOptions**: `attempts: 3`, `backoff: { type: 'exponential', delay: 2000 }`, `delay: 1000`, `keepLogs: 100`. These apply to all queues unless overridden per job or per queue. Worker-level options (lockDuration, stalledInterval) are not set in forRoot; each queue uses **defaultWorkerOptionsForRecovery** from `@openthrottle/nestjs-bullmq` (or queue-specific constants like plans) in its `@Processor` so jobs recover after restart.
 - **Plans queue jobs:** Plan-run jobs are added with `this.plansQueue.add('run-plan', { planId })` and **no third-argument job options** (see `applications/openthrottle-server/src/graphql/plans/plans.resolver.ts`), so they inherit the root defaults (attempts, backoff, delay, keepLogs).
 
 ### Worktree tracker

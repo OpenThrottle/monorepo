@@ -24,7 +24,7 @@ This document records the chosen **image build strategy** and **registry** for *
 - **Region:** `us-west2` to match existing monorepo usage and optional colocation with the OpenThrottle E2 VM.
 - **URL pattern:** `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`.
 - **Auth:** `gcloud auth configure-docker us-west2-docker.pkg.dev` (and in CI, workload identity or service account key with `roles/artifactregistry.writer`).
-- **Why:** Same pattern as other apps in the repo (e.g. rocketcms in Google-Cloud.md); keeps images in one place and integrates with GCP IAM and the E2 instance in the same project/region.
+- **Why:** Same pattern as other containerized apps in the monorepo; keeps images in one place and integrates with GCP IAM and the E2 instance in the same project/region.
 
 ---
 
@@ -104,7 +104,7 @@ The **root** `Dockerfile.NestJS.v3` is the Nx Docker plugin–friendly path for 
 
 - **Change:** In `applications/openthrottle-developer/package.json`, add:
   - `"start:docker": "react-router-serve ./build/server/index.js"`
-- **Reason:** Aligns with other React Router apps in the monorepo (rocketcms, mattscholta, barguide) and allows the same production stage `CMD ["pnpm", "start:docker"]`.
+- **Reason:** Matches the standard React Router production entrypoint (`react-router-serve`) so multi-stage images can use `CMD ["pnpm", "start:docker"]`.
 
 ---
 

@@ -1,6 +1,6 @@
 # Wiring nestjs-auth and nestjs-rbac into a NestJS app
 
-This guide describes how to apply **@openthrottle/nestjs-auth** (Passport JWT, guards) and **@openthrottle/nestjs-rbac** (CORS, RBAC guards/decorators) in a consuming NestJS application (e.g. openthrottle-server, cortex-api).
+This guide describes how to apply **@openthrottle/nestjs-auth** (Passport JWT, guards) and **@openthrottle/nestjs-rbac** (CORS, RBAC guards/decorators) in a consuming NestJS application (e.g. **openthrottle-server**).
 
 ## 1. Dependencies
 
@@ -25,7 +25,7 @@ async function bootstrap() {
 }
 ```
 
-Optional env: `CORS_ORIGINS`, `CORS_CREDENTIALS`, `CORS_ALLOWED_METHODS`. See [nestjs-rbac README](../../packages/mattscholta/nestjs-rbac/README.md#cors).
+Optional env: `CORS_ORIGINS`, `CORS_CREDENTIALS`, `CORS_ALLOWED_METHODS`. See [nestjs-rbac README](../../packages/nestjs-rbac/README.md#cors).
 
 ## 3. Module imports in `AppModule`
 
@@ -38,7 +38,7 @@ import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    NestjsAuthModule.forRoot(),   // JWT_SECRET from env; or forRootAsync for custom config
+    NestjsAuthModule.forRoot(), // JWT_SECRET from env; or forRootAsync for custom config
     NestjsRbacModule,
     // ... other modules
   ],
@@ -46,7 +46,7 @@ import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 export class AppModule {}
 ```
 
-- **Auth:** `NestjsAuthModule.forRoot()` uses `JWT_SECRET` (and optional `JWT_ISSUER`) from env. Use `forRootAsync` if you load config from `ConfigService` or elsewhere. See [nestjs-auth README](../../packages/mattscholta/nestjs-auth/README.md).
+- **Auth:** `NestjsAuthModule.forRoot()` uses `JWT_SECRET` (and optional `JWT_ISSUER`) from env. Use `forRootAsync` if you load config from `ConfigService` or elsewhere. See [nestjs-auth README](../../packages/nestjs-auth/README.md).
 - **RBAC:** `NestjsRbacModule` registers the RBAC service and guards; it does not configure CORS (that is done in `main.ts`).
 
 ## 4. Protecting routes with auth and RBAC
@@ -77,17 +77,17 @@ adminOnly() { return { ok: true }; }
 createUser() { ... }
 ```
 
-The authenticated user must expose `roles?: string[]` on `request.user` (e.g. from your JWT payload or strategy `validate()`). See [nestjs-rbac README — Guards and decorators](../../packages/mattscholta/nestjs-rbac/README.md#guards-and-decorators).
+The authenticated user must expose `roles?: string[]` on `request.user` (e.g. from your JWT payload or strategy `validate()`). See [nestjs-rbac README — Guards and decorators](../../packages/nestjs-rbac/README.md#guards-and-decorators).
 
 ## 5. Environment variables
 
-| Variable         | Package     | Purpose |
-| ---------------- | ----------- | ------- |
-| `JWT_SECRET`     | nestjs-auth  | Required for JWT verification. |
-| `JWT_ISSUER`     | nestjs-auth  | Optional JWT issuer claim. |
-| `CORS_ORIGINS`   | nestjs-rbac  | Optional; comma-separated origins; omit or `*` for allow-all. |
-| `CORS_CREDENTIALS` | nestjs-rbac | Optional; `true` / `false`; default `true`. |
-| `CORS_ALLOWED_METHODS` | nestjs-rbac | Optional; comma-separated HTTP methods. |
+| Variable               | Package     | Purpose                                                       |
+| ---------------------- | ----------- | ------------------------------------------------------------- |
+| `JWT_SECRET`           | nestjs-auth | Required for JWT verification.                                |
+| `JWT_ISSUER`           | nestjs-auth | Optional JWT issuer claim.                                    |
+| `CORS_ORIGINS`         | nestjs-rbac | Optional; comma-separated origins; omit or `*` for allow-all. |
+| `CORS_CREDENTIALS`     | nestjs-rbac | Optional; `true` / `false`; default `true`.                   |
+| `CORS_ALLOWED_METHODS` | nestjs-rbac | Optional; comma-separated HTTP methods.                       |
 
 ## 6. Example app
 
@@ -95,5 +95,5 @@ The authenticated user must expose `roles?: string[]` on `request.user` (e.g. fr
 
 ## References
 
-- [@openthrottle/nestjs-auth README](../../packages/mattscholta/nestjs-auth/README.md) — Strategy registration, `JwtAuthGuard`, `@CurrentUser()`, `@Public()`, env.
-- [@openthrottle/nestjs-rbac README](../../packages/mattscholta/nestjs-rbac/README.md) — Roles, permissions, `RolesGuard`, `PermissionsGuard`, CORS options, env.
+- [@openthrottle/nestjs-auth README](../../packages/nestjs-auth/README.md) — Strategy registration, `JwtAuthGuard`, `@CurrentUser()`, `@Public()`, env.
+- [@openthrottle/nestjs-rbac README](../../packages/nestjs-rbac/README.md) — Roles, permissions, `RolesGuard`, `PermissionsGuard`, CORS options, env.

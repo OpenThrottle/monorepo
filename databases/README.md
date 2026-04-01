@@ -1,4 +1,4 @@
-# Cortex database
+# OpenThrottle database
 
 Postgres database for plans ingestion with pgvector for semantic search. Used to store plan JSON and optional output Markdown from the `plans/` directory.
 
@@ -6,7 +6,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
 1. **Start the cortex Postgres container**
 
-   From the repo root, using env from `.env.default` (or copy to `.env`). To verify Cortex and the MCP are reachable, use the **mcp-developer `health` tool** — see `packages/openthrottle/mcp-developer/README.md` § **Is Cortex running?**
+   From the repo root, using env from `.env.default` (or copy to `.env`). To verify OpenThrottle and the MCP are reachable, use the **mcp-developer `health` tool** — see `packages/openthrottle/mcp-developer/README.md` § **Is OpenThrottle running?**
 
    ```bash
    docker compose -f docker-compose-databases.yml up -d cortex
@@ -19,19 +19,19 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    | Variable                         | Purpose           | Example                 |
    | -------------------------------- | ----------------- | ----------------------- |
    | `OPENTHROTTLE_POSTGRES_HOST`     | Postgres host     | `localhost`             |
-   | `OPENTHROTTLE_POSTGRES_PORT`     | Postgres port     | `5556`                  |
+   | `OPENTHROTTLE_POSTGRES_PORT`     | Postgres port     | `6010`                  |
    | `OPENTHROTTLE_POSTGRES_DB`       | Database name     | `openthrottle`          |
    | `OPENTHROTTLE_POSTGRES_USER`     | Database user     | `openthrottle_user`     |
    | `OPENTHROTTLE_POSTGRES_PASSWORD` | Database password | `openthrottle_password` |
 
-   Optional: `OPENTHROTTLE_POSTGRES_URL` — full connection string (e.g. `postgresql://user:pass@host:port/db`). If set, openthrottle-server and scripts can use it directly (mcp-developer talks to Cortex via GraphQL only); otherwise they build from the five vars above.
+   Optional: `OPENTHROTTLE_POSTGRES_URL` — full connection string (e.g. `postgresql://user:pass@host:port/db`). If set, openthrottle-server and scripts can use it directly (mcp-developer talks to OpenThrottle via GraphQL only); otherwise they build from the five vars above.
 
 3. **Run migrations**
 
    Creates tables and indexes (run once after first start, or after schema changes):
 
    ```bash
-   s   pnpm run database:migrate
+   pnpm run database:migrate
    ```
 
 4. **Reset the database (optional, before a fresh ingest)**
@@ -39,7 +39,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    Truncates all cortex tables so a re-run of ingest does not create duplicate plans. Use when switching from test data to real data or when re-ingesting after changing source files:
 
    ```bash
-   s   pnpm run database:reset
+   pnpm run database:reset
    ```
 
 5. **Ingest plans from the filesystem**
@@ -47,24 +47,24 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    Reads plan JSON from **all non-template subdirectories** under `plans/` (root, `completed`, `ideas`, and any other directory except `templates`) and inserts into `plans`, `tasks`, and `plan_output_stream`. For each plan file, the script looks for a same-named `*-output.md` and uses it for plan embeddings and, when non-empty, inserts it as one chunk into `plan_output_stream`. With `OPENAI_API_KEY` set, also generates embeddings and fills `plan_embeddings` and `task_embeddings`:
 
    ```bash
-   s   pnpm run database:import
+   pnpm run database:import
    ```
 
    The script is read-only for the filesystem; it does not delete or modify plan files.
 
 6. **Ingest docs/ and NX project READMEs into documentation tables (optional)**
 
-   Reads all `.md` files under `docs/` and each NX project's `README.md` (from the NX project graph) and upserts into `documentation` and `documentation_embeddings`. Idempotent per (repo, sha, path). Docs use paths like `docs/foo.md`; project READMEs use `projects/<project-root>/README.md` (e.g. `projects/applications/cortex/README.md`). With `OPENAI_API_KEY` set, generates embeddings. Optional env: `DOCS_REPO`, `DOCS_SHA`, `DOCS_AUTHORS` (comma-separated), `DOCS_MESSAGE`, `DOCS_PR_NUMBER` for source metadata (e.g. from docs-watch workflow):
+   Reads all `.md` files under `docs/` and each NX project's `README.md` (from the NX project graph) and upserts into `documentation` and `documentation_embeddings`. Idempotent per (repo, sha, path). Docs use paths like `docs/foo.md`; project READMEs use `projects/<project-root>/README.md` (e.g. `projects/applications/openthrottle-developer/README.md`). With `OPENAI_API_KEY` set, generates embeddings. Optional env: `DOCS_REPO`, `DOCS_SHA`, `DOCS_AUTHORS` (comma-separated), `DOCS_MESSAGE`, `DOCS_PR_NUMBER` for source metadata (e.g. from docs-watch workflow):
 
    ```bash
-   s   pnpm run database:import-docs
+   pnpm run database:import-docs
    ```
 
 Plan JSON must have a `metadata` object (with `author` (GitHub handle), `category`, `title`) and a `tasks` array; files with other shapes (e.g. a bare array of task objects) are skipped and reported as errors.
 
 ## Schema
 
-- **plans** – Plan metadata: `id`, `title`, `author`, `category`, `status`, `description`, `summary` (optional; PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `project_id` (optional, FK to projects; nullable), `created_at`, `updated_at`. In the Cortex API, `projectId` is optional on create/update and in list filters; `projectRelation` is null when `projectId` is unset.
+- **plans** – Plan metadata: `id`, `title`, `author`, `category`, `status`, `description`, `summary` (optional; PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `project_id` (optional, FK to projects; nullable), `created_at`, `updated_at`. In the OpenThrottle API, `projectId` is optional on create/update and in list filters; `projectRelation` is null when `projectId` is unset.
 - **projects** – NX project reference for scoping plans/tasks: `id`, `name`, `nx_project_name` (TEXT; unique when not null per migration 032), `description`, `created_at`, `updated_at`. Only **NX applications** are kept; see [Projects collection (applications only)](#projects-collection-applications-only).
 - **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `created_at`, `updated_at`.
 - **plan_embeddings** – Vector embeddings for plan content: `id`, `plan_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
@@ -106,7 +106,7 @@ Indexes are created by migrations in `databases/cortex/migrations/`. Main tables
 - **custom_prompts** – `idx_custom_prompts_prompt_type`, `idx_custom_prompts_labels` (GIN), `idx_custom_prompts_user_id` (partial), `idx_custom_prompts_project_id` (partial), `idx_custom_prompts_file_path` (partial), `idx_custom_prompts_created_at`, `idx_custom_prompts_updated_at`, `idx_custom_prompts_type_created_at`, `idx_custom_prompts_active` (partial WHERE deleted_at IS NULL), `idx_custom_prompts_title_trgm` (GIN, pg_trgm for ILIKE). See migration `036_create_custom_prompts_table.sql`.
 - **custom_prompt_embeddings** – `idx_custom_prompt_embeddings_custom_prompt_id`, `idx_custom_prompt_embeddings_vector` (HNSW cosine), `idx_custom_prompt_embeddings_metadata` (GIN). See migration `037_create_custom_prompt_embeddings_table.sql`.
 
-**When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by mcp-developer (via GraphQL), openthrottle-server, or the Cortex app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/cortex/INDEX_AUDIT.md`.
+**When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by mcp-developer (via GraphQL), openthrottle-server, or the OpenThrottle app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/cortex/INDEX_AUDIT.md`.
 
 ### Embedding dimension strategy (OpenAI and Ollama)
 
@@ -114,17 +114,17 @@ Embedding tables (`plan_embeddings`, `task_embeddings`, `documentation_embedding
 
 **Ollama (optional, additive):** When `OLLAMA_BASE_URL` or `sOLLAMA_EMBEDDING_MODEL` is set, database:import and openthrottle-server can use **Ollama** for local embeddings. When neither is set, the existing OpenAI flow (e.g. `OPENAI_API_KEY`) is used. Env: `OLLAMA_BASE_URL` (default `http://localhost:11434`), `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). See root `.env.default` and `scripts/ollama.sh`. **When using Caddy** (tools/caddy), set `OLLAMA_BASE_URL` to the Caddy-proxied URL (e.g. `https://ollama.local` or `https://localhost/osllama`) so database:import and other consumers use the same endpoint. For HTTPS with Caddy's local certs, see `docs/monorepo/Ollama.md` and tools/caddy/README.md (TLS/trust store). Ollama models (e.g. `nomic-embed-text`, `mxbai-embed-large`) may output a different dimension. Strategy:
 
-- **Option A — Same dimension (recommended for simplicity):** Use an Ollama model that outputs **1536** dimensions so the existing schema and migrations stay as-is. No migration; same tables and indexes. Re-ingest with Ollama when switching; no mixed-dimension storage. **Cortex ingest and openthrottle-server only insert embeddings when the vector length is 1536;** if the chosen Ollama model returns a different dimension, embeddings are skipped (no error). Known Ollama embedding model dimensions: `nomic-embed-text` 768, `mxbai-embed-large` 1024, `all-minilm` 384. As of the current Ollama library, none of these output 1536; for Option A with Cortex, use **OpenAI** (`OPENAI_API_KEY`) for embeddings, or use an Ollama model that outputs 1536 when one becomes available.
+- **Option A — Same dimension (recommended for simplicity):** Use an Ollama model that outputs **1536** dimensions so the existing schema and migrations stay as-is. No migration; same tables and indexes. Re-ingest with Ollama when switching; no mixed-dimension storage. **OpenThrottle ingest and openthrottle-server only insert embeddings when the vector length is 1536;** if the chosen Ollama model returns a different dimension, embeddings are skipped (no error). Known Ollama embedding model dimensions: `nomic-embed-text` 768, `mxbai-embed-large` 1024, `all-minilm` 384. As of the current Ollama library, none of these output 1536; for Option A with OpenThrottle, use **OpenAI** (`OPENAI_API_KEY`) for embeddings, or use an Ollama model that outputs 1536 when one becomes available.
 - **Option B — Different dimension (future):** If we support Ollama models with a different dimension, add an **optional** path only: e.g. configurable dimension from env, or a separate table/column for Ollama-backed embeddings, **without** altering existing `vector(1536)` columns or current OpenAI flow. Document re-ingest and any new migrations if this path is added.
 
 Do **not** change existing `vector(1536)` columns or remove the OpenAI code path. Additive only.
 
 ### Commit links (Option A workflow)
 
-We use **Option A:** link only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); Cortex stores that single SHA in `commit_links` so "what landed" matches the repo.
+We use **Option A:** link only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); OpenThrottle stores that single SHA in `commit_links` so "what landed" matches the repo.
 
 - **When to call `link_commit`:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. Do **not** link commits during the Ralph loop or while the PR is open.
-- **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read from `commit_links`. Because we only store the squash SHA, activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in Cortex.
+- **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read from `commit_links`. Because we only store the squash SHA, activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in OpenThrottle.
 - **Day-to-day workflow:**
   - **Commit as you complete tasks:** During Ralph (or any plan execution), commit and push after each task or logical chunk. Use conventional commits (e.g. `feat(cortex): document commit workflow`). In the commit body or footer, include `Plan-Id: <uuid>` and `Task-Id: <uuid>` for traceability. Do **not** call `link_commit` for these commits—they are normal branch commits. Only after the PR is merged, link the squash commit once (see below).
   - **Ralph / agent:** While executing tasks, commit and push as above; do **not** call `link_commit`. After the PR is merged, link the squash commit once (see below).
@@ -232,13 +232,13 @@ The optional **summary** field on plans and tasks supports PRD summarization: ne
 Using `psql`:
 
 ```bash
-PGPASSWORD=cortex_password psql -h localhost -p 5556 -U cortex_user -d cortex
+PGPASSWORD=openthrottle_password psql -h localhost -p 5556 -U openthrottle_user -d openthrottle
 ```
 
 Connection string:
 
 ```bash
-postgresql://cortex_user:cortex_password@localhost:5556/cortex
+postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 ```
 
 ### MCP (OpenThrottle plans/tasks)
@@ -299,7 +299,7 @@ LIMIT 5;
 - Plan JSON files under `plans/` (in any non-`templates` subdirectory) can remain the source of truth on disk until you switch to DB-as-source.
 - The ingestion script only reads; it does not delete or modify plan files.
 - For a fresh ingest (e.g. after dumping test data or changing source fsiles), run `pnpm run database:reset` then `pnpm run database:import`. Re-running ingest without reset is additive; duplicate plans may be inserted.
-- After backing up and removing the `plans/` folder, the Cortex database is the single source of truth; use MCP tools and Cursor `/cortex/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in Cortex (e.g. a placeholder plan) if you want it later.
+- After backing up and removing the `plans/` folder, the OpenThrottle database is the single source of truth; use MCP tools and Cursor `/cortex/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in OpenThrottle (e.g. a placeholder plan) if you want it later.
 
 ## Migrations
 
@@ -344,6 +344,6 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 We keep **SQL files as the single source of truth** for schema. TypeORM is used only for **runtime** (connection pooling via DataSource, raw SQL in openthrottle-server and scripts; entities for type safety). We do **not** use TypeORM’s migration runner.
 
 - **Applying schema changes:** Add a new numbered `.sql` file in `sdatabases/cortex/migrations/`, then run `pnpm run database:migrate`. The script `scripts/run-cortex-migrations.ts` runs all `.sql` files in filename order.
-- **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use Cortex Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/cortex/migrations (002, 012).”
+- **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/cortex/migrations (002, 012).”
 - **Long-term rationale:** For pros/cons and a greenfield recommendation (SQL-as-source vs TypeORM migrations), see [docs/monorepo/migration-strategy-sql-vs-typeorm.md](../../docs/monorepo/migration-strategy-sql-vs-typeorm.md).
 - **Why not TypeORM migrations:** We already have a long, ordered history osf SQL migrations and a single command (`database:migrate`) that applies them. Introducing TypeORM migrations would duplicate history or require a one-time conversion and a separate “migrations run” table. Keeping SQL as source of truth avoids two migration systems and keeps one readable, version-controlled history.
