@@ -38,13 +38,13 @@ You can run the full OpenThrottle stack (Postgres, Redis, openthrottle-server, o
 
 ```bash
 # From monorepo root
-docker compose -f applications/openthrottle/docker-compose.yml up --build
+docker compose up --build
 ```
 
 To build images only (e.g. for CI), use the same file from repo root:
 
 ```bash
-docker compose -f applications/openthrottle/docker-compose.yml build
+docker compose build
 ```
 
 ### Required `.env`
@@ -74,7 +74,7 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
 - **Prerequisites:** Node.js ≥22, pnpm, and (for full stack) Postgres with pgvector and Redis. The monorepo uses pnpm and Nx; run all commands from the **monorepo root** unless noted.
 - **Clone and install:** From the monorepo root run `pnpm install` to install workspace dependencies.
 - **Environment:** Copy `applications/openthrottle/.env.default` to `applications/openthrottle/.env` and set Postgres/Redis (and optional JWT, CORS, Ollama/OpenAI) as needed. For Docker Compose, use the same `.env`; see [Required `.env`](#required-env) above.
-- **Postgres + Redis:** Either run them via Docker Compose (`docker compose -f applications/openthrottle/docker-compose.yml up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. Cortex schema and migrations: `databases/cortex/README.md`.
+- **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. Cortex schema and migrations: `databases/cortex/README.md`.
 - **Optional — embeddings:** For semantic search (plans knowledge base) use Ollama (set `OLLAMA_BASE_URL`) or OpenAI (set `OPENAI_API_KEY`). See root `.env.default` and `docs/openthrottle/run-locally-oss.md`.
 
 ## Development
