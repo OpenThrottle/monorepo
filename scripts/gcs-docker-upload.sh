@@ -6,9 +6,11 @@
 #
 # Prerequisites:
 #   - Images exist locally (e.g. from monorepo root:
-#     docker compose -f applications/openthrottle/docker-compose.yml build
-#     or nx run <app>:docker-build). Default sources match compose image names:
-#     openthrottle-server:latest and openthrottle-developer:latest.
+#     docker compose -f applications/openthrottle/docker-compose.yml build openthrottle-server openthrottle-developer
+#     This tags the same refs as CI (applications/<app>/Dockerfile; see docker-build-push).
+#     Alternative: nx run openthrottle-server:docker-build tags openthrottle-server:local — set
+#     SOURCE_OPENTHROTTLE_SERVER=openthrottle-server:local or docker tag … :latest before push.
+#   Default sources match compose image: lines: openthrottle-server:latest and openthrottle-developer:latest.
 #   - gcloud authenticated for the target GCP project; docker credential helper:
 #     gcloud auth configure-docker us-west2-docker.pkg.dev
 #
