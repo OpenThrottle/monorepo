@@ -1,3 +1,8 @@
+output "gcs_workflow_service_account_email" {
+  description = "Email of the staging GCS workflow service account (for bucket IAM and CI identity)."
+  value       = google_service_account.gcs_workflow.email
+}
+
 output "bucket_nx_cache" {
   sensitive = false
   value     = google_storage_bucket.nx_cache.name
