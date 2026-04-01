@@ -35,8 +35,8 @@ Examples:
 
 **Examples:**
 
-- `@rocketcms/shared-ui` - React component library
-- `@rocketcms/core` - React-based core package
+- `@openthrottle/react-router-ui` - React component library
+- `@openthrottle/react-router-shadcn` - React + shadcn primitives
 
 #### `technology:react-router`
 
@@ -50,8 +50,9 @@ Examples:
 
 **Examples:**
 
-- `barguide` - React Router application
-- `@barguide/react-router` - React Router package
+- `openthrottle` - React Router application
+- `openthrottle-cms` - React Router application
+- `@openthrottle/react-router-utils` - React Router utilities package
 
 #### `technology:react-native`
 
@@ -63,8 +64,7 @@ Examples:
 
 **Examples:**
 
-- `@barguide/react-native-ui` - React Native component library
-- `barguide-app` - React Native application
+- _(None in this workspace today.)_ When a React Native app or package exists, tag it with `technology:react-native` (and `technology:expo` if applicable).
 
 #### `technology:expo`
 
@@ -77,8 +77,7 @@ Examples:
 
 **Examples:**
 
-- `barguide-app` - Expo-based React Native app
-- `@barguide/react-native` - Expo package
+- _(None in this workspace today.)_ Expo apps should include both `technology:expo` and `technology:react-native`.
 
 ### Backend Technologies
 
@@ -92,7 +91,7 @@ Examples:
 
 **Examples:**
 
-- `barguide-api` - NestJS API application
+- `openthrottle-server` - NestJS GraphQL API application
 - `@openthrottle/nestjs-graphql` - NestJS GraphQL package
 
 #### `technology:python`
@@ -105,7 +104,7 @@ Examples:
 
 **Examples:**
 
-- `barguide-llm` - Python FastAPI application
+- _(Add examples when a Python `technology:python` project exists in this repo.)_
 
 ### Infrastructure & Services
 
@@ -119,7 +118,7 @@ Examples:
 
 **Examples:**
 
-- `@barguide/supabase` - Supabase integration package
+- _(Add examples when a Supabase-specific package is tagged in this repo.)_
 
 ### Language & Tooling
 
@@ -150,7 +149,7 @@ Examples:
 
 **Examples:**
 
-- `barguide-llm` - Has both `technology:python` and `technology:llm`
+- _(Add examples when an LLM-tagged project exists in this repo.)_
 
 ## Multiple Technology Tags
 
@@ -159,8 +158,7 @@ Projects can have multiple technology tags when they use multiple technologies:
 **Examples:**
 
 - `@openthrottle/react-router-utils` - Has `technology:react` and `technology:react-router`
-- `barguide-app` - Has `technology:expo` and `technology:react-native`
-- `barguide-llm` - Has `technology:python` and `technology:llm`
+- `openthrottle-server` - Has `technology:nestjs` (and may add more tags as needed)
 
 ## Tagging Rules
 
@@ -177,4 +175,4 @@ All technology tags should be validated against this reference document. See the
 ## Related Documentation
 
 - [NX Project Tags Documentation](https://nx.dev/concepts/more-concepts/tags)
-- [Monorepo Contribution Guidelines](../CONTRIBUTING.md)
+- [AGENTS.md](../../AGENTS.md) (workspace conventions)

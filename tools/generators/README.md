@@ -4,7 +4,7 @@ Nx generators for quickly scaffolding code in this monorepo.
 
 ## Usage
 
-> **Note for AI Agents**: All generator commands **MUST** use `NX_ISOLATE_PLUGINS=false` prefix. See [AGENT_USAGE.md](../../docs/tools/generators/AGENT_USAGE.md) for details.
+> **Note for AI Agents**: All generator commands **MUST** use `NX_ISOLATE_PLUGINS=false` prefix. See [AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md) for details.
 
 ### Listing available generators
 

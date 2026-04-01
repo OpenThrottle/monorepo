@@ -40,18 +40,18 @@ Audit of README.md files in the monorepo for placeholders: **Lorem ipsum**, **tb
 
 ## 2. tbd... (fill sections)
 
-| Path                                  | Location                               | Notes                                                                                                              |
-| ------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `applications/openthrottle/README.md` | Installation, Development, Suggestions | Three sections end with "tbd...". **Priority:** high (plan target).                                                |
-| `applications/rocketcms/README.md`    | Todo list, one bullet                  | Single "tbd..." under "Deployments... how can I get around the file system". **Priority:** optional (plan target). |
+| Path                                  | Location                               | Notes                                                                       |
+| ------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------- |
+| `applications/openthrottle/README.md` | Installation, Development, Suggestions | Three sections end with "tbd...". **Priority:** high (plan target).         |
+| _(retired)_ `applications/rocketcms/` | —                                      | App removed in consolidation; see `applications/openthrottle-cms/` for CMS. |
 
 ---
 
 ## 3. FIXME (generator template)
 
-| Path                                                                   | Notes                                                                                                                     |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `tools/generators/src/generators/react-native/files/package/README.md` | Line 3: `FIXME: Add a description for <%= name %>.` **Priority:** high (plan target). Replace with scaffold/instructions. |
+| Path                                             | Notes |
+| ------------------------------------------------ | ----- | ----------------------------------------------------------------------------------------- |
+| _(removed)_ React Native package template README | —     | Generator subtree removed; no `react-native` entry in `tools/generators/generators.json`. |
 
 ---
 
@@ -60,7 +60,7 @@ Audit of README.md files in the monorepo for placeholders: **Lorem ipsum**, **tb
 READMEs with ≤7 lines that are **not** already flagged above were spot-checked:
 
 - `tools/web-scraper/src/utils/README.md` (4 lines): Contains real content (Scraping options + link). **Not a placeholder.**
-- `applications/barguide-app/README.md` (3 lines): Real app description. **Not a placeholder.**
+- _(retired)_ `applications/barguide-app/` — removed in consolidation.
 
 No additional “very short” placeholder READMEs were found in the audited set. (Excluded: `.venv`, `.nx`, `node_modules`, and other generated/cache paths.)
 
@@ -68,12 +68,12 @@ No additional “very short” placeholder READMEs were found in the audited set
 
 ## 5. Plan task mapping
 
-| Task                                         | Target                                                                 | Audit finding                                      |
-| -------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
-| Replace openthrottle-server README           | `applications/openthrottle-server/README.md`                           | Lorem ipsum; add NestJS/GraphQL, Cortex, env, run. |
-| Fill openthrottle app README                 | `applications/openthrottle/README.md`                                  | tbd... in Installation, Development, Suggestions.  |
-| Improve React Native package README template | `tools/generators/src/generators/react-native/files/package/README.md` | FIXME; remove FIXME, add scaffold.                 |
-| Optional: rocketcms README                   | `applications/rocketcms/README.md`                                     | One tbd... in Todo list.                           |
+| Task                               | Target                                       | Audit finding                                      |
+| ---------------------------------- | -------------------------------------------- | -------------------------------------------------- |
+| Replace openthrottle-server README | `applications/openthrottle-server/README.md` | Lorem ipsum; add NestJS/GraphQL, Cortex, env, run. |
+| Fill openthrottle app README       | `applications/openthrottle/README.md`        | tbd... in Installation, Development, Suggestions.  |
+| _(n/a)_ React Native template      | —                                            | Generator not present in this workspace.           |
+| CMS app README                     | `applications/openthrottle-cms/README.md`    | Still flagged in §1 if Lorem/tbd remains.          |
 
 ---
 

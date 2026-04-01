@@ -14,7 +14,7 @@ nx g @tools/generators:react --list=destinations
 # Generate component
 nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=UserCard
 ```
 
@@ -39,7 +39,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=UserCard
 ```
 
@@ -48,7 +48,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select
 ```
 
@@ -57,7 +57,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=hook \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=useUser
 ```
 
@@ -66,7 +66,7 @@ nx g @tools/generators:react \
 ```bash
 nx g @tools/generators:react \
   --subGenerator=util \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=formatDate
 ```
 

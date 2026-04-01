@@ -11,13 +11,16 @@ nx g @tools/generators:nestjs --describe
 # List NestJS applications
 nx g @tools/generators:nestjs --list=nestjsApplications
 
-# List GraphQL applications
+# List NestJS applications (preferred when choosing --application)
+nx g @tools/generators:nestjs --list=nestjsApplications
+
+# Optional: GraphQL-tagged apps (may be empty if no project has technology:graphql)
 nx g @tools/generators:nestjs --list=graphqlApplications
 
 # Generate GraphQL service
 nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=users
 ```
 
@@ -60,7 +63,7 @@ nx g @tools/generators:nestjs \
 ```bash
 nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=users
 ```
 
@@ -69,7 +72,7 @@ nx g @tools/generators:nestjs \
 ```bash
 nx g @tools/generators:nestjs \
   --subGenerator=simple-service \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=email-service
 ```
 
@@ -78,7 +81,7 @@ nx g @tools/generators:nestjs \
 ```bash
 nx g @tools/generators:nestjs \
   --subGenerator=module \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=auth
 ```
 
@@ -87,7 +90,7 @@ nx g @tools/generators:nestjs \
 ```bash
 nx g @tools/generators:nestjs \
   --subGenerator=queue \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=email-queue
 ```
 
@@ -96,7 +99,7 @@ nx g @tools/generators:nestjs \
 ```bash
 nx g @tools/generators:nestjs \
   --subGenerator=ai-agent \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=chat-agent
 ```
 
@@ -104,4 +107,4 @@ nx g @tools/generators:nestjs \
 
 - **Services**: kebab-case (e.g., `user-service`, `email-service`)
 - **Modules**: kebab-case (e.g., `auth`, `email-module`)
-- **Applications**: kebab-case (e.g., `new-api`, `oneteam-api`)
+- **Applications**: kebab-case (e.g., `new-api`, `openthrottle-server`)

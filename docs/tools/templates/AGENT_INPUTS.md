@@ -61,15 +61,15 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --describe
 
 # 3. List dynamic values (destinations, applications, folders, etc.)
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --list=<key>
-# Examples: --list=destinations, --list=applications, --list=componentFolders --application=rocketcms
+# Examples: --list=destinations, --list=applications, --list=componentFolders --application=openthrottle-cms
 
-# 4. Run generator (use --subGenerator for react/remix/nestjs; --type for react-native)
+# 4. Run generator (use --subGenerator for react/remix/nestjs)
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --subGenerator=<type> --<option>=<value> --name=<Name>
 ```
 
 ### 2.2 Per-generator examples
 
-See **[EXAMPLES.md](./EXAMPLES.md)** for copy-paste examples (React, Remix, NestJS, React Native, package, folders). **Caveat:** EXAMPLES.md currently omits the `NX_ISOLATE_PLUGINS=false` prefix in some blocks; agents must **always** add it. The authoritative command reference is **[AGENT_USAGE.md](./AGENT_USAGE.md)**.
+See **[EXAMPLES.md](./EXAMPLES.md)** for copy-paste examples (React, Remix, NestJS, package, folders). **Caveat:** EXAMPLES.md currently omits the `NX_ISOLATE_PLUGINS=false` prefix in some blocks; agents must **always** add it. The authoritative command reference is **[AGENT_USAGE.md](./AGENT_USAGE.md)**.
 
 ### 2.3 Other agent-relevant commands
 
@@ -92,7 +92,7 @@ Agents should encounter "check generators first" in **multiple** places so they 
 | **AGENTS.md** (repo root)                 | § Generators (check first): 4-step workflow, link to AGENT_USAGE.md and personal-generators.mdc.       |
 | **.cursor/rules/README.md**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.             |
 | **.cursor/rules/personal-generators.mdc** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md. |
-| **docs/tools/generators/AGENT_USAGE.md**  | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.       |
+| **docs/tools/templates/AGENT_USAGE.md**   | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.       |
 
 ### 3.2 Supporting references
 
@@ -108,7 +108,7 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 - **AGENTS.md:** Keep the Generators section at the top (or immediately after Nx) so agents see it early. Explicitly say: "Before writing new code, components, or services, check generators first (see AGENT_USAGE.md and personal-generators.mdc)."
 - **Cursor rules:** Ensure `personal-generators.mdc` has `alwaysApply: true` (already set) so it’s always in context.
-- **Skills / onboarding:** If the repo uses Cursor "skills" or an onboarding doc, include one line: "New code: always run `NX_ISOLATE_PLUGINS=false nx list @tools/generators` and use a generator if one exists; see docs/tools/generators/AGENT_USAGE.md."
+- **Skills / onboarding:** If the repo uses Cursor "skills" or an onboarding doc, include one line: "New code: always run `NX_ISOLATE_PLUGINS=false nx list @tools/generators` and use a generator if one exists; see docs/tools/templates/AGENT_USAGE.md."
 
 ---
 

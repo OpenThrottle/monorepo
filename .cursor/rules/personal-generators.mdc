@@ -31,16 +31,17 @@ alwaysApply: true
 4. **Generate using the generator:**
 
    ```bash
-   NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --type=<type> --target=<target> --name=<Name>
+   NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --subGenerator=<type> --<options>...
    ```
 
 5. **ONLY THEN** add custom logic to the generated files
 
 ## Available Generators
 
-- `react-native` - For React Native components (use `--type=component`)
+See `NX_ISOLATE_PLUGINS=false nx list @tools/generators` (source: `tools/generators/generators.json`). Typically:
+
 - `react` - For React components
-- `remix` - For Remix components/routes
+- `remix` - For Remix / React Router app components/routes
 - `nestjs` - For NestJS services/modules
 - `package` - For new packages
 - `folders` - For folder structures
@@ -48,17 +49,16 @@ alwaysApply: true
 ## Important Notes
 
 - **ALL generator commands MUST use `NX_ISOLATE_PLUGINS=false` prefix**
-- React Native uses `--type` (not `--subGenerator`)
-- React/Remix/NestJS use `--subGenerator`
-- Check `docs/tools/generators/AGENT_USAGE.md` for detailed documentation
+- React/Remix/NestJS use `--subGenerator` where applicable
+- Check `docs/tools/templates/AGENT_USAGE.md` for detailed documentation
 - If NO generator exists, state this clearly before writing custom code
 
 ## What Went Wrong Previously
 
-We manually created `ScheduleSummary` and `ScheduleEmptyState` components instead of:
+We manually created components instead of:
 
 1. Checking `NX_ISOLATE_PLUGINS=false nx list @tools/generators`
-2. Using `NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-native --type=component --target=intouch --destination=routes/schedules/components --name=ScheduleSummary,ScheduleEmptyState`
+2. Using the appropriate generator (e.g. `react` or `remix` with valid `--destination` / `--application` from `--list=destinations` or `--list=applications`)
 3. Then adding the custom logic
 
 **This must NEVER happen again.**
