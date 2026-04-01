@@ -13,6 +13,22 @@ output "bucket_terraform_state" {
   value     = google_storage_bucket.terraform_state.name
 }
 
+# Artifact Registry (OpenThrottle Docker images; see environments/README.md and openthrottle-docker.yml)
+output "artifact_registry_docker_host" {
+  description = "Docker registry hostname (e.g. us-west2-docker.pkg.dev). Matches ARTIFACT_REGISTRY_REGION in GitHub Actions."
+  value       = module.artifact_registry_openthrottle.docker_registry_host
+}
+
+output "artifact_registry_repository_id" {
+  description = "Repository id (path segment before image name). CI pushes to <host>/<project>/<repository_id>/<image>:<tag>."
+  value       = module.artifact_registry_openthrottle.repository_id
+}
+
+output "artifact_registry_image_prefix" {
+  description = "Full registry prefix for image refs: <host>/<gcp_project>/<repository_id>. Pair with vars.GOOGLE_PROJECT_ID_STAGING in GitHub."
+  value       = module.artifact_registry_openthrottle.registry_image_prefix
+}
+
 # # OpenThrottle module outputs (endpoints for app config / docs)
 # output "cloud_sql_connection_name" {
 #   sensitive = false
