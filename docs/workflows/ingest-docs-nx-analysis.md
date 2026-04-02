@@ -26,7 +26,7 @@
 
 - Use `createProjectGraphAsync()` from `@nx/devkit` to get all projects (or filter by tags if we only want apps/packages).
 - For each project node, `node.data.root` is the project root; resolve `README.md` at `join(workspaceRoot, node.data.root, 'README.md')`.
-- Use a stable path key for documentation table (e.g. project-relative like `applications/cortex/README.md` or prefixed like `projects/applications/cortex/README.md`) so idempotency per `(repo, sha, path)` still holds.
+- Use a stable path key for documentation table (ingest script uses `projects/<nx-project-root>/README.md`, e.g. `projects/applications/openthrottle-developer/README.md`) so idempotency per `(repo, sha, path)` still holds.
 - Keep existing docs/ ingestion; add a second pass (or merged list) for project READMEs.
 
 ## Verification (task 5)

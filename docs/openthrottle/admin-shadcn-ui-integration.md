@@ -6,10 +6,10 @@ This document describes how the **openthrottle-admin** application integrates an
 
 ## 1. Overview
 
-- **Package:** `@openthrottle/react-router-shadcn` (monorepo package at `packages/mattscholta/shadcn-ui`).
+- **Package:** `@openthrottle/react-router-shadcn` (monorepo package at `packages/react-router-shadcn`).
 - **Purpose:** All admin UI elements—layout, navigation, cards, tables, forms, dialogs, charts—use this package for consistency and accessibility.
 - **References:**
-  - Package README: `packages/mattscholta/shadcn-ui/README.md`
+  - Package README: `packages/react-router-shadcn/README.md`
   - Official shadcn-ui docs: https://ui.shadcn.com/docs/components
   - Admin architecture: [admin-portal-architecture.md](./admin-portal-architecture.md)
 
@@ -23,7 +23,7 @@ The app is the single place that imports Tailwind. In `applications/openthrottle
 
 1. **Tailwind and animate:** `@import 'tailwindcss'`, `@import 'tw-animate-css'`.
 2. **shadcn theme:** `@import '@openthrottle/react-router-shadcn/src/theme.css'` (theme-only; no Tailwind from the package).
-3. **Source for class names:** `@source "../../../packages/mattscholta/shadcn-ui/**/*.{css,ts,tsx}"` so Tailwind v4 scans the package for utility classes.
+3. **Source for class names:** `@source "../../../packages/**/*.{css,ts,tsx}"` so Tailwind v4 scans workspace packages for utility classes.
 4. **App overrides:** `:root` (and optional dark mode) override semantic tokens (e.g. `--background`, `--foreground`, `--brand`, `--sidebar-*`, `--chart-*`). Define only what you need; the rest fall back to the package theme.
 
 Do **not** import Tailwind from the shadcn-ui package; import it once from the app.
@@ -115,7 +115,7 @@ Do **not** import Tailwind from the shadcn-ui package; import it once from the a
 
 | Topic                    | Reference                                                      |
 | ------------------------ | -------------------------------------------------------------- |
-| Package README and usage | `packages/mattscholta/shadcn-ui/README.md`                     |
+| Package README and usage | `packages/react-router-shadcn/README.md`                       |
 | Theming (package)        | Package README § Theming; THEMING.md if present in repo        |
 | shadcn-ui components     | https://ui.shadcn.com/docs/components                          |
 | Admin architecture       | [admin-portal-architecture.md](./admin-portal-architecture.md) |

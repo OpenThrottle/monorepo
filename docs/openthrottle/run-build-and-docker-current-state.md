@@ -37,18 +37,18 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 ### 1.4 Port and env
 
-- **Port:** From `ConfigService`: `config.get<string>('PORT', '3000')`. Default **3000**. In repo `.env.default`: **6010**.
+- **Port:** From `ConfigService`: `config.get<string>('PORT', '3000')`. Default **3000**. In `applications/openthrottle-server/.env.default`: **6021** (`PORT="6021"`).
 - **Env file:** `applications/openthrottle-server/.env` (and `.env.default` as template). `ConfigModule` uses `envFilePath: ['.env']`.
 
 ### 1.5 Environment variables (relevant to run/build and deploy)
 
 | Variable                                                                                              | Purpose                                                                                                                                            |
 | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`                                                                                                | HTTP listen port (default 3000; local default 6010).                                                                                               |
+| `PORT`                                                                                                | HTTP listen port (default 3000; local template uses **6021** in `applications/openthrottle-server/.env.default`).                                  |
 | `NODE_ENV`                                                                                            | e.g. development, production.                                                                                                                      |
 | `APP_ENV`, `APP_NAME`, `APP_VERSION`, `APP_URL`                                                       | App identity and base URL.                                                                                                                         |
 | `JWT_SECRET`, `JWT_ISSUER`                                                                            | Auth (JWT).                                                                                                                                        |
-| `CORS_ORIGINS`, `CORS_CREDENTIALS`, `CORS_ALLOWED_METHODS`                                            | CORS (e.g. developer on 6012, 5173).                                                                                                               |
+| `CORS_ORIGINS`, `CORS_CREDENTIALS`, `CORS_ALLOWED_METHODS`                                            | CORS (e.g. developer on **6020**, Vite **5173**).                                                                                                  |
 | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_URL` | Cortex/Postgres.                                                                                                                                   |
 | `REDIS_HOST`, `REDIS_PORT`                                                                            | BullMQ and GraphQL cache (default Redis 6379).                                                                                                     |
 | `GITHUB_TOKEN`                                                                                        | Optional; for GitHub API (e.g. list PRs).                                                                                                          |
@@ -86,23 +86,23 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 ### 2.3 Run
 
 - **Development:** `pnpm nx dev openthrottle-developer` (Vite dev server).
-- **Production:** Served by React Router server (e.g. `react-router-serve ./build/server/index.js`). **Note:** `openthrottle-developer` does **not** currently define a `start:docker` script in its `package.json`; other React Router apps in the repo (e.g. rocketcms, mattscholta, barguide) use `"start:docker": "react-router-serve ./build/server/index.js"`. For containerized run, the same pattern would be needed (or equivalent serve command).
+- **Production:** Served by React Router server (e.g. `react-router-serve ./build/server/index.js`). **`package.json`** defines `"start:docker": "react-router-serve ./build/server/index.js"` for container images that use the same pattern as other React Router apps in the monorepo.
 
 ### 2.4 Port and env
 
-- **Port:** In `.env.default`: **6012** (and `APP_URL="http://localhost:6012"`).
-- **API:** Points at openthrottle-server: `API_URI`, `API_URL`, `API_URL_WEBSOCKET` (e.g. `http://localhost:6010` in dev). Server CORS allows `http://localhost:6012` and `http://localhost:5173`.
+- **Port:** In `applications/openthrottle-developer/.env.default`: **6020** (`PORT="6020"`, `APP_URL="http://localhost:6020"`). Vite uses `process.env.PORT` or defaults to **3000** if unset.
+- **API:** Points at openthrottle-server: `API_URL_INTERNAL`, `API_URL_EXTERNAL`, `API_URL_WEBSOCKET` (e.g. `http://localhost:6021` in dev). Align **server** `CORS_ORIGINS` with the developer origin (see `applications/openthrottle-server/.env.default`).
 
 ### 2.5 Environment variables (relevant to run/build and deploy)
 
-| Variable                                                    | Purpose                                                             |
-| ----------------------------------------------------------- | ------------------------------------------------------------------- |
-| `PORT`                                                      | Dev/serve port (default 6012).                                      |
-| `NODE_ENV`, `APP_ENV`, `APP_NAME`, `APP_VERSION`, `APP_URL` | App identity.                                                       |
-| `API_URI`, `API_URL`, `API_URL_WEBSOCKET`                   | Backend GraphQL and WebSocket (openthrottle-server).                |
-| `APP_URL_WEBSITE`                                           | Optional (e.g. 6014).                                               |
-| `REACT_ROUTER_DEV_TOOLS`                                    | Dev tooling.                                                        |
-| `VERCEL`                                                    | Vercel preset in `react-router.config.ts` when deploying to Vercel. |
+| Variable                                                    | Purpose                                                                             |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `PORT`                                                      | Dev/serve port (default **3000** in Vite if unset; **6020** in app `.env.default`). |
+| `NODE_ENV`, `APP_ENV`, `APP_NAME`, `APP_VERSION`, `APP_URL` | App identity.                                                                       |
+| `API_URL_INTERNAL`, `API_URL_EXTERNAL`, `API_URL_WEBSOCKET` | Backend GraphQL and WebSocket (openthrottle-server).                                |
+| `APP_URL_WEBSITE`                                           | Optional (e.g. 6014).                                                               |
+| `REACT_ROUTER_DEV_TOOLS`                                    | Dev tooling.                                                                        |
+| `VERCEL`                                                    | Vercel preset in `react-router.config.ts` when deploying to Vercel.                 |
 
 ---
 
@@ -112,7 +112,7 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 - **Root**
   - **`Dockerfile.NestJS`** — Commented-out; multi-stage (base → dependencies → builder → production), pnpm, Nx; expects `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`; production `CMD ["pnpm", "start:docker"]`. Could be adapted for openthrottle-server.
-  - **`Dockerfile.ReactRouter`** — Multi-stage (base → dependencies → builder → production), pnpm, Nx; `RUN pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build` then `pnpm --filter=${APP_NAME} --prod deploy pruned`; `CMD ["pnpm", "start:docker"]`. Suited for React Router apps; openthrottle-developer would need a `start:docker` script (e.g. `react-router-serve ./build/server/index.js`).
+  - **`Dockerfile.ReactRouter`** — Multi-stage (base → dependencies → builder → production), pnpm, Nx; `RUN pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build` then `pnpm --filter=${APP_NAME} --prod deploy pruned`; `CMD ["pnpm", "start:docker"]`. Suited for React Router apps; **openthrottle-developer** defines `start:docker` in `applications/openthrottle-developer/package.json`.
   - **`Dockerfile.Cortex`**, **`Dockerfile.PostgreSQL`** — Other uses (Cortex/Postgres).
 - **applications/openthrottle/**
   - **`Dockerfile.Postgres`** — Postgres image with pgvector; used by local docker-compose for the OpenThrottle Postgres service only (no server/developer images).

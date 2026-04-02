@@ -1,6 +1,6 @@
-# Cortex Brand Palette
+# OpenThrottle developer UI: brand palette
 
-Cortex uses a GitHub/Primer-inspired gray scale and a dedicated **brand** color with full Tailwind-style variants. Tailwind’s built-in **red** palette is left unchanged.
+The developer apps use a GitHub/Primer-inspired gray scale and a dedicated **brand** color with full Tailwind-style variants where configured in theme. Tailwind’s built-in **red** palette is left unchanged for semantic reds.
 
 ## Grays (GitHub/Primer-style)
 
@@ -11,7 +11,7 @@ Cortex uses a GitHub/Primer-inspired gray scale and a dedicated **brand** color 
 
 - **Base:** `#ff0000` (brand-500).
 - **Variants:** `brand-50` … `brand-950` so utilities like `text-brand-500`, `bg-brand-100`, `border-brand-200` work.
-- **Tailwind red:** Unchanged; use `red-*` for semantic red (errors, destructive actions) and `brand-*` for Cortex branding.
+- **Tailwind red:** Unchanged; use `red-*` for semantic red (errors, destructive actions) and `brand-*` for product branding.
 
 ## Usage (Tailwind)
 
@@ -21,10 +21,10 @@ Cortex uses a GitHub/Primer-inspired gray scale and a dedicated **brand** color 
 
 ## Where it’s wired
 
-- **Theme:** `applications/cortex/app/styles/index.css` — `@theme` block defines `--color-gray-*`, `--color-brand-*`, and `--color-red-*`. Dark mode grays are overridden in `@media (prefers-color-scheme: dark) { @theme { ... } }`.
+- **Theme:** `packages/react-router-shadcn/src/theme.css` — `:root` and `@media (prefers-color-scheme: dark)` define semantic tokens (`--brand`, `--background`, `--foreground`, sidebar/chart tokens, etc.). App-level tweaks (e.g. `--brand` in `applications/openthrottle-developer/app/styles.css` or `applications/openthrottle-admin/app/styles.css`) override as needed.
 
 ## References
 
 - [Primer Primitives](https://github.com/primer/primitives) — base color tokens.
 - [primer.style/foundations/color](https://primer.style/foundations/color) — Primer color system.
-- [gray-mapping.md](./gray-mapping.md) — Gray scale mapping (light/dark) for Cortex.
+- [gray-mapping.md](./gray-mapping.md) — Gray scale mapping (light/dark) for the developer UI.

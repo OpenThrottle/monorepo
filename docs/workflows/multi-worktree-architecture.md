@@ -10,7 +10,7 @@ The architecture consists of three core layers:
 
 1. **Infrastructure Layer** (Primary Worktree: `monorepo`)
    - OpenThrottle Server (NestJS, port 6010) - GraphQL API + WebSocket + BullMQ
-   - OpenThrottle Developer (React Router, port 6012) - UI Dashboard
+   - OpenThrottle Developer (React Router, port **6020** in `applications/openthrottle-developer/.env.default`) — UI dashboard
    - Postgres 18 with pgvector + Redis 8.6
 
 2. **Workflow Orchestration Layer**
@@ -37,14 +37,14 @@ All worktrees share the same Cortex database (Postgres) and Redis, but execute i
 
 ### Component Responsibilities
 
-| Component                  | Location                                 | Responsibility                                                |
-| -------------------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| **OpenThrottle Server**    | `applications/openthrottle-server/`      | API, WebSocket, BullMQ job processor                          |
-| **OpenThrottle Developer** | `applications/openthrottle-developer/`   | UI for plans, tasks, queues, monitoring                       |
-| **BullMQ Plans Queue**     | `queues/plans/` in server                | Queue and process plan execution jobs                         |
-| **NestjsWorktreesModule**  | `packages/mattscholta/nestjs-worktrees/` | Provides `WorktreeTargetsTracker` from `WORKTREE_TARGETS` env |
-| **workflow-ralph CLI**     | `tools/workflows/`                       | Spawns cursor-agent, parses signals, updates Cortex           |
-| **Cortex**                 | `databases/cortex/`                      | Plans, tasks, embeddings, output stream (Postgres + pgvector) |
+| Component                  | Location                               | Responsibility                                                |
+| -------------------------- | -------------------------------------- | ------------------------------------------------------------- |
+| **OpenThrottle Server**    | `applications/openthrottle-server/`    | API, WebSocket, BullMQ job processor                          |
+| **OpenThrottle Developer** | `applications/openthrottle-developer/` | UI for plans, tasks, queues, monitoring                       |
+| **BullMQ Plans Queue**     | `queues/plans/` in server              | Queue and process plan execution jobs                         |
+| **NestjsWorktreesModule**  | `packages/nestjs-worktrees/`           | Provides `WorktreeTargetsTracker` from `WORKTREE_TARGETS` env |
+| **workflow-ralph CLI**     | `tools/workflows/`                     | Spawns cursor-agent, parses signals, updates Cortex           |
+| **Cortex**                 | `databases/cortex/`                    | Plans, tasks, embeddings, output stream (Postgres + pgvector) |
 
 ### Execution Modes
 
@@ -191,7 +191,7 @@ flowchart TB
             Tracker[WorktreeTargetsTracker]
         end
 
-        subgraph Developer["OpenThrottle Developer :6012"]
+        subgraph Developer["OpenThrottle Developer :6020"]
             UI[React UI Dashboard]
             Plans[Plans View]
             Queues[Queues View]
