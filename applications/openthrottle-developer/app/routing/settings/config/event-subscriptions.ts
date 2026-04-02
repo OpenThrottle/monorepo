@@ -64,3 +64,16 @@ export const EVENT_SUBSCRIPTION_ROWS = [
 
 export type EventSubscriptionId =
   (typeof EVENT_SUBSCRIPTION_ROWS)[number]['id'];
+
+/**
+ * @description Default subscription toggles for each known event id (from row config).
+ */
+export const buildInitialSubscriptions = (): Record<
+  EventSubscriptionId,
+  boolean
+> => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Object.fromEntries widens keys; rows are the source of truth for EventSubscriptionId
+  return Object.fromEntries(
+    EVENT_SUBSCRIPTION_ROWS.map((row) => [row.id, row.defaultSubscribed]),
+  ) as Record<EventSubscriptionId, boolean>;
+};

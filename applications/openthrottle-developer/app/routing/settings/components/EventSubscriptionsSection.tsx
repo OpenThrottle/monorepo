@@ -9,29 +9,11 @@ import {
   Separator,
   Switch,
 } from '@openthrottle/react-router-shadcn';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
+  buildInitialSubscriptions,
   EVENT_SUBSCRIPTION_ROWS,
   type EventSubscriptionId,
 } from '~/routing/settings/config/event-subscriptions';
-
-const buildInitialSubscriptions = (): Record<EventSubscriptionId, boolean> => {
-  const next: Record<EventSubscriptionId, boolean> = {
-    [NOTIFICATION_EVENT_NAMES.DEBUG]: false,
-    [NOTIFICATION_EVENT_NAMES.PLAN_ENQUEUED]: false,
-    [NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED]: false,
-    [NOTIFICATION_EVENT_NAMES.PLAN_UPDATED]: false,
-    [NOTIFICATION_EVENT_NAMES.PLAN_WAITING_FOR_WORKTREE]: false,
-    [NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED]: false,
-    [NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT]: false,
-    [NOTIFICATION_EVENT_NAMES.TASK_COMPLETED]: false,
-    [NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED]: false,
-  };
-  for (const row of EVENT_SUBSCRIPTION_ROWS) {
-    next[row.id] = row.defaultSubscribed;
-  }
-  return next;
-};
 
 /**
  * @description Placeholder event subscription panel. Local state only until
@@ -42,6 +24,8 @@ export const EventSubscriptionsSection = () => {
 
   const handleCheckedChange =
     (id: EventSubscriptionId) => (checked: boolean) => {
+      console.log('🟢 8 - handleCheckedChange', id, checked);
+
       setSubscribed((prev) => ({ ...prev, [id]: checked }));
     };
 
