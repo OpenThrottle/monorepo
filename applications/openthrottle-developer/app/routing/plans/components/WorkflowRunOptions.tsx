@@ -163,8 +163,10 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               and{' '}
               <span className="text-xs">
                 docs/workflows/ralph-workflow-runtime-config.md
-              </span>{' '}
-              (prompt profile, execution backend, run tuning).
+              </span>
+              . The toolbar action that enqueues a run sends the same tuning
+              (iterations, model, prompt profile, project, debug CLI, iteration
+              timeout) to the worker; unchanged fields use CLI defaults.
             </CardDescription>
           </div>
           {onCollapse != null ? (
@@ -195,8 +197,10 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             Run target
           </legend>
           <p className="text-muted-foreground text-xs">
-            Required: one of <code className="text-xs">--plan</code> or{' '}
-            <code className="text-xs">--task</code> (task-centric mode).
+            For the CLI preview: one of <code className="text-xs">--plan</code>{' '}
+            or <code className="text-xs">--task</code>. Queued runs always
+            target this plan; switching to task mode here only changes the
+            preview and copyable command, not the BullMQ job.
           </p>
           <div className="space-y-2">
             <Label htmlFor="workflow-run-target-mode">Target mode</Label>
@@ -507,15 +511,12 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             {canonicalCommandLine}
           </pre>
           <p className="text-muted-foreground text-xs" role="note">
-            <span className="font-medium text-foreground">
-              Queue from toolbar:
-            </span>{' '}
-            &quot;Add to Queue&quot; / run actions send tuning flags
-            (iterations, model, prompt, etc.) to the worker; run target for the
-            queue is always this plan.
-            <code className="mx-0.5 text-[0.7rem]">--task</code> mode here only
-            affects the preview above. Copy the command to run locally with an
-            exact CLI.
+            <span className="font-medium text-foreground">Toolbar queue:</span>{' '}
+            Run / Add to Queue uses the tuning fields in this section (or
+            defaults if you have not changed them). The worker always runs this
+            plan; <code className="mx-0.5 text-[0.7rem]">--task</code> in the
+            preview is for local CLI only. Copy the command above to match a
+            manual run.
           </p>
         </div>
       </CardContent>

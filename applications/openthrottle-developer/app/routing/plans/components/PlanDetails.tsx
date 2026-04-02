@@ -258,9 +258,11 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                   Workflow run options
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Compose flags for{' '}
-                  <code className="text-xs">pnpm exec workflow-ralph</code>.
-                  Expand to edit targets, prompt, and CLI preview.
+                  Tuning for{' '}
+                  <code className="text-xs">pnpm exec workflow-ralph</code> and
+                  for queued runs from the toolbar. Defaults apply while
+                  collapsed; expand to change iterations, model, prompt, and
+                  more.
                 </p>
               </div>
               <ChevronDown

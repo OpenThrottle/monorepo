@@ -6,6 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  toast,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -40,6 +41,22 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const fetcherRunPlan = useFetcher<typeof action>();
   const fetcherSetPlanStatus = useFetcher<typeof action>();
 
+  const runPlanWasBusy = React.useRef(false);
+  React.useEffect(() => {
+    const busy = fetcherRunPlan.state !== 'idle';
+    if (runPlanWasBusy.current && !busy) {
+      const data = fetcherRunPlan.data;
+      if (data != null && typeof data === 'object') {
+        if ('runPlan' in data && data.runPlan != null) {
+          toast.success(
+            'Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).',
+          );
+        }
+      }
+    }
+    runPlanWasBusy.current = busy;
+  }, [fetcherRunPlan.state, fetcherRunPlan.data]);
+
   const isCompleted = planStatus === 'COMPLETED';
   const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =
@@ -48,6 +65,15 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     'setPlanStatusError' in setPlanStatusData &&
     typeof setPlanStatusData.setPlanStatusError === 'string'
       ? setPlanStatusData.setPlanStatusError
+      : undefined;
+
+  const runPlanData = fetcherRunPlan.data;
+  const runPlanError =
+    runPlanData != null &&
+    typeof runPlanData === 'object' &&
+    'runPlanError' in runPlanData &&
+    typeof runPlanData.runPlanError === 'string'
+      ? runPlanData.runPlanError
       : undefined;
 
   const getRunButtonLabel = (): string => {
@@ -126,10 +152,10 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 </Button>
               </fetcherRunPlan.Form>
             </TooltipTrigger>
-            <TooltipContent side="top">
+            <TooltipContent className="max-w-xs" side="top">
               {fetcherRunPlan.state !== 'idle'
                 ? 'Submitting…'
-                : 'Run or queue this plan'}
+                : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
             </TooltipContent>
           </Tooltip>
 
@@ -137,13 +163,18 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4"
             href="#workflow-run-options"
           >
-            Workflow CLI options
+            Workflow run options
           </a>
         </div>
 
         {setPlanStatusError != null && (
           <span className="text-destructive text-xs" role="alert">
             {setPlanStatusError}
+          </span>
+        )}
+        {runPlanError != null && (
+          <span className="text-destructive text-xs" role="alert">
+            {runPlanError}
           </span>
         )}
 

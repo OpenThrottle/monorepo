@@ -13,7 +13,10 @@ import { Link, useFetcher } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-options';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  PlanStatusBadge,
+  isPlanStatusKey,
+} from '~/routing/plans/components/PlanStatusBadge';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 
@@ -43,7 +46,7 @@ function buildPlanTableColumns(
         const status = row.original.status;
         const badge = (
           <PlanStatusBadge
-            status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
+            status={isPlanStatusKey(status ?? '') ? status : 'PENDING'}
           />
         );
         const url = status != null ? statusFilterUrls?.[status] : undefined;
@@ -172,7 +175,7 @@ function buildPlanTableColumns(
             <RunPlanForm action={`/plans/${planId}`} method="post">
               <input name="intent" type="hidden" value="runPlan" />
               <Button
-                aria-label={`Queue plan ${row.original.title}`}
+                aria-label={`Queue plan ${row.original.title} with default worker tuning (open plan details to set Workflow run options)`}
                 className="text-xs"
                 disabled={isQueuing}
                 size="xs"
