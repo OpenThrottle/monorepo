@@ -11,7 +11,8 @@ export class PlanRunCancellationService {
 
   /**
    * @description Registers a fresh controller for `planId` and returns its signal. If a prior
-   * registration exists (should not happen for one plan at a time), it is aborted first.
+   * registration exists (e.g. overlapping jobs or a rapid re-run before detach), it is aborted
+   * first so only one active controller applies per plan.
    */
   attach(planId: string): AbortSignal {
     const previous = this.controllers.get(planId);
