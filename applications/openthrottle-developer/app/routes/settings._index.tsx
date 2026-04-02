@@ -1,5 +1,14 @@
 import * as React from 'react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { Link } from 'react-router';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
@@ -40,6 +49,22 @@ export default function Index(props: Route.ComponentProps) {
   return (
     <main className="relative h-full p-12">
       <div className="mx-auto max-w-4xl space-y-8">
+        <Breadcrumb className="mb-2">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild={true}>
+                <Link to="/dashboard" viewTransition={true}>
+                  Dashboard
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Settings</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <header>
           <h1 className="my-4 text-3xl font-semibold tracking-tight">
             Settings

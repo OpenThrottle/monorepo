@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
 /**
- * @description Returns commander groups for the developer app: Navigation (Dashboard, Plans, Projects, Queues, Notes, Generators) and optional Actions. Items use onSelect with useNavigate for React Router.
+ * @description Returns commander groups for the developer app: Navigation (Dashboard, Plans, Projects, Prompts, Queues, Notes, Generators, Settings) and optional Actions. Items use onSelect with useNavigate for React Router.
  */
 export function useCommanderOptions(): CommanderGroup[] {
   const navigate = useNavigate();
@@ -39,6 +39,11 @@ export function useCommanderOptions(): CommanderGroup[] {
           id: 'nav-generators',
           label: 'Generators',
           onSelect: nav('/generators'),
+        },
+        {
+          id: 'nav-settings',
+          label: 'Settings',
+          onSelect: nav('/settings'),
         },
       ],
     },

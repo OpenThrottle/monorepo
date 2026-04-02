@@ -56,6 +56,7 @@ const PROTECTED_PATH_PREFIXES = [
   '/pull-requests',
   '/queues',
   '/search',
+  '/settings',
 ];
 
 function decodeAuthTokenEmail(token: string): string {
