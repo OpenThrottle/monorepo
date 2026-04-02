@@ -1,4 +1,3 @@
-
 ## [Tracking](https://docs.google.com/spreadsheets/d/1_UsYXTg2K-l0UUtwT1EHxp292XU78SkHv0kd6cam37U/edit?pli=1#gid=0)
 
 ### Google Ads
@@ -18,11 +17,9 @@
 - https://business.facebook.com/events_manager2/list/pixel/412780706505897/settings?business_id=100166365270876&global_scope_id=100166365270876
 - https://business.facebook.com/settings/pixels/969108037340410?business_id=100166365270876
 
-
 - https://business.facebook.com/settings/ad-accounts/417625759281148?business_id=100166365270876
   - https://business.facebook.com/adsmanager/manage/accounts?act=417625759281148&business_id=100166365270876&nav_entry_point=bm_ad_account_open_in_ads_manager_button&columns=name%2Cdelivery%2Ccampaign_name%2Cbid%2Cbudget%2Clast_significant_edit%2Cattribution_setting%2Cresults%2Creach%2Cimpressions%2Ccost_per_result%2Cquality_score_organic%2Cquality_score_ectr%2Cquality_score_ecvr%2Cspend%2Cend_time%2Cschedule%2Cfrequency%2Cunique_actions%3Alink_click&attribution_windows=default&selected_campaign_ids=23846806389280221&selected_adset_ids=23846806389310221&selected_ad_ids=23846807360310221
   - https://business.facebook.com/events_manager2/browser_api?act=417625759281148&business_id=100166365270876
-
 
 ### Shopify
 

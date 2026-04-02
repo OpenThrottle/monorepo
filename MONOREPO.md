@@ -399,7 +399,7 @@ nx run <project-name>:test --watch
 
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)**: Project tags (name, type, production, technology), tag usage, and contribution guidelines
 - **[docs/monorepo/NX/tags.md](./docs/monorepo/NX/tags.md)**: Complete technology tag reference
-- **[docs/monorepo/NX/dependencies.md](./docs/monorepo/NX/dependencies.md)**: Dependency relationship documentation
+- **[docs/monorepo/nx-graph.md](./docs/monorepo/nx-graph.md)**: NX graph and dependency visualization (ground truth: `nx graph`, `nx show projects`)
 - **[README.md](./README.md)**: General monorepo overview and setup
 
 ### NX Resources

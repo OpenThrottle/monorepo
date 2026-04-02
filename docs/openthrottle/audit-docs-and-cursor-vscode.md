@@ -42,19 +42,19 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 
 ### 2.2 Monorepo (local services, naming, migration)
 
-| Doc                                                    | Cortex references                                                                                                                                                          |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/monorepo/local-services-and-ports.md`            | openthrottle-server "Cortex tooling", Ollama + `cortex:import`, Postgres (Cortex), cortex-api URL, `cortex.apiBaseUrl`, Caddy plan (Cortex), `databases/cortex/README.md`. |
-| `docs/monorepo/Ollama.md`                              | `databases/cortex/README.md`, `cortex:import`, AGENTS.md.                                                                                                                  |
-| `docs/monorepo/naming-round-3-candidates.md`           | "ex-Cortex" (plans/knowledge base), naming plan.                                                                                                                           |
-| `docs/monorepo/naming-round-2-candidates.md`           | "ex-Cortex", VectorKit (ex-Cortex).                                                                                                                                        |
-| `docs/monorepo/naming-plans-candidates.md`             | "ex-Cortex", Cortex plan.                                                                                                                                                  |
-| `docs/monorepo/naming-final-convention-and-choices.md` | ex-Cortex, VectorKit, rename "Cortex" to VectorKit.                                                                                                                        |
-| `docs/monorepo/naming-criteria-and-availability.md`    | ex-Cortex, plans/knowledge base naming.                                                                                                                                    |
-| `docs/monorepo/naming-cms-candidates.md`               | Cortex plan.                                                                                                                                                               |
-| `docs/monorepo/naming-availability-results.md`         | ex-Cortex, VectorKit.                                                                                                                                                      |
-| `docs/monorepo/multi-repo-and-parent-workspace.md`     | "cortex", "cortex-api" as private app names.                                                                                                                               |
-| `docs/monorepo/migration-strategy-sql-vs-typeorm.md`   | Cortex setup, `cortex:migrate`, `run-cortex-migrations.ts`, `databases/cortex/README.md`.                                                                                  |
+| Doc                                                                     | Cortex references                                                                                                                                                          |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/monorepo/local-services-and-ports.md`                             | openthrottle-server "Cortex tooling", Ollama + `cortex:import`, Postgres (Cortex), cortex-api URL, `cortex.apiBaseUrl`, Caddy plan (Cortex), `databases/cortex/README.md`. |
+| `docs/monorepo/Ollama.md`                                               | `databases/cortex/README.md`, `cortex:import`, AGENTS.md.                                                                                                                  |
+| `docs/monorepo/naming-round-3-candidates.md`                            | "ex-Cortex" (plans/knowledge base), naming plan.                                                                                                                           |
+| `docs/monorepo/naming-round-2-candidates.md`                            | "ex-Cortex", VectorKit (ex-Cortex).                                                                                                                                        |
+| `docs/monorepo/naming-plans-candidates.md`                              | "ex-Cortex", Cortex plan.                                                                                                                                                  |
+| `docs/monorepo/naming-final-convention-and-choices.md`                  | ex-Cortex, VectorKit, rename "Cortex" to VectorKit.                                                                                                                        |
+| `docs/monorepo/naming-criteria-and-availability.md`                     | ex-Cortex, plans/knowledge base naming.                                                                                                                                    |
+| `docs/monorepo/naming-cms-candidates.md`                                | Cortex plan.                                                                                                                                                               |
+| `docs/monorepo/naming-availability-results.md`                          | ex-Cortex, VectorKit.                                                                                                                                                      |
+| `docs/__archive/monorepo/multi-repo-and-parent-workspace.md` (archived) | "cortex", "cortex-api" as private app names.                                                                                                                               |
+| `docs/monorepo/migration-strategy-sql-vs-typeorm.md`                    | Cortex setup, `cortex:migrate`, `run-cortex-migrations.ts`, `databases/cortex/README.md`.                                                                                  |
 
 ### 2.3 OpenThrottle
 
