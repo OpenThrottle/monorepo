@@ -2,6 +2,9 @@
  * @description Builds `workflow-ralph` CLI segments aligned with `tools/workflows/src/utils/parsers.ts` (`parseRalphArgs`) and `pnpm exec workflow-ralph --help`. Omits flags when values match CLI defaults so invocations stay minimal.
  */
 
+import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
+import { RalphNestedDebugCli } from '~/__generated__/graphql';
+
 /** RFC 4122 UUID v4 — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */
 const CORTEX_UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -22,7 +25,7 @@ export type WorkflowRalphDebugCli = 'omit' | 'debug' | 'verbose';
  * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link WORKFLOW_RALPH_DEFAULT_BACKEND}.
  */
 export type WorkflowRalphExecutionBackendUi =
-  (typeof WORKFLOW_RALPH_DEFAULT_BACKEND);
+  typeof WORKFLOW_RALPH_DEFAULT_BACKEND;
 
 export interface WorkflowRalphRunOptionsInput {
   readonly debugCli: WorkflowRalphDebugCli;
@@ -128,6 +131,81 @@ export const buildWorkflowRalphOptionArgs = (
   }
 
   return args;
+};
+
+/**
+ * @description Parses optional per-iteration timeout (seconds) for `--iteration-timeout`; empty string omits the flag.
+ */
+export const parseWorkflowRunIterationTimeoutSeconds = (
+  raw: string,
+): number | undefined => {
+  const t = raw.trim();
+  if (t === '') {
+    return undefined;
+  }
+  const n = parseInt(t, 10);
+  if (Number.isNaN(n) || n < 1) {
+    return undefined;
+  }
+  return n;
+};
+
+/**
+ * @description Maps workflow run options UI state to GraphQL {@link RalphPlanRunTuningInput} for `enqueuePlanRun`.
+ * Queued BullMQ runs are always plan-scoped (the route’s plan id); `--task` / target mode in the panel affects the local CLI preview only, not enqueue.
+ * Returns `undefined` when every field matches worktree/CLI defaults so the mutation can omit `ralph`.
+ */
+export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
+  input: WorkflowRalphRunOptionsInput,
+): RalphPlanRunTuningInput | undefined => {
+  const ralph: RalphPlanRunTuningInput = {};
+
+  if (input.executionBackend !== WORKFLOW_RALPH_DEFAULT_BACKEND) {
+    ralph.backend = input.executionBackend;
+  }
+
+  if (input.iterations !== WORKFLOW_RALPH_DEFAULT_ITERATIONS) {
+    ralph.iterations = input.iterations;
+  }
+
+  if (
+    input.iterationTimeoutSeconds != null &&
+    input.iterationTimeoutSeconds >= 1
+  ) {
+    ralph.iterationTimeoutSeconds = Math.floor(input.iterationTimeoutSeconds);
+  }
+
+  const model = input.model.trim();
+  if (model !== '' && model !== WORKFLOW_RALPH_DEFAULT_MODEL) {
+    ralph.model = model;
+  }
+
+  const project = input.project.trim();
+  if (project !== '') {
+    ralph.project = project;
+  }
+
+  const prompt = input.prompt.trim();
+  if (prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
+    ralph.prompt = prompt;
+  }
+
+  switch (input.debugCli) {
+    case 'debug':
+      ralph.ralphDebugCli = RalphNestedDebugCli.Debug;
+      break;
+    case 'verbose':
+      ralph.ralphDebugCli = RalphNestedDebugCli.Verbose;
+      break;
+    case 'omit':
+      break;
+  }
+
+  if (Object.keys(ralph).length === 0) {
+    return undefined;
+  }
+
+  return ralph;
 };
 
 /**

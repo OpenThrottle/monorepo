@@ -16,7 +16,6 @@ describe('WorkflowRunOptions Component', () => {
       ...globalThis.navigator,
       clipboard: undefined,
     });
-    // @ts-expect-error jsdom does not implement execCommand; library fallback depends on it
     document.execCommand = vi.fn().mockImplementation((command: string) => {
       if (command === 'copy') {
         lastCopiedViaExecCommand =
@@ -91,9 +90,7 @@ describe('WorkflowRunOptions Component', () => {
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByLabelText } = render(<RoutesStub />);
 
-      expect(
-        getByLabelText('Cortex plan UUID for --plan'),
-      ).toBeInTheDocument();
+      expect(getByLabelText('Cortex plan UUID for --plan')).toBeInTheDocument();
       expect(getByLabelText('Prompt profile for --prompt')).toBeInTheDocument();
       expect(
         getByLabelText('Cortex run target: plan or task'),

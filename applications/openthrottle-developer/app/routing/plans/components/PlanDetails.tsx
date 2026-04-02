@@ -13,7 +13,10 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { Link, useSearchParams } from 'react-router';
 import { ChevronDown } from 'lucide-react';
 import { PlanDetailsFragment } from '~/__generated__/graphql';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  PlanStatusBadge,
+  isPlanStatusKey,
+} from '~/routing/plans/components/PlanStatusBadge';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { WorkflowRunOptions } from '~/routing/plans/components/WorkflowRunOptions';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
@@ -21,6 +24,12 @@ import {
   DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES,
   DEFAULT_PLAN_SUMMARY_PREVIEW_LINES,
 } from '~/routing/plans/config/defaults';
+import {
+  buildRalphPlanRunTuningInputFromWorkflowRunOptions,
+  getDefaultWorkflowRalphRunOptionsInput,
+  parseWorkflowRunIterationTimeoutSeconds,
+  type WorkflowRalphRunOptionsInput,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
@@ -44,10 +53,38 @@ export const PlanDetails = (props: PlanDetailsProps) => {
   const workflowRunOptionsExpanded =
     isWorkflowRunOptionsExpandedFromSearchParams(searchParams);
 
+  const [workflowRunInput, setWorkflowRunInput] =
+    React.useState<WorkflowRalphRunOptionsInput>(() =>
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
+    );
+  const [workflowIterationTimeoutText, setWorkflowIterationTimeoutText] =
+    React.useState('');
+
+  React.useEffect(() => {
+    setWorkflowRunInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
+    );
+    setWorkflowIterationTimeoutText('');
+  }, [plan.id]);
+
+  const ralphTuningJson = React.useMemo((): string => {
+    const merged: WorkflowRalphRunOptionsInput = {
+      ...workflowRunInput,
+      iterationTimeoutSeconds: parseWorkflowRunIterationTimeoutSeconds(
+        workflowIterationTimeoutText,
+      ),
+    };
+    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
+    return tuning === undefined ? '' : JSON.stringify(tuning);
+  }, [workflowRunInput, workflowIterationTimeoutText]);
+
   const setWorkflowRunOptionsExpanded = (expanded: boolean): void => {
     const next = new URLSearchParams(searchParams);
     if (expanded) {
-      next.set(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM, WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE);
+      next.set(
+        WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
+        WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
+      );
     } else {
       next.delete(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM);
     }
@@ -94,7 +131,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
 
             <div className="flex flex-wrap items-center gap-2 text-sm mb-6">
               <PlanStatusBadge
-                status={plan.status as keyof typeof PlanStatusBadge}
+                status={isPlanStatusKey(plan.status) ? plan.status : 'PENDING'}
               />
             </div>
 
@@ -187,15 +224,23 @@ export const PlanDetails = (props: PlanDetailsProps) => {
         )}
 
         <CardFooter>
-          <PlanToolbar planId={plan.id} planStatus={plan.status} />
+          <PlanToolbar
+            planId={plan.id}
+            planStatus={plan.status}
+            ralphTuningJson={ralphTuningJson}
+          />
         </CardFooter>
       </Card>
 
       {workflowRunOptionsExpanded ? (
         <WorkflowRunOptions
           className="mb-6"
+          iterationTimeoutText={workflowIterationTimeoutText}
           onCollapse={() => setWorkflowRunOptionsExpanded(false)}
+          onIterationTimeoutTextChange={setWorkflowIterationTimeoutText}
+          onValueChange={setWorkflowRunInput}
           planId={plan.id}
+          value={workflowRunInput}
         />
       ) : (
         <Card className="mb-6" data-testid="workflow-run-options-collapsed">
@@ -214,8 +259,8 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                 </h2>
                 <p className="text-muted-foreground text-sm">
                   Compose flags for{' '}
-                  <code className="text-xs">pnpm exec workflow-ralph</code>. Expand
-                  to edit targets, prompt, and CLI preview.
+                  <code className="text-xs">pnpm exec workflow-ralph</code>.
+                  Expand to edit targets, prompt, and CLI preview.
                 </p>
               </div>
               <ChevronDown

@@ -24,13 +24,14 @@ import {
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
   isCortexUuid,
+  parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphDebugCli,
   type WorkflowRalphRunOptionsInput,
   type WorkflowRalphTargetMode,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 /**
- * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags) with canonical preview/copy. Server-side enqueue does not yet accept these flags; use copy for local runs until runtime config plan lands.
+ * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags) with canonical preview/copy. When the parent controls state (plan detail), the same values are serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped).
  */
 export interface WorkflowRunOptionsProps {
   readonly className?: string;
@@ -42,35 +43,63 @@ export interface WorkflowRunOptionsProps {
   readonly planId?: string;
   /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
   readonly taskId?: string;
+  /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
+  readonly value?: WorkflowRalphRunOptionsInput;
+  readonly onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
+  readonly iterationTimeoutText?: string;
+  readonly onIterationTimeoutTextChange?: (next: string) => void;
 }
 
-/**
- * @description Parses optional per-iteration timeout (seconds) for `--iteration-timeout`; empty string omits the flag.
- */
-const parseIterationTimeoutSeconds = (raw: string): number | undefined => {
-  const t = raw.trim();
-  if (t === '') {
-    return undefined;
-  }
-  const n = parseInt(t, 10);
-  if (Number.isNaN(n) || n < 1) {
-    return undefined;
-  }
-  return n;
-};
-
 export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
-  const { className, onCollapse, planId, taskId } = props;
+  const {
+    className,
+    iterationTimeoutText: iterationTimeoutTextProp,
+    onCollapse,
+    onIterationTimeoutTextChange,
+    onValueChange,
+    planId,
+    taskId,
+    value: valueProp,
+  } = props;
+
+  const isControlled =
+    valueProp !== undefined &&
+    onValueChange !== undefined &&
+    iterationTimeoutTextProp !== undefined &&
+    onIterationTimeoutTextChange !== undefined;
 
   // Hooks
-  const [input, setInput] = React.useState<WorkflowRalphRunOptionsInput>(() =>
-    getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
-  );
-  const [iterationTimeoutText, setIterationTimeoutText] = React.useState('');
+  const [internalInput, setInternalInput] =
+    React.useState<WorkflowRalphRunOptionsInput>(() =>
+      getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
+    );
+  const [internalIterationTimeoutText, setInternalIterationTimeoutText] =
+    React.useState('');
+
+  const input = isControlled ? valueProp : internalInput;
+  const setInput = isControlled
+    ? (updater: React.SetStateAction<WorkflowRalphRunOptionsInput>) => {
+        const next =
+          typeof updater === 'function' ? updater(valueProp) : updater;
+        onValueChange(next);
+      }
+    : setInternalInput;
+
+  const iterationTimeoutText = isControlled
+    ? iterationTimeoutTextProp
+    : internalIterationTimeoutText;
+  const setIterationTimeoutText = isControlled
+    ? onIterationTimeoutTextChange
+    : setInternalIterationTimeoutText;
 
   React.useEffect(() => {
-    setInput(getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }));
-  }, [planId, taskId]);
+    if (isControlled) {
+      return;
+    }
+    setInternalInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
+    );
+  }, [isControlled, planId, taskId]);
 
   // Setup
   const activePlanId = input.targetMode === 'plan' ? input.planId.trim() : '';
@@ -82,7 +111,8 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
 
   const mergedForArgv: WorkflowRalphRunOptionsInput = {
     ...input,
-    iterationTimeoutSeconds: parseIterationTimeoutSeconds(iterationTimeoutText),
+    iterationTimeoutSeconds:
+      parseWorkflowRunIterationTimeoutSeconds(iterationTimeoutText),
   };
 
   const optionArgs = buildWorkflowRalphOptionArgs(mergedForArgv);
@@ -153,7 +183,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 pt-0">
+      <CardContent className="flex flex-col flex-1 gap-8">
         <fieldset
           aria-labelledby="workflow-run-target-legend"
           className="space-y-3 rounded-md border border-border p-4"
@@ -171,7 +201,11 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
           <div className="space-y-2">
             <Label htmlFor="workflow-run-target-mode">Target mode</Label>
             <Select
-              onValueChange={(v) => handleTargetModeChange(v as WorkflowRalphTargetMode)}
+              onValueChange={(v) => {
+                if (v === 'plan' || v === 'task') {
+                  handleTargetModeChange(v);
+                }
+              }}
               value={input.targetMode}
             >
               <SelectTrigger
@@ -187,6 +221,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               </SelectContent>
             </Select>
           </div>
+
           {input.targetMode === 'plan' ? (
             <div className="space-y-2">
               <Label htmlFor="workflow-run-plan-id">--plan</Label>
@@ -234,10 +269,11 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               </p>
             </div>
           )}
+
           {targetIdWarning ? (
             <p className="text-destructive text-xs" role="alert">
-              Value does not match a Cortex UUID (v4) pattern; CLI validation may
-              fail.
+              Value does not match a Cortex UUID (v4) pattern; CLI validation
+              may fail.
             </p>
           ) : null}
         </fieldset>
@@ -253,8 +289,8 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             Layer 1 — Prompt profile
           </legend>
           <p className="text-muted-foreground text-xs">
-            How the model should approach the work (Cursor command or prompt path).
-            Default matches CLI:{' '}
+            How the model should approach the work (Cursor command or prompt
+            path). Default matches CLI:{' '}
             <code className="text-xs">{WORKFLOW_RALPH_DEFAULT_PROMPT}</code>.
           </p>
           <div className="space-y-2">
@@ -291,8 +327,9 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             Layer 2 — Execution backend
           </legend>
           <p className="text-muted-foreground text-xs">
-            Which runner executes each iteration (UI-only stub; no CLI flag yet).
-            Phase 2 will add runner selection when the workflow exposes it.
+            Which runner executes each iteration (UI-only stub; no CLI flag
+            yet). Phase 2 will add runner selection when the workflow exposes
+            it.
           </p>
           <div className="space-y-2">
             <Label htmlFor="workflow-run-backend">Runner</Label>
@@ -389,7 +426,8 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
                 className="text-muted-foreground text-xs"
                 id="workflow-run-model-hint"
               >
-                Cursor model preset; default &apos;{WORKFLOW_RALPH_DEFAULT_MODEL}
+                Cursor model preset; default &apos;
+                {WORKFLOW_RALPH_DEFAULT_MODEL}
                 &apos; is omitted.
               </p>
             </div>
@@ -418,7 +456,11 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
           <div className="space-y-2">
             <Label htmlFor="workflow-run-debug">Debug / verbose</Label>
             <Select
-              onValueChange={(v) => handleDebugChange(v as WorkflowRalphDebugCli)}
+              onValueChange={(v) => {
+                if (v === 'omit' || v === 'debug' || v === 'verbose') {
+                  handleDebugChange(v);
+                }
+              }}
               value={input.debugCli}
             >
               <SelectTrigger
@@ -440,14 +482,17 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               className="text-muted-foreground text-xs"
               id="workflow-run-debug-hint"
             >
-              CLI flags override WORKFLOW_RALPH_DEBUG / RALPH_DEBUG for this run.
+              CLI flags override WORKFLOW_RALPH_DEBUG / RALPH_DEBUG for this
+              run.
             </p>
           </div>
         </fieldset>
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <Label htmlFor="workflow-run-preview">Canonical CLI (preview)</Label>
+            <Label htmlFor="workflow-run-preview">
+              Canonical CLI (preview)
+            </Label>
             <OpenThrottleClipboard
               className="text-primary hover:text-primary/90 text-sm font-medium underline underline-offset-4"
               label="Copy canonical command"
@@ -462,11 +507,15 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             {canonicalCommandLine}
           </pre>
           <p className="text-muted-foreground text-xs" role="note">
-            <span className="font-medium text-foreground">Queue from toolbar:</span>{' '}
-            &quot;Run plan&quot; uses the server job queue and does not yet pass these CLI
-            flags. Copy the command above to run locally with custom options, or follow{' '}
-            <span className="font-mono text-[0.7rem]">ralph-workflow-runtime-config</span>{' '}
-            when the API accepts runtime parameters (plan e8ba3608-c560-4228-9bd1-39994897213c).
+            <span className="font-medium text-foreground">
+              Queue from toolbar:
+            </span>{' '}
+            &quot;Add to Queue&quot; / run actions send tuning flags
+            (iterations, model, prompt, etc.) to the worker; run target for the
+            queue is always this plan.
+            <code className="mx-0.5 text-[0.7rem]">--task</code> mode here only
+            affects the preview above. Copy the command to run locally with an
+            exact CLI.
           </p>
         </div>
       </CardContent>

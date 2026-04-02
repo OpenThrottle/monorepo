@@ -25,23 +25,29 @@ export interface PlanToolbarProps {
   readonly className?: string;
   readonly planId: string;
   readonly planStatus?: string;
+  /**
+   * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
+   */
+  readonly ralphTuningJson?: string;
 }
 
 /**
  * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group), and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
-  const { className, planId, planStatus } = props;
+  const { className, planId, planStatus, ralphTuningJson = '' } = props;
 
   const fetcherRunPlan = useFetcher<typeof action>();
   const fetcherSetPlanStatus = useFetcher<typeof action>();
 
   const isCompleted = planStatus === 'COMPLETED';
+  const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =
-    fetcherSetPlanStatus.data != null &&
-    'setPlanStatusError' in fetcherSetPlanStatus.data
-      ? (fetcherSetPlanStatus.data as { setPlanStatusError: string })
-          .setPlanStatusError
+    setPlanStatusData != null &&
+    typeof setPlanStatusData === 'object' &&
+    'setPlanStatusError' in setPlanStatusData &&
+    typeof setPlanStatusData.setPlanStatusError === 'string'
+      ? setPlanStatusData.setPlanStatusError
       : undefined;
 
   const getRunButtonLabel = (): string => {
@@ -104,6 +110,11 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             <TooltipTrigger asChild={true}>
               <fetcherRunPlan.Form method="post">
                 <input name="intent" type="hidden" value="runPlan" />
+                <input
+                  name="ralphTuning"
+                  type="hidden"
+                  value={ralphTuningJson}
+                />
                 <Button
                   disabled={fetcherRunPlan.state !== 'idle'}
                   size="sm"

@@ -3,12 +3,15 @@ import {
   WORKFLOW_RALPH_DEFAULT_ITERATIONS,
   WORKFLOW_RALPH_DEFAULT_MODEL,
   WORKFLOW_RALPH_DEFAULT_PROMPT,
+  buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
   isCortexUuid,
+  parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
+import { RalphNestedDebugCli } from '~/__generated__/graphql';
 
 const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
@@ -44,9 +47,7 @@ const baseTaskInput = (
 
 describe('isCortexUuid', () => {
   test('accepts plausible Cortex UUID v4 strings (trimmed)', () => {
-    expect(
-      isCortexUuid('  0c2720a9-920f-4b16-865a-f803eb444e18  '),
-    ).toBe(true);
+    expect(isCortexUuid('  0c2720a9-920f-4b16-865a-f803eb444e18  ')).toBe(true);
     expect(isCortexUuid('77cb14a0-5eb0-4061-87ea-d618b85e8818')).toBe(true);
   });
 
@@ -114,9 +115,14 @@ describe('buildWorkflowRalphOptionArgs', () => {
   });
 
   test('includes --iterations when not default', () => {
-    expect(buildWorkflowRalphOptionArgs(basePlanInput({ iterations: 3 }))).toEqual(
-      ['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18', '--iterations', '3'],
-    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ iterations: 3 })),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--iterations',
+      '3',
+    ]);
   });
 
   test('includes --iteration-timeout only when seconds are at least 1', () => {
@@ -127,7 +133,9 @@ describe('buildWorkflowRalphOptionArgs', () => {
     ).not.toContain('--iteration-timeout');
 
     expect(
-      buildWorkflowRalphOptionArgs(basePlanInput({ iterationTimeoutSeconds: 0 })),
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ iterationTimeoutSeconds: 0 }),
+      ),
     ).not.toContain('--iteration-timeout');
 
     expect(
@@ -143,28 +151,30 @@ describe('buildWorkflowRalphOptionArgs', () => {
   });
 
   test('omits --model for default and empty trimmed model', () => {
-    expect(buildWorkflowRalphOptionArgs(basePlanInput({ model: 'auto' }))).not.toContain(
-      '--model',
-    );
-    expect(buildWorkflowRalphOptionArgs(basePlanInput({ model: '   ' }))).not.toContain(
-      '--model',
-    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ model: 'auto' })),
+    ).not.toContain('--model');
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ model: '   ' })),
+    ).not.toContain('--model');
   });
 
   test('includes --model for non-default preset', () => {
-    expect(buildWorkflowRalphOptionArgs(basePlanInput({ model: 'gpt-4' }))).toEqual(
-      [
-        '--plan',
-        '0c2720a9-920f-4b16-865a-f803eb444e18',
-        '--model',
-        'gpt-4',
-      ],
-    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ model: 'gpt-4' })),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--model',
+      'gpt-4',
+    ]);
   });
 
   test('includes --project when non-empty', () => {
     expect(
-      buildWorkflowRalphOptionArgs(basePlanInput({ project: 'openthrottle-developer' })),
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ project: 'openthrottle-developer' }),
+      ),
     ).toEqual([
       '--plan',
       '0c2720a9-920f-4b16-865a-f803eb444e18',
@@ -174,15 +184,15 @@ describe('buildWorkflowRalphOptionArgs', () => {
   });
 
   test('maps debug CLI selection to --debug or --verbose', () => {
-    expect(buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'debug' }))).toContain(
-      '--debug',
-    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'debug' })),
+    ).toContain('--debug');
     expect(
       buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'verbose' })),
     ).toContain('--verbose');
-    expect(buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'omit' }))).toEqual(
-      ['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18'],
-    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'omit' })),
+    ).toEqual(['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18']);
   });
 
   test('trims plan and task ids in argv', () => {
@@ -191,6 +201,55 @@ describe('buildWorkflowRalphOptionArgs', () => {
         basePlanInput({ planId: '  0c2720a9-920f-4b16-865a-f803eb444e18  ' }),
       )[1],
     ).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
+  });
+});
+
+describe('parseWorkflowRunIterationTimeoutSeconds', () => {
+  test('returns undefined for empty or invalid', () => {
+    expect(parseWorkflowRunIterationTimeoutSeconds('')).toBeUndefined();
+    expect(parseWorkflowRunIterationTimeoutSeconds('  ')).toBeUndefined();
+    expect(parseWorkflowRunIterationTimeoutSeconds('0')).toBeUndefined();
+    expect(parseWorkflowRunIterationTimeoutSeconds('x')).toBeUndefined();
+  });
+
+  test('returns positive integers', () => {
+    expect(parseWorkflowRunIterationTimeoutSeconds('1800')).toBe(1800);
+    expect(parseWorkflowRunIterationTimeoutSeconds('  99  ')).toBe(99);
+  });
+});
+
+describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
+  test('returns undefined when all fields match defaults', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(basePlanInput()),
+    ).toBe(undefined);
+  });
+
+  test('includes non-default iterations and maps debug CLI', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({ debugCli: 'debug', iterations: 3 }),
+      ),
+    ).toEqual({
+      iterations: 3,
+      ralphDebugCli: RalphNestedDebugCli.Debug,
+    });
+  });
+
+  test('includes iteration timeout from merged input', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({ iterationTimeoutSeconds: 120 }),
+      ),
+    ).toEqual({ iterationTimeoutSeconds: 120 });
+  });
+
+  test('ignores task-centric target; only tuning fields matter', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        baseTaskInput({ model: 'gpt-4' }),
+      ),
+    ).toEqual({ model: 'gpt-4' });
   });
 });
 
