@@ -355,6 +355,14 @@
       "weak": false,
       "zeromq": false
     },
+    "ignoredBuiltDependencies": [
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "puppeteer",
+      "weak",
+      "zeromq"
+    ],
     "overrides": {
       "@radix-ui/react-slot": "$@radix-ui/react-slot",
       "@tanstack/query-sync-storage-persister": "$@tanstack/query-sync-storage-persister",
@@ -367,30 +375,7 @@
       "zod": "$zod",
       "zod-to-json-schema": "$zod-to-json-schema"
     },
-    "patchedDependencies": {},
-    "ignoredBuiltDependencies": [
-      "@scarf/scarf",
-      "keytar",
-      "msgpackr-extract",
-      "puppeteer",
-      "weak",
-      "zeromq",
-      "@scarf/scarf",
-      "keytar",
-      "msgpackr-extract",
-      "weak",
-      "zeromq",
-      "@scarf/scarf",
-      "keytar",
-      "msgpackr-extract",
-      "weak",
-      "zeromq",
-      "@scarf/scarf",
-      "keytar",
-      "msgpackr-extract",
-      "weak",
-      "zeromq"
-    ]
+    "patchedDependencies": {}
   },
   "private": true,
   "repository": "git://github.com/visormatt/monorepo.git",
