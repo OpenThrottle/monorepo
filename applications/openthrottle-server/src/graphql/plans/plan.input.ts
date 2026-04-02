@@ -2,7 +2,22 @@
  * @description GraphQL input types for plan mutations and multi-arg queries. Replaces many individual @Args with a single input object.
  */
 
-import { Field, ID, InputType, Int } from '@nestjs/graphql';
+import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
+
+/**
+ * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
+ */
+export enum RalphNestedDebugCliGraphQL {
+  omit = 'omit',
+  debug = 'debug',
+  verbose = 'verbose',
+}
+
+registerEnumType(RalphNestedDebugCliGraphQL, {
+  description:
+    'Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.',
+  name: 'RalphNestedDebugCli',
+});
 
 @InputType()
 export class CreatePlanInput {
@@ -136,6 +151,57 @@ export class DeletePlanInput {
 }
 
 @InputType()
+export class RalphPlanRunTuningInput {
+  @Field(() => String, {
+    description: `Execution backend (e.g. cursor). Omit to use worktree defaults.`,
+    nullable: true,
+  })
+  backend!: string | null;
+
+  @Field(() => Int, {
+    description: `Per-iteration timeout in seconds (positive integer).`,
+    nullable: true,
+  })
+  iterationTimeoutSeconds!: number | null;
+
+  @Field(() => Int, {
+    description: `Max Ralph iterations for this run (positive integer).`,
+    nullable: true,
+  })
+  iterations!: number | null;
+
+  @Field(() => String, {
+    description: `Model id passed to workflow-ralph --model.`,
+    nullable: true,
+  })
+  model!: string | null;
+
+  @Field(() => String, {
+    description: `Nx project name for workflow-ralph --project.`,
+    nullable: true,
+  })
+  project!: string | null;
+
+  @Field(() => String, {
+    description: `Prompt profile path (e.g. /agents/ralph) for --prompt.`,
+    nullable: true,
+  })
+  prompt!: string | null;
+
+  @Field(() => String, {
+    description: `Repo-relative or absolute path for --prompt-file (layer-1 prompt file).`,
+    nullable: true,
+  })
+  promptFile!: string | null;
+
+  @Field(() => RalphNestedDebugCliGraphQL, {
+    description: `Whether to pass --debug / --verbose to nested workflow-ralph.`,
+    nullable: true,
+  })
+  ralphDebugCli!: RalphNestedDebugCliGraphQL | null;
+}
+
+@InputType()
 export class EnqueuePlanRunInput {
   @Field(() => ID, { description: `Plan id to enqueue a run for` })
   planId!: string;
@@ -145,6 +211,12 @@ export class EnqueuePlanRunInput {
     nullable: true,
   })
   priority!: number | null;
+
+  @Field(() => RalphPlanRunTuningInput, {
+    description: `Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.`,
+    nullable: true,
+  })
+  ralph?: RalphPlanRunTuningInput | null;
 }
 
 @InputType()

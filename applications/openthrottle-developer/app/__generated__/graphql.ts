@@ -402,6 +402,8 @@ export type EnqueuePlanRunInput = {
   planId: Scalars['ID']['input'];
   /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
   priority?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
+  ralph?: InputMaybe<RalphPlanRunTuningInput>;
 };
 
 export type EnqueuePlanRunResultObject = {
@@ -1562,6 +1564,36 @@ export type QueueStatsObject = {
   name: Scalars['String']['output'];
   /** Number of jobs waiting to be processed. */
   waitingCount: Scalars['Int']['output'];
+};
+
+/** Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose. */
+export enum RalphNestedDebugCli {
+  Debug = 'debug',
+  Omit = 'omit',
+  Verbose = 'verbose',
+}
+
+/**
+ * Optional Ralph / workflow-ralph runtime tuning for queued plan runs (iterations, model, backend, etc.).
+ * When set, workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+ */
+export type RalphPlanRunTuningInput = {
+  /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
+  backend?: InputMaybe<Scalars['String']['input']>;
+  /** Per-iteration timeout in seconds (positive integer). */
+  iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
+  /** Max Ralph iterations for this run (positive integer). */
+  iterations?: InputMaybe<Scalars['Int']['input']>;
+  /** Model id passed to workflow-ralph --model. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Nx project name for workflow-ralph --project. */
+  project?: InputMaybe<Scalars['String']['input']>;
+  /** Prompt profile path (e.g. /agents/ralph) for --prompt. */
+  prompt?: InputMaybe<Scalars['String']['input']>;
+  /** Repo-relative or absolute path for --prompt-file (layer-1 prompt file). */
+  promptFile?: InputMaybe<Scalars['String']['input']>;
+  /** Whether to pass --debug / --verbose to nested workflow-ralph. */
+  ralphDebugCli?: InputMaybe<RalphNestedDebugCli>;
 };
 
 export type RegisterInput = {

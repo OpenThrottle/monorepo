@@ -5,6 +5,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories';
+import { BadRequestException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
@@ -16,6 +17,7 @@ import {
   CreatePlanInput,
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
+  RalphNestedDebugCliGraphQL,
   SetPlanStatusInput,
   UpdatePlanInput,
 } from './plan.input';
@@ -485,6 +487,64 @@ describe('PlansResolver', () => {
         { planId: mockPlan.id },
         { priority: 100 },
       );
+    });
+
+    test('passes ralph tuning into queue job data when provided', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        ralph: {
+          backend: 'cursor',
+          iterationTimeoutSeconds: 120,
+          iterations: 5,
+          model: null,
+          project: 'applications/openthrottle-server',
+          prompt: null,
+          promptFile: null,
+          ralphDebugCli: RalphNestedDebugCliGraphQL.verbose,
+        },
+      });
+
+      expect(mockAdd).toHaveBeenCalledWith(
+        'run-plan',
+        expect.objectContaining({
+          planId: mockPlan.id,
+          ralph: expect.objectContaining({
+            backend: 'cursor',
+            iterationTimeoutSeconds: 120,
+            iterations: 5,
+            project: 'applications/openthrottle-server',
+            ralphDebugCli: 'verbose',
+          }),
+        }),
+        { priority: 10 },
+      );
+    });
+
+    test('throws BadRequestException when ralph tuning is invalid', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+
+      await expect(
+        resolver.enqueuePlanRun({
+          planId: mockPlan.id,
+          priority: null,
+          ralph: {
+            backend: 'not-a-real-backend',
+            iterationTimeoutSeconds: null,
+            iterations: null,
+            model: null,
+            project: null,
+            prompt: null,
+            promptFile: null,
+            ralphDebugCli: null,
+          },
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 

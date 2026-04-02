@@ -21,6 +21,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
+import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
 import type {
   EnhancedTaskRunMetrics,
@@ -517,7 +518,7 @@ export class PlansProcessor
         childJobResult = await runChildJob({
           handoff,
           planId,
-          ...(job.data.ralph ?? {}),
+          ...ralphTuningForChildJob(job.data.ralph),
         });
 
         if (childJobResult.ok) {

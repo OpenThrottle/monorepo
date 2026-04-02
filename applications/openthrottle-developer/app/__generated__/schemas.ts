@@ -44,6 +44,8 @@ import {
   ProcessStripeWebhookInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
+  RalphNestedDebugCli,
+  RalphPlanRunTuningInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
@@ -84,6 +86,8 @@ export const definedNonNullAnySchema = z
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
+
+export const RalphNestedDebugCliSchema = z.nativeEnum(RalphNestedDebugCli);
 
 export const WallClockInterpretationSchema = z.nativeEnum(
   WallClockInterpretation,
@@ -313,6 +317,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   return z.object({
     planId: z.string(),
     priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
   });
 }
 
@@ -510,6 +515,21 @@ export function QueueDetailsInputSchema(): z.ZodObject<
     name: z.string(),
     offset: z.number().nullish(),
     states: z.array(z.string()).nullish(),
+  });
+}
+
+export function RalphPlanRunTuningInputSchema(): z.ZodObject<
+  Properties<RalphPlanRunTuningInput>
+> {
+  return z.object({
+    backend: z.string().nullish(),
+    iterationTimeoutSeconds: z.number().nullish(),
+    iterations: z.number().nullish(),
+    model: z.string().nullish(),
+    project: z.string().nullish(),
+    prompt: z.string().nullish(),
+    promptFile: z.string().nullish(),
+    ralphDebugCli: RalphNestedDebugCliSchema.nullish(),
   });
 }
 

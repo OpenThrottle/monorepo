@@ -7,6 +7,7 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
+import { BadRequestException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
@@ -35,6 +36,7 @@ import {
 } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { ProjectObject } from '../projects/project.object';
+import { buildRunPlanJobData } from './enqueue-plan-ralph-tuning';
 import {
   CreatePlanInput,
   DeletePlanInput,
@@ -483,7 +485,7 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority } = input;
+    const { planId, priority, ralph } = input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -492,12 +494,18 @@ export class PlansResolver {
       throw new Error(`Plan not found: ${planId}`);
     }
 
+    let jobData: RunPlanJobData;
+    try {
+      jobData = buildRunPlanJobData({ planId, ralph });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new BadRequestException(message);
+    }
+
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-    const job = await this.plansQueue.add(
-      'run-plan',
-      { planId },
-      { priority: jobPriority },
-    );
+    const job = await this.plansQueue.add('run-plan', jobData, {
+      priority: jobPriority,
+    });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
