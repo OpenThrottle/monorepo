@@ -36,11 +36,8 @@
   ],
   "ignoreDependencies": [
     // Internal
-    "@barguide/*",
-    "@intouch/*",
     "@openthrottle/*",
-    "@rocketcms/*",
-    "@visormatt/*",
+    "@tools/*",
 
     // External
     "@nx/*",

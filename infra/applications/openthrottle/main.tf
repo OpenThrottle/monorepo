@@ -1,22 +1,18 @@
+################################################################################
+#
 # OpenThrottle application module — main.
 # Composes reserved IP for Redis, Cloud SQL Postgres, Compute E2, Memorystore Redis.
 # Module sources are relative to this application (../../modules from applications/openthrottle).
+#
+################################################################################
 
 data "google_project" "project" {
   project_id = var.project_id
 }
 
-# Reserved IP range for Memorystore Redis (required; allocated to VPC).
-resource "google_compute_global_address" "redis_reserved" {
-  address_type  = "INTERNAL"
-  name          = "openthrottle-${var.env_name}-redis-reserved"
-  network       = var.network
-  prefix_length = 29
-  project       = var.project_id
-  purpose       = "VPC_PEERING"
-}
-
+################################################################################
 # Firewall: allow HTTP/HTTPS to the E2 instance (for Caddy reverse proxy).
+################################################################################
 resource "google_compute_firewall" "allow_http_https" {
   name          = "openthrottle-${var.env_name}-allow-http-https"
   network       = var.network
@@ -30,7 +26,21 @@ resource "google_compute_firewall" "allow_http_https" {
   }
 }
 
+################################################################################
+# Reserved IP range for Memorystore Redis (required; allocated to VPC).
+################################################################################
+resource "google_compute_global_address" "redis_reserved" {
+  address_type  = "INTERNAL"
+  name          = "openthrottle-${var.env_name}-redis-reserved"
+  network       = var.network
+  prefix_length = 29
+  project       = var.project_id
+  purpose       = "VPC_PEERING"
+}
+
+################################################################################
 # Allow E2 default service account to pull images from Artifact Registry.
+################################################################################
 resource "google_project_iam_member" "e2_artifact_registry_reader" {
   count   = var.deploy_enabled ? 1 : 0
   member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
