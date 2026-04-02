@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { Client } from 'pg';
 import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
-const MIGRATIONS_DIR = join(process.cwd(), 'databases', 'cortex', 'migrations');
+const MIGRATIONS_DIR = join(process.cwd(), 'databases', 'migrations');
 
 async function main(): Promise<void> {
   const config = getCortexPostgresConfig();

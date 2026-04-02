@@ -12,7 +12,7 @@ async function main(): Promise<void> {
   const config = getCortexPostgresConfig();
   if (!config) {
     throw new Error(
-      'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
+      'OpenThrottle Postgres not configured. Set OPENTHROTTLE_POSTGRES_URL or OPENTHROTTLE_POSTGRES_* env vars.',
     );
   }
   const connectionString = config.connectionString;
@@ -25,7 +25,8 @@ async function main(): Promise<void> {
       TRUNCATE plan_output_stream, commit_links, task_embeddings, plan_embeddings, tasks, plans
       RESTART IDENTITY CASCADE
     `);
-    console.log('Cortex tables truncated.');
+
+    console.log('OpenThrottle tables truncated.');
   } finally {
     await client.end();
   }

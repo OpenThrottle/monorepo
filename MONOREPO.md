@@ -46,11 +46,6 @@ monorepo/
 │   └── monorepo/          # Monorepo-specific documentation
 ├── infra/                 # Infrastructure as code
 ├── packages/              # Reusable libraries and packages
-│   ├── barguide/          # Domain-specific packages for BarGuide
-│   ├── intouch/           # Domain-specific packages for InTouch
-│   ├── mattscholta/       # Domain-specific packages
-│   ├── rocketcms/         # Domain-specific packages for RocketCMS
-│   └── visormatt/         # Personal/shared packages
 ├── scripts/               # Utility scripts (Bash + TypeScript)
 └── tools/                 # Development tools and generators
 ```
@@ -77,9 +72,8 @@ Create an **application** when you need:
 
 **Examples:**
 
-- `barguide` - React Router web application (deployed to barguide.io)
-- `nestjs-rest-api` - NestJS REST API (deployed as a service)
-- `intouch` - React Native mobile app (published to app stores)
+- `openthrottle-developer` - React Router web application (deployed to https://developer.openthrottle.ai)
+- `openthrottle-server` - React Router web application (deployed to https://api.openthrottle.ai)
 
 ### When to Create a Package
 
@@ -93,9 +87,8 @@ Create a **package** when you need:
 
 **Examples:**
 
-- `@barguide/react-native-ui` - React Native components for BarGuide apps
+- `@openthrottle/react-router-shadcn` - React UI components for OpenThrottle web apps
 - `@openthrottle/nestjs-auth` - NestJS authentication utilities
-- `@visormatt/react-goodies` - React utilities used across multiple apps
 
 ### Decision Flowchart
 
@@ -113,45 +106,6 @@ Create a **package** when you need:
 
 ## Package Organization
 
-### Domain-Specific Packages
-
-Packages can be organized under a domain/application namespace when they're specific to that domain:
-
-```bash
-packages/
-├── barguide/              # BarGuide-specific packages
-│   ├── react-router/      # React Router utilities for BarGuide
-│   ├── react-native-ui/   # React Native components for BarGuide apps
-│   └── supabase/          # Supabase utilities for BarGuide
-│
-└── intouch/               # InTouch-specific packages
-    └── react-native-ui/   # React Native components for InTouch
-```
-
-**When to use domain-specific organization:**
-
-- Package is only used by one application or domain
-- Package contains domain-specific business logic
-- Package is tightly coupled to a specific application
-
-### Shared Packages
-
-Packages at the top level (or under personal namespaces) are shared across domains:
-
-```bash
-packages/
-└── visormatt/             # Shared/personal packages
-    ├── react-goodies/     # React utilities (used by multiple apps)
-    ├── react-router-utils/ # React Router utilities (used by multiple apps)
-    └── nestjs-auth/       # NestJS utilities (used by multiple APIs)
-```
-
-**When to use shared organization:**
-
-- Package is used by multiple applications/domains
-- Package contains generic, reusable functionality
-- Package could be published independently
-
 ### Package Discovery
 
 Before creating a new package, check if similar functionality exists:
@@ -168,22 +122,6 @@ Before creating a new package, check if similar functionality exists:
 - **Format**: `kebab-case`
 - **Examples**: `barguide`, `nestjs-rest-api`, `intouch`
 - **Location**: `applications/<name>/`
-
-### Packages
-
-- **Format**: Scoped packages (`@<namespace>/<name>`) or unscoped (`<name>`)
-- **Scoped Examples**: `@visormatt/react-goodies`, `@barguide/react-native-ui`
-- **Unscoped Examples**: (rare, typically for published packages)
-- **Location**: `packages/<namespace>/<name>/` or `packages/<name>/`
-
-### Nested Packages
-
-When organizing packages under a domain:
-
-- **Format**: `packages/<domain>/<package-name>/`
-- **Examples**:
-  - `packages/barguide/react-router/` → `@barguide/react-router`
-  - `packages/intouch/react-native-ui/` → `@intouch/react-native-ui`
 
 ### Code-Level Conventions
 

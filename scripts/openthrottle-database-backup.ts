@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
-const BACKUPS_DIR = join(process.cwd(), 'databases', 'cortex', 'backups');
+const BACKUPS_DIR = join(process.cwd(), 'databases', 'backups');
 
 function timestamp(): string {
   const d = new Date();
