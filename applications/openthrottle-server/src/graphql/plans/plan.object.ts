@@ -101,3 +101,35 @@ export class EnqueuePlanRunResultObject {
   })
   queueTotal!: number;
 }
+
+/** Result of cancelPlanRun: removed job ids, active jobs that stayed locked, and optional plan status update. */
+@ObjectType()
+export class CancelPlanRunResultObject {
+  @Field(() => [String], {
+    description:
+      'BullMQ job ids that were active (locked by a worker) and could not be removed. The Ralph child may still run until the worker releases or tears it down.',
+  })
+  activeJobIdsCouldNotCancel!: string[];
+
+  @Field(() => Boolean, {
+    description:
+      'True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.',
+  })
+  noMatchingJob!: boolean;
+
+  @Field(() => String, {
+    description:
+      'Plan status after cancel when at least one queued job was removed (typically PENDING). Null when no queued job was removed.',
+    nullable: true,
+  })
+  planStatusAfter!: string | null;
+
+  @Field(() => String, { description: 'Plan id from the request.' })
+  planId!: string;
+
+  @Field(() => [String], {
+    description:
+      'BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).',
+  })
+  removedJobIds!: string[];
+}

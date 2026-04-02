@@ -7,7 +7,7 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
@@ -36,8 +36,10 @@ import {
 } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { ProjectObject } from '../projects/project.object';
+import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
 import { buildRunPlanJobData } from './enqueue-plan-ralph-tuning';
 import {
+  CancelPlanRunInput,
   CreatePlanInput,
   DeletePlanInput,
   EnqueuePlanRunInput,
@@ -47,6 +49,7 @@ import {
   UpdatePlanInput,
 } from './plan.input';
 import {
+  CancelPlanRunResultObject,
   EnqueuePlanRunResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
@@ -545,5 +548,73 @@ export class PlansResolver {
     result.queueTotal = queueTotal;
 
     return result;
+  }
+
+  // @ProfileResponseTime('PlansResolver.cancelPlanRun')
+  @Mutation(() => CancelPlanRunResultObject, {
+    description: `Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker.`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) =>
+        ret != null &&
+        (ret as CancelPlanRunResultObject).removedJobIds.length > 0
+          ? {
+              message: 'Plan run cancelled (removed from queue)',
+              planId: (ret as CancelPlanRunResultObject).planId,
+              severity: 'info' as const,
+            }
+          : null,
+    },
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
+      payload: (ret) =>
+        ret != null &&
+        (ret as CancelPlanRunResultObject).planStatusAfter != null
+          ? {
+              planId: (ret as CancelPlanRunResultObject).planId,
+              status: (ret as CancelPlanRunResultObject).planStatusAfter!,
+            }
+          : null,
+    },
+  ])
+  async cancelPlanRun(
+    @Args('input', { type: () => CancelPlanRunInput })
+    input: CancelPlanRunInput,
+  ): Promise<CancelPlanRunResultObject> {
+    const repo = this.plansService.getRepository();
+    const plan = await repo.findOne({ where: { id: input.planId } });
+
+    if (!plan) {
+      throw new NotFoundException(`Plan not found: ${input.planId}`);
+    }
+
+    const queueResult = await cancelPlanRunJobsForPlan(
+      this.plansQueue,
+      input.planId,
+    );
+
+    const out = new CancelPlanRunResultObject();
+    out.planId = input.planId;
+    out.removedJobIds = [...queueResult.removedJobIds];
+    out.activeJobIdsCouldNotCancel = [...queueResult.lockedActiveJobIds];
+    out.noMatchingJob = queueResult.matchingJobCount === 0;
+    out.planStatusAfter = null;
+
+    if (queueResult.removedJobIds.length > 0) {
+      await repo.update({ id: input.planId }, { status: 'PENDING' });
+
+      const taskRepo = this.tasksService.getRepository();
+      await taskRepo.update(
+        { planId: input.planId, status: 'QUEUED' },
+        { status: 'PENDING' },
+      );
+
+      const refreshed = await repo.findOne({ where: { id: input.planId } });
+      out.planStatusAfter = refreshed?.status ?? 'PENDING';
+    }
+
+    return out;
   }
 }

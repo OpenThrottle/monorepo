@@ -253,6 +253,31 @@ type EnqueuePlanRunResultObject {
   queueTotal: Int!
 }
 
+type CancelPlanRunResultObject {
+  """
+  BullMQ job ids that were active (locked by a worker) and could not be removed. The Ralph child may still run until the worker releases or tears it down.
+  """
+  activeJobIdsCouldNotCancel: [String!]!
+
+  """
+  True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.
+  """
+  noMatchingJob: Boolean!
+
+  """
+  Plan status after cancel when at least one queued job was removed (typically PENDING). Null when no queued job was removed.
+  """
+  planStatusAfter: String
+
+  """Plan id from the request."""
+  planId: String!
+
+  """
+  BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).
+  """
+  removedJobIds: [String!]!
+}
+
 type TaskObject {
   assignee: String
   category: String
@@ -2457,6 +2482,11 @@ type Mutation {
   deletePlan(input: DeletePlanInput!): Boolean!
 
   """
+  Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker.
+  """
+  cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
+
+  """
   Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
   """
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
@@ -2829,6 +2859,13 @@ input DeletePlanInput {
   Plan id to delete
   """
   id: ID!
+}
+
+input CancelPlanRunInput {
+  """
+  Plan id whose in-queue run-plan (Ralph) job should be cancelled
+  """
+  planId: ID!
 }
 
 """Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose."""

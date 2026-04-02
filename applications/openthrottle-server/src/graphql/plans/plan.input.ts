@@ -151,6 +151,14 @@ export class DeletePlanInput {
 }
 
 @InputType()
+export class CancelPlanRunInput {
+  @Field(() => ID, {
+    description: `Plan id whose in-queue run-plan (Ralph) job should be cancelled`,
+  })
+  planId!: string;
+}
+
+@InputType()
 export class RalphPlanRunTuningInput {
   @Field(() => String, {
     description: `Execution backend (e.g. cursor). Omit to use worktree defaults.`,

@@ -5,7 +5,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
@@ -557,6 +557,88 @@ describe('PlansResolver', () => {
           },
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('cancelPlanRun', () => {
+    test('throws NotFoundException when plan does not exist', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(null);
+
+      await expect(
+        resolver.cancelPlanRun({ planId: 'missing-id' }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    test('returns noMatchingJob when queue has no matching jobs', async () => {
+      mockGetJobs.mockResolvedValueOnce([]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+
+      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
+
+      expect(result.noMatchingJob).toBe(true);
+      expect(result.removedJobIds).toEqual([]);
+      expect(result.activeJobIdsCouldNotCancel).toEqual([]);
+      expect(result.planStatusAfter).toBeNull();
+    });
+
+    test('removes waiting run-plan job and sets plan and tasks to PENDING', async () => {
+      const remove = vi.fn().mockResolvedValue(undefined);
+      mockGetJobs.mockResolvedValueOnce([
+        {
+          data: { planId: mockPlan.id },
+          getState: vi.fn(),
+          id: 'job-99',
+          name: 'run-plan',
+          remove,
+        },
+      ]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne)
+        .mockResolvedValueOnce(mockPlan)
+        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      taskRepo.update.mockClear();
+
+      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
+
+      expect(remove).toHaveBeenCalledOnce();
+      expect(result.removedJobIds).toEqual(['job-99']);
+      expect(result.noMatchingJob).toBe(false);
+      expect(result.planStatusAfter).toBe('PENDING');
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: mockPlan.id },
+        { status: 'PENDING' },
+      );
+      expect(taskRepo.update).toHaveBeenCalledWith(
+        { planId: mockPlan.id, status: 'QUEUED' },
+        { status: 'PENDING' },
+      );
+    });
+
+    test('reports active job ids when remove fails for locked job', async () => {
+      const remove = vi.fn().mockRejectedValue(new Error('locked'));
+      const getState = vi.fn().mockResolvedValue('active');
+      mockGetJobs.mockResolvedValueOnce([
+        {
+          data: { planId: mockPlan.id },
+          getState,
+          id: 'job-a',
+          name: 'run-plan',
+          remove,
+        },
+      ]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.update).mockClear();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+
+      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
+
+      expect(result.removedJobIds).toEqual([]);
+      expect(result.activeJobIdsCouldNotCancel).toEqual(['job-a']);
+      expect(result.noMatchingJob).toBe(false);
+      expect(result.planStatusAfter).toBeNull();
+      expect(repo.update).not.toHaveBeenCalled();
     });
   });
 
