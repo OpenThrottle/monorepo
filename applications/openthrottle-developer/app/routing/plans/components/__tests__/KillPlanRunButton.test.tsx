@@ -102,4 +102,49 @@ describe('KillPlanRunButton', () => {
     });
     expect(toastError).not.toHaveBeenCalled();
   });
+
+  test('Cancel closes dialog without posting cancelPlanRun', async () => {
+    const user = userEvent.setup();
+    let cancelPlanRunPosts = 0;
+
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: async ({ request }) => {
+          const fd = await request.formData();
+          if (fd.get('intent') === 'cancelPlanRun') {
+            cancelPlanRunPosts += 1;
+            return { cancelPlanRun: null };
+          }
+          return null;
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+    );
+    expect(
+      screen.getByRole('heading', { name: /Kill plan run\?/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Task or plan edits are not deleted/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Cancel$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: /Kill plan run\?/i }),
+      ).not.toBeInTheDocument();
+    });
+    expect(cancelPlanRunPosts).toBe(0);
+    expect(toastSuccess).not.toHaveBeenCalled();
+  });
 });
