@@ -26,5 +26,5 @@ fi
 
 export OPENAI_API_KEY
 
-pnpm nx run @openthrottle/ai-mcp:build 1>&2
+# pnpm nx run @openthrottle/ai-mcp:build 1>&2
 exec node packages/mattscholta/ai-mcp/dist/src/bin.js

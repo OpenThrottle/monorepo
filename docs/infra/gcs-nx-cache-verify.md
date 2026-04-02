@@ -13,8 +13,8 @@ The Nx GCS cache plugin (`@nx/gcs-cache`) enables remote caching of Nx task outp
 ## Current Configuration
 
 - **Buckets**:
-  - **Production**: `monorepo-nx-cache-production`
-  - **Staging** (PRs / non-`main`): `monorepo-nx-cache-staging`
+  - **Production**: `openthrottle-staging-nx-cache`
+  - **Staging** (PRs / non-`main`): `openthrottle-staging-nx-cache`
 - **Two-bucket model**: CI injects `NX_GCS_BUCKET` into `nx.json` at runtime to avoid cache poisoning of the production bucket (CREEP / CVE-2025-36852).
 - **Local Mode**: `read-only` (prevents warnings when local credentials don't have write access; still allows reading from remote cache)
 
@@ -40,7 +40,7 @@ This script will:
 The Nx GCS cache plugin requires an activation key for registration. Generate it interactively:
 
 ```bash
-pnpm exec nx g @nx/gcs-cache:init --bucket=monorepo-nx-cache-staging
+pnpm exec nx g @nx/gcs-cache:init --bucket=openthrottle-staging-nx-cache
 ```
 
 This will:
@@ -60,7 +60,7 @@ This will:
 Run the verification script to ensure everything is configured correctly:
 
 ```bash
-./scripts/verify-gcs-nx-cache.sh
+./scripts/gcs-nx-cache-verify.sh
 ```
 
 ### 4. Configure Service Account Permissions
@@ -76,7 +76,7 @@ To grant permissions:
 SERVICE_ACCOUNT_EMAIL="your-service-account@visormatt-monorepo.iam.gserviceaccount.com"
 
 # Grant Storage Object Admin role
-gsutil iam ch serviceAccount:$SERVICE_ACCOUNT_EMAIL:roles/storage.objectAdmin gs://monorepo-nx-cache-staging
+gsutil iam ch serviceAccount:$SERVICE_ACCOUNT_EMAIL:roles/storage.objectAdmin gs://openthrottle-staging-nx-cache
 ```
 
 ### 5. Test Locally (Optional)
@@ -91,7 +91,7 @@ gcloud auth application-default login
 pnpm nx run-many -t build --skip-nx-cache=false
 
 # Verify cache entries were created
-gsutil ls gs://monorepo-nx-cache-staging
+gsutil ls gs://openthrottle-staging-nx-cache
 ```
 
 ## CI/CD Integration
@@ -118,17 +118,17 @@ Monitor cache effectiveness by:
 
 ```bash
 # List all cache entries
-gsutil ls -r gs://monorepo-nx-cache-staging
+gsutil ls -r gs://openthrottle-staging-nx-cache
 
 # Count cache entries
-gsutil ls -r gs://monorepo-nx-cache-staging | wc -l
+gsutil ls -r gs://openthrottle-staging-nx-cache | wc -l
 ```
 
 ## Troubleshooting
 
 ### Cache Not Working in CI/CD
 
-1. **Verify bucket exists**: Run `gsutil ls -b gs://monorepo-nx-cache-staging`
+1. **Verify bucket exists**: Run `gsutil ls -b gs://openthrottle-staging-nx-cache`
 2. **Check service account permissions**: Ensure the service account has Storage Object Admin role
 3. **Verify authentication**: Check that the Google Cloud action is running before Nx commands
 4. **Check activation key**: Ensure `NX_KEY` is set or `.nx/key/key.ini` exists
@@ -143,7 +143,7 @@ If you see warnings about cache not being writable locally:
 
 ### Bucket Not Found Errors
 
-- Ensure the bucket exists: `gsutil ls -b gs://monorepo-nx-cache-staging`
+- Ensure the bucket exists: `gsutil ls -b gs://openthrottle-staging-nx-cache`
 - Verify the bucket name in `nx.json` matches the actual bucket name
 - Check that the project is set correctly: `gcloud config get-value project`
 
@@ -159,11 +159,12 @@ To modify the retention period, edit `scripts/setup-gcs-nx-cache.sh` and re-run 
 
 ```bash
 # Update lifecycle policy
-gsutil lifecycle set lifecycle.json gs://monorepo-nx-cache-staging
+gsutil lifecycle set lifecycle.json gs://openthrottle-staging-nx-cache
 ```
 
 ## References
 
+- **OpenThrottle staging CI credentials** (GCS workflow service account key and GitHub secret): [staging-gcs-workflow-service-account.md](./staging-gcs-workflow-service-account.md)
 - [Nx GCS Cache Documentation](https://nx.dev/nx-api/gcs-cache/documents/overview)
 - [Google Cloud Storage Documentation](https://cloud.google.com/storage/docs)
 - [Nx Remote Caching Guide](https://nx.dev/core-features/remote-cache)

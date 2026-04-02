@@ -18,21 +18,21 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 - **Tooling:** Nx + Nest CLI.
 - **Commands (from monorepo root):**
-  - Build: `pnpm nx build openthrottle-server`  
+  - Build: `pnpm nx build openthrottle-server`
     Runs: `nest build --path {projectRoot}/tsconfig.app.json`.
   - Depends on: `^build` and `^build-package` (built dependencies).
 - **Output:** `applications/openthrottle-server/build/` (from `tsconfig.app.json` `outDir: "./build"`). Entry: `build/src/main.js`.
 
 ### 1.3 Run
 
-- **Development (watch):**  
-  `pnpm nx dev openthrottle-server`  
+- **Development (watch):**
+  `pnpm nx dev openthrottle-server`
   Runs: `nest start --path {projectRoot}/tsconfig.app.json --watch`. Depends on `^dev`.
-- **Production (one-shot):**  
-  `pnpm nx start openthrottle-server`  
+- **Production (one-shot):**
+  `pnpm nx start openthrottle-server`
   Runs: `nest start --path {projectRoot}/tsconfig.app.json`.
-- **Docker-style run (built artifact + env file):**  
-  `node -r dotenv/config ./build/src/main.js`  
+- **Docker-style run (built artifact + env file):**
+  `node -r dotenv/config ./build/src/main.js`
   Script in package.json: `"start:docker": "node -r dotenv/config ./build/src/main.js"`. Assumes `.env` (or env vars) and pre-built `build/`.
 
 ### 1.4 Port and env
@@ -75,11 +75,11 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 - **Tooling:** Nx + `@nx/react/router-plugin`. React Router build produces server bundle + client assets.
 - **Commands (from monorepo root):**
-  - Build: `pnpm nx build openthrottle-developer`  
+  - Build: `pnpm nx build openthrottle-developer`
     Plugin target `build` (React Router build).
-  - Dev: `pnpm nx dev openthrottle-developer`  
+  - Dev: `pnpm nx dev openthrottle-developer`
     Plugin target `dev`.
-  - Start (production): `pnpm nx start openthrottle-developer`  
+  - Start (production): `pnpm nx start openthrottle-developer`
     Plugin target `start`.
 - **Output:** React Router typical layout: `build/server/`, `build/client/` under the app directory (see other React Router apps for `react-router-serve`).
 
@@ -124,8 +124,8 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 ### 3.3 Summary
 
-- **openthrottle-server:** Dedicated Dockerfile at `applications/openthrottle-server/Dockerfile` (multi-stage, build from monorepo root). Run in container uses `start:docker` (node + dotenv). See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
-- **openthrottle-developer:** Dedicated Dockerfile at `applications/openthrottle-developer/Dockerfile` (same pattern as root `Dockerfile.ReactRouter`). App has `start:docker` script: `react-router-serve ./build/server/index.js`. See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
+- **openthrottle-server:** Dedicated Dockerfile at `Dockerfile.NestJS` (multi-stage, build from monorepo root). Run in container uses `start:docker` (node + dotenv). See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
+- **openthrottle-developer:** Dedicated Dockerfile at `Dockerfile.ReactRouter` (same pattern as root `Dockerfile.ReactRouter`). App has `start:docker` script: `react-router-serve ./build/server/index.js`. See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
 
 ---
 
@@ -139,9 +139,9 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 ## 5. Monorepo scripts (root) relevant to OpenThrottle
 
-- **Cortex/import (used by server at runtime):**  
+- **Cortex/import (used by server at runtime):**
   `cortex:import`, `cortex:import-docs`, `cortex:migrate`, `cortex:backup`, `cortex:reset` — see root `package.json`. The server can spawn `pnpm run cortex:import-docs` (and similar) when `WORKSPACE_ROOT` is set; container/deploy design should account for this if doc-ingestion or Ralph need the monorepo context.
-- **Sync (subtree push):**  
+- **Sync (subtree push):**
   `sync:openthrottle:server`, `sync:openthrottle:developer` — push app subtrees to separate repos; not used for Docker build.
 
 ---

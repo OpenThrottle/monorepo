@@ -8,11 +8,11 @@ set -e
 ################################################################################
 PRODUCTION=false
 
-BUCKET_PRODUCTION="monorepo-nx-cache-production"
-BUCKET_STAGING="monorepo-nx-cache-staging"
-PROJECT_ID_PRODUCTION="monorepo-production-473406"
-PROJECT_ID_STAGING="monorepo-production-473406"
-REGION="us-west2"  # Matching the region used in CI/CD
+BUCKET_PRODUCTION="openthrottle-staging-nx-cache"
+BUCKET_STAGING="openthrottle-staging-nx-cache"
+PROJECT_ID_PRODUCTION="monorepo-staging"
+PROJECT_ID_STAGING="monorepo-staging"
+REGION="us-central1"  # Matching the region used in CI/CD
 
 if [ "$PRODUCTION" = true ]; then
   BUCKET_NAME="$BUCKET_PRODUCTION"

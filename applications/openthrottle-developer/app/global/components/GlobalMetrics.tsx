@@ -18,7 +18,7 @@ import {
   usePollServerMetrics,
 } from '@openthrottle/react-router-ui';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
-import { ENV_SOURCE, IS_PRODUCTION } from '@openthrottle/react-router-utils';
+import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import {
   GetRootMetricsDocument,
   type GetRootMetricsQuery,
@@ -152,9 +152,9 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   }, [serverMetrics]);
 
   // 🔌 Short Circuit
-  if (!IS_PRODUCTION) {
-    return null;
-  }
+  // if (!IS_PRODUCTION) {
+  //   return null;
+  // }
 
   return (
     <div className={classnames('p-4', className)} data-testid="GlobalMetrics">
