@@ -192,7 +192,7 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <main className="gap-8 p-4 md:p-8 lg:p-12 relative flex flex-col max-w-7xl mx-auto w-full">
       {/* <OpenThrottleBreadcrumbs className="mb-2" /> */}
 
       <ProjectsStatsCards
@@ -200,9 +200,9 @@ export default function Index(props: Route.ComponentProps) {
         totalProjects={totalCount}
       />
 
-      <h1 className="text-xl mb-2 mt-12 text-highlight">Projects</h1>
+      {/* <h1 className="text-xl mb-2 mt-12 text-highlight">Projects</h1> */}
       <ProjectsToolbar
-        className="mb-4"
+        // className="my-8"
         limit={limit}
         page={page}
         search={search}

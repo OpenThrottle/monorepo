@@ -43,12 +43,16 @@ export function useNotificationsSystemPreferences(): UseSystemNotificationsPrefe
 
   React.useEffect(() => {
     return subscribeToNotificationsPreferenceStorageEvents(() => {
+      console.log('🟢 5 - subscribeToNotificationsPreferenceStorageEvents');
+
       setPreferenceState(getSystemNotificationsPreference());
     });
   }, []);
 
   const setPreference = React.useCallback(
     (pref: SystemNotificationsPreference) => {
+      console.log('🟢 4 - preference', pref);
+
       setSystemNotificationsPreference(pref);
       setPreferenceState(getSystemNotificationsPreference());
     },

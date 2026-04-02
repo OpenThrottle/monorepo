@@ -12,7 +12,16 @@ const listeners = new Set<() => void>();
 let windowListenerAttached = false;
 
 function onStorageEvent(e: StorageEvent): void {
+  console.log('🟢 2', {
+    key: e.key,
+    newValue: e.newValue,
+    oldValue: e.oldValue,
+  });
+
   if (e.key !== null && e.key !== NOTIFICATIONS_STORAGE_KEY) return;
+
+  console.log('🟢 🟢 🟢 onStorageEvent', e.key, e.newValue, e.oldValue);
+
   for (const listener of listeners) {
     listener();
   }
@@ -26,11 +35,16 @@ function onStorageEvent(e: StorageEvent): void {
 export function subscribeToNotificationsPreferenceStorageEvents(
   listener: () => void,
 ): () => void {
+  console.log('🟢 1');
+
   if (!IS_BROWSER) {
     return () => {};
   }
 
   listeners.add(listener);
+
+  console.log('🟢 3', { listeners });
+
   if (!windowListenerAttached) {
     window.addEventListener('storage', onStorageEvent);
     windowListenerAttached = true;

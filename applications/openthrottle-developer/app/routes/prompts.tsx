@@ -25,12 +25,13 @@ export default function Index(_props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <div
-      className="max-w-7xl mx-auto w-full"
-      data-testid="prompts-layout"
-    >
-      <Outlet />
-    </div>
+    // <div
+    //   // className="max-w-7xl mx-auto w-full"
+    //   className="min-h-96 bg-pink-500"
+    //   data-testid="prompts-layout"
+    // >
+    // </div>
+    <Outlet />
   );
 }
 

@@ -129,10 +129,7 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main
-      className="relative h-full flex flex-col"
-      data-testid="prompts-editor"
-    >
+    <main className="flex flex-col flex-1" data-testid="prompts-editor">
       {/* Header with prompt info and actions */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
@@ -202,24 +199,23 @@ export default function Index(props: Route.ComponentProps) {
       </div>
 
       {/* Prompt metadata */}
-      {prompt.description && (
+      {/* {prompt.description && (
         <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700 text-sm text-gray-400">
           {prompt.description}
         </div>
-      )}
+      )} */}
 
       {/* Editor */}
-      <div className="flex-1 overflow-hidden">
-        <Editor
-          basePath={PROMPTS_BASE_PATH}
-          language={language}
-          onChange={handleEditorChange}
-          showSidebar={false}
-          showTabs={false}
-          showToolbar={false}
-          value={content}
-        />
-      </div>
+      <Editor
+        basePath={PROMPTS_BASE_PATH}
+        language={language}
+        onChange={handleEditorChange}
+        // showSidebar={false}
+        // showTabs={false}
+        // showToolbar={false}
+        value={content}
+        wrapperProps={{ className: 'flex-1' }}
+      />
     </main>
   );
 }

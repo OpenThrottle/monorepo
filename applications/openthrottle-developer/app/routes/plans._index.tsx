@@ -162,7 +162,7 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <main className="gap-8 p-4 md:p-8 lg:p-12 relative flex flex-col max-w-7xl mx-auto w-full">
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Total" value={totalCount} />
         <OpenThrottleStatCard
@@ -172,11 +172,11 @@ export default function Index(props: Route.ComponentProps) {
         <OpenThrottleStatCard title="Completed (all)" value={completedCount} />
       </div>
 
-      <h1 className="text-xl mb-2 mt-12 text-highlight">Plans</h1>
+      {/* <h1 className="text-xl mb-2 mt-12 text-highlight">Plans</h1> */}
       <PlansToolbar
         assigneeOptions={assigneeOptions}
         assignees={assignees}
-        className="mb-4"
+        // className="my-8"
         limit={limit}
         page={page}
         sortBy={sortBy}

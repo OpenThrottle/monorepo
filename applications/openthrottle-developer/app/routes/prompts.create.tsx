@@ -102,10 +102,7 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main
-      className="relative h-full flex flex-col"
-      data-testid="prompts-create"
-    >
+    <main className="flex flex-col flex-1" data-testid="prompts-create">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
@@ -242,14 +239,12 @@ export default function Index(props: Route.ComponentProps) {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-hidden">
-        <EditorWindow
-          className="h-full"
-          language="markdown"
-          onChange={handleEditorChange}
-          value={content}
-        />
-      </div>
+      <EditorWindow
+        language="markdown"
+        onChange={handleEditorChange}
+        value={content}
+        wrapperProps={{ className: 'flex-1' }}
+      />
     </main>
   );
 }

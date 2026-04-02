@@ -103,12 +103,15 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-6 relative h-full" data-testid="prompts-index">
-      <h1 className="text-xl font-bold my-4">Prompts</h1>
+    <main
+      className="gap-8 p-4 md:p-8 lg:p-12 relative flex flex-1 flex-col max-w-7xl mx-auto w-full"
+      data-testid="prompts-index"
+    >
+      {/* <h1 className="text-xl font-bold my-4">Prompts</h1>
       <p className="text-muted-foreground mb-6">
         Manage your AI workflow documents including agents, commands, prompts,
         rules, and skills.
-      </p>
+      </p> */}
 
       <PromptToolbar
         className="mb-6"
@@ -135,12 +138,14 @@ export default function Index(props: Route.ComponentProps) {
           ) : null}
         </>
       ) : (
-        <div
-          className="text-center py-12 text-muted-foreground"
-          data-testid="prompts-empty"
-        >
-          <p className="text-lg">No prompts found.</p>
-          <p className="mt-2">Create your first prompt to get started.</p>
+        <div className="flex flex-col flex-1 justify-center">
+          <div
+            className="text-center py-12 text-muted-foreground"
+            data-testid="prompts-empty"
+          >
+            <p className="text-lg">No prompts found.</p>
+            <p className="mt-2">Create your first prompt to get started.</p>
+          </div>
         </div>
       )}
     </main>

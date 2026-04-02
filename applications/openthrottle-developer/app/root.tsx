@@ -195,6 +195,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Setup
   const env = data?.env ?? {};
   const isAuthRoute = pathname.startsWith('/auth');
+  const isPromptsRoute = pathname.startsWith('/prompts');
   const html = `window.env = ${JSON.stringify(env)}`;
 
   const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
@@ -263,7 +264,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
               {!isAuthRoute && <GlobalHeader />}
               <main className="flex flex-1 flex-col">{children}</main>
-              {!isAuthRoute && (
+              {!isAuthRoute && !isPromptsRoute && (
                 <>
                   <GlobalMetrics />
                   <GlobalFooter health={data?.serverHealth} />
