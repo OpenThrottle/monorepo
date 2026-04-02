@@ -1573,10 +1573,6 @@ export enum RalphNestedDebugCli {
   Verbose = 'verbose',
 }
 
-/**
- * Optional Ralph / workflow-ralph runtime tuning for queued plan runs (iterations, model, backend, etc.).
- * When set, workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
- */
 export type RalphPlanRunTuningInput = {
   /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
   backend?: InputMaybe<Scalars['String']['input']>;
