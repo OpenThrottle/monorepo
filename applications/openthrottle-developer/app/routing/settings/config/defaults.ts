@@ -1,0 +1,1 @@
+export const DEFAULT_SETTINGS = 'DEFAULT_SETTINGS';
