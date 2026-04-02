@@ -85,4 +85,51 @@ describe('cancelPlanRunJobsForPlan', () => {
     expect(result.lockedActiveJobIds).toEqual(['j-active']);
     expect(getState).toHaveBeenCalledOnce();
   });
+
+  test('removes multiple matching run-plan jobs', async () => {
+    const remove1 = vi.fn().mockResolvedValue(undefined);
+    const remove2 = vi.fn().mockResolvedValue(undefined);
+    const getJobs = vi.fn().mockResolvedValue([
+      {
+        data: { planId: 'plan-1' },
+        id: 'a',
+        name: PLAN_RUN_JOB_NAME,
+        remove: remove1,
+      },
+      {
+        data: { planId: 'plan-1' },
+        id: 'b',
+        name: PLAN_RUN_JOB_NAME,
+        remove: remove2,
+      },
+    ]);
+    const queue = createMock<Queue<RunPlanJobData, void>>({ getJobs });
+
+    const result = await cancelPlanRunJobsForPlan(queue, 'plan-1');
+
+    expect(result.matchingJobCount).toBe(2);
+    expect(result.removedJobIds).toEqual(['a', 'b']);
+    expect(remove1).toHaveBeenCalledOnce();
+    expect(remove2).toHaveBeenCalledOnce();
+  });
+
+  test('when remove fails and state is not active, outcome is skipped (no locked id)', async () => {
+    const remove = vi.fn().mockRejectedValue(new Error('transient'));
+    const getState = vi.fn().mockResolvedValue('waiting');
+    const job = {
+      data: { planId: 'plan-1' },
+      getState,
+      id: 'j-w',
+      name: PLAN_RUN_JOB_NAME,
+      remove,
+    };
+    const getJobs = vi.fn().mockResolvedValue([job]);
+    const queue = createMock<Queue<RunPlanJobData, void>>({ getJobs });
+
+    const result = await cancelPlanRunJobsForPlan(queue, 'plan-1');
+
+    expect(result.removedJobIds).toEqual([]);
+    expect(result.lockedActiveJobIds).toEqual([]);
+    expect(getState).toHaveBeenCalledOnce();
+  });
 });

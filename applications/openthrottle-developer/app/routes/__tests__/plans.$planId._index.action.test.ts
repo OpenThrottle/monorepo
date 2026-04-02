@@ -176,4 +176,54 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
     );
     expect(result).toEqual({ cancelPlanRun: cancelPayload });
   });
+
+  test('returns cancelPlanRunError when GraphQL throws', async () => {
+    mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('network down'));
+
+    const formData = new FormData();
+    formData.set('intent', 'cancelPlanRun');
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(result).toEqual({ cancelPlanRunError: 'network down' });
+  });
+
+  test('returns cancelPlanRunError when cancelPlanRun is missing from response', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({ cancelPlanRun: null });
+
+    const formData = new FormData();
+    formData.set('intent', 'cancelPlanRun');
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(result).toEqual({
+      cancelPlanRunError: 'Failed to cancel plan run.',
+    });
+  });
 });
