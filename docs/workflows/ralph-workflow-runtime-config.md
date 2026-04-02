@@ -1,32 +1,46 @@
 # Ralph workflow runtime configuration (design note)
 
-**Scope:** How operators configure `workflow-ralph` runs—execution agent, iteration limits, and (later) custom prompts—without hard-coding a single path. Complements the workflow behavior in [`ralph-design.md`](./ralph-design.md) and [`tools/workflows/README.md`](../../tools/workflows/README.md).
+**Scope:** How operators configure `workflow-ralph` runs without hard-coding a single path. Complements [`ralph-design.md`](./ralph-design.md) and [`tools/workflows/README.md`](../../tools/workflows/README.md).
+
+## Mental model: three independent knobs
+
+Think in three layers. They answer different questions; mixing them causes confusion (e.g. a “Marketing **agent**” in product language is usually a **prompt profile**, not the binary that runs the loop).
+
+| Layer                    | Question                                  | Role                                                                                                                                                                                                      |
+| ------------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Prompt**            | _How should the model approach the work?_ | Supplies context, persona, and constraints—how to read the plan, which tools matter, tone, and domain (e.g. marketing copy vs SEO vs default Ralph). **Default:** Ralph (`/agents/ralph` via `--prompt`). |
+| **2. Execution backend** | _Which tool runs each agentic iteration?_ | The process that actually invokes the LLM and tools (today: Cursor’s agent CLI; **directionally:** other runners such as Claude Code, Codex, etc., behind one interface).                                 |
+| **3. Run tuning**        | _How long and how loud?_                  | Iteration cap, timeouts, debug, model preset when the backend supports it, project context, etc.—anything useful from `pnpm exec workflow-ralph --help`.                                                  |
+
+**Why separate prompt from backend:** A “SEO prompt” or “Marketing prompt” is a **content and behavior preset** (layer 1). Choosing **Cursor vs another runner** (layer 2) is an **integration and capability** choice. You should be able to pair a given prompt with a given backend where supported, subject to what that backend can load and how it maps `--prompt` / files.
 
 ## Goals
 
-- **Selectable execution agent** — Choose which Cursor/agent profile runs the loop (e.g. different models or agent presets for cost vs. quality), without forking Ralph into multiple binaries.
-- **Configurable iteration cap** — Operators must be able to bound work per run (`--iterations` already exists; defaults and programmatic callers should stay aligned).
-- **Path toward optional custom prompts** — Support system/user prompt overrides when the runner can apply them, without blocking an MVP that uses the default `/agents/ralph` (or `--prompt`) behavior.
+- **Selectable prompt profile** — Point at the command or file that defines _how_ to tackle the plan (default Ralph; optional profiles such as domain- or team-specific agents implemented as Cursor commands or shared prompt files).
+- **Selectable execution backend** — Run the same Ralph loop with a chosen runner (Cursor today; document and extend consistently for other CLIs when added).
+- **Configurable run limits and flags** — Iterations, timeouts, model selection where applicable, debug, and other flags stay discoverable and overridable (`pnpm exec workflow-ralph --help`).
 
 ## Config surface (principles)
 
-- **Ad-hoc runs:** Prefer **explicit CLI flags** on `pnpm exec workflow-ralph` so invocations are copy-pasteable and observable in logs. Current entry points: `--plan` / `--task`, plus options such as `--iterations`, `--model`, `--prompt`, `--project`, `--iteration-timeout`, and debug flags (see `pnpm exec workflow-ralph --help`).
-- **Defaults:** Use **environment variables** and, where helpful, a **small config file** (e.g. repo-local) so teams do not repeat the same flags. Precedence should be documented when implemented: typically **CLI overrides env overrides file defaults**.
-- **Composition:** Nested invocations (e.g. `runChildJob` spawning `workflow-ralph` from BullMQ or worktrees) must forward the same options so behavior matches a manual CLI run.
+- **Ad-hoc runs:** Prefer **explicit CLI flags** so invocations are copy-pasteable and visible in logs. Today: `--plan` / `--task`, `--prompt`, `--model`, `--iterations`, `--project`, `--iteration-timeout`, debug flags (see `--help`).
+- **Defaults:** **Environment variables** and, when useful, a **small config file** (e.g. repo-local) so teams do not repeat flags. Precedence when implemented: **CLI overrides env overrides file defaults**.
+- **Composition:** Nested invocations (`runChildJob`, processors, worktrees) must **forward the same three layers** so automated runs match manual CLI behavior.
 
 ## Phased scope
 
-1. **Phase 1 — Agent + iteration limit as first-class options** — Expose execution agent selection and iteration limits consistently in the CLI, env, and any programmatic API (`child-job`, processors). Keep backward compatibility: omitting new flags preserves today’s defaults.
-2. **Phase 2 — Prompt overrides behind a clear interface** — Once the runner can inject arbitrary system/user content safely, add overrides via **file path** or **stdin** (and document interaction with `--prompt`). Do not duplicate agent definitions in multiple places; reference existing Cursor command/prompt files or a single source of truth.
+1. **Phase 1 — Prompt + iterations + flags** — Treat `--prompt` (default Ralph) and iteration/timeout/model/debug flags as first-class across CLI, env, and programmatic callers. Keep backward compatibility when options are omitted.
+2. **Phase 2 — Execution backend abstraction** — One clear way to select the runner (Cursor vs others) with shared semantics for plan/task injection and iteration loop; avoid N forked binaries.
+3. **Phase 3 — Richer prompt delivery** — When safe, support prompt overrides via **file path** or **stdin** in addition to command-style names, without duplicating canonical prompt sources.
 
 ## Non-goals and risks
 
-- **Avoid duplicating agent definitions** — One canonical prompt path (e.g. `.cursor/commands/agents/ralph.md`) plus optional overrides; no parallel “Ralph prompt v5” in code unless migrated deliberately.
-- **Backward compatibility** — Existing `pnpm exec workflow-ralph --plan <uuid>` (and `--task`) invocations without new flags must behave as they do today.
-- **Scope creep** — Full “Ralph as a service” UI or arbitrary remote config is out of scope for this note; focus on CLI/config clarity for operators and integrators.
+- **Avoid duplicating prompt sources** — One canonical Ralph prompt (e.g. `.cursor/commands/agents/ralph.md`) plus named variants; no shadow copies in code unless migrated deliberately.
+- **Avoid naming collisions** — In docs and UI, prefer **prompt profile** / **prompt** for layer 1 and **runner** / **execution backend** for layer 2 so “agent” is not overloaded.
+- **Backward compatibility** — `pnpm exec workflow-ralph --plan <uuid>` (and `--task`) without extra flags must behave as today.
+- **Scope creep** — Full hosted “Ralph as a service” or arbitrary remote config is out of scope for this note.
 
 ## References
 
 - Canonical workflow: [`ralph-design.md`](./ralph-design.md)
 - Package README and debugging: [`tools/workflows/README.md`](../../tools/workflows/README.md)
-- Help text: `pnpm exec workflow-ralph --help` (see `tools/workflows/src/config/messages.ts`)
+- CLI surface: `pnpm exec workflow-ralph --help` (see `tools/workflows/src/config/messages.ts`)

@@ -237,7 +237,9 @@ export class PlansProcessor
   async onPlanJobStalled(jobId: string): Promise<void> {
     const job = await this.plansQueue.getJob(jobId);
     const planId = job?.data?.planId;
+
     if (typeof planId !== 'string') return;
+
     await this.resetPlanStatusToQueued(planId, 'stalled', jobId);
   }
 
@@ -248,6 +250,7 @@ export class PlansProcessor
     try {
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
+
       return plan?.status ?? null;
     } catch {
       return null;
@@ -443,10 +446,13 @@ export class PlansProcessor
 
       await repo.save(entity);
     } catch (error) {
-      this.logger.warn(
-        `Failed to append task-run metrics to plan output: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
-        PlansProcessor.name,
-      );
+      const isError = error instanceof Error;
+
+      this.logger.warn(`Failed to append task-run metrics to plan output`, {
+        message: isError ? error.message : String(error),
+        name: PlansProcessor.name,
+        planId,
+      });
     }
   }
 
