@@ -565,6 +565,51 @@ describe('PlansResolver', () => {
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
+
+    /**
+     * @description After kill/cancel, plan is PENDING and queue job is gone; a new Run plan must
+     * enqueue successfully (no stuck state blocking a follow-up run).
+     */
+    test('enqueuePlanRun succeeds after cancelPlanRun left plan PENDING (regression: new run after kill)', async () => {
+      mockPlanRunCancellationAbort.mockReturnValue(false);
+      const remove = vi.fn().mockResolvedValue(undefined);
+      mockGetJobs.mockResolvedValueOnce([
+        {
+          data: { planId: mockPlan.id },
+          getState: vi.fn(),
+          id: 'job-99',
+          name: 'run-plan',
+          remove,
+        },
+      ]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne)
+        .mockResolvedValueOnce(mockPlan)
+        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+
+      await resolver.cancelPlanRun({ planId: mockPlan.id });
+
+      expect(remove).toHaveBeenCalledOnce();
+
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockPlan,
+        status: 'PENDING',
+      });
+      mockAdd.mockClear();
+      vi.mocked(repo.update).mockClear();
+
+      const enqueueResult = await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+      });
+
+      expect(enqueueResult.planId).toBe(mockPlan.id);
+      expect(mockAdd).toHaveBeenCalledTimes(1);
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: mockPlan.id },
+        { status: 'QUEUED' },
+      );
+    });
   });
 
   describe('cancelPlanRun', () => {
