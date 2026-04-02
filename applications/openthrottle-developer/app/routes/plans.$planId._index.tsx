@@ -371,6 +371,11 @@ export const action = async (args: Route.ActionArgs) => {
   const priority =
     priorityRaw != null && priorityRaw !== '' ? Number(priorityRaw) : 1; // Default to interactive priority (1) for UI-triggered runs
 
+  // EnqueuePlanRunInput is planId + priority only today. When workflow runtime
+  // configuration lands (plan e8ba3608-c560-4228-9bd1-39994897213c), read
+  // workflow-ralph options from formData (or a dedicated field) and pass through
+  // once the GraphQL schema supports them.
+
   try {
     const result = await executeGraphqlWithAuth(
       args.request,

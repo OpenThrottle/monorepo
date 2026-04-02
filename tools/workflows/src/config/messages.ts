@@ -17,13 +17,16 @@ Required (one of):
   ${COLORS.cyan}--task ${COLORS.gray}<uuid>${COLORS.reset}  Cortex task ID (UUID); task-centric mode  ${COLORS.gray}ex: 45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}
 
 Options:
+  ${COLORS.cyan}--backend ${COLORS.gray}<id>${COLORS.reset}        Execution backend (runner) for each iteration  ${COLORS.gray}default: ${COLORS.blue}cursor${COLORS.reset} (Cursor ${COLORS.gray}cursor-agent${COLORS.reset})
   ${COLORS.cyan}--debug ${COLORS.gray}[=verbose]${COLORS.reset}   Shim debug to stderr (lines prefixed ${COLORS.gray}[workflow-ralph:debug]${COLORS.reset}; see Environment below)
   ${COLORS.cyan}--help ${COLORS.reset}              Show this message
   ${COLORS.cyan}--iteration-timeout ${COLORS.gray}<seconds>${COLORS.reset}  Per-iteration timeout (non-interactive only)  ${COLORS.gray}e.g. 1800${COLORS.reset}
   ${COLORS.cyan}--iterations ${COLORS.gray}<number>${COLORS.reset}    Number of iterations to run  ${COLORS.gray}default: ${COLORS.blue}10${COLORS.reset}
-  ${COLORS.cyan}--model ${COLORS.gray}<model> ${COLORS.reset}         Cursor model to use  ${COLORS.gray}default: ${COLORS.blue}'auto'${COLORS.reset}
+  ${COLORS.cyan}--model ${COLORS.gray}<model> ${COLORS.reset}         Model preset when the backend supports it (Cursor: ${COLORS.gray}--model${COLORS.reset})  ${COLORS.gray}default: ${COLORS.blue}'auto'${COLORS.reset}
   ${COLORS.cyan}--project ${COLORS.gray}<name>${COLORS.reset}          NX project name (from project graph; applications + packages)
-  ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt for the agent  ${COLORS.gray}default: ${COLORS.blue}/agents/ralph${COLORS.reset}
+  ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt profile (command-style path for Cursor)  ${COLORS.gray}default: ${COLORS.blue}/agents/ralph${COLORS.reset}
+  ${COLORS.cyan}--prompt-file ${COLORS.gray}<path>${COLORS.reset}     Read layer-1 prompt text from a UTF-8 file (mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset})
+  ${COLORS.cyan}--prompt-stdin ${COLORS.reset}           Read layer-1 prompt text from stdin (pipe; mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset} / ${COLORS.cyan}--prompt-file${COLORS.reset})
   ${COLORS.cyan}--verbose ${COLORS.reset}           Verbose shim debug (same as ${RALPH_DEBUG_ENV}=verbose or ${RALPH_VERBOSE_ENV}=1)
 
 Environment (debug shim; optional — omit both flags to rely on env only):
@@ -31,12 +34,14 @@ Environment (debug shim; optional — omit both flags to rely on env only):
   If ${COLORS.cyan}--debug${COLORS.reset} or ${COLORS.cyan}--verbose${COLORS.reset} appears on the command line, it overrides these variables for this run.
 
 Environment (prompt profile + run tuning; optional):
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.backend}${COLORS.reset}   Default execution backend id (${COLORS.green}cursor${COLORS.reset} today), same as ${COLORS.cyan}--backend${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.prompt}${COLORS.reset}   Default prompt profile (command-style), same as ${COLORS.cyan}--prompt${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.promptFile}${COLORS.reset}   Default prompt file path (UTF-8), same as ${COLORS.cyan}--prompt-file${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterations}${COLORS.reset}   Default iteration count (positive integer)
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterationTimeout}${COLORS.reset}   Per-iteration timeout in ${COLORS.green}seconds${COLORS.reset} (non-interactive), same as ${COLORS.cyan}--iteration-timeout${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.model}${COLORS.reset}   Default Cursor model, same as ${COLORS.cyan}--model${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.project}${COLORS.reset}   Default NX project, same as ${COLORS.cyan}--project${COLORS.reset}
-  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (JSON: prompt, iterations, iterationTimeout, model, project).
+  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (JSON: backend, prompt, promptFile, iterations, iterationTimeout, model, project — use either ${COLORS.cyan}prompt${COLORS.reset} or ${COLORS.cyan}promptFile${COLORS.reset}, not both).
   Precedence: ${COLORS.green}CLI flags${COLORS.reset} override ${COLORS.green}environment${COLORS.reset} override ${COLORS.green}file${COLORS.reset} override built-in defaults.
 `;
 

@@ -8,6 +8,7 @@
 
 import { spawnSync } from 'child_process';
 import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { buildWorkflowRalphRunTuningArgv } from '@tools/workflows';
 import type { ChildJobInput, ChildJobResult } from '../types/worktree';
 import {
   ensureCortexReachable,
@@ -15,58 +16,6 @@ import {
   updatePlanStatus,
 } from './cortex-client';
 import type { CortexRalphConfig } from './cortex-client';
-
-const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph' as const;
-const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto' as const;
-
-/**
- * @description Appends workflow-ralph run-tuning argv (aligned with @tools/workflows runChildJob).
- */
-function appendWorkflowRalphRunTuningArgs(
-  ralphArgs: string[],
-  input: Pick<
-    ChildJobInput,
-    'iterationTimeoutSeconds' | 'iterations' | 'model' | 'project' | 'prompt'
-  >,
-): void {
-  if (input.iterations !== undefined && input.iterations !== null) {
-    ralphArgs.push('--iterations', String(input.iterations));
-  }
-
-  const prompt = input.prompt?.trim();
-  if (
-    prompt !== undefined &&
-    prompt !== '' &&
-    prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT
-  ) {
-    ralphArgs.push('--prompt', prompt);
-  }
-
-  const model = input.model?.trim();
-  if (
-    model !== undefined &&
-    model !== '' &&
-    model !== WORKFLOW_RALPH_DEFAULT_MODEL
-  ) {
-    ralphArgs.push('--model', model);
-  }
-
-  const project = input.project?.trim();
-  if (project !== undefined && project !== '') {
-    ralphArgs.push('--project', project);
-  }
-
-  if (
-    input.iterationTimeoutSeconds !== undefined &&
-    input.iterationTimeoutSeconds !== null &&
-    input.iterationTimeoutSeconds >= 1
-  ) {
-    ralphArgs.push(
-      '--iteration-timeout',
-      String(Math.floor(input.iterationTimeoutSeconds)),
-    );
-  }
-}
 
 /**
  * @description Runs git in the worktree and returns stdout trimmed, or undefined on failure.
@@ -91,6 +40,7 @@ export async function runChildJob(
   input: ChildJobInput,
 ): Promise<ChildJobResult> {
   const {
+    backend,
     handoff,
     iterationTimeoutSeconds,
     iterations,
@@ -98,6 +48,8 @@ export async function runChildJob(
     planId,
     project,
     prompt,
+    promptFile,
+    ralphDebugCli,
   } = input;
   const { worktreePath } = handoff;
 
@@ -120,14 +72,22 @@ export async function runChildJob(
     return { ok: false, reason: `Cortex unreachable: ${msg}` };
   }
 
-  const ralphArgs = ['exec', 'workflow-ralph', '--plan', planId];
-  appendWorkflowRalphRunTuningArgs(ralphArgs, {
-    iterationTimeoutSeconds,
-    iterations,
-    model,
-    project,
-    prompt,
-  });
+  const ralphArgs = [
+    'exec',
+    'workflow-ralph',
+    '--plan',
+    planId,
+    ...buildWorkflowRalphRunTuningArgv({
+      backend,
+      iterationTimeoutSeconds,
+      iterations,
+      model,
+      project,
+      prompt,
+      promptFile,
+      ralphDebugCli,
+    }),
+  ];
 
   const ralph = spawnSync('pnpm', ralphArgs, {
     cwd: worktreePath,

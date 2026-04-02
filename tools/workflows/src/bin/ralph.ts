@@ -207,11 +207,13 @@ export const main = async (): Promise<void> => {
 
     const iterationConfig: RunIterationConfig = {
       agentPrompt,
+      backend: parsedArgs.backend,
       iteration,
       model: parsedArgs.model,
     };
-    ralphDebugLogger.debug('main: invoking cursor-agent', {
+    ralphDebugLogger.debug('main: invoking iteration runner', {
       agentPromptLen: agentPrompt.length,
+      backend: parsedArgs.backend,
       iteration,
       nonInteractive: process.stdin.isTTY !== true,
       timeoutMs: parsedArgs.iterationTimeoutMs ?? null,
@@ -227,13 +229,10 @@ export const main = async (): Promise<void> => {
           })
         : runIteration(iterationConfig);
 
-    ralphDebugLogger.debug(
-      'main: cursor-agent finished (buffer ready for parse)',
-      {
-        iteration,
-        resultLen: result.length,
-      },
-    );
+    ralphDebugLogger.debug('main: iteration runner finished (buffer ready for parse)', {
+      iteration,
+      resultLen: result.length,
+    });
 
     const completeTaskIds = parseRalphCompleteTaskSignals(result);
     const taskIdLower = (id: string): string => id.toLowerCase();

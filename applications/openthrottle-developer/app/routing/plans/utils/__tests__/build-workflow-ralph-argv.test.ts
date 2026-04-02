@@ -1,0 +1,224 @@
+import { describe, expect, test } from 'vitest';
+import {
+  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+  WORKFLOW_RALPH_DEFAULT_MODEL,
+  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  buildWorkflowRalphOptionArgs,
+  formatWorkflowRalphCommandLine,
+  getDefaultWorkflowRalphRunOptionsInput,
+  isCortexUuid,
+  type WorkflowRalphRunOptionsInput,
+} from '../build-workflow-ralph-argv';
+
+const basePlanInput = (
+  overrides: Partial<WorkflowRalphRunOptionsInput> = {},
+): WorkflowRalphRunOptionsInput => ({
+  debugCli: 'omit',
+  executionBackend: 'cursor',
+  iterationTimeoutSeconds: undefined,
+  iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+  model: WORKFLOW_RALPH_DEFAULT_MODEL,
+  planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+  project: '',
+  prompt: WORKFLOW_RALPH_DEFAULT_PROMPT,
+  targetMode: 'plan',
+  taskId: '',
+  ...overrides,
+});
+
+const baseTaskInput = (
+  overrides: Partial<WorkflowRalphRunOptionsInput> = {},
+): WorkflowRalphRunOptionsInput => ({
+  debugCli: 'omit',
+  executionBackend: 'cursor',
+  iterationTimeoutSeconds: undefined,
+  iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+  model: WORKFLOW_RALPH_DEFAULT_MODEL,
+  planId: '',
+  project: '',
+  prompt: WORKFLOW_RALPH_DEFAULT_PROMPT,
+  targetMode: 'task',
+  taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
+  ...overrides,
+});
+
+describe('isCortexUuid', () => {
+  test('accepts plausible Cortex UUID v4 strings (trimmed)', () => {
+    expect(
+      isCortexUuid('  0c2720a9-920f-4b16-865a-f803eb444e18  '),
+    ).toBe(true);
+    expect(isCortexUuid('77cb14a0-5eb0-4061-87ea-d618b85e8818')).toBe(true);
+  });
+
+  test('rejects non-matching strings', () => {
+    expect(isCortexUuid('not-a-uuid')).toBe(false);
+    expect(isCortexUuid('')).toBe(false);
+    expect(isCortexUuid('00000000-0000-9000-8000-000000000000')).toBe(false);
+  });
+});
+
+describe('getDefaultWorkflowRalphRunOptionsInput', () => {
+  test('uses plan target when only planId is provided', () => {
+    const input = getDefaultWorkflowRalphRunOptionsInput({
+      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+    });
+    expect(input.targetMode).toBe('plan');
+    expect(input.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
+    expect(input.taskId).toBe('');
+  });
+
+  test('uses task target when only taskId is provided', () => {
+    const input = getDefaultWorkflowRalphRunOptionsInput({
+      taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
+    });
+    expect(input.targetMode).toBe('task');
+    expect(input.taskId).toBe('6a8bff52-650b-408b-b77b-ad27064cd9d1');
+    expect(input.planId).toBe('');
+  });
+
+  test('prefers plan mode when both planId and taskId are set', () => {
+    const input = getDefaultWorkflowRalphRunOptionsInput({
+      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+      taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
+    });
+    expect(input.targetMode).toBe('plan');
+  });
+});
+
+describe('buildWorkflowRalphOptionArgs', () => {
+  test('emits --plan with minimal flags when options match CLI defaults', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput())).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+    ]);
+  });
+
+  test('emits --task for task-centric mode', () => {
+    expect(buildWorkflowRalphOptionArgs(baseTaskInput())).toEqual([
+      '--task',
+      '6a8bff52-650b-408b-b77b-ad27064cd9d1',
+    ]);
+  });
+
+  test('includes --prompt when prompt differs from default', () => {
+    const args = buildWorkflowRalphOptionArgs(
+      basePlanInput({ prompt: '/agents/custom' }),
+    );
+    expect(args).toContain('--prompt');
+    expect(args).toContain('/agents/custom');
+  });
+
+  test('omits --iterations when value is the CLI default (10)', () => {
+    const args = buildWorkflowRalphOptionArgs(basePlanInput());
+    expect(args).not.toContain('--iterations');
+  });
+
+  test('includes --iterations when not default', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ iterations: 3 }))).toEqual(
+      ['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18', '--iterations', '3'],
+    );
+  });
+
+  test('includes --iteration-timeout only when seconds are at least 1', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ iterationTimeoutSeconds: undefined }),
+      ),
+    ).not.toContain('--iteration-timeout');
+
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ iterationTimeoutSeconds: 0 })),
+    ).not.toContain('--iteration-timeout');
+
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ iterationTimeoutSeconds: 99.6 }),
+      ),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--iteration-timeout',
+      '99',
+    ]);
+  });
+
+  test('omits --model for default and empty trimmed model', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ model: 'auto' }))).not.toContain(
+      '--model',
+    );
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ model: '   ' }))).not.toContain(
+      '--model',
+    );
+  });
+
+  test('includes --model for non-default preset', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ model: 'gpt-4' }))).toEqual(
+      [
+        '--plan',
+        '0c2720a9-920f-4b16-865a-f803eb444e18',
+        '--model',
+        'gpt-4',
+      ],
+    );
+  });
+
+  test('includes --project when non-empty', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ project: 'openthrottle-developer' })),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--project',
+      'openthrottle-developer',
+    ]);
+  });
+
+  test('maps debug CLI selection to --debug or --verbose', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'debug' }))).toContain(
+      '--debug',
+    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'verbose' })),
+    ).toContain('--verbose');
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ debugCli: 'omit' }))).toEqual(
+      ['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18'],
+    );
+  });
+
+  test('trims plan and task ids in argv', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ planId: '  0c2720a9-920f-4b16-865a-f803eb444e18  ' }),
+      )[1],
+    ).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
+  });
+});
+
+describe('formatWorkflowRalphCommandLine', () => {
+  test('returns bare command when there are no option args', () => {
+    expect(formatWorkflowRalphCommandLine([])).toBe('pnpm exec workflow-ralph');
+  });
+
+  test('joins argv segments with single spaces', () => {
+    expect(
+      formatWorkflowRalphCommandLine([
+        '--plan',
+        '0c2720a9-920f-4b16-865a-f803eb444e18',
+        '--iterations',
+        '2',
+      ]),
+    ).toBe(
+      'pnpm exec workflow-ralph --plan 0c2720a9-920f-4b16-865a-f803eb444e18 --iterations 2',
+    );
+  });
+
+  test('quotes args that contain shell-sensitive characters', () => {
+    const line = formatWorkflowRalphCommandLine([
+      '--prompt',
+      '/path with spaces/ralph',
+    ]);
+    expect(line).toBe(
+      "pnpm exec workflow-ralph --prompt '/path with spaces/ralph'",
+    );
+  });
+});

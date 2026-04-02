@@ -30,7 +30,7 @@ Think in three layers. They answer different questions; mixing them causes confu
 
 1. **Phase 1 — Prompt + iterations + flags** — Treat `--prompt` (default Ralph) and iteration/timeout/model/debug flags as first-class across CLI, env, and programmatic callers. Keep backward compatibility when options are omitted.
 2. **Phase 2 — Execution backend abstraction** — One clear way to select the runner (Cursor vs others) with shared semantics for plan/task injection and iteration loop; avoid N forked binaries.
-3. **Phase 3 — Richer prompt delivery** — When safe, support prompt overrides via **file path** or **stdin** in addition to command-style names, without duplicating canonical prompt sources.
+3. **Phase 3 — Richer prompt delivery** — **Implemented:** In addition to command-style `--prompt` (default `/agents/ralph`), you can pass prompt **text** via `--prompt-file <path>` (UTF-8 file, path relative to cwd or absolute) or `--prompt-stdin` (pipe stdin; not on a TTY). Defaults: `WORKFLOW_RALPH_PROMPT_FILE` and optional `promptFile` in `.workflow-ralph.json` (mutually exclusive with `WORKFLOW_RALPH_PROMPT` / `prompt` in the same layer). Precedence remains **CLI > env > file > built-ins**. `--prompt`, `--prompt-file`, and `--prompt-stdin` are mutually exclusive on the CLI. Nested runs (`runChildJob`) forward `promptFile` as `--prompt-file` when set (over `--prompt`). Point `--prompt-file` at the canonical command file (e.g. `.cursor/commands/agents/ralph.md`) instead of copying it.
 
 ## Non-goals and risks
 

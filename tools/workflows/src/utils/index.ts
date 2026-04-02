@@ -50,17 +50,22 @@ export const promptConfirmation = (): Promise<boolean> => {
 
 export const showConfiguration = (parsedArgs: RalphArgs): void => {
   const {
+    backend,
     iterationTimeoutMs,
     iterations,
     model,
     plan,
     project,
-    prompt,
+    promptProfileKind,
+    promptProfileLabel,
     ralphDebugLevel,
     task,
   } = parsedArgs;
 
   console.log(`Workflow configuration:\n`);
+  console.log(
+    ` - 🖥️ execution backend: ${COLORS.green}${backend}${COLORS.reset} (runner)`,
+  );
   console.log(` - 🔁 iterations: ${COLORS.green}${iterations}${COLORS.reset}`);
   if (iterationTimeoutMs !== undefined && iterationTimeoutMs >= 1) {
     const sec = Math.round(iterationTimeoutMs / 1000);
@@ -73,7 +78,9 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
   if (project) {
     console.log(` - 📦 project: ${COLORS.green}${project}${COLORS.reset}`);
   }
-  console.log(` - 💬 prompt: ${COLORS.green}${prompt}${COLORS.reset}`);
+  console.log(
+    ` - 💬 prompt profile: ${COLORS.green}${promptProfileLabel}${COLORS.reset} (${promptProfileKind})`,
+  );
   if (task) {
     const message = ` - 📌 task: ${COLORS.green}${task}${COLORS.reset} (task-centric)`;
     console.log(message);

@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { COLORS } from '../config/index';
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showNxUsage, showRalphUsage } from '../utils/index';
@@ -7,11 +8,22 @@ import {
   readRalphDebugConfigFromEnv,
   setRalphDebugLevel,
 } from './ralph-debug-logger';
+import type { RalphExecutionBackendId } from './ralph-execution-backend';
+import {
+  parseRalphExecutionBackendId,
+  WORKFLOW_RALPH_DEFAULT_BACKEND,
+} from './ralph-execution-backend';
 import {
   mergeRalphRuntimeSeed,
   WORKFLOW_RALPH_DEFAULT_ITERATIONS,
   WORKFLOW_RALPH_DEFAULT_PROMPT,
 } from './ralph-runtime-config';
+import {
+  readRalphPromptFileUtf8,
+  readRalphPromptStdinUtf8,
+  resolveRalphPromptFromSeed,
+  type RalphPromptProfileKind,
+} from './ralph-prompt-resolution';
 
 /** RFC 4122 UUID v4 pattern: plan/task is Cortex plan or task ID when matching */
 const CORTEX_UUID_REGEX =
@@ -123,7 +135,9 @@ export const parseNxArgs = (): NxArgs => {
 };
 
 export interface RalphArgs {
-  /** Optional per-iteration timeout in ms (non-interactive only). When set, cursor-agent is killed after this duration. */
+  /** @description Layer 2: which runner invokes each iteration (default: Cursor `cursor-agent`). */
+  backend: RalphExecutionBackendId;
+  /** Optional per-iteration timeout in ms (non-interactive only). When set, the runner process is killed after this duration. */
   iterationTimeoutMs: number | undefined;
   iterations: number;
   model: string | undefined;
@@ -131,7 +145,12 @@ export interface RalphArgs {
   plan: string | undefined;
   /** Optional NX project name (from project graph). Validated against getNxProjectNames() when provided. */
   project: string | undefined;
+  /** Effective layer-1 prompt text (named path, file body, or stdin body). */
   prompt: string;
+  /** How {@link prompt} was resolved (named / file / stdin). */
+  promptProfileKind: RalphPromptProfileKind;
+  /** Short label for logs (command path, absolute file path, or `stdin`). */
+  promptProfileLabel: string;
   /** Effective Ralph shim debug level after env + CLI (see {@link setRalphDebugLevel}). */
   ralphDebugLevel: RalphDebugLevel;
   /** When set, Ralph runs in task-centric mode (single task). Plan can be omitted and resolved from the task. */
@@ -143,8 +162,10 @@ export interface RalphArgs {
  */
 export const parseRalphArgs = (): RalphArgs => {
   const args = process.argv.slice(2);
-  const seed = mergeRalphRuntimeSeed(process.cwd());
+  const cwd = process.cwd();
+  const seed = mergeRalphRuntimeSeed(cwd);
   const parsed: Partial<RalphArgs> = {
+    backend: seed.backend,
     iterationTimeoutMs: seed.iterationTimeoutMs,
     iterations: seed.iterations,
     model: seed.model,
@@ -155,6 +176,11 @@ export const parseRalphArgs = (): RalphArgs => {
 
   /** CLI override for shim debug; `verbose` wins over `debug` if both appear. */
   let cliDebug: 'none' | 'debug' | 'verbose' = 'none';
+
+  /** True when `--prompt` appeared on argv (not only from seed defaults). */
+  let explicitNamedPrompt = false;
+  let cliPromptFile: string | undefined;
+  let cliPromptStdin = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -216,7 +242,13 @@ export const parseRalphArgs = (): RalphArgs => {
       i++;
     } else if (arg === '--prompt' && i + 1 < args.length) {
       parsed.prompt = args[i + 1];
+      explicitNamedPrompt = true;
       i++;
+    } else if (arg === '--prompt-file' && i + 1 < args.length) {
+      cliPromptFile = args[i + 1];
+      i++;
+    } else if (arg === '--prompt-stdin') {
+      cliPromptStdin = true;
     } else if (arg === '--iteration-timeout' && i + 1 < args.length) {
       const value = parseInt(args[i + 1] ?? '', 10);
       if (isNaN(value) || value < 1) {
@@ -230,6 +262,9 @@ export const parseRalphArgs = (): RalphArgs => {
       i++;
     } else if (arg === '--project' && i + 1 < args.length) {
       parsed.project = args[i + 1];
+      i++;
+    } else if (arg === '--backend' && i + 1 < args.length) {
+      parsed.backend = parseRalphExecutionBackendId(args[i + 1] ?? '', 'cli');
       i++;
     } else if (arg.startsWith('--')) {
       throw new Error(`Unknown flag: ${arg}`);
@@ -253,6 +288,60 @@ export const parseRalphArgs = (): RalphArgs => {
   }
 
   /**
+   * Layer 1 — prompt profile: explicit CLI flags override seed (CLI > env > file > built-in).
+   * `--prompt-stdin` | `--prompt-file` | `--prompt` are mutually exclusive.
+   */
+  if (cliPromptStdin && cliPromptFile !== undefined) {
+    throw new Error(
+      `${COLORS.yellow}--prompt-stdin${COLORS.reset} cannot be combined with ${COLORS.yellow}--prompt-file${COLORS.reset}`,
+    );
+  }
+  if (cliPromptStdin && explicitNamedPrompt) {
+    throw new Error(
+      `${COLORS.yellow}--prompt-stdin${COLORS.reset} cannot be combined with ${COLORS.yellow}--prompt${COLORS.reset}`,
+    );
+  }
+  if (cliPromptFile !== undefined && explicitNamedPrompt) {
+    throw new Error(
+      `${COLORS.yellow}--prompt-file${COLORS.reset} cannot be combined with ${COLORS.yellow}--prompt${COLORS.reset}`,
+    );
+  }
+
+  let resolvedPrompt: string;
+  let promptProfileKind: RalphPromptProfileKind;
+  let promptProfileLabel: string;
+
+  if (cliPromptStdin) {
+    if (process.stdin.isTTY === true) {
+      throw new Error(
+        `${COLORS.yellow}--prompt-stdin${COLORS.reset} requires piped stdin (not a TTY). Example: ${COLORS.blue}cat my-prompt.md | pnpm exec workflow-ralph --plan <uuid> --prompt-stdin${COLORS.reset}`,
+      );
+    }
+    resolvedPrompt = readRalphPromptStdinUtf8();
+    promptProfileKind = 'stdin';
+    promptProfileLabel = 'stdin';
+  } else if (cliPromptFile !== undefined) {
+    const userPath = cliPromptFile.trim();
+    if (userPath === '') {
+      throw new Error(`--prompt-file requires a non-empty path`);
+    }
+    const absolute = resolve(cwd, userPath);
+    resolvedPrompt = readRalphPromptFileUtf8(cwd, userPath);
+    promptProfileKind = 'file';
+    promptProfileLabel = absolute;
+  } else if (explicitNamedPrompt) {
+    const named = (parsed.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT).trim();
+    resolvedPrompt = named;
+    promptProfileKind = 'named';
+    promptProfileLabel = named;
+  } else {
+    const fromSeed = resolveRalphPromptFromSeed(cwd, seed);
+    resolvedPrompt = fromSeed.prompt;
+    promptProfileKind = fromSeed.promptProfileKind;
+    promptProfileLabel = fromSeed.promptProfileLabel;
+  }
+
+  /**
    * CLI wins when any `--debug` / `--verbose` is present; otherwise use env
    * (same rules as {@link readRalphDebugConfigFromEnv}) so argv parsing is the single place that applies the effective level after import.
    */
@@ -266,12 +355,15 @@ export const parseRalphArgs = (): RalphArgs => {
   setRalphDebugLevel(effectiveDebugLevel);
 
   const result: RalphArgs = {
+    backend: parsed.backend ?? WORKFLOW_RALPH_DEFAULT_BACKEND,
     iterationTimeoutMs: parsed.iterationTimeoutMs,
     iterations: parsed.iterations ?? WORKFLOW_RALPH_DEFAULT_ITERATIONS,
     model: parsed.model,
     plan: parsed.plan,
     project: parsed.project,
-    prompt: parsed.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT,
+    prompt: resolvedPrompt,
+    promptProfileKind,
+    promptProfileLabel,
     ralphDebugLevel: ralphDebugLogger.level,
     task: parsed.task,
   };

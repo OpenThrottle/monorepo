@@ -2,7 +2,6 @@
  * @description Tests for child job: Ralph loop in worktree, branch/SHA, plan completion.
  */
 
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- spawn mocks need structural casts */
 import { spawn, spawnSync } from 'child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -241,6 +240,49 @@ describe('runChildJob', () => {
     }
   });
 
+  it('passes --verbose when ralphDebugCli is verbose', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      ralphDebugCli: 'verbose',
+    };
+    try {
+      await runChildJob(input);
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        [
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+          '--verbose',
+        ],
+        expect.objectContaining({ cwd: dir, shell: true }),
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
   it('passes run-tuning flags to pnpm exec workflow-ralph', async () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChild({ status: 0, stdout: '' }),
@@ -289,6 +331,51 @@ describe('runChildJob', () => {
           'my-app',
           '--iteration-timeout',
           '600',
+        ],
+        expect.objectContaining({ cwd: dir, shell: true }),
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('forwards --prompt-file when promptFile is set (takes precedence over prompt)', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      prompt: '/agents/seo',
+      promptFile: '.cursor/commands/agents/ralph.md',
+    };
+    try {
+      await runChildJob(input);
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        [
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+          '--prompt-file',
+          '.cursor/commands/agents/ralph.md',
         ],
         expect.objectContaining({ cwd: dir, shell: true }),
       );

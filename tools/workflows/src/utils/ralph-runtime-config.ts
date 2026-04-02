@@ -6,6 +6,11 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { RalphExecutionBackendId } from './ralph-execution-backend';
+import {
+  parseRalphExecutionBackendId,
+  WORKFLOW_RALPH_DEFAULT_BACKEND,
+} from './ralph-execution-backend';
 
 export const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph' as const;
 export const WORKFLOW_RALPH_DEFAULT_ITERATIONS = 10;
@@ -13,11 +18,14 @@ export const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto' as const;
 
 /** Environment variable names for run tuning and prompt profile (Phase 1). */
 export const WORKFLOW_RALPH_ENV = {
+  backend: 'WORKFLOW_RALPH_BACKEND',
   iterationTimeout: 'WORKFLOW_RALPH_ITERATION_TIMEOUT',
   iterations: 'WORKFLOW_RALPH_ITERATIONS',
   model: 'WORKFLOW_RALPH_MODEL',
   project: 'WORKFLOW_RALPH_PROJECT',
   prompt: 'WORKFLOW_RALPH_PROMPT',
+  /** Path to UTF-8 file whose contents become layer-1 prompt text (same as `--prompt-file`). */
+  promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
 } as const;
 
 /** Repo-local JSON file (cwd); optional. */
@@ -28,22 +36,37 @@ export const WORKFLOW_RALPH_DEFAULTS_FILE = '.workflow-ralph.json' as const;
  * `iterationTimeout` is in **seconds** (matches CLI `--iteration-timeout`).
  */
 export interface WorkflowRalphDefaultsFileJson {
+  readonly backend?: RalphExecutionBackendId;
   readonly iterationTimeout?: number;
   readonly iterations?: number;
   readonly model?: string;
   readonly project?: string;
   readonly prompt?: string;
+  /** Repo-relative or absolute path; file body is the prompt (mutually exclusive with `prompt` in file). */
+  readonly promptFile?: string;
 }
+
+/** @internal Mutable builder for {@link WorkflowRalphDefaultsFileJson} (TS forbids assigning to readonly props). */
+type WorkflowRalphDefaultsFileDraft = Partial<{
+  -readonly [K in keyof WorkflowRalphDefaultsFileJson]: WorkflowRalphDefaultsFileJson[K];
+}>;
 
 /**
  * @description Seed for argv parsing before CLI flags are applied.
  */
 export interface RalphRuntimeSeed {
+  readonly backend: RalphExecutionBackendId;
   readonly iterationTimeoutMs: number | undefined;
   readonly iterations: number;
   readonly model: string | undefined;
   readonly project: string | undefined;
   readonly prompt: string;
+  /**
+   * Optional path (cwd-relative or absolute). When set and CLI does not override with `--prompt`,
+   * the UTF-8 file contents are the prompt profile (layer 1). Mutually exclusive with a non-default
+   * merged `prompt` from env + file (see {@link mergeRalphRuntimeSeed}).
+   */
+  readonly promptFile: string | undefined;
 }
 
 const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>
@@ -85,8 +108,25 @@ const normalizeDefaultsFile = (
     throw new Error(`${filePath} must be a JSON object`);
   }
   const o = parsed;
-  const out: WorkflowRalphDefaultsFileJson = {};
+  const out: WorkflowRalphDefaultsFileDraft = {};
 
+  if ('backend' in o && o.backend !== undefined) {
+    if (typeof o.backend !== 'string' || o.backend.trim() === '') {
+      throw new Error(`${filePath}: "backend" must be a non-empty string`);
+    }
+    out.backend = parseRalphExecutionBackendId(o.backend.trim(), 'file');
+  }
+  if ('promptFile' in o && o.promptFile !== undefined) {
+    if (typeof o.promptFile !== 'string' || o.promptFile.trim() === '') {
+      throw new Error(`${filePath}: "promptFile" must be a non-empty string`);
+    }
+    if ('prompt' in o && o.prompt !== undefined) {
+      throw new Error(
+        `${filePath}: "prompt" and "promptFile" cannot both be set`,
+      );
+    }
+    out.promptFile = o.promptFile.trim();
+  }
   if ('prompt' in o && o.prompt !== undefined) {
     if (typeof o.prompt !== 'string' || o.prompt.trim() === '') {
       throw new Error(`${filePath}: "prompt" must be a non-empty string`);
@@ -131,7 +171,7 @@ const normalizeDefaultsFile = (
     }
   }
 
-  return out;
+  return out as WorkflowRalphDefaultsFileJson;
 };
 
 /**
@@ -157,11 +197,28 @@ export function loadWorkflowRalphDefaultsFile(
  * @description Reads `WORKFLOW_RALPH_*` env vars for prompt and run tuning.
  */
 export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
-  const out: WorkflowRalphDefaultsFileJson = {};
+  const out: WorkflowRalphDefaultsFileDraft = {};
+
+  const backendRaw = process.env[WORKFLOW_RALPH_ENV.backend];
+  if (backendRaw !== undefined && backendRaw.trim() !== '') {
+    out.backend = parseRalphExecutionBackendId(backendRaw.trim(), 'env');
+  }
 
   const promptRaw = process.env[WORKFLOW_RALPH_ENV.prompt];
-  if (promptRaw !== undefined && promptRaw.trim() !== '') {
-    out.prompt = promptRaw.trim();
+  const promptFileRaw = process.env[WORKFLOW_RALPH_ENV.promptFile];
+  const hasNamed = promptRaw !== undefined && promptRaw.trim() !== '';
+  const hasFile =
+    promptFileRaw !== undefined && promptFileRaw.trim() !== '';
+  if (hasNamed && hasFile) {
+    throw new Error(
+      `${WORKFLOW_RALPH_ENV.prompt} and ${WORKFLOW_RALPH_ENV.promptFile} cannot both be set`,
+    );
+  }
+  if (hasNamed) {
+    out.prompt = promptRaw!.trim();
+  }
+  if (hasFile) {
+    out.promptFile = promptFileRaw!.trim();
   }
 
   const iterations = parsePositiveIntEnv(
@@ -190,7 +247,7 @@ export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
     out.project = projectRaw.trim();
   }
 
-  return out;
+  return out as WorkflowRalphDefaultsFileJson;
 }
 
 /**
@@ -201,7 +258,21 @@ export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
   const file = loadWorkflowRalphDefaultsFile(cwd);
   const env = readWorkflowRalphEnv();
 
-  const prompt = env.prompt ?? file.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT;
+  const backend =
+    env.backend ?? file.backend ?? WORKFLOW_RALPH_DEFAULT_BACKEND;
+
+  const promptFile = env.promptFile ?? file.promptFile;
+  const namedPrompt =
+    env.prompt ?? file.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT;
+  if (
+    promptFile !== undefined &&
+    namedPrompt !== WORKFLOW_RALPH_DEFAULT_PROMPT
+  ) {
+    throw new Error(
+      'Cannot combine prompt file path with a non-default named prompt in defaults (env + .workflow-ralph.json). Use only one of prompt or promptFile.',
+    );
+  }
+  const prompt = namedPrompt;
   const iterations =
     env.iterations ?? file.iterations ?? WORKFLOW_RALPH_DEFAULT_ITERATIONS;
   const iterationTimeoutSeconds = env.iterationTimeout ?? file.iterationTimeout;
@@ -217,10 +288,12 @@ export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
       : undefined;
 
   return {
+    backend,
     iterationTimeoutMs,
     iterations,
     model,
     project,
     prompt,
+    promptFile,
   };
 }

@@ -18,7 +18,7 @@ This package makes use of the `bin` folder and package.json conventions to allow
 
 - `workflow-link-merge` — link the squash commit (after PR merge) to an OpenThrottle (OT) plan; run with `--plan <uuid> --sha <squash-sha> --repo <owner/repo>` (Option A: no pre-merge linking). See **Commit links (Option A workflow)** in `databases/cortex/README.md` for when to link and how activity tools use `commit_links`.
 - A future `workflow-commit` script could optionally standardize commits after task completion (conventional message + Plan-Id/Task-Id footer); for now use `/github/commit` or manual `git add` / `git commit` with the footer.
-- `workflow-ralph` — agentic Ralph workflow (plan execution; OT plan/task UUID only). **Debug / hangs:** enable the shim logger via `WORKFLOW_RALPH_DEBUG=1` or `--debug` (see [Debugging Ralph (shim logger)](#debugging-ralph-shim-logger)). **Prompt + run tuning defaults:** optional `.workflow-ralph.json` in the cwd and `WORKFLOW_RALPH_*` env vars (`WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`); precedence is CLI > env > file > built-ins. Full flags and env are in `pnpm exec workflow-ralph --help`.
+- `workflow-ralph` — agentic Ralph workflow (plan execution; OT plan/task UUID only). **Debug / hangs:** enable the shim logger via `WORKFLOW_RALPH_DEBUG=1` or `--debug` (see [Debugging Ralph (shim logger)](#debugging-ralph-shim-logger)). **Prompt + run tuning defaults:** optional `.workflow-ralph.json` in the cwd and `WORKFLOW_RALPH_*` env vars (`WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_PROMPT_FILE`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`, `WORKFLOW_RALPH_BACKEND`); precedence is CLI > env > file > built-ins. **Prompt text:** use `--prompt` (command-style, default `/agents/ralph`), or `--prompt-file <path>` / `--prompt-stdin` for UTF-8 body (see `pnpm exec workflow-ralph --help`). Full flags and env are in `--help`.
 - `workflow-nx-validate` — Nx validation.
 - `workflow-lighthouse` — Lighthouse audits.
 
@@ -46,6 +46,16 @@ Ralph runs the agentic process (prompt + plan) for a fixed number of iterations.
 - **Task status updates (plan-centric):** When running with `--plan` only (no `--task`), Ralph fetches tasks each iteration, picks the first IN_PROGRESS or first PENDING task, sets it to IN_PROGRESS, and injects into the prompt the current task UUID and: "When you complete it output `<ralph:complete-task>uuid</ralph:complete-task>` so the CLI can mark it completed." When the agent outputs that signal, Ralph marks the task COMPLETED in Cortex. If the agent outputs `<promise>COMPLETE</promise>` but omits the tag, Ralph marks the current iteration's task COMPLETED so Cortex stays in sync.
 - **Commit as you go:** After each task (or logical chunk), commit and push with conventional commits; include `Plan-Id` and `Task-Id` in the commit body or footer. Do **not** link those commits in Cortex; link only the squash commit after PR merge via `workflow-link-merge` (see **Commit links** in `databases/cortex/README.md`).
 - **Design:** `docs/workflows/ralph-design.md`. **Runtime config (agents, limits, prompts):** `docs/workflows/ralph-workflow-runtime-config.md`. PRD attribute mapping (required / inferred / optional): `databases/cortex/README.md`. **Cross-repo:** See **Cross-repo usage** below.
+
+### Execution backend (layer 2)
+
+Ralph selects **one** runner implementation per process via `--backend` (default `cursor`), or `WORKFLOW_RALPH_BACKEND` / optional `backend` in `.workflow-ralph.json`, with the same precedence as other defaults (CLI > env > file > built-in). The binary stays `workflow-ralph`; additional backends are implemented behind this switch in `src/bin/run-iteration.ts`, not as separate executables.
+
+| Backend id | Runner                                                                    | Layer 1 (prompt profile)                                                                                                                                                                                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cursor`   | Cursor CLI `cursor-agent --force -p "<full prompt>"` (optional `--model`) | **Named:** command-style path (e.g. `/agents/ralph`) as the start of the injected prompt string. **File / stdin:** `--prompt-file` / `--prompt-stdin` supply the same string shape (full text before plan/task injection); use a file path to reference `.cursor/commands/...` without duplicating content. |
+
+Other backends are not implemented yet; unknown `--backend` values fail at config parse time with a clear error. Nested runs (`runChildJob`, worktrees) forward `--backend` when it differs from the default so automated runs match manual CLI behavior.
 
 ```bash
 # See the usage
@@ -96,6 +106,8 @@ Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger
 Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `CORTEX_POSTGRES_URL` or `CORTEX_POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details.
 
 ## Worktree + BullMQ workflow (fan-out/fan-in)
+
+**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). The legacy in-process cwd path uses the same argv builder for `job.data.ralph`.
 
 A reusable workflow composes worktree allocation, a pluggable loop, and commit guarantees so you can run any loop (e.g. Ralph) with:
 

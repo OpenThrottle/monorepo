@@ -13,7 +13,7 @@ import {
   WORKTREE_TRACKER_TOKEN,
 } from '@openthrottle/nestjs-worktrees';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
-import { runChildJob } from '@tools/workflows';
+import { buildWorkflowRalphRunTuningArgv, runChildJob } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
 import {
   PlanOutputStreamService,
@@ -387,6 +387,7 @@ export class PlansProcessor
           planTitle,
         )
       : await this.processInProcessCwd(
+          job,
           planId,
           jobId,
           logContext,
@@ -515,8 +516,8 @@ export class PlansProcessor
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
           handoff,
-          iterations: 10,
           planId,
+          ...(job.data.ralph ?? {}),
         });
 
         if (childJobResult.ok) {
@@ -674,15 +675,23 @@ export class PlansProcessor
   /**
    * @description Legacy: run Ralph in process cwd (no worktrees configured).
    * Returns task-run metrics so job returnvalue includes CPU/memory at start and end.
+   * Forwards optional `job.data.ralph` run-tuning argv so queue runs match worktree path and manual CLI omission rules.
    */
   private async processInProcessCwd(
+    job: RunPlanJob,
     planId: string,
     jobId: string,
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
   ): Promise<PlanRunJobResult> {
     const workspaceRoot = getWorkspaceRoot();
-    const args = ['exec', RALPH_CMD, '--plan', planId];
+    const args = [
+      'exec',
+      RALPH_CMD,
+      '--plan',
+      planId,
+      ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
+    ];
 
     const onStdout = (chunk: string): void => {
       this.logger.info(chunk.trimEnd(), logContext);

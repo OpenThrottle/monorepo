@@ -63,12 +63,15 @@ vi.mock('../../utils/parsers', async (importOriginal) => {
   return {
     ...actual,
     parseRalphArgs: vi.fn(() => ({
+      backend: 'cursor',
       iterationTimeoutMs: undefined,
       iterations: 2,
       model: 'auto',
       plan: PLAN_ID,
       project: undefined,
       prompt: '/agents/ralph',
+      promptProfileKind: 'named',
+      promptProfileLabel: '/agents/ralph',
       ralphDebugLevel: 'off',
       task: undefined,
     })),

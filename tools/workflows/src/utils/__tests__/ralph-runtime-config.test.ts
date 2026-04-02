@@ -6,6 +6,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { WORKFLOW_RALPH_DEFAULT_BACKEND } from '../ralph-execution-backend';
 import {
   WORKFLOW_RALPH_DEFAULT_ITERATIONS,
   WORKFLOW_RALPH_DEFAULT_MODEL,
@@ -68,6 +69,22 @@ describe('loadWorkflowRalphDefaultsFile', () => {
       rmSync(dir, { force: true, recursive: true });
     }
   });
+
+  it('throws on unknown backend in file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ backend: 'unknown-runner' }),
+        'utf8',
+      );
+      expect(() => loadWorkflowRalphDefaultsFile(dir)).toThrow(
+        /Unknown execution backend/,
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
 });
 
 describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
@@ -79,6 +96,7 @@ describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
     const dir = mkdtempSync(join(tmpdir(), 'wr-'));
     try {
       const seed = mergeRalphRuntimeSeed(dir);
+      expect(seed.backend).toBe(WORKFLOW_RALPH_DEFAULT_BACKEND);
       expect(seed.prompt).toBe(WORKFLOW_RALPH_DEFAULT_PROMPT);
       expect(seed.iterations).toBe(WORKFLOW_RALPH_DEFAULT_ITERATIONS);
       expect(seed.model).toBe(WORKFLOW_RALPH_DEFAULT_MODEL);
@@ -113,6 +131,22 @@ describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
     }
   });
 
+  it('merge backend: env overrides file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ backend: 'cursor', prompt: '/x' }),
+        'utf8',
+      );
+      vi.stubEnv(WORKFLOW_RALPH_ENV.backend, 'CURSOR');
+      const seed = mergeRalphRuntimeSeed(dir);
+      expect(seed.backend).toBe('cursor');
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
   it('env iteration timeout overrides file', () => {
     const dir = mkdtempSync(join(tmpdir(), 'wr-'));
     try {
@@ -132,5 +166,45 @@ describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
   it('readWorkflowRalphEnv throws on invalid iterations', () => {
     vi.stubEnv(WORKFLOW_RALPH_ENV.iterations, 'nope');
     expect(() => readWorkflowRalphEnv()).toThrow(WORKFLOW_RALPH_ENV.iterations);
+  });
+
+  it('readWorkflowRalphEnv throws when prompt and promptFile are both set', () => {
+    vi.stubEnv(WORKFLOW_RALPH_ENV.prompt, '/agents/x');
+    vi.stubEnv(WORKFLOW_RALPH_ENV.promptFile, './p.md');
+    expect(() => readWorkflowRalphEnv()).toThrow(/cannot both be set/);
+  });
+
+  it('merge throws when defaults combine non-default prompt with promptFile', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({
+          prompt: '/agents/custom',
+          promptFile: 'foo.md',
+        }),
+        'utf8',
+      );
+      expect(() => mergeRalphRuntimeSeed(dir)).toThrow(/cannot both be set/);
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('merge throws when env prompt and file promptFile conflict', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ promptFile: 'foo.md' }),
+        'utf8',
+      );
+      vi.stubEnv(WORKFLOW_RALPH_ENV.prompt, '/agents/from-env');
+      expect(() => mergeRalphRuntimeSeed(dir)).toThrow(
+        /prompt file path with a non-default named prompt/,
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
   });
 });

@@ -22,10 +22,7 @@ import {
   updatePlanStatus,
 } from './cortex-ralph';
 import { ralphDebugLogger } from './ralph-debug-logger';
-import {
-  WORKFLOW_RALPH_DEFAULT_MODEL,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
-} from './ralph-runtime-config';
+import { buildWorkflowRalphRunTuningArgv } from './workflow-ralph-nested-argv';
 import { createChildProcessMetricsCollector } from './child-process-metrics';
 import type { ChildProcessMetricsCollector } from './child-process-metrics';
 
@@ -34,55 +31,6 @@ const MICROSECONDS_PER_MS = 1000;
 
 /** Grace period in ms after SIGTERM before sending SIGKILL. */
 const SIGKILL_GRACE_MS = 10_000;
-
-/**
- * @description Appends workflow-ralph run-tuning flags for nested runs (matches CLI defaults omission rules).
- */
-function appendWorkflowRalphRunTuningArgs(
-  ralphArgs: string[],
-  input: Pick<
-    ChildJobInput,
-    'iterationTimeoutSeconds' | 'iterations' | 'model' | 'project' | 'prompt'
-  >,
-): void {
-  if (input.iterations !== undefined && input.iterations !== null) {
-    ralphArgs.push('--iterations', String(input.iterations));
-  }
-
-  const prompt = input.prompt?.trim();
-  if (
-    prompt !== undefined &&
-    prompt !== '' &&
-    prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT
-  ) {
-    ralphArgs.push('--prompt', prompt);
-  }
-
-  const model = input.model?.trim();
-  if (
-    model !== undefined &&
-    model !== '' &&
-    model !== WORKFLOW_RALPH_DEFAULT_MODEL
-  ) {
-    ralphArgs.push('--model', model);
-  }
-
-  const project = input.project?.trim();
-  if (project !== undefined && project !== '') {
-    ralphArgs.push('--project', project);
-  }
-
-  if (
-    input.iterationTimeoutSeconds !== undefined &&
-    input.iterationTimeoutSeconds !== null &&
-    input.iterationTimeoutSeconds >= 1
-  ) {
-    ralphArgs.push(
-      '--iteration-timeout',
-      String(Math.floor(input.iterationTimeoutSeconds)),
-    );
-  }
-}
 
 interface RalphSpawnResult {
   readonly status: number | null;
@@ -272,13 +220,16 @@ export async function runChildJob(
   input: ChildJobInput,
 ): Promise<ChildJobResult> {
   const {
+    backend,
     handoff,
-    planId,
     iterationTimeoutSeconds,
     iterations,
     model,
+    planId,
     project,
     prompt,
+    promptFile,
+    ralphDebugCli,
     timeoutMs,
     signal,
     onChunk,
@@ -329,14 +280,22 @@ export async function runChildJob(
     };
   }
 
-  const ralphArgs = ['exec', 'workflow-ralph', '--plan', planId];
-  appendWorkflowRalphRunTuningArgs(ralphArgs, {
-    iterationTimeoutSeconds,
-    iterations,
-    model,
-    project,
-    prompt,
-  });
+  const ralphArgs = [
+    'exec',
+    'workflow-ralph',
+    '--plan',
+    planId,
+    ...buildWorkflowRalphRunTuningArgv({
+      backend,
+      iterationTimeoutSeconds,
+      iterations,
+      model,
+      project,
+      prompt,
+      promptFile,
+      ralphDebugCli,
+    }),
+  ];
 
   const effectiveOnChunk: ((chunk: ChildJobStreamChunk) => void) | undefined =
     streamToCortex || onChunk

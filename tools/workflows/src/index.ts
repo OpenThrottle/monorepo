@@ -56,6 +56,13 @@ export type {
   WorktreeWorkflowResult,
 } from './types/worktree';
 export { runChildJob } from './utils/child-job';
+export {
+  buildWorkflowRalphRunTuningArgv,
+} from './utils/workflow-ralph-nested-argv';
+export type {
+  RalphNestedDebugCli,
+  RalphNestedRunTuningInput,
+} from './utils/workflow-ralph-nested-argv';
 export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
 export {
   createMutexWorktreeTargetsTracker,
@@ -76,6 +83,13 @@ export {
 } from './utils/parent-job';
 export { runWorktreeWorkflow } from './utils/workflow';
 export { WorktreeTargetsTracker } from './utils/worktree-targets';
+export {
+  RALPH_EXECUTION_BACKEND_IDS,
+  WORKFLOW_RALPH_DEFAULT_BACKEND,
+  isRalphExecutionBackendId,
+  parseRalphExecutionBackendId,
+} from './utils/ralph-execution-backend';
+export type { RalphExecutionBackendId } from './utils/ralph-execution-backend';
 export {
   WORKFLOW_RALPH_DEFAULT_ITERATIONS,
   WORKFLOW_RALPH_DEFAULT_MODEL,

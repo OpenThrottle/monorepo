@@ -121,6 +121,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 : 'Run or queue this plan'}
             </TooltipContent>
           </Tooltip>
+
+          <a
+            className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4"
+            href="#workflow-run-options"
+          >
+            Workflow CLI options
+          </a>
         </div>
 
         {setPlanStatusError != null && (

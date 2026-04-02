@@ -1,10 +1,19 @@
 import type { Job, Queue } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
-import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
+import type {
+  ChildProcessMetrics,
+  RalphNestedRunTuningInput,
+  WallClockMetrics,
+} from '@tools/workflows';
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 
 export interface RunPlanJobData {
   readonly planId: string;
+  /**
+   * Optional Ralph runtime (layers 1–3): prompt profile, execution backend, run tuning.
+   * When omitted, nested `workflow-ralph` uses env / `.workflow-ralph.json` in the worktree or workspace cwd (same precedence as manual CLI).
+   */
+  readonly ralph?: RalphNestedRunTuningInput;
 }
 
 /**

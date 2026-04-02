@@ -28,4 +28,9 @@ describe('PlanToolbar Component', () => {
       component.getByRole('button', { name: /^actions$/i }),
     ).toBeInTheDocument();
   });
+
+  test('should link to workflow CLI options anchor on the plan page', () => {
+    const link = component.getByRole('link', { name: 'Workflow CLI options' });
+    expect(link).toHaveAttribute('href', '#workflow-run-options');
+  });
 });

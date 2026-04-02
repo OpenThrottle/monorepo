@@ -10,15 +10,22 @@ import {
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { Link } from 'react-router';
-import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
+import { Link, useSearchParams } from 'react-router';
+import { ChevronDown } from 'lucide-react';
 import { PlanDetailsFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
+import { WorkflowRunOptions } from '~/routing/plans/components/WorkflowRunOptions';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import {
   DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES,
   DEFAULT_PLAN_SUMMARY_PREVIEW_LINES,
 } from '~/routing/plans/config/defaults';
+import {
+  WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
+  WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
+  isWorkflowRunOptionsExpandedFromSearchParams,
+} from '~/routing/plans/utils/workflow-run-options-search-param';
 
 export interface PlanDetailsProps {
   readonly className?: string;
@@ -30,8 +37,22 @@ export const PlanDetails = (props: PlanDetailsProps) => {
   const { projectRelation: project } = plan;
 
   // Hooks
+  const [searchParams, setSearchParams] = useSearchParams();
   const [descriptionExpanded, setDescriptionExpanded] = React.useState(false);
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
+
+  const workflowRunOptionsExpanded =
+    isWorkflowRunOptionsExpandedFromSearchParams(searchParams);
+
+  const setWorkflowRunOptionsExpanded = (expanded: boolean): void => {
+    const next = new URLSearchParams(searchParams);
+    if (expanded) {
+      next.set(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM, WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE);
+    } else {
+      next.delete(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM);
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   // Setup
   const hasDescription = plan.description != null && plan.description !== '';
@@ -169,6 +190,42 @@ export const PlanDetails = (props: PlanDetailsProps) => {
           <PlanToolbar planId={plan.id} planStatus={plan.status} />
         </CardFooter>
       </Card>
+
+      {workflowRunOptionsExpanded ? (
+        <WorkflowRunOptions
+          className="mb-6"
+          onCollapse={() => setWorkflowRunOptionsExpanded(false)}
+          planId={plan.id}
+        />
+      ) : (
+        <Card className="mb-6" data-testid="workflow-run-options-collapsed">
+          <CardHeader className="pb-0">
+            <button
+              aria-controls="workflow-run-options"
+              aria-expanded={false}
+              className="group flex w-full items-start justify-between gap-3 rounded-md text-left outline-none ring-offset-background transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              data-testid="workflow-run-options-expand"
+              onClick={() => setWorkflowRunOptionsExpanded(true)}
+              type="button"
+            >
+              <div className="min-w-0 space-y-1.5">
+                <h2 className="text-lg font-semibold leading-none tracking-tight">
+                  Workflow run options
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Compose flags for{' '}
+                  <code className="text-xs">pnpm exec workflow-ralph</code>. Expand
+                  to edit targets, prompt, and CLI preview.
+                </p>
+              </div>
+              <ChevronDown
+                aria-hidden={true}
+                className="text-muted-foreground group-hover:text-foreground mt-0.5 size-5 shrink-0"
+              />
+            </button>
+          </CardHeader>
+        </Card>
+      )}
     </div>
   );
 };
