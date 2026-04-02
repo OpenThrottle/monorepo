@@ -61,4 +61,17 @@ describe('PlanRunCancellationService', () => {
     expect(service.abort('plan-1')).toBe(true);
     expect(second.aborted).toBe(true);
   });
+
+  test('after cancel (abort) and job teardown (detach), a new attach is not pre-aborted', () => {
+    const cancelledRun = service.attach('plan-1');
+    expect(service.abort('plan-1')).toBe(true);
+    expect(cancelledRun.aborted).toBe(true);
+
+    service.detach('plan-1');
+
+    const freshRun = service.attach('plan-1');
+    expect(freshRun.aborted).toBe(false);
+    expect(service.abort('plan-1')).toBe(true);
+    expect(freshRun.aborted).toBe(true);
+  });
 });
