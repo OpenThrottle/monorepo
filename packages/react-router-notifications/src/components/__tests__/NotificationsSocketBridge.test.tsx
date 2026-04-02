@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { NotificationsStoreProvider } from '../../data/notifications-store.context';
 import { NotificationsSocketBridge } from '../NotificationsSocketBridge';
 import type { NotificationsSocketBridgeProps } from '../NotificationsSocketBridge';
 
@@ -10,9 +11,16 @@ describe('NotificationsSocketBridge Component', () => {
   let props: NotificationsSocketBridgeProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      children: null,
+      webSocketUrl: 'http://localhost:0',
+    };
 
-    const Component = () => <NotificationsSocketBridge {...props} />;
+    const Component = () => (
+      <NotificationsStoreProvider persist={false}>
+        <NotificationsSocketBridge {...props} />
+      </NotificationsStoreProvider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

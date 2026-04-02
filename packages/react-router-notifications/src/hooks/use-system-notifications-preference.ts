@@ -11,17 +11,16 @@
  *   {@link getSystemNotificationsPreference} on **every** incoming event, so prefs are
  *   applied at the socket edge without React state. No duplicate “pref state” belongs in
  *   {@link NotificationsSocketProvider} (socket-only).
- * - **This hook’s React state:** Drives NotificationBell toggles only. Today it does not
- *   re-read when **another tab** updates `localStorage`; **next implementation step** is a
- *   `window` `storage` listener for `event.key === NOTIFICATIONS_STORAGE_KEY` that calls
- *   `setPreferenceState(getSystemNotificationsPreference())`. Same-tab updates already
- *   go through {@link setSystemNotificationsPreference} + `setPreference`.
+ * - **This hook’s React state:** Drives NotificationBell toggles. Cross-tab updates use
+ *   {@link subscribeToNotificationsPreferenceStorageEvents} (single window listener).
+ *   Same-tab updates go through {@link setSystemNotificationsPreference} + `setPreference`.
  * - **Do not** mount this hook inside {@link NotificationsSocketBridge} as a second
  *   instance — that would duplicate React state. One consumer (Bell), or later a small
  *   provider wrapping the tree if multiple UIs need the same prefs.
  */
 
 import * as React from 'react';
+import { subscribeToNotificationsPreferenceStorageEvents } from '../utils/notifications-preference-storage-sync';
 import {
   getSystemNotificationsPreference,
   setSystemNotificationsPreference,
@@ -38,9 +37,15 @@ export interface UseSystemNotificationsPreferenceResult {
  */
 export function useNotificationsSystemPreferences(): UseSystemNotificationsPreferenceResult {
   const [preference, setPreferenceState] =
-    React.useState<SystemNotificationsPreference>(
-      getSystemNotificationsPreference,
+    React.useState<SystemNotificationsPreference>(() =>
+      getSystemNotificationsPreference(),
     );
+
+  React.useEffect(() => {
+    return subscribeToNotificationsPreferenceStorageEvents(() => {
+      setPreferenceState(getSystemNotificationsPreference());
+    });
+  }, []);
 
   const setPreference = React.useCallback(
     (pref: SystemNotificationsPreference) => {
