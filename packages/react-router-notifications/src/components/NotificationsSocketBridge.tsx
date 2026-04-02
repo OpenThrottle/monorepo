@@ -9,6 +9,13 @@ import { toastForNotification } from '../data/index';
 import { showSystemNotification } from '../utils/index';
 import { useNotificationsStore } from '../hooks/useNotificationsStore';
 
+/**
+ * @description Wires {@link NotificationsSocketProvider} to the notifications store,
+ * toasts, and {@link showSystemNotification}. System prefs are **not** held here:
+ * `showSystemNotification` reads {@link getSystemNotificationsPreference} per event;
+ * UI prefs live in {@link useNotificationsSystemPreferences} / NotificationBell — see
+ * that hook’s module doc for cross-tab `storage` design.
+ */
 export interface NotificationsSocketBridgeProps {
   readonly children: React.ReactNode;
   readonly webSocketUrl: string;

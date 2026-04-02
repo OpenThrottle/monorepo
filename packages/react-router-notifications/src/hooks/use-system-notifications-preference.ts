@@ -1,6 +1,24 @@
 /**
  * @description Hook for reading and updating system notification preference (localStorage).
  * Used by NotificationBell footer to toggle desktop notifications and "only when background".
+ *
+ * ## Design: bridge integration and single source of truth (Cortex plan f63ec6d5-23f2-416c-ba62-c3adaa1dea50)
+ *
+ * - **Authoritative storage:** {@link NOTIFICATIONS_STORAGE_KEY} in `config` — JSON
+ *   `{ enabled?, onlyWhenBackground? }`. This is **not** the same key as the persisted
+ *   notification **list** ({@link DEFAULT_NOTIFICATIONS_STORAGE_KEY} in the store module).
+ * - **WebSocket / desktop path:** {@link showSystemNotification} calls
+ *   {@link getSystemNotificationsPreference} on **every** incoming event, so prefs are
+ *   applied at the socket edge without React state. No duplicate “pref state” belongs in
+ *   {@link NotificationsSocketProvider} (socket-only).
+ * - **This hook’s React state:** Drives NotificationBell toggles only. Today it does not
+ *   re-read when **another tab** updates `localStorage`; **next implementation step** is a
+ *   `window` `storage` listener for `event.key === NOTIFICATIONS_STORAGE_KEY` that calls
+ *   `setPreferenceState(getSystemNotificationsPreference())`. Same-tab updates already
+ *   go through {@link setSystemNotificationsPreference} + `setPreference`.
+ * - **Do not** mount this hook inside {@link NotificationsSocketBridge} as a second
+ *   instance — that would duplicate React state. One consumer (Bell), or later a small
+ *   provider wrapping the tree if multiple UIs need the same prefs.
  */
 
 import * as React from 'react';
