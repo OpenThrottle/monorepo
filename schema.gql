@@ -201,7 +201,7 @@ type EnqueuePlanRunResultObject {
 
 type CancelPlanRunResultObject {
   """
-  BullMQ job ids that were active (locked by a worker) and could not be removed. The Ralph child may still run until the worker releases or tears it down.
+  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan.
   """
   activeJobIdsCouldNotCancel: [String!]!
 
@@ -211,7 +211,7 @@ type CancelPlanRunResultObject {
   noMatchingJob: Boolean!
 
   """
-  Plan status after cancel when at least one queued job was removed (typically PENDING). Null when no queued job was removed.
+  Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied.
   """
   planStatusAfter: String
 
@@ -222,6 +222,11 @@ type CancelPlanRunResultObject {
   BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).
   """
   removedJobIds: [String!]!
+
+  """
+  True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
+  """
+  signaledActiveRunToStop: Boolean!
 }
 
 type TaskObject {

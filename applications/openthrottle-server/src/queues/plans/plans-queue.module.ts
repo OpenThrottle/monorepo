@@ -8,10 +8,11 @@ import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 import { MetricsModule } from '../../metrics/metrics.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { PLANS_QUEUE_NAME } from './plans.constants';
+import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
 
 @Module({
-  exports: [BullModule],
+  exports: [BullModule, PlanRunCancellationService],
   imports: [
     LoggerModule,
     MetricsModule,
@@ -21,6 +22,6 @@ import { PlansProcessor } from './plans.processor';
     NestjsWorktreesModule,
     NotificationsModule,
   ],
-  providers: [PlansProcessor],
+  providers: [PlanRunCancellationService, PlansProcessor],
 })
 export class PlansQueueModule {}

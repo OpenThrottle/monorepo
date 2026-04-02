@@ -21,6 +21,7 @@ import {
   PLANS_WORKER_STALLED_INTERVAL_MS,
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
+import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -119,6 +120,7 @@ describe('PlansProcessor', () => {
 
     const mod = await Test.createTestingModule({
       providers: [
+        PlanRunCancellationService,
         PlansProcessor,
         {
           provide: LoggerService,
@@ -437,6 +439,7 @@ describe('PlansProcessor', () => {
 
       const mod = await Test.createTestingModule({
         providers: [
+          PlanRunCancellationService,
           PlansProcessor,
           {
             provide: LoggerService,

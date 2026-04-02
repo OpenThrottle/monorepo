@@ -34,6 +34,7 @@ import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
 } from '../../queues/plans/plans.constants';
+import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { ProjectObject } from '../projects/project.object';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
@@ -62,6 +63,7 @@ const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 export class PlansResolver {
   constructor(
     private readonly notificationsService: NotificationsService,
+    private readonly planRunCancellation: PlanRunCancellationService,
     private readonly plansService: PlansService,
     private readonly projectsService: ProjectsService,
     private readonly tasksService: TasksService,
@@ -552,20 +554,30 @@ export class PlansResolver {
 
   // @ProfileResponseTime('PlansResolver.cancelPlanRun')
   @Mutation(() => CancelPlanRunResultObject, {
-    description: `Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker.`,
+    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).`,
   })
   @EmitNotification([
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        ret != null &&
-        (ret as CancelPlanRunResultObject).removedJobIds.length > 0
-          ? {
-              message: 'Plan run cancelled (removed from queue)',
-              planId: (ret as CancelPlanRunResultObject).planId,
-              severity: 'info' as const,
-            }
-          : null,
+      payload: (ret) => {
+        if (ret == null) return null;
+        const r = ret as CancelPlanRunResultObject;
+        if (r.removedJobIds.length > 0) {
+          return {
+            message: 'Plan run cancelled (removed from queue)',
+            planId: r.planId,
+            severity: 'info' as const,
+          };
+        }
+        if (r.signaledActiveRunToStop) {
+          return {
+            message: 'Plan run stop requested (Ralph process)',
+            planId: r.planId,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
@@ -595,14 +607,22 @@ export class PlansResolver {
       input.planId,
     );
 
+    const signaledActiveRunToStop = this.planRunCancellation.abort(
+      input.planId,
+    );
+
     const out = new CancelPlanRunResultObject();
     out.planId = input.planId;
     out.removedJobIds = [...queueResult.removedJobIds];
     out.activeJobIdsCouldNotCancel = [...queueResult.lockedActiveJobIds];
     out.noMatchingJob = queueResult.matchingJobCount === 0;
     out.planStatusAfter = null;
+    out.signaledActiveRunToStop = signaledActiveRunToStop;
 
-    if (queueResult.removedJobIds.length > 0) {
+    const shouldSetPlanPending =
+      queueResult.removedJobIds.length > 0 || signaledActiveRunToStop;
+
+    if (shouldSetPlanPending) {
       await repo.update({ id: input.planId }, { status: 'PENDING' });
 
       const taskRepo = this.tasksService.getRepository();

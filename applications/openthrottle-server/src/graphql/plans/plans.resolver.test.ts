@@ -12,6 +12,7 @@ import { describe, expect, beforeAll, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import {
   CreatePlanInput,
@@ -103,6 +104,8 @@ describe('PlansResolver', () => {
     getRepository: vi.fn().mockReturnValue(taskRepo),
   });
 
+  const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
+
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
@@ -110,6 +113,10 @@ describe('PlansResolver', () => {
         {
           provide: NotificationsService,
           useValue: createMock<NotificationsService>(),
+        },
+        {
+          provide: PlanRunCancellationService,
+          useValue: { abort: mockPlanRunCancellationAbort },
         },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
@@ -561,6 +568,10 @@ describe('PlansResolver', () => {
   });
 
   describe('cancelPlanRun', () => {
+    beforeEach(() => {
+      mockPlanRunCancellationAbort.mockReturnValue(false);
+    });
+
     test('throws NotFoundException when plan does not exist', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
@@ -581,6 +592,7 @@ describe('PlansResolver', () => {
       expect(result.removedJobIds).toEqual([]);
       expect(result.activeJobIdsCouldNotCancel).toEqual([]);
       expect(result.planStatusAfter).toBeNull();
+      expect(result.signaledActiveRunToStop).toBe(false);
     });
 
     test('removes waiting run-plan job and sets plan and tasks to PENDING', async () => {
@@ -606,6 +618,7 @@ describe('PlansResolver', () => {
       expect(result.removedJobIds).toEqual(['job-99']);
       expect(result.noMatchingJob).toBe(false);
       expect(result.planStatusAfter).toBe('PENDING');
+      expect(result.signaledActiveRunToStop).toBe(false);
       expect(repo.update).toHaveBeenCalledWith(
         { id: mockPlan.id },
         { status: 'PENDING' },
@@ -638,7 +651,45 @@ describe('PlansResolver', () => {
       expect(result.activeJobIdsCouldNotCancel).toEqual(['job-a']);
       expect(result.noMatchingJob).toBe(false);
       expect(result.planStatusAfter).toBeNull();
+      expect(result.signaledActiveRunToStop).toBe(false);
+      expect(mockPlanRunCancellationAbort).toHaveBeenCalledWith(mockPlan.id);
       expect(repo.update).not.toHaveBeenCalled();
+    });
+
+    test('when active job cannot be removed but abort succeeds, sets plan and tasks to PENDING', async () => {
+      mockPlanRunCancellationAbort.mockReturnValue(true);
+      const remove = vi.fn().mockRejectedValue(new Error('locked'));
+      const getState = vi.fn().mockResolvedValue('active');
+      mockGetJobs.mockResolvedValueOnce([
+        {
+          data: { planId: mockPlan.id },
+          getState,
+          id: 'job-a',
+          name: 'run-plan',
+          remove,
+        },
+      ]);
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne)
+        .mockResolvedValueOnce(mockPlan)
+        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      taskRepo.update.mockClear();
+      vi.mocked(repo.update).mockClear();
+
+      const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
+
+      expect(result.removedJobIds).toEqual([]);
+      expect(result.activeJobIdsCouldNotCancel).toEqual(['job-a']);
+      expect(result.signaledActiveRunToStop).toBe(true);
+      expect(result.planStatusAfter).toBe('PENDING');
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: mockPlan.id },
+        { status: 'PENDING' },
+      );
+      expect(taskRepo.update).toHaveBeenCalledWith(
+        { planId: mockPlan.id, status: 'QUEUED' },
+        { status: 'PENDING' },
+      );
     });
   });
 
