@@ -1,0 +1,126 @@
+import { describe, expect, test, vi, beforeEach } from 'vitest';
+import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import { action } from '../plans.$planId._index';
+import { PlanDetailEnqueuePlanRunDocument } from '~/__generated__/graphql';
+
+vi.mock('@openthrottle/react-router-graphql');
+
+const mockExecuteGraphqlWithAuth = vi.mocked(
+  graphqlWithAuth.executeGraphqlWithAuth,
+);
+
+describe('routes/plans.$planId._index action (runPlan)', () => {
+  beforeEach(() => {
+    mockExecuteGraphqlWithAuth.mockReset();
+  });
+
+  test('calls enqueuePlanRun without ralph when ralphTuning form field is empty', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      enqueuePlanRun: {
+        jobId: 'job-1',
+        planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+      },
+    });
+
+    const formData = new FormData();
+    formData.set('intent', 'runPlan');
+    formData.set('ralphTuning', '');
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailEnqueuePlanRunDocument,
+      {
+        input: {
+          planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+          priority: 1,
+        },
+      },
+    );
+  });
+
+  test('passes parsed ralph tuning into enqueuePlanRun when ralphTuning JSON is valid', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      enqueuePlanRun: {
+        jobId: 'job-2',
+        planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+      },
+    });
+
+    const ralphPayload = {
+      iterations: 3,
+      project: 'applications/openthrottle-server',
+    };
+
+    const formData = new FormData();
+    formData.set('intent', 'runPlan');
+    formData.set('ralphTuning', JSON.stringify(ralphPayload));
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailEnqueuePlanRunDocument,
+      {
+        input: {
+          planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+          priority: 1,
+          ralph: ralphPayload,
+        },
+      },
+    );
+  });
+
+  test('returns error when ralphTuning JSON is invalid', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'runPlan');
+    formData.set('ralphTuning', 'not-json');
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      runPlanError: 'Invalid workflow run options payload.',
+    });
+  });
+});

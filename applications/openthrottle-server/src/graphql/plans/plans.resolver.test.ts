@@ -475,6 +475,18 @@ describe('PlansResolver', () => {
       );
     });
 
+    test('omits ralph from queue job data when ralph input is not provided', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+
+      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
+
+      const jobData = mockAdd.mock.calls[0]?.[1];
+      expect(jobData).toEqual({ planId: mockPlan.id });
+      expect(jobData).not.toHaveProperty('ralph');
+    });
+
     test('accepts batch priority (100)', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
