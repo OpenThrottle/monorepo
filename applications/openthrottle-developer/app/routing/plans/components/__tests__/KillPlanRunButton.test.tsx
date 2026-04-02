@@ -208,6 +208,42 @@ describe('KillPlanRunButton', () => {
     });
   });
 
+  test('shows error toast when action returns cancelPlanRunError (API/network failure)', async () => {
+    const user = userEvent.setup();
+
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: async ({ request }) => {
+          const fd = await request.formData();
+          if (fd.get('intent') === 'cancelPlanRun') {
+            return { cancelPlanRunError: 'Failed to fetch' };
+          }
+          return null;
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+    );
+    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+
+    await waitFor(() => {
+      expect(toastError).toHaveBeenCalledWith('Failed to fetch');
+    });
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { name: /Kill plan run\?/i }),
+    ).toBeInTheDocument();
+  });
+
   test('does not submit cancelPlanRun twice while the first request is in flight', async () => {
     const user = userEvent.setup();
     const cancelPayload: CancelPlanRunPayload = {
