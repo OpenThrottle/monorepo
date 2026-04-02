@@ -112,6 +112,11 @@ describe('PlansTable Component', () => {
     const queuePlanButtons = getAllByRole('button', { name: /Queue plan/i });
     expect(queuePlanButtons).toHaveLength(2);
     expect(queuePlanButtons[0]).toHaveAttribute('type', 'submit');
+
+    const killButtons = getAllByRole('button', {
+      name: /Kill plan run for First Plan/i,
+    });
+    expect(killButtons).toHaveLength(1);
   });
 
   test('shows author, assignee, category, summary and updated date when present', () => {

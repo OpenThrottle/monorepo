@@ -1,7 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action } from '../plans.$planId._index';
-import { PlanDetailEnqueuePlanRunDocument } from '~/__generated__/graphql';
+import {
+  PlanDetailCancelPlanRunDocument,
+  PlanDetailEnqueuePlanRunDocument,
+  type PlanDetailCancelPlanRunMutation,
+} from '~/__generated__/graphql';
 
 vi.mock('@openthrottle/react-router-graphql');
 
@@ -122,5 +126,54 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     expect(result).toEqual({
       runPlanError: 'Invalid workflow run options payload.',
     });
+  });
+});
+
+describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
+  beforeEach(() => {
+    mockExecuteGraphqlWithAuth.mockReset();
+  });
+
+  test('calls cancelPlanRun with plan id', async () => {
+    const cancelPayload: PlanDetailCancelPlanRunMutation['cancelPlanRun'] = {
+      __typename: 'CancelPlanRunResultObject',
+      activeJobIdsCouldNotCancel: [],
+      noMatchingJob: false,
+      planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+      planStatusAfter: 'PENDING',
+      removedJobIds: ['job-1'],
+      signaledActiveRunToStop: false,
+    };
+
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      cancelPlanRun: cancelPayload,
+    });
+
+    const formData = new FormData();
+    formData.set('intent', 'cancelPlanRun');
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailCancelPlanRunDocument,
+      {
+        input: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      },
+    );
+    expect(result).toEqual({ cancelPlanRun: cancelPayload });
   });
 });

@@ -16,9 +16,12 @@ import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-option
 import {
   PlanStatusBadge,
   isPlanStatusKey,
+  type PlanStatusKey,
 } from '~/routing/plans/components/PlanStatusBadge';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
+import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { shouldOfferKillPlanRun } from '~/routing/plans/utils/should-offer-kill-plan-run';
 
 const SUMMARY_TRUNCATE_LENGTH = 80;
 
@@ -44,11 +47,11 @@ function buildPlanTableColumns(
       accessorKey: 'status',
       cell: ({ row }) => {
         const status = row.original.status;
-        const badge = (
-          <PlanStatusBadge
-            status={isPlanStatusKey(status ?? '') ? status : 'PENDING'}
-          />
-        );
+        const statusRaw = status ?? '';
+        const statusKey: PlanStatusKey = isPlanStatusKey(statusRaw)
+          ? statusRaw
+          : 'PENDING';
+        const badge = <PlanStatusBadge status={statusKey} />;
         const url = status != null ? statusFilterUrls?.[status] : undefined;
         if (url) {
           return (
@@ -172,6 +175,12 @@ function buildPlanTableColumns(
                 Plan Details
               </Link>
             </Button>
+            <KillPlanRunButton
+              planId={planId}
+              planTitle={row.original.title ?? 'Untitled'}
+              show={shouldOfferKillPlanRun(row.original.status)}
+              size="xs"
+            />
             <RunPlanForm action={`/plans/${planId}`} method="post">
               <input name="intent" type="hidden" value="runPlan" />
               <Button

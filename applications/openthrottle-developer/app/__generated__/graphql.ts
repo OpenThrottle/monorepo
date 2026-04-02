@@ -126,6 +126,27 @@ export type AssignRoleToUserInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type CancelPlanRunInput = {
+  /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
+  planId: Scalars['ID']['input'];
+};
+
+export type CancelPlanRunResultObject = {
+  __typename?: 'CancelPlanRunResultObject';
+  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan. */
+  activeJobIdsCouldNotCancel: Array<Scalars['String']['output']>;
+  /** True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state. */
+  noMatchingJob: Scalars['Boolean']['output'];
+  /** Plan id from the request. */
+  planId: Scalars['String']['output'];
+  /** Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied. */
+  planStatusAfter?: Maybe<Scalars['String']['output']>;
+  /** BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized). */
+  removedJobIds: Array<Scalars['String']['output']>;
+  /** True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes. */
+  signaledActiveRunToStop: Scalars['Boolean']['output'];
+};
+
 /** Aggregated CPU and memory metrics for a child process over its lifetime. */
 export type ChildProcessMetrics = {
   __typename?: 'ChildProcessMetrics';
@@ -713,6 +734,8 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
+  /** Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker. */
+  cancelPlanRun: CancelPlanRunResultObject;
   /** Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup. */
   createCheckoutSession: CreateCheckoutSessionPayload;
   /** Create a new custom prompt */
@@ -805,6 +828,10 @@ export type MutationAppendPlanOutputArgs = {
 
 export type MutationAssignRoleToUserArgs = {
   input: AssignRoleToUserInput;
+};
+
+export type MutationCancelPlanRunArgs = {
+  input: CancelPlanRunInput;
 };
 
 export type MutationCreateCheckoutSessionArgs = {
@@ -2556,6 +2583,23 @@ export type PlanDetailEnqueuePlanRunMutation = {
     __typename?: 'EnqueuePlanRunResultObject';
     jobId: string;
     planId: string;
+  };
+};
+
+export type PlanDetailCancelPlanRunMutationVariables = Exact<{
+  input: CancelPlanRunInput;
+}>;
+
+export type PlanDetailCancelPlanRunMutation = {
+  __typename?: 'Mutation';
+  cancelPlanRun: {
+    __typename?: 'CancelPlanRunResultObject';
+    activeJobIdsCouldNotCancel: Array<string>;
+    noMatchingJob: boolean;
+    planId: string;
+    planStatusAfter?: string | null;
+    removedJobIds: Array<string>;
+    signaledActiveRunToStop: boolean;
   };
 };
 
@@ -4883,6 +4927,80 @@ export const PlanDetailEnqueuePlanRunDocument = {
 } as unknown as DocumentNode<
   PlanDetailEnqueuePlanRunMutation,
   PlanDetailEnqueuePlanRunMutationVariables
+>;
+export const PlanDetailCancelPlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailCancelPlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CancelPlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelPlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noMatchingJob' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'planStatusAfter' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'removedJobIds' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailCancelPlanRunMutation,
+  PlanDetailCancelPlanRunMutationVariables
 >;
 export const PlanDetailSetPlanStatusDocument = {
   kind: 'Document',

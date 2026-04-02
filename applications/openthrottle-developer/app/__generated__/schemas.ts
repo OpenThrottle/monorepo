@@ -5,6 +5,7 @@ import {
   AddPermissionToRoleInput,
   AppendPlanOutputInput,
   AssignRoleToUserInput,
+  CancelPlanRunInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
@@ -140,6 +141,14 @@ export function AssignRoleToUserInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     userId: z.string(),
+  });
+}
+
+export function CancelPlanRunInputSchema(): z.ZodObject<
+  Properties<CancelPlanRunInput>
+> {
+  return z.object({
+    planId: z.string(),
   });
 }
 

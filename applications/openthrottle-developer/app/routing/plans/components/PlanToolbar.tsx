@@ -21,10 +21,16 @@ import {
 } from 'lucide-react';
 import { Link, useFetcher } from 'react-router';
 import { action } from '~/routes/plans.$planId._index';
+import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { shouldOfferKillPlanRun } from '~/routing/plans/utils/should-offer-kill-plan-run';
 
 export interface PlanToolbarProps {
   readonly className?: string;
   readonly planId: string;
+  /**
+   * @description Display title for Kill run confirmation (defaults when omitted).
+   */
+  readonly planTitle?: string;
   readonly planStatus?: string;
   /**
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
@@ -36,7 +42,13 @@ export interface PlanToolbarProps {
  * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group), and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
-  const { className, planId, planStatus, ralphTuningJson = '' } = props;
+  const {
+    className,
+    planId,
+    planTitle = 'Untitled',
+    planStatus,
+    ralphTuningJson = '',
+  } = props;
 
   const fetcherRunPlan = useFetcher<typeof action>();
   const fetcherSetPlanStatus = useFetcher<typeof action>();
@@ -158,6 +170,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                 : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
             </TooltipContent>
           </Tooltip>
+
+          <KillPlanRunButton
+            planId={planId}
+            planTitle={planTitle}
+            show={shouldOfferKillPlanRun(planStatus)}
+            size="sm"
+          />
 
           <a
             className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4"

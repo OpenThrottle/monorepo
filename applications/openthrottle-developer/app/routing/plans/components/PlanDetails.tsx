@@ -227,6 +227,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
           <PlanToolbar
             planId={plan.id}
             planStatus={plan.status}
+            planTitle={plan.title ?? 'Untitled'}
             ralphTuningJson={ralphTuningJson}
           />
         </CardFooter>

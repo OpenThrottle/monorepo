@@ -4,7 +4,11 @@
  */
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { buildInitialSubscriptions } from '~/routing/settings/config/event-subscriptions';
+import {
+  EVENT_SUBSCRIPTION_ROWS,
+  buildInitialSubscriptions,
+  type EventSubscriptionId,
+} from '~/routing/settings/config/event-subscriptions';
 import {
   EVENT_SUBSCRIPTIONS_STORAGE_KEY,
   getEventSubscriptionsFromStorage,
@@ -15,7 +19,8 @@ import {
 
 describe('mergeEventSubscriptionPreferencesFromUnknown', () => {
   const defaults = buildInitialSubscriptions();
-  const firstId = Object.keys(defaults)[0];
+  const allIds = EVENT_SUBSCRIPTION_ROWS.map((row) => row.id);
+  const firstId: EventSubscriptionId = EVENT_SUBSCRIPTION_ROWS[0].id;
 
   test('returns a copy of defaults when stored is null', () => {
     const merged = mergeEventSubscriptionPreferencesFromUnknown(null, defaults);
@@ -55,7 +60,7 @@ describe('mergeEventSubscriptionPreferencesFromUnknown', () => {
       defaults,
     );
     expect(merged[firstId]).toBe(!firstValue);
-    for (const id of Object.keys(defaults)) {
+    for (const id of allIds) {
       if (id === firstId) {
         continue;
       }
@@ -77,15 +82,14 @@ describe('mergeEventSubscriptionPreferencesFromUnknown', () => {
   });
 
   test('partial object leaves other keys at default', () => {
-    const ids = Object.keys(defaults);
-    const onlyId = ids[1] ?? firstId;
+    const onlyId = allIds[1] ?? firstId;
     const patch = { [onlyId]: !defaults[onlyId] };
     const merged = mergeEventSubscriptionPreferencesFromUnknown(
       patch,
       defaults,
     );
     expect(merged[onlyId]).toBe(!defaults[onlyId]);
-    for (const id of ids) {
+    for (const id of allIds) {
       if (id === onlyId) {
         continue;
       }
@@ -118,7 +122,7 @@ describe('getEventSubscriptionsFromStorage / setEventSubscriptionsInStorage', ()
 
   test('merges valid partial JSON with defaults', () => {
     const defaults = buildInitialSubscriptions();
-    const firstId = Object.keys(defaults)[0];
+    const firstId = EVENT_SUBSCRIPTION_ROWS[0].id;
     window.localStorage.setItem(
       EVENT_SUBSCRIPTIONS_STORAGE_KEY,
       JSON.stringify({
@@ -128,7 +132,7 @@ describe('getEventSubscriptionsFromStorage / setEventSubscriptionsInStorage', ()
     );
     const read = getEventSubscriptionsFromStorage();
     expect(read[firstId]).toBe(!defaults[firstId]);
-    for (const id of Object.keys(defaults)) {
+    for (const id of EVENT_SUBSCRIPTION_ROWS.map((row) => row.id)) {
       if (id === firstId) {
         continue;
       }
@@ -138,7 +142,7 @@ describe('getEventSubscriptionsFromStorage / setEventSubscriptionsInStorage', ()
 
   test('setEventSubscriptionsInStorage persists full map', () => {
     const next = { ...buildInitialSubscriptions() };
-    const id = Object.keys(next)[0];
+    const id = EVENT_SUBSCRIPTION_ROWS[0].id;
     next[id] = !next[id];
     setEventSubscriptionsInStorage(next);
     const raw = window.localStorage.getItem(EVENT_SUBSCRIPTIONS_STORAGE_KEY);

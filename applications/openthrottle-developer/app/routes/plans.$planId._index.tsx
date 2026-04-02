@@ -41,6 +41,7 @@ import { RalphPlanRunTuningInputSchema } from '~/__generated__/schemas';
 import {
   GetPlanByIdDocument,
   GetTasksByPlanIdDocument,
+  PlanDetailCancelPlanRunDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdateTaskDocument,
@@ -338,6 +339,26 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
+  if (intent === 'cancelPlanRun') {
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailCancelPlanRunDocument,
+        { input: { planId } },
+      );
+
+      if (!result.cancelPlanRun) {
+        return { cancelPlanRunError: 'Failed to cancel plan run.' };
+      }
+
+      return { cancelPlanRun: result.cancelPlanRun };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+
+      return { cancelPlanRunError: message };
+    }
+  }
+
   if (intent === 'setPlanStatus') {
     const statusField = formData.get('status');
     const status =
@@ -366,7 +387,9 @@ export const action = async (args: Route.ActionArgs) => {
   }
 
   if (intent !== 'runPlan') {
-    return { runPlanError: 'Invalid action.' };
+    return {
+      runPlanError: 'Invalid action.',
+    };
   }
 
   const priorityRaw = formData.get('priority');
