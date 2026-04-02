@@ -7,6 +7,11 @@ import {
   readRalphDebugConfigFromEnv,
   setRalphDebugLevel,
 } from './ralph-debug-logger';
+import {
+  mergeRalphRuntimeSeed,
+  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+  WORKFLOW_RALPH_DEFAULT_PROMPT,
+} from './ralph-runtime-config';
 
 /** RFC 4122 UUID v4 pattern: plan/task is Cortex plan or task ID when matching */
 const CORTEX_UUID_REGEX =
@@ -111,7 +116,10 @@ export const parseNxArgs = (): NxArgs => {
     }
   }
 
-  return parsed as NxArgs;
+  const result: NxArgs = {
+    project: parsed.project ?? '',
+  };
+  return result;
 };
 
 export interface RalphArgs {
@@ -135,12 +143,13 @@ export interface RalphArgs {
  */
 export const parseRalphArgs = (): RalphArgs => {
   const args = process.argv.slice(2);
+  const seed = mergeRalphRuntimeSeed(process.cwd());
   const parsed: Partial<RalphArgs> = {
-    iterationTimeoutMs: undefined,
-    iterations: 10,
-    model: 'auto',
-    project: undefined,
-    prompt: '/agents/ralph',
+    iterationTimeoutMs: seed.iterationTimeoutMs,
+    iterations: seed.iterations,
+    model: seed.model,
+    project: seed.project,
+    prompt: seed.prompt,
     task: undefined,
   };
 
@@ -256,10 +265,17 @@ export const parseRalphArgs = (): RalphArgs => {
 
   setRalphDebugLevel(effectiveDebugLevel);
 
-  return {
-    ...parsed,
+  const result: RalphArgs = {
+    iterationTimeoutMs: parsed.iterationTimeoutMs,
+    iterations: parsed.iterations ?? WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+    model: parsed.model,
+    plan: parsed.plan,
+    project: parsed.project,
+    prompt: parsed.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT,
     ralphDebugLevel: ralphDebugLogger.level,
-  } as RalphArgs;
+    task: parsed.task,
+  };
+  return result;
 };
 
 /**

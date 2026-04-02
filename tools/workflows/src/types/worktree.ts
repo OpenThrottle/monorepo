@@ -125,6 +125,19 @@ export interface ChildJobInput {
   readonly planId: string;
   /** Max Ralph iterations when not task-centric. Omitted uses Ralph default. */
   readonly iterations?: number;
+  /**
+   * Prompt profile (layer 1). Omitted uses workflow-ralph built-in default (`/agents/ralph`).
+   * Passed as `--prompt` when not the default.
+   */
+  readonly prompt?: string;
+  /** Cursor model; forwarded as `--model` when not the default (`auto`). */
+  readonly model?: string;
+  /** NX project name; forwarded as `--project` when set. */
+  readonly project?: string;
+  /**
+   * Per-iteration timeout in **seconds** for workflow-ralph (non-interactive child); forwarded as `--iteration-timeout`.
+   */
+  readonly iterationTimeoutSeconds?: number;
   /** Optional timeout in milliseconds; on expiry the child is killed (SIGTERM then SIGKILL after grace). */
   readonly timeoutMs?: number;
   /** Optional AbortSignal; when aborted the child is killed (SIGTERM then SIGKILL after grace). */

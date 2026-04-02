@@ -18,7 +18,7 @@ This package makes use of the `bin` folder and package.json conventions to allow
 
 - `workflow-link-merge` — link the squash commit (after PR merge) to an OpenThrottle (OT) plan; run with `--plan <uuid> --sha <squash-sha> --repo <owner/repo>` (Option A: no pre-merge linking). See **Commit links (Option A workflow)** in `databases/cortex/README.md` for when to link and how activity tools use `commit_links`.
 - A future `workflow-commit` script could optionally standardize commits after task completion (conventional message + Plan-Id/Task-Id footer); for now use `/github/commit` or manual `git add` / `git commit` with the footer.
-- `workflow-ralph` — agentic Ralph workflow (plan execution; OT plan/task UUID only). **Debug / hangs:** enable the shim logger via `WORKFLOW_RALPH_DEBUG=1` or `--debug` (see [Debugging Ralph (shim logger)](#debugging-ralph-shim-logger)); full flags and env are in `pnpm exec workflow-ralph --help`.
+- `workflow-ralph` — agentic Ralph workflow (plan execution; OT plan/task UUID only). **Debug / hangs:** enable the shim logger via `WORKFLOW_RALPH_DEBUG=1` or `--debug` (see [Debugging Ralph (shim logger)](#debugging-ralph-shim-logger)). **Prompt + run tuning defaults:** optional `.workflow-ralph.json` in the cwd and `WORKFLOW_RALPH_*` env vars (`WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`); precedence is CLI > env > file > built-ins. Full flags and env are in `pnpm exec workflow-ralph --help`.
 - `workflow-nx-validate` — Nx validation.
 - `workflow-lighthouse` — Lighthouse audits.
 

@@ -2,6 +2,7 @@
  * @description Tests for child job: Ralph loop in worktree, branch/SHA, plan completion.
  */
 
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- spawn mocks need structural casts */
 import { spawn, spawnSync } from 'child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -234,6 +235,62 @@ describe('runChildJob', () => {
         expect.anything(),
         '2f94f33c-562d-4a70-8c08-c6d9510317e5',
         'COMPLETED',
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('passes run-tuning flags to pnpm exec workflow-ralph', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      iterationTimeoutSeconds: 600,
+      iterations: 5,
+      model: 'gpt-5',
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      project: 'my-app',
+      prompt: '/agents/seo',
+    };
+    try {
+      await runChildJob(input);
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        [
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+          '--iterations',
+          '5',
+          '--prompt',
+          '/agents/seo',
+          '--model',
+          'gpt-5',
+          '--project',
+          'my-app',
+          '--iteration-timeout',
+          '600',
+        ],
+        expect.objectContaining({ cwd: dir, shell: true }),
       );
     } finally {
       rmSync(dir, { force: true, recursive: true });

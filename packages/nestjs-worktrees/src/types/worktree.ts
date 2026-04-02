@@ -114,6 +114,14 @@ export interface ChildJobInput {
   readonly planId: string;
   /** Max Ralph iterations when not task-centric. Omitted uses Ralph default. */
   readonly iterations?: number;
+  /** Prompt profile; omitted uses workflow-ralph default (`/agents/ralph`). */
+  readonly prompt?: string;
+  /** Cursor model; forwarded when not default (`auto`). */
+  readonly model?: string;
+  /** NX project name. */
+  readonly project?: string;
+  /** Per-iteration timeout in seconds for nested workflow-ralph. */
+  readonly iterationTimeoutSeconds?: number;
 }
 
 /** Successful result of the child job: branch and commit SHA for parent to validate before release. */

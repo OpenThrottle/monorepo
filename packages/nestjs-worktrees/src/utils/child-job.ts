@@ -16,6 +16,58 @@ import {
 } from './cortex-client';
 import type { CortexRalphConfig } from './cortex-client';
 
+const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph' as const;
+const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto' as const;
+
+/**
+ * @description Appends workflow-ralph run-tuning argv (aligned with @tools/workflows runChildJob).
+ */
+function appendWorkflowRalphRunTuningArgs(
+  ralphArgs: string[],
+  input: Pick<
+    ChildJobInput,
+    'iterationTimeoutSeconds' | 'iterations' | 'model' | 'project' | 'prompt'
+  >,
+): void {
+  if (input.iterations !== undefined && input.iterations !== null) {
+    ralphArgs.push('--iterations', String(input.iterations));
+  }
+
+  const prompt = input.prompt?.trim();
+  if (
+    prompt !== undefined &&
+    prompt !== '' &&
+    prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT
+  ) {
+    ralphArgs.push('--prompt', prompt);
+  }
+
+  const model = input.model?.trim();
+  if (
+    model !== undefined &&
+    model !== '' &&
+    model !== WORKFLOW_RALPH_DEFAULT_MODEL
+  ) {
+    ralphArgs.push('--model', model);
+  }
+
+  const project = input.project?.trim();
+  if (project !== undefined && project !== '') {
+    ralphArgs.push('--project', project);
+  }
+
+  if (
+    input.iterationTimeoutSeconds !== undefined &&
+    input.iterationTimeoutSeconds !== null &&
+    input.iterationTimeoutSeconds >= 1
+  ) {
+    ralphArgs.push(
+      '--iteration-timeout',
+      String(Math.floor(input.iterationTimeoutSeconds)),
+    );
+  }
+}
+
 /**
  * @description Runs git in the worktree and returns stdout trimmed, or undefined on failure.
  */
@@ -38,7 +90,15 @@ function gitInWorktree(
 export async function runChildJob(
   input: ChildJobInput,
 ): Promise<ChildJobResult> {
-  const { handoff, planId, iterations } = input;
+  const {
+    handoff,
+    iterationTimeoutSeconds,
+    iterations,
+    model,
+    planId,
+    project,
+    prompt,
+  } = input;
   const { worktreePath } = handoff;
 
   const rawConfig = getCortexPostgresConfig();
@@ -61,9 +121,13 @@ export async function runChildJob(
   }
 
   const ralphArgs = ['exec', 'workflow-ralph', '--plan', planId];
-  if (iterations !== undefined && iterations !== null) {
-    ralphArgs.push('--iterations', String(iterations));
-  }
+  appendWorkflowRalphRunTuningArgs(ralphArgs, {
+    iterationTimeoutSeconds,
+    iterations,
+    model,
+    project,
+    prompt,
+  });
 
   const ralph = spawnSync('pnpm', ralphArgs, {
     cwd: worktreePath,

@@ -23,8 +23,8 @@ Think in three layers. They answer different questions; mixing them causes confu
 ## Config surface (principles)
 
 - **Ad-hoc runs:** Prefer **explicit CLI flags** so invocations are copy-pasteable and visible in logs. Today: `--plan` / `--task`, `--prompt`, `--model`, `--iterations`, `--project`, `--iteration-timeout`, debug flags (see `--help`).
-- **Defaults:** **Environment variables** and, when useful, a **small config file** (e.g. repo-local) so teams do not repeat flags. Precedence when implemented: **CLI overrides env overrides file defaults**.
-- **Composition:** Nested invocations (`runChildJob`, processors, worktrees) must **forward the same three layers** so automated runs match manual CLI behavior.
+- **Defaults:** **Environment variables** (`WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`; see `pnpm exec workflow-ralph --help`) and optional **repo-local** `.workflow-ralph.json` (JSON: `prompt`, `iterations`, `iterationTimeout` in seconds, `model`, `project`). Precedence: **CLI overrides env overrides file defaults** over built-ins.
+- **Composition:** Nested invocations (`runChildJob`, processors, worktrees) must **forward the same three layers** so automated runs match manual CLI behavior. Programmatic `runChildJob` accepts optional `prompt`, `model`, `project`, and `iterationTimeoutSeconds` alongside `iterations`.
 
 ## Phased scope
 

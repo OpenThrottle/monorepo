@@ -49,11 +49,25 @@ export const promptConfirmation = (): Promise<boolean> => {
 };
 
 export const showConfiguration = (parsedArgs: RalphArgs): void => {
-  const { iterations, model, plan, project, prompt, ralphDebugLevel, task } =
-    parsedArgs;
+  const {
+    iterationTimeoutMs,
+    iterations,
+    model,
+    plan,
+    project,
+    prompt,
+    ralphDebugLevel,
+    task,
+  } = parsedArgs;
 
   console.log(`Workflow configuration:\n`);
   console.log(` - 🔁 iterations: ${COLORS.green}${iterations}${COLORS.reset}`);
+  if (iterationTimeoutMs !== undefined && iterationTimeoutMs >= 1) {
+    const sec = Math.round(iterationTimeoutMs / 1000);
+    console.log(
+      ` - ⏱️ iteration-timeout: ${COLORS.green}${sec}s${COLORS.reset} (non-interactive)`,
+    );
+  }
   if (model) console.log(` - 🧠 model: ${COLORS.green}${model}${COLORS.reset}`);
   if (plan) console.log(` - 🧩 plan: ${COLORS.green}${plan}${COLORS.reset}`);
   if (project) {

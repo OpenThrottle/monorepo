@@ -3,6 +3,7 @@ import {
   RALPH_DEBUG_ENV_LEGACY,
   RALPH_VERBOSE_ENV,
 } from '../utils/ralph-debug-logger';
+import { WORKFLOW_RALPH_ENV } from '../utils/ralph-runtime-config';
 import { ARTWORK_LINE, ARTWORK_THANK_YOU, COLORS } from './index';
 
 export const MESSAGE_ON_CANCEL = `${COLORS.yellow}🚫 Cancelled.${COLORS.reset}`;
@@ -28,6 +29,15 @@ Options:
 Environment (debug shim; optional — omit both flags to rely on env only):
   ${COLORS.gray}${RALPH_DEBUG_ENV}${COLORS.reset}=1|true|verbose|0|off  ${COLORS.gray}${RALPH_DEBUG_ENV_LEGACY}${COLORS.reset} (alias)  ${COLORS.gray}${RALPH_VERBOSE_ENV}${COLORS.reset}=1 (verbose lines)
   If ${COLORS.cyan}--debug${COLORS.reset} or ${COLORS.cyan}--verbose${COLORS.reset} appears on the command line, it overrides these variables for this run.
+
+Environment (prompt profile + run tuning; optional):
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.prompt}${COLORS.reset}   Default prompt profile (command-style), same as ${COLORS.cyan}--prompt${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterations}${COLORS.reset}   Default iteration count (positive integer)
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterationTimeout}${COLORS.reset}   Per-iteration timeout in ${COLORS.green}seconds${COLORS.reset} (non-interactive), same as ${COLORS.cyan}--iteration-timeout${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.model}${COLORS.reset}   Default Cursor model, same as ${COLORS.cyan}--model${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.project}${COLORS.reset}   Default NX project, same as ${COLORS.cyan}--project${COLORS.reset}
+  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (JSON: prompt, iterations, iterationTimeout, model, project).
+  Precedence: ${COLORS.green}CLI flags${COLORS.reset} override ${COLORS.green}environment${COLORS.reset} override ${COLORS.green}file${COLORS.reset} override built-in defaults.
 `;
 
 export const MESSAGE_INTRO = `
