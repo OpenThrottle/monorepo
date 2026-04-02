@@ -2,6 +2,7 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
+import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
 import type { Route } from '@/app/routes/+types/settings._index';
 
@@ -50,6 +51,7 @@ export default function Index(props: Route.ComponentProps) {
         </header>
 
         <NotificationPreferencesSection />
+        <EventSubscriptionsSection />
       </div>
     </main>
   );
