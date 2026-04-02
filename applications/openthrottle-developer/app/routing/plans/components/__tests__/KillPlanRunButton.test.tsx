@@ -147,4 +147,128 @@ describe('KillPlanRunButton', () => {
     expect(cancelPlanRunPosts).toBe(0);
     expect(toastSuccess).not.toHaveBeenCalled();
   });
+
+  test('shows Stopping… on trigger and confirm while cancel request is in flight', async () => {
+    const user = userEvent.setup();
+    const cancelPayload: CancelPlanRunPayload = {
+      __typename: 'CancelPlanRunResultObject',
+      activeJobIdsCouldNotCancel: [],
+      noMatchingJob: true,
+      planId: 'p1',
+      planStatusAfter: null,
+      removedJobIds: [],
+      signaledActiveRunToStop: false,
+    };
+
+    let releaseCancel: (() => void) | undefined;
+    const cancelBarrier = new Promise<void>((resolve) => {
+      releaseCancel = resolve;
+    });
+
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: async ({ request }) => {
+          const fd = await request.formData();
+          if (fd.get('intent') === 'cancelPlanRun') {
+            await cancelBarrier;
+            return { cancelPlanRun: cancelPayload };
+          }
+          return null;
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+    );
+    await user.click(screen.getByRole('button', { name: /^Kill run$/i }));
+
+    // Trigger sits under aria-hidden while the dialog is open; still assert label + text.
+    expect(
+      screen.getByRole('button', {
+        hidden: true,
+        name: /Kill plan run for Alpha/i,
+      }),
+    ).toHaveTextContent('Stopping…');
+    expect(
+      screen.getByRole('button', { name: /^Stopping…$/i }),
+    ).toBeInTheDocument();
+
+    releaseCancel?.();
+
+    await waitFor(() => {
+      expect(toastSuccess).toHaveBeenCalled();
+    });
+  });
+
+  test('does not submit cancelPlanRun twice while the first request is in flight', async () => {
+    const user = userEvent.setup();
+    const cancelPayload: CancelPlanRunPayload = {
+      __typename: 'CancelPlanRunResultObject',
+      activeJobIdsCouldNotCancel: [],
+      noMatchingJob: true,
+      planId: 'p1',
+      planStatusAfter: null,
+      removedJobIds: [],
+      signaledActiveRunToStop: false,
+    };
+
+    let cancelPlanRunPosts = 0;
+    let releaseCancel: (() => void) | undefined;
+    const cancelBarrier = new Promise<void>((resolve) => {
+      releaseCancel = resolve;
+    });
+
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: async ({ request }) => {
+          const fd = await request.formData();
+          if (fd.get('intent') === 'cancelPlanRun') {
+            cancelPlanRunPosts += 1;
+            await cancelBarrier;
+            return { cancelPlanRun: cancelPayload };
+          }
+          return null;
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+    );
+    const confirmKill = screen.getByRole('button', { name: /^Kill run$/i });
+    await user.click(confirmKill);
+
+    await waitFor(() => {
+      expect(cancelPlanRunPosts).toBe(1);
+    });
+
+    const stoppingConfirm = screen.getByRole('button', {
+      name: /^Stopping…$/i,
+    });
+    expect(stoppingConfirm).toBeDisabled();
+    await user.click(stoppingConfirm);
+    expect(cancelPlanRunPosts).toBe(1);
+
+    releaseCancel?.();
+
+    await waitFor(() => {
+      expect(toastSuccess).toHaveBeenCalled();
+    });
+    expect(cancelPlanRunPosts).toBe(1);
+  });
 });
