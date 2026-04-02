@@ -99,3 +99,43 @@ export const setEventSubscriptionsInStorage = (
     // QuotaExceededError, private mode, etc.
   }
 };
+
+const storageListeners = new Set<() => void>();
+let storageWindowListenerAttached = false;
+
+function onEventSubscriptionsStorageEvent(e: StorageEvent): void {
+  if (e.key !== EVENT_SUBSCRIPTIONS_STORAGE_KEY) {
+    return;
+  }
+  for (const listener of storageListeners) {
+    listener();
+  }
+}
+
+/**
+ * @description Registers `listener` for cross-tab `storage` updates to
+ * {@link EVENT_SUBSCRIPTIONS_STORAGE_KEY}. Returns unsubscribe; when the last listener
+ * removes, the window listener is detached.
+ */
+export const subscribeToEventSubscriptionsStorageEvents = (
+  listener: () => void,
+): (() => void) => {
+  if (!IS_BROWSER) {
+    return () => {};
+  }
+
+  storageListeners.add(listener);
+
+  if (!storageWindowListenerAttached) {
+    window.addEventListener('storage', onEventSubscriptionsStorageEvent);
+    storageWindowListenerAttached = true;
+  }
+
+  return () => {
+    storageListeners.delete(listener);
+    if (storageListeners.size === 0 && storageWindowListenerAttached) {
+      window.removeEventListener('storage', onEventSubscriptionsStorageEvent);
+      storageWindowListenerAttached = false;
+    }
+  };
+};

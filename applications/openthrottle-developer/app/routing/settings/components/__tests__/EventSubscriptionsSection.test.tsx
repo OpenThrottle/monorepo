@@ -6,11 +6,13 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { EventSubscriptionsSection } from '../EventSubscriptionsSection';
 import { EVENT_SUBSCRIPTION_ROWS } from '~/routing/settings/config/event-subscriptions';
+import { EVENT_SUBSCRIPTIONS_STORAGE_KEY } from '~/routing/settings/config/event-subscriptions-storage';
 
 describe('EventSubscriptionsSection', () => {
   let component: RenderResult;
 
   beforeEach(() => {
+    window.localStorage.removeItem(EVENT_SUBSCRIPTIONS_STORAGE_KEY);
     const Component = () => <EventSubscriptionsSection />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
@@ -38,5 +40,11 @@ describe('EventSubscriptionsSection', () => {
     await user.click(switchEl);
 
     expect(switchEl).toHaveAttribute('data-state', expectedAfter);
+
+    const raw = window.localStorage.getItem(EVENT_SUBSCRIPTIONS_STORAGE_KEY);
+    expect(raw).not.toBeNull();
+    expect(JSON.parse(raw!)).toMatchObject({
+      [first.id]: !first.defaultSubscribed,
+    });
   });
 });

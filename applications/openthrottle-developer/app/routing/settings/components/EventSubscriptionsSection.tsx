@@ -10,23 +10,37 @@ import {
   Switch,
 } from '@openthrottle/react-router-shadcn';
 import {
-  buildInitialSubscriptions,
   EVENT_SUBSCRIPTION_ROWS,
   type EventSubscriptionId,
 } from '~/routing/settings/config/event-subscriptions';
+import {
+  getEventSubscriptionsFromStorage,
+  setEventSubscriptionsInStorage,
+  subscribeToEventSubscriptionsStorageEvents,
+} from '~/routing/settings/config/event-subscriptions-storage';
 
 /**
- * @description Placeholder event subscription panel. Local state only until
- * subscription persistence and server-side filters exist — see {@link EVENT_SUBSCRIPTION_ROWS}.
+ * @description Event subscription toggles persisted in localStorage; see
+ * {@link EVENT_SUBSCRIPTION_ROWS}. Server-side filters are not wired yet.
  */
 export const EventSubscriptionsSection = () => {
-  const [subscribed, setSubscribed] = React.useState(buildInitialSubscriptions);
+  const [subscribed, setSubscribed] = React.useState(() =>
+    getEventSubscriptionsFromStorage(),
+  );
+
+  React.useEffect(() => {
+    return subscribeToEventSubscriptionsStorageEvents(() => {
+      setSubscribed(getEventSubscriptionsFromStorage());
+    });
+  }, []);
 
   const handleCheckedChange =
     (id: EventSubscriptionId) => (checked: boolean) => {
-      console.log('🟢 8 - handleCheckedChange', id, checked);
-
-      setSubscribed((prev) => ({ ...prev, [id]: checked }));
+      setSubscribed((prev) => {
+        const next = { ...prev, [id]: checked };
+        setEventSubscriptionsInStorage(next);
+        return next;
+      });
     };
 
   return (
@@ -35,7 +49,8 @@ export const EventSubscriptionsSection = () => {
         <CardTitle>Event subscriptions</CardTitle>
         <CardDescription>
           Choose which real-time notification events you want to receive in the
-          app. Subscriptions are not saved yet.
+          app. Preferences are saved in this browser and stay in sync if you
+          change them in another tab.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-0">
