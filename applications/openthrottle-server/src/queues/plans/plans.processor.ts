@@ -102,7 +102,11 @@ function spawnAndWait(
       if (child.killed) return;
       child.kill('SIGTERM');
       const killTimeout = setTimeout(() => {
-        if (!child.killed) child.kill('SIGKILL');
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          /* process may have exited */
+        }
       }, RALPH_SIGKILL_GRACE_MS);
       child.once('close', () => clearTimeout(killTimeout));
     };
@@ -611,7 +615,11 @@ export class PlansProcessor
     }
 
     if (result.loop && !result.loop.ok) {
-      if (childJobResult?.reason === 'Ralph run was cancelled') {
+      if (
+        childJobResult &&
+        !childJobResult.ok &&
+        childJobResult.reason === 'Ralph run was cancelled'
+      ) {
         this.logger.info(
           `Ralph loop cancelled (user or API), ${logContext}`,
           PlansProcessor.name,

@@ -206,6 +206,11 @@ type CancelPlanRunResultObject {
   activeJobIdsCouldNotCancel: [String!]!
 
   """
+  True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
+  """
+  signaledActiveRunToStop: Boolean!
+
+  """
   True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.
   """
   noMatchingJob: Boolean!
@@ -222,11 +227,6 @@ type CancelPlanRunResultObject {
   BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).
   """
   removedJobIds: [String!]!
-
-  """
-  True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
-  """
-  signaledActiveRunToStop: Boolean!
 }
 
 type TaskObject {
@@ -1819,14 +1819,14 @@ type Mutation {
   deletePlan(input: DeletePlanInput!): Boolean!
 
   """
-  Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker.
-  """
-  cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
-
-  """
   Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
   """
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
+
+  """
+  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
+  """
+  cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
 
   """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
@@ -2094,11 +2094,6 @@ input DeletePlanInput {
   id: ID!
 }
 
-input CancelPlanRunInput {
-  """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
-  planId: ID!
-}
-
 input EnqueuePlanRunInput {
   """Plan id to enqueue a run for"""
   planId: ID!
@@ -2149,6 +2144,11 @@ enum RalphNestedDebugCli {
   omit
   debug
   verbose
+}
+
+input CancelPlanRunInput {
+  """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
+  planId: ID!
 }
 
 input CreateProjectInput {

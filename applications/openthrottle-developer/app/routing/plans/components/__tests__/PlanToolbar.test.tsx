@@ -60,4 +60,32 @@ describe('PlanToolbar Component', () => {
     }
     expect(el.value).toBe(payload);
   });
+
+  test('shows In progress and Kill run while a plan run is active', () => {
+    const r = renderToolbar({
+      planId: 'p1',
+      planStatus: 'IN_PROGRESS',
+      planTitle: 'My Plan',
+    });
+    expect(
+      r.getByRole('button', { name: /^In progress$/i }),
+    ).toBeInTheDocument();
+    expect(
+      r.getByRole('button', { name: /Kill plan run for My Plan/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('shows Add to Queue and hides Kill run when plan is idle (e.g. after cancel)', () => {
+    const r = renderToolbar({
+      planId: 'p1',
+      planStatus: 'PENDING',
+      planTitle: 'My Plan',
+    });
+    expect(
+      r.getByRole('button', { name: /^Add to Queue$/i }),
+    ).toBeInTheDocument();
+    expect(
+      r.queryByRole('button', { name: /Kill plan run/i }),
+    ).not.toBeInTheDocument();
+  });
 });

@@ -734,7 +734,7 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
-  /** Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker. */
+  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup. */
   createCheckoutSession: CreateCheckoutSessionPayload;

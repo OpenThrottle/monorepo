@@ -109,7 +109,12 @@ function runRalphAsync(
       if (child.killed) return;
       child.kill('SIGTERM');
       const killTimeout = setTimeout(() => {
-        if (!child.killed) child.kill('SIGKILL');
+        // After SIGTERM, Node sets `killed` to true; still send SIGKILL if the child has not exited.
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          /* process may have exited */
+        }
       }, SIGKILL_GRACE_MS);
       child.once('close', () => clearTimeout(killTimeout));
     };
