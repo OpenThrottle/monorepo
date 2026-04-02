@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { fireEvent, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { WorkflowRunOptions } from '../WorkflowRunOptions';
@@ -78,6 +79,27 @@ describe('WorkflowRunOptions Component', () => {
     expect(document.execCommand).toHaveBeenCalledWith('copy');
     expect(lastCopiedViaExecCommand).toBe(
       'pnpm exec workflow-ralph --plan 0c2720a9-920f-4b16-865a-f803eb444e18',
+    );
+  });
+
+  test('should update CLI preview when --model is changed from default', async () => {
+    const user = userEvent.setup();
+    const props: WorkflowRunOptionsProps = {
+      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+    };
+    const Component = () => <WorkflowRunOptions {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const { getByLabelText, getByTestId } = render(<RoutesStub />);
+
+    const modelInput = getByLabelText('Cursor model for --model');
+    await user.clear(modelInput);
+    await user.type(modelInput, 'fast');
+
+    expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
+      '--model fast',
+    );
+    expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
+      '--plan 0c2720a9-920f-4b16-865a-f803eb444e18',
     );
   });
 

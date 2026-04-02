@@ -17,9 +17,7 @@ import {
  */
 const SearchParamsProbe = () => {
   const [params] = useSearchParams();
-  return (
-    <span data-testid="search-params-probe">{params.toString()}</span>
-  );
+  return <span data-testid="search-params-probe">{params.toString()}</span>;
 };
 
 const mockPlan: PlanDetailsFragment = {
@@ -61,8 +59,12 @@ describe('PlanDetails Component', () => {
   });
 
   test('should collapse workflow run options by default', () => {
-    expect(component.getByTestId('workflow-run-options-collapsed')).toBeInTheDocument();
-    expect(component.queryByTestId('WorkflowRunOptions')).not.toBeInTheDocument();
+    expect(
+      component.getByTestId('workflow-run-options-collapsed'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('WorkflowRunOptions'),
+    ).not.toBeInTheDocument();
   });
 
   test('should show full workflow run options when runOptions is expanded in the URL', () => {
@@ -164,5 +166,35 @@ describe('PlanDetails Component', () => {
   test('should show description and summary', () => {
     expect(component.getByText('Plan description')).toBeInTheDocument();
     expect(component.getByText('Plan summary')).toBeInTheDocument();
+  });
+
+  test('should put tuning JSON on the run form when a workflow option differs from defaults', async () => {
+    const user = userEvent.setup();
+    const Component = () => <PlanDetails {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const r = render(
+      <RoutesStub
+        initialEntries={[
+          `/?${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
+        ]}
+      />,
+    );
+
+    const tuningNode = r
+      .getByTestId('PlanToolbar')
+      .querySelector('input[name="ralphTuning"]');
+    expect(tuningNode).toBeInstanceOf(HTMLInputElement);
+    if (!(tuningNode instanceof HTMLInputElement)) {
+      throw new Error('expected ralphTuning hidden input');
+    }
+    expect(tuningNode.value).toBe('');
+
+    const modelInput = r.getByLabelText('Cursor model for --model');
+    await user.clear(modelInput);
+    await user.type(modelInput, 'fast');
+
+    await waitFor(() => {
+      expect(tuningNode.value).toBe(JSON.stringify({ model: 'fast' }));
+    });
   });
 });
