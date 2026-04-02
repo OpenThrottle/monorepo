@@ -109,6 +109,15 @@ describe('buildWorkflowRalphOptionArgs', () => {
     expect(args).toContain('/agents/custom');
   });
 
+  test('omits --prompt when prompt is empty or whitespace (same as default)', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput({ prompt: '' }))).toEqual(
+      ['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18'],
+    );
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ prompt: '   ' })),
+    ).toEqual(['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18']);
+  });
+
   test('omits --iterations when value is the CLI default (10)', () => {
     const args = buildWorkflowRalphOptionArgs(basePlanInput());
     expect(args).not.toContain('--iterations');
@@ -225,6 +234,19 @@ describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
     ).toBe(undefined);
   });
 
+  test('returns undefined when optional tuning is empty or default (empty prompt, no timeout)', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({
+          iterationTimeoutSeconds: undefined,
+          model: '   ',
+          project: '',
+          prompt: '',
+        }),
+      ),
+    ).toBe(undefined);
+  });
+
   test('includes non-default iterations and maps debug CLI', () => {
     expect(
       buildRalphPlanRunTuningInputFromWorkflowRunOptions(
@@ -287,6 +309,27 @@ describe('comparing two workflow run option profiles', () => {
       iterations: 3,
       ralphDebugCli: RalphNestedDebugCli.Verbose,
     });
+  });
+});
+
+/**
+ * @description Cortex plan scratch QA Task 5: optional fields cleared or minimal must not break argv or enqueue tuning.
+ */
+describe('edge case: minimal options and empty optional fields', () => {
+  test('argv stays minimal when only required target id plus defaults', () => {
+    expect(buildWorkflowRalphOptionArgs(basePlanInput())).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+    ]);
+  });
+
+  test('invalid iteration timeout text parses to undefined (flag omitted)', () => {
+    expect(parseWorkflowRunIterationTimeoutSeconds('0')).toBeUndefined();
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ iterationTimeoutSeconds: undefined }),
+      ),
+    ).not.toContain('--iteration-timeout');
   });
 });
 

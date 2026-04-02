@@ -91,7 +91,7 @@ export const buildWorkflowRalphOptionArgs = (
   }
 
   const prompt = input.prompt.trim();
-  if (prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
+  if (prompt !== '' && prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
     args.push('--prompt', prompt);
   }
 
@@ -186,7 +186,7 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
   }
 
   const prompt = input.prompt.trim();
-  if (prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
+  if (prompt !== '' && prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
     ralph.prompt = prompt;
   }
 
