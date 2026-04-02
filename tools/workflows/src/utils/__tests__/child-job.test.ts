@@ -2,6 +2,8 @@
  * @description Tests for child job: Ralph loop in worktree, branch/SHA, plan completion.
  */
 
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- spawn mocks use explicit casts to ChildProcess shape */
+
 import { spawn, spawnSync } from 'child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -104,6 +106,100 @@ function createMockRalphChildCloseOnKill(): ReturnType<typeof spawn> {
     kill: vi.fn(() => {
       (child as { killed: boolean }).killed = true;
       closeListener(null, 'SIGTERM');
+    }),
+    killed: false,
+    on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
+      if (event === 'close') {
+        closeListener = listener as (
+          code: number | null,
+          signal: NodeJS.Signals | null,
+        ) => void;
+      }
+      return child;
+    }),
+    once: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
+      if (event === 'close') {
+        closeListener = listener as (
+          code: number | null,
+          signal: NodeJS.Signals | null,
+        ) => void;
+      }
+      return child;
+    }),
+    stderr: { on: vi.fn(), setEncoding: vi.fn() },
+    stdout: { on: vi.fn(), setEncoding: vi.fn() },
+  };
+  return child as unknown as ReturnType<typeof spawn>;
+}
+
+/**
+ * @description Like {@link createMockRalphChildCloseOnKill} but emits one stdout chunk (simulating mid-iteration output) before the process is killed on abort.
+ */
+function createMockRalphChildStreamingPartialThenCloseOnKill(): ReturnType<
+  typeof spawn
+> {
+  let closeListener: (
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ) => void = () => {};
+  const child = {
+    kill: vi.fn(() => {
+      (child as { killed: boolean }).killed = true;
+      closeListener(null, 'SIGTERM');
+    }),
+    killed: false,
+    on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
+      if (event === 'close') {
+        closeListener = listener as (
+          code: number | null,
+          signal: NodeJS.Signals | null,
+        ) => void;
+      }
+      return child;
+    }),
+    once: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
+      if (event === 'close') {
+        closeListener = listener as (
+          code: number | null,
+          signal: NodeJS.Signals | null,
+        ) => void;
+      }
+      return child;
+    }),
+    stderr: { on: vi.fn(), setEncoding: vi.fn() },
+    stdout: {
+      on: vi.fn((ev: string, cb: (d: string) => void) => {
+        if (ev === 'data') {
+          setImmediate(() => {
+            cb('partial output mid-iteration\n');
+          });
+        }
+      }),
+      setEncoding: vi.fn(),
+    },
+  };
+  return child as unknown as ReturnType<typeof spawn>;
+}
+
+/** Grace after SIGTERM before SIGKILL — must match `SIGKILL_GRACE_MS` in `child-job.ts`. */
+const SIGKILL_GRACE_MS = 10_000;
+
+/**
+ * @description Like a child that ignores SIGTERM: stays alive until SIGKILL, matching Node (`killed` true after first kill).
+ */
+function createMockRalphChildIgnoresSigtermUntilSigkill(): ReturnType<
+  typeof spawn
+> {
+  let closeListener: (
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ) => void = () => {};
+  const child = {
+    kill: vi.fn((sig: NodeJS.Signals) => {
+      (child as { killed: boolean }).killed = true;
+      if (sig === 'SIGKILL') {
+        closeListener(null, 'SIGKILL');
+      }
     }),
     killed: false,
     on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
@@ -422,6 +518,73 @@ describe('runChildJob', () => {
         expect(result.reason).toBe('Ralph run was cancelled');
       }
     } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('when aborted mid-stream with streamToCortex, partial stdout was appended and run ends cancelled', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChildStreamingPartialThenCloseOnKill(),
+    );
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 30);
+
+    const planId = '2f94f33c-562d-4a70-8c08-c6d9510317e5';
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId,
+      signal: controller.signal,
+      streamIteration: 4,
+      streamToCortex: true,
+    };
+    const { appendPlanOutput } = await import('../cortex-ralph.js');
+    vi.mocked(appendPlanOutput).mockClear();
+    try {
+      const result = await runChildJob(input);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('Ralph run was cancelled');
+      }
+      expect(appendPlanOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          connectionString: mockConfig.connectionString,
+        }),
+        planId,
+        '[stdout] partial output mid-iteration\n',
+        4,
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('sends SIGTERM then SIGKILL after grace when child ignores SIGTERM (abort)', async () => {
+    vi.useFakeTimers();
+    const mockChild = createMockRalphChildIgnoresSigtermUntilSigkill();
+    vi.mocked(spawn).mockReturnValue(mockChild);
+
+    const controller = new AbortController();
+    controller.abort();
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      signal: controller.signal,
+    };
+    try {
+      const runPromise = runChildJob(input);
+      await vi.advanceTimersByTimeAsync(SIGKILL_GRACE_MS);
+      const result = await runPromise;
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('Ralph run was cancelled');
+      }
+      expect(mockChild.kill).toHaveBeenCalledWith('SIGTERM');
+      expect(mockChild.kill).toHaveBeenCalledWith('SIGKILL');
+    } finally {
+      vi.useRealTimers();
       rmSync(dir, { force: true, recursive: true });
     }
   });
