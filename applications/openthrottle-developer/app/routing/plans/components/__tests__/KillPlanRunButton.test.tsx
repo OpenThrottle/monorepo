@@ -54,6 +54,89 @@ describe('KillPlanRunButton', () => {
     ).toBeInTheDocument();
   });
 
+  test('exposes aria-label and title on trigger for assistive tech and hover', () => {
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      { Component, path: '/plans/:planId' },
+    ]);
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    const trigger = screen.getByRole('button', {
+      name: /Kill plan run for Alpha/i,
+    });
+    expect(trigger).toHaveAttribute('aria-label', 'Kill plan run for Alpha');
+    expect(trigger).toHaveAttribute(
+      'title',
+      'Cancel the queued worker job or signal an active Ralph run to stop for this plan.',
+    );
+  });
+
+  test('Escape closes dialog without posting cancelPlanRun', async () => {
+    const user = userEvent.setup();
+    let cancelPlanRunPosts = 0;
+
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: async ({ request }) => {
+          const fd = await request.formData();
+          if (fd.get('intent') === 'cancelPlanRun') {
+            cancelPlanRunPosts += 1;
+            return { cancelPlanRun: null };
+          }
+          return null;
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Kill plan run for Alpha/i }),
+    );
+    expect(
+      screen.getByRole('heading', { name: /Kill plan run\?/i }),
+    ).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: /Kill plan run\?/i }),
+      ).not.toBeInTheDocument();
+    });
+    expect(cancelPlanRunPosts).toBe(0);
+  });
+
+  test('focus returns to Kill run trigger after Escape closes dialog', async () => {
+    const user = userEvent.setup();
+
+    const Component = () => (
+      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
+    );
+    const RoutesStub = createRoutesStub([
+      { Component, path: '/plans/:planId' },
+    ]);
+
+    render(<RoutesStub initialEntries={['/plans/p1']} />);
+
+    const trigger = screen.getByRole('button', {
+      name: /Kill plan run for Alpha/i,
+    });
+    await user.click(trigger);
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
   test('opens dialog with copy and submits cancelPlanRun to route action', async () => {
     const user = userEvent.setup();
     const cancelPayload: CancelPlanRunPayload = {
