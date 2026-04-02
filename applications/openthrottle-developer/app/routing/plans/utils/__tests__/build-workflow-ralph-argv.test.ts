@@ -253,6 +253,43 @@ describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
   });
 });
 
+/**
+ * @description Regression for manual QA Task 3: a second option profile must differ from Task 2’s in both CLI argv and enqueue tuning.
+ */
+describe('comparing two workflow run option profiles', () => {
+  test('argv and tuning differ when switching from model-only to iterations plus verbose', () => {
+    const task2Style = basePlanInput({ model: 'fast' });
+    const task3Style = basePlanInput({
+      debugCli: 'verbose',
+      iterations: 3,
+      model: WORKFLOW_RALPH_DEFAULT_MODEL,
+    });
+
+    expect(buildWorkflowRalphOptionArgs(task2Style)).not.toEqual(
+      buildWorkflowRalphOptionArgs(task3Style),
+    );
+    expect(buildWorkflowRalphOptionArgs(task2Style)).toContain('--model');
+    expect(buildWorkflowRalphOptionArgs(task2Style)).toContain('fast');
+    expect(buildWorkflowRalphOptionArgs(task3Style)).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--iterations',
+      '3',
+      '--verbose',
+    ]);
+
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(task2Style),
+    ).toEqual({ model: 'fast' });
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(task3Style),
+    ).toEqual({
+      iterations: 3,
+      ralphDebugCli: RalphNestedDebugCli.Verbose,
+    });
+  });
+});
+
 describe('formatWorkflowRalphCommandLine', () => {
   test('returns bare command when there are no option args', () => {
     expect(formatWorkflowRalphCommandLine([])).toBe('pnpm exec workflow-ralph');

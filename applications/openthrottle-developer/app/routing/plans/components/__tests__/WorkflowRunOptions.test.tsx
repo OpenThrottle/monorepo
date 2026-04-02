@@ -5,6 +5,11 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { WorkflowRunOptions } from '../WorkflowRunOptions';
 import type { WorkflowRunOptionsProps } from '../WorkflowRunOptions';
+import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import {
+  WORKFLOW_RALPH_DEFAULT_MODEL,
+  getDefaultWorkflowRalphRunOptionsInput,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 describe('WorkflowRunOptions Component', () => {
   /** Value passed to `document.execCommand('copy')` via OpenThrottleClipboard fallback (jsdom has no Clipboard API by default). */
@@ -101,6 +106,54 @@ describe('WorkflowRunOptions Component', () => {
     expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
       '--plan 0c2720a9-920f-4b16-865a-f803eb444e18',
     );
+  });
+
+  test('should reflect a second option profile when controlled value changes (Task 2 vs Task 3)', () => {
+    const planId = '0c2720a9-920f-4b16-865a-f803eb444e18';
+    const optionsAfterTask2: WorkflowRalphRunOptionsInput = {
+      ...getDefaultWorkflowRalphRunOptionsInput({ planId }),
+      model: 'fast',
+    };
+    const optionsAfterTask3: WorkflowRalphRunOptionsInput = {
+      ...getDefaultWorkflowRalphRunOptionsInput({ planId }),
+      debugCli: 'verbose',
+      iterations: 3,
+      model: WORKFLOW_RALPH_DEFAULT_MODEL,
+    };
+
+    const makeRoutesStub = (value: WorkflowRalphRunOptionsInput) =>
+      createRoutesStub([
+        {
+          Component: () => {
+            const [iterationTimeoutText, setIterationTimeoutText] =
+              React.useState('');
+            return (
+              <WorkflowRunOptions
+                iterationTimeoutText={iterationTimeoutText}
+                onIterationTimeoutTextChange={setIterationTimeoutText}
+                onValueChange={() => {}}
+                planId={planId}
+                value={value}
+              />
+            );
+          },
+          path: '/',
+        },
+      ]);
+
+    const Stub2 = makeRoutesStub(optionsAfterTask2);
+    const { getByTestId, unmount } = render(<Stub2 />);
+    const preview2 = getByTestId('workflow-run-cli-preview').textContent ?? '';
+    expect(preview2).toContain('--model fast');
+    expect(preview2).not.toContain('--iterations');
+    unmount();
+
+    const Stub3 = makeRoutesStub(optionsAfterTask3);
+    const { getByTestId: getPreview3 } = render(<Stub3 />);
+    const preview3 = getPreview3('workflow-run-cli-preview').textContent ?? '';
+    expect(preview3).toContain('--iterations 3');
+    expect(preview3).toContain('--verbose');
+    expect(preview3).not.toContain('--model');
   });
 
   describe('accessibility of primary controls', () => {

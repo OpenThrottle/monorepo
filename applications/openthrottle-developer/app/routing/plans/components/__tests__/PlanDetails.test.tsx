@@ -169,6 +169,7 @@ describe('PlanDetails Component', () => {
   });
 
   test('should put tuning JSON on the run form when a workflow option differs from defaults', async () => {
+    cleanup();
     const user = userEvent.setup();
     const Component = () => <PlanDetails {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
