@@ -198,4 +198,43 @@ describe('PlanDetails Component', () => {
       expect(tuningNode.value).toBe(JSON.stringify({ model: 'fast' }));
     });
   });
+
+  test('should clear tuning payload after Reset to defaults when options were changed', async () => {
+    cleanup();
+    const user = userEvent.setup();
+    const Component = () => <PlanDetails {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const r = render(
+      <RoutesStub
+        initialEntries={[
+          `/?${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
+        ]}
+      />,
+    );
+
+    const tuningNode = r
+      .getByTestId('PlanToolbar')
+      .querySelector('input[name="ralphTuning"]');
+    expect(tuningNode).toBeInstanceOf(HTMLInputElement);
+    if (!(tuningNode instanceof HTMLInputElement)) {
+      throw new Error('expected ralphTuning hidden input');
+    }
+
+    const modelInput = r.getByLabelText('Cursor model for --model');
+    await user.clear(modelInput);
+    await user.type(modelInput, 'fast');
+
+    await waitFor(() => {
+      expect(tuningNode.value).toBe(JSON.stringify({ model: 'fast' }));
+    });
+
+    await user.click(r.getByTestId('workflow-run-options-reset'));
+
+    await waitFor(() => {
+      expect(tuningNode.value).toBe('');
+    });
+    expect(r.getByTestId('workflow-run-cli-preview')).not.toHaveTextContent(
+      '--model fast',
+    );
+  });
 });

@@ -39,6 +39,10 @@ export interface WorkflowRunOptionsProps {
    * @description When set (plan detail URL-driven panel), shows a control to collapse the section.
    */
   readonly onCollapse?: () => void;
+  /**
+   * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
+   */
+  readonly onResetToDefaults?: () => void;
   /** When set (e.g. plan detail), seeds `--plan` and default target mode. */
   readonly planId?: string;
   /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
@@ -56,6 +60,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
     iterationTimeoutText: iterationTimeoutTextProp,
     onCollapse,
     onIterationTimeoutTextChange,
+    onResetToDefaults,
     onValueChange,
     planId,
     taskId,
@@ -169,19 +174,35 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               timeout) to the worker; unchanged fields use CLI defaults.
             </CardDescription>
           </div>
-          {onCollapse != null ? (
-            <Button
-              aria-controls="workflow-run-options"
-              aria-expanded={true}
-              aria-label="Hide workflow run options"
-              className="shrink-0"
-              onClick={onCollapse}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <ChevronUp aria-hidden={true} className="size-4" />
-            </Button>
+          {onResetToDefaults != null || onCollapse != null ? (
+            <div className="flex shrink-0 items-center gap-2">
+              {onResetToDefaults != null ? (
+                <Button
+                  aria-label="Reset workflow run options to defaults"
+                  data-testid="workflow-run-options-reset"
+                  onClick={onResetToDefaults}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Reset to defaults
+                </Button>
+              ) : null}
+              {onCollapse != null ? (
+                <Button
+                  aria-controls="workflow-run-options"
+                  aria-expanded={true}
+                  aria-label="Hide workflow run options"
+                  className="shrink-0"
+                  onClick={onCollapse}
+                  size="icon"
+                  type="button"
+                  variant="ghost"
+                >
+                  <ChevronUp aria-hidden={true} className="size-4" />
+                </Button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </CardHeader>

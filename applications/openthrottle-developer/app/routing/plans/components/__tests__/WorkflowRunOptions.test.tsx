@@ -156,6 +156,41 @@ describe('WorkflowRunOptions Component', () => {
     expect(preview3).not.toContain('--model');
   });
 
+  test('should call onResetToDefaults when Reset to defaults is activated', async () => {
+    const user = userEvent.setup();
+    const planId = '0c2720a9-920f-4b16-865a-f803eb444e18';
+    const onReset = vi.fn();
+    const optionsAfterChange: WorkflowRalphRunOptionsInput = {
+      ...getDefaultWorkflowRalphRunOptionsInput({ planId }),
+      model: 'fast',
+    };
+
+    const RoutesStub = createRoutesStub([
+      {
+        Component: () => {
+          const [iterationTimeoutText, setIterationTimeoutText] =
+            React.useState('');
+          return (
+            <WorkflowRunOptions
+              iterationTimeoutText={iterationTimeoutText}
+              onCollapse={() => {}}
+              onIterationTimeoutTextChange={setIterationTimeoutText}
+              onResetToDefaults={onReset}
+              onValueChange={() => {}}
+              planId={planId}
+              value={optionsAfterChange}
+            />
+          );
+        },
+        path: '/',
+      },
+    ]);
+
+    const { getByTestId } = render(<RoutesStub />);
+    await user.click(getByTestId('workflow-run-options-reset'));
+    expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
   describe('accessibility of primary controls', () => {
     test('exposes labeled inputs for plan target and prompt profile', () => {
       const props: WorkflowRunOptionsProps = {

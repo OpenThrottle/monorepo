@@ -238,6 +238,12 @@ export const PlanDetails = (props: PlanDetailsProps) => {
           iterationTimeoutText={workflowIterationTimeoutText}
           onCollapse={() => setWorkflowRunOptionsExpanded(false)}
           onIterationTimeoutTextChange={setWorkflowIterationTimeoutText}
+          onResetToDefaults={() => {
+            setWorkflowRunInput(
+              getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
+            );
+            setWorkflowIterationTimeoutText('');
+          }}
           onValueChange={setWorkflowRunInput}
           planId={plan.id}
           value={workflowRunInput}
