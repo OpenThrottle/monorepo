@@ -15,7 +15,7 @@
 ## How NX project graph is read elsewhere
 
 - **API:** `createProjectGraphAsync()` from `@nx/devkit` (used in scripts and generators).
-- **Graph shape:** Returns `{ nodes, dependencies }`. Each entry in `nodes` is keyed by project name; node has `name`, `data` (with `root`, `tags`, etc.). `data.root` is the project root path (e.g. `applications/cortex`, `packages/mattscholta/ai-mcp`).
+- **Graph shape:** Returns `{ nodes, dependencies }`. Each entry in `nodes` is keyed by project name; node has `name`, `data` (with `root`, `tags`, etc.). `data.root` is the project root path (e.g. `applications/openthrottle-server`, `packages/ai-mcp`).
 - **Usages in repo:**
   - **tools/generators/src/utils/projects.ts:** `getNxProjectNames()` and `getProjectsByTags()` call `createProjectGraphAsync()`, then `Object.values(nodes)`; filter by `data.tags` (e.g. `type:application`, `type:package`). Used for workflow `--project` validation and generator targets.
   - **tools/generators/src/generators/nestjs/generator.module.ts:** `createProjectGraphAsync()` then `graph.nodes[schema.destination]`; uses `node?.data?.root` to resolve project root path.

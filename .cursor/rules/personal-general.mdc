@@ -22,7 +22,7 @@ Our UI Applications use Remix and React.
 
 ### Creating New Files
 
-**Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/generators/AGENT_USAGE.md](../../docs/tools/generators/AGENT_USAGE.md). Use Nx `@tools/generators` (e.g. `remix`, `react`) with `NX_ISOLATE_PLUGINS=false`; do not use the legacy `yarn generate:*` commands for new code.
+**Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md). Use Nx `@tools/generators` (e.g. `remix`, `react`) with `NX_ISOLATE_PLUGINS=false`; do not use the legacy `yarn generate:*` commands for new code.
 
 Create new Remix routes, React components, Formik forms, and more with our custom generator:
 
@@ -60,7 +60,7 @@ Our API applications powered by React Router will typically use Supabase, Postgr
 
 ### Creating New Files
 
-**Agents:** Use the generator-first workflow (see [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/generators/AGENT_USAGE.md](../../docs/tools/generators/AGENT_USAGE.md)). Use Nx `@tools/generators:nestjs` with `NX_ISOLATE_PLUGINS=false` for new services/modules.
+**Agents:** Use the generator-first workflow (see [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md)). Use Nx `@tools/generators:nestjs` with `NX_ISOLATE_PLUGINS=false` for new services/modules.
 
 Create new GraphQL/NestJS services, NestJS repositories, and more with our custom generator:
 

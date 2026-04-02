@@ -73,7 +73,7 @@ Discover available values for dynamic options:
 ```bash
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react --list=destinations
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix --list=applications
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix --list=componentFolders --application=rocketcms
+NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix --list=componentFolders --application=openthrottle-cms
 ```
 
 ### 4. Create New Code — Always With Generators
@@ -84,18 +84,18 @@ _Only_ generate new files or structures with a generator if one exists:
 # React component example
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=UserCard
 # Remix component example
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=global/components \
   --name=UserProfile
 # NestJS GraphQL service
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
-  --application=oneteam-api \
+  --application=openthrottle-server \
   --name=users
 # NestJS module into a package (use --list=nestjsPackages for valid destinations)
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:nestjs \
@@ -146,7 +146,6 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
 ```
 
 - Use `--subGenerator` (not `--generator`) for most.
-- React Native uses `--type`.
 - Missing required options will fail the command, which is preferable to silent mistakes.
 
 ---
@@ -156,7 +155,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
 - **[React Generator](./docs/react.md)** – Components, hooks, utils, etc.
 - **[Remix Generator](./docs/remix.md)** – Apps, components, forms, modals, etc.
 - **[NestJS Generator](./docs/nestjs.md)** – Apps, services, modules, agents, etc.
-- **[React Native Generator](./docs/react-native.md)**
+- **[React Native](./docs/react-native.md)** — not registered in this repo; see file
 - **[Package Generator](./docs/package.md)**
 - **[Folders Generator](./docs/folders.md)**
 
@@ -185,7 +184,7 @@ Generators support comma-separated names:
 ```bash
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select,Textarea
 ```
 
@@ -256,7 +255,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<kind> --list=<key>
 # 4. Execute generator with all required options
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/react-router-ui \
   --name=UserCard
 ```
 
@@ -342,7 +341,7 @@ executeGenerator(
   'react',
   {
     subGenerator: 'component',
-    destination: '@rocketcms/shared-ui',
+    destination: '@openthrottle/react-router-ui',
     name: 'UserCard',
   },
   { isolatePlugins: false },

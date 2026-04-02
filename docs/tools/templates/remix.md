@@ -12,12 +12,12 @@ nx g @tools/generators:remix --describe
 nx g @tools/generators:remix --list=applications
 
 # List folders for an application
-nx g @tools/generators:remix --list=componentFolders --application=rocketcms
+nx g @tools/generators:remix --list=componentFolders --application=openthrottle-cms
 
 # Generate component
 nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=global/components \
   --name=UserProfile
 ```
@@ -61,7 +61,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=global/components \
   --name=UserProfile
 ```
@@ -71,7 +71,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=form \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing/users/components \
   --name=UserForm
 ```
@@ -81,7 +81,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=modal \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=global/components \
   --name=DeleteModal
 ```
@@ -91,7 +91,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=route \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --name=api.users
 ```
 
@@ -100,7 +100,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=table \
-  --application=rocketcms \
+  --application=openthrottle-cms \
   --folder=routing/users/components \
   --name=UsersTable
 ```

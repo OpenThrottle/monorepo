@@ -68,8 +68,8 @@ nx graph --watch=false
 
 Projects in the graph are typically categorized as:
 
-- **Applications**: Runnable projects (e.g., `barguide`, `intouch-api`)
-- **Libraries**: Shared code packages (e.g., `@barguide/shared-ui`, `@rocketcms/core`)
+- **Applications**: Runnable projects (e.g., `openthrottle`, `openthrottle-server`)
+- **Libraries**: Shared code packages (e.g., `@openthrottle/react-router-ui`, `@openthrottle/nestjs-graphql`)
 - **Tools**: Build tools and generators (e.g., `@tools/generators`)
 
 ### Dependency Types
@@ -88,9 +88,9 @@ To see what a project depends on:
 
 ```bash
 # Focus on a specific project and its dependencies
-nx graph --focus=barguide
+nx graph --focus=openthrottle
 
-# This shows barguide and all projects it depends on (ancestors)
+# This shows openthrottle and all projects it depends on (ancestors)
 ```
 
 ### Finding What Depends on a Project
@@ -99,7 +99,7 @@ To see what projects depend on a specific library:
 
 ```bash
 # Focus on a project to see its dependents
-nx graph --focus=@barguide/shared-ui
+nx graph --focus=@openthrottle/react-router-ui
 
 # This shows the library and all projects that depend on it (descendants)
 ```
@@ -149,7 +149,7 @@ Look for paths that form loops in the visualization.
 
 ```bash
 # Show only a specific project and its dependencies/dependents
-nx graph --focus=barguide-api
+nx graph --focus=openthrottle-server
 ```
 
 This filters the graph to show:
@@ -199,10 +199,10 @@ When adding a new package, understand what it should depend on:
 
 ```bash
 # First, see what similar packages depend on
-nx graph --focus=@barguide/shared-ui
+nx graph --focus=@openthrottle/react-router-ui
 
 # Then check what depends on it to understand usage patterns
-nx graph --focus=@barguide/shared-ui
+nx graph --focus=@openthrottle/react-router-ui
 ```
 
 ### Example 2: Refactoring Impact Analysis
@@ -211,7 +211,7 @@ Before refactoring a shared library:
 
 ```bash
 # See all projects that depend on the library
-nx graph --focus=@rocketcms/core
+nx graph --focus=@openthrottle/react-router-shadcn
 
 # This helps identify what might break during refactoring
 ```

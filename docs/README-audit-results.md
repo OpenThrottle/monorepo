@@ -4,6 +4,8 @@ This document records the outcome of running the [stale-content checklist](./REA
 
 **Inventory and order:** [README-audit-inventory-and-priority.md](./README-audit-inventory-and-priority.md).
 
+**Layout note:** Tables below use **historical paths** from before consolidation (e.g. `mattscholta/*`, `rocketcms/*`, `barguide/*`). Current packages live under `packages/` with `@openthrottle/*` names; use `nx show projects` as ground truth.
+
 ---
 
 ## 1. Summary

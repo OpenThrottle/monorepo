@@ -62,13 +62,7 @@ Use the row that matches the artifact type. If the artifact could have been gene
 
 ### 3.3 React Native (component, route)
 
-| Check         | Expected                                                               | How to verify                                                     |
-| ------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **Export**    | Component: **named**. Route/layout: **default** allowed (framework).   | Same as Remix for component vs route.                             |
-| **Naming**    | PascalCase components; generator uses `--type` not `--subGenerator`.   | personal-generators.mdc, react-native.md.                         |
-| **React**     | `import * as React from 'react'`.                                      | Grep for import.                                                  |
-| **Structure** | Component: `(props: NameProps) =>`; route: default export.             | Compare to `tools/generators/src/generators/react-native/files/`. |
-| **Testing**   | Where tests exist: component, userEvent, waitFor, describe per branch. | Optional but recommended.                                         |
+There is **no** `react-native` entry in `tools/generators/generators.json`. If React Native code exists in the future, align with **react** / **remix** rules and [react-native.md](./react-native.md) (status: no generator registered).
 
 ### 3.4 NestJS (graphql-service, simple-service, module)
 
