@@ -22,6 +22,26 @@ describe('PlanRunCancellationService', () => {
     expect(service.abort('unknown')).toBe(false);
   });
 
+  test('abort for unknown planId does not affect other active runs', () => {
+    const signalA = service.attach('plan-a');
+    const signalB = service.attach('plan-b');
+    const listenerA = vi.fn();
+    const listenerB = vi.fn();
+    signalA.addEventListener('abort', listenerA);
+    signalB.addEventListener('abort', listenerB);
+
+    expect(service.abort('not-registered')).toBe(false);
+
+    expect(signalA.aborted).toBe(false);
+    expect(signalB.aborted).toBe(false);
+    expect(listenerA).not.toHaveBeenCalled();
+    expect(listenerB).not.toHaveBeenCalled();
+
+    expect(service.abort('plan-a')).toBe(true);
+    expect(signalA.aborted).toBe(true);
+    expect(signalB.aborted).toBe(false);
+  });
+
   test('detach clears registration so abort is a no-op', () => {
     service.attach('plan-1');
     service.detach('plan-1');
