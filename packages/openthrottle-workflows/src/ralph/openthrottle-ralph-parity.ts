@@ -51,6 +51,20 @@
  * - **Direct Postgres (`cortex-ralph`):** `UPDATE … SET status = 'IN_PROGRESS' WHERE id = $2 AND status = 'PENDING'` — only `PENDING` rows change; no match → `null` (already `IN_PROGRESS` is not a no-op row update, unlike GraphQL below).
  * - **`updatePlan`:** Requesting `IN_PROGRESS` updates status only when current status is `PENDING` or already `IN_PROGRESS` (idempotent `IN_PROGRESS` → `IN_PROGRESS`). Otherwise the invalid transition is skipped (status unchanged); other input fields still apply. If nothing else changed and `IN_PROGRESS` was the only invalid request → `400` with `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`
  * - **`setPlanStatus`:** Validates `IN_PROGRESS` first and throws that same `400` when invalid **before** the same-status early return. Valid `IN_PROGRESS` → `IN_PROGRESS` returns the entity without persisting.
+ *
+ * ## `RalphFlowContext` from GraphQL / queue tuning (`workflow-graphql.ts`)
+ *
+ * - **`resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning`** — merges `RalphPlanRunTuningInput`
+ *   (enqueue mutation `ralph` payload) or worker job tuning with the same fields, plus `planId` and
+ *   optional `targetMode` / `taskId`, into `WorkflowRalphRunOptionsShape` using the same defaults as
+ *   the developer UI (`WORKFLOW_RALPH_*` in `flow-context.ts`). **`promptFile`** is not part of
+ *   `RalphFlowContext` (nested `--prompt-file` only).
+ * - **`buildRalphFlowContextFromRunOptionsShape`** — adds `kind`, `mode`, and effective `maxIterations`
+ *   (task-centric forces `1`; plan-centric uses `iterations`).
+ * - **`buildRalphFlowContextFromPlanRunTuning`** — combines the two for resolved runs (e.g. queue
+ *   worker: `planId` from job, `ralph` from `job.data`, `targetMode: 'plan'`). BullMQ jobs remain
+ *   plan-scoped; panel `targetMode` / `taskId` affect local CLI preview, not enqueue — same as
+ *   `buildRalphPlanRunTuningInputFromWorkflowRunOptions` in the developer app.
  */
 
 export const OPENTHROTTLE_RALPH_PARITY_NOTE =
