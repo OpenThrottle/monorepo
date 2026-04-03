@@ -69,3 +69,9 @@ mutation linkCommit($input: LinkCommitInput!) {
     ...CommitLink
   }
 }
+
+mutation createProject($input: CreateProjectInput!) {
+  createProject(input: $input) {
+    ...Project
+  }
+}

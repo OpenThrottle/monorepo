@@ -1,1 +1,1 @@
-export const REMOVE_ME = `We can remove this when we actually have some code to export.`;
+export { CORTEX_RALPH_PARITY_NOTE } from './cortex-ralph-parity';

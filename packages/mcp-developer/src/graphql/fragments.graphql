@@ -46,3 +46,12 @@ fragment Task on TaskObject {
   title
   updatedAt
 }
+
+fragment Project on ProjectObject {
+  createdAt
+  description
+  id
+  name
+  nxProjectName
+  updatedAt
+}

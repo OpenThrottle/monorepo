@@ -218,3 +218,15 @@ query listSources {
     }
   }
 }
+
+query getProjects {
+  projects {
+    ...Project
+  }
+}
+
+query getProject($id: ID!) {
+  project(id: $id) {
+    ...Project
+  }
+}
