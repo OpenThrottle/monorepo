@@ -7,8 +7,10 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-graphql": "workspace:*",
+    "graphql": "^16.13.1"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -45,7 +47,6 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",
