@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { RalphNestedDebugCli } from '../__generated__/graphql.js';
 import type { WorkflowRalphRunOptionsShape } from './contract/index.js';
 import {
@@ -10,160 +10,79 @@ import {
 import {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
-  buildWorkflowGraphqlHeaders,
-  mapGraphqlV2FailureToWorkflowGraphqlError,
-  mapUnknownToWorkflowGraphqlError,
+  buildWorkflowExecuteGraphqlV2Options,
   resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning,
 } from './workflow-graphql.js';
 
-describe('buildWorkflowGraphqlHeaders', () => {
-  it('merges additional headers and Bearer token', () => {
-    const headers = buildWorkflowGraphqlHeaders({
-      additionalHeaders: { 'X-Custom': '1' },
-      graphqlUrl: undefined,
+const INTERNAL_BASE = 'http://localhost:6021';
+
+beforeEach(() => {
+  process.env.API_URL_INTERNAL = INTERNAL_BASE;
+});
+
+afterEach(() => {
+  delete process.env.API_URL_INTERNAL;
+});
+
+describe('buildWorkflowExecuteGraphqlV2Options', () => {
+  it('uses graphqlUrl override when set', () => {
+    const opts = buildWorkflowExecuteGraphqlV2Options({
+      graphqlUrl: 'https://custom.example/graphql',
       token: 'abc',
     });
 
-    expect(headers).toEqual({
-      Authorization: 'Bearer abc',
-      'X-Custom': '1',
+    expect(opts).toEqual({
+      token: 'abc',
+      url: 'https://custom.example/graphql',
     });
   });
 
-  it('lets configured token win over Authorization in additionalHeaders', () => {
-    const headers = buildWorkflowGraphqlHeaders({
-      additionalHeaders: { Authorization: 'Bearer old' },
-      graphqlUrl: undefined,
-      token: 'new',
-    });
-
-    expect(headers.Authorization).toBe('Bearer new');
-  });
-
-  it('omits Authorization when token is undefined', () => {
-    const headers = buildWorkflowGraphqlHeaders({
-      additionalHeaders: { 'X-Foo': 'bar' },
-      graphqlUrl: undefined,
+  it('uses getGraphQLUrl when graphqlUrl is unset', () => {
+    const opts = buildWorkflowExecuteGraphqlV2Options({
       token: undefined,
     });
 
-    expect(headers).toEqual({ 'X-Foo': 'bar' });
+    expect(opts).toEqual({ url: `${INTERNAL_BASE}/graphql` });
   });
 
-  it('treats whitespace-only token as absent', () => {
-    const headers = buildWorkflowGraphqlHeaders({
-      additionalHeaders: {},
-      graphqlUrl: undefined,
-      token: '   ',
+  it('merges additionalHeaders and token', () => {
+    const opts = buildWorkflowExecuteGraphqlV2Options({
+      additionalHeaders: { 'X-Custom': '1' },
+      token: 'abc',
     });
 
-    expect(headers.Authorization).toBeUndefined();
-  });
-});
-
-describe('mapGraphqlV2FailureToWorkflowGraphqlError', () => {
-  it('maps graphql_errors kind', () => {
-    const mapped = mapGraphqlV2FailureToWorkflowGraphqlError({
-      cause: undefined,
-      graphqlErrors: [{ message: 'nope' }],
-      graphqlPath: ['x'],
-      httpStatus: 200,
-      kind: 'graphql_errors',
-      message: 'GraphQL errors: nope',
+    expect(opts).toEqual({
+      headers: { 'X-Custom': '1' },
+      token: 'abc',
+      url: `${INTERNAL_BASE}/graphql`,
     });
-
-    expect(mapped.code).toBe('WORKFLOW_GRAPHQL_GRAPHQL_ERRORS');
-    expect(mapped.graphqlPath).toEqual(['x']);
-    expect(mapped.httpStatus).toBe(200);
   });
 
-  it('maps http and missing_data kinds', () => {
+  it('omits token when undefined or whitespace-only', () => {
     expect(
-      mapGraphqlV2FailureToWorkflowGraphqlError({
-        cause: undefined,
-        graphqlErrors: undefined,
-        graphqlPath: undefined,
-        httpStatus: 502,
-        kind: 'http',
-        message: 'bad gateway',
-      }).code,
-    ).toBe('WORKFLOW_GRAPHQL_HTTP');
+      buildWorkflowExecuteGraphqlV2Options({
+        additionalHeaders: {},
+        token: undefined,
+      }),
+    ).toEqual({ url: `${INTERNAL_BASE}/graphql` });
 
     expect(
-      mapGraphqlV2FailureToWorkflowGraphqlError({
-        cause: undefined,
-        graphqlErrors: undefined,
-        graphqlPath: undefined,
-        httpStatus: 200,
-        kind: 'missing_data',
-        message: 'GraphQL response missing data',
-      }).code,
-    ).toBe('WORKFLOW_GRAPHQL_MISSING_DATA');
+      buildWorkflowExecuteGraphqlV2Options({
+        token: '   ',
+      }),
+    ).toEqual({ url: `${INTERNAL_BASE}/graphql` });
   });
 
-  it('maps invalid_json, network, and unknown to WORKFLOW_GRAPHQL_UNKNOWN', () => {
-    for (const kind of ['invalid_json', 'network', 'unknown'] as const) {
-      expect(
-        mapGraphqlV2FailureToWorkflowGraphqlError({
-          cause: undefined,
-          graphqlErrors: undefined,
-          graphqlPath: undefined,
-          httpStatus: undefined,
-          kind,
-          message: 'x',
-        }).code,
-      ).toBe('WORKFLOW_GRAPHQL_UNKNOWN');
-    }
-  });
-
-  it('preserves Error cause when present', () => {
-    const err = new Error('net');
-    const mapped = mapGraphqlV2FailureToWorkflowGraphqlError({
-      cause: err,
-      graphqlErrors: undefined,
-      graphqlPath: undefined,
-      httpStatus: undefined,
-      kind: 'network',
-      message: 'net',
+  it('omits headers when additionalHeaders is empty or absent', () => {
+    expect(
+      buildWorkflowExecuteGraphqlV2Options({
+        additionalHeaders: {},
+        token: 't',
+      }),
+    ).toEqual({
+      token: 't',
+      url: `${INTERNAL_BASE}/graphql`,
     });
-
-    expect(mapped.cause).toBe(err);
-  });
-});
-
-describe('mapUnknownToWorkflowGraphqlError', () => {
-  it('maps GraphQL errors message to GRAPHQL_ERRORS code', () => {
-    const err = new Error('GraphQL errors: not found');
-    const mapped = mapUnknownToWorkflowGraphqlError(err);
-
-    expect(mapped.code).toBe('WORKFLOW_GRAPHQL_GRAPHQL_ERRORS');
-    expect(mapped.message).toBe('GraphQL errors: not found');
-    expect(mapped.cause).toBe(err);
-  });
-
-  it('maps HTTP status line from nodejs-graphql message', () => {
-    const err = new Error(
-      'openthrottle-server GraphQL error 500: Internal Server Error',
-    );
-    const mapped = mapUnknownToWorkflowGraphqlError(err);
-
-    expect(mapped.code).toBe('WORKFLOW_GRAPHQL_HTTP');
-    expect(mapped.httpStatus).toBe(500);
-  });
-
-  it('maps missing data message', () => {
-    const err = new Error('GraphQL response missing data');
-    const mapped = mapUnknownToWorkflowGraphqlError(err);
-
-    expect(mapped.code).toBe('WORKFLOW_GRAPHQL_MISSING_DATA');
-  });
-
-  it('maps non-Error values to UNKNOWN', () => {
-    const mapped = mapUnknownToWorkflowGraphqlError(42);
-
-    expect(mapped.code).toBe('WORKFLOW_GRAPHQL_UNKNOWN');
-    expect(mapped.message).toBe('42');
-    expect(mapped.cause).toBeUndefined();
   });
 });
 

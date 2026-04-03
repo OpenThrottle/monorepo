@@ -10,10 +10,10 @@
  *
  * ## Optional GraphQL preflight (`getServerHealth`)
  *
- * - `fetchWorkflowServerHealth` (`workflow-server-health.ts`) runs the public `getServerHealth` query
- *   via `executeWorkflowGraphql`. It complements (does not replace) `WORKFLOW_GRAPHQL_HTTP` /
- *   `mapUnknownToWorkflowGraphqlError`: health JSON is only available after a successful HTTP POST;
- *   wrong URL, TLS, or proxy errors remain transport failures without health fields. Ralph startup
+ * - `fetchServerHealth` runs the public `getServerHealth` query via `executeGraphqlV2` from
+ *   `@openthrottle/nodejs-graphql` (throws on HTTP/GraphQL errors; message includes status / first
+ *   GraphQL error). Health JSON is only available after a successful HTTP POST; wrong URL, TLS, or
+ *   proxy errors remain transport failures without health fields. Ralph startup
  *   still uses direct Postgres (`ensureCortexReachableOrExit`); see `tools/workflows/README.md`
  *   (section getServerHealth vs WORKFLOW_GRAPHQL_HTTP).
  *

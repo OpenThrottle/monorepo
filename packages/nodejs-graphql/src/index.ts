@@ -24,6 +24,8 @@ export type {
   GraphqlV2Result,
 } from './graphql-v2.js';
 export { executeGraphql_v2 } from './graphql-v2.js';
+export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';
+export { executeGraphqlV2 } from './index-v2.js';
 
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
