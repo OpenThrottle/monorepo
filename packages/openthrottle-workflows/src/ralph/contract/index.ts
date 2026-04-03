@@ -1,3 +1,9 @@
+export {
+  DEFAULT_RALPH_RUNNER,
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
+} from './flow-context';
 export type {
   WorkflowRalphContext as RalphFlowContext,
   WorkflowFlowContext,
@@ -6,18 +12,18 @@ export type {
   WorkflowOptions as WorkflowRalphRunOptionsShape,
   WorkflowMode as WorkflowRalphTargetMode,
 } from './flow-context';
-export {
-  DEFAULT_RALPH_RUNNER as WORKFLOW_RALPH_DEFAULT_BACKEND,
-  DEFAULT_RALPH_ITERATIONS as WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  DEFAULT_RALPH_MODEL as WORKFLOW_RALPH_DEFAULT_MODEL,
-  DEFAULT_RALPH_PROMPT as WORKFLOW_RALPH_DEFAULT_PROMPT,
-} from './flow-context';
 export type { WorkflowOrchestrator, WorkflowRunOutcome } from './orchestrator';
+export type {
+  WorkflowExecuteGraphqlV2,
+  WorkflowRalphIterationRunParams,
+  WorkflowRalphIterationRunner,
+  WorkflowRalphOrchestratorDeps,
+} from './ralph-orchestrator-deps';
 export type {
   AgentParseControlKind,
   StepAgentParseControlResult as AgentParseControlStepResult,
   StepBootstrapResult as BootstrapStepResult,
-  StepOpenThrottleReachableResult as OpenThrottleReachableStepResult,
+  StepHealthcheckResult as OpenThrottleReachableStepResult,
   StepIterationRunResult as IterationRunStepResult,
   StepPlanGuardResult as PlanGuardStepResult,
   StepPlanMarkInProgressResult as PlanMarkInProgressStepResult,
