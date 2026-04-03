@@ -34,14 +34,19 @@
  * - `child-job.ts`: `appendPlanOutput`, `getTasksByPlanId`, `updatePlanStatus`
  * - `link-merge.ts`: `insertCommitLink` → `linkCommit`
  *
- * ## Behavioral difference: `updatePlanStatus` when status is `IN_PROGRESS`
+ * ## `updatePlanStatus` when status is `IN_PROGRESS` (aligned with cortex-ralph)
  *
  * In `cortex-ralph`, transitioning to `IN_PROGRESS` runs
- * `UPDATE … WHERE id = $2 AND status = 'PENDING'` so a plan already completed cannot be forced
- * back to in-progress by mistake. The GraphQL `updatePlan` resolver applies `status` whenever
- * `input.status` is set (no PENDING guard). Callers that need Ralph-equivalent behavior should
- * read the plan first and only call `updatePlan` with `IN_PROGRESS` when the current status is
- * `PENDING` (or mirror the SQL rule in a dedicated server mutation later).
+ * `UPDATE … WHERE id = $2 AND status = 'PENDING'` so a completed plan cannot be forced back to
+ * in-progress. **openthrottle-server enforces the same rule on GraphQL:** `updatePlan` only
+ * applies `IN_PROGRESS` when the current plan is `PENDING` or already `IN_PROGRESS` (idempotent
+ * no-op). Otherwise the status field is left unchanged, matching a conditional UPDATE that updates
+ * zero rows. If `IN_PROGRESS` was the only requested change and it is invalid, the resolver
+ * responds with `400 Bad Request` and
+ * `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.` If other fields
+ * change in the same mutation, those persist and the invalid `IN_PROGRESS` is skipped for status.
+ * The `setPlanStatus` mutation applies the same transition rule and throws on invalid `IN_PROGRESS`
+ * even when it would otherwise be a no-op.
  */
 
 export const OPENTHROTTLE_RALPH_PARITY_NOTE =
