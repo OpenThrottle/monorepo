@@ -3,13 +3,13 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CortexRalphConfig } from '../../utils/cortex-ralph';
+import type { WorkflowRalphConfig } from '../../utils/cortex-ralph';
 import type { PlanRow, TaskRow } from '../../utils/cortex-ralph';
 
 const PLAN_ID = '970aecc7-c647-4948-aa20-410e1bd090fc';
 const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 
-const mockConfig: CortexRalphConfig = {
+const mockConfig: WorkflowRalphConfig = {
   connectionString: 'postgres://localhost/cortex',
 };
 

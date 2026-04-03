@@ -12,7 +12,6 @@ import {
 import { Link, useFetcher } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
-import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-options';
 import {
   PlanStatusBadge,
   isPlanStatusKey,
@@ -22,20 +21,14 @@ import type { PlanCardFragment } from '~/__generated__/graphql';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import { shouldOfferKillPlanRun } from '~/routing/plans/utils/should-offer-kill-plan-run';
-
-const SUMMARY_TRUNCATE_LENGTH = 80;
+import { getPlanStatusLabel } from '~/routing/plans/utils/utils.plans';
+import { DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH } from '~/routing/plans/config/defaults';
 
 export interface PlansTableProps {
   className?: string;
   plans: PlanCardFragment[];
   /** When set, status pills link to filter by that status (e.g. ?status=PENDING). Key = status value. */
   statusFilterUrls?: Record<string, string>;
-}
-
-function getStatusLabel(status: string | null | undefined): string {
-  if (status == null) return 'Unknown';
-  const opt = PLAN_STATUS_FILTER_OPTIONS.find((o) => o.value === status);
-  return opt?.label ?? status;
 }
 
 function buildPlanTableColumns(
@@ -51,20 +44,24 @@ function buildPlanTableColumns(
         const statusKey: PlanStatusKey = isPlanStatusKey(statusRaw)
           ? statusRaw
           : 'PENDING';
+
+        const isNull = status === null;
+        const url = !isNull ? statusFilterUrls?.[status] : undefined;
         const badge = <PlanStatusBadge status={statusKey} />;
-        const url = status != null ? statusFilterUrls?.[status] : undefined;
-        if (url) {
-          return (
-            <Link
-              aria-label={`Filter by ${getStatusLabel(status)}`}
-              to={url}
-              viewTransition={true}
-            >
-              {badge}
-            </Link>
-          );
+
+        if (!url) {
+          return badge;
         }
-        return badge;
+
+        return (
+          <Link
+            aria-label={`Filter by ${getPlanStatusLabel(status)}`}
+            to={url}
+            viewTransition={true}
+          >
+            {badge}
+          </Link>
+        );
       },
       header: () => (
         <span className="inline-block w-full text-center">Status</span>
@@ -90,6 +87,7 @@ function buildPlanTableColumns(
         const plan = row.original;
         const planHref = `/plans/${plan.id}`;
         const title = plan.title ?? 'Untitled';
+
         return (
           <div className="overflow-hidden">
             <h2 className="text-sm line-clamp-1 text-ellipsis font-medium">
@@ -145,8 +143,8 @@ function buildPlanTableColumns(
                     className="mt-0.5 line-clamp-1 text-ellipsis text-xs text-muted-foreground"
                     title={plan.summary}
                   >
-                    {plan.summary.length > SUMMARY_TRUNCATE_LENGTH
-                      ? `${plan.summary.slice(0, SUMMARY_TRUNCATE_LENGTH)}…`
+                    {plan.summary.length > DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH
+                      ? `${plan.summary.slice(0, DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH)}…`
                       : plan.summary}
                   </p>
                 </TooltipTrigger>
@@ -163,6 +161,7 @@ function buildPlanTableColumns(
         const planId = row.original.id;
         const isQueuing = runPlanFetcher.state !== 'idle';
         const RunPlanForm = runPlanFetcher.Form;
+
         return (
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -205,11 +204,23 @@ function buildPlanTableColumns(
 
 export const PlansTable = (props: PlansTableProps) => {
   const { className, plans, statusFilterUrls } = props;
+
+  // Hooks
   const runPlanFetcher = useFetcher<typeof planDetailAction>();
+
+  // Setup
   const columns = React.useMemo(
     () => buildPlanTableColumns(statusFilterUrls, runPlanFetcher),
     [statusFilterUrls, runPlanFetcher],
   );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className={className} data-testid="PlansTable">

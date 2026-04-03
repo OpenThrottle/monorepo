@@ -1,14 +1,13 @@
 {
+  "name": "@openthrottle/openthrottle-workflows",
+  "description": "TODO: Add a description",
+  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {
-    "graphql": "^16.13.1",
-    "zod": "^4.3.6"
-  },
-  "description": "Fetch-based GraphQL client for React Router loaders and actions against openthrottle-server, using TypedDocumentNode from codegen.",
+  "dependencies": {},
   "devDependencies": {},
   "exports": {
     ".": {
@@ -24,31 +23,23 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
-  "name": "@openthrottle/nodejs-graphql",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:@openthrottle/nodejs-graphql",
+      "name:@openthrottle/openthrottle-workflows",
       "production:true",
       "publish:false",
       "technology:nodejs",
       "type:package"
     ],
     "targets": {
-      "build": {
-        "executor": "@nx/js:tsc"
-      },
-      "__dev": {
-        "continuous": true,
-        "executor": "@nx/js:tsc",
-        "options": {
-          "clean": false,
-          "watch": true
-        }
-      },
+      "build": {},
+      "build-package": {},
+      "codegen-graphql": {},
+      "codegen-graphql-watch": {},
       "lint": {},
       "test": {},
       "typecheck": {}
@@ -57,11 +48,25 @@
   "peerDependencies": {},
   "private": true,
   "publishConfig": {
-    "access": "restricted"
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
   },
   "repository": "git://github.com/visormatt/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts",
-  "version": "1.0.0"
+  "types": "./src/index.ts"
 }

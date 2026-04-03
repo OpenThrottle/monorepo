@@ -31,15 +31,29 @@ export const KillPlanRunButton = (
   props: KillPlanRunButtonProps,
 ): React.ReactElement | null => {
   const { planId, planTitle, show, size = 'xs' } = props;
+
+  // Hooks
+  const cancelBusyRef = React.useRef(false);
   const fetcher = useFetcher<typeof planDetailAction>();
   const revalidator = useRevalidator();
   const [open, setOpen] = React.useState(false);
 
-  const cancelBusyRef = React.useRef(false);
+  // Setup
+  const CancelForm = fetcher.Form;
+  const isSubmitting = fetcher.state !== 'idle';
+  const triggerTitle = `Cancel the queued worker job or signal an active Ralph run to stop for this plan.`;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     const busy = fetcher.state !== 'idle';
+
     if (cancelBusyRef.current && !busy) {
       const data = fetcher.data;
+
       if (data != null && typeof data === 'object') {
         if ('cancelPlanRun' in data && data.cancelPlanRun != null) {
           toast.success(describeCancelPlanRunResult(data.cancelPlanRun));
@@ -56,15 +70,10 @@ export const KillPlanRunButton = (
     cancelBusyRef.current = busy;
   }, [fetcher.state, fetcher.data, revalidator]);
 
+  // 🔌 Short Circuit
   if (!show) {
     return null;
   }
-
-  const isSubmitting = fetcher.state !== 'idle';
-  const CancelForm = fetcher.Form;
-
-  const triggerTitle =
-    'Cancel the queued worker job or signal an active Ralph run to stop for this plan.';
 
   return (
     <AlertDialog onOpenChange={setOpen} open={open}>

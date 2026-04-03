@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardFooter,
@@ -33,7 +34,7 @@ import {
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-  isWorkflowRunOptionsExpandedFromSearchParams,
+  isWorkflowRunOptionsExpandedFromSearchParams as isWorkflowOptionsExpanded,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
 
 export interface PlanDetailsProps {
@@ -46,39 +47,47 @@ export const PlanDetails = (props: PlanDetailsProps) => {
   const { projectRelation: project } = plan;
 
   // Hooks
+  const [expanded, setExpanded] = React.useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [descriptionExpanded, setDescriptionExpanded] = React.useState(false);
-  const [summaryExpanded, setSummaryExpanded] = React.useState(false);
+  const [summary, setSummary] = React.useState(false);
+  const [workflowTimeout, setWorkflowTimeout] = React.useState('');
 
-  const workflowRunOptionsExpanded =
-    isWorkflowRunOptionsExpandedFromSearchParams(searchParams);
-
-  const [workflowRunInput, setWorkflowRunInput] =
+  const [workflowInput, setWorkflowInput] =
     React.useState<WorkflowRalphRunOptionsInput>(() =>
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
     );
-  const [workflowIterationTimeoutText, setWorkflowIterationTimeoutText] =
-    React.useState('');
-
-  React.useEffect(() => {
-    setWorkflowRunInput(
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
-    );
-    setWorkflowIterationTimeoutText('');
-  }, [plan.id]);
 
   const ralphTuningJson = React.useMemo((): string => {
     const merged: WorkflowRalphRunOptionsInput = {
-      ...workflowRunInput,
-      iterationTimeoutSeconds: parseWorkflowRunIterationTimeoutSeconds(
-        workflowIterationTimeoutText,
-      ),
+      ...workflowInput,
+      iterationTimeoutSeconds:
+        parseWorkflowRunIterationTimeoutSeconds(workflowTimeout),
     };
-    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
-    return tuning === undefined ? '' : JSON.stringify(tuning);
-  }, [workflowRunInput, workflowIterationTimeoutText]);
 
-  const setWorkflowRunOptionsExpanded = (expanded: boolean): void => {
+    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
+
+    return tuning === undefined ? '' : JSON.stringify(tuning);
+  }, [workflowInput, workflowTimeout]);
+
+  // Setup
+  const isExpanded = isWorkflowOptionsExpanded(searchParams);
+  const hasDescription = plan.description != null && plan.description !== '';
+  const hasSummary = plan.summary != null && plan.summary !== '';
+
+  const summaryLines = hasSummary ? (plan.summary!.split('\n').length ?? 0) : 0;
+  const descriptionLines = hasDescription
+    ? plan.description!.split('\n').length
+    : 0;
+
+  const isLongDescription = descriptionLines > DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES; // prettier-ignore
+  const isLongSummary = summaryLines > DEFAULT_PLAN_SUMMARY_PREVIEW_LINES;
+
+  const showSummaryPreview = hasSummary && isLongSummary && !summary;
+  const showDescriptionPreview =
+    hasDescription && isLongDescription && !expanded;
+
+  // Handlers
+  const onToggleExpanded = (expanded: boolean): void => {
     const next = new URLSearchParams(searchParams);
     if (expanded) {
       next.set(
@@ -91,25 +100,15 @@ export const PlanDetails = (props: PlanDetailsProps) => {
     setSearchParams(next, { replace: true });
   };
 
-  // Setup
-  const hasDescription = plan.description != null && plan.description !== '';
-  const hasSummary = plan.summary != null && plan.summary !== '';
-  const descriptionLines = hasDescription
-    ? plan.description!.split('\n').length
-    : 0;
-  const summaryLines = hasSummary ? (plan.summary!.split('\n').length ?? 0) : 0;
-  const isLongDescription = descriptionLines > DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES; // prettier-ignore
-  const isLongSummary = summaryLines > DEFAULT_PLAN_SUMMARY_PREVIEW_LINES;
-  const showDescriptionPreview =
-    hasDescription && isLongDescription && !descriptionExpanded;
-
-  const showSummaryPreview = hasSummary && isLongSummary && !summaryExpanded;
-
-  // Handlers
-
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    setWorkflowInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
+    );
+    setWorkflowTimeout('');
+  }, [plan.id]);
 
   // 🔌 Short Circuit
 
@@ -190,10 +189,10 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                 {isLongDescription && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={() => setDescriptionExpanded((e) => !e)}
+                    onClick={() => setExpanded((e) => !e)}
                     type="button"
                   >
-                    {descriptionExpanded ? 'Show less' : 'Show more'}
+                    {expanded ? 'Show less' : 'Show more'}
                   </button>
                 )}
               </div>
@@ -212,10 +211,10 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                 {isLongSummary && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={() => setSummaryExpanded((e) => !e)}
+                    onClick={() => setSummary((e) => !e)}
                     type="button"
                   >
-                    {summaryExpanded ? 'Show less' : 'Show more'}
+                    {summary ? 'Show less' : 'Show more'}
                   </button>
                 )}
               </div>
@@ -233,50 +232,47 @@ export const PlanDetails = (props: PlanDetailsProps) => {
         </CardFooter>
       </Card>
 
-      {workflowRunOptionsExpanded ? (
+      {isExpanded ? (
         <WorkflowRunOptions
           className="mb-6"
-          iterationTimeoutText={workflowIterationTimeoutText}
-          onCollapse={() => setWorkflowRunOptionsExpanded(false)}
-          onIterationTimeoutTextChange={setWorkflowIterationTimeoutText}
+          iterationTimeoutText={workflowTimeout}
+          onCollapse={() => onToggleExpanded(false)}
+          onIterationTimeoutTextChange={setWorkflowTimeout}
           onResetToDefaults={() => {
-            setWorkflowRunInput(
+            setWorkflowInput(
               getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
             );
-            setWorkflowIterationTimeoutText('');
+            setWorkflowTimeout('');
           }}
-          onValueChange={setWorkflowRunInput}
+          onValueChange={setWorkflowInput}
           planId={plan.id}
-          value={workflowRunInput}
+          value={workflowInput}
         />
       ) : (
         <Card className="mb-6" data-testid="workflow-run-options-collapsed">
-          <CardHeader className="pb-0">
-            <button
+          <CardHeader className="flex flex-row w-full gap-4">
+            <div className="min-w-0 space-y-1.5 flex-1">
+              <h2 className="text-lg font-semibold leading-none tracking-tight">
+                Workflow options
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Tuning for{' '}
+                <code className="text-xs">pnpm exec workflow-ralph</code> and
+                for queued runs from the toolbar. Defaults apply while
+                collapsed; expand to change iterations, model, prompt, and more.
+              </p>
+            </div>
+
+            <Button
               aria-controls="workflow-run-options"
               aria-expanded={false}
-              className="group flex w-full items-start justify-between gap-3 rounded-md text-left outline-none ring-offset-background transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="shrink-0 size-8"
               data-testid="workflow-run-options-expand"
-              onClick={() => setWorkflowRunOptionsExpanded(true)}
-              type="button"
+              onClick={() => onToggleExpanded(true)}
+              variant="ghost"
             >
-              <div className="min-w-0 space-y-1.5">
-                <h2 className="text-lg font-semibold leading-none tracking-tight">
-                  Workflow run options
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Tuning for{' '}
-                  <code className="text-xs">pnpm exec workflow-ralph</code> and
-                  for queued runs from the toolbar. Defaults apply while
-                  collapsed; expand to change iterations, model, prompt, and
-                  more.
-                </p>
-              </div>
-              <ChevronDown
-                aria-hidden={true}
-                className="text-muted-foreground group-hover:text-foreground mt-0.5 size-5 shrink-0"
-              />
-            </button>
+              <ChevronDown aria-hidden={true} className="size-4" />
+            </Button>
           </CardHeader>
         </Card>
       )}

@@ -31,27 +31,34 @@ import {
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 /**
- * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags) with canonical preview/copy. When the parent controls state (plan detail), the same values are serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped).
+ * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags)
+ * with canonical preview/copy. When the parent controls state (plan detail), the
+ * same values are serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped).
  */
 export interface WorkflowRunOptionsProps {
   readonly className?: string;
+  readonly iterationTimeoutText?: string;
+
   /**
    * @description When set (plan detail URL-driven panel), shows a control to collapse the section.
    */
   readonly onCollapse?: () => void;
+  readonly onIterationTimeoutTextChange?: (next: string) => void;
+  readonly onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
+
   /**
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
    */
   readonly onResetToDefaults?: () => void;
+
   /** When set (e.g. plan detail), seeds `--plan` and default target mode. */
   readonly planId?: string;
+
   /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
   readonly taskId?: string;
+
   /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
   readonly value?: WorkflowRalphRunOptionsInput;
-  readonly onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
-  readonly iterationTimeoutText?: string;
-  readonly onIterationTimeoutTextChange?: (next: string) => void;
 }
 
 export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
@@ -67,12 +74,6 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
     value: valueProp,
   } = props;
 
-  const isControlled =
-    valueProp !== undefined &&
-    onValueChange !== undefined &&
-    iterationTimeoutTextProp !== undefined &&
-    onIterationTimeoutTextChange !== undefined;
-
   // Hooks
   const [internalInput, setInternalInput] =
     React.useState<WorkflowRalphRunOptionsInput>(() =>
@@ -80,6 +81,12 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
     );
   const [internalIterationTimeoutText, setInternalIterationTimeoutText] =
     React.useState('');
+
+  const isControlled =
+    valueProp !== undefined &&
+    onValueChange !== undefined &&
+    iterationTimeoutTextProp !== undefined &&
+    onIterationTimeoutTextChange !== undefined;
 
   const input = isControlled ? valueProp : internalInput;
   const setInput = isControlled
@@ -97,22 +104,16 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
     ? onIterationTimeoutTextChange
     : setInternalIterationTimeoutText;
 
-  React.useEffect(() => {
-    if (isControlled) {
-      return;
-    }
-    setInternalInput(
-      getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
-    );
-  }, [isControlled, planId, taskId]);
-
   // Setup
-  const activePlanId = input.targetMode === 'plan' ? input.planId.trim() : '';
-  const activeTaskId = input.targetMode === 'task' ? input.taskId.trim() : '';
-  const targetIdWarning =
-    input.targetMode === 'plan'
-      ? activePlanId !== '' && !isCortexUuid(activePlanId)
-      : activeTaskId !== '' && !isCortexUuid(activeTaskId);
+  const isPlanMode = input.targetMode === 'plan';
+  const isTaskMode = input.targetMode === 'task';
+
+  const activePlanId = isPlanMode ? input.planId.trim() : '';
+  const activeTaskId = isTaskMode ? input.taskId.trim() : '';
+
+  const targetIdWarning = isPlanMode
+    ? activePlanId !== '' && !isCortexUuid(activePlanId)
+    : activeTaskId !== '' && !isCortexUuid(activeTaskId);
 
   const mergedForArgv: WorkflowRalphRunOptionsInput = {
     ...input,
@@ -144,23 +145,26 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    if (isControlled) return;
+
+    setInternalInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
+    );
+  }, [isControlled, planId, taskId]);
 
   // 🔌 Short Circuit
 
   return (
-    <Card
-      className={classnames(className)}
-      data-testid="WorkflowRunOptions"
-      id="workflow-run-options"
-    >
-      <CardHeader className="pb-2">
+    <Card className={classnames(className)} data-testid="WorkflowRunOptions">
+      <CardHeader className="pb-2 mb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1.5">
             <h2
               className="text-lg font-semibold leading-none tracking-tight"
               id="workflow-run-options-title"
             >
-              Workflow run options
+              Workflow options
             </h2>
             <CardDescription>
               Compose flags aligned with{' '}
@@ -174,6 +178,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               timeout) to the worker; unchanged fields use CLI defaults.
             </CardDescription>
           </div>
+
           {onResetToDefaults != null || onCollapse != null ? (
             <div className="flex shrink-0 items-center gap-2">
               {onResetToDefaults != null ? (
@@ -188,15 +193,14 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
                   Reset to defaults
                 </Button>
               ) : null}
+
               {onCollapse != null ? (
                 <Button
                   aria-controls="workflow-run-options"
                   aria-expanded={true}
                   aria-label="Hide workflow run options"
-                  className="shrink-0"
+                  className="shrink-0 size-8"
                   onClick={onCollapse}
-                  size="icon"
-                  type="button"
                   variant="ghost"
                 >
                   <ChevronUp aria-hidden={true} className="size-4" />
@@ -206,7 +210,8 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col flex-1 gap-8">
+
+      <CardContent className="flex flex-col flex-1 gap-4">
         <fieldset
           aria-labelledby="workflow-run-target-legend"
           className="space-y-3 rounded-md border border-border p-4"

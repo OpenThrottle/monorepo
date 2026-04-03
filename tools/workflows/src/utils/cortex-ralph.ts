@@ -7,7 +7,7 @@ import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server'
 import pg from 'pg';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
-export interface CortexRalphConfig {
+export interface WorkflowRalphConfig {
   readonly connectionString: string;
 }
 
@@ -34,7 +34,7 @@ function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
 /**
  * @description Returns Cortex config or exits with {@link CORTEX_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
  */
-export function getCortexConfigOrExit(): CortexRalphConfig {
+export function getCortexConfigOrExit(): WorkflowRalphConfig {
   const config = getCortexPostgresConfig();
   if (!config) {
     console.error(CORTEX_FATAL_REQUIRED);
@@ -49,7 +49,7 @@ export function getCortexConfigOrExit(): CortexRalphConfig {
  * @description Verifies Cortex is reachable or exits with a clear message. Call after getCortexConfigOrExit() for the standard startup flow.
  */
 export async function ensureCortexReachableOrExit(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
 ): Promise<void> {
   try {
     await ensureCortexReachable(config);
@@ -66,9 +66,10 @@ export async function ensureCortexReachableOrExit(
  * @description Verifies Cortex Postgres is reachable (connect + SELECT 1). Throws with a clear message if connection fails. Call before using Cortex when config is required.
  */
 export async function ensureCortexReachable(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
 ): Promise<void> {
   const client = new pg.Client({ connectionString: config.connectionString });
+
   try {
     await client.connect();
     await client.query('SELECT 1');
@@ -116,7 +117,7 @@ export interface ProjectRow {
  * @description Updates a plan's summary (PRD summarization, usage guide). Returns updated row or null if not found.
  */
 export async function updatePlanSummary(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   summary: string,
 ): Promise<PlanRow | null> {
@@ -159,7 +160,7 @@ export async function updatePlanSummary(
  * @description Updates a task's summary (PRD summarization, close-out notes). Returns true if a row was updated.
  */
 export async function updateTaskSummary(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   taskId: string,
   summary: string,
 ): Promise<boolean> {
@@ -180,7 +181,7 @@ export async function updateTaskSummary(
  * @description Fetches a task by id, or null if not found.
  */
 export async function getTaskById(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   id: string,
 ): Promise<TaskRow | null> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -229,7 +230,7 @@ export interface ListPlansByStatusRow {
  * @description Lists plans in Cortex filtered by status. Returns id, title, status, createdAt.
  */
 export async function listPlansByStatus(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   status: string,
 ): Promise<ListPlansByStatusRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -259,7 +260,7 @@ export async function listPlansByStatus(
  * @description Fetches a plan by id, or null if not found.
  */
 export async function getPlanById(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   id: string,
 ): Promise<PlanRow | null> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -301,7 +302,7 @@ export async function getPlanById(
  * @description Lists all projects from the projects table (id, name, nx_project_name). Use to map plans to NX projects.
  */
 export async function listProjects(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
 ): Promise<ProjectRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
   await client.connect();
@@ -325,7 +326,7 @@ export async function listProjects(
  * @description Ensures a project row exists for the given NX project name; returns its id. Inserts if missing.
  */
 export async function ensureProjectForNxName(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   nxProjectName: string,
 ): Promise<string> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -353,7 +354,7 @@ export async function ensureProjectForNxName(
  * @description Updates a plan's project_id (FK to projects). Pass null to clear. Returns true if a row was updated.
  */
 export async function updatePlanProjectId(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   projectId: string | null,
 ): Promise<boolean> {
@@ -374,7 +375,7 @@ export async function updatePlanProjectId(
  * @description Fetches all tasks for a plan, ordered by created_at.
  */
 export async function getTasksByPlanId(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
 ): Promise<TaskRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -447,7 +448,7 @@ export function formatPlanAndTasksForPrompt(
  * @description Updates a task's status (and optionally other fields). Returns updated row or null if not found.
  */
 export async function updateTaskStatus(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   id: string,
   status: string,
 ): Promise<TaskRow | null> {
@@ -490,7 +491,7 @@ export async function updateTaskStatus(
  * @description Updates a plan's status. When setting to 'IN_PROGRESS', only updates if current status is 'pending' to avoid overwriting completed. Returns updated row or null if not found (or condition not met).
  */
 export async function updatePlanStatus(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   status: string,
 ): Promise<PlanRow | null> {
@@ -580,7 +581,7 @@ export interface CommitLinkRow {
  * @description Appends a chunk of streaming output to a plan (same as Cortex MCP append_plan_output). Used by child-job when streamToCortex is enabled so plan_output_stream is updated in real time.
  */
 export async function appendPlanOutput(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   content: string,
   iteration?: number | null,
@@ -607,7 +608,7 @@ export async function appendPlanOutput(
  * @description Inserts a commit link (plan/task ↔ repo/sha). Use after PR merge with the squash commit SHA so commit_links stores the one SHA on main.
  */
 export async function insertCommitLink(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   input: CommitLinkInput,
 ): Promise<CommitLinkRow> {
   const client = new pg.Client({ connectionString: config.connectionString });

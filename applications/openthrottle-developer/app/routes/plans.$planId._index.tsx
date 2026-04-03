@@ -309,12 +309,15 @@ export const action = async (args: Route.ActionArgs) => {
     const taskId = typeof taskIdRaw === 'string' ? taskIdRaw : '';
     const status = typeof statusRaw === 'string' ? statusRaw : '';
     const bodyPlanId = typeof planIdRaw === 'string' ? planIdRaw : '';
+
     if (!taskId.trim() || !status.trim()) {
       return { updateTaskError: 'Task id and status are required.' };
     }
+
     if (bodyPlanId !== planId) {
       return { updateTaskError: 'Plan id mismatch.' };
     }
+
     try {
       const result = await executeGraphqlWithAuth(
         args.request,
@@ -398,6 +401,7 @@ export const action = async (args: Route.ActionArgs) => {
 
   const ralphTuningRaw = formData.get('ralphTuning');
   let ralph: RalphPlanRunTuningInput | undefined;
+
   if (typeof ralphTuningRaw === 'string' && ralphTuningRaw.trim() !== '') {
     try {
       const parsed: unknown = JSON.parse(ralphTuningRaw);
@@ -405,6 +409,7 @@ export const action = async (args: Route.ActionArgs) => {
       if (!tuningResult.success) {
         return { runPlanError: 'Invalid workflow run options payload.' };
       }
+
       ralph = tuningResult.data;
     } catch {
       return { runPlanError: 'Invalid workflow run options payload.' };

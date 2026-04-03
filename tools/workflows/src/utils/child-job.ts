@@ -14,7 +14,7 @@ import type {
   ChildJobResult,
   ChildJobStreamChunk,
 } from '../types/worktree';
-import type { CortexRalphConfig } from './cortex-ralph';
+import type { WorkflowRalphConfig } from './cortex-ralph';
 import {
   appendPlanOutput,
   ensureCortexReachable,
@@ -264,7 +264,7 @@ export async function runChildJob(
     };
   }
 
-  const config: CortexRalphConfig = {
+  const config: WorkflowRalphConfig = {
     connectionString: rawConfig.connectionString,
   };
   try {

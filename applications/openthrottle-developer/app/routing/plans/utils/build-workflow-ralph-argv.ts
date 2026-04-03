@@ -9,10 +9,10 @@ import { RalphNestedDebugCli } from '~/__generated__/graphql';
 const CORTEX_UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const WORKFLOW_RALPH_DEFAULT_BACKEND = 'cursor' as const;
-export const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph' as const;
-export const WORKFLOW_RALPH_DEFAULT_ITERATIONS = 10 as const;
-export const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto' as const;
+export const WORKFLOW_RALPH_DEFAULT_BACKEND = 'cursor';
+export const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph';
+export const WORKFLOW_RALPH_DEFAULT_ITERATIONS = 10;
+export const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto';
 
 export type WorkflowRalphTargetMode = 'plan' | 'task';
 

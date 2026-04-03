@@ -1,0 +1,220 @@
+query getNote($id: ID!) {
+  note(id: $id) {
+    ...Note
+  }
+}
+
+query getNotes {
+  notes {
+    ...Note
+  }
+}
+
+query getServerHealth {
+  serverHealth {
+    api
+    database
+    redis
+    websocket
+  }
+}
+
+query getPlan($id: ID!) {
+  plan(id: $id) {
+    ...Plan
+  }
+}
+
+query listPlansByStatus($input: ListPlansByStatusInput!) {
+  listPlansByStatus(input: $input) {
+    plans {
+      ...Plan
+    }
+    totalCount
+  }
+}
+
+query getTask($id: ID!) {
+  task(id: $id) {
+    ...Task
+  }
+}
+
+query getTasksByPlanId($input: TasksByPlanIdInput!) {
+  tasksByPlanId(input: $input) {
+    ...Task
+  }
+}
+
+query getRemainingTasksByPlanId($input: RemainingTasksByPlanIdInput!) {
+  remainingTasksByPlanId(input: $input) {
+    ...Task
+  }
+}
+
+query getTasks {
+  tasks {
+    ...Task
+  }
+}
+
+query getCommitLinksByPlanId($input: CommitLinksByPlanIdInput!) {
+  commitLinksByPlanId(input: $input) {
+    id
+    message
+    planId
+    repo
+    sha
+    taskId
+    createdAt
+  }
+}
+
+query getActivityByDate($input: ActivityByDateInput!) {
+  activityByDate(input: $input) {
+    commits {
+      id
+      planId
+      taskId
+      repo
+      sha
+      message
+      planTitle
+      taskTitle
+      createdAt
+    }
+    outputChunks {
+      id
+      planId
+      iteration
+      content
+      planTitle
+      createdAt
+    }
+    tasksUpdated {
+      id
+      planId
+      title
+      status
+      planTitle
+      updatedAt
+    }
+    totalCount
+    hasNext
+  }
+}
+
+query getActivityByDateRange($input: ActivityByDateRangeInput!) {
+  activityByDateRange(input: $input) {
+    commits {
+      id
+      planId
+      taskId
+      repo
+      sha
+      message
+      planTitle
+      taskTitle
+      createdAt
+    }
+    outputChunks {
+      id
+      planId
+      iteration
+      content
+      planTitle
+      createdAt
+    }
+    tasksUpdated {
+      id
+      planId
+      title
+      status
+      planTitle
+      updatedAt
+    }
+    totalCount
+    hasNext
+  }
+}
+
+query getLastActivity($input: LastActivityInput!) {
+  lastActivity(input: $input) {
+    at
+    kind
+    planId
+    taskId
+    summary
+    commit {
+      message
+      repo
+      sha
+    }
+    outputChunk {
+      content
+      iteration
+    }
+    taskUpdate {
+      status
+      taskId
+      taskTitle
+    }
+  }
+}
+
+query getPlanOutputStreamChunks($input: ListPlanOutputStreamChunksInput!) {
+  planOutputStreamChunks(input: $input) {
+    id
+    planId
+    iteration
+    content
+    createdAt
+  }
+}
+
+query search($input: SearchInput!) {
+  search(input: $input) {
+    chunks {
+      id
+      content
+      planId
+      planTitle
+      similarity
+      source
+      sourcePath
+      sourceRepo
+      sourceSha
+      taskId
+      taskTitle
+    }
+  }
+}
+
+query getDocument($id: String!) {
+  getDocument(id: $id) {
+    id
+    content
+    planId
+    planTitle
+    similarity
+    source
+    sourcePath
+    sourceRepo
+    sourceSha
+    taskId
+    taskTitle
+  }
+}
+
+query listSources {
+  listSources {
+    sources {
+      name
+      description
+    }
+    plans {
+      id
+      title
+    }
+  }
+}

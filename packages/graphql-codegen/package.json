@@ -38,8 +38,7 @@
       "name:@openthrottle/graphql-codegen",
       "production:true",
       "publish:false",
-      "technology:react",
-      "technology:react-router",
+      "technology:nodejs",
       "type:package"
     ],
     "targets": {

@@ -39,7 +39,8 @@ export interface PlanToolbarProps {
 }
 
 /**
- * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group), and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
+ * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group),
+ * and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
@@ -50,25 +51,12 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     ralphTuningJson = '',
   } = props;
 
+  // Hooks
   const fetcherRunPlan = useFetcher<typeof action>();
   const fetcherSetPlanStatus = useFetcher<typeof action>();
-
   const runPlanWasBusy = React.useRef(false);
-  React.useEffect(() => {
-    const busy = fetcherRunPlan.state !== 'idle';
-    if (runPlanWasBusy.current && !busy) {
-      const data = fetcherRunPlan.data;
-      if (data != null && typeof data === 'object') {
-        if ('runPlan' in data && data.runPlan != null) {
-          toast.success(
-            'Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).',
-          );
-        }
-      }
-    }
-    runPlanWasBusy.current = busy;
-  }, [fetcherRunPlan.state, fetcherRunPlan.data]);
 
+  // Setup
   const isCompleted = planStatus === 'COMPLETED';
   const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =
@@ -104,6 +92,28 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
         return 'Run plan';
     }
   };
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    const busy = fetcherRunPlan.state !== 'idle';
+    if (runPlanWasBusy.current && !busy) {
+      const data = fetcherRunPlan.data;
+      if (data != null && typeof data === 'object') {
+        if ('runPlan' in data && data.runPlan != null) {
+          toast.success(
+            'Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).',
+          );
+        }
+      }
+    }
+    runPlanWasBusy.current = busy;
+  }, [fetcherRunPlan.state, fetcherRunPlan.data]);
+
+  // 🔌 Short Circuit
 
   return (
     <TooltipProvider>
@@ -177,13 +187,6 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             show={shouldOfferKillPlanRun(planStatus)}
             size="sm"
           />
-
-          <a
-            className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4"
-            href="#workflow-run-options"
-          >
-            Workflow run options
-          </a>
         </div>
 
         {setPlanStatusError != null && (
@@ -191,6 +194,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             {setPlanStatusError}
           </span>
         )}
+
         {runPlanError != null && (
           <span className="text-destructive text-xs" role="alert">
             {runPlanError}

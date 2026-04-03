@@ -229,10 +229,13 @@ export const main = async (): Promise<void> => {
           })
         : runIteration(iterationConfig);
 
-    ralphDebugLogger.debug('main: iteration runner finished (buffer ready for parse)', {
-      iteration,
-      resultLen: result.length,
-    });
+    ralphDebugLogger.debug(
+      'main: iteration runner finished (buffer ready for parse)',
+      {
+        iteration,
+        resultLen: result.length,
+      },
+    );
 
     const completeTaskIds = parseRalphCompleteTaskSignals(result);
     const taskIdLower = (id: string): string => id.toLowerCase();
@@ -318,6 +321,7 @@ export const main = async (): Promise<void> => {
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+
       console.warn(
         `⚠️ Could not reset task ${lastIterationTaskId} to PENDING: ${msg}`,
       );
