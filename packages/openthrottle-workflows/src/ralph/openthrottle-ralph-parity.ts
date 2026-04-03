@@ -61,14 +61,14 @@
  *
  * - **`resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning`** — merges `RalphPlanRunTuningInput`
  *   (enqueue mutation `ralph` payload) or worker job tuning with the same fields, plus `planId` and
- *   optional `targetMode` / `taskId`, into `WorkflowRalphRunOptionsShape` using the same defaults as
+ *   optional `mode` / `taskId`, into `WorkflowRalphRunOptionsShape` using the same defaults as
  *   the developer UI (`WORKFLOW_RALPH_*` in `flow-context.ts`). **`promptFile`** is not part of
  *   `RalphFlowContext` (nested `--prompt-file` only).
- * - **`buildRalphFlowContextFromRunOptionsShape`** — adds `kind`, `mode`, and effective `maxIterations`
- *   (task forces `1`; plan uses `iterations`).
+ * - **`buildRalphFlowContextFromRunOptionsShape`** — adds `kind`, `mode`, and effective `iterations`
+ *   (task forces `1`; plan uses configured `iterations`). Preserves `iterationMax` / timeout fields from {@link WorkflowOptions}.
  * - **`buildRalphFlowContextFromPlanRunTuning`** — combines the two for resolved runs (e.g. queue
- *   worker: `planId` from job, `ralph` from `job.data`, `targetMode: 'plan'`). BullMQ jobs remain
- *   plan-scoped; panel `targetMode` / `taskId` affect local CLI preview, not enqueue — same as
+ *   worker: `planId` from job, `ralph` from `job.data`, `mode: 'plan'`). BullMQ jobs remain
+ *   plan-scoped; panel `mode` / `taskId` affect local CLI preview, not enqueue — same as
  *   `buildRalphPlanRunTuningInputFromWorkflowRunOptions` in the developer app.
  */
 

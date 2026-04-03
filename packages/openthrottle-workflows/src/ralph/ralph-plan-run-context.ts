@@ -107,59 +107,61 @@ const resolveProjectFromTuning = (raw: string | null | undefined): string => {
 export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly targetMode?: WorkflowMode;
+  readonly mode?: WorkflowMode;
   readonly taskId?: string;
 }): WorkflowOptions {
   const r = params.ralph ?? {};
   const planId = params.planId.trim();
-  const targetMode = params.targetMode ?? 'plan';
+  const mode = params.mode ?? 'plan';
   const taskId = (params.taskId ?? '').trim();
+  const iterations = resolveIterationsFromTuning(r.iterations);
+  const iterationTimeout = resolveIterationTimeoutSecondsFromTuning(
+    r.iterationTimeoutSeconds,
+  );
 
   return {
-    debugCli: mapRalphNestedDebugCliToWorkflowDebugCli(r.ralphDebugCli),
-    executionBackend: resolveExecutionBackend(r.backend),
-    iterationTimeoutSeconds: resolveIterationTimeoutSecondsFromTuning(
-      r.iterationTimeoutSeconds,
-    ),
-    iterations: resolveIterationsFromTuning(r.iterations),
+    debug: mapRalphNestedDebugCliToWorkflowDebugCli(r.ralphDebugCli),
+    iterationMax: iterations,
+    iterationTimeout,
+    iterations,
+    mode,
     model: resolveModelFromTuning(r.model),
     planId,
     project: resolveProjectFromTuning(r.project),
     prompt: resolvePromptFromTuning(r.prompt),
-    targetMode,
+    runner: resolveExecutionBackend(r.backend),
     taskId,
+    timeout: iterationTimeout,
   };
 }
 
 /**
  * @description Builds {@link WorkflowRalphContext} from a full {@link WorkflowOptions}
- * (e.g. developer UI / argv preview). Applies task `maxIterations === 1` rule; keeps
+ * (e.g. developer UI / argv preview). Applies task `iterations === 1` rule; keeps
  * {@link WorkflowOptions.iterations} as the user-facing value.
  */
 export function buildRalphFlowContextFromRunOptionsShape(
   input: WorkflowOptions,
 ): WorkflowRalphContext {
-  const isTaskMode = input.targetMode === 'task';
-  const mode: WorkflowRalphContext['mode'] = isTaskMode ? 'task' : 'plan';
-  const maxIterations = input.targetMode === 'task' ? 1 : input.iterations;
+  const isTaskMode = input.mode === 'task';
 
   return {
     ...input,
+    iterations: isTaskMode ? 1 : input.iterations,
     kind: 'ralph',
-    maxIterations,
-    mode,
+    mode: input.mode,
   };
 }
 
 /**
  * @description Resolves {@link WorkflowRalphContext} from enqueue / job tuning plus plan scope.
- * Queued runs: pass `targetMode: 'plan'` and omit `taskId` so context matches BullMQ plan-scoped argv
+ * Queued runs: pass `mode: 'plan'` and omit `taskId` so context matches BullMQ plan-scoped argv
  * (see `openthrottle-ralph-parity.ts` queue vs CLI notes).
  */
 export function buildRalphFlowContextFromPlanRunTuning(params: {
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly targetMode?: WorkflowMode;
+  readonly mode?: WorkflowMode;
   readonly taskId?: string;
 }): WorkflowRalphContext {
   return buildRalphFlowContextFromRunOptionsShape(
