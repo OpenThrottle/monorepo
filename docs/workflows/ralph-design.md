@@ -58,7 +58,7 @@ The CLI sets the plan to `IN_PROGRESS` at run start when Cortex is configured (p
 
 ## Cortex required; no ref file
 
-Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mode; the CLI fails fast with a clear error if the DB is unreachable. Startup uses a **direct Cortex Postgres** check (`ensureCortexReachableOrExit`), not the GraphQL `getServerHealth` query; see **`tools/workflows/README.md`** § Workflow Ralph → **`getServerHealth` vs `WORKFLOW_GRAPHQL_HTTP`** for when health complements HTTP error codes in other tooling. Ralph does **not** write a ref file; the agent always receives Plan-Id (and optional Task-Id) in the prompt and loads plan/tasks via Cortex MCP. Cross-repo: invoke with `--plan` or `--task` and set Cortex env in the calling repo; see **`tools/workflows/README.md`** § Cross-repo usage.
+Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mode; the CLI fails fast with a clear error if the DB is unreachable. Startup uses a **direct Cortex Postgres** check (`ensureCortexReachableOrExit`), not the GraphQL `getServerHealth` query; see **`tools/workflows/README.md`** § Workflow Ralph → **`getServerHealth` vs workflow GraphQL transport errors** for when health complements thrown HTTP/GraphQL client errors in other tooling. Ralph does **not** write a ref file; the agent always receives Plan-Id (and optional Task-Id) in the prompt and loads plan/tasks via Cortex MCP. Cross-repo: invoke with `--plan` or `--task` and set Cortex env in the calling repo; see **`tools/workflows/README.md`** § Cross-repo usage.
 
 ## References
 

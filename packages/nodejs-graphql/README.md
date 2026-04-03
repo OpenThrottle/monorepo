@@ -16,7 +16,7 @@ Fetch-based GraphQL client for React Router loaders and actions against openthro
 
 **Use V2** when you need explicit URL/token without env inside the client, cancellation (`signal`), injectable `fetch`, or structured errors (map with `mapFailure`, or branch on `result.ok`). CLI tools, workflows, and tests often fit V2 better.
 
-**Workflows:** `@openthrottle/openthrottle-workflows` exposes `executeWorkflowGraphql` and config helpers that delegate to `executeGraphql_v2` with workflow-specific error mapping—prefer that package for Ralph/workflow GraphQL rather than calling V2 directly.
+**Workflows:** `@openthrottle/openthrottle-workflows` exposes **`executeWorkflowGraphqlV2`** and env/URL helpers that build options for **`executeGraphqlV2`** (throws on HTTP/GraphQL errors with status and first message in the `Error` string). Prefer that package for Ralph/workflow GraphQL so token and `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL` match other workflow tools.
 
 ## Environment (V1 URL)
 

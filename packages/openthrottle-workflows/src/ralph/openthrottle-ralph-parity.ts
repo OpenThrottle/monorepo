@@ -16,7 +16,11 @@
  *   after a successful HTTP POST; wrong URL, TLS, or proxy errors remain transport failures without
  *   health fields. Ralph startup
  *   still uses direct Postgres (`ensureCortexReachableOrExit`); see `tools/workflows/README.md`
- *   (section getServerHealth vs WORKFLOW_GRAPHQL_HTTP).
+ *   (section **getServerHealth vs workflow GraphQL transport errors**).
+ *
+ * TODO: When `@openthrottle/nodejs-graphql` exposes structured failure payloads (`errors[]`, extensions,
+ * HTTP metadata), surface them from {@link executeWorkflowGraphqlV2} or dedicated mappers so tooling
+ * can classify failures without relying only on `Error.message` strings.
  *
  * ## Queries / mutations (alphabetical by helper in `cortex-ralph.ts`)
  *
