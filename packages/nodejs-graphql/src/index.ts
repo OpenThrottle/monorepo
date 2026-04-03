@@ -8,6 +8,20 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 import { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
 
+export type {
+  ExecuteGraphqlV2,
+  GraphqlV2ErrResult,
+  GraphqlV2ExecuteOptions,
+  GraphqlV2Failure,
+  GraphqlV2FailureContext,
+  GraphqlV2FailureKind,
+  GraphqlV2GraphqlErrorItem,
+  GraphqlV2MapFailure,
+  GraphqlV2OkResult,
+  GraphqlV2ResponsePayload,
+  GraphqlV2Result,
+} from './graphql-v2.js';
+
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
  */
