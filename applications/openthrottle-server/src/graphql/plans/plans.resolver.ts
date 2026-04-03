@@ -59,6 +59,24 @@ import {
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
+  'Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.';
+
+/**
+ * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
+ */
+function normalizePlanStatusForPolicy(status: string): string {
+  return status.trim().toUpperCase();
+}
+
+/**
+ * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status = 'PENDING'`. Also allows idempotent `IN_PROGRESS` when already `IN_PROGRESS`.
+ */
+function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
+  const s = normalizePlanStatusForPolicy(currentStatus);
+  return s === 'PENDING' || s === 'IN_PROGRESS';
+}
+
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
@@ -388,18 +406,70 @@ export class PlansResolver {
 
     if (!entity) return null;
 
-    // The fields are not nullable, so we need to check for null.
-    if (input.author != null) entity.author = input.author;
-    if (input.category != null) entity.category = input.category;
-    if (input.status != null) entity.status = input.status.toUpperCase();
-    if (input.title != null) entity.title = input.title;
+    const requestedInProgress =
+      input.status != null &&
+      normalizePlanStatusForPolicy(input.status) === 'IN_PROGRESS';
+    const inProgressBlocked =
+      requestedInProgress && !canApplyInProgressAsTargetStatus(entity.status);
 
-    // These fields are nullable, so we need to check for undefined.
-    if (input.assignee !== undefined) entity.assignee = input.assignee;
-    if (input.description !== undefined) entity.description = input.description;
-    if (input.project !== undefined) entity.project = input.project;
-    if (input.projectId !== undefined) entity.projectId = input.projectId;
-    if (input.summary !== undefined) entity.summary = input.summary;
+    let touched = false;
+
+    if (input.author != null && input.author !== entity.author) {
+      entity.author = input.author;
+      touched = true;
+    }
+    if (input.category != null && input.category !== entity.category) {
+      entity.category = input.category;
+      touched = true;
+    }
+    if (input.status != null) {
+      const nextStatus = normalizePlanStatusForPolicy(input.status);
+      if (
+        nextStatus === 'IN_PROGRESS' &&
+        !canApplyInProgressAsTargetStatus(entity.status)
+      ) {
+        // Invalid transition: leave entity.status unchanged (cortex-ralph conditional UPDATE).
+      } else if (normalizePlanStatusForPolicy(entity.status) !== nextStatus) {
+        entity.status = nextStatus;
+        touched = true;
+      }
+    }
+    if (input.title != null && input.title !== entity.title) {
+      entity.title = input.title;
+      touched = true;
+    }
+
+    if (input.assignee !== undefined && input.assignee !== entity.assignee) {
+      entity.assignee = input.assignee;
+      touched = true;
+    }
+    if (
+      input.description !== undefined &&
+      input.description !== entity.description
+    ) {
+      entity.description = input.description;
+      touched = true;
+    }
+    if (input.project !== undefined && input.project !== entity.project) {
+      entity.project = input.project;
+      touched = true;
+    }
+    if (input.projectId !== undefined && input.projectId !== entity.projectId) {
+      entity.projectId = input.projectId;
+      touched = true;
+    }
+    if (input.summary !== undefined && input.summary !== entity.summary) {
+      entity.summary = input.summary;
+      touched = true;
+    }
+
+    if (!touched && inProgressBlocked) {
+      throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
+    }
+
+    if (!touched) {
+      return entity;
+    }
 
     return repo.save(entity);
   }
@@ -441,7 +511,19 @@ export class PlansResolver {
 
     if (!entity) return null;
 
-    entity.status = input.status.trim().toUpperCase();
+    const nextStatus = input.status.trim().toUpperCase();
+    if (
+      nextStatus === 'IN_PROGRESS' &&
+      !canApplyInProgressAsTargetStatus(entity.status)
+    ) {
+      throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
+    }
+
+    if (normalizePlanStatusForPolicy(entity.status) === nextStatus) {
+      return entity;
+    }
+
+    entity.status = nextStatus;
 
     return repo.save(entity);
   }
