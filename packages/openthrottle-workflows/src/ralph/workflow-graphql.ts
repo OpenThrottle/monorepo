@@ -1,10 +1,14 @@
 /**
- * @description Workflow GraphQL: env helpers and {@link buildWorkflowExecuteGraphqlV2Options} for
- * {@link executeGraphqlV2} from `@openthrottle/nodejs-graphql`. Ralph plan-run helpers are re-exported
- * from {@link ralph-plan-run-context.js}; codegen documents live under `graphql/*.graphql`.
+ * @description Workflow GraphQL: env helpers, {@link buildWorkflowExecuteGraphqlV2Options}, and
+ * {@link executeWorkflowGraphqlV2} wrapping {@link executeGraphqlV2} from `@openthrottle/nodejs-graphql`.
+ * Ralph plan-run helpers are re-exported from {@link ralph-plan-run-context.js}; codegen documents live
+ * under `graphql/*.graphql`.
+ *
+ * FIXME: richer thrown errors (full `errors[]`, extensions, HTTP metadata) when `@openthrottle/nodejs-graphql` exposes them.
  */
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import { getGraphQLUrl } from '@openthrottle/nodejs-graphql';
+import { executeGraphqlV2, getGraphQLUrl } from '@openthrottle/nodejs-graphql';
 
 export {
   buildRalphFlowContextFromPlanRunTuning,
@@ -61,6 +65,27 @@ export function buildWorkflowExecuteGraphqlV2Options(
   }
 
   return { url };
+}
+
+/**
+ * @description Runs a codegen document against OpenThrottle GraphQL using workflow env
+ * (`resolveWorkflowGraphqlConfigFromEnv` + {@link buildWorkflowExecuteGraphqlV2Options}). Throws on
+ * HTTP or GraphQL errors (first message / status text); callers should use try/catch when they need to
+ * branch or log without unwinding.
+ */
+export async function executeWorkflowGraphqlV2<
+  TData,
+  TVariables extends Record<string, unknown>,
+>(
+  document: TypedDocumentNode<TData, TVariables>,
+  variables?: TVariables,
+): Promise<TData> {
+  const options = buildWorkflowExecuteGraphqlV2Options(
+    resolveWorkflowGraphqlConfigFromEnv(),
+  );
+
+  // FIXME: wrap with structured error mapping (status, errors[], extensions) when upstream exposes it; callers use try/catch today
+  return executeGraphqlV2(document, variables, options);
 }
 
 /**
