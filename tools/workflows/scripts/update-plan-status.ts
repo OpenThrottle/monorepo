@@ -33,10 +33,13 @@ const status = STATUS_MAP[statusRaw.toLowerCase()] ?? statusRaw;
   const config = getCortexConfigOrExit();
   await ensureCortexReachableOrExit(config);
   const row = await updatePlanStatus(config, planId, status);
+  // Direct DB: IN_PROGRESS only applies when current status is PENDING (see cortex-ralph.updatePlanStatus).
   if (row) {
     console.log('Updated plan', row.id, 'to status', row.status);
   } else {
-    console.error('Plan not found or update failed');
+    console.error(
+      'Plan not found or update did not apply (e.g. IN_PROGRESS requires current status PENDING).',
+    );
     process.exit(1);
   }
 })();

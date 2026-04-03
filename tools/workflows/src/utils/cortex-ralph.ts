@@ -488,7 +488,13 @@ export async function updateTaskStatus(
 }
 
 /**
- * @description Updates a plan's status. When setting to 'IN_PROGRESS', only updates if current status is 'pending' to avoid overwriting completed. Returns updated row or null if not found (or condition not met).
+ * @description Updates a plan's status in Postgres. For `IN_PROGRESS`, applies
+ * `UPDATE … WHERE id = $2 AND status = 'PENDING'` (aligned with
+ * `PlansResolver.canApplyInProgressAsTargetStatus` in `plans.resolver.ts`). Returns the
+ * updated row, or `null` if the plan id is missing or no row matched (including `IN_PROGRESS`
+ * when the plan is not currently `PENDING`). Unlike GraphQL `updatePlan` / `setPlanStatus`,
+ * this helper does not treat `IN_PROGRESS` → `IN_PROGRESS` as a no-op: an already-in-progress
+ * plan yields no update and `null`. Other target statuses use an unconditional update by id.
  */
 export async function updatePlanStatus(
   config: WorkflowRalphConfig,
