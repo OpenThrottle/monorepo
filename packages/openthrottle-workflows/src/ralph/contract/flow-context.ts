@@ -10,7 +10,7 @@ export type WorkflowFlowContext = RalphFlowContext;
  */
 export interface RalphFlowContext {
   readonly kind: 'ralph';
-  /** Resolved Cortex plan id (from `--plan` or derived from `--task`). */
+  /** Resolved OpenThrottle plan id (from `--plan` or derived from `--task`). */
   readonly planId: string;
   /**
    * @description When `--task` is set, the focused task; in plan-centric mode the runner may
@@ -21,7 +21,7 @@ export interface RalphFlowContext {
   readonly mode: 'plan-centric' | 'task-centric';
   /** After CLI resolution: task-centric forces 1. */
   readonly maxIterations: number;
-  /** User prompt fragment before Cortex plan/task injection. */
+  /** User prompt fragment before OpenThrottle plan/task injection. */
   readonly userPrompt: string;
   readonly nxProjectName: string | undefined;
 }

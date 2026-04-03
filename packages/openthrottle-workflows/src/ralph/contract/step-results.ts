@@ -5,7 +5,7 @@ import type { WorkflowError } from './workflow-error';
  */
 export type WorkflowStepId =
   | 'bootstrap'
-  | 'cortex.reachable'
+  | 'openthrottle.reachable'
   | 'target.resolve'
   | 'state.load'
   | 'prompt.build'
@@ -33,9 +33,9 @@ export type BootstrapStepResult =
   | StepSuccess<'bootstrap'>
   | StepFailure<'bootstrap'>;
 
-export type CortexReachableStepResult =
-  | StepSuccess<'cortex.reachable'>
-  | StepFailure<'cortex.reachable'>;
+export type OpenThrottleReachableStepResult =
+  | StepSuccess<'openthrottle.reachable'>
+  | StepFailure<'openthrottle.reachable'>;
 
 export type TargetResolveStepResult =
   | StepSuccess<
@@ -127,7 +127,7 @@ export type AgentParseControlStepResult =
 export type WorkflowStepResult =
   | AgentParseControlStepResult
   | BootstrapStepResult
-  | CortexReachableStepResult
+  | OpenThrottleReachableStepResult
   | IterationRunStepResult
   | PlanGuardStepResult
   | PlanMarkInProgressStepResult

@@ -4,7 +4,7 @@ export type {
   AgentParseControlKind,
   AgentParseControlStepResult,
   BootstrapStepResult,
-  CortexReachableStepResult,
+  OpenThrottleReachableStepResult,
   IterationRunStepResult,
   PlanGuardStepResult,
   PlanMarkInProgressStepResult,

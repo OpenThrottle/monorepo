@@ -8,7 +8,7 @@ Import from the package root; public API is re-exported from `src/index.ts` (Ral
 
 - **GraphQL:** `createWorkflowGraphqlClient`, `executeWorkflowGraphql`, config/env helpers, error mapping, and re-exports from `@openthrottle/nodejs-graphql` (runtime in `src/ralph/workflow-graphql.ts`; **documents only** in `src/ralph/graphql/*.graphql`).
 - **Contract:** `RalphFlowContext`, `WorkflowOrchestrator`, `WorkflowStepResult` variants, `WorkflowError` (see `src/ralph/contract/`).
-- **Blueprints / parity:** step mapping and `main()` alignment notes live in `src/ralph/cortex-ralph-parity.ts` and JSDoc on the contract modules (compare `tools/workflows/src/bin/ralph.ts`).
+- **Blueprints / parity:** step mapping and `main()` alignment notes live in `src/ralph/openthrottle-ralph-parity.ts` and JSDoc on the contract modules (compare `tools/workflows/src/bin/ralph.ts`).
 
 ## Extending
 
