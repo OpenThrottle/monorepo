@@ -90,6 +90,12 @@ export async function executeGraphql<
  * @description Options for executeGraphqlAtUrl (e.g. auth token for Bearer header).
  */
 export interface ExecuteGraphqlAtUrlOptions {
+  /**
+   * @description Extra headers merged after `Content-Type` (e.g. tracing). When
+   * {@link token} is set, `Authorization: Bearer <token>` is applied after this map
+   * so the token wins over any `Authorization` here.
+   */
+  readonly headers?: Record<string, string>;
   /** When set, sent as Authorization: Bearer <token>. Omit for unauthenticated requests. */
   readonly token?: string | undefined;
 }
@@ -121,6 +127,7 @@ export async function executeGraphqlAtUrl<
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...options?.headers,
     ...(options?.token != null && options.token !== ''
       ? { Authorization: `Bearer ${options.token}` }
       : {}),

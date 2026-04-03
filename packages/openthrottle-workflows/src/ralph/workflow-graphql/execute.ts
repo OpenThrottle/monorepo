@@ -1,9 +1,11 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { executeGraphql } from '@openthrottle/nodejs-graphql';
+import {
+  executeGraphql,
+  executeGraphqlAtUrl,
+} from '@openthrottle/nodejs-graphql';
 import type { WorkflowGraphqlConfig } from './workflow-graphql-config.js';
 import type { WorkflowGraphqlError } from './errors.js';
 import { mapUnknownToWorkflowGraphqlError } from './errors.js';
-import { postOpenthrottleGraphql } from './post-graphql.js';
 
 /**
  * @description Successful GraphQL data payload from {@link executeWorkflowGraphql}.
@@ -29,7 +31,7 @@ export type WorkflowGraphqlResult<TData> =
   | WorkflowGraphqlOkResult<TData>;
 
 /**
- * @description Merges Bearer and optional {@link WorkflowGraphqlConfig.additionalHeaders} for `@openthrottle/nodejs-graphql` `executeGraphql` options.
+ * @description Merges Bearer and optional {@link WorkflowGraphqlConfig.additionalHeaders} for `@openthrottle/nodejs-graphql` request options.
  */
 export function buildWorkflowGraphqlHeaders(
   config: WorkflowGraphqlConfig,
@@ -64,7 +66,7 @@ export async function executeWorkflowGraphql<
 
     const data =
       url != null && url !== ''
-        ? await postOpenthrottleGraphql(url, document, variables, headers)
+        ? await executeGraphqlAtUrl(url, document, variables, { headers })
         : await executeGraphql(document, variables, { headers });
 
     return { data, ok: true };
