@@ -8,6 +8,8 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 import { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
 
+export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
+
 export type {
   ExecuteGraphqlV2,
   GraphqlV2ErrResult,

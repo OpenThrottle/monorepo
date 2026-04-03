@@ -1,11 +1,9 @@
 /**
- * @description OpenThrottle GraphQL from workflows: typed client ({@link createWorkflowGraphqlClient}), env config ({@link resolveWorkflowGraphqlConfigFromEnv}), non-throwing {@link executeWorkflowGraphql} results, re-exports from `@openthrottle/nodejs-graphql`, and codegen documents under `graphql/*.graphql` only.
+ * @description OpenThrottle GraphQL from workflows: typed client ({@link createWorkflowGraphqlClient}), env config ({@link resolveWorkflowGraphqlConfigFromEnv}), non-throwing {@link executeWorkflowGraphql} via {@link executeGraphql_v2}, re-exports from `@openthrottle/nodejs-graphql`, and codegen documents under `graphql/*.graphql` only.
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import {
-  executeGraphql,
-  executeGraphqlAtUrl,
-} from '@openthrottle/nodejs-graphql';
+import { executeGraphql_v2, getGraphQLUrl } from '@openthrottle/nodejs-graphql';
+import type { GraphqlV2Failure } from '@openthrottle/nodejs-graphql';
 import { RalphNestedDebugCli } from '../__generated__/graphql.js';
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type {
@@ -114,6 +112,42 @@ function inferHttpStatusFromMessage(message: string): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
+function mapGraphqlV2FailureKindToWorkflowCode(
+  kind: GraphqlV2Failure['kind'],
+): WorkflowGraphqlErrorCode {
+  switch (kind) {
+    case 'graphql_errors':
+      return 'WORKFLOW_GRAPHQL_GRAPHQL_ERRORS';
+    case 'http':
+      return 'WORKFLOW_GRAPHQL_HTTP';
+    case 'missing_data':
+      return 'WORKFLOW_GRAPHQL_MISSING_DATA';
+    case 'invalid_json':
+    case 'network':
+    case 'unknown':
+      return 'WORKFLOW_GRAPHQL_UNKNOWN';
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * @description Maps {@link GraphqlV2Failure} from {@link executeGraphql_v2} to {@link WorkflowGraphqlError} (same codes as legacy thrown-message mapping).
+ */
+export function mapGraphqlV2FailureToWorkflowGraphqlError(
+  failure: GraphqlV2Failure,
+): WorkflowGraphqlError {
+  return {
+    cause: failure.cause instanceof Error ? failure.cause : undefined,
+    code: mapGraphqlV2FailureKindToWorkflowCode(failure.kind),
+    graphqlPath: failure.graphqlPath,
+    httpStatus: failure.httpStatus,
+    message: failure.message,
+  };
+}
+
 /**
  * @description Successful GraphQL data payload from {@link executeWorkflowGraphql}.
  */
@@ -157,7 +191,7 @@ export function buildWorkflowGraphqlHeaders(
 }
 
 /**
- * @description Executes a codegen TypedDocumentNode against OpenThrottle GraphQL and returns a result (no throw on HTTP/GraphQL errors). Uses env-based URL when {@link WorkflowGraphqlConfig.graphqlUrl} is unset (see `API_URL_INTERNAL` in `@openthrottle/nodejs-graphql`).
+ * @description Executes a codegen TypedDocumentNode against OpenThrottle GraphQL and returns a result (no throw on HTTP/GraphQL errors). Delegates to {@link executeGraphql_v2} with explicit `url`: {@link WorkflowGraphqlConfig.graphqlUrl} when set, otherwise {@link getGraphQLUrl} (`API_URL_INTERNAL` + `/graphql`).
  */
 export async function executeWorkflowGraphql<
   TData,
@@ -167,22 +201,37 @@ export async function executeWorkflowGraphql<
   document: TypedDocumentNode<TData, TVariables>,
   variables?: TVariables,
 ): Promise<WorkflowGraphqlResult<TData>> {
+  let url: string;
+
   try {
-    const headers = buildWorkflowGraphqlHeaders(config);
-    const url = config.graphqlUrl?.trim();
-
-    const data =
-      url != null && url !== ''
-        ? await executeGraphqlAtUrl(url, document, variables, { headers })
-        : await executeGraphql(document, variables, { headers });
-
-    return { data, ok: true };
+    const override = config.graphqlUrl?.trim();
+    url = override != null && override !== '' ? override : getGraphQLUrl();
   } catch (thrown) {
     return {
       error: mapUnknownToWorkflowGraphqlError(thrown),
       ok: false,
     };
   }
+
+  const token =
+    config.token != null && config.token.trim() !== ''
+      ? config.token.trim()
+      : undefined;
+
+  const result = await executeGraphql_v2(document, variables, {
+    headers: config.additionalHeaders,
+    token,
+    url,
+  });
+
+  if (result.ok) {
+    return { data: result.data, ok: true };
+  }
+
+  return {
+    error: mapGraphqlV2FailureToWorkflowGraphqlError(result.error),
+    ok: false,
+  };
 }
 
 /**
@@ -392,13 +441,26 @@ export function buildRalphFlowContextFromPlanRunTuning(params: {
 }
 
 /**
- * @description Re-exports from `@openthrottle/nodejs-graphql` — the shared runtime for OpenThrottle GraphQL (request execution and response typing). Workflow helpers above delegate to these functions.
+ * @description Re-exports from `@openthrottle/nodejs-graphql` — the shared runtime for OpenThrottle GraphQL (V1 throwing helpers, V2 non-throwing executor, URL helper). {@link executeWorkflowGraphql} uses {@link executeGraphql_v2} internally.
  */
 export {
   executeGraphql,
   executeGraphqlAtUrl,
+  executeGraphql_v2,
   executeGraphqlWithAuth,
+  getGraphQLUrl,
   type ExecuteGraphqlAtUrlOptions,
   type ExecuteGraphqlOptions,
+  type ExecuteGraphqlV2,
   type GraphqlResponse,
+  type GraphqlV2ErrResult,
+  type GraphqlV2ExecuteOptions,
+  type GraphqlV2Failure,
+  type GraphqlV2FailureContext,
+  type GraphqlV2FailureKind,
+  type GraphqlV2GraphqlErrorItem,
+  type GraphqlV2MapFailure,
+  type GraphqlV2OkResult,
+  type GraphqlV2ResponsePayload,
+  type GraphqlV2Result,
 } from '@openthrottle/nodejs-graphql';

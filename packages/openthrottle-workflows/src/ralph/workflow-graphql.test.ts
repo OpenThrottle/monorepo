@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { RalphNestedDebugCli } from '../__generated__/graphql.js';
+import type { WorkflowRalphRunOptionsShape } from './contract/index.js';
 import {
   WORKFLOW_RALPH_DEFAULT_BACKEND,
   WORKFLOW_RALPH_DEFAULT_ITERATIONS,
   WORKFLOW_RALPH_DEFAULT_MODEL,
   WORKFLOW_RALPH_DEFAULT_PROMPT,
-} from './contract/flow-context.js';
-import type { WorkflowRalphRunOptionsShape } from './contract/flow-context.js';
+} from './contract/index.js';
 import {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
   buildWorkflowGraphqlHeaders,
+  mapGraphqlV2FailureToWorkflowGraphqlError,
   mapUnknownToWorkflowGraphqlError,
   resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning,
 } from './workflow-graphql.js';
@@ -57,6 +58,76 @@ describe('buildWorkflowGraphqlHeaders', () => {
     });
 
     expect(headers.Authorization).toBeUndefined();
+  });
+});
+
+describe('mapGraphqlV2FailureToWorkflowGraphqlError', () => {
+  it('maps graphql_errors kind', () => {
+    const mapped = mapGraphqlV2FailureToWorkflowGraphqlError({
+      cause: undefined,
+      graphqlErrors: [{ message: 'nope' }],
+      graphqlPath: ['x'],
+      httpStatus: 200,
+      kind: 'graphql_errors',
+      message: 'GraphQL errors: nope',
+    });
+
+    expect(mapped.code).toBe('WORKFLOW_GRAPHQL_GRAPHQL_ERRORS');
+    expect(mapped.graphqlPath).toEqual(['x']);
+    expect(mapped.httpStatus).toBe(200);
+  });
+
+  it('maps http and missing_data kinds', () => {
+    expect(
+      mapGraphqlV2FailureToWorkflowGraphqlError({
+        cause: undefined,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: 502,
+        kind: 'http',
+        message: 'bad gateway',
+      }).code,
+    ).toBe('WORKFLOW_GRAPHQL_HTTP');
+
+    expect(
+      mapGraphqlV2FailureToWorkflowGraphqlError({
+        cause: undefined,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: 200,
+        kind: 'missing_data',
+        message: 'GraphQL response missing data',
+      }).code,
+    ).toBe('WORKFLOW_GRAPHQL_MISSING_DATA');
+  });
+
+  it('maps invalid_json, network, and unknown to WORKFLOW_GRAPHQL_UNKNOWN', () => {
+    for (const kind of ['invalid_json', 'network', 'unknown'] as const) {
+      expect(
+        mapGraphqlV2FailureToWorkflowGraphqlError({
+          cause: undefined,
+          graphqlErrors: undefined,
+          graphqlPath: undefined,
+          httpStatus: undefined,
+          kind,
+          message: 'x',
+        }).code,
+      ).toBe('WORKFLOW_GRAPHQL_UNKNOWN');
+    }
+  });
+
+  it('preserves Error cause when present', () => {
+    const err = new Error('net');
+    const mapped = mapGraphqlV2FailureToWorkflowGraphqlError({
+      cause: err,
+      graphqlErrors: undefined,
+      graphqlPath: undefined,
+      httpStatus: undefined,
+      kind: 'network',
+      message: 'net',
+    });
+
+    expect(mapped.cause).toBe(err);
   });
 });
 
