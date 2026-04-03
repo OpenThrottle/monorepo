@@ -60,7 +60,7 @@
  *   the developer UI (`WORKFLOW_RALPH_*` in `flow-context.ts`). **`promptFile`** is not part of
  *   `RalphFlowContext` (nested `--prompt-file` only).
  * - **`buildRalphFlowContextFromRunOptionsShape`** — adds `kind`, `mode`, and effective `maxIterations`
- *   (task-centric forces `1`; plan-centric uses `iterations`).
+ *   (task forces `1`; plan uses `iterations`).
  * - **`buildRalphFlowContextFromPlanRunTuning`** — combines the two for resolved runs (e.g. queue
  *   worker: `planId` from job, `ralph` from `job.data`, `targetMode: 'plan'`). BullMQ jobs remain
  *   plan-scoped; panel `targetMode` / `taskId` affect local CLI preview, not enqueue — same as

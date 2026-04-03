@@ -8,7 +8,7 @@
  * - **UI / argv preview:** `WorkflowRalphRunOptionsInput` in
  *   `applications/openthrottle-developer/app/routing/plans/utils/build-workflow-ralph-argv.ts`
  *   (`buildWorkflowRalphOptionArgs`, `formatWorkflowRalphCommandLine`). **Shared field shapes** live
- *   here as {@link WorkflowRalphRunOptionsShape}; the app type should stay aligned (import/re-export
+ *   here as {@link WorkflowOptions}; the app type should stay aligned (import/re-export
  *   from `@openthrottle/openthrottle-workflows` when the app depends on this package).
  * - **GraphQL enqueue (plan runs):** `RalphPlanRunTuningInput` — tuning only; plan id is the
  *   mutation’s `planId`, not inside `ralph`. See `buildRalphPlanRunTuningInputFromWorkflowRunOptions`.
@@ -19,16 +19,16 @@
  *
  * | UI / `WorkflowRalphRunOptionsShape` | `RalphFlowContext` | `workflow-ralph` flags / behavior |
  * | --- | --- | --- |
- * | `targetMode` `'plan'` \| `'task'` | `targetMode` + `mode` `'plan-centric'` \| `'task-centric'` | `--plan <uuid>` vs `--task <uuid>` (if only `--task`, plan is resolved from task row). |
+ * | `targetMode` `'plan'` \| `'task'` | `targetMode` + `mode` `'plan'` \| `'task'` | `--plan <uuid>` vs `--task <uuid>` (if only `--task`, plan is resolved from task row). |
  * | `planId` | `planId` | `--plan`; required in plan mode; in task-only mode resolved from DB. |
- * | `taskId` | `taskId` | `--task`; task-centric uses this as the fixed task. Plan-centric: runner picks per-iteration task — **not** duplicated in context for iterations. |
- * | `iterations` | `iterations` + `maxIterations` | `--iterations` (default 10). **Task-centric:** `main()` sets `maxIterations = 1` **ignoring** `--iterations` (single-task rule); `iterations` keeps the user-requested value. |
+ * | `taskId` | `taskId` | `--task`; task uses this as the fixed task. plan: runner picks per-iteration task — **not** duplicated in context for iterations. |
+ * | `iterations` | `iterations` + `maxIterations` | `--iterations` (default 10). **task:** `main()` sets `maxIterations = 1` **ignoring** `--iterations` (single-task rule); `iterations` keeps the user-requested value. |
  * | `prompt` | `prompt` | `--prompt` (default `/agents/ralph`). |
  * | `project` | `project` | `--project` (must be a known Nx project name). |
  * | `model` | `model` | `--model` (default `auto`). |
  * | `debugCli` `'omit'` \| `'debug'` \| `'verbose'` | `debugCli` | `--debug` / `--verbose`; omit uses env / `.workflow-ralph.json` only. |
  * | `iterationTimeoutSeconds` | `iterationTimeoutSeconds` | `--iteration-timeout` (seconds, positive int). |
- * | `executionBackend` | `executionBackend` | `--backend` (default `cursor`; see {@link WORKFLOW_RALPH_DEFAULT_BACKEND}). |
+ * | `executionBackend` | `executionBackend` | `--backend` (default `cursor`; see {@link DEFAULT_RALPH_RUNNER}). |
  *
  * **GraphQL `RalphPlanRunTuningInput` ↔ UI:** Same lever names as the UI columns above except
  * `ralphDebugCli` (enum) ↔ `debugCli`, `backend` ↔ `executionBackend`. Optional `promptFile` exists
@@ -43,66 +43,67 @@
  */
 
 /** @description Default `--backend` for workflow-ralph; aligned with `tools/workflows` / UI. */
-export const WORKFLOW_RALPH_DEFAULT_BACKEND = 'cursor' as const;
+export const DEFAULT_RALPH_RUNNER = 'cursor';
 
 /** @description Default `--prompt` path fragment. */
-export const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph' as const;
+export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
 
-/** @description Default `--iterations` (before task-centric override in `main()`). */
-export const WORKFLOW_RALPH_DEFAULT_ITERATIONS = 10 as const;
+/** @description Default `--iterations` (before task override in `main()`). */
+export const DEFAULT_RALPH_ITERATIONS = 10;
 
 /** @description Default `--model` when unset or `auto`. */
-export const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto' as const;
+export const DEFAULT_RALPH_MODEL = 'auto';
 
 /**
  * @description Execution backend id for `--backend`; keep aligned with `workflow-ralph --backend`
- * and {@link WORKFLOW_RALPH_DEFAULT_BACKEND}.
+ * and {@link DEFAULT_RALPH_RUNNER}.
  */
-export type WorkflowRalphExecutionBackendId =
-  typeof WORKFLOW_RALPH_DEFAULT_BACKEND;
+export type WorkflowRunner = typeof DEFAULT_RALPH_RUNNER;
 
-export type WorkflowRalphTargetMode = 'plan' | 'task';
+export type WorkflowMode = 'plan' | 'task';
 
 /**
  * @description Maps to `--debug` / `--verbose` / omit (env-only). Matches CLI precedence in parsers.
  */
-export type WorkflowRalphDebugCli = 'omit' | 'debug' | 'verbose';
+export type WorkflowDebug = 'omit' | 'debug' | 'verbose';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
- * {@link RalphFlowContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
+ * {@link WorkflowRalphContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
  * `maxIterations`).
  */
-export interface WorkflowRalphRunOptionsShape {
-  readonly debugCli: WorkflowRalphDebugCli;
-  readonly executionBackend: WorkflowRalphExecutionBackendId;
+export interface WorkflowOptions {
+  readonly debugCli: WorkflowDebug;
+  readonly executionBackend: WorkflowRunner;
   readonly iterations: number;
   readonly iterationTimeoutSeconds: number | undefined;
   readonly model: string;
   readonly planId: string;
   readonly project: string;
   readonly prompt: string;
-  readonly targetMode: WorkflowRalphTargetMode;
+  readonly targetMode: WorkflowMode;
   readonly taskId: string;
 }
 
-export type WorkflowFlowContext = RalphFlowContext;
+export type WorkflowFlowContext = WorkflowRalphContext;
 
 /**
  * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare
- * the `main` function in `tools/workflows/src/bin/ralph.ts`). Extends {@link WorkflowRalphRunOptionsShape}
+ * the `main` function in `tools/workflows/src/bin/ralph.ts`). Extends {@link WorkflowOptions}
  * with `kind`, `mode`, and effective `maxIterations` after CLI rules.
  */
-export interface RalphFlowContext extends WorkflowRalphRunOptionsShape {
+export interface WorkflowRalphContext extends WorkflowOptions {
   readonly kind: 'ralph';
+
   /**
-   * @description `plan-centric` vs `task-centric` — mirrors `targetMode` (`plan` → `plan-centric`,
-   * `task` → `task-centric`).
-   */
-  readonly mode: 'plan-centric' | 'task-centric';
-  /**
-   * @description Effective iteration cap after CLI resolution (task-centric forces `1`). Compare
-   * {@link WorkflowRalphRunOptionsShape.iterations} for the user/UI value mapped to `--iterations`.
+   * @description Effective iteration cap after CLI resolution (task forces `1`). Compare
+   * {@link WorkflowOptions.iterations} for the user/UI value mapped to `--iterations`.
    */
   readonly maxIterations: number;
+
+  /**
+   * @description `plan` vs `task` — mirrors `targetMode` (`plan` → `plan`,
+   * `task` → `task`).
+   */
+  readonly mode: WorkflowMode;
 }

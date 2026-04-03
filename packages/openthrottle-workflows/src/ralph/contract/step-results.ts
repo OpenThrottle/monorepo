@@ -29,15 +29,10 @@ type StepFailure<TStep extends WorkflowStepId> = {
   readonly error: WorkflowError;
 };
 
-export type BootstrapStepResult =
-  | StepSuccess<'bootstrap'>
-  | StepFailure<'bootstrap'>;
+export type StepBootstrapResult = | StepSuccess<'bootstrap'> | StepFailure<'bootstrap'>; // prettier-ignore
+export type StepOpenThrottleReachableResult = | StepSuccess<'openthrottle.reachable'> | StepFailure<'openthrottle.reachable'>; // prettier-ignore
 
-export type OpenThrottleReachableStepResult =
-  | StepSuccess<'openthrottle.reachable'>
-  | StepFailure<'openthrottle.reachable'>;
-
-export type TargetResolveStepResult =
+export type StepTargetResolveResult =
   | StepSuccess<
       'target.resolve',
       {
@@ -46,7 +41,7 @@ export type TargetResolveStepResult =
     >
   | StepFailure<'target.resolve'>;
 
-export type StateLoadStepResult =
+export type StepStateLoadResult =
   | StepSuccess<
       'state.load',
       {
@@ -57,7 +52,7 @@ export type StateLoadStepResult =
     >
   | StepFailure<'state.load'>;
 
-export type PromptBuildStepResult =
+export type StepPromptBuildResult =
   | StepSuccess<
       'prompt.build',
       {
@@ -66,7 +61,7 @@ export type PromptBuildStepResult =
     >
   | StepFailure<'prompt.build'>;
 
-export type PlanGuardStepResult =
+export type StepPlanGuardResult =
   | StepSuccess<
       'plan.guard',
       {
@@ -76,15 +71,15 @@ export type PlanGuardStepResult =
     >
   | StepFailure<'plan.guard'>;
 
-export type PlanMarkInProgressStepResult =
+export type StepPlanMarkInProgressResult =
   | StepSuccess<'plan.mark_in_progress'>
   | StepFailure<'plan.mark_in_progress'>;
 
-export type TaskMarkInProgressStepResult =
+export type StepTaskMarkInProgressResult =
   | StepSuccess<'task.mark_in_progress'>
   | StepFailure<'task.mark_in_progress'>;
 
-export type IterationRunStepResult =
+export type StepIterationRunResult =
   | StepSuccess<
       'iteration.run',
       {
@@ -94,7 +89,7 @@ export type IterationRunStepResult =
     >
   | StepFailure<'iteration.run'>;
 
-export type TasksApplyCompletionsStepResult =
+export type StepTasksApplyCompletionsResult =
   | StepSuccess<
       'tasks.apply_completions',
       {
@@ -112,7 +107,7 @@ export type AgentParseControlKind =
   | 'INPUT_REQUIRED'
   | 'NONE';
 
-export type AgentParseControlStepResult =
+export type StepAgentParseControlResult =
   | StepSuccess<
       'agent.parse_control',
       {
@@ -125,14 +120,14 @@ export type AgentParseControlStepResult =
  * @description Union of all step results for exhaustive handling in orchestrators.
  */
 export type WorkflowStepResult =
-  | AgentParseControlStepResult
-  | BootstrapStepResult
-  | OpenThrottleReachableStepResult
-  | IterationRunStepResult
-  | PlanGuardStepResult
-  | PlanMarkInProgressStepResult
-  | PromptBuildStepResult
-  | StateLoadStepResult
-  | TargetResolveStepResult
-  | TaskMarkInProgressStepResult
-  | TasksApplyCompletionsStepResult;
+  | StepAgentParseControlResult
+  | StepBootstrapResult
+  | StepOpenThrottleReachableResult
+  | StepIterationRunResult
+  | StepPlanGuardResult
+  | StepPlanMarkInProgressResult
+  | StepPromptBuildResult
+  | StepStateLoadResult
+  | StepTargetResolveResult
+  | StepTaskMarkInProgressResult
+  | StepTasksApplyCompletionsResult;

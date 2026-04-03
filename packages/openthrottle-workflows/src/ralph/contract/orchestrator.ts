@@ -5,18 +5,18 @@ import type { WorkflowFlowContext } from './flow-context';
  */
 export type WorkflowRunOutcome =
   | {
-      readonly status: 'finished';
       readonly exitCode: 0;
       readonly reason:
         | 'agent_complete'
         | 'max_iterations'
         | 'plan_already_terminal'
         | 'tasks_exhausted';
+      readonly status: 'finished';
     }
   | {
-      readonly status: 'failed';
       readonly exitCode: 1;
       readonly reason: 'agent_error' | 'input_required' | 'unhandled';
+      readonly status: 'failed';
     };
 
 /**

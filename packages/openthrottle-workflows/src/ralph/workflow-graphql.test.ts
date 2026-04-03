@@ -109,7 +109,7 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(ctx.kind).toBe('ralph');
     expect(ctx.planId).toBe(planId);
     expect(ctx.targetMode).toBe('plan');
-    expect(ctx.mode).toBe('plan-centric');
+    expect(ctx.mode).toBe('plan');
     expect(ctx.iterations).toBe(WORKFLOW_RALPH_DEFAULT_ITERATIONS);
     expect(ctx.maxIterations).toBe(WORKFLOW_RALPH_DEFAULT_ITERATIONS);
     expect(ctx.prompt).toBe(WORKFLOW_RALPH_DEFAULT_PROMPT);
@@ -146,7 +146,7 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(ctx.executionBackend).toBe(WORKFLOW_RALPH_DEFAULT_BACKEND);
   });
 
-  it('applies task-centric maxIterations rule', () => {
+  it('applies task maxIterations rule', () => {
     const taskId = 'b56b17b4-b052-44cf-98a6-1c972caca673';
     const shape = resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning({
       planId,
@@ -160,7 +160,7 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(shape.iterations).toBe(10);
     expect(ctx.iterations).toBe(10);
     expect(ctx.maxIterations).toBe(1);
-    expect(ctx.mode).toBe('task-centric');
+    expect(ctx.mode).toBe('task');
     expect(ctx.taskId).toBe(taskId);
   });
 
@@ -283,7 +283,7 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
       iterations: 7,
       kind: 'ralph',
       maxIterations: 7,
-      mode: 'plan-centric',
+      mode: 'plan',
       model: 'gpt-4',
       planId: uiLike.planId,
       project: 'openthrottle-workflows',
@@ -312,7 +312,7 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
 
     expect(ctx.iterations).toBe(25);
     expect(ctx.maxIterations).toBe(1);
-    expect(ctx.mode).toBe('task-centric');
+    expect(ctx.mode).toBe('task');
     expect(ctx.targetMode).toBe('task');
   });
 });
