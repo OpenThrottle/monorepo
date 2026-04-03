@@ -34,19 +34,14 @@
  * - `child-job.ts`: `appendPlanOutput`, `getTasksByPlanId`, `updatePlanStatus`
  * - `link-merge.ts`: `insertCommitLink` → `linkCommit`
  *
- * ## `updatePlanStatus` when status is `IN_PROGRESS` (aligned with cortex-ralph)
+ * ## `updatePlanStatus` → `IN_PROGRESS` (cortex-ralph ↔ GraphQL)
  *
- * In `cortex-ralph`, transitioning to `IN_PROGRESS` runs
- * `UPDATE … WHERE id = $2 AND status = 'PENDING'` so a completed plan cannot be forced back to
- * in-progress. **openthrottle-server enforces the same rule on GraphQL:** `updatePlan` only
- * applies `IN_PROGRESS` when the current plan is `PENDING` or already `IN_PROGRESS` (idempotent
- * no-op). Otherwise the status field is left unchanged, matching a conditional UPDATE that updates
- * zero rows. If `IN_PROGRESS` was the only requested change and it is invalid, the resolver
- * responds with `400 Bad Request` and
- * `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.` If other fields
- * change in the same mutation, those persist and the invalid `IN_PROGRESS` is skipped for status.
- * The `setPlanStatus` mutation applies the same transition rule and throws on invalid `IN_PROGRESS`
- * even when it would otherwise be a no-op.
+ * Source of truth: `applications/openthrottle-server/src/graphql/plans/plans.resolver.ts`
+ * (`updatePlan`, `setPlanStatus`, `canApplyInProgressAsTargetStatus`).
+ *
+ * - **Direct Postgres (`cortex-ralph`):** `UPDATE … SET status = 'IN_PROGRESS' WHERE id = $2 AND status = 'PENDING'` — only `PENDING` rows change.
+ * - **`updatePlan`:** Requesting `IN_PROGRESS` updates status only when current status is `PENDING` or already `IN_PROGRESS` (idempotent `IN_PROGRESS` → `IN_PROGRESS`). Otherwise the invalid transition is skipped (status unchanged); other input fields still apply. If nothing else changed and `IN_PROGRESS` was the only invalid request → `400` with `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`
+ * - **`setPlanStatus`:** Validates `IN_PROGRESS` first and throws that same `400` when invalid **before** the same-status early return. Valid `IN_PROGRESS` → `IN_PROGRESS` returns the entity without persisting.
  */
 
 export const OPENTHROTTLE_RALPH_PARITY_NOTE =
