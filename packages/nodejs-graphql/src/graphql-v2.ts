@@ -1,8 +1,7 @@
 /**
- * @description **V2 API design** for `@openthrottle/nodejs-graphql`: explicit URL/auth, one options
- * object, non-throwing discriminated results, optional DateTime parsing on success (same as V1), and
- * injectable error shaping. The runtime `executeGraphql_v2` will be added in a follow-up; this module
- * defines the contract (types) only.
+ * @description **V2 API** for `@openthrottle/nodejs-graphql`: explicit URL/auth, one options object,
+ * non-throwing discriminated results, optional DateTime parsing on success (same as V1), and
+ * injectable error shaping via {@link executeGraphql_v2}.
  *
  * ## Backwards compatibility
  *
@@ -32,6 +31,8 @@
  */
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { print } from 'graphql';
+import { parseDateTimeInResponse } from './utils.js';
 
 /**
  * @description Wire-level GraphQL response (aligned with V1 {@link GraphqlResponse}).
@@ -173,3 +174,260 @@ export type ExecuteGraphqlV2 = <
   variables: TVariables | undefined,
   options: GraphqlV2ExecuteOptions<TFailure>,
 ) => Promise<GraphqlV2Result<TData, TFailure>>;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const isGraphqlPathSegment = (p: unknown): p is string | number =>
+  typeof p === 'string' || typeof p === 'number';
+
+/**
+ * @description Narrow JSON body to {@link GraphqlV2ResponsePayload} when shape matches.
+ */
+const asGraphqlPayload = (
+  parsed: unknown,
+): GraphqlV2ResponsePayload<unknown> | null => {
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const data = 'data' in parsed ? parsed.data : undefined;
+  const errorsRaw = 'errors' in parsed ? parsed.errors : undefined;
+  let errors: ReadonlyArray<GraphqlV2GraphqlErrorItem> | undefined;
+
+  if (Array.isArray(errorsRaw)) {
+    const items: GraphqlV2GraphqlErrorItem[] = [];
+
+    for (const item of errorsRaw) {
+      if (!isRecord(item) || typeof item.message !== 'string') {
+        continue;
+      }
+
+      const pathRaw = item.path;
+      let path: ReadonlyArray<string | number> | undefined;
+
+      if (Array.isArray(pathRaw) && pathRaw.every(isGraphqlPathSegment)) {
+        path = pathRaw;
+      }
+
+      items.push(
+        path !== undefined
+          ? { message: item.message, path }
+          : { message: item.message },
+      );
+    }
+
+    errors = items.length > 0 ? items : undefined;
+  }
+
+  return { data, errors };
+};
+
+/**
+ * @description Build request headers: `Content-Type` → `options.headers` → Bearer from `token`.
+ */
+const buildV2Headers = (
+  options: GraphqlV2ExecuteOptions,
+): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers ?? {}),
+  };
+
+  if (options.token != null && options.token !== '') {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+
+  return headers;
+};
+
+/**
+ * @description Execute a GraphQL operation with explicit URL and non-throwing {@link GraphqlV2Result}.
+ */
+export const executeGraphql_v2: ExecuteGraphqlV2 = async <
+  TData,
+  TVariables extends Record<string, unknown>,
+  TFailure extends GraphqlV2Failure = GraphqlV2Failure,
+>(
+  document: TypedDocumentNode<TData, TVariables>,
+  variables: TVariables | undefined,
+  options: GraphqlV2ExecuteOptions<TFailure>,
+): Promise<GraphqlV2Result<TData, TFailure>> => {
+  const finishFailure = (
+    failure: GraphqlV2Failure,
+    parsedPayload: GraphqlV2ResponsePayload<unknown> | null,
+    body: string | undefined,
+    res: Response | null,
+  ): GraphqlV2ErrResult<TFailure> => {
+    const context: GraphqlV2FailureContext = {
+      failure,
+      parsed: parsedPayload,
+      rawBody: body,
+      response: res,
+    };
+
+    const error: TFailure = options.mapFailure
+      ? options.mapFailure(context)
+      : (failure as TFailure); // eslint-disable-line @typescript-eslint/consistent-type-assertions -- generic failure branch
+
+    return { error, ok: false };
+  };
+
+  const fetchFn = options.fetch ?? fetch;
+  const body = JSON.stringify({
+    query: print(document),
+    variables: variables ?? undefined,
+  });
+
+  const headers = buildV2Headers(options);
+  let response: Response | null = null;
+  let rawBody: string | undefined;
+
+  try {
+    response = await fetchFn(options.url, {
+      ...options.requestInit,
+      body,
+      headers,
+      method: 'POST',
+      signal: options.signal,
+    });
+  } catch (cause) {
+    return finishFailure(
+      {
+        cause,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: undefined,
+        kind: 'network',
+        message:
+          cause instanceof Error ? cause.message : 'GraphQL request failed',
+      },
+      null,
+      undefined,
+      null,
+    );
+  }
+
+  try {
+    rawBody = await response.text();
+  } catch (cause) {
+    return finishFailure(
+      {
+        cause,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: response.status,
+        kind: 'network',
+        message:
+          cause instanceof Error
+            ? cause.message
+            : 'Failed to read response body',
+      },
+      null,
+      undefined,
+      response,
+    );
+  }
+
+  let parsedJson: unknown;
+
+  try {
+    parsedJson = rawBody === '' ? null : JSON.parse(rawBody);
+  } catch (cause) {
+    return finishFailure(
+      {
+        cause,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: response.status,
+        kind: 'invalid_json',
+        message: 'GraphQL response was not valid JSON',
+      },
+      null,
+      rawBody,
+      response,
+    );
+  }
+
+  const parsed = asGraphqlPayload(parsedJson);
+
+  if (!response.ok) {
+    const firstGql = parsed?.errors?.[0];
+    const statusFallback = `HTTP ${String(response.status)}`;
+    const httpMessage =
+      (firstGql?.message ?? response.statusText) || statusFallback;
+
+    return finishFailure(
+      {
+        cause: undefined,
+        graphqlErrors: parsed?.errors,
+        graphqlPath: firstGql?.path,
+        httpStatus: response.status,
+        kind: 'http',
+        message: httpMessage,
+      },
+      parsed,
+      rawBody,
+      response,
+    );
+  }
+
+  if (parsed == null) {
+    return finishFailure(
+      {
+        cause: undefined,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: response.status,
+        kind: 'unknown',
+        message: 'GraphQL response had unexpected shape',
+      },
+      null,
+      rawBody,
+      response,
+    );
+  }
+
+  if (parsed.errors != null && parsed.errors.length > 0) {
+    const first = parsed.errors[0];
+    return finishFailure(
+      {
+        cause: undefined,
+        graphqlErrors: parsed.errors,
+        graphqlPath: first?.path,
+        httpStatus: response.status,
+        kind: 'graphql_errors',
+        message: first?.message ?? 'GraphQL errors',
+      },
+      parsed,
+      rawBody,
+      response,
+    );
+  }
+
+  if (parsed.data == null) {
+    return finishFailure(
+      {
+        cause: undefined,
+        graphqlErrors: undefined,
+        graphqlPath: undefined,
+        httpStatus: response.status,
+        kind: 'missing_data',
+        message: 'GraphQL response missing data',
+      },
+      parsed,
+      rawBody,
+      response,
+    );
+  }
+
+  const data =
+    options.parseDateTime === false
+      ? parsed.data
+      : parseDateTimeInResponse(parsed.data);
+
+  return {
+    data: data as TData, // eslint-disable-line @typescript-eslint/consistent-type-assertions -- V1 parity: DateTime walk
+    ok: true,
+  };
+};
