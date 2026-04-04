@@ -19,6 +19,7 @@ import {
 import type { WorkflowRalphContext } from './contract/flow-context.js';
 import type {
   WorkflowExecuteGraphqlV2,
+  WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
 } from './contract/ralph-orchestrator-deps.js';
 import { createWorkflowRalphOrchestrator } from './ralph-orchestrator.js';
@@ -108,8 +109,7 @@ const createMockExecute = (opts: {
   const getPlan = opts.getPlan ?? (() => basePlan());
   const getTask = opts.getTask ?? (() => null);
   const getTasksByPlanId =
-    opts.getTasksByPlanId ??
-    (() => [] as GetTasksByPlanIdQuery['tasksByPlanId']);
+    opts.getTasksByPlanId ?? ((): GetTasksByPlanIdQuery['tasksByPlanId'] => []);
 
   return async (document) => {
     if (document === GetServerHealthDocument) {
@@ -265,6 +265,104 @@ describe('createWorkflowRalphOrchestrator', () => {
       reason: 'tasks_exhausted',
       status: 'finished',
     });
+  });
+
+  it('returns cancelled when abortSignal is aborted before the iteration loop', async () => {
+    const abortController = new AbortController();
+    abortController.abort();
+
+    const executeGraphqlV2 = vi.fn(
+      createMockExecute({
+        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+      }),
+    );
+    const run = vi.fn(async () => 'should not run');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: baseRalphContext({ abortSignal: abortController.signal }),
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'cancelled',
+      status: 'finished',
+    });
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('forwards abortSignal to iterationRunner.run', async () => {
+    const abortController = new AbortController();
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = vi.fn(
+      createMockExecute({
+        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+      }),
+    );
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    await orchestrator.execute({
+      context: baseRalphContext({ abortSignal: abortController.signal }),
+    });
+
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ signal: abortController.signal }),
+    );
+  });
+
+  it('forwards deps.onChunk to iterationRunner.run', async () => {
+    const onChunk: WorkflowRalphIterationOnChunk = vi.fn();
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = vi.fn(
+      createMockExecute({
+        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+      }),
+    );
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+      onChunk,
+    });
+
+    await orchestrator.execute({
+      context: baseRalphContext({ iterations: 3 }),
+    });
+
+    expect(run).toHaveBeenCalledWith(expect.objectContaining({ onChunk }));
+  });
+
+  it('passes undefined onChunk when deps.onChunk is omitted', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = vi.fn(
+      createMockExecute({
+        getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+      }),
+    );
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    await orchestrator.execute({
+      context: baseRalphContext({ iterations: 3 }),
+    });
+
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ onChunk: undefined }),
+    );
   });
 
   it('returns agent_complete when output contains promise COMPLETE', async () => {

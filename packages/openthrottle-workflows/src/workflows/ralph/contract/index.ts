@@ -15,8 +15,10 @@ export type {
 export type { WorkflowOrchestrator, WorkflowRunOutcome } from './orchestrator';
 export type {
   WorkflowExecuteGraphqlV2,
+  WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunParams,
   WorkflowRalphIterationRunner,
+  WorkflowRalphIterationStreamChunk,
   WorkflowRalphOrchestratorDeps,
 } from './ralph-orchestrator-deps';
 export type {

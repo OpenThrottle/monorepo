@@ -102,3 +102,13 @@ export type {
   RalphRuntimeSeed,
   WorkflowRalphDefaultsFileJson,
 } from './utils/ralph-runtime-config';
+export { runIteration, runIterationAsync } from './bin/run-iteration';
+export type { CursorAgentChunk, RunIterationConfig } from './bin/run-iteration';
+export { createCursorWorkflowRalphIterationRunner } from './utils/cursor-workflow-ralph-iteration-runner';
+export type {
+  CreateCursorWorkflowRalphIterationRunnerOptions,
+  CursorWorkflowRalphAppendPlanOutputChunk,
+  CursorWorkflowRalphIterationRunParams,
+  CursorWorkflowRalphIterationRunner,
+  CursorWorkflowRalphIterationStreamChunk,
+} from './utils/cursor-workflow-ralph-iteration-runner';

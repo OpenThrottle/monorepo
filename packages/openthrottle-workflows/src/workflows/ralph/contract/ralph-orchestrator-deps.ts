@@ -17,6 +17,24 @@ export type WorkflowExecuteGraphqlV2 = <
 ) => Promise<TData>;
 
 /**
+ * @description One stdout/stderr fragment from an iteration runner; backend-agnostic (aligns with
+ * `CursorAgentChunk` in `tools/workflows` `runIterationAsync`).
+ */
+export interface WorkflowRalphIterationStreamChunk {
+  readonly data: string;
+  readonly stream: 'stdout' | 'stderr';
+}
+
+/**
+ * @description Optional streaming hook forwarded by {@link createWorkflowRalphOrchestrator} into each
+ * `iterationRunner.run` call. The orchestrator still buffers full output for parsing; this is for side
+ * effects only (logs, WebSocket, `append_plan_output`, etc.).
+ */
+export type WorkflowRalphIterationOnChunk = (
+  chunk: WorkflowRalphIterationStreamChunk,
+) => void | Promise<void>;
+
+/**
  * @description One agent iteration (layer-2), aligned with `tools/workflows` `RunIterationConfig` /
  * `runIterationAsync`: environment-specific runner returns combined stdout/stderr text.
  */
@@ -24,6 +42,7 @@ export interface WorkflowRalphIterationRunParams {
   readonly agentPrompt: string;
   readonly iteration: number;
   readonly model: string | undefined;
+  readonly onChunk?: WorkflowRalphIterationOnChunk;
   readonly runner: WorkflowRunner;
   readonly signal: AbortSignal | undefined;
   readonly timeoutMs: number | undefined;
@@ -45,4 +64,10 @@ export interface WorkflowRalphIterationRunner {
 export interface WorkflowRalphOrchestratorDeps {
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
   readonly iterationRunner: WorkflowRalphIterationRunner;
+  /**
+   * @description When set, passed through to every {@link WorkflowRalphIterationRunner.run} call as
+   * {@link WorkflowRalphIterationRunParams.onChunk} so embedders can stream without importing runner
+   * internals.
+   */
+  readonly onChunk?: WorkflowRalphIterationOnChunk;
 }

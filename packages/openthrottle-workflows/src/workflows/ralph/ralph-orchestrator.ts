@@ -52,7 +52,7 @@ export const createWorkflowRalphOrchestrator = (
   deps: WorkflowRalphOrchestratorDeps,
 ): WorkflowOrchestrator<WorkflowRalphContext> => ({
   execute: async ({ context }) => {
-    const { executeGraphqlV2, iterationRunner } = deps;
+    const { executeGraphqlV2, iterationRunner, onChunk } = deps;
 
     try {
       // bootstrap — context must identify a plan or a task
@@ -100,7 +100,7 @@ export const createWorkflowRalphOrchestrator = (
         `${context.prompt}\n\n${injectedContext}\n\n` +
         `Plan-Id: ${effectivePlanId}.` +
         (taskIdTrim ? ` Task-Id: ${taskIdTrim}.` : '') +
-        ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:complete-task>TASK_UUID</ralph:complete-task>.';
+        ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
 
       // plan.guard
       if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
@@ -129,10 +129,20 @@ export const createWorkflowRalphOrchestrator = (
           ? iterationTimeoutSeconds * 1000
           : undefined;
 
+      const abortSignal = context.abortSignal;
+
+      if (abortSignal?.aborted) {
+        return finished('cancelled');
+      }
+
       let lastIterationTaskId: string | undefined;
       let lastIterationTaskCompleted = false;
 
       for (let iteration = 1; iteration <= maxIterations; iteration++) {
+        if (abortSignal?.aborted) {
+          return finished('cancelled');
+        }
+
         let agentPrompt = basePrompt;
         let firstPendingForIteration: string | undefined;
 
@@ -176,7 +186,7 @@ export const createWorkflowRalphOrchestrator = (
               });
             }
 
-            agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:complete-task>${taskForIteration.id}</ralph:complete-task> so the CLI can mark it completed.`;
+            agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
           }
         }
 
@@ -187,12 +197,17 @@ export const createWorkflowRalphOrchestrator = (
             agentPrompt,
             iteration,
             model: context.model,
+            onChunk,
             runner: context.runner,
-            signal: undefined,
+            signal: abortSignal,
             timeoutMs,
           });
         } catch {
           return failed('unhandled');
+        }
+
+        if (abortSignal?.aborted) {
+          return finished('cancelled');
         }
 
         const completeTaskIds = [...parseRalphCompleteTaskSignals(agentOutput)];
