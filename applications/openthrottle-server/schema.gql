@@ -2514,6 +2514,11 @@ type Mutation {
   updateProject(input: UpdateProjectInput!): ProjectObject
 
   """
+  Delete a project by ID. Related plans and tasks remain; their project link is cleared.
+  """
+  deleteProject(input: DeleteProjectInput!): Boolean!
+
+  """
   Create a role
   """
   createRole(input: CreateRoleInput!): RoleObject!
@@ -2992,6 +2997,13 @@ input UpdateProjectInput {
   NX project name (e.g. applications/openthrottle-server)
   """
   nxProjectName: String
+}
+
+input DeleteProjectInput {
+  """
+  Project id to delete
+  """
+  id: ID!
 }
 
 input CreateRoleInput {
