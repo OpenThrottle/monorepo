@@ -1,8 +1,8 @@
 'use client';
 
-import type { ChartConfig, ChartConfigEntry } from './chart-config';
-
-export type { ChartConfig, ChartConfigEntry };
+export type { ChartConfig, ChartConfigEntry } from './chart-config';
+export { getChartColor, readUnknownRecordValue } from './chart-config';
+export { ChartConfigContext, useChartConfig } from './chart-config-context';
 export type { ChartContainerProps } from './ChartContainer';
 export { ChartContainer } from './ChartContainer';
 export type { ChartTooltipContentProps } from './ChartTooltipContent';

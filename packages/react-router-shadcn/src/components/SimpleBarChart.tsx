@@ -1,13 +1,12 @@
 'use client';
 
 import * as React from 'react';
+import type { DataKey } from 'recharts';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from './Chart';
+import type { ChartConfig } from './chart-config';
+import { ChartContainer } from './ChartContainer';
+import { ChartTooltip } from './ChartTooltip';
+import { ChartTooltipContent } from './ChartTooltipContent';
 
 const DEFAULT_COLOR = 'var(--chart-1)';
 
@@ -63,11 +62,14 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
   );
 
   const isVertical = layout === 'vertical';
+  // Recharts `TypedDataKey<T>` does not accept `keyof T & string`; values are valid axis keys at runtime.
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- align with Recharts DataKey<T>
+  const categoryAxisKey = categoryKey as DataKey<T>;
 
   return (
     <ChartContainer className={className} config={config}>
       <BarChart
-        data={data as ReadonlyArray<Record<string, string | number>>}
+        data={data}
         layout={isVertical ? 'vertical' : undefined}
         margin={margin}
       >
@@ -81,7 +83,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
             <XAxis axisLine={false} tickLine={false} type="number" />
             <YAxis
               axisLine={false}
-              dataKey={categoryKey as any} // FIXME: update this
+              dataKey={categoryAxisKey}
               tickLine={false}
               type="category"
               width={80}
@@ -91,7 +93,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
           <>
             <XAxis
               axisLine={false}
-              dataKey={categoryKey as any} // FIXME: update this
+              dataKey={categoryAxisKey}
               tickLine={false}
               tickMargin={8}
             />
