@@ -75,3 +75,7 @@ mutation createProject($input: CreateProjectInput!) {
     ...Project
   }
 }
+
+mutation deleteProject($input: DeleteProjectInput!) {
+  deleteProject(input: $input)
+}
