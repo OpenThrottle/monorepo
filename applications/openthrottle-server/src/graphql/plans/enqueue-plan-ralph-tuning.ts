@@ -1,6 +1,7 @@
 /**
  * @description Maps and validates GraphQL `ralph` enqueue options into {@link RalphNestedRunTuningInput}
- * for BullMQ `RunPlanJobData` (same shape as nested `workflow-ralph` argv).
+ * for BullMQ spawn payloads (nested `workflow-ralph` argv). Orchestrator jobs use
+ * `RunPlanOrchestratorJobData` and are built elsewhere when the enqueue API supports them.
  */
 
 import type {
@@ -9,7 +10,7 @@ import type {
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
 import { parseRalphExecutionBackendId } from '@tools/workflows';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import type { RunPlanSpawnJobData } from '../../queues/plans/plans.types';
 import type { RalphPlanRunTuningInput } from './plan.input';
 
 /** @description Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph. */
@@ -148,12 +149,12 @@ export const parseEnqueueRalphTuning = (
 };
 
 /**
- * @description Builds {@link RunPlanJobData} payload for the plans queue from enqueue input.
+ * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
  */
 export const buildRunPlanJobData = (input: {
   readonly planId: string;
   readonly ralph: RalphPlanRunTuningInput | null | undefined;
-}): RunPlanJobData => {
+}): RunPlanSpawnJobData => {
   const ralph = parseEnqueueRalphTuning(input.ralph);
   if (ralph === undefined) {
     return { planId: input.planId };
