@@ -78,6 +78,7 @@ export async function executeGraphqlV2<
     'Content-Type': 'application/json',
     ...(options?.headers ?? {}),
   };
+
   if (token != null && token !== '') {
     headers.Authorization = `Bearer ${token}`;
   }

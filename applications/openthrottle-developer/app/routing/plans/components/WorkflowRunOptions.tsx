@@ -17,9 +17,9 @@ import {
 import { ChevronUp } from 'lucide-react';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import {
-  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  WORKFLOW_RALPH_DEFAULT_MODEL,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
@@ -137,7 +137,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
     if (input.iterations < 1 || Number.isNaN(input.iterations)) {
       setInput((prev) => ({
         ...prev,
-        iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+        iterations: DEFAULT_RALPH_ITERATIONS,
       }));
     }
   };
@@ -321,7 +321,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
           <p className="text-muted-foreground text-xs">
             How the model should approach the work (Cursor command or prompt
             path). Default matches CLI:{' '}
-            <code className="text-xs">{WORKFLOW_RALPH_DEFAULT_PROMPT}</code>.
+            <code className="text-xs">{DEFAULT_RALPH_PROMPT}</code>.
           </p>
           <div className="space-y-2">
             <Label htmlFor="workflow-run-prompt">--prompt</Label>
@@ -333,7 +333,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               onChange={(e) =>
                 setInput((prev) => ({ ...prev, prompt: e.target.value }))
               }
-              placeholder={WORKFLOW_RALPH_DEFAULT_PROMPT}
+              placeholder={DEFAULT_RALPH_PROMPT}
               spellCheck={false}
               value={input.prompt}
             />
@@ -413,8 +413,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
                 className="text-muted-foreground text-xs"
                 id="workflow-run-iterations-hint"
               >
-                Default {WORKFLOW_RALPH_DEFAULT_ITERATIONS}; omitted when
-                default.
+                Default {DEFAULT_RALPH_ITERATIONS}; omitted when default.
               </p>
             </div>
             <div className="space-y-2">
@@ -448,7 +447,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
                 onChange={(e) =>
                   setInput((prev) => ({ ...prev, model: e.target.value }))
                 }
-                placeholder={WORKFLOW_RALPH_DEFAULT_MODEL}
+                placeholder={DEFAULT_RALPH_MODEL}
                 spellCheck={false}
                 value={input.model}
               />
@@ -457,7 +456,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
                 id="workflow-run-model-hint"
               >
                 Cursor model preset; default &apos;
-                {WORKFLOW_RALPH_DEFAULT_MODEL}
+                {DEFAULT_RALPH_MODEL}
                 &apos; is omitted.
               </p>
             </div>

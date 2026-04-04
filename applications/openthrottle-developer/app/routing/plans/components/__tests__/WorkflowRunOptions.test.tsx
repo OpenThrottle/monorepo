@@ -7,7 +7,7 @@ import { WorkflowRunOptions } from '../WorkflowRunOptions';
 import type { WorkflowRunOptionsProps } from '../WorkflowRunOptions';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
-  WORKFLOW_RALPH_DEFAULT_MODEL,
+  DEFAULT_RALPH_MODEL,
   getDefaultWorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
@@ -118,7 +118,7 @@ describe('WorkflowRunOptions Component', () => {
       ...getDefaultWorkflowRalphRunOptionsInput({ planId }),
       debugCli: 'verbose',
       iterations: 3,
-      model: WORKFLOW_RALPH_DEFAULT_MODEL,
+      model: DEFAULT_RALPH_MODEL,
     };
 
     const makeRoutesStub = (value: WorkflowRalphRunOptionsInput) =>

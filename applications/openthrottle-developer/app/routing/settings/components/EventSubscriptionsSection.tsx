@@ -19,20 +19,38 @@ import {
   subscribeToEventSubscriptionsStorageEvents,
 } from '~/routing/settings/config/event-subscriptions-storage';
 
+export interface EventSubscriptionsSectionProps {}
+
 /**
  * @description Event subscription toggles persisted in localStorage; see
  * {@link EVENT_SUBSCRIPTION_ROWS}. Server-side filters are not wired yet.
  */
-export const EventSubscriptionsSection = () => {
+export const EventSubscriptionsSection = (
+  _props: EventSubscriptionsSectionProps,
+) => {
+  // const { } = props;
+
+  // Hooks
   const [subscribed, setSubscribed] = React.useState(() =>
     getEventSubscriptionsFromStorage(),
   );
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     return subscribeToEventSubscriptionsStorageEvents(() => {
       setSubscribed(getEventSubscriptionsFromStorage());
     });
+
+    // 🪝 On mount we set up our subscription(s)
   }, []);
+
+  // 🔌 Short Circuit
 
   const handleCheckedChange =
     (id: EventSubscriptionId) => (checked: boolean) => {
@@ -53,6 +71,7 @@ export const EventSubscriptionsSection = () => {
           change them in another tab.
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-0">
         {EVENT_SUBSCRIPTION_ROWS.map((row, index) => (
           <React.Fragment key={row.id}>
@@ -65,9 +84,9 @@ export const EventSubscriptionsSection = () => {
                 <Label htmlFor={`event-subscription-${row.id}`}>
                   {row.label}
                 </Label>
-                <p className="font-mono text-xs text-muted-foreground">
+                {/* <p className="font-mono text-xs text-muted-foreground">
                   {row.id}
-                </p>
+                </p> */}
                 <p className="text-sm text-muted-foreground">
                   {row.description}
                 </p>

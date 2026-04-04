@@ -157,6 +157,9 @@
     },
     {
       "path": "./packages/nestjs-postgres"
+    },
+    {
+      "path": "./packages/openthrottle-workflows"
     }
   ]
 }

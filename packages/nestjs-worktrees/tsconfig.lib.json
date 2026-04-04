@@ -15,6 +15,9 @@
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
+      "path": "../../tools/workflows/tsconfig.lib.json"
+    },
+    {
       "path": "../mcp-developer/tsconfig.lib.json"
     },
     {

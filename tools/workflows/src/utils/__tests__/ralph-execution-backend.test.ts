@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseRalphExecutionBackendId,
-  WORKFLOW_RALPH_DEFAULT_BACKEND,
+  DEFAULT_RALPH_RUNNER,
 } from '../ralph-execution-backend';
 
 describe('parseRalphExecutionBackendId', () => {
@@ -27,8 +27,8 @@ describe('parseRalphExecutionBackendId', () => {
   });
 });
 
-describe('WORKFLOW_RALPH_DEFAULT_BACKEND', () => {
+describe('DEFAULT_RALPH_RUNNER', () => {
   it('is cursor', () => {
-    expect(WORKFLOW_RALPH_DEFAULT_BACKEND).toBe('cursor');
+    expect(DEFAULT_RALPH_RUNNER).toBe('cursor');
   });
 });

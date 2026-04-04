@@ -5,10 +5,10 @@
  */
 
 import type { RalphExecutionBackendId } from './ralph-execution-backend';
-import { WORKFLOW_RALPH_DEFAULT_BACKEND } from './ralph-execution-backend';
+import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
 import {
-  WORKFLOW_RALPH_DEFAULT_MODEL,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
 } from './ralph-runtime-config';
 
 /**
@@ -46,7 +46,7 @@ export const buildWorkflowRalphRunTuningArgv = (
   if (
     input.backend !== undefined &&
     input.backend !== null &&
-    input.backend !== WORKFLOW_RALPH_DEFAULT_BACKEND
+    input.backend !== DEFAULT_RALPH_RUNNER
   ) {
     ralphArgs.push('--backend', input.backend);
   }
@@ -59,18 +59,14 @@ export const buildWorkflowRalphRunTuningArgv = (
     if (
       prompt !== undefined &&
       prompt !== '' &&
-      prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT
+      prompt !== DEFAULT_RALPH_PROMPT
     ) {
       ralphArgs.push('--prompt', prompt);
     }
   }
 
   const model = input.model?.trim();
-  if (
-    model !== undefined &&
-    model !== '' &&
-    model !== WORKFLOW_RALPH_DEFAULT_MODEL
-  ) {
+  if (model !== undefined && model !== '' && model !== DEFAULT_RALPH_MODEL) {
     ralphArgs.push('--model', model);
   }
 

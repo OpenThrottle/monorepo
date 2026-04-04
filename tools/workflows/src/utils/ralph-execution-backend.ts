@@ -8,10 +8,11 @@
 export const RALPH_EXECUTION_BACKEND_IDS = ['cursor'] as const;
 
 /** @description Which CLI/process runs each agentic iteration. */
-export type RalphExecutionBackendId = (typeof RALPH_EXECUTION_BACKEND_IDS)[number];
+export type RalphExecutionBackendId =
+  (typeof RALPH_EXECUTION_BACKEND_IDS)[number];
 
 /** @description Default runner: Cursor agent CLI. */
-export const WORKFLOW_RALPH_DEFAULT_BACKEND: RalphExecutionBackendId = 'cursor';
+export const DEFAULT_RALPH_RUNNER: RalphExecutionBackendId = 'cursor';
 
 /**
  * @description Returns true when `value` is a supported {@link RalphExecutionBackendId}.
@@ -31,7 +32,7 @@ export const parseRalphExecutionBackendId = (
   const normalized = raw.trim().toLowerCase();
   if (normalized === '') {
     throw new Error(
-      `Execution backend (${source}) must be a non-empty string (e.g. ${WORKFLOW_RALPH_DEFAULT_BACKEND})`,
+      `Execution backend (${source}) must be a non-empty string (e.g. ${DEFAULT_RALPH_RUNNER})`,
     );
   }
   if (!isRalphExecutionBackendId(normalized)) {

@@ -13,31 +13,38 @@ import {
   NOTIFICATION_PREFERENCE_ROWS,
   type NotificationPreferenceId,
 } from '~/routing/settings/config/notification-preferences';
+import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
 
-const buildInitialToggles = (): Record<NotificationPreferenceId, boolean> => {
-  const next: Record<NotificationPreferenceId, boolean> = {
-    assignments: false,
-    pullRequests: false,
-    queues: false,
-    weeklyDigest: false,
-  };
-  for (const row of NOTIFICATION_PREFERENCE_ROWS) {
-    next[row.id] = row.defaultEnabled;
-  }
-  return next;
-};
+export interface NotificationPreferencesSectionProps {}
 
 /**
  * @description Placeholder notification preferences panel. Local state only until
  * user settings API and action handlers exist — see {@link NOTIFICATION_PREFERENCE_ROWS}.
  */
-export const NotificationPreferencesSection = () => {
-  const [toggles, setToggles] = React.useState(buildInitialToggles);
+export const NotificationPreferencesSection = (
+  _props: NotificationPreferencesSectionProps,
+) => {
+  // const { } = props;
 
+  // Setup (for hooks)
+  const initialToggles = getDefaultNotificationSettings();
+
+  // Hooks
+  const [toggles, setToggles] = React.useState(initialToggles);
+
+  // Setup
+
+  // Handlers
   const handleCheckedChange =
     (id: NotificationPreferenceId) => (checked: boolean) => {
       setToggles((prev) => ({ ...prev, [id]: checked }));
     };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className="max-w-2xl">
@@ -48,6 +55,7 @@ export const NotificationPreferencesSection = () => {
           choices are not saved yet.
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-0">
         {NOTIFICATION_PREFERENCE_ROWS.map((row, index) => (
           <React.Fragment key={row.id}>

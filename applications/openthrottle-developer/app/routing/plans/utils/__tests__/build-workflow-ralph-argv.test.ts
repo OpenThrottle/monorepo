@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import {
-  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  WORKFLOW_RALPH_DEFAULT_MODEL,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
@@ -19,11 +19,11 @@ const basePlanInput = (
   debugCli: 'omit',
   executionBackend: 'cursor',
   iterationTimeoutSeconds: undefined,
-  iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  model: WORKFLOW_RALPH_DEFAULT_MODEL,
+  iterations: DEFAULT_RALPH_ITERATIONS,
+  model: DEFAULT_RALPH_MODEL,
   planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
   project: '',
-  prompt: WORKFLOW_RALPH_DEFAULT_PROMPT,
+  prompt: DEFAULT_RALPH_PROMPT,
   targetMode: 'plan',
   taskId: '',
   ...overrides,
@@ -35,11 +35,11 @@ const baseTaskInput = (
   debugCli: 'omit',
   executionBackend: 'cursor',
   iterationTimeoutSeconds: undefined,
-  iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  model: WORKFLOW_RALPH_DEFAULT_MODEL,
+  iterations: DEFAULT_RALPH_ITERATIONS,
+  model: DEFAULT_RALPH_MODEL,
   planId: '',
   project: '',
-  prompt: WORKFLOW_RALPH_DEFAULT_PROMPT,
+  prompt: DEFAULT_RALPH_PROMPT,
   targetMode: 'task',
   taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
   ...overrides,
@@ -284,7 +284,7 @@ describe('comparing two workflow run option profiles', () => {
     const task3Style = basePlanInput({
       debugCli: 'verbose',
       iterations: 3,
-      model: WORKFLOW_RALPH_DEFAULT_MODEL,
+      model: DEFAULT_RALPH_MODEL,
     });
 
     expect(buildWorkflowRalphOptionArgs(task2Style)).not.toEqual(

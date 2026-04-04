@@ -6,11 +6,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WORKFLOW_RALPH_DEFAULT_BACKEND } from '../ralph-execution-backend';
+import { DEFAULT_RALPH_RUNNER } from '../ralph-execution-backend';
 import {
-  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  WORKFLOW_RALPH_DEFAULT_MODEL,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
   WORKFLOW_RALPH_DEFAULTS_FILE,
   WORKFLOW_RALPH_ENV,
   loadWorkflowRalphDefaultsFile,
@@ -96,10 +96,10 @@ describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
     const dir = mkdtempSync(join(tmpdir(), 'wr-'));
     try {
       const seed = mergeRalphRuntimeSeed(dir);
-      expect(seed.backend).toBe(WORKFLOW_RALPH_DEFAULT_BACKEND);
-      expect(seed.prompt).toBe(WORKFLOW_RALPH_DEFAULT_PROMPT);
-      expect(seed.iterations).toBe(WORKFLOW_RALPH_DEFAULT_ITERATIONS);
-      expect(seed.model).toBe(WORKFLOW_RALPH_DEFAULT_MODEL);
+      expect(seed.backend).toBe(DEFAULT_RALPH_RUNNER);
+      expect(seed.prompt).toBe(DEFAULT_RALPH_PROMPT);
+      expect(seed.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
+      expect(seed.model).toBe(DEFAULT_RALPH_MODEL);
       expect(seed.project).toBeUndefined();
       expect(seed.iterationTimeoutMs).toBeUndefined();
     } finally {

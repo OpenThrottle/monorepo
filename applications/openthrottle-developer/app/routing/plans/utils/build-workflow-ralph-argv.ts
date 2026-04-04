@@ -9,10 +9,10 @@ import { RalphNestedDebugCli } from '~/__generated__/graphql';
 const CORTEX_UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const WORKFLOW_RALPH_DEFAULT_BACKEND = 'cursor';
-export const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph';
-export const WORKFLOW_RALPH_DEFAULT_ITERATIONS = 10;
-export const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto';
+export const DEFAULT_RALPH_RUNNER = 'cursor';
+export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
+export const DEFAULT_RALPH_ITERATIONS = 10;
+export const DEFAULT_RALPH_MODEL = 'auto';
 
 export type WorkflowRalphTargetMode = 'plan' | 'task';
 
@@ -22,10 +22,9 @@ export type WorkflowRalphTargetMode = 'plan' | 'task';
 export type WorkflowRalphDebugCli = 'omit' | 'debug' | 'verbose';
 
 /**
- * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link WORKFLOW_RALPH_DEFAULT_BACKEND}.
+ * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link DEFAULT_RALPH_RUNNER}.
  */
-export type WorkflowRalphExecutionBackendUi =
-  typeof WORKFLOW_RALPH_DEFAULT_BACKEND;
+export type WorkflowRalphExecutionBackendUi = typeof DEFAULT_RALPH_RUNNER;
 
 export interface WorkflowRalphRunOptionsInput {
   readonly debugCli: WorkflowRalphDebugCli;
@@ -62,11 +61,11 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
     debugCli: 'omit',
     executionBackend: 'cursor',
     iterationTimeoutSeconds: undefined,
-    iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-    model: WORKFLOW_RALPH_DEFAULT_MODEL,
+    iterations: DEFAULT_RALPH_ITERATIONS,
+    model: DEFAULT_RALPH_MODEL,
     planId,
     project: '',
-    prompt: WORKFLOW_RALPH_DEFAULT_PROMPT,
+    prompt: DEFAULT_RALPH_PROMPT,
     targetMode,
     taskId,
   };
@@ -86,16 +85,16 @@ export const buildWorkflowRalphOptionArgs = (
     args.push('--task', input.taskId.trim());
   }
 
-  if (input.executionBackend !== WORKFLOW_RALPH_DEFAULT_BACKEND) {
+  if (input.executionBackend !== DEFAULT_RALPH_RUNNER) {
     args.push('--backend', input.executionBackend);
   }
 
   const prompt = input.prompt.trim();
-  if (prompt !== '' && prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
+  if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
     args.push('--prompt', prompt);
   }
 
-  if (input.iterations !== WORKFLOW_RALPH_DEFAULT_ITERATIONS) {
+  if (input.iterations !== DEFAULT_RALPH_ITERATIONS) {
     args.push('--iterations', String(input.iterations));
   }
 
@@ -110,7 +109,7 @@ export const buildWorkflowRalphOptionArgs = (
   }
 
   const model = input.model.trim();
-  if (model !== '' && model !== WORKFLOW_RALPH_DEFAULT_MODEL) {
+  if (model !== '' && model !== DEFAULT_RALPH_MODEL) {
     args.push('--model', model);
   }
 
@@ -160,11 +159,11 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
 ): RalphPlanRunTuningInput | undefined => {
   const ralph: RalphPlanRunTuningInput = {};
 
-  if (input.executionBackend !== WORKFLOW_RALPH_DEFAULT_BACKEND) {
+  if (input.executionBackend !== DEFAULT_RALPH_RUNNER) {
     ralph.backend = input.executionBackend;
   }
 
-  if (input.iterations !== WORKFLOW_RALPH_DEFAULT_ITERATIONS) {
+  if (input.iterations !== DEFAULT_RALPH_ITERATIONS) {
     ralph.iterations = input.iterations;
   }
 
@@ -176,7 +175,7 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
   }
 
   const model = input.model.trim();
-  if (model !== '' && model !== WORKFLOW_RALPH_DEFAULT_MODEL) {
+  if (model !== '' && model !== DEFAULT_RALPH_MODEL) {
     ralph.model = model;
   }
 
@@ -186,7 +185,7 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
   }
 
   const prompt = input.prompt.trim();
-  if (prompt !== '' && prompt !== WORKFLOW_RALPH_DEFAULT_PROMPT) {
+  if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
     ralph.prompt = prompt;
   }
 

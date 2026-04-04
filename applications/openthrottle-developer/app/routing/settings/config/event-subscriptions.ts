@@ -8,55 +8,55 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 export const EVENT_SUBSCRIPTION_ROWS = [
   {
     defaultSubscribed: true,
-    description: 'When a plan’s title, description, or metadata changes.',
+    description: `When a plan's title, description, or metadata changes.`,
     id: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
     label: 'Plan updated',
   },
   {
     defaultSubscribed: true,
-    description: 'When a plan’s status changes (e.g. pending to in progress).',
+    description: `When a plan's status changes (e.g. pending to in progress).`,
     id: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
     label: 'Plan status changed',
   },
   {
     defaultSubscribed: true,
-    description: 'When work is queued for a plan (e.g. new background job).',
+    description: `When work is queued for a plan (e.g. new background job).`,
     id: NOTIFICATION_EVENT_NAMES.PLAN_ENQUEUED,
     label: 'Plan enqueued',
   },
   {
     defaultSubscribed: false,
-    description: 'When a plan is waiting on a local worktree or sync.',
+    description: `When a plan is waiting on a local worktree or sync.`,
     id: NOTIFICATION_EVENT_NAMES.PLAN_WAITING_FOR_WORKTREE,
     label: 'Plan waiting for worktree',
   },
   {
     defaultSubscribed: true,
-    description: 'When a task you follow is marked complete.',
+    description: `When a task you follow is marked complete.`,
     id: NOTIFICATION_EVENT_NAMES.TASK_COMPLETED,
     label: 'Task completed',
   },
   {
     defaultSubscribed: true,
-    description: 'When a task’s status changes (e.g. blocked or in progress).',
+    description: `When a task's status changes (e.g. blocked or in progress).`,
     id: NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED,
     label: 'Task status changed',
   },
   {
     defaultSubscribed: true,
-    description: 'When a queue job finishes successfully or fails.',
+    description: `When a queue job finishes successfully or fails.`,
     id: NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED,
     label: 'Queue job completed',
   },
   {
     defaultSubscribed: true,
-    description: 'System-wide alerts and operational messages.',
+    description: `System-wide alerts and operational messages.`,
     id: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
     label: 'System alerts',
   },
   {
     defaultSubscribed: false,
-    description: 'Verbose diagnostic events (usually for development).',
+    description: `Verbose diagnostic events (usually for development).`,
     id: NOTIFICATION_EVENT_NAMES.DEBUG,
     label: 'Debug',
   },
@@ -72,7 +72,6 @@ export const buildInitialSubscriptions = (): Record<
   EventSubscriptionId,
   boolean
 > => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Object.fromEntries widens keys; rows are the source of truth for EventSubscriptionId
   return Object.fromEntries(
     EVENT_SUBSCRIPTION_ROWS.map((row) => [row.id, row.defaultSubscribed]),
   ) as Record<EventSubscriptionId, boolean>;

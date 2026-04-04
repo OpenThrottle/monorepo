@@ -11,12 +11,12 @@ import {
 import type { RalphExecutionBackendId } from './ralph-execution-backend';
 import {
   parseRalphExecutionBackendId,
-  WORKFLOW_RALPH_DEFAULT_BACKEND,
+  DEFAULT_RALPH_RUNNER,
 } from './ralph-execution-backend';
 import {
   mergeRalphRuntimeSeed,
-  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_PROMPT,
 } from './ralph-runtime-config';
 import {
   readRalphPromptFileUtf8,
@@ -330,7 +330,7 @@ export const parseRalphArgs = (): RalphArgs => {
     promptProfileKind = 'file';
     promptProfileLabel = absolute;
   } else if (explicitNamedPrompt) {
-    const named = (parsed.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT).trim();
+    const named = (parsed.prompt ?? DEFAULT_RALPH_PROMPT).trim();
     resolvedPrompt = named;
     promptProfileKind = 'named';
     promptProfileLabel = named;
@@ -355,9 +355,9 @@ export const parseRalphArgs = (): RalphArgs => {
   setRalphDebugLevel(effectiveDebugLevel);
 
   const result: RalphArgs = {
-    backend: parsed.backend ?? WORKFLOW_RALPH_DEFAULT_BACKEND,
+    backend: parsed.backend ?? DEFAULT_RALPH_RUNNER,
     iterationTimeoutMs: parsed.iterationTimeoutMs,
-    iterations: parsed.iterations ?? WORKFLOW_RALPH_DEFAULT_ITERATIONS,
+    iterations: parsed.iterations ?? DEFAULT_RALPH_ITERATIONS,
     model: parsed.model,
     plan: parsed.plan,
     project: parsed.project,

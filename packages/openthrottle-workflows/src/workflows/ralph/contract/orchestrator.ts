@@ -1,21 +1,30 @@
 import type { WorkflowFlowContext } from './flow-context';
 
+export type WorkflowFinishedReason =
+  | 'agent_complete'
+  | 'max_iterations'
+  | 'plan_already_terminal'
+  | 'tasks_exhausted';
+
+export type WorkflowFailedReason =
+  | 'agent_error'
+  | 'input_required'
+  | 'unhandled';
+
+export type WorkflowStatus = 'finished' | 'failed';
+
 /**
  * @description Terminal outcome of a workflow run (process exit semantics align with current Ralph CLI).
  */
 export type WorkflowRunOutcome =
   | {
       readonly exitCode: 0;
-      readonly reason:
-        | 'agent_complete'
-        | 'max_iterations'
-        | 'plan_already_terminal'
-        | 'tasks_exhausted';
+      readonly reason: WorkflowFinishedReason;
       readonly status: 'finished';
     }
   | {
       readonly exitCode: 1;
-      readonly reason: 'agent_error' | 'input_required' | 'unhandled';
+      readonly reason: WorkflowFailedReason;
       readonly status: 'failed';
     };
 

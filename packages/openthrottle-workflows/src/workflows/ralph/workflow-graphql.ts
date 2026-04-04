@@ -46,6 +46,7 @@ export function buildWorkflowExecuteGraphqlV2Options(
     config.token != null && config.token.trim() !== ''
       ? config.token.trim()
       : undefined;
+
   const rawHeaders = config.additionalHeaders;
   const headers =
     rawHeaders != null && Object.keys(rawHeaders).length > 0
@@ -95,6 +96,7 @@ export function resolveWorkflowAuthTokenFromEnv(): string | undefined {
   const raw =
     process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN ??
     process.env.MCP_DEVELOPER_AUTH_TOKEN;
+
   const trimmed = typeof raw === 'string' ? raw.trim() : '';
 
   return trimmed === '' ? undefined : trimmed;

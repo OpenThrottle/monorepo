@@ -3,8 +3,8 @@
  * `RalphPlanRunTuningInput` (enqueue / job tuning). Keeps Ralph argv-equivalent defaults aligned
  * with the workflow flow-context contract (`contract/flow-context`).
  */
-import { RalphNestedDebugCli } from '../__generated__/graphql.js';
-import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
+import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
+import type { RalphPlanRunTuningInput } from '../../__generated__/graphql.js';
 import type {
   WorkflowRalphContext,
   WorkflowDebug,
@@ -25,17 +25,20 @@ import {
 const mapRalphNestedDebugCliToWorkflowDebugCli = (
   raw: RalphNestedDebugCli | null | undefined,
 ): WorkflowDebug => {
-  if (raw == null) {
+  if (!raw || raw === null) {
     return 'omit';
   }
 
   switch (raw) {
     case RalphNestedDebugCli.Debug:
       return 'debug';
-    case RalphNestedDebugCli.Verbose:
-      return 'verbose';
+
     case RalphNestedDebugCli.Omit:
       return 'omit';
+
+    case RalphNestedDebugCli.Verbose:
+      return 'verbose';
+
     default:
       return 'omit';
   }
@@ -47,7 +50,9 @@ const mapRalphNestedDebugCliToWorkflowDebugCli = (
  */
 const resolveExecutionBackend = (
   _raw: string | null | undefined,
-): WorkflowRunner => DEFAULT_RALPH_RUNNER;
+): WorkflowRunner => {
+  return DEFAULT_RALPH_RUNNER;
+};
 
 const resolveIterationsFromTuning = (
   raw: number | null | undefined,

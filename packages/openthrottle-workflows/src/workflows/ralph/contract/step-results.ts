@@ -5,7 +5,7 @@ import type { WorkflowError } from './workflow-error';
  */
 export type WorkflowStepId =
   | 'bootstrap'
-  | 'openthrottle.reachable'
+  | 'healthcheck'
   | 'target.resolve'
   | 'state.load'
   | 'prompt.build'
@@ -30,7 +30,7 @@ type StepFailure<TStep extends WorkflowStepId> = {
 };
 
 export type StepBootstrapResult = | StepSuccess<'bootstrap'> | StepFailure<'bootstrap'>; // prettier-ignore
-export type StepOpenThrottleReachableResult = | StepSuccess<'openthrottle.reachable'> | StepFailure<'openthrottle.reachable'>; // prettier-ignore
+export type StepHealthcheckResult = | StepSuccess<'healthcheck'> | StepFailure<'healthcheck'>; // prettier-ignore
 
 export type StepTargetResolveResult =
   | StepSuccess<
@@ -122,7 +122,7 @@ export type StepAgentParseControlResult =
 export type WorkflowStepResult =
   | StepAgentParseControlResult
   | StepBootstrapResult
-  | StepOpenThrottleReachableResult
+  | StepHealthcheckResult
   | StepIterationRunResult
   | StepPlanGuardResult
   | StepPlanMarkInProgressResult

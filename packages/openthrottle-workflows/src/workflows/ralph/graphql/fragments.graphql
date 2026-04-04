@@ -1,3 +1,13 @@
+fragment CommitLink on CommitLinkObject {
+  createdAt
+  id
+  message
+  planId
+  repo
+  sha
+  taskId
+}
+
 fragment Note on NoteObject {
   author
   content
@@ -19,16 +29,6 @@ fragment Plan on PlanObject {
   summary
   title
   updatedAt
-}
-
-fragment CommitLink on CommitLinkObject {
-  createdAt
-  id
-  message
-  planId
-  repo
-  sha
-  taskId
 }
 
 fragment Task on TaskObject {

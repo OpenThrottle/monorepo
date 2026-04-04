@@ -8,7 +8,7 @@ import { spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
 import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
-import { WORKFLOW_RALPH_DEFAULT_BACKEND } from '../utils/ralph-execution-backend';
+import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 
 /** Chunk from runner stdout or stderr when using async spawn. */
@@ -20,7 +20,7 @@ export interface CursorAgentChunk {
 export interface RunIterationConfig {
   /** Full prompt for the runner (e.g. Cursor `-p`); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
   agentPrompt: string;
-  /** @description Execution backend; defaults to {@link WORKFLOW_RALPH_DEFAULT_BACKEND}. */
+  /** @description Execution backend; defaults to {@link DEFAULT_RALPH_RUNNER}. */
   backend?: RalphExecutionBackendId;
   /** Iteration number. */
   iteration: number;
@@ -97,7 +97,7 @@ const runCursorIterationSync = (config: RunIterationConfig): string => {
  * @description Executes a single iteration of the agentic process (sync). Use when running interactively (TTY).
  */
 export const runIteration = (config: RunIterationConfig): string => {
-  const { backend = WORKFLOW_RALPH_DEFAULT_BACKEND, iteration } = config;
+  const { backend = DEFAULT_RALPH_RUNNER, iteration } = config;
   const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
 
   console.log(`\n${ARTWORK_LINE}\n`);
@@ -278,7 +278,7 @@ const runCursorIterationAsync = (
 export const runIterationAsync = (
   config: RunIterationConfig,
 ): Promise<string> => {
-  const { backend = WORKFLOW_RALPH_DEFAULT_BACKEND, iteration } = config;
+  const { backend = DEFAULT_RALPH_RUNNER, iteration } = config;
   const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
 
   console.log(`\n${ARTWORK_LINE}\n`);

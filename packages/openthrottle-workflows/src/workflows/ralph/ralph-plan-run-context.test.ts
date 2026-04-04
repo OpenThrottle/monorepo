@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RalphNestedDebugCli } from '../__generated__/graphql.js';
+import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
 import type { WorkflowRalphRunOptionsShape } from './contract/index.js';
 import {
   DEFAULT_RALPH_RUNNER,

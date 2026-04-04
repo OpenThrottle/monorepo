@@ -6,11 +6,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { WORKFLOW_RALPH_DEFAULT_BACKEND } from '../ralph-execution-backend';
+import { DEFAULT_RALPH_RUNNER } from '../ralph-execution-backend';
 import {
-  WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-  WORKFLOW_RALPH_DEFAULT_MODEL,
-  WORKFLOW_RALPH_DEFAULT_PROMPT,
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
 } from '../ralph-runtime-config';
 import {
   readRalphPromptFileUtf8,
@@ -20,10 +20,10 @@ import {
 describe('resolveRalphPromptFromSeed', () => {
   it('returns named profile when promptFile is absent', () => {
     const r = resolveRalphPromptFromSeed('/repo', {
-      backend: WORKFLOW_RALPH_DEFAULT_BACKEND,
+      backend: DEFAULT_RALPH_RUNNER,
       iterationTimeoutMs: undefined,
-      iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-      model: WORKFLOW_RALPH_DEFAULT_MODEL,
+      iterations: DEFAULT_RALPH_ITERATIONS,
+      model: DEFAULT_RALPH_MODEL,
       project: undefined,
       prompt: '/agents/seo',
       promptFile: undefined,
@@ -39,12 +39,12 @@ describe('resolveRalphPromptFromSeed', () => {
       const filePath = join(dir, 'custom.md');
       writeFileSync(filePath, 'Hello from file\n', 'utf8');
       const r = resolveRalphPromptFromSeed(dir, {
-        backend: WORKFLOW_RALPH_DEFAULT_BACKEND,
+        backend: DEFAULT_RALPH_RUNNER,
         iterationTimeoutMs: undefined,
-        iterations: WORKFLOW_RALPH_DEFAULT_ITERATIONS,
-        model: WORKFLOW_RALPH_DEFAULT_MODEL,
+        iterations: DEFAULT_RALPH_ITERATIONS,
+        model: DEFAULT_RALPH_MODEL,
         project: undefined,
-        prompt: WORKFLOW_RALPH_DEFAULT_PROMPT,
+        prompt: DEFAULT_RALPH_PROMPT,
         promptFile: 'custom.md',
       });
       expect(r.promptProfileKind).toBe('file');

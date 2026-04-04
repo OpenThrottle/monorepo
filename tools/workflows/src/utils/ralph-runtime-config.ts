@@ -9,12 +9,12 @@ import { join } from 'node:path';
 import type { RalphExecutionBackendId } from './ralph-execution-backend';
 import {
   parseRalphExecutionBackendId,
-  WORKFLOW_RALPH_DEFAULT_BACKEND,
+  DEFAULT_RALPH_RUNNER,
 } from './ralph-execution-backend';
 
-export const WORKFLOW_RALPH_DEFAULT_PROMPT = '/agents/ralph' as const;
-export const WORKFLOW_RALPH_DEFAULT_ITERATIONS = 10;
-export const WORKFLOW_RALPH_DEFAULT_MODEL = 'auto' as const;
+export const DEFAULT_RALPH_PROMPT = '/agents/ralph' as const;
+export const DEFAULT_RALPH_ITERATIONS = 10;
+export const DEFAULT_RALPH_MODEL = 'auto' as const;
 
 /** Environment variable names for run tuning and prompt profile (Phase 1). */
 export const WORKFLOW_RALPH_ENV = {
@@ -207,8 +207,7 @@ export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
   const promptRaw = process.env[WORKFLOW_RALPH_ENV.prompt];
   const promptFileRaw = process.env[WORKFLOW_RALPH_ENV.promptFile];
   const hasNamed = promptRaw !== undefined && promptRaw.trim() !== '';
-  const hasFile =
-    promptFileRaw !== undefined && promptFileRaw.trim() !== '';
+  const hasFile = promptFileRaw !== undefined && promptFileRaw.trim() !== '';
   if (hasNamed && hasFile) {
     throw new Error(
       `${WORKFLOW_RALPH_ENV.prompt} and ${WORKFLOW_RALPH_ENV.promptFile} cannot both be set`,
@@ -258,29 +257,24 @@ export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
   const file = loadWorkflowRalphDefaultsFile(cwd);
   const env = readWorkflowRalphEnv();
 
-  const backend =
-    env.backend ?? file.backend ?? WORKFLOW_RALPH_DEFAULT_BACKEND;
+  const backend = env.backend ?? file.backend ?? DEFAULT_RALPH_RUNNER;
 
   const promptFile = env.promptFile ?? file.promptFile;
-  const namedPrompt =
-    env.prompt ?? file.prompt ?? WORKFLOW_RALPH_DEFAULT_PROMPT;
-  if (
-    promptFile !== undefined &&
-    namedPrompt !== WORKFLOW_RALPH_DEFAULT_PROMPT
-  ) {
+  const namedPrompt = env.prompt ?? file.prompt ?? DEFAULT_RALPH_PROMPT;
+  if (promptFile !== undefined && namedPrompt !== DEFAULT_RALPH_PROMPT) {
     throw new Error(
       'Cannot combine prompt file path with a non-default named prompt in defaults (env + .workflow-ralph.json). Use only one of prompt or promptFile.',
     );
   }
   const prompt = namedPrompt;
   const iterations =
-    env.iterations ?? file.iterations ?? WORKFLOW_RALPH_DEFAULT_ITERATIONS;
+    env.iterations ?? file.iterations ?? DEFAULT_RALPH_ITERATIONS;
   const iterationTimeoutSeconds = env.iterationTimeout ?? file.iterationTimeout;
   const iterationTimeoutMs =
     iterationTimeoutSeconds !== undefined && iterationTimeoutSeconds >= 1
       ? iterationTimeoutSeconds * 1000
       : undefined;
-  const model = env.model ?? file.model ?? WORKFLOW_RALPH_DEFAULT_MODEL;
+  const model = env.model ?? file.model ?? DEFAULT_RALPH_MODEL;
   const projectRaw = env.project ?? file.project;
   const project =
     projectRaw !== undefined && projectRaw.trim() !== ''

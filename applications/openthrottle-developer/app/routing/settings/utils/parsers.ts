@@ -1,7 +1,22 @@
-/**
- * @description And example parser...
- * Build what we need and add them in here as simple testable functions.
- */
-export const parseSettingsDate = (value: string) => {
-  return value;
+import {
+  NOTIFICATION_PREFERENCE_ROWS,
+  NotificationPreferenceId,
+} from '~/routing/settings/config/notification-preferences';
+
+export const getDefaultNotificationSettings = (): Record<
+  NotificationPreferenceId,
+  boolean
+> => {
+  const next: Record<NotificationPreferenceId, boolean> = {
+    assignments: false,
+    pullRequests: false,
+    queues: false,
+    weeklyDigest: false,
+  };
+
+  for (const row of NOTIFICATION_PREFERENCE_ROWS) {
+    next[row.id] = row.defaultEnabled;
+  }
+
+  return next;
 };
