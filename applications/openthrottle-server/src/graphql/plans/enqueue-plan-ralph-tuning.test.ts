@@ -5,6 +5,7 @@ import {
 } from './plan.input';
 import {
   buildRunPlanJobData,
+  buildRunPlanOrchestratorJobData,
   parseEnqueueRalphTuning,
 } from './enqueue-plan-ralph-tuning';
 
@@ -101,5 +102,79 @@ describe('buildRunPlanJobData', () => {
       planId: 'p1',
       ralph: { iterations: 2 },
     });
+  });
+});
+
+const SAMPLE_PLAN_ID = '80864bba-630a-451d-bfd2-4b25ec202381';
+const SAMPLE_TASK_ID = '45a30762-92a9-42f4-90e0-2437c7ef26a8';
+
+describe('buildRunPlanOrchestratorJobData', () => {
+  test('returns orchestrator payload for plan scope (minimal)', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: null,
+      }),
+    ).toEqual({
+      planId: SAMPLE_PLAN_ID,
+      runKind: 'orchestrator',
+    });
+  });
+
+  test('includes explicit plan mode when requested', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        mode: 'plan',
+        planId: SAMPLE_PLAN_ID,
+        ralph: null,
+      }),
+    ).toEqual({
+      mode: 'plan',
+      planId: SAMPLE_PLAN_ID,
+      runKind: 'orchestrator',
+    });
+  });
+
+  test('includes task scope when mode is task', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        mode: 'task',
+        planId: SAMPLE_PLAN_ID,
+        ralph: null,
+        taskId: SAMPLE_TASK_ID,
+      }),
+    ).toEqual({
+      mode: 'task',
+      planId: SAMPLE_PLAN_ID,
+      runKind: 'orchestrator',
+      taskId: SAMPLE_TASK_ID,
+    });
+  });
+
+  test('throws when planId is not a valid UUID', () => {
+    expect(() =>
+      buildRunPlanOrchestratorJobData({ planId: 'nope', ralph: null }),
+    ).toThrow(/planId must be a valid Cortex UUID/);
+  });
+
+  test('throws when mode is task but taskId is missing', () => {
+    expect(() =>
+      buildRunPlanOrchestratorJobData({
+        mode: 'task',
+        planId: SAMPLE_PLAN_ID,
+        ralph: null,
+        taskId: null,
+      }),
+    ).toThrow(/taskId is required when mode is task/);
+  });
+
+  test('throws when taskId is set without task mode', () => {
+    expect(() =>
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: null,
+        taskId: SAMPLE_TASK_ID,
+      }),
+    ).toThrow(/taskId is only allowed when mode is task/);
   });
 });

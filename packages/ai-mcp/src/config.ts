@@ -39,7 +39,7 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
 /**
  * @description Returns the canonical GitHub username for author/assignee when set.
  * Used to enforce GitHub username (not display name) for plan and task author/assignee.
- * Reads GITHUB_USER or CORTEX_GITHUB_USER (trimmed).
+ * Reads GITHUB_USER (trimmed).
  */
 export function getDefaultGitHubUser(): string | undefined {
   const v = process.env.GITHUB_USER?.trim() ?? process.env.GITHUB_USER?.trim();

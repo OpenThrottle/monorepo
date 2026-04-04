@@ -42,8 +42,9 @@ export interface WorkflowRalphRunOptionsInput {
 /**
  * @description Returns true when `value` is a plausible Cortex plan/task UUID (v4).
  */
-export const isCortexUuid = (value: string): boolean =>
-  CORTEX_UUID_REGEX.test(value.trim());
+export const isCortexUuid = (value: string): boolean => {
+  return CORTEX_UUID_REGEX.test(value.trim());
+};
 
 /**
  * @description Initial form state; `planId` / `taskId` seed the run target when embedded on plan/task routes.
@@ -122,9 +123,11 @@ export const buildWorkflowRalphOptionArgs = (
     case 'debug':
       args.push('--debug');
       break;
+
     case 'verbose':
       args.push('--verbose');
       break;
+
     case 'omit':
       break;
   }
@@ -142,10 +145,12 @@ export const parseWorkflowRunIterationTimeoutSeconds = (
   if (t === '') {
     return undefined;
   }
+
   const n = parseInt(t, 10);
   if (Number.isNaN(n) || n < 1) {
     return undefined;
   }
+
   return n;
 };
 
@@ -193,9 +198,11 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
     case 'debug':
       ralph.ralphDebugCli = RalphNestedDebugCli.Debug;
       break;
+
     case 'verbose':
       ralph.ralphDebugCli = RalphNestedDebugCli.Verbose;
       break;
+
     case 'omit':
       break;
   }
@@ -217,6 +224,7 @@ export const formatWorkflowRalphCommandLine = (
   if (optionArgs.length === 0) {
     return head;
   }
+
   return `${head} ${optionArgs.map(quoteShellArg).join(' ')}`;
 };
 
@@ -227,8 +235,10 @@ const quoteShellArg = (arg: string): string => {
   if (arg === '') {
     return `''`;
   }
+
   if (/[\s\\$`'"]/.test(arg)) {
     return `'${arg.replace(/'/g, `'\\''`)}'`;
   }
+
   return arg;
 };

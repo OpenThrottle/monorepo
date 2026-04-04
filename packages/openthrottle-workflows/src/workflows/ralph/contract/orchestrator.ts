@@ -2,6 +2,7 @@ import type { WorkflowFlowContext } from './flow-context';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'
+  | 'cancelled'
   | 'max_iterations'
   | 'plan_already_terminal'
   | 'tasks_exhausted';

@@ -2497,6 +2497,13 @@ type Mutation {
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
 
   """
+  Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline). Same result shape and plan/task status updates as enqueuePlanRun.
+  """
+  enqueuePlanRalphOrchestrator(
+    input: EnqueuePlanRalphOrchestratorInput!
+  ): EnqueuePlanRunResultObject!
+
+  """
   Create a project
   """
   createProject(input: CreateProjectInput!): ProjectObject!
@@ -2880,6 +2887,12 @@ enum RalphNestedDebugCli {
   verbose
 }
 
+"""Plan vs task-centric scope for in-process Ralph orchestrator runs."""
+enum PlanRalphWorkflowMode {
+  plan
+  task
+}
+
 """
 Optional Ralph / workflow-ralph runtime tuning for queued plan runs (iterations, model, backend, etc.).
 When set, workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
@@ -2925,6 +2938,35 @@ input EnqueuePlanRunInput {
   Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
   """
   ralph: RalphPlanRunTuningInput
+}
+
+"""
+Input for enqueuePlanRalphOrchestrator: in-process orchestrator run on the plans queue.
+"""
+input EnqueuePlanRalphOrchestratorInput {
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.
+  """
+  idempotencyKey: String
+
+  """
+  Omit or plan for plan-scoped run; task requires taskId (task-centric).
+  """
+  mode: PlanRalphWorkflowMode
+
+  """Plan id to run the orchestrator for."""
+  planId: ID!
+
+  """
+  Job priority (lower = higher priority). Same as enqueuePlanRun.
+  """
+  priority: Int
+
+  """Optional Ralph tuning for the in-process orchestrator."""
+  ralph: RalphPlanRunTuningInput
+
+  """Required when mode is task; must belong to the plan."""
+  taskId: ID
 }
 
 input CreateProjectInput {

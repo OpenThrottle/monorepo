@@ -22,6 +22,7 @@ import {
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { runPlanOrchestratorJob } from './plans-workflow-ralph-orchestrator';
 import { PlansProcessor } from './plans.processor';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -30,6 +31,16 @@ const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
 vi.mock('child_process', () => ({
   spawn: vi.fn(),
 }));
+
+vi.mock('./plans-workflow-ralph-orchestrator', () => ({
+  runPlanOrchestratorJob: vi.fn().mockResolvedValue({
+    exitCode: 0,
+    reason: 'tasks_exhausted',
+    status: 'finished',
+  }),
+}));
+
+const mockRunPlanOrchestratorJob = vi.mocked(runPlanOrchestratorJob);
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -197,6 +208,31 @@ describe('PlansProcessor', () => {
     );
   });
 
+  it('should call runPlanOrchestratorJob and not spawn when runKind is orchestrator', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        runKind: 'orchestrator',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    const result = await processor.process(mockJob);
+
+    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledWith({
+      jobData: mockJob.data,
+      signal: expect.any(AbortSignal),
+    });
+    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      taskRunMetrics: {
+        atEnd: snapshotStub,
+        atStart: snapshotStub,
+      },
+    });
+  });
+
   it('should capture metrics at start and end (getCurrentSnapshot called at least twice)', async () => {
     await processor.process(mockJob);
 
@@ -302,6 +338,39 @@ describe('PlansProcessor', () => {
       expect(result).toMatchObject({
         taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
       });
+    });
+  });
+
+  describe('orchestrator path + cancel', () => {
+    it('emits cancel notification (info) when orchestrator outcome is cancelled', async () => {
+      mockJob = {
+        data: {
+          planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+          runKind: 'orchestrator',
+        },
+        id: 'job-1',
+      } as RunPlanJob;
+
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'cancelled',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobType: 'plans',
+          message: expect.stringMatching(/[Cc]ancelled/),
+          planId: mockJob.data.planId,
+          severity: 'info',
+        }),
+      );
     });
   });
 

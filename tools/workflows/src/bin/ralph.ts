@@ -42,7 +42,7 @@ export type { CursorAgentChunk, RunIterationConfig } from './run-iteration';
  * 2. Resolve plan/task (--plan or from task.planId when --task only)
  * 3. Fetch plan and tasks from Postgres; inject into prompt
  * 4. Set plan and current task to IN_PROGRESS
- * 5. Run agent → parse <ralph:complete-task> and <promise>COMPLETE</promise> → update task statuses
+ * 5. Run agent → parse <ralph:task-complete> and <promise>COMPLETE</promise> → update task statuses
  * 6. Exit on COMPLETE, ERROR, or INPUT_REQUIRED (parseRalphResponse) or after max iterations
  *
  * Exit conditions (order of checks):
@@ -106,7 +106,7 @@ export const main = async (): Promise<void> => {
     `${prompt}\n\n${injectedContext}\n\n` +
     `Plan-Id: ${effectivePlanId}.` +
     (task ? ` Task-Id: ${task}.` : '') +
-    ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:complete-task>TASK_UUID</ralph:complete-task>.';
+    ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
 
   /** Label for parseRalphResponse exit messages (e.g. "Plan <id> is complete"). */
   const contextLabel = effectivePlanId;
@@ -201,7 +201,7 @@ export const main = async (): Promise<void> => {
           const message = ` - 📌 Resuming task ${COLORS.green}${taskForIteration.id}${COLORS.reset} (already IN_PROGRESS).`;
           console.log(message);
         }
-        agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:complete-task>${taskForIteration.id}</ralph:complete-task> so the CLI can mark it completed.`;
+        agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
       }
     }
 
@@ -247,7 +247,7 @@ export const main = async (): Promise<void> => {
       !completeTaskIds.some((id) => id === taskIdLower(task))
     ) {
       completeTaskIds.push(taskIdLower(task));
-      const message = ` - 📋 No <ralph:complete-task> signal; marking task ${COLORS.green}${task}${COLORS.reset} COMPLETED from <promise>COMPLETE</promise>.`;
+      const message = ` - 📋 No <ralph:task-complete> signal; marking task ${COLORS.green}${task}${COLORS.reset} COMPLETED from <promise>COMPLETE</promise>.`;
 
       console.log(message);
     }
@@ -266,7 +266,7 @@ export const main = async (): Promise<void> => {
       !currentTaskAlreadyMarked
     ) {
       completeTaskIds.push(firstPendingForIteration.toLowerCase());
-      const message = ` - 📋 No <ralph:complete-task> signal; marking current task ${COLORS.green}${firstPendingForIteration}${COLORS.reset} COMPLETED from <promise>COMPLETE</promise>.`;
+      const message = ` - 📋 No <ralph:task-complete> signal; marking current task ${COLORS.green}${firstPendingForIteration}${COLORS.reset} COMPLETED from <promise>COMPLETE</promise>.`;
 
       console.log(message);
     }
@@ -277,7 +277,7 @@ export const main = async (): Promise<void> => {
       );
     } else if (!task && firstPendingForIteration) {
       console.warn(
-        `⚠️ No <ralph:complete-task> signal in agent output. Task ${firstPendingForIteration} was set to IN_PROGRESS; the agent must output <ralph:complete-task>${firstPendingForIteration}</ralph:complete-task> when done so the CLI can mark it completed.`,
+        `⚠️ No <ralph:task-complete> signal in agent output. Task ${firstPendingForIteration} was set to IN_PROGRESS; the agent must output <ralph:task-complete>${firstPendingForIteration}</ralph:task-complete> when done so the CLI can mark it completed.`,
       );
     }
 

@@ -16,9 +16,13 @@ import type {
 } from '../../queues/doc-ingestion/doc-ingestion.types';
 import {
   PLANS_QUEUE_NAME,
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
   RUN_PLAN_SPAWN_JOB_NAME,
 } from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import type {
+  RunPlanJobData,
+  RunPlanOrchestratorJobData,
+} from '../../queues/plans/plans.types';
 
 /** @description Job data type for dynamically created queues (no fixed schema). */
 type DynamicJobData = Record<string, unknown>;
@@ -27,6 +31,11 @@ type DynamicJobData = Record<string, unknown>;
 const QUEUE_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
 const MIN_QUEUE_NAME_LENGTH = 1;
 const MAX_QUEUE_NAME_LENGTH = 128;
+
+/** @description BullMQ `jobId` length and character set (portable dedupe keys). */
+const MIN_IDEMPOTENCY_KEY_LENGTH = 1;
+const MAX_IDEMPOTENCY_KEY_LENGTH = 128;
+const IDEMPOTENCY_KEY_REGEX = /^[a-zA-Z0-9_.:-]+$/;
 
 /** @description Union of all queue job data types for methods that work across static and dynamic queues. */
 type AnyJobData =
@@ -61,6 +70,13 @@ export interface JobDto {
 export interface GetJobsResult {
   readonly hasNext: boolean;
   readonly jobs: JobDto[];
+}
+
+/** @description Payload for {@link QueuesService.enqueuePlanRalphOrchestrator}. */
+export interface EnqueuePlanRalphOrchestratorQueuePayload {
+  readonly idempotencyKey?: string;
+  readonly jobData: RunPlanOrchestratorJobData;
+  readonly priority?: number;
 }
 
 /** @description Shape of a repeatable job returned by getRepeatableJobs for GraphQL mapping. */
@@ -336,6 +352,63 @@ export class QueuesService implements OnModuleDestroy {
       return { error: 'Failed to get new job id' };
     }
     return { jobId: String(job.id) };
+  }
+
+  /**
+   * @description Enqueues an in-process Ralph orchestrator job on the plans queue (`run-plan-orchestrator`).
+   * Validates tuning via {@link RunPlanOrchestratorJobData}; optional `idempotencyKey` is passed as BullMQ `jobId` so duplicate adds return the existing job.
+   */
+  async enqueuePlanRalphOrchestrator(
+    input: EnqueuePlanRalphOrchestratorQueuePayload,
+  ): Promise<{ jobId: string } | { error: string }> {
+    if (input.jobData.runKind !== 'orchestrator') {
+      return { error: 'jobData.runKind must be orchestrator' };
+    }
+
+    let idempotencyKey: string | undefined;
+    if (input.idempotencyKey !== undefined && input.idempotencyKey !== '') {
+      const raw = input.idempotencyKey.trim();
+      if (raw.length < MIN_IDEMPOTENCY_KEY_LENGTH) {
+        return { error: 'idempotencyKey cannot be empty when provided' };
+      }
+      if (raw.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
+        return {
+          error: `idempotencyKey must be at most ${MAX_IDEMPOTENCY_KEY_LENGTH} characters`,
+        };
+      }
+      if (!IDEMPOTENCY_KEY_REGEX.test(raw)) {
+        return {
+          error: 'idempotencyKey must contain only letters, digits, and ._:-',
+        };
+      }
+      idempotencyKey = raw;
+    }
+
+    const priority = input.priority;
+    const opts =
+      idempotencyKey !== undefined
+        ? {
+            ...(priority !== undefined ? { priority } : {}),
+            jobId: idempotencyKey,
+          }
+        : priority !== undefined
+          ? { priority }
+          : {};
+
+    try {
+      const job = await this.plansQueue.add(
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        input.jobData,
+        opts,
+      );
+      if (job.id == null) {
+        return { error: 'Failed to get new job id' };
+      }
+      return { jobId: String(job.id) };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: `Failed to enqueue orchestrator job: ${message}` };
+    }
   }
 
   /**

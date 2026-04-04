@@ -90,7 +90,7 @@ export function registerPlanTools(server: McpServer): void {
   server.registerTool(
     'create_plan',
     {
-      description: `Create a new plan in Cortex. Requires title, author, category; optional description, status (default: pending), summary (PRD summarization: next actions, usage guides, wrap-up notes), assignee (GitHub username), project (NX project name from the project graph). When GITHUB_USER or CORTEX_GITHUB_USER is set, that value is used for author and assignee (enforcing GitHub username over display name).`,
+      description: `Create a new plan in Cortex. Requires title, author, category; optional description, status (default: pending), summary (PRD summarization: next actions, usage guides, wrap-up notes), assignee (GitHub username), project (NX project name from the project graph). When GITHUB_USER is set, that value is used for author and assignee (enforcing GitHub username over display name).`,
       inputSchema: {
         assignee: z.string().nullable().optional(),
         author: z.string().min(1),

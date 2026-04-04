@@ -349,6 +349,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
         <fieldset
           aria-labelledby="workflow-run-layer2-legend"
           className="space-y-3 rounded-md border border-border p-4"
+          disabled={true} // FIXME: When we have runners remove this
         >
           <legend
             className="px-1 text-sm font-medium text-foreground"

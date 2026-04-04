@@ -38,14 +38,20 @@ import {
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { ProjectObject } from '../projects/project.object';
+import { QueuesService } from '../queues/queues.service';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
-import { buildRunPlanJobData } from './enqueue-plan-ralph-tuning';
+import {
+  buildRunPlanJobData,
+  buildRunPlanOrchestratorJobData,
+} from './enqueue-plan-ralph-tuning';
 import {
   CancelPlanRunInput,
   CreatePlanInput,
   DeletePlanInput,
+  EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
+  PlanRalphWorkflowModeGraphQL,
   SearchPlansInput,
   SetPlanStatusInput,
   UpdatePlanInput,
@@ -85,6 +91,7 @@ export class PlansResolver {
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly plansService: PlansService,
     private readonly projectsService: ProjectsService,
+    private readonly queuesService: QueuesService,
     private readonly tasksService: TasksService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
@@ -628,6 +635,137 @@ export class PlansResolver {
 
     const result = new EnqueuePlanRunResultObject();
     result.jobId = String(job.id ?? job.name);
+    result.planId = planId;
+    result.queuePosition = queuePosition;
+    result.queueTotal = queueTotal;
+
+    return result;
+  }
+
+  @Mutation(() => EnqueuePlanRunResultObject, {
+    description: `Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) =>
+        ret != null
+          ? {
+              message: 'Plan queued for run (orchestrator)',
+              planId: (ret as EnqueuePlanRunResultObject).planId,
+              severity: 'info' as const,
+            }
+          : null,
+    },
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
+      payload: (ret) =>
+        ret != null
+          ? {
+              planId: (ret as EnqueuePlanRunResultObject).planId,
+              status: 'QUEUED',
+            }
+          : null,
+    },
+  ])
+  async enqueuePlanRalphOrchestrator(
+    @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
+    input: EnqueuePlanRalphOrchestratorInput,
+  ): Promise<EnqueuePlanRunResultObject> {
+    const { idempotencyKey, planId, priority, ralph, taskId } = input;
+    const modeGraphql = input.mode;
+
+    const repo = this.plansService.getRepository();
+    const plan = await repo.findOne({ where: { id: planId } });
+
+    if (!plan) {
+      throw new Error(`Plan not found: ${planId}`);
+    }
+
+    const taskRepo = this.tasksService.getRepository();
+
+    const mode =
+      modeGraphql === PlanRalphWorkflowModeGraphQL.task
+        ? ('task' as const)
+        : modeGraphql === PlanRalphWorkflowModeGraphQL.plan
+          ? ('plan' as const)
+          : null;
+
+    if (mode === 'task' && (taskId === null || taskId === undefined)) {
+      throw new BadRequestException('taskId is required when mode is task');
+    }
+
+    if (mode === 'task' && taskId != null) {
+      const task = await taskRepo.findOne({
+        where: { id: taskId.trim(), planId },
+      });
+      if (!task) {
+        throw new BadRequestException(
+          `Task not found for this plan: ${taskId}`,
+        );
+      }
+    }
+
+    let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
+    try {
+      jobData = buildRunPlanOrchestratorJobData({
+        mode,
+        planId,
+        ralph,
+        taskId,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new BadRequestException(message);
+    }
+
+    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
+    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
+      {
+        idempotencyKey: idempotencyKey ?? undefined,
+        jobData,
+        priority: jobPriority,
+      },
+    );
+
+    if ('error' in enqueueResult) {
+      throw new BadRequestException(enqueueResult.error);
+    }
+
+    await repo.update({ id: planId }, { status: 'QUEUED' });
+
+    const statusesToReset = [
+      'PENDING',
+      'IN_PROGRESS',
+      'BLOCKED',
+      'BACKLOG',
+      'SKIPPED',
+      'CANCELED',
+    ] as const;
+    await taskRepo.update(
+      {
+        planId,
+        status: In(statusesToReset),
+      },
+      { status: 'QUEUED' },
+    );
+
+    const waitingCount = await this.plansQueue.getWaitingCount();
+    const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
+    const jobIndex = waitingJobs.findIndex(
+      (j) => String(j.id) === enqueueResult.jobId,
+    );
+    const queuePosition = jobIndex >= 0 ? jobIndex + 1 : waitingCount;
+    const queueTotal = waitingCount;
+
+    this.notificationsService.emitPlanEnqueued({
+      planId,
+      queuePosition,
+      queueTotal,
+    });
+
+    const result = new EnqueuePlanRunResultObject();
+    result.jobId = enqueueResult.jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;
     result.queueTotal = queueTotal;

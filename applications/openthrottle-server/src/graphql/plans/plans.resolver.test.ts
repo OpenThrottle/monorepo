@@ -12,12 +12,14 @@ import { describe, expect, beforeAll, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { QueuesService } from '../queues/queues.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import {
   CreatePlanInput,
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
+  PlanRalphWorkflowModeGraphQL,
   RalphNestedDebugCliGraphQL,
   SetPlanStatusInput,
   UpdatePlanInput,
@@ -101,6 +103,7 @@ describe('PlansResolver', () => {
   });
 
   const taskRepo = {
+    findOne: vi.fn().mockResolvedValue(null),
     update: vi.fn().mockResolvedValue(undefined),
   };
   const mockTasksService = createMock<TasksService>({
@@ -108,6 +111,14 @@ describe('PlansResolver', () => {
   });
 
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
+
+  const mockEnqueuePlanRalphOrchestrator = vi
+    .fn()
+    .mockResolvedValue({ jobId: 'job-orch-1' });
+
+  const mockQueuesService = createMock<QueuesService>({
+    enqueuePlanRalphOrchestrator: mockEnqueuePlanRalphOrchestrator,
+  });
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -123,6 +134,7 @@ describe('PlansResolver', () => {
         },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
+        { provide: QueuesService, useValue: mockQueuesService },
         { provide: TasksService, useValue: mockTasksService },
         {
           provide: getQueueToken(PLANS_QUEUE_NAME),
@@ -612,6 +624,87 @@ describe('PlansResolver', () => {
         { id: mockPlan.id },
         { status: 'QUEUED' },
       );
+    });
+  });
+
+  describe('enqueuePlanRalphOrchestrator', () => {
+    test('delegates to QueuesService with orchestrator job data', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockEnqueuePlanRalphOrchestrator.mockClear();
+      mockAdd.mockClear();
+
+      const result = await resolver.enqueuePlanRalphOrchestrator({
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        taskId: null,
+      });
+
+      expect(result.jobId).toBe('job-orch-1');
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith({
+        idempotencyKey: undefined,
+        jobData: {
+          planId: mockPlan.id,
+          runKind: 'orchestrator',
+        },
+        priority: 10,
+      });
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    test('task mode validates task belongs to plan', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      taskRepo.findOne.mockResolvedValueOnce({
+        id: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+        planId: mockPlan.id,
+      } as never);
+      mockEnqueuePlanRalphOrchestrator.mockClear();
+
+      await resolver.enqueuePlanRalphOrchestrator({
+        idempotencyKey: null,
+        mode: PlanRalphWorkflowModeGraphQL.task,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+      });
+
+      expect(taskRepo.findOne).toHaveBeenCalledWith({
+        where: {
+          id: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+          planId: mockPlan.id,
+        },
+      });
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobData: expect.objectContaining({
+            mode: 'task',
+            runKind: 'orchestrator',
+            taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+          }),
+        }),
+      );
+    });
+
+    test('throws when task not found for task mode', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      taskRepo.findOne.mockResolvedValueOnce(null);
+
+      await expect(
+        resolver.enqueuePlanRalphOrchestrator({
+          idempotencyKey: null,
+          mode: PlanRalphWorkflowModeGraphQL.task,
+          planId: mockPlan.id,
+          priority: null,
+          ralph: null,
+          taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+        }),
+      ).rejects.toThrow(/Task not found for this plan/);
     });
   });
 

@@ -99,5 +99,10 @@ export type WorkflowFlowContext = WorkflowRalphContext;
  * with `kind`, `mode`, and effective `iterations` after CLI rules.
  */
 export interface WorkflowRalphContext extends WorkflowOptions {
+  /**
+   * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
+   * checked between steps so user cancel matches the spawn-path behavior.
+   */
+  readonly abortSignal?: AbortSignal;
   readonly kind: 'ralph';
 }

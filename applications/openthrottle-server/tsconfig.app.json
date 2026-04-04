@@ -20,6 +20,12 @@
       "path": "../../packages/nestjs-worktrees/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nodejs-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {

@@ -8,7 +8,6 @@
     "applications/**/*.{ts,tsx,js,jsx}",
     "packages/**/src/index.{ts,tsx,js,jsx}",
     "packages/**/src/bin.{ts,js}",
-    "packages/**/src/cortex-server.{ts,js}",
     "tools/**/*.{ts,tsx,js,jsx}"
   ],
   "project": [

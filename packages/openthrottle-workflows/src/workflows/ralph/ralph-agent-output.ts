@@ -1,8 +1,8 @@
 import type { AgentParseControlKind } from './contract/step-results.js';
 
-/** Matches `<ralph:complete-task>uuid</ralph:complete-task>`. */
+/** Matches `<ralph:task-complete>uuid</ralph:task-complete>`. */
 const RALPH_COMPLETE_TASK_REGEX =
-  /<ralph:complete-task>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:complete-task>/gi;
+  /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi;
 
 const PROMISE_COMPLETE = '<promise>COMPLETE</promise>';
 const PROMISE_ERROR = '<promise>ERROR</promise>';
@@ -27,7 +27,7 @@ export const getRalphOutputMarkerFlags = (
 });
 
 /**
- * @description Parses `<ralph:complete-task>uuid</ralph:complete-task>`; returns unique task ids (lowercase).
+ * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`; returns unique task ids (lowercase).
  */
 export const parseRalphCompleteTaskSignals = (
   result: string,

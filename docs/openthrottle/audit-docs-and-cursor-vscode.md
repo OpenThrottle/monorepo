@@ -82,11 +82,11 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 
 ### 3.1 Rules
 
-| File                                | Cortex references                                                                                                                                           |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.cursor/rules/commands/cortex.mdc` | **Full rule for Cortex:** product name "Cortex", ai-mcp, "ask cortex", `/cortex/*`, `databases/cortex/README.md`, CORTEX_GITHUB_USER, commit/task workflow. |
-| `.cursor/rules/commands/agents.mdc` | "Plans in Cortex only", cortex.mdc, Cortex/ai-mcp.                                                                                                          |
-| `.cursor/rules/README.md`           | "When to use Cortex", "Plans in Cortex only", cortex.mdc, agents.mdc.                                                                                       |
+| File                                | Cortex references                                                                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.cursor/rules/commands/cortex.mdc` | **Full rule for Cortex:** product name "Cortex", ai-mcp, "ask cortex", `/cortex/*`, `databases/cortex/README.md`, GITHUB_USER, commit/task workflow. |
+| `.cursor/rules/commands/agents.mdc` | "Plans in Cortex only", cortex.mdc, Cortex/ai-mcp.                                                                                                   |
+| `.cursor/rules/README.md`           | "When to use Cortex", "Plans in Cortex only", cortex.mdc, agents.mdc.                                                                                |
 
 ### 3.2 Commands (directory and files)
 

@@ -63,7 +63,7 @@ describe('PlanDetails Component', () => {
       component.getByTestId('workflow-run-options-collapsed'),
     ).toBeInTheDocument();
     expect(
-      component.queryByTestId('WorkflowRunOptions'),
+      component.queryByTestId('PlanWorkflowConfig'),
     ).not.toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe('PlanDetails Component', () => {
       />,
     );
 
-    expect(expanded.getByTestId('WorkflowRunOptions')).toBeInTheDocument();
+    expect(expanded.getByTestId('PlanWorkflowConfig')).toBeInTheDocument();
     expect(expanded.getByTestId('workflow-run-plan-id-input')).toHaveValue(
       'plan-1',
     );
@@ -104,7 +104,7 @@ describe('PlanDetails Component', () => {
         `${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
       );
     });
-    expect(r.getByTestId('WorkflowRunOptions')).toBeInTheDocument();
+    expect(r.getByTestId('PlanWorkflowConfig')).toBeInTheDocument();
 
     await user.click(
       r.getByRole('button', { name: 'Hide workflow run options' }),
@@ -113,7 +113,7 @@ describe('PlanDetails Component', () => {
     await waitFor(() => {
       expect(r.getByTestId('search-params-probe')).toHaveTextContent('');
     });
-    expect(r.queryByTestId('WorkflowRunOptions')).not.toBeInTheDocument();
+    expect(r.queryByTestId('PlanWorkflowConfig')).not.toBeInTheDocument();
   });
 
   test('should preserve other query params when toggling workflow run options', async () => {

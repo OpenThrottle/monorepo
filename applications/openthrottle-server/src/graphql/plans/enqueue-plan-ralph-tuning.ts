@@ -10,8 +10,21 @@ import type {
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
 import { parseRalphExecutionBackendId } from '@tools/workflows';
-import type { RunPlanSpawnJobData } from '../../queues/plans/plans.types';
+import type {
+  RunPlanOrchestratorJobData,
+  RunPlanSpawnJobData,
+} from '../../queues/plans/plans.types';
 import type { RalphPlanRunTuningInput } from './plan.input';
+
+/** @description RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`. */
+const CORTEX_UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * @description Returns true when `value` is a plausible Cortex plan/task UUID.
+ */
+export const isCortexPlanTaskUuid = (value: string): boolean =>
+  CORTEX_UUID_REGEX.test(value.trim());
 
 /** @description Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph. */
 const MAX_ITERATIONS = 1_000_000;
@@ -160,4 +173,56 @@ export const buildRunPlanJobData = (input: {
     return { planId: input.planId };
   }
   return { planId: input.planId, ralph };
+};
+
+/**
+ * @description Builds {@link RunPlanOrchestratorJobData} for in-process Ralph (plans queue, `run-plan-orchestrator`).
+ * @throws Error when ids are invalid or task mode constraints fail.
+ */
+export const buildRunPlanOrchestratorJobData = (input: {
+  readonly planId: string;
+  readonly mode?: 'plan' | 'task' | null;
+  readonly ralph?: RalphPlanRunTuningInput | null;
+  readonly taskId?: string | null;
+}): RunPlanOrchestratorJobData => {
+  const planId = input.planId.trim();
+  if (!isCortexPlanTaskUuid(planId)) {
+    throw new Error('planId must be a valid Cortex UUID');
+  }
+
+  const mode = input.mode ?? null;
+  const taskRaw =
+    input.taskId !== undefined && input.taskId !== null
+      ? input.taskId.trim()
+      : '';
+
+  if (mode === 'task') {
+    if (taskRaw === '') {
+      throw new Error('taskId is required when mode is task');
+    }
+    if (!isCortexPlanTaskUuid(taskRaw)) {
+      throw new Error('taskId must be a valid Cortex UUID');
+    }
+    const ralph = parseEnqueueRalphTuning(input.ralph);
+    return {
+      mode: 'task',
+      planId,
+      ...(ralph !== undefined ? { ralph } : {}),
+      runKind: 'orchestrator',
+      taskId: taskRaw,
+    };
+  }
+
+  if (taskRaw !== '') {
+    throw new Error('taskId is only allowed when mode is task');
+  }
+
+  const ralph = parseEnqueueRalphTuning(input.ralph);
+  const data: RunPlanOrchestratorJobData = {
+    planId,
+    runKind: 'orchestrator',
+    ...(mode === 'plan' ? { mode: 'plan' } : {}),
+    ...(ralph !== undefined ? { ralph } : {}),
+  };
+  return data;
 };

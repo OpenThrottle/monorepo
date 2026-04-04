@@ -29,21 +29,21 @@ describe('parseRalphCompleteTaskSignals', () => {
   });
 
   it('returns single task id when one tag is present', () => {
-    const result = `Summary of work. <ralph:complete-task>${TASK_UUID}</ralph:complete-task>`;
+    const result = `Summary of work. <ralph:task-complete>${TASK_UUID}</ralph:task-complete>`;
     expect(parseRalphCompleteTaskSignals(result)).toEqual([
       TASK_UUID.toLowerCase(),
     ]);
   });
 
   it('normalizes task id to lowercase', () => {
-    const result = `<ralph:complete-task>${TASK_UUID_UPPER}</ralph:complete-task>`;
+    const result = `<ralph:task-complete>${TASK_UUID_UPPER}</ralph:task-complete>`;
     expect(parseRalphCompleteTaskSignals(result)).toEqual([
       TASK_UUID.toLowerCase(),
     ]);
   });
 
   it('returns unique task ids when multiple tags present', () => {
-    const result = `First <ralph:complete-task>${TASK_UUID}</ralph:complete-task> then <ralph:complete-task>${OTHER_UUID}</ralph:complete-task>`;
+    const result = `First <ralph:task-complete>${TASK_UUID}</ralph:task-complete> then <ralph:task-complete>${OTHER_UUID}</ralph:task-complete>`;
     expect(parseRalphCompleteTaskSignals(result)).toEqual(
       expect.arrayContaining([
         TASK_UUID.toLowerCase(),
@@ -54,7 +54,7 @@ describe('parseRalphCompleteTaskSignals', () => {
   });
 
   it('deduplicates same task id when repeated', () => {
-    const result = `<ralph:complete-task>${TASK_UUID}</ralph:complete-task> again <ralph:complete-task>${TASK_UUID}</ralph:complete-task>`;
+    const result = `<ralph:task-complete>${TASK_UUID}</ralph:task-complete> again <ralph:task-complete>${TASK_UUID}</ralph:task-complete>`;
     expect(parseRalphCompleteTaskSignals(result)).toEqual([
       TASK_UUID.toLowerCase(),
     ]);
@@ -63,12 +63,12 @@ describe('parseRalphCompleteTaskSignals', () => {
   it('does not match malformed tags', () => {
     expect(
       parseRalphCompleteTaskSignals(
-        '<ralph:complete-task>not-a-uuid</ralph:complete-task>',
+        '<ralph:task-complete>not-a-uuid</ralph:task-complete>',
       ),
     ).toEqual([]);
     expect(
       parseRalphCompleteTaskSignals(
-        '<ralph:complete-task>93fcbc19-1861-4931-9631-6393d33220a2</ralph:complete-tas>',
+        '<ralph:task-complete>93fcbc19-1861-4931-9631-6393d33220a2</ralph:complete-tas>',
       ),
     ).toEqual([]);
   });
@@ -78,7 +78,7 @@ describe('getRalphOutputMarkerFlags', () => {
   it('reports promise and complete-task markers independently', () => {
     expect(
       getRalphOutputMarkerFlags(
-        'ok <promise>COMPLETE</promise> <ralph:complete-task>x</ralph:complete-task>',
+        'ok <promise>COMPLETE</promise> <ralph:task-complete>x</ralph:task-complete>',
       ),
     ).toEqual({
       hasCompleteTaskClose: true,

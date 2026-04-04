@@ -47,7 +47,7 @@ describe('WorkflowRunOptions Component', () => {
     expect(
       component.getByRole('heading', {
         level: 2,
-        name: 'Workflow run options',
+        name: 'Workflow options',
       }),
     ).toBeInTheDocument();
     expect(component.getByTestId('workflow-run-cli-preview')).toHaveTextContent(
@@ -213,7 +213,7 @@ describe('WorkflowRunOptions Component', () => {
       const { getByRole } = render(<RoutesStub />);
 
       expect(
-        getByRole('heading', { level: 2, name: 'Workflow run options' }),
+        getByRole('heading', { level: 2, name: 'Workflow options' }),
       ).toHaveAttribute('id', 'workflow-run-options-title');
     });
   });

@@ -19,7 +19,6 @@ import {
   isPlanStatusKey,
 } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
-import { WorkflowRunOptions } from '~/routing/plans/components/WorkflowRunOptions';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import {
   DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES,
@@ -36,6 +35,7 @@ import {
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
   isWorkflowRunOptionsExpandedFromSearchParams as isWorkflowOptionsExpanded,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
+import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
 
 export interface PlanDetailsProps {
   readonly className?: string;
@@ -233,7 +233,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
       </Card>
 
       {isExpanded ? (
-        <WorkflowRunOptions
+        <PlanWorkflowConfig
           className="mb-6"
           iterationTimeoutText={workflowTimeout}
           onCollapse={() => onToggleExpanded(false)}

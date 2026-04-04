@@ -1,7 +1,5 @@
 {
   "cSpell.words": ["Pressable", "revalidator", "supabase", "Swiper"],
-  "cortex.apiBaseUrl": "http://localhost:6021",
-  "openthrottle.apiBaseUrl": "http://localhost:6021",
   "editor.codeActionsOnSave": {
     "eslint.experimental.useFlatConfig": "always",
     "source.fixAll.eslint": "explicit"
@@ -10,6 +8,7 @@
   "editor.fontSize": 15,
   "editor.formatOnSave": true,
   "eslint.useFlatConfig": true,
+  "openthrottle.apiBaseUrl": "http://localhost:6021",
   "terminal.integrated.env.osx": {
     "NX_ISOLATE_PLUGINS": "false"
   },

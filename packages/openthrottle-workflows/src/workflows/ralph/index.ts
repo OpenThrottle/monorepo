@@ -7,5 +7,5 @@ export {
   ralphOutputHasPromiseComplete,
 } from './ralph-agent-output.js';
 export { createWorkflowRalphOrchestrator } from './ralph-orchestrator.js';
-export { formatPlanAndTasksForPrompt } from './ralph-prompt-inject.js';
+export { formatPlanAndTasksForPrompt } from './utils/index.js';
 export * from './workflow-graphql.js';

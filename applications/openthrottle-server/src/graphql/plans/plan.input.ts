@@ -19,6 +19,20 @@ registerEnumType(RalphNestedDebugCliGraphQL, {
   name: 'RalphNestedDebugCli',
 });
 
+/**
+ * @description Plan vs task-centric scope for in-process Ralph orchestrator runs (matches `WorkflowRalphContext` / CLI `--plan` vs `--task`).
+ */
+export enum PlanRalphWorkflowModeGraphQL {
+  plan = 'plan',
+  task = 'task',
+}
+
+registerEnumType(PlanRalphWorkflowModeGraphQL, {
+  description:
+    'Plan-scoped run (default) or task-centric run (`task` requires taskId).',
+  name: 'PlanRalphWorkflowMode',
+});
+
 @InputType()
 export class CreatePlanInput {
   @Field(() => String, { nullable: true })
@@ -225,6 +239,44 @@ export class EnqueuePlanRunInput {
     nullable: true,
   })
   ralph?: RalphPlanRunTuningInput | null;
+}
+
+@InputType()
+export class EnqueuePlanRalphOrchestratorInput {
+  @Field(() => String, {
+    description:
+      'Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.',
+    nullable: true,
+  })
+  idempotencyKey!: string | null;
+
+  @Field(() => PlanRalphWorkflowModeGraphQL, {
+    description:
+      'Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric).',
+    nullable: true,
+  })
+  mode!: PlanRalphWorkflowModeGraphQL | null;
+
+  @Field(() => ID, { description: 'Plan id to run the orchestrator for' })
+  planId!: string;
+
+  @Field(() => Int, {
+    description: `Job priority (lower = higher priority). Same as enqueuePlanRun.`,
+    nullable: true,
+  })
+  priority!: number | null;
+
+  @Field(() => RalphPlanRunTuningInput, {
+    description: `Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.).`,
+    nullable: true,
+  })
+  ralph?: RalphPlanRunTuningInput | null;
+
+  @Field(() => ID, {
+    description: `Required when mode is task; must belong to the plan.`,
+    nullable: true,
+  })
+  taskId!: string | null;
 }
 
 @InputType()

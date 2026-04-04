@@ -135,7 +135,7 @@ services:
 
   #############################################################################
   #
-  #     🤖 openthrottle-server | NestJS API (GraphQL, Cortex, MCP)
+  #     🤖 openthrottle-server | NestJS API (GraphQL, Postgres, Redis, MCP)
   #
   #     Built from monorepo root per docs/openthrottle/docker-image-build-strategy.md.
   #     Run compose from repo root so build context is correct:

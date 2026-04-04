@@ -118,7 +118,7 @@ describe('Ralph main (max-iterations cleanup)', () => {
 
   it('does not call updateTaskStatus with PENDING when task was completed in last iteration', async () => {
     runIterationMock.mockReturnValue(
-      `<ralph:complete-task>${TASK_ID}</ralph:complete-task>`,
+      `<ralph:task-complete>${TASK_ID}</ralph:task-complete>`,
     );
     const { main } = await import('../ralph');
 

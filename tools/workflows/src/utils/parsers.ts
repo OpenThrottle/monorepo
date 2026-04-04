@@ -29,12 +29,12 @@ import {
 const CORTEX_UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-/** Matches <ralph:complete-task>uuid</ralph:complete-task>; Ralph marks those tasks completed via Postgres. */
+/** Matches <ralph:task-complete>uuid</ralph:task-complete>; Ralph marks those tasks completed via Postgres. */
 const RALPH_COMPLETE_TASK_REGEX =
-  /<ralph:complete-task>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:complete-task>/gi;
+  /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi;
 
-const RALPH_COMPLETE_TASK_OPEN = '<ralph:complete-task>' as const;
-const RALPH_COMPLETE_TASK_CLOSE = '</ralph:complete-task>' as const;
+const RALPH_COMPLETE_TASK_OPEN = '<ralph:task-complete>' as const;
+const RALPH_COMPLETE_TASK_CLOSE = '</ralph:task-complete>' as const;
 
 const PROMISE_ERROR = '<promise>ERROR</promise>' as const;
 const PROMISE_COMPLETE = '<promise>COMPLETE</promise>' as const;
@@ -66,7 +66,7 @@ export const isCortexTaskId = (task: string): boolean =>
   CORTEX_UUID_REGEX.test(task.trim());
 
 /**
- * @description Parses agent result for <ralph:complete-task>uuid</ralph:complete-task>. Returns unique task IDs; Ralph marks them completed via Postgres.
+ * @description Parses agent result for <ralph:task-complete>uuid</ralph:task-complete>. Returns unique task IDs; Ralph marks them completed via Postgres.
  */
 export const parseRalphCompleteTaskSignals = (result: string): string[] => {
   const ids: string[] = [];
