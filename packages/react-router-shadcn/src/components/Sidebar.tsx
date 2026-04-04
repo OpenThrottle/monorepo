@@ -500,6 +500,7 @@ export const SidebarFooter = React.forwardRef<
     />
   );
 });
+
 SidebarFooter.displayName = 'SidebarFooter';
 
 export interface SidebarSeparatorProps extends SeparatorProps {}
@@ -530,6 +531,7 @@ export const SidebarSeparator = React.forwardRef<
     />
   );
 });
+
 SidebarSeparator.displayName = 'SidebarSeparator';
 
 export interface SidebarContentProps extends React.ComponentProps<'div'> {}
@@ -563,6 +565,7 @@ export const SidebarContent = React.forwardRef<
     />
   );
 });
+
 SidebarContent.displayName = 'SidebarContent';
 
 export interface SidebarGroupProps extends React.ComponentProps<'div'> {}
@@ -634,7 +637,7 @@ export const SidebarGroupLabel = React.forwardRef<
 
 SidebarGroupLabel.displayName = 'SidebarGroupLabel';
 
-export interface SidebarGroupActionProps extends React.ComponentProps<'div'> {
+export interface SidebarGroupActionProps extends React.ComponentProps<'button'> {
   asChild?: boolean;
 }
 
@@ -674,23 +677,43 @@ export const SidebarGroupAction = React.forwardRef<
 
 SidebarGroupAction.displayName = 'SidebarGroupAction';
 
+export interface SidebarGroupContentProps extends React.ComponentProps<'div'> {}
+
 export const SidebarGroupContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<'div'>
->(({ className, ...props }, ref) => (
-  <div
-    className={cn('w-full text-sm', className)}
-    data-sidebar="group-content"
-    ref={ref}
-    {...props}
-  />
-));
+  SidebarGroupContentProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <div
+      className={cn('w-full text-sm', className)}
+      data-sidebar="group-content"
+      ref={ref}
+      {...rest}
+    />
+  );
+});
+
 SidebarGroupContent.displayName = 'SidebarGroupContent';
 
 export const SidebarMenu = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<'ul'>
->(({ className, ...props }, ref) => {
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
+
   // Hooks
 
   // Setup
@@ -708,10 +731,11 @@ export const SidebarMenu = React.forwardRef<
       className={cn('flex w-full min-w-0 flex-col gap-1', className)}
       data-sidebar="menu"
       ref={ref}
-      {...props}
+      {...rest}
     />
   );
 });
+
 SidebarMenu.displayName = 'SidebarMenu';
 
 export const SidebarMenuItem = React.forwardRef<
@@ -829,6 +853,7 @@ export const SidebarMenuButton = React.forwardRef<
     </Tooltip>
   );
 });
+
 SidebarMenuButton.displayName = 'SidebarMenuButton';
 
 export const SidebarMenuAction = React.forwardRef<
@@ -902,6 +927,7 @@ export const SidebarMenuBadge = React.forwardRef<
     />
   );
 });
+
 SidebarMenuBadge.displayName = 'SidebarMenuBadge';
 
 export const SidebarMenuSkeleton = React.forwardRef<
@@ -976,6 +1002,7 @@ const SidebarMenuSub = React.forwardRef<
     />
   );
 });
+
 SidebarMenuSub.displayName = 'SidebarMenuSub';
 
 export const SidebarMenuSubItem = React.forwardRef<
