@@ -1,42 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import type { ComponentType } from 'react';
 import {
   Legend as RechartsLegend,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
 } from 'recharts';
 import { cn } from '../utils/cn';
+import type { ChartConfig, ChartConfigEntry } from './chart-config';
+import { getChartColor, readUnknownRecordValue } from './chart-config';
+import { ChartConfigContext, useChartConfig } from './chart-config-context';
 
-/** Config entry for a single series (label, color, optional icon/theme). */
-export interface ChartConfigEntry {
-  readonly label?: string;
-  readonly color?: string;
-  readonly icon?: ComponentType<{ className?: string }>;
-  readonly theme?: { readonly light: string; readonly dark: string };
-}
-
-/** Map of data keys to chart config entries. Use with ChartContainer config prop. */
-export type ChartConfig = Record<string, ChartConfigEntry>;
-
-const ChartConfigContext = React.createContext<ChartConfig | undefined>(
-  undefined,
-);
-
-function useChartConfig(): ChartConfig | undefined {
-  return React.useContext(ChartConfigContext);
-}
-
-/** Resolves color for a config key (supports theme or single color). */
-function getChartColor(
-  config: ChartConfigEntry | undefined,
-): string | undefined {
-  if (!config) return undefined;
-  if (config.color) return config.color;
-  if (config.theme) return undefined; // consumer should set --color-* via CSS
-  return undefined;
-}
+export type { ChartConfig, ChartConfigEntry };
 
 export interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   readonly config: ChartConfig;
@@ -54,17 +29,16 @@ export function ChartContainer({
   style,
   ...props
 }: ChartContainerProps): React.ReactElement {
-  const varStyle = React.useMemo(() => {
-    const s: React.CSSProperties = { ...style };
-
+  const varStyle = React.useMemo((): React.CSSProperties => {
+    const cssVars: Record<string, string> = {};
     for (const key of Object.keys(config)) {
       const entry = config[key];
       const color = entry?.color ?? entry?.theme?.light;
       if (color) {
-        (s as Record<string, string>)[`--color-${key}`] = color;
+        cssVars[`--color-${key}`] = color;
       }
     }
-    return s;
+    return { ...style, ...cssVars };
   }, [config, style]);
 
   return (
@@ -131,7 +105,7 @@ export function ChartTooltipContent({
     if (entry?.label) return entry.label;
 
     const p = payload.find((item) => String(item.dataKey ?? item.name) === key);
-    const raw = p && (p.payload as Record<string, unknown>)?.[nameKey];
+    const raw = p ? readUnknownRecordValue(p.payload, nameKey) : undefined;
 
     return raw != null ? String(raw) : key;
   };
@@ -144,7 +118,7 @@ export function ChartTooltipContent({
   if (!active || payload.length === 0) return null;
 
   const labelValue = labelKey
-    ? (payload[0]?.payload as Record<string, unknown>)?.[labelKey]
+    ? readUnknownRecordValue(payload[0]?.payload, labelKey)
     : label;
 
   return (
@@ -229,8 +203,8 @@ export function ChartLegendContent({
     );
 
     if (p?.value) return p.value;
-    if (nameKey && p && typeof p === 'object' && nameKey in p) {
-      const raw = (p as Record<string, unknown>)[nameKey];
+    if (nameKey && p) {
+      const raw = readUnknownRecordValue(p, nameKey);
       if (raw != null) return String(raw);
     }
 
