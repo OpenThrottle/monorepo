@@ -1,60 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Legend as RechartsLegend,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-} from 'recharts';
-import { cn } from '../utils/cn';
+import { Legend as RechartsLegend, Tooltip as RechartsTooltip } from 'recharts';
 import type { ChartConfig, ChartConfigEntry } from './chart-config';
 import { getChartColor, readUnknownRecordValue } from './chart-config';
-import { ChartConfigContext, useChartConfig } from './chart-config-context';
+import { useChartConfig } from './chart-config-context';
 
 export type { ChartConfig, ChartConfigEntry };
-
-export interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  readonly config: ChartConfig;
-  readonly children: React.ReactNode;
-}
-
-/**
- * Wraps a Recharts chart and provides config via context and CSS variables (--color-{key}).
- * Set min-h-[value] for responsive height. Use with ResponsiveContainer or chart responsive prop.
- */
-export function ChartContainer({
-  config,
-  className,
-  children,
-  style,
-  ...props
-}: ChartContainerProps): React.ReactElement {
-  const varStyle = React.useMemo((): React.CSSProperties => {
-    const cssVars: Record<string, string> = {};
-    for (const key of Object.keys(config)) {
-      const entry = config[key];
-      const color = entry?.color ?? entry?.theme?.light;
-      if (color) {
-        cssVars[`--color-${key}`] = color;
-      }
-    }
-    return { ...style, ...cssVars };
-  }, [config, style]);
-
-  return (
-    <ChartConfigContext.Provider value={config}>
-      <ResponsiveContainer
-        className={cn('w-full h-full', className)}
-        height="100%"
-        style={varStyle}
-        width="100%"
-        {...props}
-      >
-        {children}
-      </ResponsiveContainer>
-    </ChartConfigContext.Provider>
-  );
-}
+export type { ChartContainerProps } from './ChartContainer';
+export { ChartContainer } from './ChartContainer';
 
 export interface ChartTooltipContentProps {
   readonly active?: boolean;
