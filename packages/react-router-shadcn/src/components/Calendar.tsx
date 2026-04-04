@@ -17,17 +17,30 @@ export type CalendarProps = DayPickerProps & {
   readonly buttonVariant?: React.ComponentProps<typeof Button>['variant'];
 };
 
-function Calendar({
-  className,
-  classNames,
-  showOutsideDays = true,
-  captionLayout = 'label',
-  buttonVariant = 'ghost',
-  formatters,
-  components,
-  ...props
-}: CalendarProps): React.ReactElement {
+export const Calendar = (props: CalendarProps): React.ReactElement => {
+  const {
+    buttonVariant = 'ghost',
+    captionLayout = 'label',
+    className,
+    classNames,
+    components,
+    formatters,
+    showOutsideDays = true,
+    ...rest
+  } = props;
+
+  // Hooks
+
+  // Setup
   const defaultClassNames = getDefaultClassNames();
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <DayPicker
@@ -190,23 +203,34 @@ function Calendar({
         ...formatters,
       }}
       showOutsideDays={showOutsideDays}
-      {...props}
+      {...rest}
     />
   );
-}
+};
 
 Calendar.displayName = 'Calendar';
 
-function CalendarDayButton(
+export const CalendarDayButton = (
   props: React.ComponentProps<typeof DayButton>,
-): React.ReactElement {
+): React.ReactElement => {
   const { className, day, modifiers, ...rest } = props;
-  const defaultClassNames = getDefaultClassNames();
+
+  // Hooks
   const ref = React.useRef<HTMLButtonElement>(null);
 
+  // Setup
+  const defaultClassNames = getDefaultClassNames();
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus();
   }, [modifiers.focused]);
+
+  // 🔌 Short Circuit
 
   return (
     <Button
@@ -231,8 +255,6 @@ function CalendarDayButton(
       {...rest}
     />
   );
-}
+};
 
 CalendarDayButton.displayName = 'CalendarDayButton';
-
-export { Calendar, CalendarDayButton };

@@ -2,20 +2,14 @@
 
 import * as React from 'react';
 import { Tooltip as RechartsTooltip } from 'recharts';
+import type { TooltipProps as RechartsTooltipProps } from 'recharts';
 
-export interface ChartTooltipProps {
-  readonly content?: React.ReactElement;
-  readonly children?: never;
-}
+export interface ChartTooltipProps extends RechartsTooltipProps {}
 
 /**
  * Recharts Tooltip wired to ChartTooltipContent. Use inside a chart: <ChartTooltip content={<ChartTooltipContent />} />.
  */
-export function ChartTooltip({
-  content,
-  ...props
-}: ChartTooltipProps &
-  React.ComponentProps<typeof RechartsTooltip>): React.ReactElement {
+export const ChartTooltip = (props: ChartTooltipProps): React.ReactElement => {
   // Hooks
 
   // Setup
@@ -28,5 +22,5 @@ export function ChartTooltip({
 
   // 🔌 Short Circuit
 
-  return <RechartsTooltip {...props} content={content} />;
-}
+  return <RechartsTooltip {...props} />;
+};

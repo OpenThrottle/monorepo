@@ -65,35 +65,31 @@ services:
   openthrottle-postgres:
     build:
       args:
-        POSTGRES_DB: ${OPENTHROTTLE_POSTGRES_DB}
-        POSTGRES_PASSWORD: ${OPENTHROTTLE_POSTGRES_PASSWORD}
-        POSTGRES_PORT: ${OPENTHROTTLE_POSTGRES_PORT}
-        POSTGRES_USER: ${OPENTHROTTLE_POSTGRES_USER}
-        POSTGRES_VERSION: ${OPENTHROTTLE_POSTGRES_VERSION}
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_PORT: ${POSTGRES_PORT}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_VERSION: ${POSTGRES_VERSION}
       context: ../../
       dockerfile: Dockerfile.Postgres
     container_name: openthrottle-postgres
     environment:
-      POSTGRES_DB: ${OPENTHROTTLE_POSTGRES_DB}
-      POSTGRES_PASSWORD: ${OPENTHROTTLE_POSTGRES_PASSWORD}
-      POSTGRES_PORT: ${OPENTHROTTLE_POSTGRES_PORT}
-      POSTGRES_USER: ${OPENTHROTTLE_POSTGRES_USER}
-      POSTGRES_VERSION: ${OPENTHROTTLE_POSTGRES_VERSION}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_VERSION: ${POSTGRES_VERSION}
     healthcheck:
       interval: 1s
       retries: 10
-      test:
-        [
-          'CMD-SHELL',
-          'pg_isready -U ${OPENTHROTTLE_POSTGRES_USER} -d ${OPENTHROTTLE_POSTGRES_DB}',
-        ]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       timeout: 5s
     ports:
-      - ${OPENTHROTTLE_POSTGRES_PORT}:5432
+      - ${POSTGRES_PORT}:5432
     restart: always
     shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
     volumes:
-      - openthrottle_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   #############################################################################
   #
@@ -110,9 +106,9 @@ services:
       retries: 3
       test: ['CMD', 'redis-cli', 'ping']
       timeout: 5s
-    image: redis:${OPENTHROTTLE_REDIS_VERSION}-alpine
+    image: redis:${REDIS_VERSION}-alpine
     ports:
-      - ${OPENTHROTTLE_REDIS_PORT}:6379
+      - ${REDIS_PORT}:6379
     restart: always
 
   #############################################################################
@@ -134,14 +130,14 @@ services:
       - .env
     environment:
       <<: *openthrottle-server
-      POSTGRES_HOST: ${OPENTHROTTLE_POSTGRES_HOST}
-      POSTGRES_DB: ${OPENTHROTTLE_POSTGRES_DB}
-      POSTGRES_PASSWORD: ${OPENTHROTTLE_POSTGRES_PASSWORD}
-      POSTGRES_PORT: ${OPENTHROTTLE_POSTGRES_PORT}
-      POSTGRES_USER: ${OPENTHROTTLE_POSTGRES_USER}
-      POSTGRES_VERSION: ${OPENTHROTTLE_POSTGRES_VERSION}
-      REDIS_HOST: ${OPENTHROTTLE_REDIS_HOST}
-      REDIS_PORT: ${OPENTHROTTLE_REDIS_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_VERSION: ${POSTGRES_VERSION}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     healthcheck:
       interval: 30s
       retries: 3
@@ -162,4 +158,4 @@ services:
 #     🎧 Volumes | Persistent "named" volumes
 #
 volumes:
-  openthrottle_postgres_data:
+  postgres_data:

@@ -81,14 +81,14 @@ type PrsMergedPerPeriodObject {
 }
 
 type PrTimeInStateSummaryObject {
-  """PR state (e.g. open, closed, merged)."""
-  state: String!
+  """Average number of days PRs spent in this state."""
+  avgDaysInState: Float
 
   """Count of PRs in this state."""
   count: Int!
 
-  """Average number of days PRs spent in this state."""
-  avgDaysInState: Float
+  """PR state (e.g. open, closed, merged)."""
+  state: String!
 }
 
 type ReviewCycleTimeObject {
@@ -1479,6 +1479,12 @@ input GetGeneratorInput {
 }
 
 input ListPullsInput {
+  """Filter by base branch"""
+  base: String
+
+  """Filter by merged (true/false); omit for no filter"""
+  merged: Boolean
+
   """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
@@ -1487,12 +1493,6 @@ input ListPullsInput {
 
   """Filter by state: open, closed, or all"""
   state: String
-
-  """Filter by base branch"""
-  base: String
-
-  """Filter by merged (true/false); omit for no filter"""
-  merged: Boolean
 }
 
 input GitHubRepoInput {

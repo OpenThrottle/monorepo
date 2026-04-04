@@ -373,6 +373,11 @@ export type DeletePlanInput = {
   id: Scalars['ID']['input'];
 };
 
+export type DeleteProjectInput = {
+  /** Project id to delete */
+  id: Scalars['ID']['input'];
+};
+
 export type DeleteTaskInput = {
   /** Task id to delete */
   id: Scalars['ID']['input'];
@@ -416,6 +421,21 @@ export type EnqueueDocIngestionResultObject = {
   jobId?: Maybe<Scalars['String']['output']>;
   /** Whether the job was enqueued. */
   success: Scalars['Boolean']['output'];
+};
+
+export type EnqueuePlanRalphOrchestratorInput = {
+  /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric). */
+  mode?: InputMaybe<PlanRalphWorkflowMode>;
+  /** Plan id to run the orchestrator for */
+  planId: Scalars['ID']['input'];
+  /** Job priority (lower = higher priority). Same as enqueuePlanRun. */
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.). */
+  ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Required when mode is task; must belong to the plan. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type EnqueuePlanRunInput = {
@@ -760,6 +780,8 @@ export type Mutation = {
   deleteNote: Scalars['Boolean']['output'];
   /** Delete a plan by ID */
   deletePlan: Scalars['Boolean']['output'];
+  /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
+  deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
   deleteRole: Scalars['Boolean']['output'];
   /** Delete a task by ID */
@@ -772,6 +794,8 @@ export type Mutation = {
   enableUser?: Maybe<UserObject>;
   /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
+  /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
+  enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;
   /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Permanently delete a custom prompt by ID */
@@ -882,6 +906,10 @@ export type MutationDeletePlanArgs = {
   input: DeletePlanInput;
 };
 
+export type MutationDeleteProjectArgs = {
+  input: DeleteProjectInput;
+};
+
 export type MutationDeleteRoleArgs = {
   id: Scalars['ID']['input'];
 };
@@ -904,6 +932,10 @@ export type MutationEnableUserArgs = {
 
 export type MutationEnqueueDocIngestionArgs = {
   input: EnqueueDocIngestionInput;
+};
+
+export type MutationEnqueuePlanRalphOrchestratorArgs = {
+  input: EnqueuePlanRalphOrchestratorInput;
 };
 
 export type MutationEnqueuePlanRunArgs = {
@@ -1082,6 +1114,12 @@ export type PlanOutputStreamChunkObject = {
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
 };
+
+/** Plan-scoped run (default) or task-centric run (`task` requires taskId). */
+export enum PlanRalphWorkflowMode {
+  Plan = 'plan',
+  Task = 'task',
+}
 
 /** A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end). */
 export type PlanRunMetricsEntry = {

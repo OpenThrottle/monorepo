@@ -8,7 +8,7 @@ type BadgeVariants = VariantProps<typeof badgeVariants>;
 export interface BadgeProps extends BaseProps, BadgeVariants {}
 
 export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  (props, ref) => {
+  (props, ref): React.ReactElement => {
     const { className, size, variant, ...rest } = props;
 
     // Hooks

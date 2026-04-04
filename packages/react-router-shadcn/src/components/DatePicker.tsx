@@ -9,31 +9,34 @@ import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 export interface DatePickerProps {
   readonly className?: string;
   readonly disabled?: boolean;
+  readonly onSelect?: (date: Date | undefined) => void;
   readonly placeholder?: string;
   readonly value?: Date;
-  readonly onSelect?: (date: Date | undefined) => void;
 }
 
 /**
  * @description Single-date picker composed of Popover and Calendar. Uses date-fns for formatting.
  */
 export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
-  (
-    {
+  (props, ref): React.ReactElement => {
+    const {
       className,
       disabled = false,
       onSelect,
       placeholder = 'Pick a date',
       value,
-    },
-    ref,
-  ): React.ReactElement => {
+    } = props;
+
+    // Hooks
     const [open, setOpen] = React.useState(false);
     const [internalDate, setInternalDate] = React.useState<Date | undefined>(
       value,
     );
+
+    // Setup
     const date = value ?? internalDate;
 
+    // Handlers
     const handleSelect = React.useCallback(
       (selected: Date | undefined): void => {
         if (value === undefined) {
@@ -44,6 +47,12 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
       },
       [onSelect, value],
     );
+
+    // Markup
+
+    // Life Cycle
+
+    // 🔌 Short Circuit
 
     return (
       <Popover onOpenChange={setOpen} open={open}>

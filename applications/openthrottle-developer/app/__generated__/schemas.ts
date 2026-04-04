@@ -20,9 +20,11 @@ import {
   CreateUserInput,
   CustomPromptType,
   DeletePlanInput,
+  DeleteProjectInput,
   DeleteTaskInput,
   DuplicateJobInput,
   EnqueueDocIngestionInput,
+  EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   GetCommitLinkInput,
   GetGeneratorInput,
@@ -40,6 +42,7 @@ import {
   LoginInput,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
+  PlanRalphWorkflowMode,
   PrCountByLabelInput,
   PressureLevel,
   ProcessStripeWebhookInput,
@@ -85,6 +88,8 @@ export const definedNonNullAnySchema = z
   .refine((v) => isDefinedNonNullAny(v));
 
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
+
+export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
 
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
 
@@ -291,6 +296,14 @@ export function DeletePlanInputSchema(): z.ZodObject<
   });
 }
 
+export function DeleteProjectInputSchema(): z.ZodObject<
+  Properties<DeleteProjectInput>
+> {
+  return z.object({
+    id: z.string(),
+  });
+}
+
 export function DeleteTaskInputSchema(): z.ZodObject<
   Properties<DeleteTaskInput>
 > {
@@ -317,6 +330,19 @@ export function EnqueueDocIngestionInputSchema(): z.ZodObject<
     repo: z.string().nullish(),
     scope: z.string().nullish(),
     sha: z.string().nullish(),
+  });
+}
+
+export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
+  Properties<EnqueuePlanRalphOrchestratorInput>
+> {
+  return z.object({
+    idempotencyKey: z.string().nullish(),
+    mode: PlanRalphWorkflowModeSchema.nullish(),
+    planId: z.string(),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    taskId: z.string().nullish(),
   });
 }
 

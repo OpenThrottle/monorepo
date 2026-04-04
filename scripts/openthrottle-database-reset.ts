@@ -12,7 +12,7 @@ async function main(): Promise<void> {
   const config = getCortexPostgresConfig();
   if (!config) {
     throw new Error(
-      'OpenThrottle Postgres not configured. Set OPENTHROTTLE_POSTGRES_URL or OPENTHROTTLE_POSTGRES_* env vars.',
+      'OpenThrottle Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',
     );
   }
   const connectionString = config.connectionString;

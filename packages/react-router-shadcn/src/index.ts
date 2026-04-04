@@ -38,7 +38,7 @@ export * from './components/Skeleton';
 export * from './components/Spinner';
 export * from './components/Switch';
 export * from './components/Table';
-export * from './components/Tabs';
+export * from './components/Tabs/index';
 export * from './components/TextArea';
 export * from './components/ToggleGroup';
 export * from './components/Tooltip';

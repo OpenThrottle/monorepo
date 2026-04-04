@@ -43,11 +43,11 @@ export interface ButtonProps extends BaseProps, ButtonVariants {
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => {
-    const { className, variant, size, asChild = false, ...rest } = props;
+  (props, ref): React.ReactElement => {
+    const { asChild = false, className, size, variant, ...rest } = props;
 
     // Setup
-    const Comp = asChild ? Slot : 'button';
+    const Component = asChild ? Slot : 'button';
 
     // Hooks
 
@@ -60,7 +60,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // 🔌 Short Circuit
 
     return (
-      <Comp
+      <Component
         className={cn(buttonVariants({ className, size, variant }))}
         ref={ref}
         {...rest}

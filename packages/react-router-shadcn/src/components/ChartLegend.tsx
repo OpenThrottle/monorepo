@@ -2,20 +2,15 @@
 
 import * as React from 'react';
 import { Legend as RechartsLegend } from 'recharts';
+import type { LegendProps as RechartsLegendProps } from 'recharts';
 
-export interface ChartLegendProps {
-  readonly content?: React.ReactElement;
-  readonly children?: never;
-}
+export interface ChartLegendProps extends RechartsLegendProps {}
 
 /**
- * Recharts Legend wired to ChartLegendContent. Use inside a chart: <ChartLegend content={<ChartLegendContent />} />.
+ * Recharts Legend wired to ChartLegendContent. Use inside a chart:
+ * <ChartLegend content={<ChartLegendContent />} /> or <ChartLegend />.
  */
-export function ChartLegend({
-  content,
-  ...props
-}: ChartLegendProps &
-  React.ComponentProps<typeof RechartsLegend>): React.ReactElement {
+export const ChartLegend = (props: ChartLegendProps): React.ReactElement => {
   // Hooks
 
   // Setup
@@ -28,5 +23,5 @@ export function ChartLegend({
 
   // 🔌 Short Circuit
 
-  return <RechartsLegend {...props} content={content} />;
-}
+  return <RechartsLegend {...props} />;
+};
