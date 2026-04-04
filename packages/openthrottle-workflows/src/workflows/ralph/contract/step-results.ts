@@ -1,4 +1,4 @@
-import type { WorkflowError } from './workflow-error';
+import type { WorkflowError } from './workflow-error.js';
 
 /**
  * @description Logical steps along the Ralph main() pipeline; used to tag discriminated results.

@@ -84,25 +84,25 @@ export function ChartContainer({
 
 export interface ChartTooltipContentProps {
   readonly active?: boolean;
-  readonly payload?: ReadonlyArray<{
-    name?: string;
-    value?: string | number;
-    dataKey?: string;
-    color?: string;
-    fill?: string;
-    payload?: unknown;
-  }>;
+  readonly formatter?: (
+    item: unknown,
+    name: string,
+    value: unknown,
+  ) => React.ReactNode;
+  readonly hideIndicator?: boolean;
+  readonly hideLabel?: boolean;
+  readonly indicator?: 'dot' | 'line' | 'dashed';
   readonly label?: string | number;
   readonly labelKey?: string;
   readonly nameKey?: string;
-  readonly hideLabel?: boolean;
-  readonly hideIndicator?: boolean;
-  readonly indicator?: 'dot' | 'line' | 'dashed';
-  readonly formatter?: (
-    value: unknown,
-    name: string,
-    item: unknown,
-  ) => React.ReactNode;
+  readonly payload?: ReadonlyArray<{
+    color?: string;
+    dataKey?: string;
+    fill?: string;
+    name?: string;
+    payload?: unknown;
+    value?: string | number;
+  }>;
 }
 
 /**
@@ -111,28 +111,41 @@ export interface ChartTooltipContentProps {
  */
 export function ChartTooltipContent({
   active,
-  payload = [],
+  formatter,
+  hideIndicator,
+  hideLabel,
+  indicator = 'dot',
   label,
   labelKey,
   nameKey = 'name',
-  hideLabel,
-  hideIndicator,
-  indicator = 'dot',
-  formatter,
+  payload = [],
 }: ChartTooltipContentProps): React.ReactElement | null {
+  // Hooks
   const config = useChartConfig();
+
+  // Setup
+
+  // Handlers
+  const nameForKey = (key: string): string => {
+    const entry = config?.[key];
+    if (entry?.label) return entry.label;
+
+    const p = payload.find((item) => String(item.dataKey ?? item.name) === key);
+    const raw = p && (p.payload as Record<string, unknown>)?.[nameKey];
+
+    return raw != null ? String(raw) : key;
+  };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (!active || payload.length === 0) return null;
 
   const labelValue = labelKey
     ? (payload[0]?.payload as Record<string, unknown>)?.[labelKey]
     : label;
-  const nameForKey = (key: string): string => {
-    const entry = config?.[key];
-    if (entry?.label) return entry.label;
-    const p = payload.find((item) => String(item.dataKey ?? item.name) === key);
-    const raw = p && (p.payload as Record<string, unknown>)?.[nameKey];
-    return raw != null ? String(raw) : key;
-  };
 
   return (
     <div className="rounded-lg border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
@@ -143,10 +156,12 @@ export function ChartTooltipContent({
         {payload.map((item, index) => {
           const key = String(item.dataKey ?? item.name ?? index);
           const name = nameForKey(key);
+          const color = item.color ?? item.fill ?? getChartColor(config?.[key]);
+          const isLine = indicator === 'line';
           const value = formatter
             ? formatter(item.value, name, item)
             : item.value;
-          const color = item.color ?? item.fill ?? getChartColor(config?.[key]);
+
           return (
             <div className="flex items-center gap-2" key={key}>
               {!hideIndicator && (
@@ -155,15 +170,13 @@ export function ChartTooltipContent({
                   style={{
                     backgroundColor: color,
                     borderStyle: indicator === 'dashed' ? 'dashed' : undefined,
-                    height:
-                      indicator === 'line' || indicator === 'dashed' ? 2 : 8,
-                    width:
-                      indicator === 'line' || indicator === 'dashed' ? 12 : 8,
+                    height: isLine || indicator === 'dashed' ? 2 : 8,
+                    width: isLine || indicator === 'dashed' ? 12 : 8,
                   }}
                 />
               )}
               <span className="flex-1 text-muted-foreground">{name}</span>
-              <span className="font-medium">{value}</span>
+              <span className="font-medium">{Number(value).toFixed(2)}</span>
             </div>
           );
         })}

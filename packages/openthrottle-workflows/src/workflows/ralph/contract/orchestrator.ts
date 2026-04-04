@@ -1,4 +1,4 @@
-import type { WorkflowFlowContext } from './flow-context';
+import type { WorkflowFlowContext } from './flow-context.js';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'

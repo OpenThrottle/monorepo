@@ -1824,6 +1824,11 @@ type Mutation {
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
 
   """
+  Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.
+  """
+  enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
+
+  """
   Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
@@ -1835,7 +1840,7 @@ type Mutation {
   updateProject(input: UpdateProjectInput!): ProjectObject
 
   """
-  Delete a project by ID. Related plans and tasks remain; their project link is cleared.
+  Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL).
   """
   deleteProject(input: DeleteProjectInput!): Boolean!
 
@@ -2149,6 +2154,40 @@ enum RalphNestedDebugCli {
   omit
   debug
   verbose
+}
+
+input EnqueuePlanRalphOrchestratorInput {
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.
+  """
+  idempotencyKey: String
+
+  """
+  Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric).
+  """
+  mode: PlanRalphWorkflowMode
+
+  """Plan id to run the orchestrator for"""
+  planId: ID!
+
+  """Job priority (lower = higher priority). Same as enqueuePlanRun."""
+  priority: Int
+
+  """
+  Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.).
+  """
+  ralph: RalphPlanRunTuningInput
+
+  """Required when mode is task; must belong to the plan."""
+  taskId: ID
+}
+
+"""
+Plan-scoped run (default) or task-centric run (`task` requires taskId).
+"""
+enum PlanRalphWorkflowMode {
+  plan
+  task
 }
 
 input CancelPlanRunInput {

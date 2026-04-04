@@ -3,7 +3,7 @@ export {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
-} from './flow-context';
+} from './flow-context.js';
 export type {
   WorkflowRalphContext as RalphFlowContext,
   WorkflowFlowContext,
@@ -11,8 +11,11 @@ export type {
   WorkflowRunner as WorkflowRalphExecutionBackendId,
   WorkflowOptions as WorkflowRalphRunOptionsShape,
   WorkflowMode as WorkflowRalphTargetMode,
-} from './flow-context';
-export type { WorkflowOrchestrator, WorkflowRunOutcome } from './orchestrator';
+} from './flow-context.js';
+export type {
+  WorkflowOrchestrator,
+  WorkflowRunOutcome,
+} from './orchestrator.js';
 export type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphIterationOnChunk,
@@ -20,7 +23,7 @@ export type {
   WorkflowRalphIterationRunner,
   WorkflowRalphIterationStreamChunk,
   WorkflowRalphOrchestratorDeps,
-} from './ralph-orchestrator-deps';
+} from './ralph-orchestrator-deps.js';
 export type {
   AgentParseControlKind,
   StepAgentParseControlResult as AgentParseControlStepResult,
@@ -36,5 +39,5 @@ export type {
   StepTasksApplyCompletionsResult as TasksApplyCompletionsStepResult,
   WorkflowStepId,
   WorkflowStepResult,
-} from './step-results';
-export type { WorkflowError } from './workflow-error';
+} from './step-results.js';
+export type { WorkflowError } from './workflow-error.js';
