@@ -22,6 +22,16 @@ Import from the package root; public API is re-exported from `src/index.ts` (Ral
 - `**pnpm exec workflow-ralph**` (see `tools/workflows`) is the CLI humans and nested jobs use: it parses argv/env, builds `**RalphFlowContext**`, runs `**runIteration**` / Cursor, and may evolve alongside `ralph.ts`.
 - `**createWorkflowRalphOrchestrator**` _is the package-level orchestration loop: same GraphQL operations and exit reasons, but **iteration execution is always injected** so the package stays free of Cursor or subprocess details. Use the orchestrator when embedding Ralph in another process; use the CLI for local agent runs._
 
+### Embedded Ralph: streaming agent output (injected runner)
+
+You can **stream** stdout/stderr for logs, OpenThrottle `append_plan_output`, WebSockets, or other side effects **without** changing the orchestrator contract:
+
+- **`WorkflowRalphIterationRunner.run`** must still return a **`Promise<string>`** that resolves to the **full** combined agent output for that iteration (same shape as the CLI). The orchestrator only parses control markers (`<ralph:complete-task>`, `<promise>COMPLETE</promise>`, etc.) **after** the full string is available — it does not interpret partial chunks for task completion.
+- **Tier 1 (no package API change):** Implement the injected runner by calling **`runIterationAsync`** from `@tools/workflows/src/bin/run-iteration` (source: [`tools/workflows/src/bin/run-iteration.ts`](../../tools/workflows/src/bin/run-iteration.ts); also re-exported from [`ralph.ts`](../../tools/workflows/src/bin/ralph.ts) for the CLI). Pass **`RunIterationConfig`** with optional **`onChunk`** to receive each `CursorAgentChunk` while the subprocess runs; **return** the same string promise that `runIterationAsync` resolves with so embedding stays aligned with `workflow-ralph`.
+- **Non-goal:** Streaming partial text into GraphQL or task completion — the GraphQL layer and completion parsing stay **buffer-at-end** on the full iteration string.
+
+For CLI behavior, nesting, and runtime tuning, see [`tools/workflows` README](../../tools/workflows/README.md) (Workflow Ralph section).
+
 ## Extending
 
 - **New OpenThrottle operations:** add documents under `src/ralph/graphql/*.graphql`, run `pnpm nx run @openthrottle/openthrottle-workflows:codegen-graphql`, then call `**executeWorkflowGraphqlV2*`\* from thin helpers in `src/ralph/` (or add helpers next to `queries.ts` / `mutations.ts`).
