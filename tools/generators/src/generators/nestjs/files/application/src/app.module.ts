@@ -5,7 +5,6 @@ import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq/src/nestjs-bullm
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis/src/nestjs-redis.module';
 import { NestjsGraphqlModule as _NestjsGraphqlModule } from '@openthrottle/nestjs-graphql/src/nestjs-graphql.module';
 import { NestjsBullmqBoardModule as _NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board/src/nestjs-bullmq-board.module';
-import { NestjsDevtoolsModule as _NestjsDevtoolsModule } from '@openthrottle/nestjs-devtools/src/nestjs-devtools.module';
 import { NestjsRedisModule as _NestjsRedisModule } from '@openthrottle/nestjs-redis/src/nestjs-redis.module';
 import { NestjsThrottlerModule as _NestjsThrottlerModule } from '@openthrottle/nestjs-throttler/src/nestjs-throttler.module';
 import { AppController } from './app.controller';

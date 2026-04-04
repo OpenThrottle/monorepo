@@ -10,7 +10,6 @@
   "dependencies": {
     "@apollo/server": "^5.2.0",
     "@apollo/server-plugin-response-cache": "^5.0.0",
-    "@openthrottle/nestjs-express": "workspace:*",
     "@nestjs/apollo": "^13.2.3",
     "@nestjs/graphql": "^13.2.3",
     "graphql": "^16.13.1",
