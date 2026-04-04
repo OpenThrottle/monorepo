@@ -47,8 +47,9 @@ export const parseRalphCompleteTaskSignals = (
 /**
  * @description True when output contains `<promise>COMPLETE</promise>`.
  */
-export const ralphOutputHasPromiseComplete = (result: string): boolean =>
-  result.includes(PROMISE_COMPLETE);
+export const ralphOutputHasPromiseComplete = (result: string): boolean => {
+  return result.includes(PROMISE_COMPLETE);
+};
 
 /**
  * @description Terminal control from promise markers (order matches `parseRalphResponse` in `ralph.ts`).

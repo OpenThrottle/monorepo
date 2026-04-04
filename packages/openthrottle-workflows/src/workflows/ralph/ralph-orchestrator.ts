@@ -159,7 +159,7 @@ export const createWorkflowRalphOrchestrator = (
             (t) => t.status === 'IN_PROGRESS',
           );
 
-          // Otherwise we'll pock up the next available task
+          // Otherwise we'll pick up the next available task
           const taskForIteration =
             firstInProgress ??
             remaining.find((t) => ['QUEUED', 'PENDING'].includes(t.status));

@@ -221,9 +221,11 @@ const runCursorIterationAsync = (
             stdoutLen: stdout.length,
           },
         );
+
         resolve(
           `<promise>ERROR</promise>\n${runnerLabel} iteration was cancelled`,
         );
+
         return;
       }
 
