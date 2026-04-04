@@ -13,7 +13,6 @@
 .vercel
 build
 coverage
-databases/backups
 design/*
 dist
 node_modules
