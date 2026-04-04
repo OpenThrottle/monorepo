@@ -1,0 +1,53 @@
+/**
+ * @description Registers project tools: delete_project.
+ */
+
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { DeleteProjectDocument } from '../__generated__/graphql.js';
+import { DeleteProjectInputSchema } from '../__generated__/schemas.js';
+import type { GenericResult } from '../types/index.js';
+import { getAuthToken } from '../auth/index.js';
+import { invalidArgsContent } from '../utils/errors.js';
+import { runTool } from '../utils/tool-result.js';
+
+type DeleteProjectResult = GenericResult<{
+  deleted: boolean;
+}>;
+
+const deleteProjectSchema = DeleteProjectInputSchema();
+
+async function deleteProjectHandler(
+  args: z.infer<typeof deleteProjectSchema>,
+): Promise<DeleteProjectResult> {
+  const parsed = deleteProjectSchema.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{ deleted: boolean }>('delete_project', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(token, DeleteProjectDocument, {
+      input: parsed.data,
+    });
+
+    const deleted = result?.deleteProject ?? false;
+    const text = deleted
+      ? `Deleted project: ${parsed.data.id}`
+      : `Project not found or already deleted: ${parsed.data.id}`;
+
+    return { structuredContent: { deleted }, text };
+  });
+}
+
+export function registerProjectTools(server: McpServer): void {
+  server.registerTool(
+    'delete_project',
+    {
+      description: `Delete a Cortex project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.`,
+      inputSchema: deleteProjectSchema,
+    },
+    deleteProjectHandler,
+  );
+}
