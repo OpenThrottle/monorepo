@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import {
   PLAN_RUN_JOB_NAME,
@@ -19,6 +20,26 @@ describe('cancelPlanRunJobsForPlan', () => {
     expect(result.matchingJobCount).toBe(0);
     expect(result.removedJobIds).toEqual([]);
     expect(result.lockedActiveJobIds).toEqual([]);
+  });
+
+  test('removes waiting run-plan-orchestrator job and records id', async () => {
+    const remove = vi.fn().mockResolvedValue(undefined);
+    const job = {
+      data: { planId: 'plan-1', runKind: 'orchestrator' as const },
+      id: 'j-orch',
+      name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+      remove,
+    };
+    const getJobs = vi.fn().mockResolvedValue([job]);
+    const queue = createMock<Queue<RunPlanJobData, void>>({
+      getJobs,
+    });
+
+    const result = await cancelPlanRunJobsForPlan(queue, 'plan-1');
+
+    expect(remove).toHaveBeenCalledOnce();
+    expect(result.removedJobIds).toEqual(['j-orch']);
+    expect(result.matchingJobCount).toBe(1);
   });
 
   test('removes waiting run-plan job and records id', async () => {

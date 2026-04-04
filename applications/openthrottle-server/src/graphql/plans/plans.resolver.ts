@@ -33,6 +33,7 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
+  RUN_PLAN_SPAWN_JOB_NAME,
 } from '../../queues/plans/plans.constants';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
@@ -590,7 +591,7 @@ export class PlansResolver {
     }
 
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-    const job = await this.plansQueue.add('run-plan', jobData, {
+    const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
       priority: jobPriority,
     });
 

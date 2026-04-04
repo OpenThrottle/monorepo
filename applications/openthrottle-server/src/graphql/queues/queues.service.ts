@@ -14,7 +14,10 @@ import type {
   DocIngestionJobPayload,
   DocIngestionJobResult,
 } from '../../queues/doc-ingestion/doc-ingestion.types';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import {
+  PLANS_QUEUE_NAME,
+  RUN_PLAN_SPAWN_JOB_NAME,
+} from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 
 /** @description Job data type for dynamically created queues (no fixed schema). */
@@ -352,7 +355,7 @@ export class QueuesService implements OnModuleDestroy {
       return { error: 'Job not found' };
     }
 
-    const jobName = job.name ?? 'run-plan';
+    const jobName = job.name ?? RUN_PLAN_SPAWN_JOB_NAME;
     const jobData = job.data;
     const newJob = await queue.add(jobName, jobData);
     if (newJob.id == null) {

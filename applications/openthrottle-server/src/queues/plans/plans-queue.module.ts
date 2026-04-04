@@ -11,6 +11,11 @@ import { PLANS_QUEUE_NAME } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
 
+/**
+ * @description Registers the single BullMQ **queue** {@link PLANS_QUEUE_NAME} (`plans`) and the plans worker.
+ * In-process Ralph orchestrator jobs share this queue with spawn jobs (see `plans.types.ts`); there is no
+ * separate Ralph queue. Bull Board lists this queue via {@link NestjsBullmqBoardModule.forFeature}.
+ */
 @Module({
   exports: [BullModule, PlanRunCancellationService],
   imports: [
