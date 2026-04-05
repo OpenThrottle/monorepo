@@ -26,7 +26,7 @@ export class GqlPermissionsGuard {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // FIXME: ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
+    // FIXME: APP_ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
     const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
     if (!isAuthEnabled) return true;
 

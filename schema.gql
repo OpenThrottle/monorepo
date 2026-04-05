@@ -966,6 +966,27 @@ type StripeWebhookProcessedPayload {
   received: Boolean!
 }
 
+type SubscriptionObject {
+  cancelAtPeriodEnd: Boolean!
+  createdAt: DateTime!
+  currentPeriodEnd: DateTime
+  currentPeriodStart: DateTime
+  id: String!
+  status: String!
+  stripeCustomerId: String
+  stripePriceId: String!
+  stripeSubscriptionId: String
+  updatedAt: DateTime!
+  userId: String!
+}
+
+type CreateCheckoutSessionPayload {
+  """
+  Redirect URL to Stripe Checkout. Null if user not found or session creation failed.
+  """
+  url: String
+}
+
 type PlanEmbeddingObject {
   content: String!
   createdAt: DateTime!
@@ -990,27 +1011,6 @@ type PlanOutputStreamChunkObject {
   """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
-}
-
-type SubscriptionObject {
-  cancelAtPeriodEnd: Boolean!
-  createdAt: DateTime!
-  currentPeriodEnd: DateTime
-  currentPeriodStart: DateTime
-  id: String!
-  status: String!
-  stripeCustomerId: String
-  stripePriceId: String!
-  stripeSubscriptionId: String
-  updatedAt: DateTime!
-  userId: String!
-}
-
-type CreateCheckoutSessionPayload {
-  """
-  Redirect URL to Stripe Checkout. Null if user not found or session creation failed.
-  """
-  url: String
 }
 
 type PermissionObject {
@@ -1280,6 +1280,15 @@ type Query {
   """List all notes, ordered by createdAt descending"""
   notes: [NoteObject!]!
 
+  """Active Stripe products (catalog). Does not require authentication."""
+  stripeProducts: [StripeProductObject!]!
+
+  """A single Stripe product by ID, or null if not found."""
+  stripeProduct(id: String!): StripeProductObject
+
+  """Current user's active subscription (entitlement). Null if none."""
+  mySubscription: SubscriptionObject
+
   """Get a plan embedding by ID"""
   planEmbedding(input: GetPlanEmbeddingInput!): PlanEmbeddingObject
 
@@ -1293,15 +1302,6 @@ type Query {
   List plan output stream chunks by plan ID, ordered by createdAt ascending
   """
   planOutputStreamChunks(input: ListPlanOutputStreamChunksInput!): [PlanOutputStreamChunkObject!]!
-
-  """Active Stripe products (catalog). Does not require authentication."""
-  stripeProducts: [StripeProductObject!]!
-
-  """A single Stripe product by ID, or null if not found."""
-  stripeProduct(id: String!): StripeProductObject
-
-  """Current user's active subscription (entitlement). Null if none."""
-  mySubscription: SubscriptionObject
 
   """Get a plan by ID"""
   plan(id: ID!): PlanObject
@@ -1796,13 +1796,13 @@ type Mutation {
   """Delete a note by ID"""
   deleteNote(id: ID!): Boolean!
 
-  """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
-  appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
-
   """
   Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup.
   """
   createCheckoutSession(input: CreateCheckoutSessionInput!): CreateCheckoutSessionPayload!
+
+  """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
+  appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
 
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
@@ -2032,17 +2032,6 @@ input UpdateNoteInput {
   id: ID!
 }
 
-input AppendPlanOutputInput {
-  """Content of the output chunk"""
-  content: String!
-
-  """Optional iteration number for the output chunk"""
-  iteration: Int
-
-  """Plan id to append output to"""
-  planId: ID!
-}
-
 input CreateCheckoutSessionInput {
   """URL to redirect to if the user cancels checkout."""
   cancelUrl: String!
@@ -2052,6 +2041,17 @@ input CreateCheckoutSessionInput {
 
   """URL to redirect to after successful payment."""
   successUrl: String!
+}
+
+input AppendPlanOutputInput {
+  """Content of the output chunk"""
+  content: String!
+
+  """Optional iteration number for the output chunk"""
+  iteration: Int
+
+  """Plan id to append output to"""
+  planId: ID!
 }
 
 input CreatePlanInput {

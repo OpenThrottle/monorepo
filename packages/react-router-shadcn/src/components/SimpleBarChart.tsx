@@ -3,35 +3,35 @@
 import * as React from 'react';
 import type { DataKey } from 'recharts';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { ChartContainer } from './Chart/ChartContainer';
+import { ChartTooltip } from './Chart/ChartTooltip';
+import { ChartTooltipContent } from './Chart/ChartTooltipContent';
 import type { ChartConfig } from './chart-config';
-import { ChartContainer } from './ChartContainer';
-import { ChartTooltip } from './ChartTooltip';
-import { ChartTooltipContent } from './ChartTooltipContent';
 
 const DEFAULT_COLOR = 'var(--chart-1)';
 
 export interface SimpleBarChartProps<
   T extends Record<string, string | number> = Record<string, string | number>,
 > {
-  /** Data rows; each must include the keys given by categoryKey and valueKey. */
-  readonly data: ReadonlyArray<T>;
   /** Key in each datum for the category (shown on X or Y axis). */
   readonly categoryKey: keyof T & string;
-  /** Key in each datum for the bar value. */
-  readonly valueKey: keyof T & string;
-  /** Optional label for the value series (tooltip/legend). */
-  readonly valueLabel?: string;
+  readonly className?: string;
   /** Bar fill color. Defaults to var(--chart-1). */
   readonly color?: string;
+  /** Data rows; each must include the keys given by categoryKey and valueKey. */
+  readonly data: ReadonlyArray<T>;
   /** Vertical bars (category on X) or horizontal bars (category on Y). */
   readonly layout?: 'horizontal' | 'vertical';
-  readonly className?: string;
   readonly margin?: {
     readonly top?: number;
     readonly right?: number;
     readonly bottom?: number;
     readonly left?: number;
   };
+  /** Key in each datum for the bar value. */
+  readonly valueKey: keyof T & string;
+  /** Optional label for the value series (tooltip/legend). */
+  readonly valueLabel?: string;
 }
 
 /**
@@ -41,16 +41,25 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
   props: SimpleBarChartProps<T>,
 ): React.ReactElement {
   const {
-    data,
     categoryKey,
+    className,
+    color = DEFAULT_COLOR,
+    data,
+    layout = 'horizontal',
+    margin = { bottom: 8, left: 0, right: 12, top: 4 },
     valueKey,
     valueLabel,
-    color = DEFAULT_COLOR,
-    layout = 'horizontal',
-    className,
-    margin = { bottom: 8, left: 0, right: 12, top: 4 },
   } = props;
 
+  // Hooks
+
+  // Setup
+  const isVertical = layout === 'vertical';
+
+  // Recharts `TypedDataKey<T>` does not accept `keyof T & string`; values are valid axis keys at runtime.
+  const categoryAxisKey = categoryKey as DataKey<T>;
+
+  // Handlers
   const config: ChartConfig = React.useMemo(
     () => ({
       [valueKey]: {
@@ -61,10 +70,11 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
     [valueKey, color, valueLabel],
   );
 
-  const isVertical = layout === 'vertical';
-  // Recharts `TypedDataKey<T>` does not accept `keyof T & string`; values are valid axis keys at runtime.
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- align with Recharts DataKey<T>
-  const categoryAxisKey = categoryKey as DataKey<T>;
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <ChartContainer className={className} config={config}>

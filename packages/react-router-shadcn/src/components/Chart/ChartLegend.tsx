@@ -25,3 +25,5 @@ export const ChartLegend = (props: ChartLegendProps): React.ReactElement => {
 
   return <RechartsLegend {...props} />;
 };
+
+ChartLegend.displayName = 'ChartLegend';

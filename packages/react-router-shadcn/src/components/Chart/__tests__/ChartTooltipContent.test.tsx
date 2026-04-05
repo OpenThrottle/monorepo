@@ -2,18 +2,25 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ChartConfigContext } from '../chart-config-context';
-import { ChartLegendContent } from '../ChartLegendContent';
-import type { ChartLegendContentProps } from '../ChartLegendContent';
+import { ChartConfigContext } from '../../chart-config-context';
+import { ChartTooltipContent } from '../ChartTooltipContent';
+import type { ChartTooltipContentProps } from '../ChartTooltipContent';
 
-describe('ChartLegendContent Component', () => {
+describe('ChartTooltipContent Component', () => {
   let component: RenderResult;
-  let props: ChartLegendContentProps;
+  let props: ChartTooltipContentProps;
 
   beforeEach(() => {
     props = {
+      active: true,
+      label: 'Q1',
       payload: [
-        { color: '#222222', dataKey: 'sales', value: 'sales' },
+        {
+          dataKey: 'sales',
+          name: 'sales',
+          payload: { name: 'Region A' },
+          value: 12.34,
+        },
       ],
     };
 
@@ -23,7 +30,7 @@ describe('ChartLegendContent Component', () => {
           sales: { color: '#111111', label: 'Sales' },
         }}
       >
-        <ChartLegendContent {...props} />
+        <ChartTooltipContent {...props} />
       </ChartConfigContext.Provider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

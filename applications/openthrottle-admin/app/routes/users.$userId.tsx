@@ -389,37 +389,6 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   try {
-    if (intent === 'updateUser') {
-      const email = formData.get('email');
-      const githubUsername = formData.get('githubUsername');
-      await executeGraphqlWithAuth(request, UpdateUserDocument, {
-        input: {
-          email:
-            typeof email === 'string' && email.trim()
-              ? email.trim()
-              : undefined,
-          githubUsername:
-            typeof githubUsername === 'string' && githubUsername.trim()
-              ? githubUsername.trim()
-              : undefined,
-          id: userId,
-        },
-      });
-      return { ok: true };
-    }
-
-    if (intent === 'disableUser') {
-      await executeGraphqlWithAuth(request, DisableUserDocument, {
-        id: userId,
-      });
-      return { ok: true };
-    }
-
-    if (intent === 'enableUser') {
-      await executeGraphqlWithAuth(request, EnableUserDocument, { id: userId });
-      return { ok: true };
-    }
-
     if (intent === 'assignRole') {
       const roleId = formData.get('roleId');
 
@@ -430,6 +399,20 @@ export const action = async (args: Route.ActionArgs) => {
 
         return { ok: true };
       }
+    }
+
+    if (intent === 'disableUser') {
+      await executeGraphqlWithAuth(request, DisableUserDocument, {
+        id: userId,
+      });
+
+      return { ok: true };
+    }
+
+    if (intent === 'enableUser') {
+      await executeGraphqlWithAuth(request, EnableUserDocument, { id: userId });
+
+      return { ok: true };
     }
 
     if (intent === 'removeRole') {
@@ -443,8 +426,30 @@ export const action = async (args: Route.ActionArgs) => {
         return { ok: true };
       }
     }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Action failed';
+
+    if (intent === 'updateUser') {
+      const email = formData.get('email');
+      const githubUsername = formData.get('githubUsername');
+
+      await executeGraphqlWithAuth(request, UpdateUserDocument, {
+        input: {
+          email:
+            typeof email === 'string' && email.trim()
+              ? email.trim()
+              : undefined,
+          githubUsername:
+            typeof githubUsername === 'string' && githubUsername.trim()
+              ? githubUsername.trim()
+              : undefined,
+          id: userId,
+        },
+      });
+
+      return { ok: true };
+    }
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : 'Action failed';
 
     return { error: message };
   }

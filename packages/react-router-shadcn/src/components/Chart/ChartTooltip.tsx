@@ -24,3 +24,5 @@ export const ChartTooltip = (props: ChartTooltipProps): React.ReactElement => {
 
   return <RechartsTooltip {...props} />;
 };
+
+ChartTooltip.displayName = 'ChartTooltip';

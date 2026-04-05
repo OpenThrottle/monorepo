@@ -10,7 +10,8 @@ import { IoAdapter } from '@openthrottle/nestjs-websockets';
 import { AppModule } from './app.module';
 
 /**
- * Bootstrap OpenThrottle server: NestJS backend for the OpenThrottle platform.
+ * @description Bootstrap our NestJS + GraphQL + Websockets backend for
+ * the OpenThrottle platform.
  */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -42,10 +43,10 @@ async function bootstrap(): Promise<void> {
   /** @external https://docs.nestjs.com/techniques/logger#dependency-injection */
   app.useLogger(logger);
 
-  /** Use Socket.IO adapter so @openthrottle/nestjs-websockets gateway works. */
+  /** Use Socket.IO adapter so @openthrottle/nestjs-websockets gateway. */
   app.useWebSocketAdapter(new IoAdapter(app));
 
-  // // Global middleware to set response headers
+  // Global middleware to set response headers
   // app.use(setHeadersMiddleware);
 
   /** @external https://github.com/meabed/graphql-upload-ts */
@@ -68,22 +69,20 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(port);
 
-  // logger.info(`\n\n\n  🚀 Application is running on: ${url} \n\n`);
-  console.info(`\n\n\n  🚀 Application is running on: ${url} \n\n`);
-
-  // logger.info('📦 nestjs-tester 📦', { ANOTHER_VALUE, NESTJS_TESTER_UTILS });
+  logger.info(`\n\n\n  🚀 Application is running on: ${url} \n\n`);
 }
 
+// /**
+//  * @description Middleware to set response headers
+//  */
 // const setHeadersMiddleware = (
 //   _req: Request,
 //   res: Response,
 //   next: NextFunction,
 // ) => {
-//   res.set({
-//     'X-App-Name': process.env.APP_NAME,
-//     'X-App-Version': process.env.APP_VERSION,
-//   });
-
+//   res.headers.set('X-App-Name', process.env.APP_NAME!);
+//   res.headers.set('X-App-Version', process.env.APP_VERSION!);
+//
 //   next();
 // };
 
@@ -93,13 +92,13 @@ async function bootstrap(): Promise<void> {
  */
 
 process.on('uncaughtException', (error) => {
-  console.error(`🚨 There was an "uncaughtException", process exiting`, error);
+  console.error(`🚨 There was an "uncaughtException" exiting`, error);
 
   process.exit(1);
 });
 
 process.on('unhandledRejection', (error) => {
-  console.error(`🚨 There was an "unhandledRejection", process exiting`, error);
+  console.error(`🚨 There was an "unhandledRejection" exiting`, error);
 
   process.exit(1);
 });

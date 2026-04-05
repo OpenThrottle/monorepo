@@ -25,7 +25,8 @@ const parseOptionalStringArray = (
 };
 
 /**
- * @description Returns the JWT payload from an HTTP-like request object, or undefined if missing/invalid.
+ * @description Returns the JWT payload from an HTTP-like request object,
+ * or undefined if missing/invalid.
  */
 export const getJwtPayloadFromRequest = (
   req: unknown,
@@ -47,9 +48,9 @@ export const getJwtPayloadFromRequest = (
   }
 
   const emailUnknown: unknown = Reflect.get(userUnknown, 'email');
-  const rolesUnknown: unknown = Reflect.get(userUnknown, 'roles');
   const expUnknown: unknown = Reflect.get(userUnknown, 'exp');
   const iatUnknown: unknown = Reflect.get(userUnknown, 'iat');
+  const rolesUnknown: unknown = Reflect.get(userUnknown, 'roles');
 
   const roles = parseOptionalStringArray(rolesUnknown);
 

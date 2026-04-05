@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { getChartColor, readUnknownRecordValue } from './chart-config';
-import { useChartConfig } from './chart-config-context';
+import { getChartColor, readUnknownRecordValue } from '../chart-config';
+import { useChartConfig } from '../chart-config-context';
 
 export interface ChartTooltipContentProps {
   readonly active?: boolean;
@@ -102,7 +102,7 @@ export const ChartTooltipContent = (
                 />
               )}
               <span className="flex-1 text-muted-foreground">{name}</span>
-              <span className="font-medium">{Number(value).toFixed(2)}</span>
+              <span className="font-medium">{value}</span>
             </div>
           );
         })}
@@ -110,3 +110,5 @@ export const ChartTooltipContent = (
     </div>
   );
 };
+
+ChartTooltipContent.displayName = 'ChartTooltipContent';

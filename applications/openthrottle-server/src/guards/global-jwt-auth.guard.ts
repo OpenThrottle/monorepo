@@ -1,9 +1,3 @@
-/**
- * @description Global JWT guard that enforces auth on all resolvers/controllers unless marked @Public().
- * Use as APP_GUARD; mark login and health with @Public().
- * After a successful JWT check, populates {@link GlobalClsService} via {@link GlobalClsAuthHook} (GraphQL + REST).
- */
-
 import {
   type ExecutionContext,
   Injectable,
@@ -17,6 +11,11 @@ import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
 import { getJwtPayloadFromRequest } from './jwt-payload-from-request';
 
+/**
+ * @description Global JWT guard that enforces auth on all resolvers/controllers unless marked @Public().
+ * Use as APP_GUARD; mark login and health with @Public().
+ * After a successful JWT check, populates {@link GlobalClsService} via {@link GlobalClsAuthHook} (GraphQL + REST).
+ */
 @Injectable()
 export class GlobalJwtAuthGuard implements CanActivate {
   constructor(
@@ -27,7 +26,7 @@ export class GlobalJwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // FIXME: ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
+    // FIXME: APP_ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
     const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
     if (!isAuthEnabled) return true;
 

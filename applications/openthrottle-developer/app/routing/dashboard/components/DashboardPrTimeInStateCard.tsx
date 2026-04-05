@@ -80,7 +80,13 @@ export const DashboardPrTimeInStateCard = (
             tickMargin={8}
           />
           <YAxis axisLine={false} tickLine={false} tickMargin={4} width={36} />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value) => Number(value).toFixed(2)}
+              />
+            }
+          />
           <Bar
             dataKey="count"
             fill="var(--color-count)"

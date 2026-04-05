@@ -1,10 +1,9 @@
-/**
- * @description Resolves the HTTP request from either GraphQL or HTTP execution context.
- */
-
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
+/**
+ * @description Resolves the HTTP request from either GraphQL or HTTP execution context.
+ */
 export const getRequestFromExecutionContext = (
   context: ExecutionContext,
 ): unknown => {

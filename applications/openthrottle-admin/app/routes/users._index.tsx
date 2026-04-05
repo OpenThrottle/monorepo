@@ -15,11 +15,12 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/users._index';
 import { UsersTable } from '~/routing/users/components/UsersTable';
+import type { Route } from '@/app/routes/+types/users._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
+
   try {
     const data = await executeGraphqlWithAuth(request, GetUsersDocument);
     return { users: data.users };
@@ -30,6 +31,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     ) {
       return redirect('/');
     }
+
     throw err;
   }
 };
@@ -57,8 +59,24 @@ export default function Component(
   // Handlers
 
   // Markup
-  const renderSheet = () => {
-    return (
+
+  // Life Cycle
+  React.useEffect(() => {
+    if (createSuccess) setCreateOpen(false);
+
+    // 🪝 On success we close the create modal
+  }, [createSuccess]);
+
+  // 🔌 Short Circuit
+
+  return (
+    <>
+      <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-xl text-highlight">Users</h1>
+        </div>
+        <UsersTable users={users} />
+      </main>
       <Sheet onOpenChange={setCreateOpen} open={createOpen}>
         <SheetTrigger asChild={true}>
           <Button size="xs" type="button">
@@ -116,26 +134,7 @@ export default function Component(
           </CreateUserForm>
         </SheetContent>
       </Sheet>
-    );
-  };
-
-  // Life Cycle
-  React.useEffect(() => {
-    if (createSuccess) setCreateOpen(false);
-
-    // 🪝 On success we close the create modal
-  }, [createSuccess]);
-
-  // 🔌 Short Circuit
-
-  return (
-    <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl text-highlight">Users</h1>
-        {renderSheet()}
-      </div>
-      <UsersTable users={users} />
-    </main>
+    </>
   );
 }
 

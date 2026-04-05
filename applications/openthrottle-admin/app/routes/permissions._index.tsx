@@ -5,20 +5,8 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetPermissionsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/permissions._index';
 import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
-
-export interface PermissionsIndexLoaderData {
-  permissions: Array<{
-    id: string;
-    name: string;
-    description?: string | null;
-  }>;
-}
-
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+import type { Route } from '@/app/routes/+types/permissions._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;

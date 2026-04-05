@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { getChartColor, readUnknownRecordValue } from './chart-config';
-import { useChartConfig } from './chart-config-context';
+import { getChartColor, readUnknownRecordValue } from '../chart-config';
+import { useChartConfig } from '../chart-config-context';
 
 export interface ChartLegendContentProps {
   readonly payload?: ReadonlyArray<{
@@ -70,3 +70,5 @@ export const ChartLegendContent = (
     </div>
   );
 };
+
+ChartLegendContent.displayName = 'ChartLegendContent';

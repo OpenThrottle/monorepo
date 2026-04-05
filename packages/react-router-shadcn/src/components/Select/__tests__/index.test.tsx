@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '../Select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '../index';
 
 describe('Select', () => {
   it('should render root', () => {

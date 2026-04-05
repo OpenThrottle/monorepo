@@ -38,14 +38,12 @@ export const loader = async (args: Route.LoaderArgs) => {
       GetDashboardDocument,
       variables,
     );
-    const { activityByDate, dailyStatsRange, queues } = result;
 
+    const { activityByDate, dailyStatsRange, queues } = result;
     const githubStats = await executeGraphqlWithAuth(
       args.request,
       GetDashboardGithubStatsDocument,
-      {
-        input: { owner: 'visormatt', repo: 'monorepo', state: 'draft' },
-      },
+      { input: { owner: 'visormatt', repo: 'monorepo', state: 'draft' } },
     );
 
     return { activityByDate, dailyStatsRange, githubStats, queues };
@@ -95,8 +93,6 @@ export default function Component(
         <OpenThrottleStatCard title="Active tasks" value={3} />
         <OpenThrottleStatCard title="Scheduled tasks" value={23} />
       </div>
-
-      {/* <GlobalHeading heading="Dashboard" /> */}
 
       <div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
@@ -175,20 +171,20 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
 
-  if (intent !== 'triggerWebsocketNotification') {
-    return {};
+  if (intent === 'triggerWebsocketNotification') {
+    try {
+      await executeGraphqlWithAuth(args.request, TriggerNotificationDocument);
+
+      return { devTriggerWebsocket: { success: true } };
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { devTriggerWebsocket: { error: message } };
+    }
   }
 
-  try {
-    await executeGraphqlWithAuth(args.request, TriggerNotificationDocument);
-
-    return { devTriggerWebsocket: { success: true } };
-  } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-
-    return { devTriggerWebsocket: { error: message } };
-  }
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

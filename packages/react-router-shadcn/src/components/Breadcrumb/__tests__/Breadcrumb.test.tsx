@@ -1,0 +1,24 @@
+import { render } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { Breadcrumb } from '../Breadcrumb';
+import type { BreadcrumbProps } from '../Breadcrumb';
+
+describe('Breadcrumb Component', () => {
+  let component: RenderResult;
+  let props: BreadcrumbProps;
+
+  beforeEach(() => {
+    props = {};
+
+    const Component = () => <Breadcrumb {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+    component = render(<RoutesStub />);
+  });
+
+  test('should render', () => {
+    expect(component.baseElement).toMatchSnapshot();
+  });
+});
