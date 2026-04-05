@@ -4,8 +4,8 @@ import { SetMetadata } from '@nestjs/common';
 export const IS_PUBLIC_KEY = 'isPublic';
 
 /**
- * @description Marks a route as public (no JWT required). Use when you have a global JwtAuthGuard
- * but want to skip it for specific routes (e.g. login, health).
+ * @description Marks a route as public (no JWT required). Use when you have a
+ * global JwtAuthGuard but want to skip it for specific routes (e.g. login, health).
  *
  * @example
  * ```ts

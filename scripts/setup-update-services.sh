@@ -57,7 +57,6 @@ do
     # Store the branch name
     BRANCH=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
-
     # Ensure the repo exists, otherwise log it
     if git ls-remote --exit-code > /dev/null 2>&1;
     then
