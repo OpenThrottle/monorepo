@@ -93,7 +93,7 @@
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

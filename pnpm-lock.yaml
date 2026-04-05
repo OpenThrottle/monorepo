@@ -34,27 +34,12 @@ importers:
       '@apollo/utils.keyvaluecache':
         specifier: ^4.0.0
         version: 4.0.0
-      '@aws-sdk/client-s3':
-        specifier: ^3.971.0
-        version: 3.1014.0
       '@faker-js/faker':
         specifier: ^10.2.0
         version: 10.3.0
-      '@fireworks-js/react':
-        specifier: ^2.10.8
-        version: 2.10.8(@types/react@19.2.7)(react@19.2.3)
       '@golevelup/ts-vitest':
         specifier: ^2.2.0
         version: 2.2.0
-      '@googlemaps/js-api-loader':
-        specifier: ^2.0.2
-        version: 2.0.2
-      '@graphcms/rich-text-react-renderer':
-        specifier: ^0.6.2
-        version: 0.6.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@graphql-typed-document-node/core':
-        specifier: ^3.2.0
-        version: 3.2.0(graphql@16.13.1)
       '@headlessui/react':
         specifier: ^2.2.9
         version: 2.2.9(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -253,12 +238,6 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.2.7)(react@19.2.3)
-      '@react-email/components':
-        specifier: ^1.0.4
-        version: 1.0.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@react-google-maps/api':
-        specifier: ^2.20.8
-        version: 2.20.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@react-router/dev':
         specifier: ^7.13.1
         version: 7.13.1(@react-router/serve@7.13.1(react-router@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3))(@types/node@22.19.15)(babel-plugin-macros@3.1.0)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(react-router@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(sass-embedded@1.98.0)(sass@1.98.0)(terser@5.46.1)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.1(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.6.1)(less@4.6.4)(sass-embedded@1.98.0)(sass@1.98.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
@@ -364,9 +343,6 @@ importers:
       enhanced-resolve:
         specifier: ^5.18.4
         version: 5.20.1
-      fireworks-js:
-        specifier: ^2.10.8
-        version: 2.10.8
       focus-formik-error:
         specifier: ^1.1.0
         version: 1.1.0(formik@2.4.9(@types/react@19.2.7)(react@19.2.3))(react@19.2.3)
@@ -451,9 +427,6 @@ importers:
       motion:
         specifier: ^12.26.2
         version: 12.38.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      mysql2:
-        specifier: ^3.20.0
-        version: 3.20.0(@types/node@22.19.15)
       nestjs-cls:
         specifier: ^6.2.0
         version: 6.2.0(@nestjs/common@11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -502,9 +475,6 @@ importers:
       react-i18next:
         specifier: ^16.5.3
         version: 16.5.8(i18next@25.9.0(typescript@5.9.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
-      react-multi-carousel:
-        specifier: ^2.8.6
-        version: 2.8.6
       react-router:
         specifier: ^7.13.1
         version: 7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -731,9 +701,6 @@ importers:
       '@types/morgan':
         specifier: ^1.9.10
         version: 1.9.10
-      '@types/mysql':
-        specifier: ^2.15.27
-        version: 2.15.27
       '@types/node':
         specifier: ^22.19.11
         version: 22.19.15
@@ -746,9 +713,6 @@ importers:
       '@types/pluralize':
         specifier: ^0.0.33
         version: 0.0.33
-      '@types/prismjs':
-        specifier: ^1.26.5
-        version: 1.26.6
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
@@ -4868,15 +4832,6 @@ packages:
         integrity: sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==,
       }
 
-  '@fireworks-js/react@2.10.8':
-    resolution:
-      {
-        integrity: sha512-Qy/HSiTnph2IT2LHVzo9Ov+zifGQboTICjVLyrp/sWMHZoaodZiW0xrFxN1RfYI3R7j5bNZmf6S9EzqOWPfFWA==,
-      }
-    peerDependencies:
-      '@types/react': '>=16.8.0'
-      react: 19.2.3
-
   '@floating-ui/core@1.7.5':
     resolution:
       {
@@ -4976,39 +4931,6 @@ packages:
         integrity: sha512-n2FjE7NAOYyshogdc7KQOl/VZb4sneqPjWouSyia9CMDdMhRX5+RIbqalNmC7LOLzuLAN89VlF2HvG8na9G+zQ==,
       }
     engines: { node: '>=14' }
-
-  '@googlemaps/js-api-loader@1.16.8':
-    resolution:
-      {
-        integrity: sha512-CROqqwfKotdO6EBjZO/gQGVTbeDps5V7Mt9+8+5Q+jTg5CRMi3Ii/L9PmV3USROrt2uWxtGzJHORmByxyo9pSQ==,
-      }
-
-  '@googlemaps/js-api-loader@2.0.2':
-    resolution:
-      {
-        integrity: sha512-bKVuTqatS8Jven5aFqVB7rCHF1VFEzpzyi0ruzO0GUR+A7m9oMqMgtnmpANj7kMYEvvhty8Fk7TnJ1MKjWHu+Q==,
-      }
-
-  '@googlemaps/markerclusterer@2.5.3':
-    resolution:
-      {
-        integrity: sha512-x7lX0R5yYOoiNectr10wLgCBasNcXFHiADIBdmn7jQllF2B5ENQw5XtZK+hIw4xnV0Df0xhN4LN98XqA5jaiOw==,
-      }
-
-  '@graphcms/rich-text-react-renderer@0.6.2':
-    resolution:
-      {
-        integrity: sha512-eQpHtAixJZwKM61/tvucKMJ+fCEv0WRXJoTGAG/AW3Xalg3BFZhsp3x/mQJra+DpS6H0hjG+h8cXzDwq/lQPfA==,
-      }
-    peerDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3
-
-  '@graphcms/rich-text-types@0.5.1':
-    resolution:
-      {
-        integrity: sha512-bjlkaTMllpHtgqZ1w3MbxFSWXt11l6OvQir58YQHgFUy23sIGk1L4GyoM1WwOYcC4dKqOST86Nrh0Tu4wYTTLQ==,
-      }
 
   '@graphql-codegen/add@6.0.0':
     resolution:
@@ -10144,249 +10066,6 @@ packages:
         integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==,
       }
 
-  '@react-email/body@0.3.0':
-    resolution:
-      {
-        integrity: sha512-uGo0BOOzjbMUo3lu+BIDWayvn5o6Xyfmnlla5VGf05n8gHMvO1ll7U4FtzWe3hxMLwt53pmc4iE0M+B5slG+Ug==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/button@0.2.1':
-    resolution:
-      {
-        integrity: sha512-qXyj7RZLE7POy9BMKSoqQ00tOXThjOZSUnI2Yu9i29IHngPlmrNayIWBoVKtElES7OWwypUcpiajwi1mUWx6/A==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/code-block@0.2.1':
-    resolution:
-      {
-        integrity: sha512-M3B7JpVH4ytgn83/ujRR1k1DQHvTeABiDM61OvAbjLRPhC/5KLHU5KkzIbbuGIrjWwxAbL1kSQzU8MhLEtSxyw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/code-inline@0.0.6':
-    resolution:
-      {
-        integrity: sha512-jfhebvv3dVsp3OdPgKXnk8+e2pBiDVZejDOBFzBa/IblrAJ9cQDkN6rBD5IyEg8hTOxwbw3iaI/yZFmDmIguIA==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/column@0.0.14':
-    resolution:
-      {
-        integrity: sha512-f+W+Bk2AjNO77zynE33rHuQhyqVICx4RYtGX9NKsGUg0wWjdGP0qAuIkhx9Rnmk4/hFMo1fUrtYNqca9fwJdHg==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/components@1.0.10':
-    resolution:
-      {
-        integrity: sha512-r/BnqfAjr3apcvn/NDx2DqNRD5BP5wZLRdjn2IVHXjt4KmQ5RHWSCAvFiXAzRHys1BWQ2zgIc7cpWePUcAl+nw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/container@0.0.16':
-    resolution:
-      {
-        integrity: sha512-QWBB56RkkU0AJ9h+qy33gfT5iuZknPC7Un/IjZv9B0QmMIK+WWacc0cH6y2SV5Cv/b99hU94fjEMOOO4enpkbQ==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/font@0.0.10':
-    resolution:
-      {
-        integrity: sha512-0urVSgCmQIfx5r7Xc586miBnQUVnGp3OTYUm8m5pwtQRdTRO5XrTtEfNJ3JhYhSOruV0nD8fd+dXtKXobum6tA==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/head@0.0.13':
-    resolution:
-      {
-        integrity: sha512-AJg6le/08Gz4tm+6MtKXqtNNyKHzmooOCdmtqmWxD7FxoAdU1eVcizhtQ0gcnVaY6ethEyE/hnEzQxt1zu5Kog==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/heading@0.0.16':
-    resolution:
-      {
-        integrity: sha512-jmsKnQm1ykpBzw4hCYHwBkt5pW2jScXffPeEH5ZRF5tZeF5b1pvlFTO9han7C0pCkZYo1kEvWiRtx69yfCIwuw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/hr@0.0.12':
-    resolution:
-      {
-        integrity: sha512-TwmOmBDibavUQpXBxpmZYi2Iks/yeZOzFYh+di9EltMSnEabH8dMZXrl+pxNXzCgZ2XE8HY7VmUL65Lenfu5PA==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/html@0.0.12':
-    resolution:
-      {
-        integrity: sha512-KTShZesan+UsreU7PDUV90afrZwU5TLwYlALuCSU0OT+/U8lULNNbAUekg+tGwCnOfIKYtpDPKkAMRdYlqUznw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/img@0.0.12':
-    resolution:
-      {
-        integrity: sha512-sRCpEARNVTf3FQhZOC+JTvu5r6ubiYWkT0ucYXg8ctkyi4G8QG+jgYPiNUqVeTLA2STOfmPM/nrk1nb84y6CPQ==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/link@0.0.13':
-    resolution:
-      {
-        integrity: sha512-lkWc/NjOcefRZMkQoSDDbuKBEBDES9aXnFEOuPH845wD3TxPwh+QTf0fStuzjoRLUZWpHnio4z7qGGRYusn/sw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/markdown@0.0.18':
-    resolution:
-      {
-        integrity: sha512-gSuYK5fsMbGk87jDebqQ6fa2fKcWlkf2Dkva8kMONqLgGCq8/0d+ZQYMEJsdidIeBo3kmsnHZPrwdFB4HgjUXg==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/preview@0.0.14':
-    resolution:
-      {
-        integrity: sha512-aYK8q0IPkBXyMsbpMXgxazwHxYJxTrXrV95GFuu2HbEiIToMwSyUgb8HDFYwPqqfV03/jbwqlsXmFxsOd+VNaw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/render@2.0.4':
-    resolution:
-      {
-        integrity: sha512-kht2oTFQ1SwrLpd882ahTvUtNa9s53CERHstiTbzhm6aR2Hbykp/mQ4tpPvsBGkKAEvKRlDEoooh60Uk6nHK1g==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3
-
-  '@react-email/row@0.0.13':
-    resolution:
-      {
-        integrity: sha512-bYnOac40vIKCId7IkwuLAAsa3fKfSfqCvv6epJKmPE0JBuu5qI4FHFCl9o9dVpIIS08s/ub+Y/txoMt0dYziGw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/section@0.0.17':
-    resolution:
-      {
-        integrity: sha512-qNl65ye3W0Rd5udhdORzTV9ezjb+GFqQQSae03NDzXtmJq6sqVXNWNiVolAjvJNypim+zGXmv6J9TcV5aNtE/w==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-email/tailwind@2.0.6':
-    resolution:
-      {
-        integrity: sha512-3PgL/GYWmgS+puLPQ2aLlsplHSOFztRl70fowBkbLIb8ZUIgvx5YId6zYCCHeM2+DQ/EG3iXXqLNTahVztuMqQ==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      '@react-email/body': '>=0'
-      '@react-email/button': '>=0'
-      '@react-email/code-block': '>=0'
-      '@react-email/code-inline': '>=0'
-      '@react-email/container': '>=0'
-      '@react-email/heading': '>=0'
-      '@react-email/hr': '>=0'
-      '@react-email/img': '>=0'
-      '@react-email/link': '>=0'
-      '@react-email/preview': '>=0'
-      '@react-email/text': '>=0'
-      react: 19.2.3
-    peerDependenciesMeta:
-      '@react-email/body':
-        optional: true
-      '@react-email/button':
-        optional: true
-      '@react-email/code-block':
-        optional: true
-      '@react-email/code-inline':
-        optional: true
-      '@react-email/container':
-        optional: true
-      '@react-email/heading':
-        optional: true
-      '@react-email/hr':
-        optional: true
-      '@react-email/img':
-        optional: true
-      '@react-email/link':
-        optional: true
-      '@react-email/preview':
-        optional: true
-
-  '@react-email/text@0.1.6':
-    resolution:
-      {
-        integrity: sha512-TYqkioRS45wTR5il3dYk/SbUjjEdhSwh9BtRNB99qNH1pXAwA45H7rAuxehiu8iJQJH0IyIr+6n62gBz9ezmsw==,
-      }
-    engines: { node: '>=20.0.0' }
-    peerDependencies:
-      react: 19.2.3
-
-  '@react-google-maps/api@2.20.8':
-    resolution:
-      {
-        integrity: sha512-wtLYFtCGXK3qbIz1H5to3JxbosPnKsvjDKhqGylXUb859EskhzR7OpuNt0LqdLarXUtZCJTKzPn3BNaekNIahg==,
-      }
-    peerDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3
-
-  '@react-google-maps/infobox@2.20.0':
-    resolution:
-      {
-        integrity: sha512-03PJHjohhaVLkX6+NHhlr8CIlvUxWaXhryqDjyaZ8iIqqix/nV8GFdz9O3m5OsjtxtNho09F/15j14yV0nuyLQ==,
-      }
-
-  '@react-google-maps/marker-clusterer@2.20.0':
-    resolution:
-      {
-        integrity: sha512-tieX9Va5w1yP88vMgfH1pHTacDQ9TgDTjox3tLlisKDXRQWdjw+QeVVghhf5XqqIxXHgPdcGwBvKY6UP+SIvLw==,
-      }
-
   '@react-router/dev@7.13.1':
     resolution:
       {
@@ -12972,12 +12651,6 @@ packages:
         integrity: sha512-DSLCOXhkvfS5WNNPbfn2KdICAmk8lLc+/PNvnPnF7gOdMZCxopXduqv0OQ13y/yA/zXTSikZZqVgybUxOEg6YQ==,
       }
 
-  '@types/mysql@2.15.27':
-    resolution:
-      {
-        integrity: sha512-YfWiV16IY0OeBfBCk8+hXKmdTKrKlwKN1MNKAPBu5JYxLwBEZl7QzeEpGnlZb3VMGJrrGmB84gXiH+ofs/TezA==,
-      }
-
   '@types/node-fetch@2.6.13':
     resolution:
       {
@@ -13084,12 +12757,6 @@ packages:
     resolution:
       {
         integrity: sha512-JOqsl+ZoCpP4e8TDke9W79FDcSgPAR0l6pixx2JHkhnRjvShyYiAYw2LVsnA7K08Y6DeOnaU6ujmENO4os/cYg==,
-      }
-
-  '@types/prismjs@1.26.6':
-    resolution:
-      {
-        integrity: sha512-vqlvI7qlMvcCBbVe0AKAb4f97//Hy0EBTaiW8AalRnG/xAN5zOiWWyrNqNXeq8+KAuvRewjCVY1+IPxk4RdNYw==,
       }
 
   '@types/prompts@2.4.9':
@@ -16031,12 +15698,6 @@ packages:
       }
     deprecated: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
 
-  core-js@3.49.0:
-    resolution:
-      {
-        integrity: sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==,
-      }
-
   core-util-is@1.0.3:
     resolution:
       {
@@ -18364,12 +18025,6 @@ packages:
       }
     engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
 
-  fireworks-js@2.10.8:
-    resolution:
-      {
-        integrity: sha512-UZNxeJvRmQzLisN4iriWXqKojG9TDJqc0dPmkUw0/+AEQQ3w8z1Jx2YdFSiBGSVb/u4dPTQXU109GMVblzhfpg==,
-      }
-
   fishery@2.4.0:
     resolution:
       {
@@ -19778,13 +19433,6 @@ packages:
         integrity: sha512-lhYo5qNTQp3EvSSp3sRvXMbVQTLrvGV6DycRMJ5dm2BLMiJ30wpXKdDdgX+GmJZ5uQMucwRKHamXSst3Sj/Giw==,
       }
 
-  install@0.13.0:
-    resolution:
-      {
-        integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==,
-      }
-    engines: { node: '>= 0.10' }
-
   internal-slot@1.1.0:
     resolution:
       {
@@ -21003,12 +20651,6 @@ packages:
         integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==,
       }
 
-  kdbush@4.0.2:
-    resolution:
-      {
-        integrity: sha512-WbCVYJ27Sz8zi9Q7Q0xHC+05iwkm3Znipc2XTlrnJbsHMYktW4hPhXUE8Ys1engBrvffoSCqbil1JQAa7clRpA==,
-      }
-
   keygrip@1.1.0:
     resolution:
       {
@@ -21850,14 +21492,6 @@ packages:
     resolution:
       {
         integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==,
-      }
-    engines: { node: '>= 18' }
-    hasBin: true
-
-  marked@15.0.12:
-    resolution:
-      {
-        integrity: sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==,
       }
     engines: { node: '>= 18' }
     hasBin: true
@@ -22771,83 +22405,6 @@ packages:
         integrity: sha512-9qny7Z9DsQU8Ou39ERsPU4OZQlSTP47ShQzuKZ6PRXpYLtIFgl/DEBYEXKlvcEa+9tHVcK8CF81Y2V72qaZhWA==,
       }
     engines: { node: '>=18' }
-
-  npm@10.9.7:
-    resolution:
-      {
-        integrity: sha512-17u9+Ssv6as3iua2l6abTv1H4TtQDhle/Qn+XJ4TjKR4SzIjk1Ox3SZXRVBUW48KojLttHNQUk/U00m7sh1OGw==,
-      }
-    engines: { node: ^18.17.0 || >=20.5.0 }
-    hasBin: true
-    bundledDependencies:
-      - '@isaacs/string-locale-compare'
-      - '@npmcli/arborist'
-      - '@npmcli/config'
-      - '@npmcli/fs'
-      - '@npmcli/map-workspaces'
-      - '@npmcli/package-json'
-      - '@npmcli/promise-spawn'
-      - '@npmcli/redact'
-      - '@npmcli/run-script'
-      - '@sigstore/tuf'
-      - abbrev
-      - archy
-      - cacache
-      - chalk
-      - ci-info
-      - cli-columns
-      - fastest-levenshtein
-      - fs-minipass
-      - glob
-      - graceful-fs
-      - hosted-git-info
-      - ini
-      - init-package-json
-      - is-cidr
-      - json-parse-even-better-errors
-      - libnpmaccess
-      - libnpmdiff
-      - libnpmexec
-      - libnpmfund
-      - libnpmhook
-      - libnpmorg
-      - libnpmpack
-      - libnpmpublish
-      - libnpmsearch
-      - libnpmteam
-      - libnpmversion
-      - make-fetch-happen
-      - minimatch
-      - minipass
-      - minipass-pipeline
-      - ms
-      - node-gyp
-      - nopt
-      - normalize-package-data
-      - npm-audit-report
-      - npm-install-checks
-      - npm-package-arg
-      - npm-pick-manifest
-      - npm-profile
-      - npm-registry-fetch
-      - npm-user-validate
-      - p-map
-      - pacote
-      - parse-conflict-json
-      - proc-log
-      - qrcode-terminal
-      - read
-      - semver
-      - spdx-expression-parse
-      - ssri
-      - supports-color
-      - tar
-      - text-table
-      - tiny-relative-date
-      - treeverse
-      - validate-npm-package-name
-      - which
-      - write-file-atomic
 
   nth-check@2.1.1:
     resolution:
@@ -24866,13 +24423,6 @@ packages:
       }
     engines: { node: '>=18' }
 
-  prismjs@1.30.0:
-    resolution:
-      {
-        integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==,
-      }
-    engines: { node: '>=6' }
-
   process-nextick-args@2.0.1:
     resolution:
       {
@@ -25250,13 +24800,6 @@ packages:
       {
         integrity: sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==,
       }
-
-  react-multi-carousel@2.8.6:
-    resolution:
-      {
-        integrity: sha512-sAX5I9Xec3MR9FxLgZYcYqNnY8M8zJxRRwRipMPtuh4BGvcvoptJfX8Z6nRn0ROMkqVO72iAmb83GlqmSW4Gqw==,
-      }
-    engines: { node: '>=8' }
 
   react-redux@9.2.0:
     resolution:
@@ -27323,12 +26866,6 @@ packages:
     engines: { node: '>=16 || 14 >=14.17' }
     hasBin: true
 
-  supercluster@8.0.1:
-    resolution:
-      {
-        integrity: sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==,
-      }
-
   superjson@2.2.6:
     resolution:
       {
@@ -27501,12 +27038,6 @@ packages:
       }
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
-
-  tailwindcss@4.1.18:
-    resolution:
-      {
-        integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==,
-      }
 
   tailwindcss@4.2.2:
     resolution:
@@ -29986,12 +29517,14 @@ snapshots:
       '@aws-crypto/util': 5.2.0
       '@aws-sdk/types': 3.973.6
       tslib: 2.8.1
+    optional: true
 
   '@aws-crypto/crc32c@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
       '@aws-sdk/types': 3.973.6
       tslib: 2.8.1
+    optional: true
 
   '@aws-crypto/sha1-browser@5.2.0':
     dependencies:
@@ -30001,6 +29534,7 @@ snapshots:
       '@aws-sdk/util-locate-window': 3.965.5
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
+    optional: true
 
   '@aws-crypto/sha256-browser@5.2.0':
     dependencies:
@@ -30011,22 +29545,26 @@ snapshots:
       '@aws-sdk/util-locate-window': 3.965.5
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
+    optional: true
 
   '@aws-crypto/sha256-js@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
       '@aws-sdk/types': 3.973.6
       tslib: 2.8.1
+    optional: true
 
   '@aws-crypto/supports-web-crypto@5.2.0':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@aws-crypto/util@5.2.0':
     dependencies:
       '@aws-sdk/types': 3.973.6
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/client-s3@3.1014.0':
     dependencies:
@@ -30087,6 +29625,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/core@3.973.23':
     dependencies:
@@ -30103,11 +29642,13 @@ snapshots:
       '@smithy/util-middleware': 4.2.12
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/crc64-nvme@3.972.5':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/credential-provider-env@3.972.21':
     dependencies:
@@ -30116,6 +29657,7 @@ snapshots:
       '@smithy/property-provider': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/credential-provider-http@3.972.23':
     dependencies:
@@ -30129,6 +29671,7 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-stream': 4.5.20
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/credential-provider-ini@3.972.23':
     dependencies:
@@ -30148,6 +29691,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/credential-provider-login@3.972.23':
     dependencies:
@@ -30161,6 +29705,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/credential-provider-node@3.972.24':
     dependencies:
@@ -30178,6 +29723,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/credential-provider-process@3.972.21':
     dependencies:
@@ -30187,6 +29733,7 @@ snapshots:
       '@smithy/shared-ini-file-loader': 4.4.7
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/credential-provider-sso@3.972.23':
     dependencies:
@@ -30200,6 +29747,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/credential-provider-web-identity@3.972.23':
     dependencies:
@@ -30212,6 +29760,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/middleware-bucket-endpoint@3.972.8':
     dependencies:
@@ -30222,6 +29771,7 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-config-provider': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-expect-continue@3.972.8':
     dependencies:
@@ -30229,6 +29779,7 @@ snapshots:
       '@smithy/protocol-http': 5.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-flexible-checksums@3.974.3':
     dependencies:
@@ -30246,6 +29797,7 @@ snapshots:
       '@smithy/util-stream': 4.5.20
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-host-header@3.972.8':
     dependencies:
@@ -30253,18 +29805,21 @@ snapshots:
       '@smithy/protocol-http': 5.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-location-constraint@3.972.8':
     dependencies:
       '@aws-sdk/types': 3.973.6
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-logger@3.972.8':
     dependencies:
       '@aws-sdk/types': 3.973.6
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-recursion-detection@3.972.8':
     dependencies:
@@ -30273,6 +29828,7 @@ snapshots:
       '@smithy/protocol-http': 5.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-sdk-s3@3.972.23':
     dependencies:
@@ -30290,12 +29846,14 @@ snapshots:
       '@smithy/util-stream': 4.5.20
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-ssec@3.972.8':
     dependencies:
       '@aws-sdk/types': 3.973.6
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/middleware-user-agent@3.972.24':
     dependencies:
@@ -30307,6 +29865,7 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-retry': 4.2.12
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/nested-clients@3.996.13':
     dependencies:
@@ -30350,6 +29909,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/region-config-resolver@3.972.9':
     dependencies:
@@ -30358,6 +29918,7 @@ snapshots:
       '@smithy/node-config-provider': 4.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/signature-v4-multi-region@3.996.11':
     dependencies:
@@ -30367,6 +29928,7 @@ snapshots:
       '@smithy/signature-v4': 5.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/token-providers@3.1014.0':
     dependencies:
@@ -30379,15 +29941,18 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@aws-sdk/types@3.973.6':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/util-arn-parser@3.972.3':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/util-endpoints@3.996.5':
     dependencies:
@@ -30396,10 +29961,12 @@ snapshots:
       '@smithy/url-parser': 4.2.12
       '@smithy/util-endpoints': 3.3.3
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/util-locate-window@3.965.5':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/util-user-agent-browser@3.972.8':
     dependencies:
@@ -30407,6 +29974,7 @@ snapshots:
       '@smithy/types': 4.13.1
       bowser: 2.14.1
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/util-user-agent-node@3.973.10':
     dependencies:
@@ -30416,14 +29984,17 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-config-provider': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@aws-sdk/xml-builder@3.972.15':
     dependencies:
       '@smithy/types': 4.13.1
       fast-xml-parser: 5.5.8
       tslib: 2.8.1
+    optional: true
 
-  '@aws/lambda-invoke-store@0.2.4': {}
+  '@aws/lambda-invoke-store@0.2.4':
+    optional: true
 
   '@azu/format-text@1.0.2': {}
 
@@ -32267,12 +31838,6 @@ snapshots:
 
   '@fastify/busboy@3.2.0': {}
 
-  '@fireworks-js/react@2.10.8(@types/react@19.2.7)(react@19.2.3)':
-    dependencies:
-      '@types/react': 19.2.7
-      fireworks-js: 2.10.8
-      react: 19.2.3
-
   '@floating-ui/core@1.7.5':
     dependencies:
       '@floating-ui/utils': 0.2.11
@@ -32355,28 +31920,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-
-  '@googlemaps/js-api-loader@1.16.8': {}
-
-  '@googlemaps/js-api-loader@2.0.2':
-    dependencies:
-      '@types/google.maps': 3.58.1
-
-  '@googlemaps/markerclusterer@2.5.3':
-    dependencies:
-      fast-deep-equal: 3.1.3
-      supercluster: 8.0.1
-
-  '@graphcms/rich-text-react-renderer@0.6.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@graphcms/rich-text-types': 0.5.1
-      escape-html: 1.0.3
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-
-  '@graphcms/rich-text-types@0.5.1':
-    dependencies:
-      tslib: 2.8.1
 
   '@graphql-codegen/add@6.0.0(graphql@16.13.1)':
     dependencies:
@@ -37059,145 +36602,6 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-email/body@0.3.0(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/button@0.2.1(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/code-block@0.2.1(react@19.2.3)':
-    dependencies:
-      prismjs: 1.30.0
-      react: 19.2.3
-
-  '@react-email/code-inline@0.0.6(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/column@0.0.14(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/components@1.0.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@react-email/body': 0.3.0(react@19.2.3)
-      '@react-email/button': 0.2.1(react@19.2.3)
-      '@react-email/code-block': 0.2.1(react@19.2.3)
-      '@react-email/code-inline': 0.0.6(react@19.2.3)
-      '@react-email/column': 0.0.14(react@19.2.3)
-      '@react-email/container': 0.0.16(react@19.2.3)
-      '@react-email/font': 0.0.10(react@19.2.3)
-      '@react-email/head': 0.0.13(react@19.2.3)
-      '@react-email/heading': 0.0.16(react@19.2.3)
-      '@react-email/hr': 0.0.12(react@19.2.3)
-      '@react-email/html': 0.0.12(react@19.2.3)
-      '@react-email/img': 0.0.12(react@19.2.3)
-      '@react-email/link': 0.0.13(react@19.2.3)
-      '@react-email/markdown': 0.0.18(react@19.2.3)
-      '@react-email/preview': 0.0.14(react@19.2.3)
-      '@react-email/render': 2.0.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@react-email/row': 0.0.13(react@19.2.3)
-      '@react-email/section': 0.0.17(react@19.2.3)
-      '@react-email/tailwind': 2.0.6(@react-email/body@0.3.0(react@19.2.3))(@react-email/button@0.2.1(react@19.2.3))(@react-email/code-block@0.2.1(react@19.2.3))(@react-email/code-inline@0.0.6(react@19.2.3))(@react-email/container@0.0.16(react@19.2.3))(@react-email/heading@0.0.16(react@19.2.3))(@react-email/hr@0.0.12(react@19.2.3))(@react-email/img@0.0.12(react@19.2.3))(@react-email/link@0.0.13(react@19.2.3))(@react-email/preview@0.0.14(react@19.2.3))(@react-email/text@0.1.6(react@19.2.3))(react@19.2.3)
-      '@react-email/text': 0.1.6(react@19.2.3)
-      react: 19.2.3
-    transitivePeerDependencies:
-      - react-dom
-
-  '@react-email/container@0.0.16(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/font@0.0.10(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/head@0.0.13(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/heading@0.0.16(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/hr@0.0.12(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/html@0.0.12(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/img@0.0.12(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/link@0.0.13(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/markdown@0.0.18(react@19.2.3)':
-    dependencies:
-      marked: 15.0.12
-      react: 19.2.3
-
-  '@react-email/preview@0.0.14(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/render@2.0.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      html-to-text: 9.0.5
-      prettier: 3.8.1
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-
-  '@react-email/row@0.0.13(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/section@0.0.17(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-email/tailwind@2.0.6(@react-email/body@0.3.0(react@19.2.3))(@react-email/button@0.2.1(react@19.2.3))(@react-email/code-block@0.2.1(react@19.2.3))(@react-email/code-inline@0.0.6(react@19.2.3))(@react-email/container@0.0.16(react@19.2.3))(@react-email/heading@0.0.16(react@19.2.3))(@react-email/hr@0.0.12(react@19.2.3))(@react-email/img@0.0.12(react@19.2.3))(@react-email/link@0.0.13(react@19.2.3))(@react-email/preview@0.0.14(react@19.2.3))(@react-email/text@0.1.6(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@react-email/text': 0.1.6(react@19.2.3)
-      react: 19.2.3
-      tailwindcss: 4.1.18
-    optionalDependencies:
-      '@react-email/body': 0.3.0(react@19.2.3)
-      '@react-email/button': 0.2.1(react@19.2.3)
-      '@react-email/code-block': 0.2.1(react@19.2.3)
-      '@react-email/code-inline': 0.0.6(react@19.2.3)
-      '@react-email/container': 0.0.16(react@19.2.3)
-      '@react-email/heading': 0.0.16(react@19.2.3)
-      '@react-email/hr': 0.0.12(react@19.2.3)
-      '@react-email/img': 0.0.12(react@19.2.3)
-      '@react-email/link': 0.0.13(react@19.2.3)
-      '@react-email/preview': 0.0.14(react@19.2.3)
-
-  '@react-email/text@0.1.6(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
-  '@react-google-maps/api@2.20.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@googlemaps/js-api-loader': 1.16.8
-      '@googlemaps/markerclusterer': 2.5.3
-      '@react-google-maps/infobox': 2.20.0
-      '@react-google-maps/marker-clusterer': 2.20.0
-      '@types/google.maps': 3.58.1
-      invariant: 2.2.4
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-
-  '@react-google-maps/infobox@2.20.0': {}
-
-  '@react-google-maps/marker-clusterer@2.20.0': {}
-
   '@react-router/dev@7.13.1(@react-router/serve@7.13.1(react-router@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3))(@types/node@22.19.15)(babel-plugin-macros@3.1.0)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(react-router@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(sass-embedded@1.98.0)(sass@1.98.0)(terser@5.46.1)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.1(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.6.1)(less@4.6.4)(sass-embedded@1.98.0)(sass@1.98.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)':
     dependencies:
       '@babel/core': 7.29.0
@@ -37768,6 +37172,7 @@ snapshots:
     dependencies:
       domhandler: 5.0.3
       selderee: 0.11.0
+    optional: true
 
   '@sentry/core@9.47.1': {}
 
@@ -37861,15 +37266,18 @@ snapshots:
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/chunked-blob-reader-native@4.2.3':
     dependencies:
       '@smithy/util-base64': 4.3.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/chunked-blob-reader@5.2.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/config-resolver@4.4.13':
     dependencies:
@@ -37879,6 +37287,7 @@ snapshots:
       '@smithy/util-endpoints': 3.3.3
       '@smithy/util-middleware': 4.2.12
       tslib: 2.8.1
+    optional: true
 
   '@smithy/core@3.23.12':
     dependencies:
@@ -37892,6 +37301,7 @@ snapshots:
       '@smithy/util-utf8': 4.2.2
       '@smithy/uuid': 1.1.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/credential-provider-imds@4.2.12':
     dependencies:
@@ -37900,6 +37310,7 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/url-parser': 4.2.12
       tslib: 2.8.1
+    optional: true
 
   '@smithy/eventstream-codec@4.2.12':
     dependencies:
@@ -37907,29 +37318,34 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-hex-encoding': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/eventstream-serde-browser@4.2.12':
     dependencies:
       '@smithy/eventstream-serde-universal': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/eventstream-serde-config-resolver@4.3.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/eventstream-serde-node@4.2.12':
     dependencies:
       '@smithy/eventstream-serde-universal': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/eventstream-serde-universal@4.2.12':
     dependencies:
       '@smithy/eventstream-codec': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/fetch-http-handler@5.3.15':
     dependencies:
@@ -37938,6 +37354,7 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-base64': 4.3.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/hash-blob-browser@4.2.13':
     dependencies:
@@ -37945,6 +37362,7 @@ snapshots:
       '@smithy/chunked-blob-reader-native': 4.2.3
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/hash-node@4.2.12':
     dependencies:
@@ -37952,37 +37370,44 @@ snapshots:
       '@smithy/util-buffer-from': 4.2.2
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/hash-stream-node@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/invalid-dependency@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/is-array-buffer@2.2.0':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/is-array-buffer@4.2.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/md5-js@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/middleware-content-length@4.2.12':
     dependencies:
       '@smithy/protocol-http': 5.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/middleware-endpoint@4.4.27':
     dependencies:
@@ -37994,6 +37419,7 @@ snapshots:
       '@smithy/url-parser': 4.2.12
       '@smithy/util-middleware': 4.2.12
       tslib: 2.8.1
+    optional: true
 
   '@smithy/middleware-retry@4.4.44':
     dependencies:
@@ -38006,6 +37432,7 @@ snapshots:
       '@smithy/util-retry': 4.2.12
       '@smithy/uuid': 1.1.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/middleware-serde@4.2.15':
     dependencies:
@@ -38013,11 +37440,13 @@ snapshots:
       '@smithy/protocol-http': 5.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/middleware-stack@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/node-config-provider@4.3.12':
     dependencies:
@@ -38025,6 +37454,7 @@ snapshots:
       '@smithy/shared-ini-file-loader': 4.4.7
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/node-http-handler@4.5.0':
     dependencies:
@@ -38033,36 +37463,43 @@ snapshots:
       '@smithy/querystring-builder': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/property-provider@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/protocol-http@5.3.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/querystring-builder@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       '@smithy/util-uri-escape': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/querystring-parser@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/service-error-classification@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
+    optional: true
 
   '@smithy/shared-ini-file-loader@4.4.7':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/signature-v4@5.3.12':
     dependencies:
@@ -38074,6 +37511,7 @@ snapshots:
       '@smithy/util-uri-escape': 4.2.2
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/smithy-client@4.12.7':
     dependencies:
@@ -38084,44 +37522,53 @@ snapshots:
       '@smithy/types': 4.13.1
       '@smithy/util-stream': 4.5.20
       tslib: 2.8.1
+    optional: true
 
   '@smithy/types@4.13.1':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/url-parser@4.2.12':
     dependencies:
       '@smithy/querystring-parser': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-base64@4.3.2':
     dependencies:
       '@smithy/util-buffer-from': 4.2.2
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-body-length-browser@4.2.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-body-length-node@4.2.3':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-buffer-from@2.2.0':
     dependencies:
       '@smithy/is-array-buffer': 2.2.0
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-buffer-from@4.2.2':
     dependencies:
       '@smithy/is-array-buffer': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-config-provider@4.2.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-defaults-mode-browser@4.3.43':
     dependencies:
@@ -38129,6 +37576,7 @@ snapshots:
       '@smithy/smithy-client': 4.12.7
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-defaults-mode-node@4.2.47':
     dependencies:
@@ -38139,27 +37587,32 @@ snapshots:
       '@smithy/smithy-client': 4.12.7
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-endpoints@3.3.3':
     dependencies:
       '@smithy/node-config-provider': 4.3.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-hex-encoding@4.2.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-middleware@4.2.12':
     dependencies:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-retry@4.2.12':
     dependencies:
       '@smithy/service-error-classification': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-stream@4.5.20':
     dependencies:
@@ -38171,30 +37624,36 @@ snapshots:
       '@smithy/util-hex-encoding': 4.2.2
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-uri-escape@4.2.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-utf8@2.3.0':
     dependencies:
       '@smithy/util-buffer-from': 2.2.0
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-utf8@4.2.2':
     dependencies:
       '@smithy/util-buffer-from': 4.2.2
       tslib: 2.8.1
+    optional: true
 
   '@smithy/util-waiter@4.2.13':
     dependencies:
       '@smithy/abort-controller': 4.2.12
       '@smithy/types': 4.13.1
       tslib: 2.8.1
+    optional: true
 
   '@smithy/uuid@1.1.2':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@so-ric/colorspace@1.1.6':
     dependencies:
@@ -38972,10 +38431,6 @@ snapshots:
     dependencies:
       '@types/node': 22.19.15
 
-  '@types/mysql@2.15.27':
-    dependencies:
-      '@types/node': 22.19.15
-
   '@types/node-fetch@2.6.13':
     dependencies:
       '@types/node': 22.19.15
@@ -39045,8 +38500,6 @@ snapshots:
   '@types/pidusage@2.0.5': {}
 
   '@types/pluralize@0.0.33': {}
-
-  '@types/prismjs@1.26.6': {}
 
   '@types/prompts@2.4.9':
     dependencies:
@@ -40037,7 +39490,8 @@ snapshots:
 
   await-to-js@3.0.0: {}
 
-  aws-ssl-profiles@1.1.2: {}
+  aws-ssl-profiles@1.1.2:
+    optional: true
 
   axe-core@4.11.1: {}
 
@@ -40330,7 +39784,8 @@ snapshots:
 
   boundary@2.0.0: {}
 
-  bowser@2.14.1: {}
+  bowser@2.14.1:
+    optional: true
 
   brace-expansion@1.1.12:
     dependencies:
@@ -40896,8 +40351,6 @@ snapshots:
       browserslist: 4.28.1
 
   core-js@3.10.2: {}
-
-  core-js@3.49.0: {}
 
   core-util-is@1.0.3: {}
 
@@ -42637,8 +42090,6 @@ snapshots:
       locate-path: 7.2.0
       path-exists: 5.0.0
 
-  fireworks-js@2.10.8: {}
-
   fishery@2.4.0:
     dependencies:
       lodash.mergewith: 4.6.2
@@ -42879,6 +42330,7 @@ snapshots:
   generate-function@2.3.1:
     dependencies:
       is-property: 1.0.2
+    optional: true
 
   generator-function@2.0.1: {}
 
@@ -43321,6 +42773,7 @@ snapshots:
       dom-serializer: 2.0.0
       htmlparser2: 8.0.2
       selderee: 0.11.0
+    optional: true
 
   html@1.0.0:
     dependencies:
@@ -43339,6 +42792,7 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.2.2
       entities: 4.5.0
+    optional: true
 
   http-assert@1.5.0:
     dependencies:
@@ -43604,8 +43058,6 @@ snapshots:
     dependencies:
       css-in-js-utils: 3.1.0
 
-  install@0.13.0: {}
-
   internal-slot@1.1.0:
     dependencies:
       es-errors: 1.3.0
@@ -43785,7 +43237,8 @@ snapshots:
 
   is-promise@4.0.0: {}
 
-  is-property@1.0.2: {}
+  is-property@1.0.2:
+    optional: true
 
   is-reference@1.2.1:
     dependencies:
@@ -44486,8 +43939,6 @@ snapshots:
       jwa: 2.0.1
       safe-buffer: 5.2.1
 
-  kdbush@4.0.2: {}
-
   keygrip@1.1.0:
     dependencies:
       tsscmp: 1.0.6
@@ -44669,7 +44120,8 @@ snapshots:
       picocolors: 1.1.1
       shell-quote: 1.8.3
 
-  leac@0.6.0: {}
+  leac@0.6.0:
+    optional: true
 
   legacy-javascript@0.0.1: {}
 
@@ -44952,7 +44404,8 @@ snapshots:
 
   long@4.0.0: {}
 
-  long@5.3.2: {}
+  long@5.3.2:
+    optional: true
 
   lookup-closest-locale@6.2.0: {}
 
@@ -44984,7 +44437,8 @@ snapshots:
 
   lru-cache@7.18.3: {}
 
-  lru.min@1.1.4: {}
+  lru.min@1.1.4:
+    optional: true
 
   lucide-react@0.577.0(react@19.2.3):
     dependencies:
@@ -45044,8 +44498,6 @@ snapshots:
       uc.micro: 2.1.0
 
   marked@14.0.0: {}
-
-  marked@15.0.12: {}
 
   marky@1.3.0: {}
 
@@ -45517,6 +44969,7 @@ snapshots:
       lru.min: 1.1.4
       named-placeholders: 1.1.6
       sql-escaper: 1.3.3
+    optional: true
 
   mysql2@3.20.0(@types/node@24.12.0):
     dependencies:
@@ -45540,6 +44993,7 @@ snapshots:
   named-placeholders@1.1.6:
     dependencies:
       lru.min: 1.1.4
+    optional: true
 
   nano-css@5.6.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
@@ -45684,8 +45138,6 @@ snapshots:
     dependencies:
       path-key: 4.0.0
       unicorn-magic: 0.3.0
-
-  npm@10.9.7: {}
 
   nth-check@2.1.1:
     dependencies:
@@ -46110,6 +45562,7 @@ snapshots:
     dependencies:
       leac: 0.6.0
       peberminta: 0.9.0
+    optional: true
 
   parseurl@1.3.3: {}
 
@@ -46199,7 +45652,8 @@ snapshots:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.80
 
-  peberminta@0.9.0: {}
+  peberminta@0.9.0:
+    optional: true
 
   peek-readable@4.1.0: {}
 
@@ -47003,8 +46457,6 @@ snapshots:
     dependencies:
       parse-ms: 4.0.0
 
-  prismjs@1.30.0: {}
-
   process-nextick-args@2.0.1: {}
 
   process-warning@5.0.0: {}
@@ -47268,12 +46720,6 @@ snapshots:
   react-is@19.2.4: {}
 
   react-lifecycles-compat@3.0.4: {}
-
-  react-multi-carousel@2.8.6:
-    dependencies:
-      core-js: 3.49.0
-      install: 0.13.0
-      npm: 10.9.7
 
   react-redux@9.2.0(@types/react@19.2.7)(react@19.2.3)(redux@5.0.1):
     dependencies:
@@ -48031,6 +47477,7 @@ snapshots:
   selderee@0.11.0:
     dependencies:
       parseley: 0.12.1
+    optional: true
 
   select-hose@2.0.0: {}
 
@@ -48480,7 +47927,8 @@ snapshots:
 
   sprintf-js@1.0.3: {}
 
-  sql-escaper@1.3.3: {}
+  sql-escaper@1.3.3:
+    optional: true
 
   sql-highlight@6.1.0: {}
 
@@ -48762,10 +48210,6 @@ snapshots:
       tinyglobby: 0.2.15
       ts-interface-checker: 0.1.13
 
-  supercluster@8.0.1:
-    dependencies:
-      kdbush: 4.0.2
-
   superjson@2.2.6:
     dependencies:
       copy-anything: 4.0.5
@@ -48864,8 +48308,6 @@ snapshots:
   tailwindcss-animate@1.0.7(tailwindcss@4.2.2):
     dependencies:
       tailwindcss: 4.2.2
-
-  tailwindcss@4.1.18: {}
 
   tailwindcss@4.2.2: {}
 

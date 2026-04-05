@@ -60,14 +60,15 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
 
 ## Applications
 
+- `6011` | OpenThrottle - Redis
+- `6010` | OpenThrottle - Postgres
+
 - `6022` | OpenThrottle Admin
 - `6023` | OpenThrottle CMS
 - `6020` | OpenThrottle Developer
 - `6024` | OpenThrottle Email
-- `6021` | OpenThrottle Server
+- `6021` | OpenThrottle Server (API)
 - `6025` | OpenThrottle Website
-- `6011` | OpenThrottle - Redis
-- `6010` | OpenThrottle - Postgres
 
 ## Installation
 
