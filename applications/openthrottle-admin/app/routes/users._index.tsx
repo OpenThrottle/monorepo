@@ -38,7 +38,7 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Users | ${SITE_TITLE}` }];
 };
 
-export default function UsersIndexPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;

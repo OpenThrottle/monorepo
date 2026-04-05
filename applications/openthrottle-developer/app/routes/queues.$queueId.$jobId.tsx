@@ -23,7 +23,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title: `${queueName} | Queues | ${SITE_TITLE}` }];
 });
 
-export default function QueueDetail(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks

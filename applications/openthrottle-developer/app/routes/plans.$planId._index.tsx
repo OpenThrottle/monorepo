@@ -86,7 +86,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title }];
 });
 
-export default function PlanDetail(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
   const { plan, tasks } = loaderData;
 

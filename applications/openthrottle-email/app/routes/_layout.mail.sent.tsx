@@ -8,6 +8,7 @@ import type { Route } from '@/app/routes/+types/_layout.mail.sent';
 // Sent folder list; same MessageList as inbox. Wire to API when backend is ready.
 export const loader = async (_args: Route.LoaderArgs) => {
   const messages = getMockMessages(MAIL_FOLDER_IDS.sent);
+
   return { messages };
 };
 
@@ -15,7 +16,11 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function Index({ loaderData }: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
   // Hooks
 
   // Setup

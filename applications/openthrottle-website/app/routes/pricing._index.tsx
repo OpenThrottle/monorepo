@@ -5,10 +5,6 @@ import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { buildCheckoutPath } from '~/routing/checkout/utils';
-// import {
-//   MOCK_COMPANY_TIERS,
-//   MOCK_PRICING_TIERS,
-// } from '~/routing/pricing/data/mock.pricing';
 import { parseIntervalFromSearchParams } from '~/routing/pricing/utils';
 import { PRICING_INTERVAL_PARAM } from '~/routing/pricing/config';
 import { PricingCard } from '~/routing/pricing/components/PricingCard';
@@ -37,7 +33,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Pricing | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks

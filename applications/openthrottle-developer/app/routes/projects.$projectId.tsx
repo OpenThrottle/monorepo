@@ -82,7 +82,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 
 type ProjectTabValue = 'overview' | 'tasks';
 
-export default function ProjectDetail(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks

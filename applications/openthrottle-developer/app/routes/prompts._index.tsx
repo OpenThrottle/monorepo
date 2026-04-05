@@ -84,8 +84,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Prompts | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
-  const { loaderData } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { limit, page, prompts, total, totalPages, types } = loaderData;
 
   // Hooks

@@ -64,8 +64,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Dashboard | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
-  const { loaderData, matches: _m, params: _p } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { activityByDate, dailyStatsRange, githubStats, queues } = loaderData;
 
   // Hooks

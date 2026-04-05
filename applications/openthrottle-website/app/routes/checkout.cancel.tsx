@@ -13,7 +13,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Checkout cancelled | ${SITE_TITLE}` }];
 });
 
-export default function CheckoutCancel(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks

@@ -24,8 +24,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create Prompt | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
-  const { actionData } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
   const fetcher = useFetcher();

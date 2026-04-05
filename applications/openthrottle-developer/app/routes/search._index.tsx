@@ -35,7 +35,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Search | ${SITE_TITLE}` }];
 });
 
-export default function SearchIndex(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { page, query: q, results } = loaderData;
 

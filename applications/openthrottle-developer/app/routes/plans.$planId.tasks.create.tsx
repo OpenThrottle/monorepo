@@ -24,6 +24,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     { id: planId },
   );
   const plan = result.plan ?? null;
+
   return { plan, planId };
 };
 
@@ -39,7 +40,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement | null {
   const { actionData, loaderData, matches: _m, params: _p } = props;
   const { planId } = loaderData;
 

@@ -143,7 +143,7 @@ export const meta = ({ data }: Route.MetaArgs) => {
   return [{ title }];
 };
 
-export default function RoleDetailPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;

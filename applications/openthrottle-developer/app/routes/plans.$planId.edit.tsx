@@ -36,7 +36,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
   const { plan } = loaderData;
 

@@ -25,7 +25,11 @@ export const meta = (_args: Route.MetaArgs) => {
   ];
 };
 
-export default function Index({ loaderData }: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
   // Hooks
   const [filter, setFilter] = React.useState<InboxFilter>('all');
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
