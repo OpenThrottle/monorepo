@@ -126,7 +126,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const canonical: string = request.url;
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
-  const isRestrictedAccess = process.env.ENABLE_AUTHENTICATION === 'true';
+  const isRestrictedAccess = process.env.APP_ENABLE_AUTHENTICATION === 'true';
 
   let serverHealth: ServerHealthObject = {
     api: 'ok',

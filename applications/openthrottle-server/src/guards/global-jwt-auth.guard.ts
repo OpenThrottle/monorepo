@@ -28,7 +28,7 @@ export class GlobalJwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // FIXME: ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
-    const isAuthEnabled = process.env.ENABLE_AUTHENTICATION === 'true';
+    const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
     if (!isAuthEnabled) return true;
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [

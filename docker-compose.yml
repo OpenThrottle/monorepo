@@ -47,10 +47,6 @@ services:
   #
   #     🤖 openthrottle-developer | React Router (MCP developer UI)
   #
-  #     Built from monorepo root per docs/openthrottle/docker-image-build-strategy.md.
-  #     Depends on openthrottle-server for GraphQL/OpenThrottle; run compose from repo root:
-  #     docker compose -f applications/openthrottle/docker-compose.yml up --build
-  #
   openthrottle-developer:
     build:
       args:
@@ -132,10 +128,6 @@ services:
   #############################################################################
   #
   #     🤖 openthrottle-server | NestJS API (GraphQL, Postgres, Redis, MCP)
-  #
-  #     Built from monorepo root per docs/openthrottle/docker-image-build-strategy.md.
-  #     Run compose from repo root so build context is correct:
-  #     docker compose -f applications/openthrottle/docker-compose.yml up openthrottle-server --build
   #
   openthrottle-server:
     build:
