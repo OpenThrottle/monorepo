@@ -6,5 +6,10 @@
     "rootDirs": ["./src", "./tests"]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
 }
