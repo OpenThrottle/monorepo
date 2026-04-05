@@ -1,13 +1,5 @@
 #!/usr/bin/env node
 
-/* eslint-disable no-await-in-loop */
-
-/**
- * @description Ingests plan JSON and optional output Markdown from plans/ into the Cortex Postgres database.
- * Read-only with respect to the filesystem; does not delete or modify plan files.
- * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Optional embeddings when OPENAI_API_KEY or OLLAMA_* is set (see @openthrottle/ai-mcp embedding).
- */
-
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from 'pg';
@@ -16,6 +8,14 @@ import {
   embedQuery,
   isOllamaEmbeddingConfigured,
 } from '@openthrottle/ai-mcp/src/embedding';
+
+/* eslint-disable no-await-in-loop */
+
+/**
+ * @description Ingests plan JSON and optional output Markdown from plans/ into the Cortex Postgres database.
+ * Read-only with respect to the filesystem; does not delete or modify plan files.
+ * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Optional embeddings when OPENAI_API_KEY or OLLAMA_* is set (see @openthrottle/ai-mcp embedding).
+ */
 
 const PLANS_ROOT = join(process.cwd(), 'plans');
 const TEMPLATES_DIR = 'templates';

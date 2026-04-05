@@ -20,8 +20,8 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
   const db = process.env.POSTGRES_DB;
   const host = process.env.POSTGRES_HOST;
   const password = process.env.POSTGRES_PASSWORD;
-  const user = process.env.POSTGRES_USER;
   const port = Number(process.env.POSTGRES_PORT);
+  const user = process.env.POSTGRES_USER;
 
   if (!db || !host || !password || !port || !user) {
     throw new Error(
@@ -42,7 +42,7 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
  * Reads GITHUB_USER (trimmed).
  */
 export function getDefaultGitHubUser(): string | undefined {
-  const v = process.env.GITHUB_USER?.trim() ?? process.env.GITHUB_USER?.trim();
+  const username = process.env.GITHUB_USER?.trim() ?? '';
 
-  return v === '' ? undefined : v;
+  return username === '' ? undefined : username;
 }

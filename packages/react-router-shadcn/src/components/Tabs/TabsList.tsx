@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { cn } from '../../utils/cn';
 
-export interface TabsListProps {
-  readonly className?: string;
-}
+export interface TabsListProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
   (props, ref): React.ReactElement => {

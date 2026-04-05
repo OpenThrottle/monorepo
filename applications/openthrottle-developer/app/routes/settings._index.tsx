@@ -49,25 +49,25 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="relative h-full p-12">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <Breadcrumb className="mb-2">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild={true}>
-                <Link to="/dashboard" viewTransition={true}>
-                  Dashboard
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Settings</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+      <Breadcrumb className="mb-4 md:mb-8">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild={true}>
+              <Link to="/dashboard" viewTransition={true}>
+                Dashboard
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Settings</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-        <header>
+      <div className="mx-auto max-w-7xl space-y-8">
+        {/* <header>
           <h1 className="my-4 text-3xl font-semibold tracking-tight">
             Settings
           </h1>
@@ -75,7 +75,7 @@ export default function Component(
             Manage notification preferences and event subscriptions for your
             account.
           </p>
-        </header>
+        </header> */}
 
         <NotificationPreferencesSection />
         <EventSubscriptionsSection />

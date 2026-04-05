@@ -1,6 +1,5 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { Form, Link } from 'react-router';
 import {
   Button,
   Card,
@@ -8,8 +7,10 @@ import {
   CardFooter,
   Input,
   Label,
+  Markdown,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import { Form, Link } from 'react-router';
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 
 const PLAN_CATEGORIES = [
@@ -28,12 +29,12 @@ export interface PlanFormProps {
 
 export const PlanForm = (props: PlanFormProps) => {
   const { actionData, className, plan } = props;
-  const error = actionData?.error;
-  const isEdit = plan != null;
 
   // Hooks
 
   // Setup
+  const error = actionData?.error;
+  const isEdit = plan != null;
 
   // Handlers
 
@@ -46,131 +47,159 @@ export const PlanForm = (props: PlanFormProps) => {
   return (
     <Card className={classnames('w-full', className)} data-testid="PlanForm">
       <CardContent className="pt-8">
-        <Form className="w-full space-y-4" method="post">
-          {isEdit ? <input name="id" type="hidden" value={plan.id} /> : null}
-          <div className="space-y-2">
-            <Label htmlFor="plan-title">Title</Label>
-            <Input
-              defaultValue={plan?.title ?? ''}
-              id="plan-title"
-              name="title"
-              placeholder="Plan title"
-              required={true}
-              type="text"
-            />
+        <Form className="gap-4 md:gap-8 w-full flex" method="post">
+          <div className="flex-1 space-y-4">
+            {isEdit ? <input name="id" type="hidden" value={plan.id} /> : null}
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-title">
+                Title
+              </Label>
+              <Input
+                defaultValue={plan?.title ?? ''}
+                id="plan-title"
+                name="title"
+                placeholder="Plan title"
+                required={true}
+                type="text"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-category">
+                Category
+              </Label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                defaultValue={plan?.category ?? ''}
+                id="plan-category"
+                name="category"
+                required={true}
+              >
+                <option value="">Select category</option>
+                {PLAN_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-author">
+                Author
+              </Label>
+              <Input
+                defaultValue={plan?.author ?? ''}
+                id="plan-author"
+                name="author"
+                placeholder="e.g. visormatt"
+                required={true}
+                type="text"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-assignee">
+                Assignee{' '}
+                <span className="text-muted-foreground italic">(optional)</span>
+              </Label>
+              <Input
+                defaultValue={plan?.assignee ?? ''}
+                id="plan-assignee"
+                name="assignee"
+                placeholder="e.g. visormatt"
+                type="text"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-project">
+                Project{' '}
+                <span className="text-muted-foreground italic">(optional)</span>
+              </Label>
+              <Input
+                id="plan-project"
+                name="project"
+                placeholder="Project name"
+                type="text"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-project-id">
+                Project ID{' '}
+                <span className="text-muted-foreground italic">(optional)</span>
+              </Label>
+              <Input
+                defaultValue={plan?.projectId ?? ''}
+                id="plan-project-id"
+                name="projectId"
+                placeholder="Project UUID"
+                type="text"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-status">
+                Status{' '}
+                <span className="text-muted-foreground italic">(optional)</span>
+              </Label>
+              <Input
+                defaultValue={plan?.status ?? ''}
+                id="plan-status"
+                name="status"
+                placeholder="e.g. PENDING"
+                type="text"
+              />
+            </div>
+
+            {error ? (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            ) : null}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="plan-category">Category</Label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              defaultValue={plan?.category ?? ''}
-              id="plan-category"
-              name="category"
-              required={true}
-            >
-              <option value="">Select category</option>
-              {PLAN_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+          <div className="gap-8 flex flex-col flex-2">
+            <div>
+              <Label className="mb-2 block" htmlFor="plan-summary">
+                Summary{' '}
+                <span className="text-muted-foreground italic">(optional)</span>
+              </Label>
+              <TextArea
+                defaultValue={plan?.summary ?? ''}
+                id="plan-summary"
+                name="summary"
+                placeholder="Short summary"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex-1">
+              <Label className="mb-2 block" htmlFor="plan-description">
+                Description{' '}
+                <span className="text-muted-foreground italic">(optional)</span>
+              </Label>
+              <TextArea
+                className="h-full flex-1"
+                defaultValue={plan?.description ?? ''}
+                id="plan-description"
+                name="description"
+                placeholder="Plan description"
+              />
+            </div>
+
+            <CardFooter className="flex justify-end gap-3 p-0 pt-4">
+              <Button asChild={true} variant="outline">
+                <Link to={isEdit && plan ? `/plans/${plan.id}` : '/plans'}>
+                  Cancel
+                </Link>
+              </Button>
+              <Button type="submit">
+                {isEdit ? 'Update plan' : 'Create plan'}
+              </Button>
+            </CardFooter>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-author">Author</Label>
-            <Input
-              defaultValue={plan?.author ?? ''}
-              id="plan-author"
-              name="author"
-              placeholder="e.g. visormatt"
-              required={true}
-              type="text"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-assignee">Assignee (optional)</Label>
-            <Input
-              defaultValue={plan?.assignee ?? ''}
-              id="plan-assignee"
-              name="assignee"
-              placeholder="e.g. visormatt"
-              type="text"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-description">Description (optional)</Label>
-            <TextArea
-              defaultValue={plan?.description ?? ''}
-              id="plan-description"
-              name="description"
-              placeholder="Plan description"
-              rows={4}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-project">Project (optional)</Label>
-            <Input
-              id="plan-project"
-              name="project"
-              placeholder="Project name"
-              type="text"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-project-id">Project ID (optional)</Label>
-            <Input
-              defaultValue={plan?.projectId ?? ''}
-              id="plan-project-id"
-              name="projectId"
-              placeholder="Project UUID"
-              type="text"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-status">Status (optional)</Label>
-            <Input
-              defaultValue={plan?.status ?? ''}
-              id="plan-status"
-              name="status"
-              placeholder="e.g. PENDING"
-              type="text"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plan-summary">Summary (optional)</Label>
-            <TextArea
-              defaultValue={plan?.summary ?? ''}
-              id="plan-summary"
-              name="summary"
-              placeholder="Short summary"
-              rows={3}
-            />
-          </div>
-
-          {error ? (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <CardFooter className="flex gap-3 p-0 pt-4">
-            <Button type="submit">
-              {isEdit ? 'Update plan' : 'Create plan'}
-            </Button>
-            <Button asChild={true} variant="outline">
-              <Link to={isEdit && plan ? `/plans/${plan.id}` : '/plans'}>
-                Cancel
-              </Link>
-            </Button>
-          </CardFooter>
         </Form>
       </CardContent>
     </Card>

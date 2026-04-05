@@ -1,8 +1,8 @@
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { getMockMessages } from '~/global/data/mock.mail';
-import { MessageList } from '~/routing/inbox/components/MessageList';
 import { MAIL_FOLDER_IDS } from '~/types/mail';
+import { MessageList } from '~/routing/inbox/components/MessageList';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.trash';
 
 // Trash folder list; reuse MessageList. Wire to API when backend is ready.

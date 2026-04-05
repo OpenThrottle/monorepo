@@ -17,7 +17,6 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans._index';
 import {
   PLAN_STATUS_FILTER_OPTIONS,
   parseStatusesFromSearchParams,
@@ -25,6 +24,7 @@ import {
 import { parsePlansSortFromSearch } from '~/routing/plans/utils/parsers';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
+import type { Route } from '@/app/routes/+types/plans._index';
 
 /** Parse multiple assignee values from URL (repeated params or comma-separated). */
 function parseAssigneesFromSearchParams(
@@ -128,17 +128,12 @@ export default function Component(
   // Hooks
   const [searchParams] = useSearchParams();
 
+  // Setup
   const countByStatus = (status: string): number =>
     statusCounts.find((s) => s.status === status)?.count ?? 0;
 
   const inProgressCount = countByStatus('IN_PROGRESS');
   const completedCount = countByStatus('COMPLETED');
-
-  // Setup
-  const { sortBy, sortOrder } = React.useMemo(
-    () => parsePlansSortFromSearch(searchParams),
-    [searchParams],
-  );
 
   const view = (searchParams.get('view') === 'card' ? 'card' : 'table') as
     | 'table'
@@ -149,13 +144,20 @@ export default function Component(
   // Markup
 
   // Life Cycle
+  const { sortBy, sortOrder } = React.useMemo(
+    () => parsePlansSortFromSearch(searchParams),
+    [searchParams],
+  );
+
   const statusFilterUrls = React.useMemo(() => {
     return Object.fromEntries(
       PLAN_STATUS_FILTER_OPTIONS.map((opt) => {
         const p = new URLSearchParams(searchParams);
+
         p.delete('status');
         p.append('status', opt.value);
         p.set('page', '1');
+
         return [opt.value, `/plans?${p.toString()}`] as const;
       }),
     );
@@ -174,11 +176,9 @@ export default function Component(
         <OpenThrottleStatCard title="Completed (all)" value={completedCount} />
       </div>
 
-      {/* <h1 className="text-xl mb-2 mt-12 text-highlight">Plans</h1> */}
       <PlansToolbar
         assigneeOptions={assigneeOptions}
         assignees={assignees}
-        // className="my-8"
         limit={limit}
         page={page}
         sortBy={sortBy}

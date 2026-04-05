@@ -2,16 +2,16 @@ import * as React from 'react';
 import { ShouldRevalidateFunction, useSearchParams } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { buildCheckoutPath } from '~/routing/checkout/utils';
+import { GetPricingDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { parseIntervalFromSearchParams } from '~/routing/pricing/utils';
 import { PRICING_INTERVAL_PARAM } from '~/routing/pricing/config';
 import { PricingCard } from '~/routing/pricing/components/PricingCard';
 import { PricingToggle } from '~/routing/pricing/components/PricingToggle';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { BillingInterval } from '~/routing/pricing/components/PricingToggle';
 import type { Route } from '@/app/routes/+types/pricing._index';
-import { GetPricingDocument } from '~/__generated__/graphql';
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate

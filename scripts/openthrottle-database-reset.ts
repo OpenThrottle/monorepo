@@ -1,12 +1,13 @@
 #!/usr/bin/env node
+
+import { Client } from 'pg';
+import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+
 /**
  * @description Truncates all cortex tables (plans, tasks, embeddings, commit_links, plan_output_stream).
  * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
  * Run before a fresh ingest to avoid duplicate plans.
  */
-
-import { Client } from 'pg';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 async function main(): Promise<void> {
   const config = getCortexPostgresConfig();
@@ -15,6 +16,7 @@ async function main(): Promise<void> {
       'OpenThrottle Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',
     );
   }
+
   const connectionString = config.connectionString;
 
   const client = new Client({ connectionString });

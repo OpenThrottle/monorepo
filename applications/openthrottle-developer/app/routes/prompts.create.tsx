@@ -14,11 +14,11 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/prompts.create';
 import {
   PROMPTS_BASE_PATH,
   PROMPTS_DEFAULT_CONTENT,
 } from '~/routing/prompts/config';
+import type { Route } from '@/app/routes/+types/prompts.create';
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create Prompt | ${SITE_TITLE}` }];
@@ -312,6 +312,9 @@ export const action = async (args: Route.ActionArgs) => {
   } catch {
     return { error: 'Failed to create prompt.' };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

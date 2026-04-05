@@ -107,20 +107,28 @@ export class SearchResolver {
     if (!config) {
       return { plans: [], sources: [] };
     }
+
     const result = await listSources(config);
     const obj = new ListSourcesResultObject();
+
     obj.sources = result.sources.map((s) => {
       const o = new ListSourceInfoObject();
+
       o.name = s.name;
       o.description = s.description;
+
       return o;
     });
+
     obj.plans = result.plans.map((p) => {
       const o = new ListPlanSourceObject();
+
       o.id = p.id;
       o.title = p.title;
+
       return o;
     });
+
     return obj;
   }
 }

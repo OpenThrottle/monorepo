@@ -46,10 +46,10 @@ import {
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
+import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 
 const PLAN_TASKS_VIEW_STORAGE_KEY = 'openthrottle-developer.planTasksView';
 
@@ -98,11 +98,12 @@ export default function Component(
   const socketContext = useNotificationsSocket();
 
   // Setup
-  const planId = params.planId ?? '';
-
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
 
-  const handlePlanTasksViewChange = (value: string): void => {
+  const isBoardView = planTasksView === 'board';
+  const planId = params.planId ?? '';
+
+  const onChangeView = (value: string): void => {
     if (value !== 'table' && value !== 'board') return;
     try {
       localStorage.setItem(PLAN_TASKS_VIEW_STORAGE_KEY, value);
@@ -129,6 +130,7 @@ export default function Component(
   // re-applying on every search-param change (e.g. after the user clears `view` for table).
   React.useEffect(() => {
     if (parsePlanTasksView(searchParams.get('view'))) return;
+
     try {
       const stored = parsePlanTasksView(
         localStorage.getItem(PLAN_TASKS_VIEW_STORAGE_KEY),
@@ -147,6 +149,7 @@ export default function Component(
   React.useEffect(() => {
     const fromUrl = parsePlanTasksView(searchParams.get('view'));
     if (!fromUrl) return;
+
     try {
       localStorage.setItem(PLAN_TASKS_VIEW_STORAGE_KEY, fromUrl);
     } catch {
@@ -211,86 +214,89 @@ export default function Component(
   }
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/plans" viewTransition={true}>
-                Plans
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              <OpenThrottleClipboard
-                className="cursor-pointer whitespace-nowrap"
-                label={plan.id}
-                text={plan.id}
-              />
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+    <>
+      <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+        <Breadcrumb className="mb-4 md:mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild={true}>
+                <Link to="/plans" viewTransition={true}>
+                  Plans
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                <OpenThrottleClipboard
+                  className="cursor-pointer whitespace-nowrap"
+                  label={plan.id}
+                  text={plan.id}
+                />
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
-      <PlanDetails plan={plan} />
+        <PlanDetails plan={plan} />
 
-      {tasks.length === 0 ? (
-        <>
-          <h2 className="text-lg font-semibold mb-3">Tasks</h2>
-          <Empty>
-            <EmptyTitle>No tasks</EmptyTitle>
-            <EmptyDescription>This plan has no tasks yet.</EmptyDescription>
-          </Empty>
-        </>
-      ) : (
-        <>
-          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold">Tasks</h2>
-            <ToggleGroup
-              aria-label="Choose how to display plan tasks"
-              className="shrink-0"
-              onValueChange={handlePlanTasksViewChange}
-              size="sm"
-              type="single"
-              value={planTasksView}
-              variant="outline"
-            >
-              <ToggleGroupItem
-                aria-label="Table view"
-                className="gap-1.5 px-2.5"
-                value="table"
+        {tasks.length === 0 ? (
+          <>
+            <h2 className="text-lg font-semibold mb-3">Tasks</h2>
+            <Empty>
+              <EmptyTitle>No tasks</EmptyTitle>
+              <EmptyDescription>This plan has no tasks yet.</EmptyDescription>
+            </Empty>
+          </>
+        ) : (
+          <>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-lg font-semibold">Tasks</h2>
+              <ToggleGroup
+                aria-label="Choose how to display plan tasks"
+                className="shrink-0"
+                onValueChange={onChangeView}
+                size="sm"
+                type="single"
+                value={planTasksView}
+                variant="outline"
               >
-                <TableIcon aria-hidden={true} className="size-4" />
-                Table
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                aria-label="Board view"
-                className="gap-1.5 px-2.5"
-                value="board"
-              >
-                <ColumnsIcon aria-hidden={true} className="size-4" />
-                Board
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <Card
-            className={
-              planTasksView === 'board' ? 'overflow-hidden p-4' : undefined
-            }
-          >
-            {planTasksView === 'table' ? (
-              <PlanTasksTable tasks={tasks} />
-            ) : (
-              <PlanTasksBoard planId={plan.id} tasks={tasks} />
-            )}
-          </Card>
-        </>
-      )}
+                <ToggleGroupItem
+                  aria-label="Table view"
+                  className="gap-1.5 px-2.5"
+                  value="table"
+                >
+                  <TableIcon aria-hidden={true} className="size-4" />
+                  Table
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  aria-label="Board view"
+                  className="gap-1.5 px-2.5"
+                  value="board"
+                >
+                  <ColumnsIcon aria-hidden={true} className="size-4" />
+                  Board
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
 
-      <Outlet />
-    </main>
+            {!isBoardView ? (
+              <Card>
+                <PlanTasksTable tasks={tasks} />
+              </Card>
+            ) : null}
+          </>
+        )}
+
+        <Outlet />
+      </main>
+
+      {isBoardView ? (
+        <Card className="overflow-hidden p-4 mx-4">
+          <PlanTasksBoard planId={plan.id} tasks={tasks} />
+        </Card>
+      ) : null}
+    </>
   );
 }
 
@@ -303,6 +309,58 @@ export const action = async (args: Route.ActionArgs) => {
 
   const formData = await args.request.formData();
   const intent = formData.get('intent');
+
+  if (intent === 'cancelPlanRun') {
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailCancelPlanRunDocument,
+        { input: { planId } },
+      );
+
+      if (!result.cancelPlanRun) {
+        return { cancelPlanRunError: 'Failed to cancel plan run.' };
+      }
+
+      return { cancelPlanRun: result.cancelPlanRun };
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { cancelPlanRunError: message };
+    }
+  }
+
+  if (intent === 'setPlanStatus') {
+    const statusField = formData.get('status');
+    const status =
+      typeof statusField === 'string' && statusField.trim() !== ''
+        ? statusField
+        : 'COMPLETED';
+
+    if (!status || status.trim() === '') {
+      return { setPlanStatusError: 'Status is required.' };
+    }
+
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailSetPlanStatusDocument,
+        { input: { planId, status: status.trim() } },
+      );
+
+      if (!result.setPlanStatus) {
+        return { setPlanStatusError: 'Failed to update plan status.' };
+      }
+
+      return redirect(`/plans/${planId}`);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { setPlanStatusError: message };
+    }
+  }
 
   if (intent === 'updateTaskStatus') {
     const taskIdRaw = formData.get('taskId');
@@ -338,109 +396,64 @@ export const action = async (args: Route.ActionArgs) => {
       }
 
       return { ok: true };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       return { updateTaskError: message };
     }
   }
 
-  if (intent === 'cancelPlanRun') {
-    try {
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        PlanDetailCancelPlanRunDocument,
-        { input: { planId } },
-      );
+  if (intent === 'runPlan') {
+    const priorityRaw = formData.get('priority');
+    const priority =
+      priorityRaw != null && priorityRaw !== '' ? Number(priorityRaw) : 1; // Default to interactive priority (1) for UI-triggered runs
 
-      if (!result.cancelPlanRun) {
-        return { cancelPlanRunError: 'Failed to cancel plan run.' };
-      }
+    const ralphTuningRaw = formData.get('ralphTuning');
+    let ralph: RalphPlanRunTuningInput | undefined;
 
-      return { cancelPlanRun: result.cancelPlanRun };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    if (typeof ralphTuningRaw === 'string' && ralphTuningRaw.trim() !== '') {
+      try {
+        const parsed: unknown = JSON.parse(ralphTuningRaw);
+        const tuningResult = RalphPlanRunTuningInputSchema().safeParse(parsed);
+        if (!tuningResult.success) {
+          return { runPlanError: 'Invalid workflow run options payload.' };
+        }
 
-      return { cancelPlanRunError: message };
-    }
-  }
-
-  if (intent === 'setPlanStatus') {
-    const statusField = formData.get('status');
-    const status =
-      typeof statusField === 'string' && statusField.trim() !== ''
-        ? statusField
-        : 'COMPLETED';
-    if (!status || status.trim() === '') {
-      return { setPlanStatusError: 'Status is required.' };
-    }
-    try {
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        PlanDetailSetPlanStatusDocument,
-        { input: { planId, status: status.trim() } },
-      );
-
-      if (!result.setPlanStatus) {
-        return { setPlanStatusError: 'Failed to update plan status.' };
-      }
-
-      return redirect(`/plans/${planId}`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { setPlanStatusError: message };
-    }
-  }
-
-  if (intent !== 'runPlan') {
-    return {
-      runPlanError: 'Invalid action.',
-    };
-  }
-
-  const priorityRaw = formData.get('priority');
-  const priority =
-    priorityRaw != null && priorityRaw !== '' ? Number(priorityRaw) : 1; // Default to interactive priority (1) for UI-triggered runs
-
-  const ralphTuningRaw = formData.get('ralphTuning');
-  let ralph: RalphPlanRunTuningInput | undefined;
-
-  if (typeof ralphTuningRaw === 'string' && ralphTuningRaw.trim() !== '') {
-    try {
-      const parsed: unknown = JSON.parse(ralphTuningRaw);
-      const tuningResult = RalphPlanRunTuningInputSchema().safeParse(parsed);
-      if (!tuningResult.success) {
+        ralph = tuningResult.data;
+      } catch {
         return { runPlanError: 'Invalid workflow run options payload.' };
       }
-
-      ralph = tuningResult.data;
-    } catch {
-      return { runPlanError: 'Invalid workflow run options payload.' };
     }
-  }
 
-  try {
-    const result = await executeGraphqlWithAuth(
-      args.request,
-      PlanDetailEnqueuePlanRunDocument,
-      {
-        input: {
-          planId,
-          priority,
-          ...(ralph !== undefined ? { ralph } : {}),
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailEnqueuePlanRunDocument,
+        {
+          input: {
+            planId,
+            priority,
+            ...(ralph !== undefined ? { ralph } : {}),
+          },
         },
-      },
-    );
+      );
 
-    if (!result.enqueuePlanRun) {
-      return { runPlanError: 'Failed to enqueue plan run.' };
+      if (!result.enqueuePlanRun) {
+        return { runPlanError: 'Failed to enqueue plan run.' };
+      }
+
+      return { runPlan: result.enqueuePlanRun };
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { runPlanError: message };
     }
-
-    return { runPlan: result.enqueuePlanRun };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
-    return { runPlanError: message };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

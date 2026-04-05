@@ -253,8 +253,9 @@ export const action = async (args: Route.ActionArgs) => {
       return redirect('/dashboard', {
         headers: { 'Set-Cookie': cookie },
       });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : 'Login failed';
 
       return { error: message };
     }

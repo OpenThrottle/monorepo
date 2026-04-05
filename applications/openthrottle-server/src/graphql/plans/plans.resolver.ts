@@ -592,8 +592,9 @@ export class PlansResolver {
     let jobData: RunPlanJobData;
     try {
       jobData = buildRunPlanJobData({ planId, ralph });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
       throw new BadRequestException(message);
     }
 
@@ -714,8 +715,10 @@ export class PlansResolver {
         ralph,
         taskId,
       });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       throw new BadRequestException(message);
     }
 

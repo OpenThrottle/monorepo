@@ -5,10 +5,10 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { getMockSearchResults } from '~/global/data/mock.mail';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MessageList } from '~/routing/inbox/components/MessageList';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.search';
 
 export const loader = async (args: Route.LoaderArgs) => {

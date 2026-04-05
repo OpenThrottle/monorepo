@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+import { readFile, readdir } from 'node:fs/promises';
+import { access } from 'node:fs/promises';
+import { join } from 'node:path';
+import { Client } from 'pg';
+import { createProjectGraphAsync } from '@nx/devkit';
+import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+
 /* eslint-disable no-await-in-loop */
 
 /**
@@ -8,13 +15,6 @@
  * Set DOCS_REPO and DOCS_SHA for source metadata (e.g. from workflow); defaults to local/repo and local.
  * Optional DOCS_PATHS: comma-separated relative paths to ingest only those files (used by BullMQ doc-ingestion job).
  */
-
-import { readFile, readdir } from 'node:fs/promises';
-import { access } from 'node:fs/promises';
-import { join } from 'node:path';
-import { Client } from 'pg';
-import { createProjectGraphAsync } from '@nx/devkit';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 const DOCS_ROOT = join(process.cwd(), 'docs');
 const WORKSPACE_ROOT = process.cwd();

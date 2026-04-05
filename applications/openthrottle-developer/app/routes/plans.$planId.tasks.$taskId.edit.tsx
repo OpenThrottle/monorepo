@@ -1,8 +1,14 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { redirect } from 'react-router';
+import { Link, redirect } from 'react-router';
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
   Empty,
   EmptyDescription,
   EmptyMedia,
@@ -12,12 +18,12 @@ import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.edit';
 import {
   GetTaskByIdDocument,
   UpdateTaskDocument,
 } from '~/__generated__/graphql';
 import { TaskForm } from '~/routing/plans/components/TaskForm';
+import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.edit';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
@@ -45,6 +51,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const title = task?.title
     ? `Edit ${task.title} | ${SITE_TITLE}`
     : `Edit task | ${SITE_TITLE}`;
+
   return [{ title }];
 });
 
@@ -89,12 +96,35 @@ export default function Component(
   }
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">Edit task</h1>
+    <>
+      <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+        <Breadcrumb className="mb-4 md:mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild={true}>
+                <Link to="/plans" viewTransition={true}>
+                  Plans
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild={true}>
+                <Link to={`/plans/${planId}`} viewTransition={true}>
+                  {planId}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Edit Task</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <TaskForm actionData={actionData} planId={planId} task={task} />
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -103,6 +133,7 @@ export const action = async (args: Route.ActionArgs) => {
   if (taskId == null || taskId === '') {
     return { error: 'Task id is required.' };
   }
+
   const formData = await args.request.formData();
   const id = formData.get('id');
   const title = formData.get('title');
@@ -110,9 +141,11 @@ export const action = async (args: Route.ActionArgs) => {
   if (typeof id !== 'string' || id.trim() === '') {
     return { error: 'Task id is required.' };
   }
+
   if (id !== taskId) {
     return { error: 'Task id does not match.' };
   }
+
   if (typeof title !== 'string' || !title.trim()) {
     return { error: 'Title is required.' };
   }
@@ -150,12 +183,17 @@ export const action = async (args: Route.ActionArgs) => {
     }
 
     const effectivePlanId = planId ?? result.updateTask.planId ?? '';
+
     return redirect(`/plans/${effectivePlanId}/tasks/${result.updateTask.id}`);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to update task.';
+    const isError = error instanceof Error;
+    const message = isError ? error.message : 'Failed to update task.';
+
     return { error: message };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

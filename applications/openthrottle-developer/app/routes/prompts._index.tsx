@@ -15,11 +15,11 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
 import { PromptCard } from '~/routing/prompts/components/PromptCard';
-import type { Route } from '@/app/routes/+types/prompts._index';
 import {
   parseSortFromSearchParams as parsePromptsSortFromSearch,
   parseTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
+import type { Route } from '@/app/routes/+types/prompts._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;

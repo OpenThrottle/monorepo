@@ -5,7 +5,7 @@
 //  * association is clear from the title. Uses criteria from
 //  * docs/openthrottle/plans-tasks-without-project-scope.md and
 //  * databases/cortex/README.md § Project association.
-//  * Usage: pnpm exec tsx ./scripts/associate-cortex-plans-tasks-with-project.ts [--dry-run]
+//  * Usage: pnpm exec tsx ./scripts/openthrottle-associate-plans-tasks-with-project.ts [--dry-run]
 //  */
 
 // import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';

@@ -1,6 +1,6 @@
+import { ComposeForm } from '~/routing/compose/components/ComposeForm';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import { ComposeForm } from '~/routing/compose/components/ComposeForm';
 import type { Route } from '@/app/routes/+types/_layout.mail.compose';
 
 // Optional loader: read searchParams (replyTo, replyAll, forward) and return initialValues for ComposeForm prefill when wiring reply/forward from reading pane.

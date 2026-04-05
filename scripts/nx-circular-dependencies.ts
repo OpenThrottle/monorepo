@@ -8,17 +8,17 @@ const findCircularDependencies = (
   graph: Awaited<ReturnType<typeof createProjectGraphAsync>>,
 ): string[][] => {
   const cycles: string[][] = [];
-  const visited = new Set<string>();
-  const recursionStack = new Set<string>();
   const path: string[] = [];
+  const recursionStack = new Set<string>();
+  const visited = new Set<string>();
 
   /**
    * @description Performs depth-first search to detect cycles
    */
   const dfs = (node: string): void => {
-    visited.add(node);
-    recursionStack.add(node);
     path.push(node);
+    recursionStack.add(node);
+    visited.add(node);
 
     const dependencies = graph.dependencies[node] || [];
     for (const dep of dependencies) {
@@ -90,15 +90,18 @@ const main = async (): Promise<void> => {
       console.error(
         '\n💡 To visualize the dependency graph, run: pnpm exec nx graph',
       );
+
       process.exit(1);
-    } else {
-      console.log('✅ No circular dependencies detected!');
-      process.exit(0);
     }
+
+    console.log('✅ No circular dependencies detected!');
   } catch (error) {
     console.error('❌ Error checking for circular dependencies:', error);
+
     process.exit(1);
   }
+
+  process.exit(0);
 };
 
 main();

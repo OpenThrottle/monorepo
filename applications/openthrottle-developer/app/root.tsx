@@ -42,7 +42,7 @@ import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { GlobalMetrics } from '~/global/components/GlobalMetrics';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { SITE_TITLE } from '#/app/global/config/settings';
-import { useCommanderOptions } from '~/routing/commander/config';
+import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 
@@ -336,8 +336,9 @@ export const action = async (args: Route.ActionArgs) => {
       return redirect('/', {
         headers: { 'Set-Cookie': cookie },
       });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : 'Login failed';
 
       return { error: message };
     }

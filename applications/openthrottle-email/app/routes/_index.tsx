@@ -1,7 +1,7 @@
 import { redirect } from 'react-router-dom';
-import type { Route } from '@/app/routes/+types/_index';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { Route } from '@/app/routes/+types/_index';
 
 /**
  * @description Pathless layout for mail-area routes. Renders {@link MailLayout} (sidebar + main) with an `<Outlet />` for child routes (inbox, compose, sent, drafts, trash, search).

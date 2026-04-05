@@ -11,8 +11,8 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId';
 
 export const loader = async (args: Route.LoaderArgs) => {

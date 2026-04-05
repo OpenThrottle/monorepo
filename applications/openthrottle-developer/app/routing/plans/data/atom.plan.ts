@@ -47,6 +47,7 @@ export const workflowRalphMergedRunOptionsForArgvAtom = atom(
   (get): WorkflowRalphRunOptionsInput => {
     const runOptions = get(workflowRalphRunOptionsAtom);
     const iterationTimeoutText = get(workflowRunIterationTimeoutTextAtom);
+
     return {
       ...runOptions,
       iterationTimeoutSeconds:
@@ -80,6 +81,7 @@ export const resetWorkflowRunToDefaultsAtom = atom(
     seed: { readonly planId?: string; readonly taskId?: string } | undefined,
   ) => {
     const defaults = getWorkflowRunAtomDefaultState(seed);
+
     set(workflowRalphRunOptionsAtom, defaults.runOptions);
     set(workflowRunIterationTimeoutTextAtom, defaults.iterationTimeoutText);
   },

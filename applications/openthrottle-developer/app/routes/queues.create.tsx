@@ -2,11 +2,11 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { CreateQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { QueueForm } from '~/routing/queues/components/QueueForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.create';
-import { QueueForm } from '~/routing/queues/components/QueueForm';
-import { CreateQueueDocument } from '~/__generated__/graphql';
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create queue | ${SITE_TITLE}` }];
@@ -50,10 +50,14 @@ export const action = async (args: Route.ActionArgs) => {
 
     return redirect(`/queues/${result.createQueue.queueName}`);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create queue.';
+    const isError = error instanceof Error;
+    const message = isError ? error.message : 'Failed to update queue.';
+
     return { error: message };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

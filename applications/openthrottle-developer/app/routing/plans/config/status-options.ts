@@ -1,5 +1,6 @@
 /**
- * @description Status filter options for the plans list (PlansToolbar). Aligns with PlanStatusBadge / format-status.
+ * @description Status filter options for the plans list (PlansToolbar).
+ * Aligns with PlanStatusBadge / format-status.
  */
 export const DEFAULT_PLAN_STATUS = 'PENDING' as const;
 
@@ -36,7 +37,8 @@ const VALID_STATUSES = new Set(
 );
 
 /**
- * @description Returns the status from the URL or default. Invalid values fall back to DEFAULT_PLAN_STATUS.
+ * @description Returns the status from the URL or default. Invalid values
+ * fall back to DEFAULT_PLAN_STATUS.
  */
 export function parseStatusFromSearchParams(
   searchParams: URLSearchParams,
@@ -48,7 +50,8 @@ export function parseStatusFromSearchParams(
 }
 
 /**
- * @description Returns multiple statuses from the URL (getAll("status") and comma-separated). Defaults to DEFAULT_STATUSES when none valid.
+ * @description Returns multiple statuses from the URL (getAll("status") and
+ * comma-separated). Defaults to DEFAULT_STATUSES when none valid.
  */
 export function parseStatusesFromSearchParams(
   searchParams: URLSearchParams,

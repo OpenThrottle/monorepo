@@ -26,11 +26,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     return { roles: data.roles };
   } catch (error) {
     const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
 
-    if (
-      isError &&
-      (error.message.includes('401') || error.message.includes('403'))
-    ) {
+    if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
     }
 
@@ -167,7 +165,8 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
-  return null;
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

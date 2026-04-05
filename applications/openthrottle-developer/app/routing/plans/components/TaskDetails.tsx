@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import { format } from 'date-fns';
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardFooter,
@@ -179,12 +180,14 @@ export const TaskDetails = (props: TaskDetailsProps) => {
         )}
 
         <CardFooter>
-          <Link
-            className="text-sm text-primary hover:underline"
-            to={`/plans/${planId}/tasks/${task.id}/edit`}
-          >
-            Edit task
-          </Link>
+          <Button asChild={true} variant="outline">
+            <Link
+              className="text-sm text-primary hover:underline"
+              to={`/plans/${planId}/tasks/${task.id}/edit`}
+            >
+              Edit task
+            </Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>

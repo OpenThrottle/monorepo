@@ -1,8 +1,8 @@
 import { Outlet, useRouteLoaderData } from 'react-router';
-import { MailLayout } from '~/global/components/MailLayout';
-import type { Route } from '@/app/routes/+types/_layout.mail';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { MailLayout } from '~/global/components/MailLayout';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { Route } from '@/app/routes/+types/_layout.mail';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 

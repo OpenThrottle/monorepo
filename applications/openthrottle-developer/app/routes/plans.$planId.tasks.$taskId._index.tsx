@@ -107,8 +107,8 @@ export default function Component(
   const effectivePlanId = task.planId ?? '';
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4">
+    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+      <Breadcrumb className="mb-4 md:mb-8">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild={true}>

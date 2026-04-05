@@ -47,41 +47,43 @@ export const NotificationPreferencesSection = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="max-w-2xl">
-      <CardHeader>
-        <CardTitle>Notifications</CardTitle>
-        <CardDescription>
-          Choose how we reach you about plans, tasks, and system activity. These
-          choices are not saved yet.
-        </CardDescription>
-      </CardHeader>
+    <>
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>
+            Choose how we reach you about plans, tasks, and system activity.
+            These choices are not saved yet.
+          </CardDescription>
+        </CardHeader>
 
-      <CardContent className="space-y-0">
-        {NOTIFICATION_PREFERENCE_ROWS.map((row, index) => (
-          <React.Fragment key={row.id}>
-            {index > 0 ? <Separator className="my-4" /> : null}
-            <div
-              className="flex flex-row items-center justify-between gap-4"
-              data-testid={`notification-pref-${row.id}`}
-            >
-              <div className="space-y-1">
-                <Label htmlFor={`notification-pref-${row.id}`}>
-                  {row.label}
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  {row.description}
-                </p>
+        <CardContent className="space-y-0">
+          {NOTIFICATION_PREFERENCE_ROWS.map((row, index) => (
+            <React.Fragment key={row.id}>
+              {index > 0 ? <Separator className="my-4" /> : null}
+              <div
+                className="flex flex-row items-center justify-between gap-4"
+                data-testid={`notification-pref-${row.id}`}
+              >
+                <div className="space-y-1">
+                  <Label htmlFor={`notification-pref-${row.id}`}>
+                    {row.label}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {row.description}
+                  </p>
+                </div>
+                <Switch
+                  aria-label={row.label}
+                  checked={toggles[row.id]}
+                  id={`notification-pref-${row.id}`}
+                  onCheckedChange={handleCheckedChange(row.id)}
+                />
               </div>
-              <Switch
-                aria-label={row.label}
-                checked={toggles[row.id]}
-                id={`notification-pref-${row.id}`}
-                onCheckedChange={handleCheckedChange(row.id)}
-              />
-            </div>
-          </React.Fragment>
-        ))}
-      </CardContent>
-    </Card>
+            </React.Fragment>
+          ))}
+        </CardContent>
+      </Card>
+    </>
   );
 };

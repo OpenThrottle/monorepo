@@ -85,8 +85,10 @@ export function registerSearchTools(server: McpServer): void {
             })),
           },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
             {
@@ -142,11 +144,16 @@ export function registerSearchTools(server: McpServer): void {
             sha: chunk.sha,
           },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `get_document failed: ${message}`, type: 'text' as const },
+            {
+              text: `get_document failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };

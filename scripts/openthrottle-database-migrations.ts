@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * @description Runs cortex database migrations from databases/cortex/migrations/ in order.
- * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
- */
-
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from 'pg';
 import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+
+/**
+ * @description Runs cortex database migrations from databases/cortex/migrations/ in order.
+ * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
+ */
 
 const MIGRATIONS_DIR = join(process.cwd(), 'databases', 'migrations');
 
@@ -19,6 +19,7 @@ async function main(): Promise<void> {
       'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
     );
   }
+
   const connectionString = config.connectionString;
 
   let entries: string[];
@@ -48,6 +49,7 @@ async function main(): Promise<void> {
       await client.query(sql);
     }
     /* eslint-enable no-await-in-loop */
+
     console.log('Migrations completed.');
   } finally {
     await client.end();

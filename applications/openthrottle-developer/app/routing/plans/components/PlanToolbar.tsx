@@ -22,7 +22,7 @@ import {
 import { Link, useFetcher } from 'react-router';
 import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
-import { shouldOfferKillPlanRun } from '~/routing/plans/utils/should-offer-kill-plan-run';
+import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanToolbarProps {
   readonly className?: string;
@@ -78,16 +78,17 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
   const getRunButtonLabel = (): string => {
     switch (planStatus) {
-      case 'QUEUED':
-        return 'Queued';
       case 'COMPLETED':
         return 'Completed';
       case 'IN_PROGRESS':
         return 'In progress';
       case 'PENDING':
         return 'Add to Queue';
+      case 'QUEUED':
+        return 'Queued';
       case 'SKIPPED':
         return 'Skipped';
+
       default:
         return 'Run plan';
     }
@@ -100,17 +101,21 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   // Life Cycle
   React.useEffect(() => {
     const busy = fetcherRunPlan.state !== 'idle';
+
     if (runPlanWasBusy.current && !busy) {
       const data = fetcherRunPlan.data;
+
       if (data != null && typeof data === 'object') {
         if ('runPlan' in data && data.runPlan != null) {
-          toast.success(
-            'Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).',
-          );
+          const message = `Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).`;
+          toast.success(message);
         }
       }
     }
+
     runPlanWasBusy.current = busy;
+
+    // 🪝 ...
   }, [fetcherRunPlan.state, fetcherRunPlan.data]);
 
   // 🔌 Short Circuit
@@ -184,7 +189,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           <KillPlanRunButton
             planId={planId}
             planTitle={planTitle}
-            show={shouldOfferKillPlanRun(planStatus)}
+            show={getPlanIsCancelable(planStatus)}
             size="sm"
           />
         </div>

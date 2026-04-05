@@ -3,14 +3,14 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { useSearchParams } from 'react-router';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/search._index';
+import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
-import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
-import { parseSearchParams } from '~/routing/search/utils/parsers';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { Route } from '@/app/routes/+types/search._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;

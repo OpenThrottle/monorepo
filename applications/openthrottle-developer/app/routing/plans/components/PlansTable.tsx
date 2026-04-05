@@ -15,14 +15,16 @@ import { formatDate } from 'date-fns';
 import {
   PlanStatusBadge,
   isPlanStatusKey,
-  type PlanStatusKey,
 } from '~/routing/plans/components/PlanStatusBadge';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
-import { shouldOfferKillPlanRun } from '~/routing/plans/utils/should-offer-kill-plan-run';
-import { getPlanStatusLabel } from '~/routing/plans/utils/utils.plans';
+import {
+  getPlanStatusLabel,
+  getPlanIsCancelable,
+} from '~/routing/plans/utils/utils.plans';
 import { DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH } from '~/routing/plans/config/defaults';
+import { PlanStatusKey } from '~/routing/plans/types';
 
 export interface PlansTableProps {
   className?: string;
@@ -177,7 +179,7 @@ function buildPlanTableColumns(
             <KillPlanRunButton
               planId={planId}
               planTitle={row.original.title ?? 'Untitled'}
-              show={shouldOfferKillPlanRun(row.original.status)}
+              show={getPlanIsCancelable(row.original.status)}
               size="xs"
             />
             <RunPlanForm action={`/plans/${planId}`} method="post">

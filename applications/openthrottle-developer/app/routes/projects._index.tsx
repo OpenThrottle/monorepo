@@ -20,6 +20,7 @@ const DEFAULT_LIMIT = 10;
 const SORT_BY_VALUES = ['name', 'createdAt', 'updatedAt'] as const;
 const SORT_ORDER_VALUES = ['asc', 'desc'] as const;
 const VIEW_VALUES = ['table', 'card'] as const;
+
 type SortBy = (typeof SORT_BY_VALUES)[number];
 type SortOrder = (typeof SORT_ORDER_VALUES)[number];
 type View = (typeof VIEW_VALUES)[number];
@@ -79,6 +80,7 @@ function sortProjects(
       case 'name':
         aVal = a.name ?? '';
         bVal = b.name ?? '';
+
         return (
           mult *
           (aVal.localeCompare(bVal, undefined, { sensitivity: 'base' }) || 0)
@@ -121,9 +123,11 @@ export const loader = async (args: Route.LoaderArgs) => {
     url.searchParams.get('search') ??
     ''
   ).trim();
+
   const sortByParam = url.searchParams.get('sortBy') ?? '';
   const sortOrderParam = url.searchParams.get('sortOrder') ?? '';
   const viewParam = url.searchParams.get('view') ?? '';
+
   const sortBy: SortBy = isSortBy(sortByParam) ? sortByParam : 'name';
   const sortOrder: SortOrder = isSortOrder(sortOrderParam)
     ? sortOrderParam

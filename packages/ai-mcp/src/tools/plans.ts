@@ -72,8 +72,10 @@ export function registerPlanTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { plans: result.plans },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
             {
@@ -136,11 +138,16 @@ export function registerPlanTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { plan },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `create_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `create_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -187,11 +194,16 @@ export function registerPlanTools(server: McpServer): void {
           ],
           structuredContent: payload,
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `get_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `get_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -255,15 +267,23 @@ export function registerPlanTools(server: McpServer): void {
         }
         return {
           content: [
-            { text: JSON.stringify(plan, null, 2), type: 'text' as const },
+            {
+              text: JSON.stringify(plan, null, 2),
+              type: 'text' as const,
+            },
           ],
           structuredContent: { plan },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `update_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `update_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -291,15 +311,21 @@ export function registerPlanTools(server: McpServer): void {
         const text = deleted
           ? `Plan ${parsed.data.id} deleted.`
           : `No plan found for id: ${parsed.data.id}.`;
+
         return {
           content: [{ text, type: 'text' as const }],
           structuredContent: { deleted },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `delete_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `delete_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };

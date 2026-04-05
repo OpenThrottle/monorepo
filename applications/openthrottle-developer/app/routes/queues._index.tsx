@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/queues._index';
 import { GetQueuesDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { QueuesToolbar } from '~/routing/queues/components/QueuesToolbar';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { Route } from '@/app/routes/+types/queues._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { queues } = await executeGraphqlWithAuth(

@@ -11,9 +11,9 @@ import {
   type UpdateCustomPromptInput,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
-import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const promptId = args.params.promptId;
@@ -291,7 +291,8 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
-  return { error: 'Invalid action.' };
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

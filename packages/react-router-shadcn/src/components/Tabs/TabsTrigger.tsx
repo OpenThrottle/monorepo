@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { cn } from '../../utils/cn';
 
-export interface TabsTriggerProps {
-  readonly className?: string;
-}
+export interface TabsTriggerProps extends React.HTMLAttributes<HTMLButtonElement> {}
 
 export const TabsTrigger = React.forwardRef<
   HTMLButtonElement,
   TabsTriggerProps
 >((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
+
   // Hooks
 
   // Setup

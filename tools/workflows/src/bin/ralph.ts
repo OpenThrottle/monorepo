@@ -191,8 +191,9 @@ export const main = async (): Promise<void> => {
 
             const message = ` - 📌 Set task ${COLORS.green}${taskForIteration.id}${COLORS.reset} to IN_PROGRESS for this iteration.`;
             console.log(message);
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
+          } catch (error) {
+            const isError = error instanceof Error;
+            const msg = isError ? error.message : String(error);
             const message = `⚠️ Could not set task ${taskForIteration.id} to IN_PROGRESS: ${msg}`;
 
             console.warn(message);
@@ -201,6 +202,7 @@ export const main = async (): Promise<void> => {
           const message = ` - 📌 Resuming task ${COLORS.green}${taskForIteration.id}${COLORS.reset} (already IN_PROGRESS).`;
           console.log(message);
         }
+
         agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
       }
     }
@@ -297,8 +299,9 @@ export const main = async (): Promise<void> => {
           const message = `⚠️ Task ${taskId} not found; could not mark completed.`;
           console.warn(message);
         }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const msg = isError ? error.message : String(error);
 
         console.warn(`⚠️ Could not set task ${taskId} to COMPLETED: ${msg}`);
       }
@@ -319,11 +322,12 @@ export const main = async (): Promise<void> => {
       console.log(
         ` - 📋 Max iterations reached; task ${COLORS.green}${lastIterationTaskId}${COLORS.reset} was reset to PENDING so a future run can resume it.`,
       );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
 
       console.warn(
-        `⚠️ Could not reset task ${lastIterationTaskId} to PENDING: ${msg}`,
+        `⚠️ Could not reset task ${lastIterationTaskId} to PENDING: ${message}`,
       );
     }
   }

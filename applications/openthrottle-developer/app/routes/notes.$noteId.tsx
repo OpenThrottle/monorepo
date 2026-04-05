@@ -89,6 +89,9 @@ export const action = async (args: Route.ActionArgs) => {
   } catch {
     return { error: 'Note not found.' };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

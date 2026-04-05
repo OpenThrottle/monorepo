@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/openthrottle-workflows",
-  "description": "GraphQL-first workflow building blocks for OpenThrottle: typed GraphQL client, Ralph flow contract types, and blueprints (no CLI; see tools/workflows for shipped workflow-ralph).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -11,6 +8,7 @@
     "@openthrottle/nodejs-graphql": "workspace:*",
     "graphql": "^16.13.1"
   },
+  "description": "GraphQL-first workflow building blocks for OpenThrottle: typed GraphQL client, Ralph flow contract types, and blueprints (no CLI; see tools/workflows for shipped workflow-ralph).",
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -25,6 +23,7 @@
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-workflows",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": [],
@@ -46,14 +45,14 @@
       },
       "build-package": {},
       "codegen-graphql": {},
-      "codegen-graphql-watch": {},
+      "__codegen-graphql-watch": {},
       "lint": {},
       "test": {
         "dependsOn": [
           "@tools/dotfiles:build"
         ],
         "options": {
-          "configFile": "packages/openthrottle-workflows/vitest.config.mjs"
+          "configFile": "{projectRoot}/vitest.config.mjs"
         }
       },
       "typecheck": {}
@@ -81,5 +80,6 @@
   "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "version": "1.0.0"
 }

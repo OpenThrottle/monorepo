@@ -183,8 +183,10 @@ export class QueuesService implements OnModuleDestroy {
       });
       this.dynamicQueues.set(trimmed, queue);
       return { queueName: trimmed };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       return { error: `Failed to create queue: ${message}` };
     }
   }
@@ -405,8 +407,10 @@ export class QueuesService implements OnModuleDestroy {
         return { error: 'Failed to get new job id' };
       }
       return { jobId: String(job.id) };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       return { error: `Failed to enqueue orchestrator job: ${message}` };
     }
   }

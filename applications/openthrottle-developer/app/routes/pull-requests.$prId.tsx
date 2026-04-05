@@ -4,9 +4,9 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
-};
+// export const loader = async (_args: Route.LoaderArgs) => {
+//   return {};
+// };
 
 // export const links: LinksFunction = () => {
 //   return [{ href: stylesheet, rel: 'stylesheet' }];

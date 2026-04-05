@@ -123,12 +123,17 @@ export const action = async (args: Route.ActionArgs) => {
     }
 
     const effectivePlanId = planId ?? formPlanId.trim();
+
     return redirect(`/plans/${effectivePlanId}/tasks/${result.createTask.id}`);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create task.';
+    const isError = error instanceof Error;
+    const message = isError ? error.message : 'Failed to create task.';
+
     return { error: message };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;
