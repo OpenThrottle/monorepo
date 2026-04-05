@@ -6,6 +6,7 @@ import { GetProjectsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
 import { ProjectEmpty } from '~/routing/projects/components/ProjectEmpty';
+import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
 import { ProjectsCardGrid } from '~/routing/projects/components/ProjectsCardGrid';
 import { ProjectsStatsCards } from '~/routing/projects/components/ProjectsStatsCards';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
@@ -14,8 +15,6 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { GetProjectsQuery } from '~/__generated__/graphql';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import type { Route } from '@/app/routes/+types/projects._index';
-
-const DEFAULT_LIMIT = 10;
 
 const SORT_BY_VALUES = ['name', 'createdAt', 'updatedAt'] as const;
 const SORT_ORDER_VALUES = ['asc', 'desc'] as const;
@@ -116,7 +115,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
   const limit = Math.max(
     1,
-    Math.min(100, Number(url.searchParams.get('limit')) || DEFAULT_LIMIT),
+    Math.min(
+      100,
+      Number(url.searchParams.get('limit')) || PROJECTS_DEFAULT_LIMIT,
+    ),
   );
   const search = (
     url.searchParams.get('q') ??
@@ -198,17 +200,16 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:p-8 lg:p-12 relative flex flex-col max-w-7xl mx-auto w-full">
+    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
       {/* <OpenThrottleBreadcrumbs className="mb-2" /> */}
 
       <ProjectsStatsCards
+        className="mt-4"
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />
 
-      {/* <h1 className="text-xl mb-2 mt-12 text-highlight">Projects</h1> */}
       <ProjectsToolbar
-        // className="my-8"
         limit={limit}
         page={page}
         search={search}

@@ -31,35 +31,3 @@ describe('SortDropdown', () => {
     expect((select as HTMLSelectElement).value).toBe('createdAt-desc');
   });
 });
-
-// describe('parseSortFromSearchParams', () => {
-//   test('should return defaults when params are missing', () => {
-//     const params = new URLSearchParams();
-//     expect(parsePlansSortFromSearch(params)).toEqual({
-//       sortBy: 'createdAt',
-//       sortOrder: 'desc',
-//     });
-//   });
-
-//   test('should return valid sortBy and sortOrder from URL', () => {
-//     const params = new URLSearchParams({
-//       sortBy: 'updatedAt',
-//       sortOrder: 'asc',
-//     });
-//     expect(parsePlansSortFromSearch(params)).toEqual({
-//       sortBy: 'updatedAt',
-//       sortOrder: 'asc',
-//     });
-//   });
-
-//   test('should fallback to defaults for invalid values', () => {
-//     const params = new URLSearchParams({
-//       sortBy: 'invalid',
-//       sortOrder: 'invalid',
-//     });
-//     expect(parsePlansSortFromSearch(params)).toEqual({
-//       sortBy: 'createdAt',
-//       sortOrder: 'desc',
-//     });
-//   });
-// });

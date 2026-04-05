@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
+import { PlusIcon } from 'lucide-react';
 import { TypeMultiSelect } from './TypeMultiSelect';
 import { PromptSortDropdown } from './PromptSortDropdown';
 import {
@@ -165,9 +166,12 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
           asChild={true}
           className="shrink-0"
           data-testid="PromptToolbar-create-button"
-          variant="default"
+          variant="outline"
         >
-          <Link to="/prompts/create">Create prompt</Link>
+          <div>
+            <PlusIcon className="w-4 h-4" />
+            <Link to="/prompts/create">Create prompt</Link>
+          </div>
         </Button>
       </form>
     </div>

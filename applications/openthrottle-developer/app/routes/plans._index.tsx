@@ -166,8 +166,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:p-8 lg:p-12 relative flex flex-col max-w-7xl mx-auto w-full">
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
+    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
+      {/* <OpenThrottleBreadcrumbs className="mb-2" /> */}
+
+      <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
         <OpenThrottleStatCard title="Total" value={totalCount} />
         <OpenThrottleStatCard
           title="In progress (all)"

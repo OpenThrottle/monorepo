@@ -11,6 +11,7 @@ import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/search._index';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
@@ -76,3 +77,9 @@ export default function Component(
     </main>
   );
 }
+
+// export const action = async (args: Route.ActionArgs) => {
+//   return {};
+// };
+
+export const ErrorBoundary = GlobalErrorBoundary;

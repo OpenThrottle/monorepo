@@ -63,4 +63,8 @@ export default function Component(
   );
 }
 
+// export const action = async (args: Route.ActionArgs) => {
+//   return {};
+// };
+
 export const ErrorBoundary = GlobalErrorBoundary;
