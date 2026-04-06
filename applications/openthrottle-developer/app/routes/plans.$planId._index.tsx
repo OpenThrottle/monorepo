@@ -1,12 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Card,
   Empty,
   EmptyDescription,
@@ -19,14 +13,16 @@ import { ColumnsIcon } from '@phosphor-icons/react/dist/ssr/Columns';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { TableIcon } from '@phosphor-icons/react/dist/ssr/Table';
 import {
-  Link,
   Outlet,
   redirect,
   useRevalidator,
   useSearchParams,
 } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleBreadcrumbs,
+  OpenThrottleClipboard,
+} from '@openthrottle/react-router-ui';
 import type {
   PlanStatusChangedPayload,
   TaskStatusChangedPayload,
@@ -99,10 +95,10 @@ export default function Component(
 
   // Setup
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
-
   const isBoardView = planTasksView === 'board';
   const planId = params.planId ?? '';
 
+  // Handlers
   const onChangeView = (value: string): void => {
     if (value !== 'table' && value !== 'board') return;
     try {
@@ -110,16 +106,16 @@ export default function Component(
     } catch {
       // ignore quota / private mode
     }
+
     const next = new URLSearchParams(searchParams);
     if (value === 'table') {
       next.delete('view');
     } else {
       next.set('view', value);
     }
+
     setSearchParams(next, { replace: true });
   };
-
-  // Handlers
 
   // Markup
 
@@ -216,27 +212,17 @@ export default function Component(
   return (
     <>
       <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-        <Breadcrumb className="mb-4 md:mb-8">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild={true}>
-                <Link to="/plans" viewTransition={true}>
-                  Plans
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>
-                <OpenThrottleClipboard
-                  className="cursor-pointer whitespace-nowrap"
-                  label={plan.id}
-                  text={plan.id}
-                />
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <OpenThrottleBreadcrumbs
+          children={
+            <OpenThrottleClipboard
+              className="cursor-pointer whitespace-nowrap"
+              label={plan.id}
+              text={plan.id}
+            />
+          }
+          className="mb-4"
+          links={[{ children: 'Plans', to: '/plans' }]}
+        />
 
         <PlanDetails plan={plan} />
 

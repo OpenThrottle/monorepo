@@ -1,15 +1,8 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, redirect } from 'react-router';
+import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-  BreadcrumbPage,
-} from '@openthrottle/react-router-shadcn';
+import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
@@ -73,29 +66,12 @@ export default function Component(
   }
 
   return (
-    // <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-    //   <div className="max-w-xl mx-auto">
-    //     <h1 className="text-xl my-4 text-highlight">Edit plan</h1>
-    //     <PlanForm actionData={actionData} plan={plan} />
-    //   </div>
-    // </main>
-
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4 md:mb-8">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/plans" viewTransition={true}>
-                Plans
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Edit Plan</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <OpenThrottleBreadcrumbs
+        children="Edit Plan"
+        className="mb-4"
+        links={[{ children: 'Plans', to: '/plans' }]}
+      />
 
       <PlanForm actionData={actionData} plan={plan} />
     </main>

@@ -23,6 +23,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   try {
     const data = await executeGraphqlWithAuth(request, GetUsersDocument);
+
     return { users: data.users };
   } catch (error) {
     const isError = error instanceof Error;
@@ -46,12 +47,12 @@ export default function Component(
   const { actionData, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const createFetcher = useFetcher<typeof action>();
+  const [open, setOpen] = React.useState(false);
+  const fetcher = useFetcher<typeof action>();
 
   // Setup
   const users = loaderData?.users ?? [];
-  const CreateUserForm = createFetcher.Form;
+  const CreateUserForm = fetcher.Form;
 
   const createSuccess =
     actionData != null && 'ok' in actionData && actionData.ok === true;
@@ -62,7 +63,7 @@ export default function Component(
 
   // Life Cycle
   React.useEffect(() => {
-    if (createSuccess) setCreateOpen(false);
+    if (createSuccess) setOpen(false);
 
     // 🪝 On success we close the create modal
   }, [createSuccess]);
@@ -70,76 +71,76 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <>
-      <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-xl text-highlight">Users</h1>
-        </div>
-        <UsersTable users={users} />
-      </main>
-      <Sheet onOpenChange={setCreateOpen} open={createOpen}>
-        <SheetTrigger asChild={true}>
-          <Button size="xs" type="button">
-            Add user
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Create user</SheetTitle>
-          </SheetHeader>
-          <CreateUserForm method="post">
-            <input name="intent" type="hidden" value="createUser" />
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-githubUsername">GitHub username</Label>
-                <Input
-                  id="create-githubUsername"
-                  name="githubUsername"
-                  placeholder="visormatt"
-                  required={true}
-                />
+    <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-xl text-highlight">Users</h1>
+        <Sheet onOpenChange={setOpen} open={open}>
+          <SheetTrigger asChild={true}>
+            <Button size="xs" type="button">
+              Add user
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Create user</SheetTitle>
+            </SheetHeader>
+
+            <CreateUserForm method="post">
+              <input name="intent" type="hidden" value="createUser" />
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="create-githubUsername">GitHub username</Label>
+                  <Input
+                    id="create-githubUsername"
+                    name="githubUsername"
+                    placeholder="visormatt"
+                    required={true}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="create-email">Email (optional)</Label>
+                  <Input
+                    id="create-email"
+                    name="email"
+                    placeholder="user@example.com"
+                    type="email"
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="create-email">Email (optional)</Label>
-                <Input
-                  id="create-email"
-                  name="email"
-                  placeholder="user@example.com"
-                  type="email"
-                />
+              {fetcher.data != null && 'error' in fetcher.data ? (
+                <p className="text-destructive text-sm" role="alert">
+                  {fetcher.data.error}
+                </p>
+              ) : null}
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => setOpen(false)}
+                  size="xs"
+                  type="button"
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={fetcher.state !== 'idle'}
+                  size="xs"
+                  type="submit"
+                >
+                  {fetcher.state !== 'idle' ? 'Creating…' : 'Create'}
+                </Button>
               </div>
-            </div>
-            {createFetcher.data != null && 'error' in createFetcher.data ? (
-              <p className="text-destructive text-sm" role="alert">
-                {createFetcher.data.error}
-              </p>
-            ) : null}
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => setCreateOpen(false)}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={createFetcher.state !== 'idle'}
-                size="xs"
-                type="submit"
-              >
-                {createFetcher.state !== 'idle' ? 'Creating…' : 'Create'}
-              </Button>
-            </div>
-          </CreateUserForm>
-        </SheetContent>
-      </Sheet>
-    </>
+            </CreateUserForm>
+          </SheetContent>
+        </Sheet>
+      </div>
+      <UsersTable users={users} />
+    </main>
   );
 }
 
 export const action = async (args: Route.ActionArgs) => {
   const { request } = args;
+
   const formData = await request.formData();
   const intent = formData.get('intent');
 

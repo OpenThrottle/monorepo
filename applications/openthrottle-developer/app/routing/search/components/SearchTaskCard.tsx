@@ -23,10 +23,9 @@ function planOrTaskHref(planId: string, taskId?: string | null): string {
   if (taskId != null && taskId !== '') {
     return `${base}#task-${taskId}`;
   }
+
   return base;
 }
-
-const TITLE_CLASS = 'text-lg font-semibold leading-tight tracking-tight';
 
 export const SearchTaskCard = (props: SearchTaskCardProps) => {
   const { className, result } = props;
@@ -34,6 +33,7 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
   // Hooks
 
   // Setup
+  const titleClass = 'text-lg font-semibold leading-tight tracking-tight';
   const hasPlanLink = result.planId != null && result.planId !== '';
   const hasTaskLink =
     hasPlanLink && result.taskId != null && result.taskId !== '';
@@ -66,9 +66,9 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
         <CardTitle
-          className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${TITLE_CLASS}`}
+          className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${titleClass}`}
         >
-          <span className={TITLE_CLASS}>{result.taskTitle ?? 'Task'}</span>
+          <span className={titleClass}>{result.taskTitle ?? 'Task'}</span>
           {hasPlanLink && (
             <span className="text-sm font-normal text-muted-foreground">
               {hasTaskLink ? (

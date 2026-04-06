@@ -27,16 +27,19 @@ export interface StatusMultiSelectProps {
  */
 export function StatusMultiSelect(
   props: StatusMultiSelectProps,
-): React.JSX.Element {
+): React.ReactElement {
   const {
-    compact = false,
     'data-testid': dataTestId,
+    compact = false,
     onChange,
     options,
     value,
   } = props;
+
+  // Hooks
   const [open, setOpen] = React.useState(false);
 
+  // Setup
   const triggerLabel =
     compact && value.length > 0 ? `Status (${value.length})` : 'Status…';
 
@@ -49,13 +52,17 @@ export function StatusMultiSelect(
     [options],
   );
 
+  // Handlers
+
   const toggle = React.useCallback(
     (optValue: string) => {
       const next = value.includes(optValue)
         ? value.filter((v) => v !== optValue)
         : [...value, optValue];
+
       onChange(next);
     },
+
     [onChange, value],
   );
 
@@ -63,14 +70,21 @@ export function StatusMultiSelect(
     (optValue: string) => {
       onChange(value.filter((v) => v !== optValue));
     },
+
     [onChange, value],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <label
       className={cn(
         'flex flex-col gap-1',
-        compact ? 'min-w-0 shrink-0' : 'min-w-[10rem]',
+        compact ? 'min-w-0 shrink-0' : 'min-w-40',
       )}
       data-testid={dataTestId}
     >
@@ -83,7 +97,7 @@ export function StatusMultiSelect(
             aria-expanded={open}
             className={cn(
               'justify-between font-normal text-muted-foreground',
-              compact ? 'min-w-[5rem] shrink-0' : 'w-full min-w-[10rem]',
+              compact ? 'min-w-20 shrink-0' : 'w-full min-w-40',
             )}
             role="combobox"
             type="button"

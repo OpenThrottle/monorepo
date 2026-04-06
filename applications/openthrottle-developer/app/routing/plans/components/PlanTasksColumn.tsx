@@ -28,8 +28,19 @@ export const PlanTasksColumn = (props: PlanTasksColumnProps) => {
     title,
   } = props;
 
+  // Hooks
+
+  // Setup
   const headingId = `plan-tasks-column-title-${columnId}`;
   const isEmpty = React.Children.count(children) === 0;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <section

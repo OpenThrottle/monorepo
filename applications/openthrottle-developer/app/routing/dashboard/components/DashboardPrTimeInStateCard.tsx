@@ -36,6 +36,9 @@ export const DashboardPrTimeInStateCard = (
 ) => {
   const { className, prTimeInStateSummary } = props;
 
+  // Hooks
+
+  // Setup
   const chartData = React.useMemo(
     () =>
       [...prTimeInStateSummary].map((node) => ({
@@ -43,11 +46,19 @@ export const DashboardPrTimeInStateCard = (
         count: node.count,
         state: node.state,
       })),
+
     [prTimeInStateSummary],
   );
 
   const isEmpty = chartData.length === 0;
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (isEmpty) {
     return (
       <div

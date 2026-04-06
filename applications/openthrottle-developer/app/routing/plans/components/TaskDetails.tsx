@@ -38,10 +38,13 @@ function formatTaskDate(value: string | number | unknown): string {
 
 export const TaskDetails = (props: TaskDetailsProps) => {
   const { className, planId, task } = props;
+  // Hooks
   const [descriptionExpanded, setDescriptionExpanded] = React.useState(false);
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
 
+  // Setup
   const { projectRelation: project } = task;
+
   const hasDescription = task.description != null && task.description !== '';
   const hasSummary = task.summary != null && task.summary !== '';
   const descriptionLines = hasDescription
@@ -53,10 +56,6 @@ export const TaskDetails = (props: TaskDetailsProps) => {
   const showDescriptionPreview =
     hasDescription && isLongDescription && !descriptionExpanded;
   const showSummaryPreview = hasSummary && isLongSummary && !summaryExpanded;
-
-  // Hooks
-
-  // Setup
 
   // Handlers
 

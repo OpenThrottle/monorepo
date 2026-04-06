@@ -16,6 +16,18 @@ export interface QueuesToolbarProps {
 export const QueuesToolbar = (props: QueuesToolbarProps) => {
   const { className, queues: _queues } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={classnames(

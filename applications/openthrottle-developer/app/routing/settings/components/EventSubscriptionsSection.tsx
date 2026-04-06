@@ -28,7 +28,7 @@ export interface EventSubscriptionsSectionProps {}
 export const EventSubscriptionsSection = (
   _props: EventSubscriptionsSectionProps,
 ) => {
-  // const { } = props;
+  // const {} = props;
 
   // Hooks
   const [subscribed, setSubscribed] = React.useState(() =>
@@ -38,6 +38,14 @@ export const EventSubscriptionsSection = (
   // Setup
 
   // Handlers
+  const handleCheckedChange =
+    (id: EventSubscriptionId) => (checked: boolean) => {
+      setSubscribed((prev) => {
+        const next = { ...prev, [id]: checked };
+        setEventSubscriptionsInStorage(next);
+        return next;
+      });
+    };
 
   // Markup
 
@@ -51,15 +59,6 @@ export const EventSubscriptionsSection = (
   }, []);
 
   // 🔌 Short Circuit
-
-  const handleCheckedChange =
-    (id: EventSubscriptionId) => (checked: boolean) => {
-      setSubscribed((prev) => {
-        const next = { ...prev, [id]: checked };
-        setEventSubscriptionsInStorage(next);
-        return next;
-      });
-    };
 
   return (
     <Card className="max-w-2xl">

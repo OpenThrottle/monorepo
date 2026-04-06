@@ -201,8 +201,6 @@ export default function Component(
 
   return (
     <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
-      {/* <OpenThrottleBreadcrumbs className="mb-2" /> */}
-
       <ProjectsStatsCards
         className="mt-4"
         plansLinkedCount={plansLinkedCount}

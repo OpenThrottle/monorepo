@@ -12,15 +12,28 @@ export interface AssigneeMultiSelectProps {
  */
 export function AssigneeMultiSelect(
   props: AssigneeMultiSelectProps,
-): React.JSX.Element {
+): React.ReactElement {
   const { onChange, options, value } = props;
+
+  // Hooks
+
+  // Setup
   const selectOptions = options.map((opt) => ({
     label: `@${opt}`,
     value: opt,
   }));
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <MultiSelect
-      className="min-w-[10rem] shrink-0"
+      className="min-w-40 shrink-0"
       onChange={onChange}
       options={selectOptions}
       placeholder="Assignee…"

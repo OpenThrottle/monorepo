@@ -1,18 +1,10 @@
 import * as React from 'react';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link } from 'react-router';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
+import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/settings._index';
 
 // export const loader = async (args: Route.LoaderArgs) => {
@@ -50,21 +42,11 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4 md:mb-8">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/dashboard" viewTransition={true}>
-                Dashboard
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Settings</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <OpenThrottleBreadcrumbs
+        children="Settings"
+        className="mb-4"
+        links={[{ children: 'Dashboard', to: '/dashboard' }]}
+      />
 
       <div className="mx-auto max-w-7xl space-y-8">
         {/* <header>
