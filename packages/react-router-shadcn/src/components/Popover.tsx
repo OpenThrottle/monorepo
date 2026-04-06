@@ -5,11 +5,15 @@ import { cn } from '../utils/cn';
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
 
+export interface PopoverContentProps extends React.ComponentPropsWithoutRef<
+  typeof PopoverPrimitive.Content
+> {}
+
 export const PopoverContent = React.forwardRef<
   React.ComponentRef<typeof PopoverPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+  PopoverContentProps
 >((props, ref): React.ReactElement => {
-  const { className, align = 'center', sideOffset = 4, ...rest } = props;
+  const { align = 'center', className, sideOffset = 4, ...rest } = props;
 
   // Hooks
 

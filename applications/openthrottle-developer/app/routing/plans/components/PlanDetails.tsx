@@ -97,7 +97,11 @@ export const PlanDetails = (props: PlanDetailsProps) => {
     } else {
       next.delete(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM);
     }
-    setSearchParams(next, { replace: true });
+
+    setSearchParams(next, {
+      preventScrollReset: true,
+      replace: true,
+    });
   };
 
   // Markup

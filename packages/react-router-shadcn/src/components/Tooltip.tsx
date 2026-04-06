@@ -7,9 +7,11 @@ const Tooltip = TooltipPrimitive.Root;
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
 const TooltipContent = React.forwardRef<
-  React.ElementRef<typeof TooltipPrimitive.Content>,
+  React.ComponentRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => {
+>((props, ref) => {
+  const { className, sideOffset = 4, ...rest } = props;
+
   // Hooks
 
   // Setup
@@ -30,12 +32,11 @@ const TooltipContent = React.forwardRef<
       )}
       ref={ref}
       sideOffset={sideOffset}
-      {...props}
+      {...rest}
     />
   );
 });
 
-TooltipContent.displayName =
-  TooltipPrimitive.Content.displayName ?? 'TooltipContent';
+TooltipContent.displayName = TooltipPrimitive.Content.displayName ?? 'TooltipContent'; // prettier-ignore
 
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };

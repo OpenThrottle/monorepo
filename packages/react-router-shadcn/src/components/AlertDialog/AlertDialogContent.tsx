@@ -8,10 +8,10 @@ export interface AlertDialogContentProps extends React.ComponentPropsWithoutRef<
   typeof AlertDialogPrimitive.Content
 > {}
 
-const AlertDialogContent = React.forwardRef<
+export const AlertDialogContent = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Content>,
   AlertDialogContentProps
->((props, ref) => {
+>((props, ref): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

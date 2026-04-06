@@ -7,7 +7,6 @@ import {
   CardFooter,
   Input,
   Label,
-  Markdown,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';

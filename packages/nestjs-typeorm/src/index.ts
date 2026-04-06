@@ -1,7 +1,6 @@
 // Core Module
 export * from './nestjs-typeorm.config';
 export * from './nestjs-typeorm.module';
-export * from './nestjs-typeorm.service';
 
 // Modules
 export * from './modules/database/database.constants';

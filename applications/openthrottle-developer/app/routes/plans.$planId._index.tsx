@@ -33,7 +33,13 @@ import { useNotificationsSocket } from '@openthrottle/react-router-notifications
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
-import { RalphPlanRunTuningInputSchema } from '~/__generated__/schemas';
+import {
+  CancelPlanRunInputSchema,
+  EnqueuePlanRunInputSchema,
+  RalphPlanRunTuningInputSchema,
+  SetPlanStatusInputSchema,
+  UpdateTaskInputSchema,
+} from '~/__generated__/schemas';
 import {
   GetPlanByIdDocument,
   GetTasksByPlanIdDocument,
@@ -56,6 +62,16 @@ const parsePlanTasksView = (raw: string | null): 'board' | 'table' | null => {
   if (raw === 'board' || raw === 'table') return raw;
   return null;
 };
+
+// /**
+//  * @external https://remix.run/docs/en/main/route/should-revalidate
+//  * @description We only need to revalidate when we login or logout which
+//  * is already taken care of by the auth routes. So we don't need to revalidate
+//  * (refetch) to data at this level.
+//  */
+// export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
+//   return false;
+// };
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId } = args.params;
@@ -114,7 +130,10 @@ export default function Component(
       next.set('view', value);
     }
 
-    setSearchParams(next, { replace: true });
+    setSearchParams(next, {
+      preventScrollReset: true,
+      replace: true,
+    });
   };
 
   // Markup
@@ -298,10 +317,11 @@ export const action = async (args: Route.ActionArgs) => {
 
   if (intent === 'cancelPlanRun') {
     try {
+      const input = CancelPlanRunInputSchema().parse({ planId });
       const result = await executeGraphqlWithAuth(
         args.request,
         PlanDetailCancelPlanRunDocument,
-        { input: { planId } },
+        { input },
       );
 
       if (!result.cancelPlanRun) {
@@ -324,6 +344,8 @@ export const action = async (args: Route.ActionArgs) => {
         ? statusField
         : 'COMPLETED';
 
+    const input = SetPlanStatusInputSchema().parse({ planId, status });
+
     if (!status || status.trim() === '') {
       return { setPlanStatusError: 'Status is required.' };
     }
@@ -332,7 +354,7 @@ export const action = async (args: Route.ActionArgs) => {
       const result = await executeGraphqlWithAuth(
         args.request,
         PlanDetailSetPlanStatusDocument,
-        { input: { planId, status: status.trim() } },
+        { input },
       );
 
       if (!result.setPlanStatus) {
@@ -349,32 +371,17 @@ export const action = async (args: Route.ActionArgs) => {
   }
 
   if (intent === 'updateTaskStatus') {
-    const taskIdRaw = formData.get('taskId');
-    const statusRaw = formData.get('status');
-    const planIdRaw = formData.get('planId');
-    const taskId = typeof taskIdRaw === 'string' ? taskIdRaw : '';
-    const status = typeof statusRaw === 'string' ? statusRaw : '';
-    const bodyPlanId = typeof planIdRaw === 'string' ? planIdRaw : '';
-
-    if (!taskId.trim() || !status.trim()) {
-      return { updateTaskError: 'Task id and status are required.' };
-    }
-
-    if (bodyPlanId !== planId) {
-      return { updateTaskError: 'Plan id mismatch.' };
-    }
-
     try {
+      const input = UpdateTaskInputSchema().parse({
+        id: formData.get('taskId'),
+        planId,
+        status: formData.get('status'),
+      });
+
       const result = await executeGraphqlWithAuth(
         args.request,
         PlanDetailUpdateTaskDocument,
-        {
-          input: {
-            id: taskId.trim(),
-            planId,
-            status: status.trim(),
-          },
-        },
+        { input },
       );
 
       if (!result.updateTask) {
@@ -413,16 +420,16 @@ export const action = async (args: Route.ActionArgs) => {
     }
 
     try {
+      const input = EnqueuePlanRunInputSchema().parse({
+        planId,
+        priority,
+        ...(ralph !== undefined ? { ralph } : {}),
+      });
+
       const result = await executeGraphqlWithAuth(
         args.request,
         PlanDetailEnqueuePlanRunDocument,
-        {
-          input: {
-            planId,
-            priority,
-            ...(ralph !== undefined ? { ralph } : {}),
-          },
-        },
+        { input },
       );
 
       if (!result.enqueuePlanRun) {
