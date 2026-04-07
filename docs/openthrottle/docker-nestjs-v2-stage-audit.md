@@ -31,7 +31,7 @@ See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build
 
 ## 3. Baseline: image size per stage
 
-Measured with `APP_NAME=openthrottle-server`, `APP_VERSION=1.3.0`, `NX_VERSION=22.5.4`, `PNPM_VERSION=9`. Date of audit: **2025-03-07**.
+Measured with `APP_NAME=openthrottle-server`, `APP_VERSION=1.3.0`, `NX_VERSION=22.6.4`, `PNPM_VERSION=9`. Date of audit: **2025-03-07**.
 
 | Stage        | Image size (human) | Notes                                                                                                                                                                                                                       |
 | ------------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +63,7 @@ From monorepo root:
 # Required build-args for stages that need them
 export APP_NAME=openthrottle-server
 export APP_VERSION=1.3.0
-export NX_VERSION=22.5.4
+export NX_VERSION=22.6.4
 export PNPM_VERSION=9
 export GITHUB_TOKEN=${GITHUB_TOKEN:-}   # optional if no private deps
 export NX_KEY=${NX_KEY:-}               # optional for build stage

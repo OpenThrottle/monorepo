@@ -66,7 +66,7 @@ Both are intended to be built from the repo root, e.g.:
 docker build -f Dockerfile.NestJS \
   --build-arg APP_NAME=openthrottle-server \
   --build-arg APP_VERSION=1.3.0 \
-  --build-arg NX_VERSION=22.5.4 \
+  --build-arg NX_VERSION=22.6.4 \
   -t openthrottle-server:local .
 ```
 
@@ -76,13 +76,13 @@ The **root** `Dockerfile.NestJS.v3` is the Nx Docker plugin–friendly path for 
 
 - **Nx target (recommended):** From repo root run
   `nx run openthrottle-server:docker-build`
-  This runs `docker build` with `-f Dockerfile.NestJS.v3`, `--target production`, and build context `.`. The target sets default env: `APP_VERSION=1.3.0`, `NX_VERSION=22.5.4`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and Nx cache (optional for local builds without cache).
+  This runs `docker build` with `-f Dockerfile.NestJS.v3`, `--target production`, and build context `.`. The target sets default env: `APP_VERSION=1.3.0`, `NX_VERSION=22.6.4`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and Nx cache (optional for local builds without cache).
 - **Manual build from repo root:**
 
   ```bash
   export APP_NAME=openthrottle-server
   export APP_VERSION=1.3.0
-  export NX_VERSION=22.5.4
+  export NX_VERSION=22.6.4
   export GITHUB_TOKEN=${GITHUB_TOKEN:-}
   export NX_KEY=${NX_KEY:-}
 

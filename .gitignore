@@ -48,3 +48,5 @@ vitest.config.ts.timestamp*
 # Tracking these in here as we flush the workflows out
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+.claude/worktrees

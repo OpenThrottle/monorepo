@@ -41,7 +41,7 @@
           "cwd": "{workspaceRoot}",
           "env": {
             "APP_VERSION": "1.3.0",
-            "NX_VERSION": "22.5.4"
+            "NX_VERSION": "22.6.4"
           }
         },
         "description": "Build openthrottle-server image from root Dockerfile.NestJS.v3 (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
