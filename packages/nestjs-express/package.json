@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@as-integrations/express5": "^1.1.2",
-    "@nestjs/platform-express": "^11.1.12",
+    "@nestjs/platform-express": "^11.1.18",
     "express": "^5.2.1"
   },
   "devDependencies": {},

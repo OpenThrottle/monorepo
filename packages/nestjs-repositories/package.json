@@ -8,14 +8,14 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/typeorm": "^11.0.0",
+    "@nestjs/typeorm": "^11.0.1",
     "bcrypt": "^6.0.0",
     "dataloader": "^2.2.3",
     "pg": "^8.17.1",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.0.0",
+    "@faker-js/faker": "^10.4.0",
     "@types/bcrypt": "^6.0.0",
     "fishery": "^2.4.0"
   },

@@ -12,7 +12,7 @@
     "@apollo/server-plugin-response-cache": "^5.0.0",
     "@nestjs/apollo": "^13.2.3",
     "@nestjs/graphql": "^13.2.3",
-    "graphql": "^16.13.1",
+    "graphql": "^16.13.2",
     "graphql-request": "^7.4.0",
     "graphql-scalars": "^1.25.0"
   },
