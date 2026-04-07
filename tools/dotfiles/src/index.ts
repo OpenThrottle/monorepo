@@ -2,7 +2,7 @@
 // @ts-expect-error - This is a type-only import that doesn't need to resolve at runtime
 import type {} from './global';
 
-// import expoConfig from 'eslint-config-expo/flat';
+// import pluginTypescript from '@typescript-eslint/eslint-plugin';
 import js from '@eslint/js';
 import pluginComments from 'eslint-plugin-eslint-comments';
 import pluginImport from 'eslint-plugin-import';
@@ -13,7 +13,6 @@ import pluginNx from '@nx/eslint-plugin';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
-import pluginTypescript from '@typescript-eslint/eslint-plugin';
 import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 import tslint from 'typescript-eslint';
 export {
@@ -123,19 +122,6 @@ export const eslintConfig = tslint.config([
   // pluginPrettier, // FIXME: Look at this again
   ...tslint.configs.recommended,
 
-  // FIXME: lets enable all this good stuff
-  // @link https://docs.expo.dev/guides/react-compiler/#enabling-the-linter
-  // expoConfig,
-  // {
-  //   ignores: ['dist/*'],
-  //   plugins: {
-  //     'react-compiler': pluginReactCompiler,
-  //   },
-  //   rules: {
-  //     'react-compiler/react-compiler': 'error',
-  //   },
-  // },
-
   {
     languageOptions: {
       parserOptions: {
@@ -161,7 +147,7 @@ export const eslintConfig = tslint.config([
 
     plugins: {
       '@nx': pluginNx,
-      '@typescript-eslint': pluginTypescript,
+      // '@typescript-eslint': pluginTypescript,
       comments: pluginComments,
       import: pluginImport,
       jest: pluginJest,
