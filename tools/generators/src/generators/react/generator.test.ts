@@ -30,8 +30,8 @@ describe('reactGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      `packages/rocketcms/${folderName}/src/components/${name}.tsx`,
-      `packages/rocketcms/${folderName}/src/components/__tests__/${name}.test.tsx`,
+      `packages/openthrottle/${folderName}/src/components/${name}.tsx`,
+      `packages/openthrottle/${folderName}/src/components/__tests__/${name}.test.tsx`,
     ]);
   });
 });

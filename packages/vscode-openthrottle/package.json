@@ -174,7 +174,7 @@
     }
   },
   "private": true,
-  "publisher": "visormatt",
+  "publisher": "OpenThrottle",
   "publishConfig": {
     "access": "restricted"
   },

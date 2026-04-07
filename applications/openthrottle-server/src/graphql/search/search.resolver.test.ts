@@ -175,7 +175,7 @@ describe('SearchResolver', () => {
           id: 'doc-chunk-uuid',
           metadata: {},
           path: 'docs/openthrottle/desktop-notifications-testing.md',
-          repo: 'visormatt/monorepo',
+          repo: 'openthrottle/monorepo',
           sha: 'abc123def',
           similarity: 0.85,
           source: 'documentation',
@@ -194,7 +194,7 @@ describe('SearchResolver', () => {
         similarity: 0.85,
         source: 'documentation',
         sourcePath: 'docs/openthrottle/desktop-notifications-testing.md',
-        sourceRepo: 'visormatt/monorepo',
+        sourceRepo: 'openthrottle/monorepo',
         sourceSha: 'abc123def',
       });
       expect(result.chunks[0].planId).toBeNull();

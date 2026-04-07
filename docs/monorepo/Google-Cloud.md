@@ -14,16 +14,16 @@ gcloud auth list
 ```bash
 gcloud auth configure-docker us-west2-docker.pkg.dev
 
-docker tag rocketcms:production \
-  us-west2-docker.pkg.dev/rocketcms/monorepo/rocketcms:production
+docker tag openthrottle-developer:production \
+  us-west2-docker.pkg.dev/openthrottle-staging/monorepo/openthrottle-developer:production
 
-docker push us-west2-docker.pkg.dev/rocketcms/monorepo/rocketcms:production
+docker push us-west2-docker.pkg.dev/openthrottle-staging/monorepo/openthrottle-developer:production
 
 # Digital Ocean
-docker tag rocketcms:production \
-  registry.digitalocean.com/rocketcms/monorepo/rocketcms:production
+docker tag openthrottle-developer:production \
+  registry.digitalocean.com/openthrottle-staging/monorepo/openthrottle-developer:production
 
-docker push registry.digitalocean.com/rocketcms/monorepo/rocketcms:production
+docker push registry.digitalocean.com/openthrottle-staging/monorepo/openthrottle-developer:production
 ```
 
 Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam sit quisquam error exercitationem expedita consectetur explicabo enim deserunt itaque commodi facilis atque quae inventore fugiat quidem, officiis ut. Veritatis, voluptates?

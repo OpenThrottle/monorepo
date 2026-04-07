@@ -33,11 +33,11 @@ DIR_START=$PWD
 
 cd "$DIR_START/services"
 
-# 🌎 Repositories - https://github.com/visormatt?tab=repositories&q=&type=source&language=&sort=
+# 🌎 Repositories - https://github.com/OpenThrottle?tab=repositories&q=&type=source&language=&sort=
 # [ ! -d "$DIR_START/services/openthrottle-github" ] && git clone git@github.com:OpenThrottle/.github.git openthrottle-github || echo " - openthrottle-github"
 
-# 👋 Archived Repositories - https://github.com/visormatt?tab=repositories&q=&type=archived&language=&sort=
-# [ ! -d "$DIR_START/services/learning-langchain" ] && git clone git@github.com:visormatt/learning-langchain.git  || echo " - learning-langchain"
+# 👋 Archived Repositories - https://github.com/OpenThrottle?tab=repositories&q=&type=archived&language=&sort=
+# [ ! -d "$DIR_START/services/learning-langchain" ] && git clone git@github.com:OpenThrottle/learning-langchain.git  || echo " - learning-langchain"
 
 # And back to the root
 cd $DIR_START

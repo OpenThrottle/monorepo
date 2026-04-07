@@ -1,4 +1,4 @@
--- Use definitive status enums for plans and tasks (barguide-style).
+-- Use definitive status enums for plans and tasks
 -- Replaces TEXT status with plan_task_status enum; canonical values uppercase.
 
 -- Normalize any remaining 'complete' to 'completed' before enum migration (only when status is still TEXT).

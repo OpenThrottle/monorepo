@@ -27,8 +27,8 @@ describe('componentGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      `packages/rocketcms/${packageName}/src/components/${name}.tsx`,
-      `packages/rocketcms/${packageName}/src/components/__tests__/${name}.test.tsx`,
+      `packages/openthrottle/${packageName}/src/components/${name}.tsx`,
+      `packages/openthrottle/${packageName}/src/components/__tests__/${name}.test.tsx`,
     ]);
   });
 });

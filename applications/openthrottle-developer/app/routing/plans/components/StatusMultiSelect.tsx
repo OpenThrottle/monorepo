@@ -122,11 +122,6 @@ export function StatusMultiSelect(
                     <CommandItem
                       key={opt.value}
                       onSelect={() => toggle(opt.value)}
-                      // style={{
-                      //   fontSize: '0.75rem',
-                      //   lineHeight: '1.25rem',
-                      //   padding: '0.25rem 0.5rem',
-                      // }}
                       value={opt.label}
                     >
                       <Check

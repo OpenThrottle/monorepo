@@ -9,7 +9,7 @@ export const CONFIG_API_BASE_URL = 'apiBaseUrl';
 export const CONFIG_DEFAULT_AUTHOR = 'defaultAuthor';
 
 export const DEFAULT_API_BASE_URL = 'http://localhost:6021';
-export const DEFAULT_AUTHOR = 'visormatt';
+export const DEFAULT_AUTHOR = 'OpenThrottle';
 export const DEFAULT_CATEGORY = 'general';
 
 /**

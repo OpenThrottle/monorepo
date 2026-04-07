@@ -39,7 +39,11 @@ export const OpenThrottleBreadcrumbs = (
           <React.Fragment key={link.to.toString()}>
             <BreadcrumbItem>
               <BreadcrumbLink asChild={true}>
-                <Link to={link.to} viewTransition={true}>
+                <Link
+                  className="hover:text-accent transition-colors"
+                  to={link.to}
+                  viewTransition={true}
+                >
                   {link.children}
                 </Link>
               </BreadcrumbLink>

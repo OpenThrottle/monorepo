@@ -308,7 +308,7 @@ export type CreateTaskInput = {
 
 export type CreateUserInput = {
   email?: InputMaybe<Scalars['String']['input']>;
-  /** GitHub username (e.g. visormatt) */
+  /** GitHub user or Organization name (e.g. OpenThrottle) */
   githubUsername: Scalars['String']['input'];
 };
 
@@ -2133,7 +2133,7 @@ export type UserObject = {
   /** When set, user is disabled and cannot log in. */
   disabledAt?: Maybe<Scalars['DateTime']['output']>;
   email?: Maybe<Scalars['String']['output']>;
-  /** GitHub username (e.g. visormatt) */
+  /** GitHub user or Organization name (e.g. OpenThrottle) */
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];

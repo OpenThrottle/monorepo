@@ -1123,7 +1123,7 @@ type UserObject {
   disabledAt: DateTime
   email: String
 
-  """GitHub username (e.g. visormatt)"""
+  """GitHub user or Organization name (e.g. OpenThrottle)"""
   githubUsername: String!
   id: String!
   updatedAt: DateTime!
@@ -2317,7 +2317,7 @@ input DeleteTaskInput {
 input CreateUserInput {
   email: String
 
-  """GitHub username (e.g. visormatt)"""
+  """GitHub user or Organization name (e.g. OpenThrottle)"""
   githubUsername: String!
 }
 

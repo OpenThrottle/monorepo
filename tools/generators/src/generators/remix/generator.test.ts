@@ -11,7 +11,7 @@ describe('remixGenerator', () => {
   });
 
   const type = 'component';
-  const application = 'rocketcms';
+  const application = 'openthrottle';
   const folder = 'global/components';
   const name = 'TestComponentName';
 
@@ -31,8 +31,8 @@ describe('remixGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      'applications/rocketcms/app/global/components/TestComponentName.tsx',
-      'applications/rocketcms/app/global/components/__tests__/TestComponentName.test.tsx',
+      'applications/openthrottle/app/global/components/TestComponentName.tsx',
+      'applications/openthrottle/app/global/components/__tests__/TestComponentName.test.tsx',
     ]);
   });
 });

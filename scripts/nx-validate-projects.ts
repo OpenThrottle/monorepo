@@ -166,10 +166,8 @@ const main = async (): Promise<void> => {
     // Find package.json files with NX config that aren't registered
     const missingFromNx = packageJsonFiles.filter((file) => {
       const isTemplatesPackage = file.path.includes('tools/generators/');
-      const isBarGuideLLMApp = file.path.includes('applications/barguide-llm/');
-      const isSkipped = isTemplatesPackage || isBarGuideLLMApp;
 
-      return file.name && !isSkipped && !registeredSet.has(file.name);
+      return file.name && !isTemplatesPackage && !registeredSet.has(file.name);
     });
 
     // Find registered projects that don't have a corresponding package.json with NX config

@@ -110,8 +110,8 @@ export default function Component(
         children={
           <OpenThrottleClipboard
             className="cursor-pointer whitespace-nowrap"
-            label={effectivePlanId}
-            text={effectivePlanId}
+            label={task.id}
+            text={task.id}
           />
         }
         className="mb-4"

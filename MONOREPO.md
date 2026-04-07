@@ -54,7 +54,7 @@ monorepo/
 
 - **`applications/`**: Contains all standalone, deployable applications. Each application is a complete project that can be built and deployed independently.
 - **`docs/monorepo/`**: Contains monorepo-specific documentation including technology tags reference, dependency relationships, and NX documentation.
-- **`packages/`**: Contains reusable libraries. Can be organized by domain (e.g., `packages/barguide/`) or as top-level shared packages (e.g., `packages/visormatt/`).
+- **`packages/`**: Contains reusable libraries shared across applications and used between packages.
 - **`scripts/`**: Utility scripts for common tasks like setup, validation, and automation.
 - **`tools/`**: Development tools including NX generators and custom tooling.
 
@@ -111,9 +111,9 @@ Create a **package** when you need:
 Before creating a new package, check if similar functionality exists:
 
 1. **Search existing packages**: Look for similar functionality in `packages/`
-2. **Check domain packages**: Review domain-specific packages (e.g., `packages/barguide/`)
-3. **Review shared packages**: Check top-level shared packages
-4. **Consider extending**: If similar functionality exists, consider extending it rather than creating new
+   <!-- 2. **Check domain packages**: Review domain-specific packages (e.g., `packages/`) -->
+   <!-- 3. **Review shared packages**: Check top-level shared packages -->
+2. **Consider extending**: If similar functionality exists, consider extending it rather than creating new
 
 ## Naming Conventions
 
@@ -236,7 +236,7 @@ nx run <project-name>:test --watch
 
 ### React Router Application
 
-**Example**: `applications/barguide/`
+**Example**: `applications/openthrottle-website/`
 
 **Key Files:**
 
@@ -251,7 +251,7 @@ nx run <project-name>:test --watch
 ```json
 {
   "tags": [
-    "name:barguide",
+    "name:openthrottle-frontend-app",
     "production:true",
     "technology:react",
     "technology:react-router",

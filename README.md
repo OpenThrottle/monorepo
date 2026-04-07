@@ -3,9 +3,7 @@
 [![Continuous Integration](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
 [![NX Release](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
 <br>
-[![OpenThrottle | Developer](https://img.shields.io/badge/🍺_OpenThrottle-.ai-30c653)](https://openthrottle-developer.io)
-<br>
-[![Rollbar - Error Tracking](https://img.shields.io/badge/🚨_Rollbar-.com-yellow)](https://app.rollbar.com/a/BarGuide.io?duration=7d&prj=719306&prj=719305&prj=737974)
+[![OpenThrottle | Developer](https://img.shields.io/badge/🏍️_OpenThrottle-.ai-30c653)](https://openthrottle-developer.io)
 
 After years of development, I've refined my tech stack to focus on a core set of battle-tested tools, with TypeScript as the foundation. This monorepo represents the culmination of those learnings - a streamlined, production-ready setup that balances flexibility with maintainability.
 
@@ -73,10 +71,10 @@ nx run openthrottle-developer:dev -- --host
 
 ```bash
 # 📦 Adding a package to monorepo root
-pnpm add __SOME_PACKAGE__ -w -S
+pnpm add <PROJECT_NAME> -w -S
 
 # 📦 Adding a package to a specific project
-pnpm add __SOME_PACKAGE__ --filter openthrottle-developer -S
+pnpm add <PROJECT_NAME> --filter openthrottle-developer -S
 
 # 🧪 Run only the changed tests and watch for changes
 nx run @tools/generators:test --changed --watch

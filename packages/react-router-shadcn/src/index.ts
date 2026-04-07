@@ -1,5 +1,5 @@
 // Components
-export * from './components/Accordion';
+export * from './components/Accordion/index';
 export * from './components/AlertDialog/index';
 export * from './components/Avatar';
 export * from './components/Badge';
@@ -31,13 +31,13 @@ export * from './components/Progress';
 export * from './components/Select/index';
 export * from './components/Separator';
 export * from './components/Sonner';
-export * from './components/Sheet';
+export * from './components/Sheet/index';
 export * from './components/SimpleBarChart';
 export * from './components/Sidebar';
 export * from './components/Skeleton';
 export * from './components/Spinner';
 export * from './components/Switch';
-export * from './components/Table';
+export * from './components/Table/index';
 export * from './components/Tabs/index';
 export * from './components/TextArea';
 export * from './components/ToggleGroup';

@@ -19,17 +19,14 @@ Using this repo with custom MCPs (mcp-developer, docs-mcp) across git worktrees 
 
 ## Other MCPs in `.cursor/mcp.json`
 
-| Server                 | Needs change? | Notes                                                                                                                                                               |
-| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **mcp-developer**      | Done          | Worktree-aware via `WORKTREE_ID` / `MCP_SERVER_NAME`.                                                                                                               |
-| **docs-mcp**           | Done          | Same as mcp-developer.                                                                                                                                              |
-| **fetch**              | No            | Docker-based; stateless. No per-worktree config.                                                                                                                    |
-| **filesystem**         | No            | Uses `./` (workspace root); already per-workspace.                                                                                                                  |
-| **git**                | No            | `scripts/mcp-git.sh` runs in repo; path is implicit. No identity conflict.                                                                                          |
-| **docker-git**         | Optional      | Bind mount is currently hardcoded (`/Users/matt/Development/monorepo`). For multiple worktrees, either use a different config per worktree or a shared parent path. |
-| **memory**             | No            | Stateless in-process; no identity.                                                                                                                                  |
-| **postgres-barguide**  | Optional      | Connection string is fixed (port 55322). If you run different Postgres per worktree, use env or a generated config per worktree.                                    |
-| **postgres-rocketcms** | Optional      | Same as postgres-barguide (port 54322).                                                                                                                             |
-| **supabase**           | No            | Uses access token; same account. No per-worktree config unless you use different projects per worktree.                                                             |
+| Server            | Needs change? | Notes                                                                                                                                                               |
+| ----------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **mcp-developer** | Done          | Worktree-aware via `WORKTREE_ID` / `MCP_SERVER_NAME`.                                                                                                               |
+| **docs-mcp**      | Done          | Same as mcp-developer.                                                                                                                                              |
+| **fetch**         | No            | Docker-based; stateless. No per-worktree config.                                                                                                                    |
+| **filesystem**    | No            | Uses `./` (workspace root); already per-workspace.                                                                                                                  |
+| **git**           | No            | `scripts/mcp-git.sh` runs in repo; path is implicit. No identity conflict.                                                                                          |
+| **docker-git**    | Optional      | Bind mount is currently hardcoded (`/Users/matt/Development/monorepo`). For multiple worktrees, either use a different config per worktree or a shared parent path. |
+| **memory**        | No            | Stateless in-process; no identity.                                                                                                                                  |
 
 **Cortex/Postgres per worktree:** If you want a separate Cortex DB per worktree, set `CORTEX_POSTGRES_*` (or `CORTEX_POSTGRES_URL`) in each worktree’s `.env` (e.g. different ports or DB names). openthrottle-server and docs-mcp read those env vars at runtime. mcp-developer talks to Cortex via GraphQL (openthrottle-server), so point it at the correct API URL per worktree if needed.
