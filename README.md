@@ -2,8 +2,6 @@
 
 [![Continuous Integration](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
 [![NX Release](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
-<br>
-[![OpenThrottle | Developer](https://img.shields.io/badge/🏍️_OpenThrottle-.ai-30c653)](https://openthrottle-developer.io)
 
 After years of development, I've refined my tech stack to focus on a core set of battle-tested tools, with TypeScript as the foundation. This monorepo represents the culmination of those learnings - a streamlined, production-ready setup that balances flexibility with maintainability.
 
