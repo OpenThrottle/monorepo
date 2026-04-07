@@ -3,25 +3,26 @@ import { cn } from '../../utils/cn';
 
 export interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
 
-const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
-  (props, ref): React.ReactElement => {
-    const { className, ...rest } = props;
-    // Hooks
+export const TableHeader = React.forwardRef<
+  HTMLTableSectionElement,
+  TableHeaderProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
+  // Hooks
 
-    // Setup
+  // Setup
 
-    // Handlers
+  // Handlers
 
-    // Markup
+  // Markup
 
-    // Life Cycle
+  // Life Cycle
 
-    // 🔌 Short Circuit
+  // 🔌 Short Circuit
 
-    return (
-      <thead className={cn('[&_tr]:border-b', className)} ref={ref} {...rest} />
-    );
-  },
-);
+  return (
+    <thead className={cn('[&_tr]:border-b', className)} ref={ref} {...rest} />
+  );
+});
 
 TableHeader.displayName = 'TableHeader';

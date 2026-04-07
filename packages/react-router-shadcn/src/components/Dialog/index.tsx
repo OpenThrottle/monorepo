@@ -1,27 +1,5 @@
 import * as React from 'react';
-import { cn } from '../utils/cn';
-
-const Dialog = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->((props, ref): React.ReactElement => {
-  const { className, ...rest } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return <div className={cn(className)} ref={ref} role="dialog" {...rest} />;
-});
-Dialog.displayName = 'Dialog';
+import { cn } from '../../utils/cn';
 
 const DialogTrigger = React.forwardRef<
   HTMLButtonElement,
@@ -188,8 +166,9 @@ const DialogDescription = React.forwardRef<
 
 DialogDescription.displayName = 'DialogDescription';
 
+export * from './Dialog';
+
 export {
-  Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,

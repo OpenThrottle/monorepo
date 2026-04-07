@@ -3,7 +3,7 @@ import { cn } from '../../utils/cn';
 
 export interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {}
 
-const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
+export const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
   (props, ref): React.ReactElement => {
     const { className, ...rest } = props;
     // Hooks

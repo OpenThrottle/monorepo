@@ -3,30 +3,31 @@ import { cn } from '../../utils/cn';
 
 export interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
 
-const TableBody = React.forwardRef<HTMLTableSectionElement, TableBodyProps>(
-  (props, ref): React.ReactElement => {
-    const { className, ...rest } = props;
+export const TableBody = React.forwardRef<
+  HTMLTableSectionElement,
+  TableBodyProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
 
-    // Hooks
+  // Hooks
 
-    // Setup
+  // Setup
 
-    // Handlers
+  // Handlers
 
-    // Markup
+  // Markup
 
-    // Life Cycle
+  // Life Cycle
 
-    // 🔌 Short Circuit
+  // 🔌 Short Circuit
 
-    return (
-      <tbody
-        className={cn('[&_tr:last-child]:border-0', className)}
-        ref={ref}
-        {...rest}
-      />
-    );
-  },
-);
+  return (
+    <tbody
+      className={cn('[&_tr:last-child]:border-0', className)}
+      ref={ref}
+      {...rest}
+    />
+  );
+});
 
 TableBody.displayName = 'TableBody';

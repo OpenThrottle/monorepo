@@ -1,3 +1,6 @@
+// Config
+export * from './config/badgeVariants';
+
 // Components
 export * from './components/Accordion/index';
 export * from './components/AlertDialog/index';
@@ -13,7 +16,7 @@ export * from './components/Combobox';
 export * from './components/Command';
 export * from './components/DataTable';
 export * from './components/DatePicker';
-export * from './components/Dialog';
+export * from './components/Dialog/index';
 export * from './components/Drawer';
 export * from './components/DropdownMenu';
 export * from './components/Empty';
