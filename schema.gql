@@ -470,7 +470,7 @@ type ServerHealthObject {
   api: String!
 
   """
-  OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic.
+  OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
   """
   database: String!
 
@@ -1131,9 +1131,9 @@ type UserObject {
 
 type Query {
   """
-  Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page.
+  Database health: ok | unconfigured | unreachable. Used by app status page.
   """
-  cortexHealth: String!
+  databaseHealth: String!
 
   """
   Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.

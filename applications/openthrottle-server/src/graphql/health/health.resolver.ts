@@ -1,5 +1,5 @@
 /**
- * @description GraphQL resolver for Cortex health, server health, and server metrics. cortexHealth for status page (DB); serverHealth returns API, DB, Redis; serverMetrics returns process CPU and memory.
+ * @description GraphQL resolver for Database health, server health, and server metrics. databaseHealth for status page (DB); serverHealth returns API, DB, Redis; serverMetrics returns process CPU and memory.
  */
 
 import { Query, Resolver } from '@nestjs/graphql';
@@ -10,7 +10,7 @@ import { ServerHealthObject } from './server-health.object';
 import { ServerMetricsObject } from './server-metrics.object';
 
 /** Cortex health status: ok, unconfigured, or unreachable. */
-export type CortexHealthStatus = 'ok' | 'unconfigured' | 'unreachable';
+export type HealthStatus = 'ok' | 'unconfigured' | 'unreachable';
 
 @Public()
 @Resolver()
@@ -24,9 +24,9 @@ export class HealthResolver {
    * @description Cortex DB health for status page. Returns "ok" if DB is reachable, "unconfigured" if no config, "unreachable" on error.
    */
   @Query(() => String, {
-    description: `Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page.`,
+    description: `Database health: ok | unconfigured | unreachable. Used by app status page.`,
   })
-  async cortexHealth(): Promise<CortexHealthStatus> {
+  async databaseHealth(): Promise<HealthStatus> {
     return this.healthService.getDatabaseStatus();
   }
 

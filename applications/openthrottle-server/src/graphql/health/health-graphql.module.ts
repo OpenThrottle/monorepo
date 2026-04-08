@@ -1,5 +1,5 @@
 /**
- * @description GraphQL module for cortexHealth and serverHealth. Imports NestjsRepositoriesModule for PlansService and PlansQueueModule for Redis health.
+ * @description GraphQL module for databaseHealth and serverHealth. Imports NestjsRepositoriesModule for PlansService and PlansQueueModule for Redis health.
  */
 
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
