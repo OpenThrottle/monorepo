@@ -253,8 +253,7 @@ export async function runChildJob(
     const cpuAtEnd = process.cpuUsage();
     return {
       ok: false,
-      reason:
-        'Cortex is required. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_*.',
+      reason: `🚨 Postgres is not configured. Set POSTGRES_URL or POSTGRES_* env vars.`,
       wallClockMetrics: computeWallClockMetrics(
         startTimestamp,
         endTimestamp,

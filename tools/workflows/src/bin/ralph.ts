@@ -24,7 +24,7 @@ import {
   getTasksByPlanId,
   updatePlanStatus,
   updateTaskStatus,
-  WORKFLOW_FATAL_PREFIX,
+  RALPH_WORKFLOW_FATAL_PREFIX,
 } from '../utils/cortex-ralph';
 import { ARTWORK_THANK_YOU } from '../config/index';
 import {
@@ -70,7 +70,7 @@ export const main = async (): Promise<void> => {
     const allowed = await getNxProjectNames();
     if (!allowed.includes(parsedArgs.project)) {
       console.error(
-        `${WORKFLOW_FATAL_PREFIX}--project must be an NX project name (application or package). Allowed: ${allowed.join(', ')}`,
+        `${RALPH_WORKFLOW_FATAL_PREFIX}--project must be an NX project name (application or package). Allowed: ${allowed.join(', ')}`,
       );
       process.exit(1);
     }
@@ -85,7 +85,7 @@ export const main = async (): Promise<void> => {
   if (task && !plan) {
     const taskRow = await getTaskById(cortexConfig, task);
     if (!taskRow) {
-      console.error(`${WORKFLOW_FATAL_PREFIX}Task not found: ${task}`);
+      console.error(`${RALPH_WORKFLOW_FATAL_PREFIX}Task not found: ${task}`);
       process.exit(1);
     }
     effectivePlanId = taskRow.planId;
@@ -97,7 +97,9 @@ export const main = async (): Promise<void> => {
   ]);
 
   if (!planRow) {
-    console.error(`${WORKFLOW_FATAL_PREFIX}Plan not found: ${effectivePlanId}`);
+    console.error(
+      `${RALPH_WORKFLOW_FATAL_PREFIX}Plan not found: ${effectivePlanId}`,
+    );
     process.exit(1);
   }
 
@@ -338,7 +340,7 @@ export const main = async (): Promise<void> => {
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error(`${WORKFLOW_FATAL_PREFIX}Fatal error:`, error);
+    console.error(`${RALPH_WORKFLOW_FATAL_PREFIX}Fatal error:`, error);
     process.exit(1);
   });
 }

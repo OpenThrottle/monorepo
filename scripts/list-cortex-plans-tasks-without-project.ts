@@ -2,7 +2,7 @@
 
 // /**
 //  * @description Lists plans and tasks in Cortex where project_id IS NULL.
-//  * Uses CORTEX_POSTGRES_* or CORTEX_POSTGRES_URL. For Ralph: associate plans/tasks with NX projects.
+//  * Uses POSTGRES_* or POSTGRES_URL. For Ralph: associate plans/tasks with NX projects.
 //  * Usage: pnpm exec tsx ./scripts/list-cortex-plans-tasks-without-project.ts
 //  */
 
@@ -13,7 +13,7 @@
 //   const config = getCortexPostgresConfig();
 //   if (!config) {
 //     console.error(
-//       'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
+//       'Cortex Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',
 //     );
 //     process.exit(1);
 //   }

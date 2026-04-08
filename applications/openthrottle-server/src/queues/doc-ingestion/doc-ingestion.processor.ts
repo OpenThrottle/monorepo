@@ -101,7 +101,7 @@ export class DocIngestionProcessor
     const connectionString = getDocIngestionStateConnectionString();
     if (!connectionString) {
       throw new Error(
-        'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* for doc-ingestion.',
+        'Cortex Postgres not configured. Set POSTGRES_URL or POSTGRES_* for doc-ingestion.',
       );
     }
 

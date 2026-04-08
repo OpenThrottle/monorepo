@@ -6,7 +6,7 @@ import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import { RalphNestedDebugCli } from '~/__generated__/graphql';
 
 /** RFC 4122 UUID v4 — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */
-const CORTEX_UUID_REGEX =
+const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const DEFAULT_RALPH_RUNNER = 'cursor';
@@ -43,7 +43,7 @@ export interface WorkflowRalphRunOptionsInput {
  * @description Returns true when `value` is a plausible Cortex plan/task UUID (v4).
  */
 export const isCortexUuid = (value: string): boolean => {
-  return CORTEX_UUID_REGEX.test(value.trim());
+  return UUID_REGEX.test(value.trim());
 };
 
 /**

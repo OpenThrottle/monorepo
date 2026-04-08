@@ -25,13 +25,7 @@ function timestamp(): string {
 }
 
 async function main(): Promise<void> {
-  const config = getCortexPostgresConfig();
-  if (!config) {
-    throw new Error(
-      'Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',
-    );
-  }
-
+  const { connectionString } = getCortexPostgresConfig();
   await mkdir(BACKUPS_DIR, { recursive: true });
 
   const ts = timestamp();
@@ -40,7 +34,7 @@ async function main(): Promise<void> {
 
   const pgDump = spawnSync(
     'pg_dump',
-    ['--dbname', config.connectionString, '-F', 'p', '-f', sqlPath],
+    ['--dbname', connectionString, '-F', 'p', '-f', sqlPath],
     { shell: false, stdio: 'inherit' },
   );
 

@@ -21,9 +21,9 @@ export async function ensureCortexReachable(
     await client.query('SELECT 1');
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Cortex database is unreachable. ${detail}\n   Check CORTEX_POSTGRES_URL (or CORTEX_POSTGRES_*) and network connectivity.\n`,
-    );
+    const message = `🚨 Postgres database is unreachable. Set POSTGRES_URL or POSTGRES_* env vars.`;
+
+    throw new Error(`${message} \n${detail}`);
   } finally {
     await client.end();
   }

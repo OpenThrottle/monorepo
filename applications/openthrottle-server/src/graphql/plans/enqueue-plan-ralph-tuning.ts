@@ -17,14 +17,14 @@ import type {
 import type { RalphPlanRunTuningInput } from './plan.input';
 
 /** @description RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`. */
-const CORTEX_UUID_REGEX =
+const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * @description Returns true when `value` is a plausible Cortex plan/task UUID.
  */
 export const isCortexPlanTaskUuid = (value: string): boolean =>
-  CORTEX_UUID_REGEX.test(value.trim());
+  UUID_REGEX.test(value.trim());
 
 /** @description Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph. */
 const MAX_ITERATIONS = 1_000_000;

@@ -24,7 +24,7 @@ export function registerSearchTools(server: McpServer): void {
   server.registerTool(
     'documentation_semantic_search',
     {
-      description: `Search the documentation knowledge base by meaning. Runs a vector similarity search over documentation_embeddings in Cortex Postgres. Requires OPENAI_API_KEY for query embedding and CORTEX_POSTGRES_* (or DOCS_MCP_* or CORTEX_POSTGRES_URL) for the database.`,
+      description: `Search the documentation knowledge base by meaning. Runs a vector similarity search over documentation_embeddings in Cortex Postgres. Requires OPENAI_API_KEY for query embedding and POSTGRES_* (or DOCS_MCP_* or POSTGRES_URL) for the database.`,
       inputSchema: {
         limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
         query: z.string().min(1),

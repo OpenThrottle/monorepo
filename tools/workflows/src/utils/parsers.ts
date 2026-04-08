@@ -25,8 +25,8 @@ import {
   type RalphPromptProfileKind,
 } from './ralph-prompt-resolution';
 
-/** RFC 4122 UUID v4 pattern: plan/task is Cortex plan or task ID when matching */
-const CORTEX_UUID_REGEX =
+/** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
+const RALPH_UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Matches <ralph:task-complete>uuid</ralph:task-complete>; Ralph marks those tasks completed via Postgres. */
@@ -60,10 +60,10 @@ export const getRalphOutputMarkerFlags = (
 });
 
 export const isCortexPlanId = (plan: string): boolean =>
-  CORTEX_UUID_REGEX.test(plan.trim());
+  RALPH_UUID_REGEX.test(plan.trim());
 
 export const isCortexTaskId = (task: string): boolean =>
-  CORTEX_UUID_REGEX.test(task.trim());
+  RALPH_UUID_REGEX.test(task.trim());
 
 /**
  * @description Parses agent result for <ralph:task-complete>uuid</ralph:task-complete>. Returns unique task IDs; Ralph marks them completed via Postgres.

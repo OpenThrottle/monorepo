@@ -22,7 +22,7 @@ export function registerSearchTools(server: McpServer): void {
   server.registerTool(
     'semantic_search',
     {
-      description: `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content in Cortex Postgres. Requires OPENAI_API_KEY for query embedding and CORTEX_POSTGRES_* (or CORTEX_POSTGRES_URL) for the database.`,
+      description: `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content in Cortex Postgres. Requires OPENAI_API_KEY for query embedding and POSTGRES_* (or POSTGRES_URL) for the database.`,
       inputSchema: {
         limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
         query: z.string().min(1),

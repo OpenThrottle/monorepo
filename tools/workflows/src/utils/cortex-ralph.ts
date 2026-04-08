@@ -12,17 +12,17 @@ export interface WorkflowRalphConfig {
 }
 
 /** Fatal error prefix used by getCortexConfigOrExit and ensureCortexReachableOrExit for consistent CLI output. */
-const CORTEX_FATAL_PREFIX = '\n🚨 FATAL: ';
+export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
-export const WORKFLOW_FATAL_PREFIX = '🚨 ';
+export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 ';
 
 /** Shared message when Cortex env is missing. Used by getCortexConfigOrExit and all workflow bins/scripts. */
-export const CORTEX_FATAL_REQUIRED = `${CORTEX_FATAL_PREFIX}Cortex is required. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* and ensure the database is reachable.\n`;
+export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
-export const CORTEX_FATAL_UNREACHABLE_SUFFIX =
-  '\n   Check CORTEX_POSTGRES_URL (or CORTEX_POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
+export const RALPH_FATAL_UNREACHABLE_SUFFIX =
+  '\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
 
 /**
  * @description Normalizes JSONB task requirements from Postgres to a readonly array.
@@ -32,12 +32,12 @@ function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
 }
 
 /**
- * @description Returns Cortex config or exits with {@link CORTEX_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
+ * @description Returns Cortex config or exits with {@link RALPH_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
  */
 export function getCortexConfigOrExit(): WorkflowRalphConfig {
   const config = getCortexPostgresConfig();
   if (!config) {
-    console.error(CORTEX_FATAL_REQUIRED);
+    console.error(RALPH_FATAL_REQUIRED);
     process.exit(1);
   }
 
@@ -55,7 +55,7 @@ export async function ensureCortexReachableOrExit(
     await ensureCortexReachable(config);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error(`${CORTEX_FATAL_PREFIX}${msg}\n`);
+    console.error(`${RALPH_FATAL_PREFIX}${msg}\n`);
     process.exit(1);
   }
 
@@ -76,7 +76,7 @@ export async function ensureCortexReachable(
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Cortex database is unreachable. ${detail}${CORTEX_FATAL_UNREACHABLE_SUFFIX}`,
+      `Cortex database is unreachable. ${detail}${RALPH_FATAL_UNREACHABLE_SUFFIX}`,
     );
   } finally {
     await client.end();

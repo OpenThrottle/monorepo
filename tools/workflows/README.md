@@ -40,12 +40,12 @@ Ralph runs the agentic process (prompt + plan) for a fixed number of iterations.
 - **Prompt (source of truth):** `.cursor/commands/agents/ralph.md`
 - **`--plan`:** OpenThrottle (OT) plan ID (UUID). Ralph loads plan and tasks from Postgres and injects them into the prompt; the agent should not call `get_plan` or `get_tasks_by_plan_id`. Ralph updates task status from `<ralph:task-complete>` and `<promise>COMPLETE</promise>`; iteration output can be logged via OT MCP `append_plan_output` / `get_plan_output` if the agent has MCP.
 - **`--task`:** Cortex task ID (UUID). Task-centric mode: work on a single task; plan is resolved from the task when `--plan` is omitted.
-- **Cortex required:** Plan/task mode requires Cortex to be configured and reachable. Set `CORTEX_POSTGRES_URL` or `CORTEX_POSTGRES_*`; the CLI fails fast with a clear error if the DB is unreachable.
+- **Cortex required:** Plan/task mode requires Cortex to be configured and reachable. Set `POSTGRES_URL` or `POSTGRES_*`; the CLI fails fast with a clear error if the DB is unreachable.
 - **No ref file:** Ralph does not write a ref file. Ralph injects plan and tasks into the prompt; the agent need not call OT MCP for plan/tasks.
 
 ### `getServerHealth` vs workflow GraphQL transport errors (Ralph startup)
 
-- **Ralph `workflow-ralph` startup does not use `getServerHealth`.** It uses `ensureCortexReachableOrExit` in `src/utils/cortex-ralph.ts`: a direct Postgres TCP check with the **CLI process** `CORTEX_POSTGRES_*` (or URL). That is the right preflight for loading plans and tasks from Cortex in this binary.
+- **Ralph `workflow-ralph` startup does not use `getServerHealth`.** It uses `ensureCortexReachableOrExit` in `src/utils/cortex-ralph.ts`: a direct Postgres TCP check with the **CLI process** `POSTGRES_*` (or URL). That is the right preflight for loading plans and tasks from Cortex in this binary.
 - **`getServerHealth`** (GraphQL query `serverHealth`, same data as REST `GET /health`) runs only after a successful HTTP POST to the GraphQL endpoint. It reports `api` (ok when the resolver runs), `database` (Cortex DB from the **openthrottle-server** process config via `HealthService`), `redis`, and `websocket`. The resolver is `@Public()` in `applications/openthrottle-server/src/graphql/health/health.resolver.ts`, so no bearer token is required for this query.
 - **Thrown errors from workflow GraphQL:** `@openthrottle/openthrottle-workflows` uses **`executeWorkflowGraphqlV2`**, which delegates to **`executeGraphqlV2`** in `@openthrottle/nodejs-graphql`. Non-OK HTTP responses throw `Error` messages shaped like `openthrottle-server GraphQL error <status>: …` (first GraphQL error message or HTTP status text). GraphQL `errors[]` with HTTP 200 throw `GraphQL errors: …` (first message). There is no separate workflow-side discriminant mapper; callers use try/catch and parse or log the message. This answers “did the POST succeed and return data?” but does not expose DB/Redis fields from health JSON.
 - **Complement, not replacement:** A `getServerHealth` preflight **does not replace** handling thrown transport errors. Failures before a successful POST never return health fields. When the POST returns 200, `getServerHealth` can **add** signal (e.g. `database: unreachable` while the HTTP stack is fine). Wrong URL, TLS, or proxy errors remain transport failures without health JSON.
@@ -116,7 +116,7 @@ Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger
 
 ### Cross-repo usage
 
-Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `CORTEX_POSTGRES_URL` or `CORTEX_POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details.
+Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `POSTGRES_URL` or `POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details.
 
 ## Worktree + BullMQ workflow (fan-out/fan-in)
 

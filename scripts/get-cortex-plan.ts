@@ -1,6 +1,6 @@
 // #!/usr/bin/env node
 // /**
-//  * @description Fetches a plan and its tasks from Cortex by plan ID. Uses CORTEX_POSTGRES_* or CORTEX_POSTGRES_URL.
+//  * @description Fetches a plan and its tasks from Cortex by plan ID. Uses POSTGRES_* or POSTGRES_URL.
 //  * Usage: pnpm exec tsx ./scripts/get-cortex-plan.ts <plan-id>
 //  */
 // import {
@@ -19,7 +19,7 @@
 //   const config = getCortexPostgresConfig();
 //   if (!config) {
 //     console.error(
-//       'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
+//       'Cortex Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',
 //     );
 //     process.exit(1);
 //   }

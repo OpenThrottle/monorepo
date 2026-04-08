@@ -57,7 +57,7 @@
 //   const config = getCortexPostgresConfig();
 //   if (!config) {
 //     console.error(
-//       'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
+//       'Cortex Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',
 //     );
 //     process.exit(1);
 //   }

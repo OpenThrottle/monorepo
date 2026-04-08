@@ -26,6 +26,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
 
     return (
       <>
+        {/*
         <NavLink
           className="text-sm h-full hover:text-accent p-4 transition"
           to="/"
@@ -33,7 +34,8 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
         >
           About
         </NavLink>
-        {/* <NavLink
+
+        <NavLink
           className="text-sm h-full hover:text-accent p-4 transition"
           to="/#features"
           viewTransition={true}
@@ -53,7 +55,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
           viewTransition={true}
         >
           Built By Engineers
-        </NavLink> */}
+        </NavLink>
         <NavLink
           className="text-sm h-full hover:text-accent p-4 transition"
           to="/case-studies"
@@ -68,15 +70,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
         >
           Pricing
         </NavLink>
-        {/* <Button asChild={true} size="xs">
-          <NavLink
-            className="text-sm h-full hover:text-accent p-4 transition"
-            to="/pricing"
-            viewTransition={true}
-          >
-            Coming Soon
-          </NavLink>
-        </Button> */}
+        */}
       </>
     );
   };
