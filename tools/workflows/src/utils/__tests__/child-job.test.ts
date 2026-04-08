@@ -15,7 +15,7 @@ import { runChildJob } from '../child-job';
 const mockConfig = { connectionString: 'postgres://localhost/cortex' };
 
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
-  getCortexPostgresConfig: vi.fn(() => mockConfig),
+  getPostgresConfig: vi.fn(() => mockConfig),
 }));
 
 const mockCortexState: {
@@ -248,9 +248,7 @@ describe('runChildJob', () => {
 
   it('returns ok: false when Cortex config is missing', async () => {
     const cortexServer = await import('@openthrottle/ai-mcp/src/cortex-server');
-    vi.mocked(cortexServer.getCortexPostgresConfig).mockReturnValueOnce(
-      undefined,
-    );
+    vi.mocked(cortexServer.getPostgresConfig).mockReturnValueOnce(undefined);
 
     const dir = createTempDir();
     const input: ChildJobInput = {

@@ -7,7 +7,7 @@
  */
 
 import { spawnSync } from 'child_process';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import { buildWorkflowRalphRunTuningArgv } from '@tools/workflows';
 import type { ChildJobInput, ChildJobResult } from '../types/worktree';
 import {
@@ -53,7 +53,7 @@ export async function runChildJob(
   } = input;
   const { worktreePath } = handoff;
 
-  const rawConfig = getCortexPostgresConfig();
+  const rawConfig = getPostgresConfig();
   if (!rawConfig) {
     return {
       ok: false,

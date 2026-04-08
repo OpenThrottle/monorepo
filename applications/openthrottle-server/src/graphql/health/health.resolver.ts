@@ -9,7 +9,7 @@ import { HealthService } from './health.service';
 import { ServerHealthObject } from './server-health.object';
 import { ServerMetricsObject } from './server-metrics.object';
 
-/** Cortex health status: ok, unconfigured, or unreachable. */
+/** Database health status: ok, unconfigured, or unreachable. */
 export type HealthStatus = 'ok' | 'unconfigured' | 'unreachable';
 
 @Public()
@@ -21,7 +21,7 @@ export class HealthResolver {
   ) {}
 
   /**
-   * @description Cortex DB health for status page. Returns "ok" if DB is reachable, "unconfigured" if no config, "unreachable" on error.
+   * @description Database health for status page. Returns "ok" if DB is reachable, "unconfigured" if no config, "unreachable" on error.
    */
   @Query(() => String, {
     description: `Database health: ok | unconfigured | unreachable. Used by app status page.`,
@@ -31,10 +31,10 @@ export class HealthResolver {
   }
 
   /**
-   * @description Server health: API (ok when resolver runs), Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.
+   * @description Server health: API (ok when resolver runs), OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.
    */
   @Query(() => ServerHealthObject, {
-    description: `Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.`,
+    description: `Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.`,
   })
   async serverHealth(): Promise<ServerHealthObject> {
     return this.healthService.getServerHealth();

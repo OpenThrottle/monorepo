@@ -200,11 +200,9 @@ describe('WorkflowRunOptions Component', () => {
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByLabelText } = render(<RoutesStub />);
 
-      expect(getByLabelText('Cortex plan UUID for --plan')).toBeInTheDocument();
+      expect(getByLabelText('Plan UUID for --plan')).toBeInTheDocument();
       expect(getByLabelText('Prompt profile for --prompt')).toBeInTheDocument();
-      expect(
-        getByLabelText('Cortex run target: plan or task'),
-      ).toBeInTheDocument();
+      expect(getByLabelText('Run target: plan or task')).toBeInTheDocument();
     });
 
     test('titles the card section for screen readers via heading', () => {

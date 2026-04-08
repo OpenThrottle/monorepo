@@ -189,12 +189,12 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <CardFooter className="flex justify-end gap-3 p-0 pt-4">
-              <Button asChild={true} variant="outline">
+              <Button asChild={true} variant="ghost">
                 <Link to={isEdit && plan ? `/plans/${plan.id}` : '/plans'}>
                   Cancel
                 </Link>
               </Button>
-              <Button type="submit">
+              <Button type="submit" variant="outline">
                 {isEdit ? 'Update plan' : 'Create plan'}
               </Button>
             </CardFooter>

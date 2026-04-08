@@ -5,7 +5,7 @@
 
 import { spawn, spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { ChildProcessMetrics } from '../types/child-process-metrics';
 import type { WallClockMetrics } from '../types/wall-clock-metrics';
 import { createWallClockMetrics } from '../types/wall-clock-metrics';
@@ -247,7 +247,7 @@ export async function runChildJob(
   const startTimestamp = Date.now();
   const cpuAtStart = process.cpuUsage();
 
-  const rawConfig = getCortexPostgresConfig();
+  const rawConfig = getPostgresConfig();
   if (!rawConfig) {
     const endTimestamp = Date.now();
     const cpuAtEnd = process.cpuUsage();

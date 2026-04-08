@@ -5,7 +5,7 @@
  *
  * ## Not represented in GraphQL (transport / env)
  *
- * - `getCortexConfigOrExit`, `ensureCortexReachable`, `ensureCortexReachableOrExit` — connection
+ * - `getCortexConfigOrExit`, `ensureCortexReachable`, `ensureDatabaseReachableOrExit` — connection
  *   string and TCP health checks; the HTTP client uses server URL + auth instead.
  *
  * ## Optional GraphQL preflight (`getServerHealth`)
@@ -15,7 +15,7 @@
  *   HTTP/GraphQL errors; message includes status / first GraphQL error). Health JSON is only available
  *   after a successful HTTP POST; wrong URL, TLS, or proxy errors remain transport failures without
  *   health fields. Ralph startup
- *   still uses direct Postgres (`ensureCortexReachableOrExit`); see `tools/workflows/README.md`
+ *   still uses direct Postgres (`ensureDatabaseReachableOrExit`); see `tools/workflows/README.md`
  *   (section **getServerHealth vs workflow GraphQL transport errors**).
  *
  * TODO: When `@openthrottle/nodejs-graphql` exposes structured failure payloads (`errors[]`, extensions,

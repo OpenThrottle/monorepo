@@ -143,7 +143,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                   }
                   size="sm"
                   type="submit"
-                  variant="outline"
+                  variant="ghost"
                 >
                   <CheckCircle />
                   {fetcherSetPlanStatus.state !== 'idle'
@@ -172,7 +172,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                   disabled={fetcherRunPlan.state !== 'idle'}
                   size="sm"
                   type="submit"
-                  variant="default"
+                  variant="outline"
                 >
                   <PlayCircle />
                   {getRunButtonLabel()}
@@ -190,6 +190,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             planId={planId}
             planTitle={planTitle}
             show={getPlanIsCancelable(planStatus)}
+            // show={true}
             size="sm"
           />
         </div>

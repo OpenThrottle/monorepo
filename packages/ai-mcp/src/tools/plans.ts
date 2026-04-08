@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig, getDefaultGitHubUser } from '../config.js';
+import { getPostgresConfig, getDefaultGitHubUser } from '../config.js';
 import {
   createPlan as cortexCreatePlan,
   deletePlan as cortexDeletePlan,
@@ -46,7 +46,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -109,7 +109,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -166,7 +166,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -232,7 +232,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -302,7 +302,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }

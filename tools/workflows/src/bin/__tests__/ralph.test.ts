@@ -49,7 +49,7 @@ vi.mock('../../utils/cortex-ralph', async (importOriginal) => {
     await importOriginal<typeof import('../../utils/cortex-ralph')>();
   return {
     ...actual,
-    ensureCortexReachableOrExit: vi.fn().mockResolvedValue(undefined),
+    ensureDatabaseReachableOrExit: vi.fn().mockResolvedValue(undefined),
     getCortexConfigOrExit: vi.fn(() => mockConfig),
     getPlanById: vi.fn().mockResolvedValue(mockPlan),
     getTasksByPlanId: vi.fn().mockResolvedValue(mockTasks),

@@ -27,7 +27,7 @@ import {
 import { PlansResolver } from './plans.resolver';
 
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
-  getCortexPostgresConfig: vi.fn(),
+  getPostgresConfig: vi.fn(),
   searchPlansBySemanticQuery: vi.fn(),
 }));
 
@@ -332,9 +332,9 @@ describe('PlansResolver', () => {
 
   describe('searchPlans', () => {
     test('returns empty result when Cortex config is not set', async () => {
-      const { getCortexPostgresConfig } =
+      const { getPostgresConfig } =
         await import('@openthrottle/ai-mcp/src/cortex-server');
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(undefined);
+      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
 
       const result = await resolver.searchPlans({ query: 'some query' });
 
@@ -343,9 +343,9 @@ describe('PlansResolver', () => {
     });
 
     test('returns mapped plans when semantic search returns results', async () => {
-      const { getCortexPostgresConfig, searchPlansBySemanticQuery } =
+      const { getPostgresConfig, searchPlansBySemanticQuery } =
         await import('@openthrottle/ai-mcp/src/cortex-server');
-      vi.mocked(getCortexPostgresConfig).mockReturnValue({
+      vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/cortex',
       });
       vi.mocked(searchPlansBySemanticQuery).mockResolvedValue({

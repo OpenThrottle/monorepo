@@ -19,13 +19,13 @@ This doc lists **direct Postgres touch points** (raw SQL, pg client, connection 
 
 ### 1.2 cortex-server (`@openthrottle/ai-mcp/src/cortex-server`)
 
-Used for **config**, **semantic search**, and **embedding**. Each of these uses `getCortexPostgresConfig()` and then runs queries or uses a connection internally.
+Used for **config**, **semantic search**, and **embedding**. Each of these uses `getPostgresConfig()` and then runs queries or uses a connection internally.
 
-| File                                                                     | Usage                                                                                                                                                                                           |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `applications/openthrottle-server/src/graphql/search/search.resolver.ts` | `getCortexPostgresConfig()`, `embedQuery()`, `runSemanticSearch(config, embedding, limit)`, `getChunkById(config, id)`, `listSources(config)` — semantic search over plan/task/docs embeddings. |
-| `applications/openthrottle-server/src/graphql/plans/plans.resolver.ts`   | `getCortexPostgresConfig()`, `searchPlansBySemanticQuery(config, query, limit)` — plan-level semantic search used by `searchPlans` query.                                                       |
-| `applications/openthrottle-server/src/graphql/health/health.service.ts`  | `getCortexPostgresConfig()` to decide if DB is configured; then uses `PlansService.getRepository().manager.query('SELECT 1')` for liveness.                                                     |
+| File                                                                     | Usage                                                                                                                                                                                     |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `applications/openthrottle-server/src/graphql/search/search.resolver.ts` | `getPostgresConfig()`, `embedQuery()`, `runSemanticSearch(config, embedding, limit)`, `getChunkById(config, id)`, `listSources(config)` — semantic search over plan/task/docs embeddings. |
+| `applications/openthrottle-server/src/graphql/plans/plans.resolver.ts`   | `getPostgresConfig()`, `searchPlansBySemanticQuery(config, query, limit)` — plan-level semantic search used by `searchPlans` query.                                                       |
+| `applications/openthrottle-server/src/graphql/health/health.service.ts`  | `getPostgresConfig()` to decide if DB is configured; then uses `PlansService.getRepository().manager.query('SELECT 1')` for liveness.                                                     |
 
 ### 1.3 TypeORM / repository (Cortex Postgres via `@openthrottle/nestjs-repositories`)
 
@@ -250,9 +250,9 @@ Goal: **all** Postgres access is limited to openthrottle-server; every other Ope
    - Enforce that **no** OpenThrottle app or package (other than openthrottle-server) adds a dependency on `@openthrottle/nestjs-repositories`, `pg`, or any Cortex connection env (e.g. `POSTGRES_*` for connection purposes). mcp-developer and vscode should only use `@openthrottle/nodejs-graphql` (or equivalent) against the server.
 
 2. **Optional: consolidate connection paths inside openthrottle-server**
-   - Today the server uses (a) TypeORM via nestjs-repositories, (b) cortex-server (`getCortexPostgresConfig()` + raw pg/semantic search), and (c) doc-ingestion state (separate connection string + raw pg in `@tools/workflows/doc-ingestion`).
+   - Today the server uses (a) TypeORM via nestjs-repositories, (b) cortex-server (`getPostgresConfig()` + raw pg/semantic search), and (c) doc-ingestion state (separate connection string + raw pg in `@tools/workflows/doc-ingestion`).
    - **Recommendation:** Prefer a single connection story where possible:
-     - **Semantic search:** Consider moving `runSemanticSearch`, `embedQuery`, `getChunkById`, `listSources` (and plan-level semantic search) behind a small service that uses the same TypeORM DataSource or a shared pool, so cortex-server’s `getCortexPostgresConfig()` is only used from one place (e.g. doc-ingestion or a single “cortex adapter” in the server). This reduces two config paths (POSTGRES*\* vs POSTGRES*\*) to one where feasible.
+     - **Semantic search:** Consider moving `runSemanticSearch`, `embedQuery`, `getChunkById`, `listSources` (and plan-level semantic search) behind a small service that uses the same TypeORM DataSource or a shared pool, so cortex-server’s `getPostgresConfig()` is only used from one place (e.g. doc-ingestion or a single “cortex adapter” in the server). This reduces two config paths (POSTGRES*\* vs POSTGRES*\*) to one where feasible.
      - **Doc-ingestion state:** Either (A) expose doc-ingestion state via GraphQL (e.g. `getDocIngestionState`, `saveDocIngestionState`) and have the doc-ingestion processor call the server, so the server is the only one touching `doc_ingestion_state`, or (B) keep the current raw pg path but document it as a **server-side-only** exception: the processor runs inside the server’s process/worker and uses a connection string derived from the same env as the server. Option (A) is more aligned with “all interaction at the GraphQL layer”; option (B) is simpler if the processor must stay in tools/workflows and share no runtime with the server.
 
 3. **Document and guard the boundary**

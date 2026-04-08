@@ -6,7 +6,7 @@
  * Example: pnpm exec tsx ./scripts/update-cortex-plan-status.ts 6d3893b9-26f2-4a89-9b6f-207aaed0554a IN_PROGRESS
  */
 
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import { Client } from 'pg';
 
 const planId = process.argv[2];
@@ -19,7 +19,7 @@ if (!planId || !status) {
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getCortexPostgresConfig();
+  const { connectionString } = getPostgresConfig();
 
   const client = new Client({ connectionString });
   await client.connect();

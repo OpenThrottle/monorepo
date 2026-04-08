@@ -1,5 +1,5 @@
 /**
- * @description GraphQL module for auth: login mutation (public). Uses JwtModule to sign tokens compatible with NestjsAuthModule JWT strategy. LocalStrategy validates email/password against Cortex users.
+ * @description GraphQL module for auth: login mutation (public). Uses JwtModule to sign tokens compatible with NestjsAuthModule JWT strategy. LocalStrategy validates email/password against OpenThrottle users.
  */
 
 import { Module } from '@nestjs/common';

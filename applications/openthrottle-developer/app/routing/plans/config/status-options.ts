@@ -4,7 +4,7 @@
  */
 export const DEFAULT_PLAN_STATUS = 'PENDING' as const;
 
-/** Default statuses when none are in the URL (aligns with cortex PlansListFilters). */
+/** Default statuses when none are in the URL (aligns with API PlansListFilters). */
 export const DEFAULT_STATUSES: readonly string[] = [
   'BACKLOG',
   // 'COMPLETED',

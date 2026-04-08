@@ -70,7 +70,10 @@ export default function Component(
       <OpenThrottleBreadcrumbs
         children="Edit Plan"
         className="mb-4"
-        links={[{ children: 'Plans', to: '/plans' }]}
+        links={[
+          { children: 'Plans', to: '/plans' },
+          { children: plan.title, to: `/plans/${plan.id}` },
+        ]}
       />
 
       <PlanForm actionData={actionData} plan={plan} />

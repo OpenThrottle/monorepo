@@ -5,7 +5,7 @@
  */
 
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   insertCommitLink,
 } from '../utils/cortex-ralph';
@@ -87,7 +87,7 @@ const main = async (): Promise<void> => {
   const { message, planId, repo, sha, taskId } = parseArgs();
 
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
 
   try {
     const link = await insertCommitLink(config, {

@@ -7,7 +7,7 @@ import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
-  isCortexUuid,
+  isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
@@ -47,14 +47,14 @@ const baseTaskInput = (
 
 describe('isCortexUuid', () => {
   test('accepts plausible Cortex UUID v4 strings (trimmed)', () => {
-    expect(isCortexUuid('  0c2720a9-920f-4b16-865a-f803eb444e18  ')).toBe(true);
-    expect(isCortexUuid('77cb14a0-5eb0-4061-87ea-d618b85e8818')).toBe(true);
+    expect(isUuid('  0c2720a9-920f-4b16-865a-f803eb444e18  ')).toBe(true);
+    expect(isUuid('77cb14a0-5eb0-4061-87ea-d618b85e8818')).toBe(true);
   });
 
   test('rejects non-matching strings', () => {
-    expect(isCortexUuid('not-a-uuid')).toBe(false);
-    expect(isCortexUuid('')).toBe(false);
-    expect(isCortexUuid('00000000-0000-9000-8000-000000000000')).toBe(false);
+    expect(isUuid('not-a-uuid')).toBe(false);
+    expect(isUuid('')).toBe(false);
+    expect(isUuid('00000000-0000-9000-8000-000000000000')).toBe(false);
   });
 });
 
@@ -313,7 +313,7 @@ describe('comparing two workflow run option profiles', () => {
 });
 
 /**
- * @description Cortex plan scratch QA Task 5: optional fields cleared or minimal must not break argv or enqueue tuning.
+ * @description Plan scratch QA Task 5: optional fields cleared or minimal must not break argv or enqueue tuning.
  */
 describe('edge case: minimal options and empty optional fields', () => {
   test('argv stays minimal when only required target id plus defaults', () => {

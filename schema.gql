@@ -1136,7 +1136,7 @@ type Query {
   databaseHealth: String!
 
   """
-  Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.
+  Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.
   """
   serverHealth: ServerHealthObject!
 

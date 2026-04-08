@@ -3,7 +3,7 @@
  */
 
 import {
-  getCortexPostgresConfig,
+  getPostgresConfig,
   searchPlansBySemanticQuery,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
@@ -264,7 +264,7 @@ export class PlansResolver {
   async searchPlans(
     @Args('input', { type: () => SearchPlansInput }) input: SearchPlansInput,
   ): Promise<ListPlansByStatusResultObject> {
-    const config = getCortexPostgresConfig();
+    const config = getPostgresConfig();
 
     if (!config) {
       const result = new ListPlansByStatusResultObject();

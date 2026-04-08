@@ -1,6 +1,6 @@
 {
   "name": "openthrottle-server",
-  "description": "NestJS GraphQL API for OpenThrottle—Cortex plans, tasks, embeddings, and related platform services (Redis, BullMQ, Stripe).",
+  "description": "NestJS GraphQL API for OpenThrottle plans, tasks, embeddings, and related platform services (Redis, BullMQ, Stripe).",
   "version": "1.3.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

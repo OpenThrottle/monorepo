@@ -16,7 +16,7 @@ import {
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import { isComplete, showConfiguration, showRalphUsage } from '../utils/index';
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   formatPlanAndTasksForPrompt,
   getCortexConfigOrExit,
   getPlanById,
@@ -38,7 +38,7 @@ export type { CursorAgentChunk, RunIterationConfig } from './run-iteration';
 /**
  * @description Main entry point. Single flow:
  *
- * 1. Cortex required (getCortexConfigOrExit → ensureCortexReachableOrExit)
+ * 1. Cortex required (getCortexConfigOrExit → ensureDatabaseReachableOrExit)
  * 2. Resolve plan/task (--plan or from task.planId when --task only)
  * 3. Fetch plan and tasks from Postgres; inject into prompt
  * 4. Set plan and current task to IN_PROGRESS
@@ -79,7 +79,7 @@ export const main = async (): Promise<void> => {
   const { iterations, plan, prompt, task } = parsedArgs;
 
   const cortexConfig = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(cortexConfig);
+  await ensureDatabaseReachableOrExit(cortexConfig);
 
   let effectivePlanId: string = plan ?? '';
   if (task && !plan) {

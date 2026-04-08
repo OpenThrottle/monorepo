@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Client } from 'pg';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 /**
  * @description Truncates all cortex tables (plans, tasks, embeddings, commit_links, plan_output_stream).
@@ -10,7 +10,7 @@ import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server'
  */
 
 async function main(): Promise<void> {
-  const { connectionString } = getCortexPostgresConfig();
+  const { connectionString } = getPostgresConfig();
 
   const client = new Client({ connectionString });
   await client.connect();

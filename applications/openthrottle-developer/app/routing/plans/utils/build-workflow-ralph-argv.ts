@@ -40,9 +40,9 @@ export interface WorkflowRalphRunOptionsInput {
 }
 
 /**
- * @description Returns true when `value` is a plausible Cortex plan/task UUID (v4).
+ * @description Returns true when `value` is a plausible plan/task UUID (v4).
  */
-export const isCortexUuid = (value: string): boolean => {
+export const isUuid = (value: string): boolean => {
   return UUID_REGEX.test(value.trim());
 };
 

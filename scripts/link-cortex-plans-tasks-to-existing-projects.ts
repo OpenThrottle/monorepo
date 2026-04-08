@@ -11,7 +11,7 @@
 //  * Usage: pnpm exec tsx ./scripts/link-cortex-plans-tasks-to-existing-projects.ts [--dry-run]
 //  */
 
-// import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+// import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 // import { Client } from 'pg';
 
 // const DRY_RUN = process.argv.includes('--dry-run');
@@ -54,7 +54,7 @@
 // }
 
 // async function main(): Promise<void> {
-//   const config = getCortexPostgresConfig();
+//   const config = getPostgresConfig();
 //   if (!config) {
 //     console.error(
 //       'Cortex Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',

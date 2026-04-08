@@ -3,7 +3,7 @@
 import { mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 /**
  * @description Backs up the Cortex Postgres database to a timestamped zip file.
@@ -25,7 +25,7 @@ function timestamp(): string {
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getCortexPostgresConfig();
+  const { connectionString } = getPostgresConfig();
   await mkdir(BACKUPS_DIR, { recursive: true });
 
   const ts = timestamp();

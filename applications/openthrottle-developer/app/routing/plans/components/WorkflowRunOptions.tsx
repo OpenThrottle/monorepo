@@ -23,7 +23,7 @@ import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
-  isCortexUuid,
+  isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphDebugCli,
   type WorkflowRalphRunOptionsInput,
@@ -112,8 +112,8 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
   const activeTaskId = isTaskMode ? input.taskId.trim() : '';
 
   const targetIdWarning = isPlanMode
-    ? activePlanId !== '' && !isCortexUuid(activePlanId)
-    : activeTaskId !== '' && !isCortexUuid(activeTaskId);
+    ? activePlanId !== '' && !isUuid(activePlanId)
+    : activeTaskId !== '' && !isUuid(activeTaskId);
 
   const mergedForArgv: WorkflowRalphRunOptionsInput = {
     ...input,
@@ -239,15 +239,15 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               value={input.targetMode}
             >
               <SelectTrigger
-                aria-label="Cortex run target: plan or task"
+                aria-label="Run target: plan or task"
                 className="max-w-md"
                 id="workflow-run-target-mode"
               >
                 <SelectValue placeholder="Target mode" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="plan">Cortex plan (--plan)</SelectItem>
-                <SelectItem value="task">Cortex task (--task)</SelectItem>
+                <SelectItem value="plan">Plan (--plan)</SelectItem>
+                <SelectItem value="task">Task (--task)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -257,14 +257,14 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               <Label htmlFor="workflow-run-plan-id">--plan</Label>
               <Input
                 aria-describedby="workflow-run-plan-id-hint"
-                aria-label="Cortex plan UUID for --plan"
+                aria-label="Plan UUID for --plan"
                 autoComplete="off"
                 data-testid="workflow-run-plan-id-input"
                 id="workflow-run-plan-id"
                 onChange={(e) =>
                   setInput((prev) => ({ ...prev, planId: e.target.value }))
                 }
-                placeholder="Cortex plan UUID"
+                placeholder="Plan UUID"
                 spellCheck={false}
                 value={input.planId}
               />
@@ -280,14 +280,14 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               <Label htmlFor="workflow-run-task-id">--task</Label>
               <Input
                 aria-describedby="workflow-run-task-id-hint"
-                aria-label="Cortex task UUID for --task"
+                aria-label="Task UUID for --task"
                 autoComplete="off"
                 data-testid="workflow-run-task-id-input"
                 id="workflow-run-task-id"
                 onChange={(e) =>
                   setInput((prev) => ({ ...prev, taskId: e.target.value }))
                 }
-                placeholder="Cortex task UUID"
+                placeholder="Task UUID"
                 spellCheck={false}
                 value={input.taskId}
               />
@@ -302,8 +302,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
 
           {targetIdWarning ? (
             <p className="text-destructive text-xs" role="alert">
-              Value does not match a Cortex UUID (v4) pattern; CLI validation
-              may fail.
+              Value does not match a UUID (v4) pattern; CLI validation may fail.
             </p>
           ) : null}
         </fieldset>

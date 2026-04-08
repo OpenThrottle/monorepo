@@ -1,5 +1,5 @@
 /**
- * @description Finds BullMQ plan Ralph jobs (spawn and orchestrator job names) for a Cortex plan id and
+ * @description Finds BullMQ plan Ralph jobs (spawn and orchestrator job names) for a OpenThrottle plan id and
  * removes non-active jobs. Active (locked) jobs cannot be removed from outside the worker; callers should
  * surface those ids separately.
  */

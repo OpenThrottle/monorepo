@@ -1276,8 +1276,6 @@ export type Query = {
   commitLinksByTaskId: Array<CommitLinkObject>;
   /** Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
-  /** Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page. */
-  cortexHealth: Scalars['String']['output'];
   /** Get a custom prompt by ID */
   customPrompt?: Maybe<CustomPromptObject>;
   /** List custom prompts with optional filters */
@@ -1286,6 +1284,8 @@ export type Query = {
   dailyStats?: Maybe<DailyStatsObject>;
   /** Aggregated plan and task stats for a date range (start and end inclusive, YYYY-MM-DD). */
   dailyStatsRange: DailyStatsRangeResultObject;
+  /** Database health: ok | unconfigured | unreachable. Used by app status page. */
+  databaseHealth: Scalars['String']['output'];
   /** Development ping. Returns "pong" when the development GraphQL API is reachable. */
   developmentPing: Scalars['String']['output'];
   /** Get a generator by name (includes schema JSON) */
@@ -1843,7 +1843,7 @@ export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
-  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic. */
+  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
   redis: Scalars['String']['output'];

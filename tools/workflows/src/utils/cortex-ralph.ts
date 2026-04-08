@@ -1,9 +1,9 @@
 /**
- * @description Minimal Cortex client for Ralph (plan and task flows): get/update plan and task, format prompt context. Config from @openthrottle/ai-mcp getCortexPostgresConfig().
- * All workflow entry points require Cortex at startup; use getCortexConfigOrExit and ensureCortexReachableOrExit for a single fail-fast flow.
+ * @description Minimal Cortex client for Ralph (plan and task flows): get/update plan and task, format prompt context. Config from @openthrottle/ai-mcp getPostgresConfig().
+ * All workflow entry points require Cortex at startup; use getCortexConfigOrExit and ensureDatabaseReachableOrExit for a single fail-fast flow.
  */
 
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import pg from 'pg';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
@@ -11,7 +11,7 @@ export interface WorkflowRalphConfig {
   readonly connectionString: string;
 }
 
-/** Fatal error prefix used by getCortexConfigOrExit and ensureCortexReachableOrExit for consistent CLI output. */
+/** Fatal error prefix used by getCortexConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
 export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
@@ -35,7 +35,7 @@ function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
  * @description Returns Cortex config or exits with {@link RALPH_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
  */
 export function getCortexConfigOrExit(): WorkflowRalphConfig {
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     console.error(RALPH_FATAL_REQUIRED);
     process.exit(1);
@@ -48,7 +48,7 @@ export function getCortexConfigOrExit(): WorkflowRalphConfig {
 /**
  * @description Verifies Cortex is reachable or exits with a clear message. Call after getCortexConfigOrExit() for the standard startup flow.
  */
-export async function ensureCortexReachableOrExit(
+export async function ensureDatabaseReachableOrExit(
   config: WorkflowRalphConfig,
 ): Promise<void> {
   try {
@@ -59,7 +59,7 @@ export async function ensureCortexReachableOrExit(
     process.exit(1);
   }
 
-  console.log('💰 💰 ensureCortexReachableOrExit 💰 💰 SUCCESS');
+  console.log('💰 💰 ensureDatabaseReachableOrExit 💰 💰 SUCCESS');
 }
 
 /**

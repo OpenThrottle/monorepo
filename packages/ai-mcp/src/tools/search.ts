@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import {
   getChunkById,
   listSources,
@@ -34,7 +34,7 @@ export function registerSearchTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
       const { query, limit = DEFAULT_LIMIT } = parsed.data;
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -107,7 +107,7 @@ export function registerSearchTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -161,7 +161,7 @@ export function registerSearchTools(server: McpServer): void {
       description: `List knowledge-base sources (plan, task) and plan titles from Cortex. Use to discover available collections and plans.`,
     },
     async () => {
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }

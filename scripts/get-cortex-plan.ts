@@ -4,7 +4,7 @@
 //  * Usage: pnpm exec tsx ./scripts/get-cortex-plan.ts <plan-id>
 //  */
 // import {
-//   getCortexPostgresConfig,
+//   getPostgresConfig,
 //   getPlanById,
 //   getTasksByPlanId,
 // } from '@openthrottle/ai-mcp/src/cortex-server';
@@ -16,7 +16,7 @@
 // }
 
 // async function main(): Promise<void> {
-//   const config = getCortexPostgresConfig();
+//   const config = getPostgresConfig();
 //   if (!config) {
 //     console.error(
 //       'Cortex Postgres not configured. Set POSTGRES_URL or POSTGRES_* env vars.',

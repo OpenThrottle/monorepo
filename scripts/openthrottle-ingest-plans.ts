@@ -3,7 +3,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from 'pg';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import {
   embedQuery,
   isOllamaEmbeddingConfigured,
@@ -233,7 +233,7 @@ function chunkTextForEmbedding(text: string): string[] {
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getCortexPostgresConfig();
+  const { connectionString } = getPostgresConfig();
 
   const planPaths = await collectPlanJsonPaths();
   console.log(`Found ${planPaths.length} plan JSON file(s).`);

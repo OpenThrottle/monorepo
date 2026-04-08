@@ -3,7 +3,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from 'pg';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 /**
  * @description Runs cortex database migrations from databases/cortex/migrations/ in order.
@@ -13,7 +13,7 @@ import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server'
 const MIGRATIONS_DIR = join(process.cwd(), 'databases', 'migrations');
 
 async function main(): Promise<void> {
-  const { connectionString } = getCortexPostgresConfig();
+  const { connectionString } = getPostgresConfig();
 
   let entries: string[];
   try {

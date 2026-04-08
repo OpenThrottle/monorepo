@@ -111,19 +111,19 @@ describe('PlanWorkflowConfig Component', () => {
     );
   });
 
-  test('should show UUID warning when plan id is not a valid Cortex UUID', async () => {
+  test('should show UUID warning when plan id is not a valid UUID', async () => {
     const user = userEvent.setup();
     const props: PlanWorkflowConfigProps = {};
     const Component = () => <PlanWorkflowConfig {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText, getByRole } = render(<RoutesStub />);
 
-    const planInput = getByLabelText('Cortex plan UUID for --plan');
+    const planInput = getByLabelText('plan UUID for --plan');
     await user.clear(planInput);
     await user.type(planInput, 'not-a-valid-uuid');
 
     expect(getByRole('alert')).toHaveTextContent(
-      'Value does not match a Cortex UUID (v4) pattern',
+      'Value does not match a UUID (v4) pattern',
     );
   });
 
@@ -137,13 +137,13 @@ describe('PlanWorkflowConfig Component', () => {
     );
 
     await user.click(
-      getByRole('combobox', { name: 'Cortex run target: plan or task' }),
+      getByRole('combobox', { name: 'Run target: plan or task' }),
     );
-    const taskOption = await findByRole('option', { name: /Cortex task/ });
+    const taskOption = await findByRole('option', { name: /Task/ });
     await user.click(taskOption);
 
     expect(getByTestId('workflow-run-task-id-input')).toBeInTheDocument();
-    expect(getByLabelText('Cortex task UUID for --task')).toBeInTheDocument();
+    expect(getByLabelText('Task UUID for --task')).toBeInTheDocument();
   });
 
   test('should include --iteration-timeout in CLI preview when uncontrolled timeout text is set', async () => {
@@ -285,11 +285,9 @@ describe('PlanWorkflowConfig Component', () => {
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByLabelText } = render(<RoutesStub />);
 
-      expect(getByLabelText('Cortex plan UUID for --plan')).toBeInTheDocument();
+      expect(getByLabelText('Plan UUID for --plan')).toBeInTheDocument();
       expect(getByLabelText('Prompt profile for --prompt')).toBeInTheDocument();
-      expect(
-        getByLabelText('Cortex run target: plan or task'),
-      ).toBeInTheDocument();
+      expect(getByLabelText('Run target: plan or task')).toBeInTheDocument();
     });
 
     test('titles the card section for screen readers via heading', () => {

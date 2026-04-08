@@ -5,7 +5,7 @@ import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from 'pg';
 import { createProjectGraphAsync } from '@nx/devkit';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 /* eslint-disable no-await-in-loop */
 
@@ -172,7 +172,7 @@ async function collectMdPaths(
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getCortexPostgresConfig();
+  const { connectionString } = getPostgresConfig();
 
   const repo = process.env.DOCS_REPO?.trim() ?? 'local/repo';
   const sha = process.env.DOCS_SHA?.trim() ?? 'local';

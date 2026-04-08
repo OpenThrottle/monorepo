@@ -39,7 +39,7 @@ export default function Component(
           <blockquote>
             OpenThrottle is a plans knowledge base: a Postgres-backed app and MCP
             server that stores plans, tasks, and semantic search over them. It
-            powers “ask Cortex,” agentic execution (Ralph), and a dashboard so
+            powers “ask OT,” agentic execution (Ralph), and a dashboard so
             you can see what's in progress and what shipped.
           </blockquote>
           */}

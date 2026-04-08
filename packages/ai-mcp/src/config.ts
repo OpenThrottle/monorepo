@@ -10,7 +10,7 @@ export interface CortexPostgresConfig {
  * @description Returns Cortex Postgres connection string from POSTGRES_URL or POSTGRES_* env vars.
  * @returns Connection config or undefined if not configured.
  */
-export function getCortexPostgresConfig(): CortexPostgresConfig {
+export function getPostgresConfig(): CortexPostgresConfig {
   const url = process.env.POSTGRES_URL;
 
   if (url?.trim()) {

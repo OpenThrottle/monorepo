@@ -3,7 +3,7 @@
  * One-off: update a Cortex plan's status. Usage: pnpm exec tsx scripts/update-plan-status.ts <plan-id> <status>
  */
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updatePlanStatus,
 } from '../src/utils/cortex-ralph';
@@ -31,7 +31,7 @@ const status = STATUS_MAP[statusRaw.toLowerCase()] ?? statusRaw;
 
 (async (): Promise<void> => {
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
   const row = await updatePlanStatus(config, planId, status);
   // Direct DB: IN_PROGRESS only applies when current status is PENDING (see cortex-ralph.updatePlanStatus).
   if (row) {

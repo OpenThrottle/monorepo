@@ -92,5 +92,5 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
 
 - **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/openthrottle/run-locally-oss.md` and `databases/cortex/README.md` (embedding dimension strategy).
 - **Docker Compose:** For a single-command stack (Postgres, Redis, server, developer app), run Compose from the monorepo root as in [Run from monorepo root](#run-from-monorepo-root); ensure `.env` is populated per [Required `.env`](#required-env).
-- **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against Cortex plans; see `tools/workflows/README.md` and `AGENTS.md`.
+- **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against plans; see `tools/workflows/README.md` and `AGENTS.md`.
 - **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `run-locally-oss.md`, `work-as-history.md`, `docker-image-build-strategy.md`).

@@ -6,7 +6,7 @@
  * Usage: pnpm exec tsx scripts/associate-completed-plans-with-nx-projects.ts [--dry-run]
  */
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   ensureProjectForNxName,
   getCortexConfigOrExit,
   getPlanById,
@@ -45,7 +45,7 @@ function inferNxProjectName(
 
 async function main(): Promise<void> {
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
 
   const [completedPlans, nxProjectNames] = await Promise.all([
     listPlansByStatus(config, 'COMPLETED'),
