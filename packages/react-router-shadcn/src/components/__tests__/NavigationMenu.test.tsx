@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   NavigationMenu,
@@ -29,7 +29,7 @@ describe('NavigationMenu', () => {
     expect(trigger).toHaveTextContent('Item One');
   });
 
-  it('should render NavigationMenuList with role navigation', () => {
+  it('should render NavigationMenuList as a styled list inside the navigation landmark', () => {
     const { container } = render(
       <NavigationMenu>
         <NavigationMenuList>
@@ -39,8 +39,20 @@ describe('NavigationMenu', () => {
         </NavigationMenuList>
       </NavigationMenu>,
     );
-    const list = container.querySelector('[role="navigation"]');
+    expect(
+      screen.getByRole('navigation', { name: 'Main' }),
+    ).toBeInTheDocument();
+    const list = container.querySelector('ul');
     expect(list).toBeInTheDocument();
+    expect(list).toHaveClass(
+      'group',
+      'flex',
+      'flex-1',
+      'list-none',
+      'items-center',
+      'justify-center',
+      'space-x-1',
+    );
   });
 
   it('should render NavigationMenuLink as anchor when href provided', () => {
