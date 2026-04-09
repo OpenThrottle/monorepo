@@ -1,24 +1,52 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { AlertDialogCancel } from '../AlertDialogCancel';
-import type { AlertDialogCancelProps } from '../AlertDialogCancel';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '../index';
 
-describe('AlertDialogCancel Component', () => {
-  let component: RenderResult;
-  let props: AlertDialogCancelProps;
+describe('AlertDialogCancel', () => {
+  it('renders as a button with outline variant, spacing, and merged className', () => {
+    render(
+      <AlertDialog defaultOpen={true}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Cancel test</AlertDialogTitle>
+          <AlertDialogDescription>
+            Description for cancel test.
+          </AlertDialogDescription>
+          <AlertDialogCancel className="custom-cancel">
+            Go back
+          </AlertDialogCancel>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <AlertDialogCancel {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    const button = screen.getByRole('button', { name: 'Go back' });
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass('custom-cancel');
+    expect(button).toHaveClass('border-input');
+    expect(button).toHaveClass('mt-2', 'sm:mt-0');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('forwards ref to the underlying button', () => {
+    const ref = React.createRef<HTMLButtonElement>();
+
+    render(
+      <AlertDialog defaultOpen={true}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Cancel test</AlertDialogTitle>
+          <AlertDialogDescription>
+            Description for cancel test.
+          </AlertDialogDescription>
+          <AlertDialogCancel ref={ref}>Cancel</AlertDialogCancel>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+
+    expect(ref.current).toBe(screen.getByRole('button', { name: 'Cancel' }));
   });
 });

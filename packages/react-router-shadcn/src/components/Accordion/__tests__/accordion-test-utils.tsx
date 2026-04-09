@@ -1,7 +1,7 @@
 import * as React from 'react';
+import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { Accordion } from '../index';
 import { AccordionContent } from '../AccordionContent';
 import { AccordionItem } from '../AccordionItem';
 import { AccordionTrigger } from '../AccordionTrigger';
@@ -47,7 +47,7 @@ export const ComposedSingleAccordionFixture = (
   const { classNames, defaultOpen, panelChildren, triggerLabel } = props;
 
   return (
-    <Accordion
+    <AccordionPrimitive.Root
       collapsible={true}
       defaultValue={
         defaultOpen === true ? ACCORDION_TEST_ITEM_VALUE : undefined
@@ -65,7 +65,7 @@ export const ComposedSingleAccordionFixture = (
           {panelChildren}
         </AccordionContent>
       </AccordionItem>
-    </Accordion>
+    </AccordionPrimitive.Root>
   );
 };
 

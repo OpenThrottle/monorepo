@@ -17,7 +17,7 @@ import type {
   RalphFlowContext,
   WorkflowExecuteGraphqlV2,
   WorkflowRalphOrchestratorDeps,
-  WorkflowRunOutcome,
+  WorkflowRunResult,
 } from '@openthrottle/openthrottle-workflows';
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './plans.types';
@@ -60,7 +60,7 @@ export const createPlansQueueWorkflowRalphOrchestratorDeps =
 export const runPlanOrchestratorJob = async (params: {
   readonly jobData: RunPlanOrchestratorJobData;
   readonly signal?: AbortSignal;
-}): Promise<WorkflowRunOutcome> => {
+}): Promise<WorkflowRunResult> => {
   const { jobData, signal } = params;
   const orchestrator = createWorkflowRalphOrchestrator(
     createPlansQueueWorkflowRalphOrchestratorDeps(),

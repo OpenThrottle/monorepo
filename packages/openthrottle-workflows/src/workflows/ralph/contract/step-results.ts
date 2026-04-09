@@ -4,7 +4,8 @@ import type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
- * @description Logical steps along the Ralph main() pipeline; used to tag discriminated results.
+ * @description Logical steps along the Ralph main() pipeline; used to tag
+ * discriminated results.
  */
 export type WorkflowStepId =
   | 'bootstrap'
@@ -26,38 +27,41 @@ type StepSuccess<
 
 type StepFailure<TStep extends WorkflowStepId> = WorkflowStepFailure<TStep>;
 
-export type StepBootstrapResult = | StepSuccess<'bootstrap'> | StepFailure<'bootstrap'>; // prettier-ignore
-export type StepHealthcheckResult = | StepSuccess<'healthcheck'> | StepFailure<'healthcheck'>; // prettier-ignore
+type StepBootstrapResult = StepSuccess<'bootstrap'> | StepFailure<'bootstrap'>;
 
-export type StepTargetResolveResult =
+type StepHealthcheckResult =
+  | StepSuccess<'healthcheck'>
+  | StepFailure<'healthcheck'>;
+
+type StepTargetResolveResult =
   | StepSuccess<'target.resolve', { readonly effectivePlanId: string }>
   | StepFailure<'target.resolve'>;
 
-export type StepStateLoadResult =
+type StepStateLoadResult =
   | StepSuccess<'state.load', { readonly planLoaded: true; readonly taskCount: number }> // prettier-ignore
   | StepFailure<'state.load'>;
 
-export type StepPromptBuildResult =
+type StepPromptBuildResult =
   | StepSuccess<'prompt.build', { readonly agentPrompt: string }>
   | StepFailure<'prompt.build'>;
 
-export type StepPlanGuardResult =
+type StepPlanGuardResult =
   | StepSuccess<'plan.guard', { readonly continue: boolean; readonly planStatus: string }> // prettier-ignore
   | StepFailure<'plan.guard'>;
 
-export type StepPlanMarkInProgressResult =
+type StepPlanMarkInProgressResult =
   | StepSuccess<'plan.mark_in_progress'>
   | StepFailure<'plan.mark_in_progress'>;
 
-export type StepTaskMarkInProgressResult =
+type StepTaskMarkInProgressResult =
   | StepSuccess<'task.mark_in_progress'>
   | StepFailure<'task.mark_in_progress'>;
 
-export type StepIterationRunResult =
+type StepIterationRunResult =
   | StepSuccess<'iteration.run', { readonly iteration: number; readonly agentOutput: string }> // prettier-ignore
   | StepFailure<'iteration.run'>;
 
-export type StepTasksApplyCompletionsResult =
+type StepTasksApplyCompletionsResult =
   | StepSuccess<'tasks.apply_completions', { readonly completedTaskIds: readonly string[] }> // prettier-ignore
   | StepFailure<'tasks.apply_completions'>;
 

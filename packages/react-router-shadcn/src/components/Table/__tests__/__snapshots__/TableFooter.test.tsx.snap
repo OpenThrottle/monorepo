@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TableFooter Component > should render 1`] = `
+<body>
+  <div>
+    <tfoot
+      class="border-t bg-muted/50 font-medium [&>tr]:last:border-b-0"
+    />
+  </div>
+</body>
+`;

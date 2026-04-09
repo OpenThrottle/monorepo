@@ -1,0 +1,39 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ChartTooltipContent Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="rounded-lg border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md"
+    >
+      <p
+        class="mb-1.5 font-medium leading-none"
+      >
+        Q1
+      </p>
+      <div
+        class="flex flex-col gap-1.5"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="shrink-0 rounded-[2px]"
+            style="background-color: rgb(17, 17, 17); height: 8px; width: 8px;"
+          />
+          <span
+            class="flex-1 text-muted-foreground"
+          >
+            Sales
+          </span>
+          <span
+            class="font-medium"
+          >
+            12.34
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+`;

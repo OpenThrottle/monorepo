@@ -27,43 +27,41 @@ type StepSuccess<
   TData extends Record<string, unknown> | undefined = undefined,
 > = WorkflowStepSuccess<TStep, TData>;
 
-export type StepBootstrapResult =
-  | StepSuccess<'bootstrap'>
-  | StepFailure<'bootstrap'>;
+type StepBootstrapResult = StepSuccess<'bootstrap'> | StepFailure<'bootstrap'>;
 
-export type StepHealthcheckResult =
+type StepHealthcheckResult =
   | StepSuccess<'healthcheck'>
   | StepFailure<'healthcheck'>;
 
-export type StepTargetResolveResult =
+type StepTargetResolveResult =
   | StepSuccess<'target.resolve', { readonly effectivePlanId: string }>
   | StepFailure<'target.resolve'>;
 
-export type StepStateLoadResult =
+type StepStateLoadResult =
   | StepSuccess<'state.load', { readonly planLoaded: true; readonly taskCount: number }> // prettier-ignore
   | StepFailure<'state.load'>;
 
-export type StepPromptBuildResult =
+type StepPromptBuildResult =
   | StepSuccess<'prompt.build', { readonly agentPrompt: string }>
   | StepFailure<'prompt.build'>;
 
-export type StepPlanGuardResult =
+type StepPlanGuardResult =
   | StepSuccess<'plan.guard', { readonly continue: boolean; readonly planStatus: string }> // prettier-ignore
   | StepFailure<'plan.guard'>;
 
-export type StepPlanMarkInProgressResult =
+type StepPlanMarkInProgressResult =
   | StepSuccess<'plan.mark_in_progress'>
   | StepFailure<'plan.mark_in_progress'>;
 
-export type StepTaskMarkInProgressResult =
+type StepTaskMarkInProgressResult =
   | StepSuccess<'task.mark_in_progress'>
   | StepFailure<'task.mark_in_progress'>;
 
-export type StepIterationRunResult =
+type StepIterationRunResult =
   | StepSuccess<'iteration.run', { readonly iteration: number; readonly agentOutput: string }> // prettier-ignore
   | StepFailure<'iteration.run'>;
 
-export type StepTasksApplyCompletionsResult =
+type StepTasksApplyCompletionsResult =
   | StepSuccess<'tasks.apply_completions', { readonly completedTaskIds: readonly string[] }> // prettier-ignore
   | StepFailure<'tasks.apply_completions'>;
 

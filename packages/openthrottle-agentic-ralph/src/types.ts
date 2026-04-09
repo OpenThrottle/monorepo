@@ -1,7 +1,9 @@
-import type {
-  WorkflowConfig,
-  WorkflowError,
-} from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfig } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
+import {
+  WorkflowFailedReason,
+  WorkflowFinishedReason,
+} from './contract/orchestrator';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
@@ -18,32 +20,12 @@ export interface WorkflowOptions extends WorkflowConfig {
 
 /**
  * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).
+ * align with current Ralph CLI).z
  */
-export type WorkflowRunOutcome<WorkflowFinishedReason, WorkflowFailedReason> =
-  | {
-      readonly exitCode: 0;
-      readonly reason: WorkflowFinishedReason;
-      readonly status: 'finished';
-    }
-  | {
-      readonly exitCode: 1;
-      readonly reason: WorkflowFailedReason;
-      readonly status: 'failed';
-    };
-
-export type WorkflowStepFailure<TStep extends string[] = string[]> = {
-  readonly error: WorkflowError;
-  readonly outcome: 'failure';
-  readonly step: TStep;
-};
-
-export type WorkflowStepSuccess<
-  TStep extends string[] = string[],
-  TData extends Record<string, unknown> | undefined = undefined,
-> = TData extends undefined
-  ? { readonly step: TStep; readonly outcome: 'success' }
-  : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
+export type WorkflowRunResult = WorkflowRunResultBase<
+  WorkflowFinishedReason,
+  WorkflowFailedReason
+>;
 
 /**
  * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
@@ -53,9 +35,9 @@ export interface WorkflowOrchestrator<
   TContext = unknown,
 > {
   /**
-   * @description Runs the workflow until a terminal {@link WorkflowRunOutcome}.
+   * @description Runs the workflow until a terminal {@link WorkflowRunResult}.
    */
   readonly execute: (params: {
     readonly context: TContext;
-  }) => Promise<WorkflowRunOutcome<any, any>>;
+  }) => Promise<WorkflowRunResult>;
 }

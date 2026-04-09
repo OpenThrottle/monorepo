@@ -1,4 +1,4 @@
-import type { WorkflowRunOutcome as WorkflowRunOutcomeBase } from '../types.js';
+import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
 import type { WorkflowFlowContext } from './flow-context.js';
 
 export type WorkflowFailedReason =
@@ -13,7 +13,7 @@ export type WorkflowFinishedReason =
   | 'plan_already_terminal'
   | 'tasks_exhausted';
 
-export type WorkflowRunOutcome = WorkflowRunOutcomeBase<
+export type WorkflowRunResult = WorkflowRunResultBase<
   WorkflowFinishedReason,
   WorkflowFailedReason
 >;
@@ -25,9 +25,9 @@ export interface WorkflowOrchestrator<
   TContext extends WorkflowFlowContext = WorkflowFlowContext,
 > {
   /**
-   * @description Runs the workflow until a terminal {@link WorkflowRunOutcome}.
+   * @description Runs the workflow until a terminal {@link WorkflowRunResult}.
    */
   readonly execute: (params: {
     readonly context: TContext;
-  }) => Promise<WorkflowRunOutcome>;
+  }) => Promise<WorkflowRunResult>;
 }

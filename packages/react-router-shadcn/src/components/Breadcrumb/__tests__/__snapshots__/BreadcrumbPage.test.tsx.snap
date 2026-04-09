@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BreadcrumbPage Component > should render 1`] = `
+<body>
+  <div>
+    <span
+      aria-current="page"
+      class="font-normal text-foreground"
+      role="link"
+    />
+  </div>
+</body>
+`;

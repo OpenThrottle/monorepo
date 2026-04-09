@@ -13,7 +13,7 @@ import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
   WorkflowOrchestrator,
-  WorkflowRunOutcome,
+  WorkflowRunResult,
 } from '../contract/orchestrator.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {
@@ -30,13 +30,13 @@ const REMAINING_TASK_STATUS = new Set([
   'BLOCKED',
 ]);
 
-const finished = (reason: WorkflowFinishedReason): WorkflowRunOutcome => ({
+const finished = (reason: WorkflowFinishedReason): WorkflowRunResult => ({
   exitCode: 0,
   reason,
   status: 'finished',
 });
 
-const failed = (reason: WorkflowFailedReason): WorkflowRunOutcome => ({
+const failed = (reason: WorkflowFailedReason): WorkflowRunResult => ({
   exitCode: 1,
   reason,
   status: 'failed',

@@ -1,24 +1,52 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { AlertDialogAction } from '../AlertDialogAction';
-import type { AlertDialogActionProps } from '../AlertDialogAction';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '../index';
 
-describe('AlertDialogAction Component', () => {
-  let component: RenderResult;
-  let props: AlertDialogActionProps;
+describe('AlertDialogAction', () => {
+  it('renders as a button with merged className and button variant styles', () => {
+    render(
+      <AlertDialog defaultOpen={true}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Action test</AlertDialogTitle>
+          <AlertDialogDescription>
+            Description for action test.
+          </AlertDialogDescription>
+          <AlertDialogAction className="custom-action">
+            Confirm
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
 
-  beforeEach(() => {
-    props = {};
+    const button = screen.getByRole('button', { name: 'Confirm' });
 
-    const Component = () => <AlertDialogAction {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass('custom-action');
+    expect(button).toHaveClass('inline-flex');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('forwards ref to the underlying button', () => {
+    const ref = React.createRef<HTMLButtonElement>();
+
+    render(
+      <AlertDialog defaultOpen={true}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Action test</AlertDialogTitle>
+          <AlertDialogDescription>
+            Description for action test.
+          </AlertDialogDescription>
+          <AlertDialogAction ref={ref}>OK</AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+
+    expect(ref.current).toBe(screen.getByRole('button', { name: 'OK' }));
   });
 });

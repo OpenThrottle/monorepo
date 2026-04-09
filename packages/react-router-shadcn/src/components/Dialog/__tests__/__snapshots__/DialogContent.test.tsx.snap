@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DialogContent Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="DialogContent"
+    >
+      <h2>
+        DialogContent
+      </h2>
+    </div>
+  </div>
+</body>
+`;

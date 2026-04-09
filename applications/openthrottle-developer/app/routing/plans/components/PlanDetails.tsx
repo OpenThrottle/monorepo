@@ -8,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Markdown,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
@@ -36,6 +37,7 @@ import {
   isWorkflowRunOptionsExpandedFromSearchParams as isWorkflowOptionsExpanded,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
 import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
+import { mockOutput } from '~/routing/plans/data/mock.output';
 
 export interface PlanDetailsProps {
   readonly className?: string;
@@ -234,6 +236,20 @@ export const PlanDetails = (props: PlanDetailsProps) => {
             ralphTuningJson={ralphTuningJson}
           />
         </CardFooter>
+      </Card>
+
+      <Card className="mb-6" data-testid="workflow-run-options-collapsed">
+        <CardHeader className="flex flex-row w-full gap-4">
+          <div className="min-w-0 space-y-1.5 flex-1">
+            <h2 className="text-lg font-semibold leading-none tracking-tight">
+              Output
+            </h2>
+            <Markdown
+              className="overflow-x-auto text-xs text-muted-foreground"
+              content={mockOutput}
+            />
+          </div>
+        </CardHeader>
       </Card>
 
       {isExpanded ? (

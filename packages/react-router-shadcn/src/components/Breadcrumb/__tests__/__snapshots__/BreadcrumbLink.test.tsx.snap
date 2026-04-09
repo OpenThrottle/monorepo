@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BreadcrumbLink Component > should render 1`] = `
+<body>
+  <div>
+    <a
+      class="transition-colors hover:text-foreground"
+    />
+  </div>
+</body>
+`;

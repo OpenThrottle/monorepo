@@ -1,24 +1,37 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { AlertDialogOverlay } from '../AlertDialogOverlay';
-import type { AlertDialogOverlayProps } from '../AlertDialogOverlay';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
+import { describe, expect, it } from 'vitest';
+import {
+  AlertDialog,
+  AlertDialogDescription,
+  AlertDialogOverlay,
+  AlertDialogPortal,
+  AlertDialogTitle,
+} from '../index';
 
-describe('AlertDialogOverlay Component', () => {
-  let component: RenderResult;
-  let props: AlertDialogOverlayProps;
+describe('AlertDialogOverlay', () => {
+  it('renders a full-screen backdrop with merged className and forwards ref', () => {
+    const ref = React.createRef<HTMLDivElement>();
 
-  beforeEach(() => {
-    props = {};
+    render(
+      <AlertDialog open={true}>
+        <AlertDialogPortal>
+          <AlertDialogOverlay className="overlay-extra" ref={ref} />
+          <AlertDialogPrimitive.Content>
+            <AlertDialogTitle>Inside</AlertDialogTitle>
+            <AlertDialogDescription>
+              Overlay test description.
+            </AlertDialogDescription>
+          </AlertDialogPrimitive.Content>
+        </AlertDialogPortal>
+      </AlertDialog>,
+    );
 
-    const Component = () => <AlertDialogOverlay {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Inside');
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+    expect(ref.current?.getAttribute('data-state')).toBe('open');
+    expect(ref.current).toHaveClass('overlay-extra');
+    expect(ref.current).toHaveClass('fixed', 'inset-0', 'z-50');
   });
 });
