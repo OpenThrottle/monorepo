@@ -7,7 +7,7 @@ export interface AlertDialogActionProps extends React.ComponentPropsWithoutRef<
   typeof AlertDialogPrimitive.Action
 > {}
 
-const AlertDialogAction = React.forwardRef<
+export const AlertDialogAction = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Action>,
   AlertDialogActionProps
 >((props, ref): React.ReactElement => {
