@@ -1,24 +1,19 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { BreadcrumbPage } from '../BreadcrumbPage';
-import type { BreadcrumbPageProps } from '../BreadcrumbPage';
 
-describe('BreadcrumbPage Component', () => {
-  let component: RenderResult;
-  let props: BreadcrumbPageProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <BreadcrumbPage {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+describe('BreadcrumbPage', () => {
+  it('uses aria-current page, role link, visible text, and typography classes', () => {
+    render(<BreadcrumbPage>Current section</BreadcrumbPage>);
+    const page = screen.getByRole('link', { name: 'Current section' });
+    expect(page).toHaveAttribute('aria-current', 'page');
+    expect(page).toHaveClass('font-normal', 'text-foreground');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('merges custom className with defaults', () => {
+    render(<BreadcrumbPage className="truncate">Long label</BreadcrumbPage>);
+    const page = screen.getByRole('link', { name: 'Long label' });
+    expect(page).toHaveClass('font-normal', 'truncate');
   });
 });

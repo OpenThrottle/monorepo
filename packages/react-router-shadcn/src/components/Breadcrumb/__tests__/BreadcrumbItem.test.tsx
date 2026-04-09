@@ -1,24 +1,19 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { BreadcrumbItem } from '../BreadcrumbItem';
-import type { BreadcrumbItemProps } from '../BreadcrumbItem';
 
-describe('BreadcrumbItem Component', () => {
-  let component: RenderResult;
-  let props: BreadcrumbItemProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <BreadcrumbItem {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+describe('BreadcrumbItem', () => {
+  it('renders a list item with inline-flex gap layout classes', () => {
+    render(<BreadcrumbItem>Segment</BreadcrumbItem>);
+    const item = screen.getByRole('listitem');
+    expect(item).toHaveClass('inline-flex', 'items-center', 'gap-1.5');
+    expect(item).toHaveTextContent('Segment');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('merges custom className with defaults', () => {
+    render(<BreadcrumbItem className="min-w-0 shrink">Crumb</BreadcrumbItem>);
+    const item = screen.getByRole('listitem');
+    expect(item).toHaveClass('inline-flex', 'min-w-0', 'shrink');
   });
 });
