@@ -69,8 +69,9 @@ async function runCreatePlanFromText(
     await vscode.window.showInformationMessage(
       `Plan created: ${plan.title} (${plan.id})`,
     );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
 
     await vscode.window.showErrorMessage(
       `OpenThrottle: Failed to create plan. ${message}`,

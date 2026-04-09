@@ -1,5 +1,5 @@
 /**
- * @description Unit tests for health resolver: cortexHealth, serverHealth, and serverMetrics. Mocks HealthService and ProcessMetricsService.
+ * @description Unit tests for health resolver: databaseHealth, serverHealth, and serverMetrics. Mocks HealthService and ProcessMetricsService.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -46,13 +46,13 @@ describe('HealthResolver', () => {
     vi.mocked(mockProcessMetrics.getCurrentSnapshot).mockClear();
   });
 
-  describe('cortexHealth', () => {
+  describe('databaseHealth', () => {
     test('returns unconfigured when HealthService returns unconfigured', async () => {
       vi.mocked(mockHealthService.getDatabaseStatus).mockResolvedValueOnce(
         'unconfigured',
       );
 
-      const result = await resolver.cortexHealth();
+      const result = await resolver.databaseHealth();
 
       expect(result).toBe('unconfigured');
     });
@@ -62,7 +62,7 @@ describe('HealthResolver', () => {
         'ok',
       );
 
-      const result = await resolver.cortexHealth();
+      const result = await resolver.databaseHealth();
 
       expect(result).toBe('ok');
     });
@@ -72,7 +72,7 @@ describe('HealthResolver', () => {
         'unreachable',
       );
 
-      const result = await resolver.cortexHealth();
+      const result = await resolver.databaseHealth();
 
       expect(result).toBe('unreachable');
     });

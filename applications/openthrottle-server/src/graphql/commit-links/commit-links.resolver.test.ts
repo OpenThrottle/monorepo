@@ -15,9 +15,9 @@ describe('CommitLinksResolver', () => {
   const mockCommitLink: CommitLink = {
     createdAt: new Date('2026-02-01T22:00:00.000Z'),
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    message: 'feat(cortex): add GraphQL for tasks',
+    message: 'feat(openthrottle): add GraphQL for tasks',
     // FIXME: Swap out eventually
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
     plan: null as unknown as any,
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
     repo: 'owner/repo',

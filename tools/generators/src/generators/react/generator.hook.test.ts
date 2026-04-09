@@ -10,7 +10,7 @@ describe('hookGenerator', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  const org = `@rocketcms`;
+  const org = `@openthrottle`;
   const orgName = org.replace('@', '');
   const packageName = `shared-ui`;
   const target = `${org}/${packageName}`;

@@ -9,7 +9,8 @@ export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
   /**
-   * @description Returns server health: API (ok when invoked), Cortex DB, and Redis. Same shape as GraphQL serverHealth.
+   * @description Returns server health: API (ok when invoked), OpenThrottle DB,
+   * and Redis. Same shape as GraphQL serverHealth.
    */
   @Get()
   async check(): Promise<ServerHealthResponse> {

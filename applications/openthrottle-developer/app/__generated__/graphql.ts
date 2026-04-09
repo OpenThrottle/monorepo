@@ -126,6 +126,27 @@ export type AssignRoleToUserInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type CancelPlanRunInput = {
+  /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
+  planId: Scalars['ID']['input'];
+};
+
+export type CancelPlanRunResultObject = {
+  __typename?: 'CancelPlanRunResultObject';
+  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan. */
+  activeJobIdsCouldNotCancel: Array<Scalars['String']['output']>;
+  /** True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state. */
+  noMatchingJob: Scalars['Boolean']['output'];
+  /** Plan id from the request. */
+  planId: Scalars['String']['output'];
+  /** Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied. */
+  planStatusAfter?: Maybe<Scalars['String']['output']>;
+  /** BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized). */
+  removedJobIds: Array<Scalars['String']['output']>;
+  /** True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes. */
+  signaledActiveRunToStop: Scalars['Boolean']['output'];
+};
+
 /** Aggregated CPU and memory metrics for a child process over its lifetime. */
 export type ChildProcessMetrics = {
   __typename?: 'ChildProcessMetrics';
@@ -287,7 +308,7 @@ export type CreateTaskInput = {
 
 export type CreateUserInput = {
   email?: InputMaybe<Scalars['String']['input']>;
-  /** GitHub username (e.g. visormatt) */
+  /** GitHub user or Organization name (e.g. OpenThrottle) */
   githubUsername: Scalars['String']['input'];
 };
 
@@ -352,6 +373,11 @@ export type DeletePlanInput = {
   id: Scalars['ID']['input'];
 };
 
+export type DeleteProjectInput = {
+  /** Project id to delete */
+  id: Scalars['ID']['input'];
+};
+
 export type DeleteTaskInput = {
   /** Task id to delete */
   id: Scalars['ID']['input'];
@@ -397,11 +423,28 @@ export type EnqueueDocIngestionResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type EnqueuePlanRalphOrchestratorInput = {
+  /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric). */
+  mode?: InputMaybe<PlanRalphWorkflowMode>;
+  /** Plan id to run the orchestrator for */
+  planId: Scalars['ID']['input'];
+  /** Job priority (lower = higher priority). Same as enqueuePlanRun. */
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.). */
+  ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Required when mode is task; must belong to the plan. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type EnqueuePlanRunInput = {
   /** Plan id to enqueue a run for */
   planId: Scalars['ID']['input'];
   /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
   priority?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
+  ralph?: InputMaybe<RalphPlanRunTuningInput>;
 };
 
 export type EnqueuePlanRunResultObject = {
@@ -711,6 +754,8 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
+  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
+  cancelPlanRun: CancelPlanRunResultObject;
   /** Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup. */
   createCheckoutSession: CreateCheckoutSessionPayload;
   /** Create a new custom prompt */
@@ -735,6 +780,8 @@ export type Mutation = {
   deleteNote: Scalars['Boolean']['output'];
   /** Delete a plan by ID */
   deletePlan: Scalars['Boolean']['output'];
+  /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
+  deleteProject: Scalars['Boolean']['output'];
   /** Delete a role */
   deleteRole: Scalars['Boolean']['output'];
   /** Delete a task by ID */
@@ -747,6 +794,8 @@ export type Mutation = {
   enableUser?: Maybe<UserObject>;
   /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
+  /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
+  enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;
   /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Permanently delete a custom prompt by ID */
@@ -805,6 +854,10 @@ export type MutationAssignRoleToUserArgs = {
   input: AssignRoleToUserInput;
 };
 
+export type MutationCancelPlanRunArgs = {
+  input: CancelPlanRunInput;
+};
+
 export type MutationCreateCheckoutSessionArgs = {
   input: CreateCheckoutSessionInput;
 };
@@ -853,6 +906,10 @@ export type MutationDeletePlanArgs = {
   input: DeletePlanInput;
 };
 
+export type MutationDeleteProjectArgs = {
+  input: DeleteProjectInput;
+};
+
 export type MutationDeleteRoleArgs = {
   id: Scalars['ID']['input'];
 };
@@ -875,6 +932,10 @@ export type MutationEnableUserArgs = {
 
 export type MutationEnqueueDocIngestionArgs = {
   input: EnqueueDocIngestionInput;
+};
+
+export type MutationEnqueuePlanRalphOrchestratorArgs = {
+  input: EnqueuePlanRalphOrchestratorInput;
 };
 
 export type MutationEnqueuePlanRunArgs = {
@@ -1054,6 +1115,12 @@ export type PlanOutputStreamChunkObject = {
   planId: Scalars['String']['output'];
 };
 
+/** Plan-scoped run (default) or task-centric run (`task` requires taskId). */
+export enum PlanRalphWorkflowMode {
+  Plan = 'plan',
+  Task = 'task',
+}
+
 /** A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end). */
 export type PlanRunMetricsEntry = {
   __typename?: 'PlanRunMetricsEntry';
@@ -1209,8 +1276,6 @@ export type Query = {
   commitLinksByTaskId: Array<CommitLinkObject>;
   /** Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
-  /** Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page. */
-  cortexHealth: Scalars['String']['output'];
   /** Get a custom prompt by ID */
   customPrompt?: Maybe<CustomPromptObject>;
   /** List custom prompts with optional filters */
@@ -1219,6 +1284,8 @@ export type Query = {
   dailyStats?: Maybe<DailyStatsObject>;
   /** Aggregated plan and task stats for a date range (start and end inclusive, YYYY-MM-DD). */
   dailyStatsRange: DailyStatsRangeResultObject;
+  /** Database health: ok | unconfigured | unreachable. Used by app status page. */
+  databaseHealth: Scalars['String']['output'];
   /** Development ping. Returns "pong" when the development GraphQL API is reachable. */
   developmentPing: Scalars['String']['output'];
   /** Get a generator by name (includes schema JSON) */
@@ -1309,7 +1376,7 @@ export type Query = {
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
-  /** Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
+  /** Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
@@ -1564,6 +1631,32 @@ export type QueueStatsObject = {
   waitingCount: Scalars['Int']['output'];
 };
 
+/** Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose. */
+export enum RalphNestedDebugCli {
+  Debug = 'debug',
+  Omit = 'omit',
+  Verbose = 'verbose',
+}
+
+export type RalphPlanRunTuningInput = {
+  /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
+  backend?: InputMaybe<Scalars['String']['input']>;
+  /** Per-iteration timeout in seconds (positive integer). */
+  iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
+  /** Max Ralph iterations for this run (positive integer). */
+  iterations?: InputMaybe<Scalars['Int']['input']>;
+  /** Model id passed to workflow-ralph --model. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Nx project name for workflow-ralph --project. */
+  project?: InputMaybe<Scalars['String']['input']>;
+  /** Prompt profile path (e.g. /agents/ralph) for --prompt. */
+  prompt?: InputMaybe<Scalars['String']['input']>;
+  /** Repo-relative or absolute path for --prompt-file (layer-1 prompt file). */
+  promptFile?: InputMaybe<Scalars['String']['input']>;
+  /** Whether to pass --debug / --verbose to nested workflow-ralph. */
+  ralphDebugCli?: InputMaybe<RalphNestedDebugCli>;
+};
+
 export type RegisterInput = {
   /** User email (must be unique) */
   email: Scalars['String']['input'];
@@ -1750,7 +1843,7 @@ export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
-  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic. */
+  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
   redis: Scalars['String']['output'];
@@ -2040,7 +2133,7 @@ export type UserObject = {
   /** When set, user is disabled and cannot log in. */
   disabledAt?: Maybe<Scalars['DateTime']['output']>;
   email?: Maybe<Scalars['String']['output']>;
-  /** GitHub username (e.g. visormatt) */
+  /** GitHub user or Organization name (e.g. OpenThrottle) */
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -2528,6 +2621,23 @@ export type PlanDetailEnqueuePlanRunMutation = {
     __typename?: 'EnqueuePlanRunResultObject';
     jobId: string;
     planId: string;
+  };
+};
+
+export type PlanDetailCancelPlanRunMutationVariables = Exact<{
+  input: CancelPlanRunInput;
+}>;
+
+export type PlanDetailCancelPlanRunMutation = {
+  __typename?: 'Mutation';
+  cancelPlanRun: {
+    __typename?: 'CancelPlanRunResultObject';
+    activeJobIdsCouldNotCancel: Array<string>;
+    noMatchingJob: boolean;
+    planId: string;
+    planStatusAfter?: string | null;
+    removedJobIds: Array<string>;
+    signaledActiveRunToStop: boolean;
   };
 };
 
@@ -4855,6 +4965,80 @@ export const PlanDetailEnqueuePlanRunDocument = {
 } as unknown as DocumentNode<
   PlanDetailEnqueuePlanRunMutation,
   PlanDetailEnqueuePlanRunMutationVariables
+>;
+export const PlanDetailCancelPlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailCancelPlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CancelPlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelPlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noMatchingJob' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'planStatusAfter' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'removedJobIds' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailCancelPlanRunMutation,
+  PlanDetailCancelPlanRunMutationVariables
 >;
 export const PlanDetailSetPlanStatusDocument = {
   kind: 'Document',

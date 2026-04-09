@@ -11,7 +11,7 @@ export const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
     // a Cookie from `createCookie` or the CookieOptions to create one
     cookie: {
-      domain: IS_PRODUCTION ? 'barguide.io' : 'localhost', // FIXME: change this to the domain of the app
+      domain: IS_PRODUCTION ? 'openthrottle.ai' : 'localhost', // FIXME: change this to the domain of the app
       expires: new Date(Date.now() + 60 * 60 * 24 * 7),
       httpOnly: true,
       maxAge: 60 * 60 * 24 * 7,

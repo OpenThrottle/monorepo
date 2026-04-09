@@ -1,16 +1,24 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { redirect } from 'react-router';
+import { Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@openthrottle/react-router-shadcn';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans.$planId.create';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { CreatePlanDocument } from '~/__generated__/graphql';
+import type { Route } from '@/app/routes/+types/plans.$planId.create';
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
-};
+// export const loader = async (_args: Route.LoaderArgs) => {
+//   return {};
+// };
 
 // export const links: LinksFunction = () => {
 //   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -24,7 +32,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create plan | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
@@ -40,29 +50,45 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">Create plan</h1>
-        <PlanForm actionData={actionData} />
-      </div>
+    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+      <Breadcrumb className="mb-4 md:mb-8">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild={true}>
+              <Link to="/plans" viewTransition={true}>
+                Plans
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Create Plan</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <PlanForm actionData={actionData} />
     </main>
   );
 }
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
-  const title = formData.get('title');
-  const category = formData.get('category');
-  const author = formData.get('author');
 
-  if (typeof title !== 'string' || !title.trim()) {
-    return { error: 'Title is required.' };
+  const author = formData.get('author');
+  const category = formData.get('category');
+  const title = formData.get('title');
+
+  if (typeof author !== 'string' || !author.trim()) {
+    return { error: 'Author is required.' };
   }
+
   if (typeof category !== 'string' || !category.trim()) {
     return { error: 'Category is required.' };
   }
-  if (typeof author !== 'string' || !author.trim()) {
-    return { error: 'Author is required.' };
+
+  if (typeof title !== 'string' || !title.trim()) {
+    return { error: 'Title is required.' };
   }
 
   const assignee = formData.get('assignee');
@@ -103,10 +129,14 @@ export const action = async (args: Route.ActionArgs) => {
 
     return redirect(`/plans/${result.createPlan.id}`);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create plan.';
+    const isError = error instanceof Error;
+    const message = isError ? error.message : 'Failed to create plan.';
+
     return { error: message };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans.tasks.edit.$taskId';
+import type { Route } from '@/app/routes/+types/<%= name %>';
 
 // export const loader = async (args: Route.LoaderArgs) => {
 //   return {};
@@ -12,15 +12,13 @@ import type { Route } from '@/app/routes/+types/plans.tasks.edit.$taskId';
 //   return [{ href: stylesheet, rel: 'stylesheet' }];
 // };
 
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `<%= namePascal %> | ${SITE_TITLE}` }];
-// };
+export const meta = (_args: Route.MetaArgs) => {
+  return [{ title: `<%= namePascal %> | ${SITE_TITLE}` }];
+};
 
-export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Explore | ${SITE_TITLE}` }];
-});
-
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks

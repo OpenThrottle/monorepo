@@ -12,9 +12,6 @@
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
-      "path": "../nestjs-express/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

@@ -1,17 +1,17 @@
 # Ralph plan-centric task status: investigation findings
 
-**Plan:** 6eaebb97-dfcf-474d-9630-f2c684aea45c  
+**Plan:** 6eaebb97-dfcf-474d-9630-f2c684aea45c
 **Task:** 274cbc71-de69-457d-8814-7976773584a7 — Investigate task status not updating in plan-centric mode
 
 ## Summary
 
-Traced the flow from agent output → parsing → DB update. The implementation is correct: plan-centric mode sets the first PENDING task to IN_PROGRESS each iteration, injects the task UUID into the prompt, parses `<ralph:complete-task>uuid</ralph:complete-task>` from `cursor-agent` stdout/stderr, and calls `updateTaskStatus(..., 'COMPLETED')`. The DB uses uppercase enum values; Ralph passes uppercase. If tasks were observed “staying PENDING,” likely causes are (1) agent output not containing the signal, (2) `cursor-agent` not forwarding the agent’s final response to stdout/stderr, or (3) an older CLI version before the IN_PROGRESS-at-start and fallback logic.
+Traced the flow from agent output → parsing → DB update. The implementation is correct: plan-centric mode sets the first PENDING task to IN_PROGRESS each iteration, injects the task UUID into the prompt, parses `<ralph:task-complete>uuid</ralph:task-complete>` from `cursor-agent` stdout/stderr, and calls `updateTaskStatus(..., 'COMPLETED')`. The DB uses uppercase enum values; Ralph passes uppercase. If tasks were observed “staying PENDING,” likely causes are (1) agent output not containing the signal, (2) `cursor-agent` not forwarding the agent’s final response to stdout/stderr, or (3) an older CLI version before the IN_PROGRESS-at-start and fallback logic.
 
 ---
 
-## (1) Does the agent output `<ralph:complete-task>uuid</ralph:complete-task>`?
+## (1) Does the agent output `<ralph:task-complete>uuid</ralph:task-complete>`?
 
-- **Ralph’s responsibility:** The prompt is built with the current task UUID and explicit instruction: “Current task for this iteration: &lt;uuid&gt;. When you complete it output &lt;ralph:complete-task&gt;&lt;uuid&gt;&lt;/ralph:complete-task&gt; so the CLI can mark it completed.” (See `tools/workflows/src/bin/ralph.ts` ~line 184.)
+- **Ralph’s responsibility:** The prompt is built with the current task UUID and explicit instruction: “Current task for this iteration: &lt;uuid&gt;. When you complete it output &lt;ralph:task-complete&gt;&lt;uuid&gt;&lt;/ralph:task-complete&gt; so the CLI can mark it completed.” (See `tools/workflows/src/bin/ralph.ts` ~line 184.)
 - **What Ralph parses:** `result` is the concatenation of **stdout** and **stderr** from `cursor-agent` (`spawnSync(..., stdio: ['inherit', 'pipe', 'pipe'])`). So the signal must appear in whatever `cursor-agent` writes to stdout or stderr. If the Cursor agent emits the tag but `cursor-agent` does not forward that text to stdout/stderr, Ralph will not see it.
 - **Conclusion:** Ralph instructs the agent correctly. Whether the tag appears in `result` depends on the agent actually outputting it and on `cursor-agent` exposing that output to stdout/stderr.
 
@@ -19,7 +19,7 @@ Traced the flow from agent output → parsing → DB update. The implementation 
 
 ## (2) Does `parseRalphCompleteTaskSignals` find it?
 
-- **Implementation:** `tools/workflows/src/utils/parsers.ts`. Regex: `/<ralph:complete-task>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:complete-task>/gi`. Returns unique task IDs (lowercased).
+- **Implementation:** `tools/workflows/src/utils/parsers.ts`. Regex: `/<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi`. Returns unique task IDs (lowercased).
 - **Conclusion:** The pattern matches RFC 4122 UUID v4. If the agent output (as seen in `result`) contains the tag with a valid task UUID, `parseRalphCompleteTaskSignals(result)` will return that ID. No bug found here.
 
 ---
@@ -47,14 +47,14 @@ Traced the flow from agent output → parsing → DB update. The implementation 
   - Each iteration fetches tasks for the plan and filters to `PENDING`, `IN_PROGRESS`, `BLOCKED`.
   - It picks the first IN_PROGRESS (resume) or else the first PENDING.
   - If the chosen task is PENDING, it calls `updateTaskStatus(cortexConfig, taskForIteration.id, 'IN_PROGRESS')` before running the agent.
-  - The prompt is then set to include: “Current task for this iteration: &lt;taskForIteration.id&gt;. When you complete it output &lt;ralph:complete-task&gt;&lt;id&gt;&lt;/ralph:complete-task&gt; …”
+  - The prompt is then set to include: “Current task for this iteration: &lt;taskForIteration.id&gt;. When you complete it output &lt;ralph:task-complete&gt;&lt;id&gt;&lt;/ralph:task-complete&gt; …”
 - **Conclusion:** Plan-centric mode does set the first pending (or in-progress) task to IN_PROGRESS and passes its UUID in the prompt. No dependency on the agent having MCP for this step.
 
 ---
 
 ## Fallback when the agent does not emit the tag
 
-If the agent outputs `<promise>COMPLETE</promise>` but does **not** output `<ralph:complete-task>uuid</ralph:complete-task>`, Ralph still marks the current iteration’s task completed:
+If the agent outputs `<promise>COMPLETE</promise>` but does **not** output `<ralph:task-complete>uuid</ralph:task-complete>`, Ralph still marks the current iteration’s task completed:
 
 - `isComplete(result)` is true when `result.includes('<promise>COMPLETE</promise>')`.
 - If `firstPendingForIteration` is set and the parsed `completeTaskIds` do not already include it, Ralph appends it to `completeTaskIds`, so the same `updateTaskStatus(..., 'COMPLETED')` loop runs for that task.

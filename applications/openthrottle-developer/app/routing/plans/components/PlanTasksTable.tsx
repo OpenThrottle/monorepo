@@ -141,18 +141,29 @@ export const PlanTasksTable = (
 ): React.ReactElement => {
   const { className, tasks } = props;
 
+  // Hooks
   const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);
 
+  // Setup
   const getRowId = React.useCallback(
     (task: PlanTaskRowFragment) => task.id,
     [],
   );
+
   const getRowProps = React.useCallback(
     (row: { original: PlanTaskRowFragment }) => ({
       id: `task-${row.original.id}`,
     }),
     [],
   );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div className={classnames(className)} data-testid="PlanTasksTable">

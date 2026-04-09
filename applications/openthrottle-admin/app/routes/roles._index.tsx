@@ -15,22 +15,24 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/roles._index';
 import { RolesTable } from '~/routing/roles/components/RolesTable';
+import type { Route } from '@/app/routes/+types/roles._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
+
   try {
     const data = await executeGraphqlWithAuth(request, GetRolesDocument);
     return { roles: data.roles };
-  } catch (err) {
-    if (
-      err instanceof Error &&
-      (err.message.includes('401') || err.message.includes('403'))
-    ) {
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
+    if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
     }
-    throw err;
+
+    throw error;
   }
 };
 
@@ -38,7 +40,7 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Roles | ${SITE_TITLE}` }];
 };
 
-export default function RolesIndexPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
@@ -57,64 +59,6 @@ export default function RolesIndexPage(
   // Handlers
 
   // Markup
-  const renderSheet = () => {
-    return (
-      <Sheet onOpenChange={setCreateOpen} open={createOpen}>
-        <SheetTrigger asChild={true}>
-          <Button size="xs" type="button">
-            Add role
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Create role</SheetTitle>
-          </SheetHeader>
-          <CreateRoleForm method="post">
-            <input name="intent" type="hidden" value="createRole" />
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-name">Name</Label>
-                <Input
-                  id="create-name"
-                  name="name"
-                  placeholder="e.g. admin, editor"
-                  required={true}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="create-description">
-                  Description (optional)
-                </Label>
-                <Input
-                  id="create-description"
-                  name="description"
-                  placeholder="Human-readable description"
-                />
-              </div>
-            </div>
-            {createFetcher.data != null && 'error' in createFetcher.data ? (
-              <p className="text-destructive text-sm" role="alert">
-                {createFetcher.data.error}
-              </p>
-            ) : null}
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => setCreateOpen(false)}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button disabled={createFetcher.state !== 'idle'} type="submit">
-                {createFetcher.state !== 'idle' ? 'Creating…' : 'Create'}
-              </Button>
-            </div>
-          </CreateRoleForm>
-        </SheetContent>
-      </Sheet>
-    );
-  };
 
   // Life Cycle
   React.useEffect(() => {
@@ -129,12 +73,61 @@ export default function RolesIndexPage(
     <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl text-highlight">Roles</h1>
-        {renderSheet()}
+        <Sheet onOpenChange={setCreateOpen} open={createOpen}>
+          <SheetTrigger asChild={true}>
+            <Button size="xs" type="button">
+              Add role
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Create role</SheetTitle>
+            </SheetHeader>
+            <CreateRoleForm method="post">
+              <input name="intent" type="hidden" value="createRole" />
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="create-name">Name</Label>
+                  <Input
+                    id="create-name"
+                    name="name"
+                    placeholder="e.g. admin, editor"
+                    required={true}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="create-description">
+                    Description (optional)
+                  </Label>
+                  <Input
+                    id="create-description"
+                    name="description"
+                    placeholder="Human-readable description"
+                  />
+                </div>
+              </div>
+              {createFetcher.data != null && 'error' in createFetcher.data ? (
+                <p className="text-destructive text-sm" role="alert">
+                  {createFetcher.data.error}
+                </p>
+              ) : null}
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => setCreateOpen(false)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button disabled={createFetcher.state !== 'idle'} type="submit">
+                  {createFetcher.state !== 'idle' ? 'Creating…' : 'Create'}
+                </Button>
+              </div>
+            </CreateRoleForm>
+          </SheetContent>
+        </Sheet>
       </div>
-      {/* <p className="text-muted-foreground text-sm">
-        Overview and server metrics for OpenThrottle Admin.
-      </p> */}
-
       <RolesTable roles={roles} />
     </main>
   );
@@ -172,7 +165,8 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
-  return null;
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

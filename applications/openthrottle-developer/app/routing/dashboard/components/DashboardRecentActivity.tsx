@@ -198,6 +198,9 @@ export const DashboardRecentActivity = (
 ) => {
   const { className, data } = props;
 
+  // Hooks
+
+  // Setup
   const activityRows = toActivityRows(data);
 
   const VALID_TASK_STATUSES = [
@@ -216,6 +219,14 @@ export const DashboardRecentActivity = (
   ): s is (typeof VALID_TASK_STATUSES)[number] =>
     s != null &&
     VALID_TASK_STATUSES.includes(s as (typeof VALID_TASK_STATUSES)[number]);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

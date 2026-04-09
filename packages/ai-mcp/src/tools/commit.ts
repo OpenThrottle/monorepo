@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import { createCommitLink as cortexCreateCommitLink } from '../cortex-client.js';
 import { linkCommitInputSchema } from '../schemas.js';
 import { configMissingContent, invalidArgsContent } from './errors.js';
@@ -28,7 +28,7 @@ export function registerCommitTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }

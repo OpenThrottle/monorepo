@@ -5,13 +5,13 @@
 ## Why migrate
 
 - **Single API surface:** All Cortex access goes through openthrottle-server GraphQL. No need to expose Postgres connection details to MCP clients.
-- **Auth and consistency:** mcp-developer uses `CORTEX_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated GraphQL; no `CORTEX_POSTGRES_*` in the MCP environment.
+- **Auth and consistency:** mcp-developer uses `AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated GraphQL; no `POSTGRES_*` in the MCP environment.
 - **Parity:** mcp-developer implements the same tools (notes, plans, tasks, commit links, activity, output stream, semantic search, health) via GraphQL.
 
 ## Migration steps
 
 1. **Use mcp-developer in Cursor:** Configure the **mcp-developer** MCP server instead of (or in addition to) ai-mcp. See [packages/openthrottle/mcp-developer/README.md](../../openthrottle/mcp-developer/README.md) and [packages/openthrottle/mcp-developer/docs/AUTH.md](../../openthrottle/mcp-developer/docs/AUTH.md).
-2. **Environment:** Set `CORTEX_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for mcp-developer. You can remove `CORTEX_POSTGRES_URL` / `CORTEX_POSTGRES_*` from the MCP run environment once you no longer use ai-mcp.
+2. **Environment:** Set `AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for mcp-developer. You can remove `POSTGRES_URL` / `POSTGRES_*` from the MCP run environment once you no longer use ai-mcp.
 3. **Tool names:** Tool names and arguments are the same (e.g. `list_plans_by_status`, `semantic_search`, `create_plan`). Cortex rules and `/cortex/*` commands apply to whichever MCP server provides these tools (ai-mcp or mcp-developer).
 
 ## Timeline

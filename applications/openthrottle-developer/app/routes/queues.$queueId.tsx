@@ -11,8 +11,8 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId';
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -47,8 +47,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title: `${queueName} | Queues | ${SITE_TITLE}` }];
 });
 
-export default function QueueDetail(props: Route.ComponentProps) {
-  const { loaderData } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { queue } = loaderData;
 
   const jobs = queue.jobs?.jobs ?? [];
@@ -103,5 +105,9 @@ export default function QueueDetail(props: Route.ComponentProps) {
     </main>
   );
 }
+
+// export const action = async (args: Route.ActionArgs) => {
+//   return {};
+// };
 
 export const ErrorBoundary = GlobalErrorBoundary;

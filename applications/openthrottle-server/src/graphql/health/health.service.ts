@@ -1,8 +1,8 @@
 /**
- * @description Service for server health checks: Cortex DB (via existing logic) and Redis (BullMQ PING).
+ * @description Service for server health checks: OpenThrottle DB (via existing logic) and Redis (BullMQ PING).
  */
 
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import { PlansService } from '@openthrottle/nestjs-repositories';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
@@ -27,10 +27,10 @@ export class HealthService {
   ) {}
 
   /**
-   * @description Cortex DB status: ok if reachable, unconfigured if no config, unreachable on error.
+   * @description Database status: ok if reachable, unconfigured if no config, unreachable on error.
    */
   async getDatabaseStatus(): Promise<ServerHealthStatus> {
-    const config = getCortexPostgresConfig();
+    const config = getPostgresConfig();
 
     if (!config) {
       return 'unconfigured';

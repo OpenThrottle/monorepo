@@ -36,3 +36,9 @@ export class UpdateProjectInput {
   })
   nxProjectName!: string | null;
 }
+
+@InputType()
+export class DeleteProjectInput {
+  @Field(() => ID, { description: 'Project id to delete' })
+  id!: string;
+}

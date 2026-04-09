@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import { getOrCreateDataSource, runQuery } from '../data-source.js';
 
 type HealthStructured = {
@@ -30,7 +30,7 @@ async function handleHealth(args: { checkDb?: boolean }): Promise<{
     };
   }
 
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     result.cortex = 'not_configured';
     result.message = 'Cortex Postgres is not configured.';

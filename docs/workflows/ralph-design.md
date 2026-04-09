@@ -39,13 +39,13 @@
 
 ## Plan-centric task status
 
-The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches remaining tasks (PENDING, IN_PROGRESS, BLOCKED), **resumes the first IN_PROGRESS task if any** (so a previously started task is not skipped), otherwise picks the first PENDING and sets it to `IN_PROGRESS`. It injects that task ID into the agent prompt with a reminder to output `<ralph:complete-task>TASK_UUID</ralph:complete-task>` when done. The agent should also call MCP `update_task(..., 'completed')` when available. The CLI parses both stdout and stderr for the tag and marks those tasks `COMPLETED` via Postgres. **Fallback:** if the agent emits `<promise>COMPLETE</promise>` but does not emit the complete-task tag, the CLI still marks the current iteration’s task (the one set to IN_PROGRESS for that run) as `COMPLETED` so Cortex stays in sync.
+The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches remaining tasks (PENDING, IN_PROGRESS, BLOCKED), **resumes the first IN_PROGRESS task if any** (so a previously started task is not skipped), otherwise picks the first PENDING and sets it to `IN_PROGRESS`. It injects that task ID into the agent prompt with a reminder to output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` when done. The agent should also call MCP `update_task(..., 'completed')` when available. The CLI parses both stdout and stderr for the tag and marks those tasks `COMPLETED` via Postgres. **Fallback:** if the agent emits `<promise>COMPLETE</promise>` but does not emit the complete-task tag, the CLI still marks the current iteration’s task (the one set to IN_PROGRESS for that run) as `COMPLETED` so Cortex stays in sync.
 
 ## Max iterations and task cleanup
 
 When Ralph hits the iteration cap (e.g. `--iterations 10`) and there is still work to do (remaining tasks), the loop exits with code 0 and logs "All iterations have completed. Exiting...".
 
-- **Current behavior (without cleanup):** The task that was set to **IN_PROGRESS** for the last iteration can be left stuck in that state if the agent did not emit `<ralph:complete-task>` or `<promise>COMPLETE</promise>`. The next plan run would then see that task as IN_PROGRESS and resume it, but operators may expect it to be PENDING so "first PENDING" ordering is clear.
+- **Current behavior (without cleanup):** The task that was set to **IN_PROGRESS** for the last iteration can be left stuck in that state if the agent did not emit `<ralph:task-complete>` or `<promise>COMPLETE</promise>`. The next plan run would then see that task as IN_PROGRESS and resume it, but operators may expect it to be PENDING so "first PENDING" ordering is clear.
 - **Cleanup strategy (desired):** Before exit(0), the CLI sets that task back to **PENDING** so the next plan run (or re-queue) can pick it up. No automatic re-queue in the plans processor (e.g. re-adding the job when Ralph exits due to max iterations)—that is costly; cleanup in `workflow-ralph` is sufficient.
 
 Implementation: see `tools/workflows/README.md` § Workflow Ralph → "Max iterations and task cleanup", and `src/bin/ralph.ts` (cleanup before `MESSAGE_COMPLETED` and `process.exit(0)`). Plan: `970aecc7-c647-4948-aa20-410e1bd090fc`.
@@ -58,11 +58,12 @@ The CLI sets the plan to `IN_PROGRESS` at run start when Cortex is configured (p
 
 ## Cortex required; no ref file
 
-Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mode; the CLI fails fast with a clear error if the DB is unreachable. Ralph does **not** write a ref file; the agent always receives Plan-Id (and optional Task-Id) in the prompt and loads plan/tasks via Cortex MCP. Cross-repo: invoke with `--plan` or `--task` and set Cortex env in the calling repo; see **`tools/workflows/README.md`** § Cross-repo usage.
+Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mode; the CLI fails fast with a clear error if the DB is unreachable. Startup uses a **direct Cortex Postgres** check (`ensureDatabaseReachableOrExit`), not the GraphQL `getServerHealth` query; see **`tools/workflows/README.md`** § Workflow Ralph → **`getServerHealth` vs workflow GraphQL transport errors** for when health complements thrown HTTP/GraphQL client errors in other tooling. Ralph does **not** write a ref file; the agent always receives Plan-Id (and optional Task-Id) in the prompt and loads plan/tasks via Cortex MCP. Cross-repo: invoke with `--plan` or `--task` and set Cortex env in the calling repo; see **`tools/workflows/README.md`** § Cross-repo usage.
 
 ## References
 
 - **Agentic prompt (v4):** `.cursor/commands/agents/ralph.md`
+- **Runtime configuration (agents, limits, future prompt overrides):** [ralph-workflow-runtime-config.md](./ralph-workflow-runtime-config.md)
 - **Cortex:** `.cursor/rules/commands/cortex.mdc`, `databases/cortex/README.md`
 - **Cross-repo usage:** `tools/workflows/README.md` § Cross-repo usage and [tools/workflows/docs/cross-repo-usage.md](../../tools/workflows/docs/cross-repo-usage.md)
 - **Ralph technique:** [ghuntley.com/ralph](https://ghuntley.com/ralph)

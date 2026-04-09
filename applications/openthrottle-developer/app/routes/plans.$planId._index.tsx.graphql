@@ -57,6 +57,17 @@ mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
   }
 }
 
+mutation PlanDetailCancelPlanRun($input: CancelPlanRunInput!) {
+  cancelPlanRun(input: $input) {
+    activeJobIdsCouldNotCancel
+    noMatchingJob
+    planId
+    planStatusAfter
+    removedJobIds
+    signaledActiveRunToStop
+  }
+}
+
 mutation PlanDetailSetPlanStatus($input: SetPlanStatusInput!) {
   setPlanStatus(input: $input) {
     id

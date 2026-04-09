@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import {
   getChunkById,
   listSources,
@@ -22,7 +22,7 @@ export function registerSearchTools(server: McpServer): void {
   server.registerTool(
     'semantic_search',
     {
-      description: `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content in Cortex Postgres. Requires OPENAI_API_KEY for query embedding and CORTEX_POSTGRES_* (or CORTEX_POSTGRES_URL) for the database.`,
+      description: `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content in Cortex Postgres. Requires OPENAI_API_KEY for query embedding and POSTGRES_* (or POSTGRES_URL) for the database.`,
       inputSchema: {
         limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
         query: z.string().min(1),
@@ -34,7 +34,7 @@ export function registerSearchTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
       const { query, limit = DEFAULT_LIMIT } = parsed.data;
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -79,8 +79,10 @@ export function registerSearchTools(server: McpServer): void {
             })),
           },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
             {
@@ -105,7 +107,7 @@ export function registerSearchTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -136,11 +138,16 @@ export function registerSearchTools(server: McpServer): void {
             taskTitle: chunk.taskTitle,
           },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `get_document failed: ${message}`, type: 'text' as const },
+            {
+              text: `get_document failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -154,7 +161,7 @@ export function registerSearchTools(server: McpServer): void {
       description: `List knowledge-base sources (plan, task) and plan titles from Cortex. Use to discover available collections and plans.`,
     },
     async () => {
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -174,11 +181,16 @@ export function registerSearchTools(server: McpServer): void {
             sources: result.sources,
           },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `list_sources failed: ${message}`, type: 'text' as const },
+            {
+              text: `list_sources failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };

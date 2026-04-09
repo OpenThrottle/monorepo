@@ -1,6 +1,37 @@
 export const PLANS_QUEUE_NAME = 'plans';
 
 /**
+ * @description BullMQ **job name** for spawn plan runs (nested `workflow-ralph`). Same string as historical
+ * GraphQL enqueue; use this in `queue.add` for {@link RunPlanSpawnJobData}.
+ */
+export const RUN_PLAN_SPAWN_JOB_NAME = 'run-plan';
+
+/**
+ * @description BullMQ **job name** for in-process Ralph via `createWorkflowRalphOrchestrator`
+ * ({@link RunPlanOrchestratorJobData}). Same {@link PLANS_QUEUE_NAME} queue as spawn jobs; discriminated by
+ * name + payload `runKind`.
+ */
+export const RUN_PLAN_ORCHESTRATOR_JOB_NAME = 'run-plan-orchestrator';
+
+/**
+ * @description Job names on the plans queue that represent a Ralph/plan run (spawn or orchestrator).
+ * Used for cancellation and observability filters.
+ */
+export const PLAN_RALPH_BULL_JOB_NAMES = [
+  RUN_PLAN_SPAWN_JOB_NAME,
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+] as const;
+
+/**
+ * @description True when `name` is a plan Ralph job type on the plans queue.
+ */
+export const isPlanRalphBullJobName = (
+  name: string | null | undefined,
+): boolean =>
+  name != null &&
+  (PLAN_RALPH_BULL_JOB_NAMES as readonly string[]).includes(name);
+
+/**
  * Worker options for stalled-job recovery after server restart.
  * Ralph runs can be long; lock is renewed every lockDuration/2. After restart, the lock expires
  * and the job becomes stalled, then is moved back to waiting within ~lockDuration + stalledInterval.

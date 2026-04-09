@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -10,11 +10,13 @@ import { ProjectsService } from './projects.service';
 describe('ProjectsService', () => {
   type GetRepository = ReturnType<ProjectsService['getRepository']>;
 
+  let mockRepo: ReturnType<typeof createMock<GetRepository>>;
   let service: ProjectsService;
 
   beforeAll(async () => {
-    const mockRepo = createMock<GetRepository>({
+    mockRepo = createMock<GetRepository>({
       create: (data) => projectsFactory.build(data),
+      delete: () => Promise.resolve({ affected: 1, raw: [] }),
       find: () => Promise.resolve(projectsFactory.buildList(2)),
       findOne: () => Promise.resolve(projectsFactory.build()),
       merge: () => {},
@@ -85,6 +87,42 @@ describe('ProjectsService', () => {
       const updated = await service.update('test-id', { name: 'Updated Name' });
 
       expect(updated).toBeDefined();
+    });
+  });
+
+  describe('delete', () => {
+    it('returns true when a row was removed', async () => {
+      vi.mocked(mockRepo.delete).mockResolvedValueOnce({
+        affected: 1,
+        raw: [],
+      });
+
+      const removed = await service.delete('project-id');
+
+      expect(removed).toBe(true);
+      expect(mockRepo.delete).toHaveBeenCalledWith('project-id');
+    });
+
+    it('returns false when no row was removed', async () => {
+      vi.mocked(mockRepo.delete).mockResolvedValueOnce({
+        affected: 0,
+        raw: [],
+      });
+
+      const removed = await service.delete('missing-id');
+
+      expect(removed).toBe(false);
+    });
+
+    it('returns false when affected is undefined', async () => {
+      vi.mocked(mockRepo.delete).mockResolvedValueOnce({
+        affected: undefined,
+        raw: [],
+      });
+
+      const removed = await service.delete('any-id');
+
+      expect(removed).toBe(false);
     });
   });
 });

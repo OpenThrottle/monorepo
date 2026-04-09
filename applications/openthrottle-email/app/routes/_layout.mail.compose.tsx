@@ -1,6 +1,6 @@
+import { ComposeForm } from '~/routing/compose/components/ComposeForm';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import { ComposeForm } from '~/routing/compose/components/ComposeForm';
 import type { Route } from '@/app/routes/+types/_layout.mail.compose';
 
 // Optional loader: read searchParams (replyTo, replyAll, forward) and return initialValues for ComposeForm prefill when wiring reply/forward from reading pane.
@@ -12,7 +12,11 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function Compose(_props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+
   // Hooks
 
   // Setup

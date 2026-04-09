@@ -1,6 +1,6 @@
 # OpenThrottle | Developer
 
-Developer portal for [OpenThrottle](https://developer.openthrottle.ai)—dashboard for plans, projects, notes, generators, and pull requests. Integrates with Cortex and the OpenThrottle API.
+Developer portal for [OpenThrottle](https://developer.openthrottle.ai)—dashboard for plans, projects, notes, generators, and pull requests.
 
 ## Tech stack
 

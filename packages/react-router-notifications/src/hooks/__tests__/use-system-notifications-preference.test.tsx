@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
@@ -88,5 +88,42 @@ describe('useNotificationsSystemPreferences', () => {
       enabled: true,
       onlyWhenBackground: true,
     });
+  });
+
+  test('storage event from another tab updates preference state', async () => {
+    const { getByTestId } = render(<TestConsumer />);
+    expect(getByTestId('enabled').textContent).toBe('false');
+
+    storage[NOTIFICATIONS_STORAGE_KEY] = JSON.stringify({ enabled: true });
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: NOTIFICATIONS_STORAGE_KEY,
+        newValue: JSON.stringify({ enabled: true }),
+        oldValue: null,
+        storageArea: localStorage,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(getByTestId('enabled').textContent).toBe('true');
+    });
+  });
+
+  test('storage event for unrelated key does not change preference state', async () => {
+    const { getByTestId } = render(<TestConsumer />);
+    expect(getByTestId('enabled').textContent).toBe('false');
+
+    storage['other-key'] = JSON.stringify({ enabled: true });
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: 'other-key',
+        newValue: JSON.stringify({ enabled: true }),
+        oldValue: null,
+        storageArea: localStorage,
+      }),
+    );
+
+    await Promise.resolve();
+    expect(getByTestId('enabled').textContent).toBe('false');
   });
 });

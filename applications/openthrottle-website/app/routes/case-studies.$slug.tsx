@@ -27,7 +27,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   ];
 });
 
-export default function CaseStudySlug(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement | null {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks

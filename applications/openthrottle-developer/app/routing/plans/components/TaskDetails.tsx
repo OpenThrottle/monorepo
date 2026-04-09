@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import { format } from 'date-fns';
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardFooter,
@@ -37,10 +38,13 @@ function formatTaskDate(value: string | number | unknown): string {
 
 export const TaskDetails = (props: TaskDetailsProps) => {
   const { className, planId, task } = props;
+  // Hooks
   const [descriptionExpanded, setDescriptionExpanded] = React.useState(false);
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
 
+  // Setup
   const { projectRelation: project } = task;
+
   const hasDescription = task.description != null && task.description !== '';
   const hasSummary = task.summary != null && task.summary !== '';
   const descriptionLines = hasDescription
@@ -52,10 +56,6 @@ export const TaskDetails = (props: TaskDetailsProps) => {
   const showDescriptionPreview =
     hasDescription && isLongDescription && !descriptionExpanded;
   const showSummaryPreview = hasSummary && isLongSummary && !summaryExpanded;
-
-  // Hooks
-
-  // Setup
 
   // Handlers
 
@@ -179,12 +179,14 @@ export const TaskDetails = (props: TaskDetailsProps) => {
         )}
 
         <CardFooter>
-          <Link
-            className="text-sm text-primary hover:underline"
-            to={`/plans/${planId}/tasks/${task.id}/edit`}
-          >
-            Edit task
-          </Link>
+          <Button asChild={true} variant="outline">
+            <Link
+              className="text-sm text-primary hover:underline"
+              to={`/plans/${planId}/tasks/${task.id}/edit`}
+            >
+              Edit task
+            </Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>

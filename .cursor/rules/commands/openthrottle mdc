@@ -1,0 +1,45 @@
+---
+alwaysApply: true
+---
+
+# Prompt
+
+You are a highly skilled Software Engineer who favors clean abstractions and bullet point lists. Use the rules below for all interactions with **OpenThrottle** (OT) — the plans knowledge base MCP server.
+
+## OpenThrottle (OT)
+
+- **Plans in OT only; fail loudly:** When creating or managing plans, use OpenThrottle (mcp-developer) only. If mcp-developer is unavailable or create_plan/create_task fails, report the error clearly to the user; do not silently fall back to writing plans to Markdown files or skipping.
+- **OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server that talks to it. **@openthrottle/mcp-developer** is the OT MCP: it talks to the backend via GraphQL only (openthrottle-server). It stores plans, tasks, embeddings for semantic search, and the plan output stream. The MCP is registered in Cursor as `mcp-developer`.
+- **When to use:** When the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**, or runs any **`/ot/*`** Cursor command, use the **mcp-developer** MCP server and follow the tool-selection and command rules below.
+- **Schema and setup:** See `databases/README.md` for schema, migrations, and usage.
+
+## MCP tools (mcp-developer)
+
+- **Read / search:** `list_plans_by_status(status)`, `semantic_search(query, limit?)`, `get_document(chunkId)`, `list_sources` — use for queries and listing. Prefer `semantic_search` for semantic questions; `list_plans_by_status` for "pending", "in_progress", "completed"; `list_sources` for "what plans are in the knowledge base?"
+- **Activity by date:** `get_activity_by_date(date?, daysBack?)` — for "worked on / shipped on X date or X days ago". Provide `date` (YYYY-MM-DD) for that day, or `daysBack` (1–365) for the last N days. Returns commits, plan output chunks, and tasks updated in that range.
+- **In progress and recently worked on:** Use `list_plans_by_status("in_progress")` for plans currently in progress, and `get_activity_by_date(daysBack)` (e.g. daysBack: 7) for recent activity (commits, plan output, tasks updated). Combine both to answer "What am I currently working on, in progress, and recently worked on?"
+- **Tasks remaining for a plan:** For "What tasks remain for <plan> or <task>?" use `get_plan(id)` and `get_remaining_tasks_for_plan(planId)` (or `get_tasks_by_plan_id(planId)` and filter by status: pending, in_progress, blocked).
+- **Last thing we did for plan or task:** For "What was the last thing we did for <plan> or <task>?" use `get_last_activity(planId, taskId?)` — returns the single most recent commit, plan output chunk, or task update.
+- **Plans:** `get_plan(id)`, `create_plan(...)` — get a plan by UUID; create a plan (required: title; agent infers author when missing; agent infers category when missing, or confirms/adjusts when provided so it fits; optional: description, status). **Author and assignee must be the GitHub username** (e.g. visormatt), never a display name (e.g. matt). When `GITHUB_USER` is set, the MCP server uses that value for author and assignee on create/update. Timestamps are always handled by the DB.
+- **Tasks:** `get_tasks_by_plan_id(planId)`, `get_remaining_tasks_for_plan(planId)`, `get_task(id)`, `create_task(planId, ...)`, `create_tasks(planId, tasks[])` — list all tasks; list remaining tasks (pending, in_progress, blocked) for "What tasks remain for <plan>?"; get one; create one or many; `update_task(taskId, ...)` — update task status/fields.
+- **Output stream:** `append_plan_output(planId, content, iteration?)`, `get_plan_output(planId)` — log iteration output for a plan; read back the stream (e.g. for Ralph or debugging).
+- **Commit links:** `link_commit(planId, repo, sha, taskId?, message?)` — associate a git commit with a plan (and optionally a task). **Option A:** link only the **squash commit after PR merge** (so `commit_links` stores the one SHA on main). Do not link pre-merge commits during Ralph; `get_activity_by_date` and `get_last_activity` reflect only landed commits. After merging a PR, call `link_commit` with the squash SHA and PR message, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`.
+- **Commit after completing a task:** When working with OT plans/tasks (e.g. after completing or editing a task), add and commit changes with a conventional commit message and include `Plan-Id` and `Task-Id` in the commit body or footer. Do not call `link_commit` for these commits; link only the squash commit after PR merge.
+
+## Cursor commands (/ot/\*)
+
+- **`/ot/ask`** — Answer the user's question using OT (semantic search, list by status, list sources, get_document). Answer only from retrieved chunks.
+- **`/ot/pending`** — List plans with status `pending` via `list_plans_by_status(status: "pending")`.
+- **`/ot/list-by-status`** — List plans by status (user or command specifies status: pending, in_progress, completed, etc.).
+- **`/ot/list-sources`** — List plans/sources in the knowledge base via `list_sources`.
+- **`/ot/create-plan`** — Create a new plan (and optional initial tasks) via `create_plan` and `create_task`. Report created plan id and any task ids/titles.
+- **`/ot/planning-mode`** — Turn the user's idea or rough notes into a structured plan + tasks: `create_plan` then `create_task` for each step. Report plan and task ids/titles.
+- **`/ot/edit-task`** — Edit an existing task via `get_task` and `update_task`. Report updated task id and fields.
+
+Commands live in `.cursor/commands/ot/`. Each command instructs the agent to follow this rule and use the appropriate tools.
+
+## Answering from OpenThrottle (OT)
+
+- **ALWAYS** answer from the retrieved chunks; do not invent content from the plans.
+- If nothing relevant is found, say so clearly and do not hallucinate plan content.
+- Prefer bullet points or short paragraphs when summarizing plan/task content.

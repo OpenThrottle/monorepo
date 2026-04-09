@@ -27,6 +27,18 @@ export class GitHubRepoInput {
 @InputType()
 export class ListPullsInput {
   @Field(() => String, {
+    description: `Filter by base branch`,
+    nullable: true,
+  })
+  base!: string | null;
+
+  @Field(() => Boolean, {
+    description: `Filter by merged (true/false); omit for no filter`,
+    nullable: true,
+  })
+  merged!: boolean | null;
+
+  @Field(() => String, {
     description: `Repository owner (e.g. GitHub username or org)`,
   })
   owner!: string;
@@ -41,18 +53,6 @@ export class ListPullsInput {
     nullable: true,
   })
   state!: 'all' | 'closed' | 'open' | null;
-
-  @Field(() => String, {
-    description: `Filter by base branch`,
-    nullable: true,
-  })
-  base!: string | null;
-
-  @Field(() => Boolean, {
-    description: `Filter by merged (true/false); omit for no filter`,
-    nullable: true,
-  })
-  merged!: boolean | null;
 }
 
 /** Period bucket for lines-added/deleted aggregation. */

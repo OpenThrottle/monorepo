@@ -6,7 +6,7 @@ import {
   ResourceTemplate,
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import type { SemanticSearchChunk } from '../cortex-client.js';
 import { getChunkById } from '../cortex-client.js';
 
@@ -23,7 +23,7 @@ async function readKnowledgeBaseChunk(
     contents: [{ text: '', type: 'text' as const, uri: uriStr }],
   };
 
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     result = {
       contents: [

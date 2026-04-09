@@ -10,7 +10,7 @@ describe('generatorRemixRoute', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  const application = 'rocketcms';
+  const application = 'openthrottle';
   const name = 'example.route._index';
 
   test('should run successfully', async () => {
@@ -24,9 +24,9 @@ describe('generatorRemixRoute', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      'applications/rocketcms/app/routes/example.route._index.tsx',
-      'applications/rocketcms/app/routes/example.route._index.tsx.graphql.tmp',
-      'applications/rocketcms/app/routes/__tests__/example.route._index.test.tsx',
+      'applications/openthrottle/app/routes/example.route._index.tsx',
+      'applications/openthrottle/app/routes/example.route._index.tsx.graphql.tmp',
+      'applications/openthrottle/app/routes/__tests__/example.route._index.test.tsx',
     ]);
   });
 });

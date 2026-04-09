@@ -3,10 +3,11 @@
  */
 
 import {
-  getCortexPostgresConfig,
+  getPostgresConfig,
   searchPlansBySemanticQuery,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { PlanStatusCount } from '@openthrottle/ai-mcp/src/cortex-server';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
@@ -32,19 +33,31 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
+  RUN_PLAN_SPAWN_JOB_NAME,
 } from '../../queues/plans/plans.constants';
+import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { ProjectObject } from '../projects/project.object';
+import { QueuesService } from '../queues/queues.service';
+import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
 import {
+  buildRunPlanJobData,
+  buildRunPlanOrchestratorJobData,
+} from './enqueue-plan-ralph-tuning';
+import {
+  CancelPlanRunInput,
   CreatePlanInput,
   DeletePlanInput,
+  EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
+  PlanRalphWorkflowModeGraphQL,
   SearchPlansInput,
   SetPlanStatusInput,
   UpdatePlanInput,
 } from './plan.input';
 import {
+  CancelPlanRunResultObject,
   EnqueuePlanRunResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
@@ -53,12 +66,32 @@ import {
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
+  'Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.';
+
+/**
+ * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
+ */
+function normalizePlanStatusForPolicy(status: string): string {
+  return status.trim().toUpperCase();
+}
+
+/**
+ * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status = 'PENDING'`. Also allows idempotent `IN_PROGRESS` when already `IN_PROGRESS`.
+ */
+function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
+  const s = normalizePlanStatusForPolicy(currentStatus);
+  return s === 'PENDING' || s === 'IN_PROGRESS';
+}
+
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
     private readonly notificationsService: NotificationsService,
+    private readonly planRunCancellation: PlanRunCancellationService,
     private readonly plansService: PlansService,
     private readonly projectsService: ProjectsService,
+    private readonly queuesService: QueuesService,
     private readonly tasksService: TasksService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
@@ -231,7 +264,7 @@ export class PlansResolver {
   async searchPlans(
     @Args('input', { type: () => SearchPlansInput }) input: SearchPlansInput,
   ): Promise<ListPlansByStatusResultObject> {
-    const config = getCortexPostgresConfig();
+    const config = getPostgresConfig();
 
     if (!config) {
       const result = new ListPlansByStatusResultObject();
@@ -381,18 +414,70 @@ export class PlansResolver {
 
     if (!entity) return null;
 
-    // The fields are not nullable, so we need to check for null.
-    if (input.author != null) entity.author = input.author;
-    if (input.category != null) entity.category = input.category;
-    if (input.status != null) entity.status = input.status.toUpperCase();
-    if (input.title != null) entity.title = input.title;
+    const requestedInProgress =
+      input.status != null &&
+      normalizePlanStatusForPolicy(input.status) === 'IN_PROGRESS';
+    const inProgressBlocked =
+      requestedInProgress && !canApplyInProgressAsTargetStatus(entity.status);
 
-    // These fields are nullable, so we need to check for undefined.
-    if (input.assignee !== undefined) entity.assignee = input.assignee;
-    if (input.description !== undefined) entity.description = input.description;
-    if (input.project !== undefined) entity.project = input.project;
-    if (input.projectId !== undefined) entity.projectId = input.projectId;
-    if (input.summary !== undefined) entity.summary = input.summary;
+    let touched = false;
+
+    if (input.author != null && input.author !== entity.author) {
+      entity.author = input.author;
+      touched = true;
+    }
+    if (input.category != null && input.category !== entity.category) {
+      entity.category = input.category;
+      touched = true;
+    }
+    if (input.status != null) {
+      const nextStatus = normalizePlanStatusForPolicy(input.status);
+      if (
+        nextStatus === 'IN_PROGRESS' &&
+        !canApplyInProgressAsTargetStatus(entity.status)
+      ) {
+        // Invalid transition: leave entity.status unchanged (cortex-ralph conditional UPDATE).
+      } else if (normalizePlanStatusForPolicy(entity.status) !== nextStatus) {
+        entity.status = nextStatus;
+        touched = true;
+      }
+    }
+    if (input.title != null && input.title !== entity.title) {
+      entity.title = input.title;
+      touched = true;
+    }
+
+    if (input.assignee !== undefined && input.assignee !== entity.assignee) {
+      entity.assignee = input.assignee;
+      touched = true;
+    }
+    if (
+      input.description !== undefined &&
+      input.description !== entity.description
+    ) {
+      entity.description = input.description;
+      touched = true;
+    }
+    if (input.project !== undefined && input.project !== entity.project) {
+      entity.project = input.project;
+      touched = true;
+    }
+    if (input.projectId !== undefined && input.projectId !== entity.projectId) {
+      entity.projectId = input.projectId;
+      touched = true;
+    }
+    if (input.summary !== undefined && input.summary !== entity.summary) {
+      entity.summary = input.summary;
+      touched = true;
+    }
+
+    if (!touched && inProgressBlocked) {
+      throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
+    }
+
+    if (!touched) {
+      return entity;
+    }
 
     return repo.save(entity);
   }
@@ -434,7 +519,19 @@ export class PlansResolver {
 
     if (!entity) return null;
 
-    entity.status = input.status.trim().toUpperCase();
+    const nextStatus = input.status.trim().toUpperCase();
+    if (
+      nextStatus === 'IN_PROGRESS' &&
+      !canApplyInProgressAsTargetStatus(entity.status)
+    ) {
+      throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
+    }
+
+    if (normalizePlanStatusForPolicy(entity.status) === nextStatus) {
+      return entity;
+    }
+
+    entity.status = nextStatus;
 
     return repo.save(entity);
   }
@@ -483,7 +580,7 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority } = input;
+    const { planId, priority, ralph } = input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -492,12 +589,19 @@ export class PlansResolver {
       throw new Error(`Plan not found: ${planId}`);
     }
 
+    let jobData: RunPlanJobData;
+    try {
+      jobData = buildRunPlanJobData({ planId, ralph });
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+      throw new BadRequestException(message);
+    }
+
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-    const job = await this.plansQueue.add(
-      'run-plan',
-      { planId },
-      { priority: jobPriority },
-    );
+    const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
+      priority: jobPriority,
+    });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
@@ -537,5 +641,224 @@ export class PlansResolver {
     result.queueTotal = queueTotal;
 
     return result;
+  }
+
+  @Mutation(() => EnqueuePlanRunResultObject, {
+    description: `Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) =>
+        ret != null
+          ? {
+              message: 'Plan queued for run (orchestrator)',
+              planId: (ret as EnqueuePlanRunResultObject).planId,
+              severity: 'info' as const,
+            }
+          : null,
+    },
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
+      payload: (ret) =>
+        ret != null
+          ? {
+              planId: (ret as EnqueuePlanRunResultObject).planId,
+              status: 'QUEUED',
+            }
+          : null,
+    },
+  ])
+  async enqueuePlanRalphOrchestrator(
+    @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
+    input: EnqueuePlanRalphOrchestratorInput,
+  ): Promise<EnqueuePlanRunResultObject> {
+    const { idempotencyKey, planId, priority, ralph, taskId } = input;
+    const modeGraphql = input.mode;
+
+    const repo = this.plansService.getRepository();
+    const plan = await repo.findOne({ where: { id: planId } });
+
+    if (!plan) {
+      throw new Error(`Plan not found: ${planId}`);
+    }
+
+    const taskRepo = this.tasksService.getRepository();
+
+    const mode =
+      modeGraphql === PlanRalphWorkflowModeGraphQL.task
+        ? ('task' as const)
+        : modeGraphql === PlanRalphWorkflowModeGraphQL.plan
+          ? ('plan' as const)
+          : null;
+
+    if (mode === 'task' && (taskId === null || taskId === undefined)) {
+      throw new BadRequestException('taskId is required when mode is task');
+    }
+
+    if (mode === 'task' && taskId != null) {
+      const task = await taskRepo.findOne({
+        where: { id: taskId.trim(), planId },
+      });
+      if (!task) {
+        throw new BadRequestException(
+          `Task not found for this plan: ${taskId}`,
+        );
+      }
+    }
+
+    let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
+    try {
+      jobData = buildRunPlanOrchestratorJobData({
+        mode,
+        planId,
+        ralph,
+        taskId,
+      });
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      throw new BadRequestException(message);
+    }
+
+    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
+    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
+      {
+        idempotencyKey: idempotencyKey ?? undefined,
+        jobData,
+        priority: jobPriority,
+      },
+    );
+
+    if ('error' in enqueueResult) {
+      throw new BadRequestException(enqueueResult.error);
+    }
+
+    await repo.update({ id: planId }, { status: 'QUEUED' });
+
+    const statusesToReset = [
+      'PENDING',
+      'IN_PROGRESS',
+      'BLOCKED',
+      'BACKLOG',
+      'SKIPPED',
+      'CANCELED',
+    ] as const;
+    await taskRepo.update(
+      {
+        planId,
+        status: In(statusesToReset),
+      },
+      { status: 'QUEUED' },
+    );
+
+    const waitingCount = await this.plansQueue.getWaitingCount();
+    const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
+    const jobIndex = waitingJobs.findIndex(
+      (j) => String(j.id) === enqueueResult.jobId,
+    );
+    const queuePosition = jobIndex >= 0 ? jobIndex + 1 : waitingCount;
+    const queueTotal = waitingCount;
+
+    this.notificationsService.emitPlanEnqueued({
+      planId,
+      queuePosition,
+      queueTotal,
+    });
+
+    const result = new EnqueuePlanRunResultObject();
+    result.jobId = enqueueResult.jobId;
+    result.planId = planId;
+    result.queuePosition = queuePosition;
+    result.queueTotal = queueTotal;
+
+    return result;
+  }
+
+  // @ProfileResponseTime('PlansResolver.cancelPlanRun')
+  @Mutation(() => CancelPlanRunResultObject, {
+    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) => {
+        if (ret == null) return null;
+        const r = ret as CancelPlanRunResultObject;
+        if (r.removedJobIds.length > 0) {
+          return {
+            message: 'Plan run cancelled (removed from queue)',
+            planId: r.planId,
+            severity: 'info' as const,
+          };
+        }
+        if (r.signaledActiveRunToStop) {
+          return {
+            message: 'Plan run stop requested (Ralph process)',
+            planId: r.planId,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
+    },
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
+      payload: (ret) =>
+        ret != null &&
+        (ret as CancelPlanRunResultObject).planStatusAfter != null
+          ? {
+              planId: (ret as CancelPlanRunResultObject).planId,
+              status: (ret as CancelPlanRunResultObject).planStatusAfter!,
+            }
+          : null,
+    },
+  ])
+  async cancelPlanRun(
+    @Args('input', { type: () => CancelPlanRunInput })
+    input: CancelPlanRunInput,
+  ): Promise<CancelPlanRunResultObject> {
+    const repo = this.plansService.getRepository();
+    const plan = await repo.findOne({ where: { id: input.planId } });
+
+    if (!plan) {
+      throw new NotFoundException(`Plan not found: ${input.planId}`);
+    }
+
+    const queueResult = await cancelPlanRunJobsForPlan(
+      this.plansQueue,
+      input.planId,
+    );
+
+    const signaledActiveRunToStop = this.planRunCancellation.abort(
+      input.planId,
+    );
+
+    const out = new CancelPlanRunResultObject();
+    out.planId = input.planId;
+    out.removedJobIds = [...queueResult.removedJobIds];
+    out.activeJobIdsCouldNotCancel = [...queueResult.lockedActiveJobIds];
+    out.noMatchingJob = queueResult.matchingJobCount === 0;
+    out.planStatusAfter = null;
+    out.signaledActiveRunToStop = signaledActiveRunToStop;
+
+    const shouldSetPlanPending =
+      queueResult.removedJobIds.length > 0 || signaledActiveRunToStop;
+
+    if (shouldSetPlanPending) {
+      await repo.update({ id: input.planId }, { status: 'PENDING' });
+
+      const taskRepo = this.tasksService.getRepository();
+      await taskRepo.update(
+        { planId: input.planId, status: 'QUEUED' },
+        { status: 'PENDING' },
+      );
+
+      const refreshed = await repo.findOne({ where: { id: input.planId } });
+      out.planStatusAfter = refreshed?.status ?? 'PENDING';
+    }
+
+    return out;
   }
 }

@@ -1,21 +1,18 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
-import { Link, redirect } from 'react-router';
+import { redirect } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleBreadcrumbs,
+  OpenThrottleClipboard,
+} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -38,6 +35,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     GetTaskByIdDocument,
     { id: taskId },
   );
+
   const task = taskResult.task ?? null;
 
   if (task?.planId != null && planId != null && task.planId !== planId) {
@@ -65,14 +63,16 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   return [{ title }];
 });
 
-export default function PlanTaskDetail(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
   const { plan, task } = loaderData;
 
   // Hooks
 
   // Setup
-  const taskId = params.taskId ?? '';
+  const _taskId = params.taskId ?? '';
 
   // Handlers
 
@@ -105,46 +105,29 @@ export default function PlanTaskDetail(props: Route.ComponentProps) {
   const effectivePlanId = task.planId ?? '';
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/plans" viewTransition={true}>
-                Plans
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to={`/plans/${effectivePlanId}`} viewTransition={true}>
-                {plan?.title ?? (
-                  <OpenThrottleClipboard
-                    className="cursor-pointer whitespace-nowrap"
-                    label={effectivePlanId}
-                    text={effectivePlanId}
-                  />
-                )}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              <OpenThrottleClipboard
-                className="cursor-pointer whitespace-nowrap"
-                label={taskId}
-                text={taskId}
-              />
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+      <OpenThrottleBreadcrumbs
+        children={
+          <OpenThrottleClipboard
+            className="cursor-pointer whitespace-nowrap"
+            label={task.id}
+            text={task.id}
+          />
+        }
+        className="mb-4"
+        links={[
+          { children: 'Plans', to: '/plans' },
+          { children: plan?.title, to: `/plans/${effectivePlanId}` },
+        ]}
+      />
 
       <TaskDetails planId={effectivePlanId} task={task} />
     </main>
   );
 }
+
+// export const action = async (args: Route.ActionArgs) => {
+//   return {};
+// };
 
 export const ErrorBoundary = GlobalErrorBoundary;

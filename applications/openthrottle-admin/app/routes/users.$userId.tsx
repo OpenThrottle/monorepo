@@ -115,15 +115,15 @@ export const loader = async (args: Route.LoaderArgs) => {
       rolesList: rolesListResult.roles,
       user: userResult.user ?? null,
     };
-  } catch (err) {
-    if (
-      err instanceof Error &&
-      (err.message.includes('401') || err.message.includes('403'))
-    ) {
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
+    if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
     }
 
-    throw err;
+    throw error;
   }
 };
 
@@ -133,7 +133,7 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title }];
 };
 
-export default function UserDetailPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
@@ -389,37 +389,6 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   try {
-    if (intent === 'updateUser') {
-      const email = formData.get('email');
-      const githubUsername = formData.get('githubUsername');
-      await executeGraphqlWithAuth(request, UpdateUserDocument, {
-        input: {
-          email:
-            typeof email === 'string' && email.trim()
-              ? email.trim()
-              : undefined,
-          githubUsername:
-            typeof githubUsername === 'string' && githubUsername.trim()
-              ? githubUsername.trim()
-              : undefined,
-          id: userId,
-        },
-      });
-      return { ok: true };
-    }
-
-    if (intent === 'disableUser') {
-      await executeGraphqlWithAuth(request, DisableUserDocument, {
-        id: userId,
-      });
-      return { ok: true };
-    }
-
-    if (intent === 'enableUser') {
-      await executeGraphqlWithAuth(request, EnableUserDocument, { id: userId });
-      return { ok: true };
-    }
-
     if (intent === 'assignRole') {
       const roleId = formData.get('roleId');
 
@@ -430,6 +399,20 @@ export const action = async (args: Route.ActionArgs) => {
 
         return { ok: true };
       }
+    }
+
+    if (intent === 'disableUser') {
+      await executeGraphqlWithAuth(request, DisableUserDocument, {
+        id: userId,
+      });
+
+      return { ok: true };
+    }
+
+    if (intent === 'enableUser') {
+      await executeGraphqlWithAuth(request, EnableUserDocument, { id: userId });
+
+      return { ok: true };
     }
 
     if (intent === 'removeRole') {
@@ -443,13 +426,36 @@ export const action = async (args: Route.ActionArgs) => {
         return { ok: true };
       }
     }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Action failed';
+
+    if (intent === 'updateUser') {
+      const email = formData.get('email');
+      const githubUsername = formData.get('githubUsername');
+
+      await executeGraphqlWithAuth(request, UpdateUserDocument, {
+        input: {
+          email:
+            typeof email === 'string' && email.trim()
+              ? email.trim()
+              : undefined,
+          githubUsername:
+            typeof githubUsername === 'string' && githubUsername.trim()
+              ? githubUsername.trim()
+              : undefined,
+          id: userId,
+        },
+      });
+
+      return { ok: true };
+    }
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : 'Action failed';
 
     return { error: message };
   }
 
-  return null;
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

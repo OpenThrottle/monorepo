@@ -160,7 +160,7 @@ spawn('pnpm', ['exec', 'workflow-ralph', '--plan', planId], {
 for (let i = 0; i < iterations; i++) {
   // 1. Spawn cursor-agent with prompt (plan + tasks injected)
   // 2. Parse signals from output:
-  //    - <ralph:complete-task>UUID</ralph:complete-task>
+  //    - <ralph:task-complete>UUID</ralph:task-complete>
   //    - <promise>COMPLETE</promise>
   // 3. Update task status in Cortex
   // 4. Exit on COMPLETE, ERROR, INPUT_REQUIRED, or max iterations
@@ -284,7 +284,7 @@ sequenceDiagram
         Ralph->>Agent: spawn cursor-agent with prompt
         Agent->>Agent: Execute tasks, make changes
         Agent-->>Ralph: Output with signals
-        Ralph->>Ralph: Parse <ralph:complete-task>
+        Ralph->>Ralph: Parse <ralph:task-complete>
         Ralph->>Cortex: updateTaskStatus(COMPLETED)
         Ralph->>Cortex: appendPlanOutput(iteration log)
     end

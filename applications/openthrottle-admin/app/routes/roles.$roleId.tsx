@@ -40,7 +40,6 @@ import {
   RemovePermissionFromRoleDocument,
   UpdateRoleDocument,
 } from '~/__generated__/graphql';
-import type { RoleDetailsFragment } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
@@ -57,19 +56,29 @@ function AddPermissionSelectForm(
   props: AddPermissionSelectFormProps,
 ): React.ReactElement {
   const { availablePermissions, fetcher } = props;
-  const [selectedPermissionId, setSelectedPermissionId] =
-    React.useState<string>('');
 
+  // Hooks
+  const [permissionId, setPermissionId] = React.useState<string>('');
+
+  // Setup
   const Form = fetcher.Form;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Form method="post">
       <input name="intent" type="hidden" value="addPermission" />
-      <input name="permissionId" type="hidden" value={selectedPermissionId} />
+      <input name="permissionId" type="hidden" value={permissionId} />
       <div className="flex items-center gap-2">
         <Select
-          onValueChange={setSelectedPermissionId}
-          value={selectedPermissionId || undefined}
+          onValueChange={setPermissionId}
+          value={permissionId || undefined}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Add permission…" />
@@ -83,7 +92,7 @@ function AddPermissionSelectForm(
           </SelectContent>
         </Select>
         <Button
-          disabled={fetcher.state !== 'idle' || !selectedPermissionId}
+          disabled={fetcher.state !== 'idle' || !permissionId}
           size="sm"
           type="submit"
         >
@@ -93,17 +102,6 @@ function AddPermissionSelectForm(
     </Form>
   );
 }
-
-export interface RoleDetailLoaderData {
-  permissions: Array<{
-    id: string;
-    name: string;
-    description?: string | null;
-  }>;
-  role: RoleDetailsFragment | null;
-}
-
-export type RoleDetailActionData = { error: string } | { ok: true } | null;
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request, params } = args;
@@ -123,15 +121,15 @@ export const loader = async (args: Route.LoaderArgs) => {
       permissions: permissionsResult.permissions,
       role: roleResult.role ?? null,
     };
-  } catch (err) {
-    if (
-      err instanceof Error &&
-      (err.message.includes('401') || err.message.includes('403'))
-    ) {
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
+    if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
     }
 
-    throw err;
+    throw error;
   }
 };
 
@@ -143,7 +141,7 @@ export const meta = ({ data }: Route.MetaArgs) => {
   return [{ title }];
 };
 
-export default function RoleDetailPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
@@ -357,6 +355,36 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   try {
+    if (intent === 'addPermission') {
+      const permissionId = formData.get('permissionId');
+
+      if (typeof permissionId === 'string' && permissionId) {
+        await executeGraphqlWithAuth(request, AddPermissionToRoleDocument, {
+          input: { permissionId, roleId },
+        });
+
+        return { ok: true };
+      }
+    }
+
+    if (intent === 'deleteRole') {
+      await executeGraphqlWithAuth(request, DeleteRoleDocument, { id: roleId });
+      throw redirect('/roles');
+    }
+
+    if (intent === 'removePermission') {
+      const permissionId = formData.get('permissionId');
+
+      if (typeof permissionId === 'string' && permissionId) {
+        await executeGraphqlWithAuth(
+          request,
+          RemovePermissionFromRoleDocument,
+          { input: { permissionId, roleId } },
+        );
+        return { ok: true };
+      }
+    }
+
     if (intent === 'updateRole') {
       const name = formData.get('name');
       const description = formData.get('description');
@@ -373,36 +401,6 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { ok: true };
     }
-
-    if (intent === 'deleteRole') {
-      await executeGraphqlWithAuth(request, DeleteRoleDocument, { id: roleId });
-      throw redirect('/roles');
-    }
-
-    if (intent === 'addPermission') {
-      const permissionId = formData.get('permissionId');
-
-      if (typeof permissionId === 'string' && permissionId) {
-        await executeGraphqlWithAuth(request, AddPermissionToRoleDocument, {
-          input: { permissionId, roleId },
-        });
-
-        return { ok: true };
-      }
-    }
-
-    if (intent === 'removePermission') {
-      const permissionId = formData.get('permissionId');
-
-      if (typeof permissionId === 'string' && permissionId) {
-        await executeGraphqlWithAuth(
-          request,
-          RemovePermissionFromRoleDocument,
-          { input: { permissionId, roleId } },
-        );
-        return { ok: true };
-      }
-    }
   } catch (error) {
     const isError = error instanceof Error;
     const message = isError ? error.message : 'Action failed';
@@ -410,7 +408,8 @@ export const action = async (args: Route.ActionArgs) => {
     return { error: message };
   }
 
-  return null;
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

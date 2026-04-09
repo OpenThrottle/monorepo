@@ -3,6 +3,8 @@
  * Used to model and expose availability of worktree targets for Ralph loops.
  */
 
+import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
+import type { RalphNestedDebugCli } from '../utils/workflow-ralph-nested-argv';
 import type {
   ChildProcessMetrics,
   ChildProcessMetricsOptions,
@@ -125,6 +127,33 @@ export interface ChildJobInput {
   readonly planId: string;
   /** Max Ralph iterations when not task-centric. Omitted uses Ralph default. */
   readonly iterations?: number;
+  /**
+   * Execution backend (layer 2). Omitted uses workflow-ralph default (`cursor`).
+   * Passed as `--backend` when not the default.
+   */
+  readonly backend?: RalphExecutionBackendId;
+  /**
+   * Prompt profile (layer 1). Omitted uses workflow-ralph built-in default (`/agents/ralph`).
+   * Passed as `--prompt` when not the default.
+   */
+  readonly prompt?: string;
+  /**
+   * UTF-8 prompt file path (layer 1). When set, forwarded as `--prompt-file` and takes precedence over `prompt`.
+   * Use repo-relative or absolute paths; resolution is against the worktree cwd for nested runs.
+   */
+  readonly promptFile?: string;
+  /** Cursor model; forwarded as `--model` when not the default (`auto`). */
+  readonly model?: string;
+  /** NX project name; forwarded as `--project` when set. */
+  readonly project?: string;
+  /**
+   * Per-iteration timeout in **seconds** for workflow-ralph (non-interactive child); forwarded as `--iteration-timeout`.
+   */
+  readonly iterationTimeoutSeconds?: number;
+  /**
+   * Shim debug level for nested runs; forwarded as `--debug` or `--verbose` when not `omit`.
+   */
+  readonly ralphDebugCli?: RalphNestedDebugCli;
   /** Optional timeout in milliseconds; on expiry the child is killed (SIGTERM then SIGKILL after grace). */
   readonly timeoutMs?: number;
   /** Optional AbortSignal; when aborted the child is killed (SIGTERM then SIGKILL after grace). */

@@ -8,14 +8,14 @@
 module "artifact_registry_openthrottle" {
   source = "../../modules/gcp_artifact_registry"
 
+  description = "Staging: Docker images for OpenThrottle (CI push, E2 pull)."
+  location    = "us-west2"
+  project_id  = local.project_id
+
   labels = {
     app = "openthrottle"
     env = local.project_env
   }
-
-  description = "Staging: Docker images for OpenThrottle (CI push, E2 pull)."
-  location    = "us-west2"
-  project_id  = local.project_id
 
   repository_writer_members = [
     "serviceAccount:${google_service_account.gcs_workflow.email}",

@@ -6,6 +6,7 @@ import { GetProjectsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
 import { ProjectEmpty } from '~/routing/projects/components/ProjectEmpty';
+import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
 import { ProjectsCardGrid } from '~/routing/projects/components/ProjectsCardGrid';
 import { ProjectsStatsCards } from '~/routing/projects/components/ProjectsStatsCards';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
@@ -15,11 +16,10 @@ import type { GetProjectsQuery } from '~/__generated__/graphql';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import type { Route } from '@/app/routes/+types/projects._index';
 
-const DEFAULT_LIMIT = 10;
-
 const SORT_BY_VALUES = ['name', 'createdAt', 'updatedAt'] as const;
 const SORT_ORDER_VALUES = ['asc', 'desc'] as const;
 const VIEW_VALUES = ['table', 'card'] as const;
+
 type SortBy = (typeof SORT_BY_VALUES)[number];
 type SortOrder = (typeof SORT_ORDER_VALUES)[number];
 type View = (typeof VIEW_VALUES)[number];
@@ -79,6 +79,7 @@ function sortProjects(
       case 'name':
         aVal = a.name ?? '';
         bVal = b.name ?? '';
+
         return (
           mult *
           (aVal.localeCompare(bVal, undefined, { sensitivity: 'base' }) || 0)
@@ -114,16 +115,21 @@ export const loader = async (args: Route.LoaderArgs) => {
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
   const limit = Math.max(
     1,
-    Math.min(100, Number(url.searchParams.get('limit')) || DEFAULT_LIMIT),
+    Math.min(
+      100,
+      Number(url.searchParams.get('limit')) || PROJECTS_DEFAULT_LIMIT,
+    ),
   );
   const search = (
     url.searchParams.get('q') ??
     url.searchParams.get('search') ??
     ''
   ).trim();
+
   const sortByParam = url.searchParams.get('sortBy') ?? '';
   const sortOrderParam = url.searchParams.get('sortOrder') ?? '';
   const viewParam = url.searchParams.get('view') ?? '';
+
   const sortBy: SortBy = isSortBy(sortByParam) ? sortByParam : 'name';
   const sortOrder: SortOrder = isSortOrder(sortOrderParam)
     ? sortOrderParam
@@ -163,7 +169,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Projects | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const {
     limit,
@@ -192,17 +200,14 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      {/* <OpenThrottleBreadcrumbs className="mb-2" /> */}
-
+    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
       <ProjectsStatsCards
+        className="mt-4"
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />
 
-      <h1 className="text-xl mb-2 mt-12 text-highlight">Projects</h1>
       <ProjectsToolbar
-        className="mb-4"
         limit={limit}
         page={page}
         search={search}

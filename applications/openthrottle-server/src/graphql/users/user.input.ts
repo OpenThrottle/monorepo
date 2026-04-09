@@ -10,7 +10,7 @@ export class CreateUserInput {
   email!: string | null;
 
   @Field(() => String, {
-    description: `GitHub username (e.g. visormatt)`,
+    description: `GitHub user or Organization name (e.g. OpenThrottle)`,
   })
   githubUsername!: string;
 }

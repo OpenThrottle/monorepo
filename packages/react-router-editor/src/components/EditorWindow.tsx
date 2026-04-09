@@ -32,14 +32,11 @@ export const EditorWindow = (props: EditorWindowProps) => {
   if (!IS_BROWSER) return null;
 
   return (
-    <div className={className} data-testid="EditorWindow">
-      <MonacoEditor
-        {...rest}
-        className="h-screen"
-        height="min-h-full"
-        options={mergedOptions}
-        theme={EDITOR_DEFAULTS.theme}
-      />
-    </div>
+    <MonacoEditor
+      {...rest}
+      className={className}
+      options={mergedOptions}
+      theme={EDITOR_DEFAULTS.theme}
+    />
   );
 };

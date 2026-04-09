@@ -9,8 +9,8 @@ MCP server for plans knowledge base (semantic search over Cortex Postgres).
 ## Environment
 
 - **Cortex Postgres** — connection uses either:
-  - **`CORTEX_POSTGRES_URL`** — full connection string (e.g. `postgresql://user:pass@host:port/db`), or
-  - **`CORTEX_POSTGRES_*`** — `CORTEX_POSTGRES_HOST`, `CORTEX_POSTGRES_PORT`, `CORTEX_POSTGRES_DB`, `CORTEX_POSTGRES_USER`, `CORTEX_POSTGRES_PASSWORD` (see `.env.default` and `databases/cortex/README.md`).
+  - **`POSTGRES_URL`** — full connection string (e.g. `postgresql://user:pass@host:port/db`), or
+  - **`POSTGRES_*`** — `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (see `.env.default` and `databases/cortex/README.md`).
 - **Embeddings** — either:
   - **OpenAI** — set **`OPENAI_API_KEY`** so the server can embed queries with `text-embedding-3-small` (1536 dimensions); or
   - **Ollama (local)** — set **`OLLAMA_BASE_URL`** (default `http://localhost:11434`) and/or **`OLLAMA_EMBEDDING_MODEL`** (e.g. `nomic-embed-text`). When either is set, Ollama is used for embeddings; when neither is set, OpenAI is used. See root `.env.default` and `databases/cortex/README.md` § Embedding dimension strategy.

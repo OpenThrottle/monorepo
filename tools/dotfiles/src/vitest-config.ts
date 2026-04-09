@@ -54,9 +54,6 @@ export interface CreateVitestConfigOptions {
 
 /**
  * @description Calculates the coverage directory path relative to the package
- * @example
- *   packages/barguide/react-hooks -> ../../coverage/packages/react-hooks
- *   packages/rocketcms/surveys -> ../../../coverage/packages/rocketcms/surveys
  */
 const calculateCoverageDirectory = (packagePath: string): string => {
   // packagePath is __dirname from the config file
@@ -182,7 +179,7 @@ export const createVitestConfigHappyDom = (
     environment: 'happy-dom',
     overrides: {
       // FIXME: Swap out eventually
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
       plugins: [react()],
       root: packagePath,
       ...overrides,

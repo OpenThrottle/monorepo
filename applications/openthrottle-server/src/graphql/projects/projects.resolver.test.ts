@@ -132,6 +132,27 @@ describe('ProjectsResolver', () => {
     });
   });
 
+  describe('deleteProject', () => {
+    test('returns true when service removes a row', async () => {
+      vi.mocked(projectsService.delete).mockResolvedValue(true);
+
+      const result = await resolver.deleteProject({ id: mockProject.id });
+
+      expect(result).toBe(true);
+      expect(projectsService.delete).toHaveBeenCalledWith(mockProject.id);
+    });
+
+    test('returns false when project id does not exist', async () => {
+      vi.mocked(projectsService.delete).mockResolvedValue(false);
+
+      const result = await resolver.deleteProject({
+        id: '00000000-0000-0000-0000-000000000000',
+      });
+
+      expect(result).toBe(false);
+    });
+  });
+
   describe('plans (ResolveField)', () => {
     test('returns plans from plansByProjectIdLoader.load(projectId)', async () => {
       const mockPlans: Plan[] = [

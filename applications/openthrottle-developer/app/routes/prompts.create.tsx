@@ -14,18 +14,20 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/prompts.create';
 import {
   PROMPTS_BASE_PATH,
   PROMPTS_DEFAULT_CONTENT,
 } from '~/routing/prompts/config';
+import type { Route } from '@/app/routes/+types/prompts.create';
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create Prompt | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
-  const { actionData } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
   const fetcher = useFetcher();
@@ -102,10 +104,7 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main
-      className="relative h-full flex flex-col"
-      data-testid="prompts-create"
-    >
+    <main className="flex flex-col flex-1" data-testid="prompts-create">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
@@ -242,14 +241,12 @@ export default function Index(props: Route.ComponentProps) {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-hidden">
-        <EditorWindow
-          className="h-full"
-          language="markdown"
-          onChange={handleEditorChange}
-          value={content}
-        />
-      </div>
+      <EditorWindow
+        language="markdown"
+        onChange={handleEditorChange}
+        value={content}
+        wrapperProps={{ className: 'flex-1' }}
+      />
     </main>
   );
 }
@@ -315,6 +312,9 @@ export const action = async (args: Route.ActionArgs) => {
   } catch {
     return { error: 'Failed to create prompt.' };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

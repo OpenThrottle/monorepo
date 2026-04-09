@@ -1,28 +1,28 @@
 /**
- * @description Minimal Cortex client for Ralph (plan and task flows): get/update plan and task, format prompt context. Config from @openthrottle/ai-mcp getCortexPostgresConfig().
- * All workflow entry points require Cortex at startup; use getCortexConfigOrExit and ensureCortexReachableOrExit for a single fail-fast flow.
+ * @description Minimal Cortex client for Ralph (plan and task flows): get/update plan and task, format prompt context. Config from @openthrottle/ai-mcp getPostgresConfig().
+ * All workflow entry points require Cortex at startup; use getCortexConfigOrExit and ensureDatabaseReachableOrExit for a single fail-fast flow.
  */
 
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import pg from 'pg';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
-export interface CortexRalphConfig {
+export interface WorkflowRalphConfig {
   readonly connectionString: string;
 }
 
-/** Fatal error prefix used by getCortexConfigOrExit and ensureCortexReachableOrExit for consistent CLI output. */
-const CORTEX_FATAL_PREFIX = '\n🚨 FATAL: ';
+/** Fatal error prefix used by getCortexConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
+export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
-export const WORKFLOW_FATAL_PREFIX = '🚨 ';
+export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 ';
 
 /** Shared message when Cortex env is missing. Used by getCortexConfigOrExit and all workflow bins/scripts. */
-export const CORTEX_FATAL_REQUIRED = `${CORTEX_FATAL_PREFIX}Cortex is required. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* and ensure the database is reachable.\n`;
+export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
-export const CORTEX_FATAL_UNREACHABLE_SUFFIX =
-  '\n   Check CORTEX_POSTGRES_URL (or CORTEX_POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
+export const RALPH_FATAL_UNREACHABLE_SUFFIX =
+  '\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
 
 /**
  * @description Normalizes JSONB task requirements from Postgres to a readonly array.
@@ -32,12 +32,12 @@ function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
 }
 
 /**
- * @description Returns Cortex config or exits with {@link CORTEX_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
+ * @description Returns Cortex config or exits with {@link RALPH_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
  */
-export function getCortexConfigOrExit(): CortexRalphConfig {
-  const config = getCortexPostgresConfig();
+export function getCortexConfigOrExit(): WorkflowRalphConfig {
+  const config = getPostgresConfig();
   if (!config) {
-    console.error(CORTEX_FATAL_REQUIRED);
+    console.error(RALPH_FATAL_REQUIRED);
     process.exit(1);
   }
 
@@ -48,34 +48,35 @@ export function getCortexConfigOrExit(): CortexRalphConfig {
 /**
  * @description Verifies Cortex is reachable or exits with a clear message. Call after getCortexConfigOrExit() for the standard startup flow.
  */
-export async function ensureCortexReachableOrExit(
-  config: CortexRalphConfig,
+export async function ensureDatabaseReachableOrExit(
+  config: WorkflowRalphConfig,
 ): Promise<void> {
   try {
     await ensureCortexReachable(config);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error(`${CORTEX_FATAL_PREFIX}${msg}\n`);
+    console.error(`${RALPH_FATAL_PREFIX}${msg}\n`);
     process.exit(1);
   }
 
-  console.log('💰 💰 ensureCortexReachableOrExit 💰 💰 SUCCESS');
+  console.log('💰 💰 ensureDatabaseReachableOrExit 💰 💰 SUCCESS');
 }
 
 /**
  * @description Verifies Cortex Postgres is reachable (connect + SELECT 1). Throws with a clear message if connection fails. Call before using Cortex when config is required.
  */
 export async function ensureCortexReachable(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
 ): Promise<void> {
   const client = new pg.Client({ connectionString: config.connectionString });
+
   try {
     await client.connect();
     await client.query('SELECT 1');
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Cortex database is unreachable. ${detail}${CORTEX_FATAL_UNREACHABLE_SUFFIX}`,
+      `Cortex database is unreachable. ${detail}${RALPH_FATAL_UNREACHABLE_SUFFIX}`,
     );
   } finally {
     await client.end();
@@ -116,7 +117,7 @@ export interface ProjectRow {
  * @description Updates a plan's summary (PRD summarization, usage guide). Returns updated row or null if not found.
  */
 export async function updatePlanSummary(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   summary: string,
 ): Promise<PlanRow | null> {
@@ -159,7 +160,7 @@ export async function updatePlanSummary(
  * @description Updates a task's summary (PRD summarization, close-out notes). Returns true if a row was updated.
  */
 export async function updateTaskSummary(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   taskId: string,
   summary: string,
 ): Promise<boolean> {
@@ -180,7 +181,7 @@ export async function updateTaskSummary(
  * @description Fetches a task by id, or null if not found.
  */
 export async function getTaskById(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   id: string,
 ): Promise<TaskRow | null> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -229,7 +230,7 @@ export interface ListPlansByStatusRow {
  * @description Lists plans in Cortex filtered by status. Returns id, title, status, createdAt.
  */
 export async function listPlansByStatus(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   status: string,
 ): Promise<ListPlansByStatusRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -259,7 +260,7 @@ export async function listPlansByStatus(
  * @description Fetches a plan by id, or null if not found.
  */
 export async function getPlanById(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   id: string,
 ): Promise<PlanRow | null> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -301,7 +302,7 @@ export async function getPlanById(
  * @description Lists all projects from the projects table (id, name, nx_project_name). Use to map plans to NX projects.
  */
 export async function listProjects(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
 ): Promise<ProjectRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
   await client.connect();
@@ -325,7 +326,7 @@ export async function listProjects(
  * @description Ensures a project row exists for the given NX project name; returns its id. Inserts if missing.
  */
 export async function ensureProjectForNxName(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   nxProjectName: string,
 ): Promise<string> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -353,7 +354,7 @@ export async function ensureProjectForNxName(
  * @description Updates a plan's project_id (FK to projects). Pass null to clear. Returns true if a row was updated.
  */
 export async function updatePlanProjectId(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   projectId: string | null,
 ): Promise<boolean> {
@@ -374,7 +375,7 @@ export async function updatePlanProjectId(
  * @description Fetches all tasks for a plan, ordered by created_at.
  */
 export async function getTasksByPlanId(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
 ): Promise<TaskRow[]> {
   const client = new pg.Client({ connectionString: config.connectionString });
@@ -447,7 +448,7 @@ export function formatPlanAndTasksForPrompt(
  * @description Updates a task's status (and optionally other fields). Returns updated row or null if not found.
  */
 export async function updateTaskStatus(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   id: string,
   status: string,
 ): Promise<TaskRow | null> {
@@ -487,10 +488,16 @@ export async function updateTaskStatus(
 }
 
 /**
- * @description Updates a plan's status. When setting to 'IN_PROGRESS', only updates if current status is 'pending' to avoid overwriting completed. Returns updated row or null if not found (or condition not met).
+ * @description Updates a plan's status in Postgres. For `IN_PROGRESS`, applies
+ * `UPDATE … WHERE id = $2 AND status = 'PENDING'` (aligned with
+ * `PlansResolver.canApplyInProgressAsTargetStatus` in `plans.resolver.ts`). Returns the
+ * updated row, or `null` if the plan id is missing or no row matched (including `IN_PROGRESS`
+ * when the plan is not currently `PENDING`). Unlike GraphQL `updatePlan` / `setPlanStatus`,
+ * this helper does not treat `IN_PROGRESS` → `IN_PROGRESS` as a no-op: an already-in-progress
+ * plan yields no update and `null`. Other target statuses use an unconditional update by id.
  */
 export async function updatePlanStatus(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   status: string,
 ): Promise<PlanRow | null> {
@@ -580,7 +587,7 @@ export interface CommitLinkRow {
  * @description Appends a chunk of streaming output to a plan (same as Cortex MCP append_plan_output). Used by child-job when streamToCortex is enabled so plan_output_stream is updated in real time.
  */
 export async function appendPlanOutput(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   planId: string,
   content: string,
   iteration?: number | null,
@@ -607,7 +614,7 @@ export async function appendPlanOutput(
  * @description Inserts a commit link (plan/task ↔ repo/sha). Use after PR merge with the squash commit SHA so commit_links stores the one SHA on main.
  */
 export async function insertCommitLink(
-  config: CortexRalphConfig,
+  config: WorkflowRalphConfig,
   input: CommitLinkInput,
 ): Promise<CommitLinkRow> {
   const client = new pg.Client({ connectionString: config.connectionString });

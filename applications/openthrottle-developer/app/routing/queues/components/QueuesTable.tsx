@@ -130,6 +130,17 @@ const queuesTableColumns: ColumnDef<
 export const QueuesTable = (props: QueuesTableProps) => {
   const { className, queues } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (queues.length === 0) {
     return (
       <Card className={classnames(className)} data-testid="QueuesTable">

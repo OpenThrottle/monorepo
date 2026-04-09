@@ -36,7 +36,7 @@ There are certain situations where a framework may require a default export. For
 
 ```tsx
 // This is fine, if required by the framework
-export default function Index(props: Route.ComponentProps) {
+export default function Component(props: Route.ComponentProps) {
   return <div>Hello</div>;
 }
 ```

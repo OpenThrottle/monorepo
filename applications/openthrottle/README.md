@@ -54,20 +54,21 @@ Compose reads **`applications/openthrottle/.env`** (path is relative to the comp
 - **Postgres (for server and Postgres service):** `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_VERSION`. When running in Compose, the server and developer run inside the same Docker network, so set **`POSTGRES_HOST=openthrottle-postgres`** and **`REDIS_HOST=openthrottle-redis`** (and use `POSTGRES_DB=cortex` if you use the default Cortex schema).
 - **Redis:** `REDIS_HOST=openthrottle-redis`, `REDIS_PORT=6379`, `REDIS_VERSION` (e.g. `8.6-rc1`).
 - **openthrottle-server:** `JWT_SECRET`, `CORS_ORIGINS` (include the developer app origin, e.g. `http://localhost:5173`). Optional: `PORT` (default in container is 3000), `OPENAI_API_KEY` or Ollama vars for embeddings (see root `.env.default` and `databases/cortex/README.md`).
-- **openthrottle-developer:** `API_URL` must be the URL the **browser** uses to reach the server (e.g. `http://localhost:3000` when using the default host port). Optional: `API_URL_WEBSOCKET`, `PORT` (default 5173 in container).
+- **openthrottle-developer:** `API_URL` must be the URL the **browser** uses to reach the server (e.g. `http://localhost:3000` when using the default host port). Optional: `API_URL_EXTERNAL`, `PORT` (default 5173 in container).
 
 Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (default 3000) and **`OPENTHROTTLE_DEVELOPER_PORT`** (default 5173). Build args **`OPENTHROTTLE_SERVER_VERSION`**, **`OPENTHROTTLE_DEVELOPER_VERSION`**, and **`NX_VERSION`** are optional (see compose file and [docker-image-build-strategy.md](../../docs/openthrottle/docker-image-build-strategy.md)).
 
 ## Applications
 
+- `6011` | OpenThrottle - Redis
+- `6010` | OpenThrottle - Postgres
+
 - `6022` | OpenThrottle Admin
 - `6023` | OpenThrottle CMS
 - `6020` | OpenThrottle Developer
 - `6024` | OpenThrottle Email
-- `6021` | OpenThrottle Server
+- `6021` | OpenThrottle Server (API)
 - `6025` | OpenThrottle Website
-- `6011` | OpenThrottle - Redis
-- `6010` | OpenThrottle - Postgres
 
 ## Installation
 
@@ -91,5 +92,5 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
 
 - **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/openthrottle/run-locally-oss.md` and `databases/cortex/README.md` (embedding dimension strategy).
 - **Docker Compose:** For a single-command stack (Postgres, Redis, server, developer app), run Compose from the monorepo root as in [Run from monorepo root](#run-from-monorepo-root); ensure `.env` is populated per [Required `.env`](#required-env).
-- **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against Cortex plans; see `tools/workflows/README.md` and `AGENTS.md`.
+- **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against plans; see `tools/workflows/README.md` and `AGENTS.md`.
 - **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `run-locally-oss.md`, `work-as-history.md`, `docker-image-build-strategy.md`).

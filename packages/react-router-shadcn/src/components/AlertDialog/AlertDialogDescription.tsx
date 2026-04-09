@@ -1,0 +1,36 @@
+import * as React from 'react';
+import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
+import { cn } from '../../utils/cn';
+
+export interface AlertDialogDescriptionProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Description
+> {}
+
+export const AlertDialogDescription = React.forwardRef<
+  React.ComponentRef<typeof AlertDialogPrimitive.Description>,
+  AlertDialogDescriptionProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <AlertDialogPrimitive.Description
+      className={cn('text-sm text-muted-foreground', className)}
+      ref={ref}
+      {...rest}
+    />
+  );
+});
+
+AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName; // prettier-ignore

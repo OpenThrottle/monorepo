@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
 import classnames from 'classnames';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { OPEN_THROTTLE_META_DESCRIPTION } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { getMockMessages } from '~/global/data/mock.mail';
-import { MessageList } from '~/routing/inbox/components/MessageList';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MAIL_FOLDER_IDS } from '~/types/mail';
+import { MessageList } from '~/routing/inbox/components/MessageList';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail._index';
 
 /** Inbox filter: show all messages or only unread. For future API, filter can be moved to loader params. */
@@ -25,7 +25,11 @@ export const meta = (_args: Route.MetaArgs) => {
   ];
 };
 
-export default function Index({ loaderData }: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
   // Hooks
   const [filter, setFilter] = React.useState<InboxFilter>('all');
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());

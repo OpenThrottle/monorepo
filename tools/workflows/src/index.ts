@@ -56,6 +56,11 @@ export type {
   WorktreeWorkflowResult,
 } from './types/worktree';
 export { runChildJob } from './utils/child-job';
+export { buildWorkflowRalphRunTuningArgv } from './utils/workflow-ralph-nested-argv';
+export type {
+  RalphNestedDebugCli,
+  RalphNestedRunTuningInput,
+} from './utils/workflow-ralph-nested-argv';
 export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
 export {
   createMutexWorktreeTargetsTracker,
@@ -76,3 +81,34 @@ export {
 } from './utils/parent-job';
 export { runWorktreeWorkflow } from './utils/workflow';
 export { WorktreeTargetsTracker } from './utils/worktree-targets';
+export {
+  RALPH_EXECUTION_BACKEND_IDS,
+  DEFAULT_RALPH_RUNNER,
+  isRalphExecutionBackendId,
+  parseRalphExecutionBackendId,
+} from './utils/ralph-execution-backend';
+export type { RalphExecutionBackendId } from './utils/ralph-execution-backend';
+export {
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
+  WORKFLOW_RALPH_DEFAULTS_FILE,
+  WORKFLOW_RALPH_ENV,
+  loadWorkflowRalphDefaultsFile,
+  mergeRalphRuntimeSeed,
+  readWorkflowRalphEnv,
+} from './utils/ralph-runtime-config';
+export type {
+  RalphRuntimeSeed,
+  WorkflowRalphDefaultsFileJson,
+} from './utils/ralph-runtime-config';
+export { runIteration, runIterationAsync } from './bin/run-iteration';
+export type { CursorAgentChunk, RunIterationConfig } from './bin/run-iteration';
+export { createCursorWorkflowRalphIterationRunner } from './utils/cursor-workflow-ralph-iteration-runner';
+export type {
+  CreateCursorWorkflowRalphIterationRunnerOptions,
+  CursorWorkflowRalphAppendPlanOutputChunk,
+  CursorWorkflowRalphIterationRunParams,
+  CursorWorkflowRalphIterationRunner,
+  CursorWorkflowRalphIterationStreamChunk,
+} from './utils/cursor-workflow-ralph-iteration-runner';

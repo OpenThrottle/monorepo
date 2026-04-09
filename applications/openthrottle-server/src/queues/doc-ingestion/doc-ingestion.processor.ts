@@ -1,6 +1,6 @@
 /**
  * @description BullMQ processor for diff-based doc ingestion. Runs diff, de-indexes to-remove,
- * runs existing cortex:import-docs for to-add/to-update, then persists prior state.
+ * runs existing openthrottle:import-docs for to-add/to-update, then persists prior state.
  * See docs/openthrottle/doc-ingestion-job-spec.md and @tools/workflows/doc-ingestion.
  */
 
@@ -25,14 +25,14 @@ import type {
 const CONCURRENCY = 1;
 
 /**
- * @description Resolves the monorepo root for running cortex:import-docs. Set WORKSPACE_ROOT when the API is not started from the repo root.
+ * @description Resolves the monorepo root for running openthrottle:import-docs. Set WORKSPACE_ROOT when the API is not started from the repo root.
  */
 function getWorkspaceRoot(): string {
   return process.env.WORKSPACE_ROOT ?? process.cwd();
 }
 
 /**
- * @description Spawns pnpm run cortex:import-docs with env and waits for exit. Resolves with exit code or null if signaled.
+ * @description Spawns pnpm run openthrottle:import-docs with env and waits for exit. Resolves with exit code or null if signaled.
  */
 function spawnIngestDocs(
   env: NodeJS.ProcessEnv,
@@ -41,7 +41,7 @@ function spawnIngestDocs(
   onStderr: (chunk: string) => void,
 ): Promise<number | null> {
   return new Promise((resolve, reject) => {
-    const child = spawn('pnpm', ['run', 'cortex:import-docs'], {
+    const child = spawn('pnpm', ['run', 'openthrottle:import-docs'], {
       cwd,
       env: { ...process.env, ...env },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -101,7 +101,7 @@ export class DocIngestionProcessor
     const connectionString = getDocIngestionStateConnectionString();
     if (!connectionString) {
       throw new Error(
-        'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* for doc-ingestion.',
+        'Postgres not configured. Set POSTGRES_URL or POSTGRES_* for doc-ingestion.',
       );
     }
 
@@ -158,7 +158,7 @@ export class DocIngestionProcessor
 
       if (exitCode !== 0) {
         throw new Error(
-          `cortex:import-docs exited with code ${exitCode ?? 'signal'}. Not persisting prior state.`,
+          `openthrottle:import-docs exited with code ${exitCode ?? 'signal'}. Not persisting prior state.`,
         );
       }
 

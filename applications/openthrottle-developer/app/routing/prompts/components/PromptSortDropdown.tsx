@@ -37,8 +37,10 @@ export const PromptSortDropdown = (
         PromptsSortBy,
         PromptsSortOrder,
       ];
+
       onChange(by, order);
     },
+
     [onChange],
   );
 

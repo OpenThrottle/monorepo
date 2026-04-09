@@ -11,7 +11,7 @@ describe('componentGenerator', () => {
   });
 
   const packageName = `shared-ui`;
-  const target = `@rocketcms/${packageName}`;
+  const target = `@openthrottle/${packageName}`;
   const name = 'TestComponent';
 
   test('should run successfully', async () => {
@@ -27,8 +27,8 @@ describe('componentGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      `packages/rocketcms/${packageName}/src/components/${name}.tsx`,
-      `packages/rocketcms/${packageName}/src/components/__tests__/${name}.test.tsx`,
+      `packages/openthrottle/${packageName}/src/components/${name}.tsx`,
+      `packages/openthrottle/${packageName}/src/components/__tests__/${name}.test.tsx`,
     ]);
   });
 });

@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "joi": "^18.0.2"
+    "joi": "^18.1.2"
   },
   "exports": {
     ".": {
@@ -58,7 +58,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

@@ -12,5 +12,17 @@ export const PlanTasksTableCellActions = (
 ): React.ReactElement => {
   const { row } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return <PlanTaskInlineActions task={row.original} />;
 };

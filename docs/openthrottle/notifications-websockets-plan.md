@@ -22,7 +22,7 @@ Add notifications to the openthrottle-developer app by wiring WebSockets end-to-
 - **Server:** `NestjsWebsocketsModule` and Socket.IO (`IoAdapter` in `main.ts`). **NotificationsModule** and **NotificationsService** emit notification events using the shared contract from `@openthrottle/openthrottle-notifications`. Events are emitted from:
   - **GraphQL:** plans resolver (plan create/update), tasks resolver (task complete, plan updated).
   - **Queues:** plans processor, daily-stats processor (queue.job.completed).
-- **Developer app:** Socket.IO client in `~/global/notifications/notifications-socket.context.tsx` (connects to `API_URL_WEBSOCKET`); notifications store in `~/global/notifications/notifications-store.context.tsx`; **NotificationBell** in header; root wraps with `NotificationsStoreProvider` and socket bridge; Toaster (shadcn) for real-time toasts.
+- **Developer app:** Socket.IO client in `~/global/notifications/notifications-socket.context.tsx` (connects to `API_URL_EXTERNAL`); notifications store in `~/global/notifications/notifications-store.context.tsx`; **NotificationBell** in header; root wraps with `NotificationsStoreProvider` and socket bridge; Toaster (shadcn) for real-time toasts.
 
 ---
 
@@ -41,7 +41,7 @@ Add notifications to the openthrottle-developer app by wiring WebSockets end-to-
 
 ### 3. Developer app: Socket.IO client and connection to server ✅
 
-- **Done.** Socket.IO client in `NotificationsSocketProvider`; connects to `API_URL_WEBSOCKET` from settings; subscribes to all `NOTIFICATION_EVENT_NAMES`; connect/disconnect/reconnect status exposed. Optional auth not yet implemented.
+- **Done.** Socket.IO client in `NotificationsSocketProvider`; connects to `API_URL_EXTERNAL` from settings; subscribes to all `NOTIFICATION_EVENT_NAMES`; connect/disconnect/reconnect status exposed. Optional auth not yet implemented.
 
 ### 4. Developer app: notifications state and persistence ✅
 
@@ -61,7 +61,7 @@ Add notifications to the openthrottle-developer app by wiring WebSockets end-to-
 
 - **Contract:** `packages/openthrottle/notifications` — event names, payload types, README.
 - **Server:** `applications/openthrottle-server/src/notifications/` (NotificationsModule, NotificationsService); `main.ts` (IoAdapter); resolvers/processors inject NotificationsService and call `emit*`.
-- **Developer app:** `applications/openthrottle-developer/app/global/notifications/` (socket context, store context, NotificationBell); `app/global/config/settings.ts` (API_URL_WEBSOCKET); root.tsx (NotificationsStoreProvider, NotificationsSocketBridge, Toaster).
+- **Developer app:** `applications/openthrottle-developer/app/global/notifications/` (socket context, store context, NotificationBell); `app/global/config/settings.ts` (API_URL_EXTERNAL); root.tsx (NotificationsStoreProvider, NotificationsSocketBridge, Toaster).
 
 ---
 
@@ -85,8 +85,8 @@ For keeping the plans detail route in sync without manual refresh (e.g. when sta
 
 ## Env / config
 
-- **API_URL_WEBSOCKET** — Server base URL for Socket.IO (same host as GraphQL; Socket.IO serves at path `/socket.io`). Used by the developer app only.
-  - **Developer app:** Set in `.env` or `.env.default` (e.g. `API_URL_WEBSOCKET="http://localhost:6010"`). At runtime the app reads `window.env.API_URL_WEBSOCKET` in the browser and `process.env.API_URL_WEBSOCKET` on the server; see `applications/openthrottle-developer/app/global/config/settings.ts` (`API_URL_WEBSOCKET`). Default when unset: `http://localhost:6010`.
+- **API_URL_EXTERNAL** — Server base URL for Socket.IO (same host as GraphQL; Socket.IO serves at path `/socket.io`). Used by the developer app only.
+  - **Developer app:** Set in `.env` or `.env.default` (e.g. `API_URL_EXTERNAL="http://localhost:6010"`). At runtime the app reads `window.env.API_URL_EXTERNAL` in the browser and `process.env.API_URL_EXTERNAL` on the server; see `applications/openthrottle-developer/app/global/config/settings.ts` (`API_URL_EXTERNAL`). Default when unset: `http://localhost:6010`.
   - **Server:** No env needed for the WebSocket itself; it listens on the same HTTP server as the API.
 
 ---

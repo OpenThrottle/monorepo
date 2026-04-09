@@ -6,7 +6,7 @@ import { generatorRemixForm } from './generator.form';
 describe('remix form generator', () => {
   let tree: Tree;
 
-  const application = 'rocketcms';
+  const application = 'openthrottle';
   const folder = 'routing/home/components';
   const name = 'HomeExampleForm';
 

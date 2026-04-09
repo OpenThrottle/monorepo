@@ -5,6 +5,7 @@ import {
   AddPermissionToRoleInput,
   AppendPlanOutputInput,
   AssignRoleToUserInput,
+  CancelPlanRunInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
@@ -19,9 +20,11 @@ import {
   CreateUserInput,
   CustomPromptType,
   DeletePlanInput,
+  DeleteProjectInput,
   DeleteTaskInput,
   DuplicateJobInput,
   EnqueueDocIngestionInput,
+  EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   GetCommitLinkInput,
   GetGeneratorInput,
@@ -39,11 +42,14 @@ import {
   LoginInput,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
+  PlanRalphWorkflowMode,
   PrCountByLabelInput,
   PressureLevel,
   ProcessStripeWebhookInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
+  RalphNestedDebugCli,
+  RalphPlanRunTuningInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
@@ -83,7 +89,11 @@ export const definedNonNullAnySchema = z
 
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
+export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
+
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
+
+export const RalphNestedDebugCliSchema = z.nativeEnum(RalphNestedDebugCli);
 
 export const WallClockInterpretationSchema = z.nativeEnum(
   WallClockInterpretation,
@@ -136,6 +146,14 @@ export function AssignRoleToUserInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     userId: z.string(),
+  });
+}
+
+export function CancelPlanRunInputSchema(): z.ZodObject<
+  Properties<CancelPlanRunInput>
+> {
+  return z.object({
+    planId: z.string(),
   });
 }
 
@@ -278,6 +296,14 @@ export function DeletePlanInputSchema(): z.ZodObject<
   });
 }
 
+export function DeleteProjectInputSchema(): z.ZodObject<
+  Properties<DeleteProjectInput>
+> {
+  return z.object({
+    id: z.string(),
+  });
+}
+
 export function DeleteTaskInputSchema(): z.ZodObject<
   Properties<DeleteTaskInput>
 > {
@@ -307,12 +333,26 @@ export function EnqueueDocIngestionInputSchema(): z.ZodObject<
   });
 }
 
+export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
+  Properties<EnqueuePlanRalphOrchestratorInput>
+> {
+  return z.object({
+    idempotencyKey: z.string().nullish(),
+    mode: PlanRalphWorkflowModeSchema.nullish(),
+    planId: z.string(),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    taskId: z.string().nullish(),
+  });
+}
+
 export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
   return z.object({
     planId: z.string(),
     priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
   });
 }
 
@@ -510,6 +550,21 @@ export function QueueDetailsInputSchema(): z.ZodObject<
     name: z.string(),
     offset: z.number().nullish(),
     states: z.array(z.string()).nullish(),
+  });
+}
+
+export function RalphPlanRunTuningInputSchema(): z.ZodObject<
+  Properties<RalphPlanRunTuningInput>
+> {
+  return z.object({
+    backend: z.string().nullish(),
+    iterationTimeoutSeconds: z.number().nullish(),
+    iterations: z.number().nullish(),
+    model: z.string().nullish(),
+    project: z.string().nullish(),
+    prompt: z.string().nullish(),
+    promptFile: z.string().nullish(),
+    ralphDebugCli: RalphNestedDebugCliSchema.nullish(),
   });
 }
 

@@ -1,6 +1,6 @@
 import { spawn as nodeSpawn } from 'child_process';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
 import { createMock } from '@golevelup/ts-vitest';
@@ -21,6 +21,8 @@ import {
   PLANS_WORKER_STALLED_INTERVAL_MS,
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
+import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { runPlanOrchestratorJob } from './plans-workflow-ralph-orchestrator';
 import { PlansProcessor } from './plans.processor';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -29,6 +31,16 @@ const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
 vi.mock('child_process', () => ({
   spawn: vi.fn(),
 }));
+
+vi.mock('./plans-workflow-ralph-orchestrator', () => ({
+  runPlanOrchestratorJob: vi.fn().mockResolvedValue({
+    exitCode: 0,
+    reason: 'tasks_exhausted',
+    status: 'finished',
+  }),
+}));
+
+const mockRunPlanOrchestratorJob = vi.mocked(runPlanOrchestratorJob);
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -87,6 +99,7 @@ const mockPlansQueue = {
 
 describe('PlansProcessor', () => {
   let processor: PlansProcessor;
+  let testingModule: TestingModule;
   let mockJob: RunPlanJob;
 
   beforeEach(async () => {
@@ -119,6 +132,7 @@ describe('PlansProcessor', () => {
 
     const mod = await Test.createTestingModule({
       providers: [
+        PlanRunCancellationService,
         PlansProcessor,
         {
           provide: LoggerService,
@@ -151,6 +165,7 @@ describe('PlansProcessor', () => {
       ],
     }).compile();
 
+    testingModule = mod;
     processor = mod.get(PlansProcessor);
   });
 
@@ -193,6 +208,31 @@ describe('PlansProcessor', () => {
     );
   });
 
+  it('should call runPlanOrchestratorJob and not spawn when runKind is orchestrator', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        runKind: 'orchestrator',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    const result = await processor.process(mockJob);
+
+    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledWith({
+      jobData: mockJob.data,
+      signal: expect.any(AbortSignal),
+    });
+    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      taskRunMetrics: {
+        atEnd: snapshotStub,
+        atStart: snapshotStub,
+      },
+    });
+  });
+
   it('should capture metrics at start and end (getCurrentSnapshot called at least twice)', async () => {
     await processor.process(mockJob);
 
@@ -214,6 +254,124 @@ describe('PlansProcessor', () => {
     );
     const content = mockCreate.mock.calls[0]?.[0]?.content as string;
     expect(content).toMatch(/RSS .+ MB, heap .+ MB, CPU user .+ ms/);
+  });
+
+  /**
+   * @description Cancelled runs complete the BullMQ job successfully (returnvalue has metrics;
+   * not `failed`). Plan row is set to PENDING by `cancelPlanRun` when the user cancels; the worker
+   * does not mark the plan COMPLETED. Notifications use cancel copy + info severity vs success.
+   */
+  describe('kill / cancel outcome (legacy path)', () => {
+    it('completes the job with cancel notification (info), not success or Bull failed', async () => {
+      mockSpawn.mockImplementationOnce((() => {
+        const closeListeners: Array<
+          (code: number | null, signal: NodeJS.Signals | null) => void
+        > = [];
+
+        const fireClose = (
+          code: number | null,
+          signal: NodeJS.Signals | null,
+        ): void => {
+          for (const fn of closeListeners) {
+            fn(code, signal);
+          }
+        };
+
+        const stub = {
+          kill: vi.fn((_sig?: NodeJS.Signals) => {
+            stub.killed = true;
+            setImmediate(() => fireClose(null, 'SIGTERM'));
+          }),
+          killed: false,
+          on: vi.fn((ev: string, fn: (...args: unknown[]) => void) => {
+            if (ev === 'close') {
+              closeListeners.push(
+                fn as (
+                  code: number | null,
+                  signal: NodeJS.Signals | null,
+                ) => void,
+              );
+            }
+          }),
+          once: vi.fn((ev: string, fn: (...args: unknown[]) => void) => {
+            if (ev === 'close') {
+              closeListeners.push(
+                fn as (
+                  code: number | null,
+                  signal: NodeJS.Signals | null,
+                ) => void,
+              );
+            }
+          }),
+          pid: 42,
+          stderr: { on: vi.fn() },
+          stdout: { on: vi.fn() },
+        };
+        return stub as unknown as ReturnType<typeof nodeSpawn>;
+      }) as typeof nodeSpawn);
+
+      const planRunCancellation = testingModule.get(PlanRunCancellationService);
+      const processPromise = processor.process(mockJob);
+
+      await vi.waitFor(() => {
+        expect(mockSpawn).toHaveBeenCalled();
+      });
+
+      planRunCancellation.abort(mockJob.data.planId);
+      const result = await processPromise;
+
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobType: 'plans',
+          message: expect.stringMatching(/[Cc]ancelled/),
+          planId: mockJob.data.planId,
+          severity: 'info',
+        }),
+      );
+      expect(notifications.emitQueueJobCompleted).not.toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'success' }),
+      );
+      expect(result).toMatchObject({
+        taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
+      });
+    });
+  });
+
+  describe('orchestrator path + cancel', () => {
+    it('emits cancel notification (info) when orchestrator outcome is cancelled', async () => {
+      mockJob = {
+        data: {
+          planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+          runKind: 'orchestrator',
+        },
+        id: 'job-1',
+      } as RunPlanJob;
+
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'cancelled',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobType: 'plans',
+          message: expect.stringMatching(/[Cc]ancelled/),
+          planId: mockJob.data.planId,
+          severity: 'info',
+        }),
+      );
+    });
   });
 
   describe('iteration limit notification (legacy path)', () => {
@@ -437,6 +595,7 @@ describe('PlansProcessor', () => {
 
       const mod = await Test.createTestingModule({
         providers: [
+          PlanRunCancellationService,
           PlansProcessor,
           {
             provide: LoggerService,
