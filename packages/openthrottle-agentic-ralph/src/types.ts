@@ -64,17 +64,17 @@ export type WorkflowStepSuccess<
   ? { readonly step: TStep; readonly outcome: 'success' }
   : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
 
-// /**
-//  * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
-//  */
-// export interface WorkflowOrchestrator<
-//   // TContext extends WorkflowFlowContext = WorkflowFlowContext,
-//   TContext = unknown,
-// > {
-//   /**
-//    * @description Runs the workflow until a terminal {@link WorkflowRunOutcome}.
-//    */
-//   readonly execute: (params: {
-//     readonly context: TContext;
-//   }) => Promise<WorkflowRunOutcome<any, any>>;
-// }
+/**
+ * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
+ */
+export interface WorkflowOrchestrator<
+  // TContext extends WorkflowFlowContext = WorkflowFlowContext,
+  TContext = unknown,
+> {
+  /**
+   * @description Runs the workflow until a terminal {@link WorkflowRunOutcome}.
+   */
+  readonly execute: (params: {
+    readonly context: TContext;
+  }) => Promise<WorkflowRunOutcome<any, any>>;
+}

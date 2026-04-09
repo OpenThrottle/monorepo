@@ -72,6 +72,7 @@ export const ralphTuningForChildJob = (
   if (!r) return {};
   return {
     ...(r.backend != null ? { backend: r.backend } : {}),
+    ...(r.debug !== undefined ? { ralphDebugCli: r.debug } : {}),
     ...(r.iterationTimeoutSeconds != null
       ? { iterationTimeoutSeconds: r.iterationTimeoutSeconds }
       : {}),
@@ -80,9 +81,6 @@ export const ralphTuningForChildJob = (
     ...(r.project !== undefined ? { project: r.project } : {}),
     ...(r.prompt !== undefined ? { prompt: r.prompt } : {}),
     ...(r.promptFile !== undefined ? { promptFile: r.promptFile } : {}),
-    ...(r.ralphDebugCli !== undefined
-      ? { ralphDebugCli: r.ralphDebugCli }
-      : {}),
   } satisfies ChildJobRalphTuning;
 };
 

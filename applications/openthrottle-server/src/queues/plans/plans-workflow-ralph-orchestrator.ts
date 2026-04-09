@@ -12,13 +12,13 @@ import {
   buildWorkflowExecuteGraphqlV2Options,
   createWorkflowRalphOrchestrator,
   resolveWorkflowGraphqlConfigFromEnv,
-} from '@openthrottle/openthrottle-agentic-ralph';
+} from '@openthrottle/openthrottle-workflows';
 import type {
   RalphFlowContext,
   WorkflowExecuteGraphqlV2,
   WorkflowRalphOrchestratorDeps,
   WorkflowRunOutcome,
-} from '@openthrottle/openthrottle-agentic-ralph';
+} from '@openthrottle/openthrottle-workflows';
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './plans.types';
 
