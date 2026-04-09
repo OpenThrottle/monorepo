@@ -14,6 +14,7 @@ import {
   registerNoteTools,
   registerOutputTools,
   registerPlanTools,
+  registerProjectTools,
   registerSearchTools,
   registerTaskTools,
 } from './tools/index.js';
@@ -34,6 +35,7 @@ export async function runServer(): Promise<void> {
   registerNoteTools(server);
   registerOutputTools(server);
   registerPlanTools(server);
+  registerProjectTools(server);
   registerSearchTools(server);
   registerTaskTools(server);
 

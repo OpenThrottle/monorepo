@@ -47,13 +47,15 @@ export class OpenThrottleApiClient {
       return await executeGraphqlAtUrl(this.graphqlUrl, document, variables, {
         token,
       });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       if (message.includes(' 401') || message.includes('401 ')) {
         throw new UnauthenticatedError(message);
       }
 
-      throw err;
+      throw error;
     }
   }
 

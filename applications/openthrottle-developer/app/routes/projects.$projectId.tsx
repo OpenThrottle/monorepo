@@ -82,14 +82,16 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 
 type ProjectTabValue = 'overview' | 'tasks';
 
-export default function ProjectDetail(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { limit, page, project, projectTasks, totalTaskCount } = loaderData;
 
   // Hooks
   const [activeTab, setActiveTab] = React.useState<ProjectTabValue>('overview');
 
   // Setup
-  const { limit, page, project, projectTasks, totalTaskCount } = loaderData;
   const tasks = projectTasks ?? [];
 
   // Handlers
@@ -99,7 +101,6 @@ export default function ProjectDetail(props: Route.ComponentProps) {
   // Life Cycle
 
   // 🔌 Short Circuit
-
   if (!project) return <ProjectNotFound />;
 
   return (

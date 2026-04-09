@@ -23,7 +23,7 @@ export function configMissingSearchContent(): {
   content: { text: string; type: 'text' }[];
   isError: true;
 } {
-  const message = `Cortex Postgres is not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.`;
+  const message = `🚨 Postgres database is unreachable. Set POSTGRES_URL or POSTGRES_* env vars.`;
 
   return errorContent(message);
 }

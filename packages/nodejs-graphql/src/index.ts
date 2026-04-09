@@ -8,6 +8,25 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 import { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
 
+export { getGraphQLUrl, parseDateTimeInResponse } from './utils.js';
+
+export type {
+  ExecuteGraphqlV2,
+  GraphqlV2ErrResult,
+  GraphqlV2ExecuteOptions,
+  GraphqlV2Failure,
+  GraphqlV2FailureContext,
+  GraphqlV2FailureKind,
+  GraphqlV2GraphqlErrorItem,
+  GraphqlV2MapFailure,
+  GraphqlV2OkResult,
+  GraphqlV2ResponsePayload,
+  GraphqlV2Result,
+} from './graphql-v2.js';
+export { executeGraphql_v2 } from './graphql-v2.js';
+export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.js';
+export { executeGraphqlV2 } from './index-v2.js';
+
 /**
  * @description Standard GraphQL response shape from openthrottle-server.
  */
@@ -90,6 +109,12 @@ export async function executeGraphql<
  * @description Options for executeGraphqlAtUrl (e.g. auth token for Bearer header).
  */
 export interface ExecuteGraphqlAtUrlOptions {
+  /**
+   * @description Extra headers merged after `Content-Type` (e.g. tracing). When
+   * {@link token} is set, `Authorization: Bearer <token>` is applied after this map
+   * so the token wins over any `Authorization` here.
+   */
+  readonly headers?: Record<string, string>;
   /** When set, sent as Authorization: Bearer <token>. Omit for unauthenticated requests. */
   readonly token?: string | undefined;
 }
@@ -121,6 +146,7 @@ export async function executeGraphqlAtUrl<
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...options?.headers,
     ...(options?.token != null && options.token !== ''
       ? { Authorization: `Bearer ${options.token}` }
       : {}),

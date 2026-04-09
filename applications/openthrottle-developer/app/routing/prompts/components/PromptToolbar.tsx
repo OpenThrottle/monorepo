@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
+import { PlusIcon } from 'lucide-react';
 import { TypeMultiSelect } from './TypeMultiSelect';
 import { PromptSortDropdown } from './PromptSortDropdown';
 import {
@@ -30,6 +31,11 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
   const [searchInput, setSearchInput] = React.useState(() => searchQuery);
 
   // Setup
+  const hasActiveFilters =
+    searchQuery.length > 0 ||
+    types.length > 0 ||
+    sortBy !== 'updatedAt' ||
+    sortOrder !== 'desc';
 
   // Handlers
   const handleTypeChange = React.useCallback(
@@ -50,7 +56,10 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
     (updates: { sortBy?: PromptsSortBy; sortOrder?: PromptsSortOrder }) => {
       const next = new URLSearchParams(searchParams);
 
-      if (updates.sortBy !== undefined) next.set('sortBy', updates.sortBy);
+      if (updates.sortBy !== undefined) {
+        next.set('sortBy', updates.sortBy);
+      }
+
       if (updates.sortOrder !== undefined) {
         next.set('sortOrder', updates.sortOrder);
       }
@@ -74,24 +83,31 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
   const handleSearchSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+
       const next = new URLSearchParams(searchParams);
       const q = searchInput.trim();
+
       if (q) {
         next.set('q', q);
       } else {
         next.delete('q');
       }
+
       next.set('page', '1');
       next.set('limit', String(limit));
+
       setSearchParams(next, { replace: true });
     },
+
     [limit, searchParams, searchInput, setSearchParams],
   );
 
   const handleClearFilters = React.useCallback(() => {
     const next = new URLSearchParams();
+
     next.set('page', '1');
     next.set('limit', String(limit));
+
     setSearchParams(next, { replace: true });
     setSearchInput('');
   }, [limit, setSearchParams]);
@@ -105,12 +121,6 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-
-  const hasActiveFilters =
-    searchQuery.length > 0 ||
-    types.length > 0 ||
-    sortBy !== 'updatedAt' ||
-    sortOrder !== 'desc';
 
   return (
     <div
@@ -161,14 +171,19 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
           </Button>
         ) : null}
         <div className="flex-1 min-w-0" />
-        <Button
-          asChild={true}
-          className="shrink-0"
-          data-testid="PromptToolbar-create-button"
-          variant="default"
-        >
-          <Link to="/prompts/create">Create prompt</Link>
-        </Button>
+        <Link to="/prompts/create">
+          <Button
+            asChild={true}
+            className="shrink-0"
+            data-testid="PromptToolbar-create-button"
+            variant="outline"
+          >
+            <div>
+              <PlusIcon className="w-4 h-4" />
+              Create prompt
+            </div>
+          </Button>
+        </Link>
       </form>
     </div>
   );

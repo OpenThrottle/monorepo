@@ -3,7 +3,7 @@
  * Use this entry point to avoid pulling in the full MCP server.
  */
 
-export { getCortexPostgresConfig } from './config.js';
+export { getPostgresConfig } from './config.js';
 export type { CortexPostgresConfig } from './config.js';
 export { embedQuery } from './embedding.js';
 export {

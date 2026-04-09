@@ -12,7 +12,7 @@ export interface SortDropdownProps {
 }
 
 /**
- * @description Single dropdown to sort plans (combines sortBy and sortOrder). Matches cortex SortDropdown API: value (sortBy + sortOrder), onChange(sortBy, sortOrder).
+ * @description Single dropdown to sort plans (combines sortBy and sortOrder). Matches OpenThrottle API SortDropdown: value (sortBy + sortOrder), onChange(sortBy, sortOrder).
  */
 export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
   const { sortBy, sortOrder, onChange } = props;

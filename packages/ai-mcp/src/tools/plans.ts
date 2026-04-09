@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig, getDefaultGitHubUser } from '../config.js';
+import { getPostgresConfig, getDefaultGitHubUser } from '../config.js';
 import {
   createPlan as cortexCreatePlan,
   deletePlan as cortexDeletePlan,
@@ -46,7 +46,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingSearchContent();
       }
@@ -72,8 +72,10 @@ export function registerPlanTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { plans: result.plans },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
             {
@@ -90,7 +92,7 @@ export function registerPlanTools(server: McpServer): void {
   server.registerTool(
     'create_plan',
     {
-      description: `Create a new plan in Cortex. Requires title, author, category; optional description, status (default: pending), summary (PRD summarization: next actions, usage guides, wrap-up notes), assignee (GitHub username), project (NX project name from the project graph). When GITHUB_USER or CORTEX_GITHUB_USER is set, that value is used for author and assignee (enforcing GitHub username over display name).`,
+      description: `Create a new plan in Cortex. Requires title, author, category; optional description, status (default: pending), summary (PRD summarization: next actions, usage guides, wrap-up notes), assignee (GitHub username), project (NX project name from the project graph). When GITHUB_USER is set, that value is used for author and assignee (enforcing GitHub username over display name).`,
       inputSchema: {
         assignee: z.string().nullable().optional(),
         author: z.string().min(1),
@@ -107,7 +109,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -136,11 +138,16 @@ export function registerPlanTools(server: McpServer): void {
           content: [{ text, type: 'text' as const }],
           structuredContent: { plan },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `create_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `create_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -159,7 +166,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -187,11 +194,16 @@ export function registerPlanTools(server: McpServer): void {
           ],
           structuredContent: payload,
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `get_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `get_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -220,7 +232,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -255,15 +267,23 @@ export function registerPlanTools(server: McpServer): void {
         }
         return {
           content: [
-            { text: JSON.stringify(plan, null, 2), type: 'text' as const },
+            {
+              text: JSON.stringify(plan, null, 2),
+              type: 'text' as const,
+            },
           ],
           structuredContent: { plan },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `update_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `update_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };
@@ -282,7 +302,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -291,15 +311,21 @@ export function registerPlanTools(server: McpServer): void {
         const text = deleted
           ? `Plan ${parsed.data.id} deleted.`
           : `No plan found for id: ${parsed.data.id}.`;
+
         return {
           content: [{ text, type: 'text' as const }],
           structuredContent: { deleted },
         };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const isError = error instanceof Error;
+        const message = isError ? error.message : String(error);
+
         return {
           content: [
-            { text: `delete_plan failed: ${message}`, type: 'text' as const },
+            {
+              text: `delete_plan failed: ${message}`,
+              type: 'text' as const,
+            },
           ],
           isError: true,
         };

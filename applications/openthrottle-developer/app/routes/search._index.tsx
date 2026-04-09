@@ -3,14 +3,15 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { useSearchParams } from 'react-router';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/search._index';
+import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
-import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
-import { parseSearchParams } from '~/routing/search/utils/parsers';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { Route } from '@/app/routes/+types/search._index';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
@@ -35,7 +36,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Search | ${SITE_TITLE}` }];
 });
 
-export default function SearchIndex(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { page, query: q, results } = loaderData;
 
@@ -74,3 +77,9 @@ export default function SearchIndex(props: Route.ComponentProps) {
     </main>
   );
 }
+
+// export const action = async (args: Route.ActionArgs) => {
+//   return {};
+// };
+
+export const ErrorBoundary = GlobalErrorBoundary;

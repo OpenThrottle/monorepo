@@ -11,7 +11,9 @@ const getRegisteredNxProjects = (): readonly string[] => {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
     });
+
     const projects = JSON.parse(output);
+
     return Array.isArray(projects) ? projects : [];
   } catch {
     return [];
@@ -33,8 +35,10 @@ const getPackageJsonName = (filePath: string): string | null => {
     if (!existsSync(filePath)) {
       return null;
     }
+
     const content = readFileSync(filePath, 'utf-8');
     const packageJson = JSON.parse(content) as PackageJson;
+
     return packageJson.name || null;
   } catch {
     return null;
@@ -162,10 +166,8 @@ const main = async (): Promise<void> => {
     // Find package.json files with NX config that aren't registered
     const missingFromNx = packageJsonFiles.filter((file) => {
       const isTemplatesPackage = file.path.includes('tools/generators/');
-      const isBarGuideLLMApp = file.path.includes('applications/barguide-llm/');
-      const isSkipped = isTemplatesPackage || isBarGuideLLMApp;
 
-      return file.name && !isSkipped && !registeredSet.has(file.name);
+      return file.name && !isTemplatesPackage && !registeredSet.has(file.name);
     });
 
     // Find registered projects that don't have a corresponding package.json with NX config
@@ -216,13 +218,13 @@ const main = async (): Promise<void> => {
 
     if (missingFromNx.length > 0 || missingFromPackageJson.length > 0) {
       process.exit(1);
-    } else {
-      process.exit(0);
     }
   } catch (error) {
     console.error('❌ Error comparing projects:', error);
     process.exit(1);
   }
+
+  process.exit(0);
 };
 
 main();

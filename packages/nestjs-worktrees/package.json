@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-worktrees",
-  "description": "NestJS module for git worktree workflows: WorktreeTargetsTracker from WORKTREE_TARGETS, plus runWorktreeWorkflow and runChildJob re-exported from @tools/workflows for queue processors.",
+  "description": "NestJS module for git worktree workflows: WorktreeTargetsTracker from WORKTREE_TARGETS, plus runWorktreeWorkflow and runChildJob (argv aligned with @tools/workflows) for queue processors.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@openthrottle/mcp-developer": "workspace:*",
+    "@tools/workflows": "workspace:*",
     "pg": "^8.17.1"
   },
-  "devDependencies": {},
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -62,7 +62,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

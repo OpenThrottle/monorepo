@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nx/devkit": "22.5.4",
+    "@nx/devkit": "22.6.4",
     "tslib": "^2.8.1"
   },
   "devDependencies": {},
@@ -64,7 +64,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "__type": "module",
   "types": "./src/index.ts"
 }

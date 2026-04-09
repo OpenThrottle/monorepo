@@ -70,8 +70,9 @@ async function handleChatCompletions(
       headers,
       method: 'POST',
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
 
     writeJson(res, 502, {
       error: { message: `Upstream request failed: ${message}` },
@@ -111,11 +112,14 @@ async function handleModels(res: http.ServerResponse): Promise<void> {
 
   try {
     upstream = await fetch(url);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
     writeJson(res, 502, {
       error: { message: `Upstream request failed: ${message}` },
     });
+
     return;
   }
 

@@ -1,6 +1,6 @@
 # @tools/dotfiles
 
-Common configuration for various RocketCMS tooling. This package provides shared ESLint configurations, Vite configs, and Vitest configs used across the monorepo.
+Common configuration across the OpenThrottle organization. This package provides shared ESLint configurations, Vite configs, and Vitest configs used across the monorepo.
 
 ## Purpose
 

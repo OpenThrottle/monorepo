@@ -8,9 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.12",
-    "@nestjs/platform-socket.io": "^11.1.12",
-    "@nestjs/websockets": "^11.1.12",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/platform-socket.io": "^11.1.18",
+    "@nestjs/websockets": "^11.1.18",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {},
@@ -62,7 +62,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

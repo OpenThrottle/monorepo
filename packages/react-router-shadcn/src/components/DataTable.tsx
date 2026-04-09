@@ -31,18 +31,28 @@ export interface DataTableProps<TData, TValue> {
 /**
  * @description Generic data table built with TanStack Table and the Table primitive. Renders columns and data with a core row model; supports extension via table options.
  */
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-  getRowId,
-  getRowProps,
-}: DataTableProps<TData, TValue>): React.ReactElement {
+export function DataTable<TData, TValue>(
+  props: DataTableProps<TData, TValue>,
+): React.ReactElement {
+  const { columns, data, getRowId, getRowProps } = props;
+
+  // Hooks
   const table = useReactTable({
     columns,
     data,
     getCoreRowModel: getCoreRowModel(),
     getRowId: getRowId ?? undefined,
   });
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div className="overflow-hidden rounded-md border">

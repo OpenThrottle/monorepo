@@ -6,35 +6,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import {
-  PROJECTS_SORT_BY,
-  PROJECTS_SORT_ORDER,
-} from '~/routing/prompts/config/types';
 import type {
   ProjectsSortBy,
   ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
-
-/**
- * @description Parses sortBy and sortOrder from URL search params; defaults to createdAt-desc.
- */
-export function parseSortFromSearchParams(searchParams: URLSearchParams): {
-  sortBy: ProjectsSortBy;
-  sortOrder: ProjectsSortOrder;
-} {
-  const by = searchParams.get('sortBy');
-  const order = searchParams.get('sortOrder');
-
-  return {
-    sortBy: (PROJECTS_SORT_BY as readonly string[]).includes(by ?? '')
-      ? (by as ProjectsSortBy)
-      : 'createdAt',
-    sortOrder: (PROJECTS_SORT_ORDER as readonly string[]).includes(order ?? '')
-      ? (order as ProjectsSortOrder)
-      : 'desc',
-  };
-}
 
 export interface ProjectsSortDropdownProps {
   readonly onChange: (
@@ -50,20 +26,32 @@ export interface ProjectsSortDropdownProps {
  */
 export function ProjectsSortDropdown(
   props: ProjectsSortDropdownProps,
-): React.JSX.Element {
+): React.ReactElement {
   const { sortBy, sortOrder, onChange } = props;
+
+  // Hooks
+
+  // Setup
   const value = `${sortBy}-${sortOrder}`;
   const resolvedValue = PROJECTS_SORT_OPTIONS.some((o) => o.value === value)
     ? value
     : 'createdAt-desc';
 
+  // Handlers
   const handleValueChange = React.useCallback(
     (val: string) => {
       const [by, order] = val.split('-') as [ProjectsSortBy, ProjectsSortOrder];
       onChange(by, order);
     },
+
     [onChange],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Select onValueChange={handleValueChange} value={resolvedValue}>

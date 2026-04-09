@@ -30,7 +30,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Note Details | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
@@ -87,6 +89,9 @@ export const action = async (args: Route.ActionArgs) => {
   } catch {
     return { error: 'Note not found.' };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

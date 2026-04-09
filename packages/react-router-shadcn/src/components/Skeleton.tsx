@@ -8,7 +8,7 @@ export interface SkeletonProps extends BaseProps {
 }
 
 export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
-  (props, ref) => {
+  (props, ref): React.ReactElement => {
     const { className, ...rest } = props;
 
     // Hooks

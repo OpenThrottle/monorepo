@@ -3,10 +3,10 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Card } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GetPullRequestsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/pull-requests._index';
-import { GetPullRequestsDocument } from '~/__generated__/graphql';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { pulls } = await executeGraphqlWithAuth(
@@ -25,13 +25,15 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Pull Requests | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { pulls } = loaderData;
 
   // Hooks
 
   // Setup
-  const { pulls } = loaderData;
 
   // Handlers
 

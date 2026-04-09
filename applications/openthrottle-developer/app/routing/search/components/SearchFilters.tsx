@@ -17,18 +17,32 @@ export interface SearchFiltersProps {
  */
 export const SearchFilters = (props: SearchFiltersProps) => {
   const { className } = props;
+
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
   const { limit } = parseSearchParams(searchParams);
 
+  // Setup
+
+  // Handlers
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     const value = e.target.value;
     const newLimit = parseInt(value, 10);
     if (Number.isNaN(newLimit)) return;
+
     const next = new URLSearchParams(searchParams);
+
     next.set('limit', String(newLimit));
     next.set('page', '1');
+
     setSearchParams(next, { replace: true });
   };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

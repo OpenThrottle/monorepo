@@ -5,7 +5,7 @@
  */
 
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   formatPlanAndTasksForPrompt,
   getCortexConfigOrExit,
   getPlanById,
@@ -16,7 +16,7 @@ const planId = process.argv[2] ?? 'a58c1ccc-a04e-41a0-9cf6-641b1bc78ab5';
 
 async function main(): Promise<void> {
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
   const plan = await getPlanById(config, planId);
   const tasks = await getTasksByPlanId(config, planId);
   console.log(formatPlanAndTasksForPrompt(plan, tasks));

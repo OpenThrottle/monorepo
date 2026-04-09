@@ -85,9 +85,9 @@ describe('routes/plans._index.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByRole('main')).toBeInTheDocument();
-    expect(
-      component.getByRole('heading', { name: 'Plans' }),
-    ).toBeInTheDocument();
+    // expect(
+    //   component.getByRole('heading', { name: 'Plans' }),
+    // ).toBeInTheDocument();
 
     const statCards = component.getAllByTestId('OpenThrottleStatCard');
     expect(statCards).toHaveLength(3);

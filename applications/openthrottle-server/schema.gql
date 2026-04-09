@@ -253,6 +253,36 @@ type EnqueuePlanRunResultObject {
   queueTotal: Int!
 }
 
+type CancelPlanRunResultObject {
+  """
+  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan.
+  """
+  activeJobIdsCouldNotCancel: [String!]!
+
+  """
+  True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.
+  """
+  noMatchingJob: Boolean!
+
+  """
+  Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied.
+  """
+  planStatusAfter: String
+
+  """Plan id from the request."""
+  planId: String!
+
+  """
+  BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).
+  """
+  removedJobIds: [String!]!
+
+  """
+  True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
+  """
+  signaledActiveRunToStop: Boolean!
+}
+
 type TaskObject {
   assignee: String
   category: String
@@ -2457,9 +2487,21 @@ type Mutation {
   deletePlan(input: DeletePlanInput!): Boolean!
 
   """
+  Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker.
+  """
+  cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
+
+  """
   Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
   """
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
+
+  """
+  Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline). Same result shape and plan/task status updates as enqueuePlanRun.
+  """
+  enqueuePlanRalphOrchestrator(
+    input: EnqueuePlanRalphOrchestratorInput!
+  ): EnqueuePlanRunResultObject!
 
   """
   Create a project
@@ -2470,6 +2512,11 @@ type Mutation {
   Update a project
   """
   updateProject(input: UpdateProjectInput!): ProjectObject
+
+  """
+  Delete a project by ID. Related plans and tasks remain; their project link is cleared.
+  """
+  deleteProject(input: DeleteProjectInput!): Boolean!
 
   """
   Create a role
@@ -2831,6 +2878,56 @@ input DeletePlanInput {
   id: ID!
 }
 
+input CancelPlanRunInput {
+  """
+  Plan id whose in-queue run-plan (Ralph) job should be cancelled
+  """
+  planId: ID!
+}
+
+"""Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose."""
+enum RalphNestedDebugCli {
+  debug
+  omit
+  verbose
+}
+
+"""Plan vs task-centric scope for in-process Ralph orchestrator runs."""
+enum PlanRalphWorkflowMode {
+  plan
+  task
+}
+
+"""
+Optional Ralph / workflow-ralph runtime tuning for queued plan runs (iterations, model, backend, etc.).
+When set, workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+"""
+input RalphPlanRunTuningInput {
+  """Execution backend (e.g. cursor). Omit to use worktree defaults."""
+  backend: String
+
+  """Per-iteration timeout in seconds (positive integer)."""
+  iterationTimeoutSeconds: Int
+
+  """Max Ralph iterations for this run (positive integer)."""
+  iterations: Int
+
+  """Model id passed to workflow-ralph --model."""
+  model: String
+
+  """Nx project name for workflow-ralph --project."""
+  project: String
+
+  """Prompt profile path (e.g. /agents/ralph) for --prompt."""
+  prompt: String
+
+  """Repo-relative or absolute path for --prompt-file (layer-1 prompt file)."""
+  promptFile: String
+
+  """Whether to pass --debug / --verbose to nested workflow-ralph."""
+  ralphDebugCli: RalphNestedDebugCli
+}
+
 input EnqueuePlanRunInput {
   """
   Plan id to enqueue a run for
@@ -2841,6 +2938,40 @@ input EnqueuePlanRunInput {
   Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority.
   """
   priority: Int
+
+  """
+  Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+  """
+  ralph: RalphPlanRunTuningInput
+}
+
+"""
+Input for enqueuePlanRalphOrchestrator: in-process orchestrator run on the plans queue.
+"""
+input EnqueuePlanRalphOrchestratorInput {
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.
+  """
+  idempotencyKey: String
+
+  """
+  Omit or plan for plan-scoped run; task requires taskId (task-centric).
+  """
+  mode: PlanRalphWorkflowMode
+
+  """Plan id to run the orchestrator for."""
+  planId: ID!
+
+  """
+  Job priority (lower = higher priority). Same as enqueuePlanRun.
+  """
+  priority: Int
+
+  """Optional Ralph tuning for the in-process orchestrator."""
+  ralph: RalphPlanRunTuningInput
+
+  """Required when mode is task; must belong to the plan."""
+  taskId: ID
 }
 
 input CreateProjectInput {
@@ -2866,6 +2997,13 @@ input UpdateProjectInput {
   NX project name (e.g. applications/openthrottle-server)
   """
   nxProjectName: String
+}
+
+input DeleteProjectInput {
+  """
+  Project id to delete
+  """
+  id: ID!
 }
 
 input CreateRoleInput {

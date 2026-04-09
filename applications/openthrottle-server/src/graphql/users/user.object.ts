@@ -23,7 +23,7 @@ export class UserObject implements PublicUserData {
   email!: string | null;
 
   @Field(() => String, {
-    description: `GitHub username (e.g. visormatt)`,
+    description: `GitHub user or Organization name (e.g. OpenThrottle)`,
   })
   githubUsername!: string;
 

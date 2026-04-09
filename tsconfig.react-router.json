@@ -3,11 +3,12 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "declarationMap": false,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": false,
     "jsx": "react-jsx",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "module": "esnext",
     "moduleResolution": "bundler",
+    "noEmit": true,
     "sourceMap": false,
     "types": ["node", "vite/client"]
   }

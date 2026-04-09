@@ -15,22 +15,25 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/users._index';
 import { UsersTable } from '~/routing/users/components/UsersTable';
+import type { Route } from '@/app/routes/+types/users._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
+
   try {
     const data = await executeGraphqlWithAuth(request, GetUsersDocument);
+
     return { users: data.users };
-  } catch (err) {
-    if (
-      err instanceof Error &&
-      (err.message.includes('401') || err.message.includes('403'))
-    ) {
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
+    if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
     }
-    throw err;
+
+    throw error;
   }
 };
 
@@ -38,18 +41,18 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Users | ${SITE_TITLE}` }];
 };
 
-export default function UsersIndexPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const createFetcher = useFetcher<typeof action>();
+  const [open, setOpen] = React.useState(false);
+  const fetcher = useFetcher<typeof action>();
 
   // Setup
   const users = loaderData?.users ?? [];
-  const CreateUserForm = createFetcher.Form;
+  const CreateUserForm = fetcher.Form;
 
   const createSuccess =
     actionData != null && 'ok' in actionData && actionData.ok === true;
@@ -57,71 +60,10 @@ export default function UsersIndexPage(
   // Handlers
 
   // Markup
-  const renderSheet = () => {
-    return (
-      <Sheet onOpenChange={setCreateOpen} open={createOpen}>
-        <SheetTrigger asChild={true}>
-          <Button size="xs" type="button">
-            Add user
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Create user</SheetTitle>
-          </SheetHeader>
-          <CreateUserForm method="post">
-            <input name="intent" type="hidden" value="createUser" />
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-githubUsername">GitHub username</Label>
-                <Input
-                  id="create-githubUsername"
-                  name="githubUsername"
-                  placeholder="visormatt"
-                  required={true}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="create-email">Email (optional)</Label>
-                <Input
-                  id="create-email"
-                  name="email"
-                  placeholder="user@example.com"
-                  type="email"
-                />
-              </div>
-            </div>
-            {createFetcher.data != null && 'error' in createFetcher.data ? (
-              <p className="text-destructive text-sm" role="alert">
-                {createFetcher.data.error}
-              </p>
-            ) : null}
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => setCreateOpen(false)}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={createFetcher.state !== 'idle'}
-                size="xs"
-                type="submit"
-              >
-                {createFetcher.state !== 'idle' ? 'Creating…' : 'Create'}
-              </Button>
-            </div>
-          </CreateUserForm>
-        </SheetContent>
-      </Sheet>
-    );
-  };
 
   // Life Cycle
   React.useEffect(() => {
-    if (createSuccess) setCreateOpen(false);
+    if (createSuccess) setOpen(false);
 
     // 🪝 On success we close the create modal
   }, [createSuccess]);
@@ -132,7 +74,64 @@ export default function UsersIndexPage(
     <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl text-highlight">Users</h1>
-        {renderSheet()}
+        <Sheet onOpenChange={setOpen} open={open}>
+          <SheetTrigger asChild={true}>
+            <Button size="xs" type="button">
+              Add user
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Create user</SheetTitle>
+            </SheetHeader>
+
+            <CreateUserForm method="post">
+              <input name="intent" type="hidden" value="createUser" />
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="create-githubUsername">GitHub username</Label>
+                  <Input
+                    id="create-githubUsername"
+                    name="githubUsername"
+                    placeholder="visormatt"
+                    required={true}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="create-email">Email (optional)</Label>
+                  <Input
+                    id="create-email"
+                    name="email"
+                    placeholder="user@example.com"
+                    type="email"
+                  />
+                </div>
+              </div>
+              {fetcher.data != null && 'error' in fetcher.data ? (
+                <p className="text-destructive text-sm" role="alert">
+                  {fetcher.data.error}
+                </p>
+              ) : null}
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => setOpen(false)}
+                  size="xs"
+                  type="button"
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={fetcher.state !== 'idle'}
+                  size="xs"
+                  type="submit"
+                >
+                  {fetcher.state !== 'idle' ? 'Creating…' : 'Create'}
+                </Button>
+              </div>
+            </CreateUserForm>
+          </SheetContent>
+        </Sheet>
       </div>
       <UsersTable users={users} />
     </main>
@@ -141,6 +140,7 @@ export default function UsersIndexPage(
 
 export const action = async (args: Route.ActionArgs) => {
   const { request } = args;
+
   const formData = await request.formData();
   const intent = formData.get('intent');
 
@@ -169,7 +169,8 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
-  return null;
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

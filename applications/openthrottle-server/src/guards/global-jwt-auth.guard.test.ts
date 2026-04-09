@@ -1,7 +1,3 @@
-/**
- * @description Unit tests for {@link GlobalJwtAuthGuard}: public vs JWT paths and CLS population.
- */
-
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createMock } from '@golevelup/ts-vitest';

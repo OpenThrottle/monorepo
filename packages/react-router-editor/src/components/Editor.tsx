@@ -43,7 +43,7 @@ export const Editor = (props: EditorProps) => {
   if (!IS_BROWSER) return null;
 
   return (
-    <div className="flex flex-col h-96 h-full" data-testid="Editor">
+    <div className="flex flex-col flex-1" data-testid="Editor">
       {showToolbar && (
         <EditorToolbar
           basePath={basePath}
@@ -52,7 +52,7 @@ export const Editor = (props: EditorProps) => {
         />
       )}
 
-      <div className="flex flex-1 overflow-visible h-96">
+      <div className="flex flex-1">
         <div className="flex flex-col flex-1 w-full">
           {showTabs && <EditorTabs basePath={basePath} />}
           <div className="flex-1">

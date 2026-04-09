@@ -42,7 +42,7 @@ yarn generate:remix --generator=<GENERATOR_NAME> --name=<COMPONENT_NAME> --proje
 
 ### Updating Existing Files
 
-- Use components from `@rocketcms/shared-ui` when possible. These components are located in the `packages/shared-ui/src/components` folder of the monorepo if they ever need to be updated.
+- Use components from `@openthrottle/react-router-shadcn` when possible. These components are located in the `packages/shared-ui/src/components` folder of the monorepo if they ever need to be updated.
 
 ### Testing
 

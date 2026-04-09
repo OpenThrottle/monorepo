@@ -8,11 +8,10 @@
 # Folders
 #############################################################################
 __generated__/
-.react-router/
 .nx/
+.nx/cache
+.nx/workspace-data
+.react-router/
 coverage/
 dist/
 tools/generators/src/generators/*/files/**
-
-/.nx/cache
-/.nx/workspace-data

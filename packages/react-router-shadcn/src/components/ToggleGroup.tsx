@@ -35,25 +35,55 @@ const ToggleGroup = React.forwardRef<
   React.ComponentRef<typeof ToggleGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
     ToggleGroupContextValue
->(({ className, children, size, variant, ...props }, ref) => (
-  <ToggleGroupContext.Provider value={{ size, variant }}>
-    <ToggleGroupPrimitive.Root
-      className={cn('flex items-center gap-1', className)}
-      ref={ref}
-      {...props}
-    >
-      {children}
-    </ToggleGroupPrimitive.Root>
-  </ToggleGroupContext.Provider>
-));
+>((props, ref) => {
+  const { className, children, size, variant, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <ToggleGroupContext.Provider value={{ size, variant }}>
+      <ToggleGroupPrimitive.Root
+        className={cn('flex items-center gap-1', className)}
+        ref={ref}
+        {...rest}
+      >
+        {children}
+      </ToggleGroupPrimitive.Root>
+    </ToggleGroupContext.Provider>
+  );
+});
+
 ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName;
 
 const ToggleGroupItem = React.forwardRef<
   React.ComponentRef<typeof ToggleGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> &
     VariantProps<typeof toggleGroupItemVariants>
->(({ className, size, variant, ...props }, ref) => {
+>((props, ref) => {
+  const { className, size, variant, ...rest } = props;
+
+  // Hooks
   const context = React.useContext(ToggleGroupContext);
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <ToggleGroupPrimitive.Item
@@ -65,10 +95,11 @@ const ToggleGroupItem = React.forwardRef<
         className,
       )}
       ref={ref}
-      {...props}
+      {...rest}
     />
   );
 });
+
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName;
 
 export { ToggleGroup, ToggleGroupItem, toggleGroupItemVariants };

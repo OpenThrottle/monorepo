@@ -37,6 +37,18 @@ export interface QueueJobCardProps {
 export const QueueJobCard = (props: QueueJobCardProps) => {
   const { className, job } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <Card className={classnames('p-4', className)} data-testid="QueueJobCard">
       <CardHeader className="space-y-1.5 p-0">

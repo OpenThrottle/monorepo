@@ -5,8 +5,8 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/notes.create';
 import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
+import type { Route } from '@/app/routes/+types/notes.create';
 
 // export const loader = async (args: Route.LoaderArgs) => {
 //   return {}
@@ -24,7 +24,9 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create note | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
@@ -80,6 +82,9 @@ export const action = async (args: Route.ActionArgs) => {
       error: isError ? error.message : 'Failed to create note.',
     };
   }
+
+  // 🚨 Default to invalid action error when no intent is provided.
+  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * @description Updates a task's status in Cortex by task ID. Uses CORTEX_POSTGRES_* or CORTEX_POSTGRES_URL.
+ * @description Updates a task's status in Cortex by task ID. Uses POSTGRES_* or POSTGRES_URL.
  * Usage: pnpm exec tsx ./scripts/update-cortex-task-status.ts <task-id> <status>
  * Example: pnpm exec tsx ./scripts/update-cortex-task-status.ts e918fc4e-7f58-495e-84fe-f14837ae5718 completed
  */
 
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import { Client } from 'pg';
 
 const taskId = process.argv[2];
@@ -19,25 +19,24 @@ if (!taskId || !status) {
 }
 
 async function main(): Promise<void> {
-  const config = getCortexPostgresConfig();
-  if (!config) {
-    console.error(
-      'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
-    );
-    process.exit(1);
-  }
-  const client = new Client({ connectionString: config.connectionString });
+  const { connectionString } = getPostgresConfig();
+
+  const client = new Client({ connectionString });
   await client.connect();
+
   try {
     const res = await client.query(
       `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, status`,
       [status, taskId],
     );
+
     const row = res.rows[0];
+
     if (!row) {
       console.error(`No task found for id: ${taskId}`);
       process.exit(1);
     }
+
     console.log(JSON.stringify(row, null, 2));
   } finally {
     await client.end();

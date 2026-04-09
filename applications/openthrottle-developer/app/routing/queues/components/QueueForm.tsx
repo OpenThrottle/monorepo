@@ -10,7 +10,19 @@ export interface QueueFormProps {
 
 export const QueueForm = (props: QueueFormProps) => {
   const { actionData, className } = props;
+
+  // Hooks
+
+  // Setup
   const error = actionData?.error;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div className={classnames('p-4', className)} data-testid="QueueForm">

@@ -111,12 +111,6 @@
       "path": "./packages/graphql-codegen"
     },
     {
-      "path": "./packages/nestjs-devtools"
-    },
-    {
-      "path": "./packages/nestjs-express"
-    },
-    {
       "path": "./packages/nestjs-graphql"
     },
     {
@@ -127,9 +121,6 @@
     },
     {
       "path": "./packages/nestjs-bullmq"
-    },
-    {
-      "path": "./packages/nestjs-tester"
     },
     {
       "path": "./packages/nestjs-redis"
@@ -157,6 +148,21 @@
     },
     {
       "path": "./packages/nestjs-postgres"
+    },
+    {
+      "path": "./packages/openthrottle-workflows"
+    },
+    {
+      "path": "./packages/openthrottle-skills"
+    },
+    {
+      "path": "./packages/nestjs-express"
+    },
+    {
+      "path": "./packages/openthrottle-agentic-ralph"
+    },
+    {
+      "path": "./packages/openthrottle-agentic-workflow"
     }
   ]
 }

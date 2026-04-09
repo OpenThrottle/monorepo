@@ -11,8 +11,14 @@ import type {
   DocIngestionJobPayload,
   DocIngestionJobResult,
 } from '../../queues/doc-ingestion/doc-ingestion.types';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import {
+  PLANS_QUEUE_NAME,
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+} from '../../queues/plans/plans.constants';
+import type {
+  RunPlanJobData,
+  RunPlanOrchestratorJobData,
+} from '../../queues/plans/plans.types';
 import { QueuesService } from './queues.service';
 
 function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
@@ -560,9 +566,88 @@ describe('QueuesService', () => {
     });
   });
 
+  describe('enqueuePlanRalphOrchestrator', () => {
+    const orchJobData: RunPlanOrchestratorJobData = {
+      planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+      runKind: 'orchestrator',
+    };
+
+    test('returns error when runKind is not orchestrator', async () => {
+      mockAdd.mockClear();
+      const bad = await service.enqueuePlanRalphOrchestrator({
+        jobData: {
+          planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+          runKind: 'spawn',
+        } as unknown as RunPlanOrchestratorJobData,
+      });
+      expect(bad).toEqual({ error: 'jobData.runKind must be orchestrator' });
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    test('enqueues with job name run-plan-orchestrator and priority', async () => {
+      mockAdd.mockClear();
+
+      const result = await service.enqueuePlanRalphOrchestrator({
+        jobData: orchJobData,
+        priority: 5,
+      });
+
+      expect(result).toEqual({ jobId: 'new-job-id' });
+      expect(mockAdd).toHaveBeenCalledWith(
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        orchJobData,
+        { priority: 5 },
+      );
+    });
+
+    test('passes idempotencyKey as BullMQ jobId', async () => {
+      mockAdd.mockClear();
+
+      const result = await service.enqueuePlanRalphOrchestrator({
+        idempotencyKey: 'ralph-orch:80864bba',
+        jobData: orchJobData,
+        priority: 10,
+      });
+
+      expect(result).toEqual({ jobId: 'new-job-id' });
+      expect(mockAdd).toHaveBeenCalledWith(
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        orchJobData,
+        { jobId: 'ralph-orch:80864bba', priority: 10 },
+      );
+    });
+
+    test('returns error when idempotencyKey has invalid characters', async () => {
+      mockAdd.mockClear();
+
+      const result = await service.enqueuePlanRalphOrchestrator({
+        idempotencyKey: 'has spaces',
+        jobData: orchJobData,
+      });
+
+      expect(result).toEqual({
+        error: 'idempotencyKey must contain only letters, digits, and ._:-',
+      });
+      expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    test('returns error when add throws', async () => {
+      mockAdd.mockRejectedValueOnce(new Error('redis down'));
+
+      const result = await service.enqueuePlanRalphOrchestrator({
+        jobData: orchJobData,
+      });
+
+      expect(result).toEqual({
+        error: 'Failed to enqueue orchestrator job: redis down',
+      });
+    });
+  });
+
   describe('duplicateJob', () => {
     test('returns error when queue not found', async () => {
       mockGetJob.mockClear();
+      mockAdd.mockClear();
 
       const result = await service.duplicateJob('other', 'job-1');
 
@@ -571,6 +656,7 @@ describe('QueuesService', () => {
     });
 
     test('returns error when job not found', async () => {
+      mockAdd.mockClear();
       mockGetJob.mockResolvedValueOnce(null);
 
       const result = await service.duplicateJob(

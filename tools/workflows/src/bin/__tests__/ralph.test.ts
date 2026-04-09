@@ -3,13 +3,13 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CortexRalphConfig } from '../../utils/cortex-ralph';
+import type { WorkflowRalphConfig } from '../../utils/cortex-ralph';
 import type { PlanRow, TaskRow } from '../../utils/cortex-ralph';
 
 const PLAN_ID = '970aecc7-c647-4948-aa20-410e1bd090fc';
 const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 
-const mockConfig: CortexRalphConfig = {
+const mockConfig: WorkflowRalphConfig = {
   connectionString: 'postgres://localhost/cortex',
 };
 
@@ -49,7 +49,7 @@ vi.mock('../../utils/cortex-ralph', async (importOriginal) => {
     await importOriginal<typeof import('../../utils/cortex-ralph')>();
   return {
     ...actual,
-    ensureCortexReachableOrExit: vi.fn().mockResolvedValue(undefined),
+    ensureDatabaseReachableOrExit: vi.fn().mockResolvedValue(undefined),
     getCortexConfigOrExit: vi.fn(() => mockConfig),
     getPlanById: vi.fn().mockResolvedValue(mockPlan),
     getTasksByPlanId: vi.fn().mockResolvedValue(mockTasks),
@@ -63,12 +63,15 @@ vi.mock('../../utils/parsers', async (importOriginal) => {
   return {
     ...actual,
     parseRalphArgs: vi.fn(() => ({
+      backend: 'cursor',
       iterationTimeoutMs: undefined,
       iterations: 2,
       model: 'auto',
       plan: PLAN_ID,
       project: undefined,
       prompt: '/agents/ralph',
+      promptProfileKind: 'named',
+      promptProfileLabel: '/agents/ralph',
       ralphDebugLevel: 'off',
       task: undefined,
     })),
@@ -115,7 +118,7 @@ describe('Ralph main (max-iterations cleanup)', () => {
 
   it('does not call updateTaskStatus with PENDING when task was completed in last iteration', async () => {
     runIterationMock.mockReturnValue(
-      `<ralph:complete-task>${TASK_ID}</ralph:complete-task>`,
+      `<ralph:task-complete>${TASK_ID}</ralph:task-complete>`,
     );
     const { main } = await import('../ralph');
 

@@ -6,7 +6,7 @@ import { generatorRemixTable } from './generator.table';
 describe('remix table generator', () => {
   let tree: Tree;
 
-  const application = 'rocketcms';
+  const application = 'openthrottle';
   const folder = 'routing/home/components';
   const name = 'HomeExampleTable';
 

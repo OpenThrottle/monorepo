@@ -56,9 +56,6 @@ export interface CreateViteConfigOptions {
 
 /**
  * @description Calculates the cache directory path relative to the package
- * @example
- *   packages/barguide/react-hooks -> ../../node_modules/.vite/packages/react-hooks
- *   packages/rocketcms/surveys -> ../../../node_modules/.vite/packages/rocketcms/surveys
  */
 const calculateCacheDir = (packagePath: string): string => {
   // packagePath is __dirname from the config file
@@ -77,11 +74,11 @@ const calculateCacheDir = (packagePath: string): string => {
   }
 
   // Calculate depth: how many directories from package to root
-  // packages/barguide/react-hooks = 3 parts, need to go up 2 levels (../../)
-  // packages/rocketcms/surveys = 3 parts, need to go up 2 levels (../../)
+  // packages/openthrottle/react-hooks = 3 parts, need to go up 2 levels (../../)
+  // packages/openthrottle/surveys = 3 parts, need to go up 2 levels (../../)
   // But wait, let's check actual examples...
   // Actually, depth is: pathParts.length - baseIndex - 1
-  // packages/barguide/react-hooks: length=3, baseIndex=0, depth=2 -> ../../
+  // packages/openthrottle/react-hooks: length=3, baseIndex=0, depth=2 -> ../../
   const depth = pathParts.length - baseIndex - 1;
   const relativeUp = '../'.repeat(depth);
 

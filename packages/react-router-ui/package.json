@@ -39,7 +39,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

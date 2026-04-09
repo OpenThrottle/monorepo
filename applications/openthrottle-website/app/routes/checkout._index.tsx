@@ -28,15 +28,16 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Checkout | ${SITE_TITLE}` }];
 });
 
-export default function CheckoutIndex(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
   const { product } = loaderData;
-
-  console.log('loaderData', loaderData);
 
   // Hooks
 
   // Setup
+  console.log('loaderData', loaderData);
 
   const lineItems = [product].map((product) => {
     const price = product?.prices[0].unitAmount ?? 0;

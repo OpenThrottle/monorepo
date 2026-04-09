@@ -70,12 +70,12 @@ export class PlansTreeDataProvider implements vscode.TreeDataProvider<vscode.Tre
       });
 
       this.plans = [...result.plans];
-    } catch (err) {
-      if (err instanceof UnauthenticatedError) {
+    } catch (error) {
+      if (error instanceof UnauthenticatedError) {
         this.unauthenticated = true;
         this.plans = [];
       } else {
-        const message = err instanceof Error ? err.message : String(err);
+        const message = error instanceof Error ? error.message : String(error);
         this.loadError = message;
         this.plans = [];
       }
@@ -209,8 +209,8 @@ export class PlansTreeDataProvider implements vscode.TreeDataProvider<vscode.Tre
       try {
         tasks = [...(await this.client.tasksByPlanId(planId))];
         this.tasksByPlanId.set(planId, tasks);
-      } catch (err) {
-        if (err instanceof UnauthenticatedError) {
+      } catch (error) {
+        if (error instanceof UnauthenticatedError) {
           const signIn = new vscode.TreeItem(
             'Sign in to load tasks',
             vscode.TreeItemCollapsibleState.None,

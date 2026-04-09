@@ -1,12 +1,10 @@
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import {
-  isPlanStatusKey,
-  planStatusValues,
-  type PlanStatusKey,
-} from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
+import { PlanStatusKey, planStatusValues } from '~/routing/plans/types';
 
 /**
- * @description Left-to-right Kanban order for plan task board columns (matches API enum keys).
+ * @description Left-to-right Kanban order for plan task board columns
+ * (matches API enum keys).
  */
 export const PLAN_TASK_BOARD_COLUMN_ORDER: readonly PlanStatusKey[] = [
   'BACKLOG',
@@ -34,10 +32,12 @@ export function groupPlanTasksByStatus(
   for (const status of PLAN_TASK_BOARD_COLUMN_ORDER) {
     map.set(status, []);
   }
+
   map.set(UNKNOWN_KEY, []);
 
   for (const task of tasks) {
     const status = task.status;
+
     if (isPlanStatusKey(status)) {
       map.get(status)?.push(task);
     } else {
@@ -57,15 +57,18 @@ export function getPlanTaskBoardColumnTitle(
   if (key === UNKNOWN_KEY) {
     return 'Other';
   }
+
   return planStatusValues[key];
 }
 
 /**
- * @description Stable `columnId` for tests and `aria-labelledby` (lowercase enum-style).
+ * @description Stable `columnId` for tests and `aria-labelledby`
+ * (lowercase enum-style).
  */
 export function getPlanTaskBoardColumnId(key: PlanTaskBoardGroupKey): string {
   if (key === UNKNOWN_KEY) {
     return 'unknown';
   }
+
   return key.toLowerCase();
 }

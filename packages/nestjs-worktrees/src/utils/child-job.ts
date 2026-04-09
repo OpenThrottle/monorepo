@@ -7,7 +7,8 @@
  */
 
 import { spawnSync } from 'child_process';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { buildWorkflowRalphRunTuningArgv } from '@tools/workflows';
 import type { ChildJobInput, ChildJobResult } from '../types/worktree';
 import {
   ensureCortexReachable,
@@ -26,7 +27,9 @@ function gitInWorktree(
   const child = spawnSync('git', ['-C', worktreePath, ...args], {
     encoding: 'utf-8',
   });
+
   if (child.status !== 0) return undefined;
+
   return child.stdout?.trim();
 }
 
@@ -38,15 +41,25 @@ function gitInWorktree(
 export async function runChildJob(
   input: ChildJobInput,
 ): Promise<ChildJobResult> {
-  const { handoff, planId, iterations } = input;
+  const {
+    backend,
+    handoff,
+    iterationTimeoutSeconds,
+    iterations,
+    model,
+    planId,
+    project,
+    prompt,
+    promptFile,
+    debug,
+  } = input;
   const { worktreePath } = handoff;
 
-  const rawConfig = getCortexPostgresConfig();
+  const rawConfig = getPostgresConfig();
   if (!rawConfig) {
     return {
       ok: false,
-      reason:
-        'Cortex is required. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_*.',
+      reason: `🚨 Postgres is not configured. Set POSTGRES_URL or POSTGRES_* env vars.`,
     };
   }
 
@@ -60,10 +73,22 @@ export async function runChildJob(
     return { ok: false, reason: `Cortex unreachable: ${msg}` };
   }
 
-  const ralphArgs = ['exec', 'workflow-ralph', '--plan', planId];
-  if (iterations !== undefined && iterations !== null) {
-    ralphArgs.push('--iterations', String(iterations));
-  }
+  const ralphArgs = [
+    'exec',
+    'workflow-ralph',
+    '--plan',
+    planId,
+    ...buildWorkflowRalphRunTuningArgv({
+      backend,
+      debug,
+      iterationTimeoutSeconds,
+      iterations,
+      model,
+      project,
+      prompt,
+      promptFile,
+    }),
+  ];
 
   const ralph = spawnSync('pnpm', ralphArgs, {
     cwd: worktreePath,

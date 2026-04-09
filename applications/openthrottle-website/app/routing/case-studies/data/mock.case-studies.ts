@@ -7,7 +7,7 @@ import type { CaseStudyDetail, CaseStudyListItem } from '../types';
 /** Static list + detail entries for case studies. */
 export const MOCK_CASE_STUDIES: readonly CaseStudyDetail[] = [
   {
-    body: `OpenThrottle helped our team ship features 40% faster by automating routine PR reviews and keeping our Cortex plans in sync with GitHub. We use the developer portal daily.`,
+    body: `OpenThrottle helped our team ship features 40% faster by automating routine PR reviews and keeping our plans in sync with GitHub. We use the developer portal daily.`,
     company: 'Acme Corp',
     ctaLabel: 'Start free trial',
     ctaUrl: '/contact',
@@ -18,7 +18,7 @@ export const MOCK_CASE_STUDIES: readonly CaseStudyDetail[] = [
       { label: 'PRs auto-reviewed', value: '500+' },
     ],
     slug: 'acme-corp',
-    tags: ['CI/CD', 'Cortex', 'GitHub'],
+    tags: ['CI/CD', 'OpenThrottle', 'GitHub'],
     testimonial: {
       author: 'Jane Doe',
       company: 'Acme Corp',

@@ -35,8 +35,8 @@ function getOptionLabel(option: ComboboxOption | string): string {
  * @description Autocomplete input with a list of suggestions. Composes Popover and Command.
  */
 export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
-  (
-    {
+  (props, ref): React.ReactElement => {
+    const {
       className,
       disabled = false,
       emptyText = 'No results found.',
@@ -44,18 +44,30 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       options,
       placeholder = 'Select...',
       value,
-    },
-    ref,
-  ) => {
+    } = props;
+
+    // Hooks
     const [open, setOpen] = React.useState(false);
     const normalizedOptions = React.useMemo(
       () =>
-        options.map((opt) =>
-          typeof opt === 'string' ? { label: opt, value: opt } : opt,
-        ),
+        options.map((opt) => {
+          const isString = typeof opt === 'string';
+
+          return isString ? { label: opt, value: opt } : opt;
+        }),
       [options],
     );
+
+    // Setup
     const selected = normalizedOptions.find((opt) => opt.value === value);
+
+    // Handlers
+
+    // Markup
+
+    // Life Cycle
+
+    // 🔌 Short Circuit
 
     return (
       <Popover onOpenChange={setOpen} open={open}>

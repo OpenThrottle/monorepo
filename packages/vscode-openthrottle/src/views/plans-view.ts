@@ -33,8 +33,8 @@ export function registerPlansView(
         const tasks = await client.tasksByPlanId(el.id);
 
         showPlanDetail(context, plan, tasks);
-      } catch (err) {
-        if (err instanceof UnauthenticatedError) {
+      } catch (error) {
+        if (error instanceof UnauthenticatedError) {
           await vscode.window
             .showInformationMessage('Sign in to view plan details.', 'Sign in')
             .then((choice) => {

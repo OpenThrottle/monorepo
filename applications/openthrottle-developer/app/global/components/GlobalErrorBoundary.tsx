@@ -9,7 +9,7 @@ export interface GlobalErrorBoundaryProps {
  * @link https://remix.run/docs/en/main/route/error-boundary
  */
 export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
-  const { className = 'flex flex-col h-full p-8' } = props;
+  const { className = 'flex flex-col h-full p-8 overflow-auto' } = props;
 
   // Hooks
   const error = useRouteError();

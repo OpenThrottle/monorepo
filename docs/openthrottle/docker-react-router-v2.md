@@ -45,9 +45,9 @@ See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build
 From monorepo root:
 
 ```bash
-export APP_NAME=openthrottle-developer   # or rocketcms, barguide, mattscholta, etc.
+export APP_NAME=openthrottle-developer
 export APP_VERSION=1.0.0
-export NX_VERSION=22.5.4
+export NX_VERSION=22.6.4
 export PNPM_VERSION=9
 export GITHUB_TOKEN=${GITHUB_TOKEN:-}
 export NX_KEY=${NX_KEY:-}

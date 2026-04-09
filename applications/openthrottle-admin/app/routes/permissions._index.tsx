@@ -5,20 +5,8 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetPermissionsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/permissions._index';
 import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
-
-export interface PermissionsIndexLoaderData {
-  permissions: Array<{
-    id: string;
-    name: string;
-    description?: string | null;
-  }>;
-}
-
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+import type { Route } from '@/app/routes/+types/permissions._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
@@ -29,10 +17,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     return { permissions: data.permissions };
   } catch (error) {
     const isError = error instanceof Error;
-    const is401 = isError && error.message.includes('401');
-    const is403 = isError && error.message.includes('403');
+    const message = isError ? error.message : String(error);
 
-    if (is401 || is403) {
+    if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
     }
 
@@ -48,7 +35,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Permissions | ${SITE_TITLE}` }];
 });
 
-export default function PermissionsIndexPage(
+export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;

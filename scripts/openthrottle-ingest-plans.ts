@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
+import { readFile, readdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { Client } from 'pg';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import {
+  embedQuery,
+  isOllamaEmbeddingConfigured,
+} from '@openthrottle/ai-mcp/src/embedding';
+
 /* eslint-disable no-await-in-loop */
 
 /**
  * @description Ingests plan JSON and optional output Markdown from plans/ into the Cortex Postgres database.
  * Read-only with respect to the filesystem; does not delete or modify plan files.
- * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Optional embeddings when OPENAI_API_KEY or OLLAMA_* is set (see @openthrottle/ai-mcp embedding).
+ * Uses POSTGRES_URL or POSTGRES_* env vars. Optional embeddings when OPENAI_API_KEY or OLLAMA_* is set (see @openthrottle/ai-mcp embedding).
  */
-
-import { readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
-import { Client } from 'pg';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
-import {
-  embedQuery,
-  isOllamaEmbeddingConfigured,
-} from '@openthrottle/ai-mcp/src/embedding';
 
 const PLANS_ROOT = join(process.cwd(), 'plans');
 const TEMPLATES_DIR = 'templates';
@@ -48,8 +48,10 @@ interface PlanJson {
 
 function isValidPlanJson(value: unknown): value is PlanJson {
   if (value === null || typeof value !== 'object') return false;
+
   const o = value as Record<string, unknown>;
   if (!o.metadata || typeof o.metadata !== 'object') return false;
+
   const meta = o.metadata as Record<string, unknown>;
   if (
     typeof meta.author !== 'string' ||
@@ -58,6 +60,7 @@ function isValidPlanJson(value: unknown): value is PlanJson {
   ) {
     return false;
   }
+
   if (!Array.isArray(o.tasks)) return false;
   for (const t of o.tasks) {
     if (
@@ -81,10 +84,12 @@ async function getPlanSubdirs(): Promise<string[]> {
   } catch {
     return [''];
   }
+
   const subdirs = entries
     .filter((e) => e.isDirectory() && e.name !== TEMPLATES_DIR)
     .map((e) => e.name)
     .sort();
+
   return ['', ...subdirs];
 }
 
@@ -92,31 +97,39 @@ async function collectPlanJsonPaths(): Promise<
   { relativePath: string; absolutePath: string }[]
 > {
   const out: { relativePath: string; absolutePath: string }[] = [];
+
   const subdirs = await getPlanSubdirs();
   for (const sub of subdirs) {
     const dir = sub ? join(PLANS_ROOT, sub) : PLANS_ROOT;
+
     let entries: string[];
     try {
       entries = await readdir(dir, { withFileTypes: false });
     } catch {
       continue;
     }
+
     for (const name of entries) {
       if (!name.endsWith('.json') || name.endsWith(OUTPUT_SUFFIX)) continue;
+
       const absolutePath = join(dir, name);
       const relativePath = sub ? `${sub}/${name}` : name;
+
       out.push({ absolutePath, relativePath });
     }
   }
+
   return out;
 }
 
 async function loadPlanJson(absolutePath: string): Promise<PlanJson> {
   const raw = await readFile(absolutePath, 'utf-8');
   const parsed = JSON.parse(raw) as unknown;
+
   if (!isValidPlanJson(parsed)) {
     throw new Error(`Invalid plan JSON structure: ${absolutePath}`);
   }
+
   return parsed;
 }
 
@@ -124,6 +137,7 @@ async function loadOutputMarkdownIfExists(
   absolutePath: string,
 ): Promise<string | undefined> {
   const mdPath = absolutePath.replace(/\.json$/, OUTPUT_MD_SUFFIX);
+
   try {
     return await readFile(mdPath, 'utf-8');
   } catch {
@@ -146,7 +160,9 @@ function buildPlanContentForEmbedding(
       (t) => t.title + (t.description ?? '') + (t.summary ?? ''),
     ),
   ];
+
   if (outputMd) parts.push(outputMd);
+
   return parts.filter(Boolean).join('\n');
 }
 
@@ -156,9 +172,11 @@ function buildTaskContentForEmbedding(task: PlanTask): string {
     task.description ?? '',
     task.summary ?? '',
   ];
+
   if (Array.isArray(task.requirements)) {
     parts.push(task.requirements.join(' '));
   }
+
   return parts.filter(Boolean).join('\n');
 }
 
@@ -170,8 +188,10 @@ const MAX_EMBEDDING_CHARS = 24_000;
  */
 function chunkTextForEmbedding(text: string): string[] {
   if (text.length <= MAX_EMBEDDING_CHARS) return [text];
+
   const chunks: string[] = [];
   const paragraphs = text.split(/\n\n+/);
+
   let current = '';
   for (const p of paragraphs) {
     const next = current ? `${current}\n\n${p}` : p;
@@ -182,6 +202,7 @@ function chunkTextForEmbedding(text: string): string[] {
         chunks.push(current);
         current = '';
       }
+
       if (p.length <= MAX_EMBEDDING_CHARS) {
         current = p;
       } else {
@@ -197,6 +218,7 @@ function chunkTextForEmbedding(text: string): string[] {
               for (let i = 0; i < line.length; i += MAX_EMBEDDING_CHARS) {
                 chunks.push(line.slice(i, i + MAX_EMBEDDING_CHARS));
               }
+
               current = '';
             }
           }
@@ -204,18 +226,14 @@ function chunkTextForEmbedding(text: string): string[] {
       }
     }
   }
+
   if (current) chunks.push(current);
+
   return chunks;
 }
 
 async function main(): Promise<void> {
-  const config = getCortexPostgresConfig();
-  if (!config) {
-    throw new Error(
-      'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
-    );
-  }
-  const connectionString = config.connectionString;
+  const { connectionString } = getPostgresConfig();
 
   const planPaths = await collectPlanJsonPaths();
   console.log(`Found ${planPaths.length} plan JSON file(s).`);
@@ -223,6 +241,7 @@ async function main(): Promise<void> {
   const hasEmbeddings =
     Boolean(process.env.OPENAI_API_KEY?.trim()) ||
     isOllamaEmbeddingConfigured();
+
   if (!hasEmbeddings) {
     console.log(
       'No embedding provider (OPENAI_API_KEY or OLLAMA_*); skipping embeddings (plan_embeddings and task_embeddings will be empty).',

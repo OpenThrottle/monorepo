@@ -53,8 +53,8 @@ export async function runCreatePlanFromText(
     } else {
       category = DEFAULT_CATEGORY;
     }
-  } catch (err) {
-    if (err instanceof UnauthenticatedError) {
+  } catch (error) {
+    if (error instanceof UnauthenticatedError) {
       const choice = await vscode.window.showInformationMessage(
         'Sign in to create plans.',
         'Sign in',
@@ -84,8 +84,11 @@ export async function runCreatePlanFromText(
     await vscode.window.showInformationMessage(
       `Plan created: ${plan.title} (${plan.id})`,
     );
-  } catch (err) {
-    if (err instanceof UnauthenticatedError) {
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
+    if (error instanceof UnauthenticatedError) {
       const choice = await vscode.window.showInformationMessage(
         'Sign in to create plans.',
         'Sign in',
@@ -97,8 +100,6 @@ export async function runCreatePlanFromText(
 
       return;
     }
-
-    const message = err instanceof Error ? err.message : String(err);
 
     await vscode.window.showErrorMessage(
       `OpenThrottle: Failed to create plan. ${message}`,

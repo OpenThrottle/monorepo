@@ -8,61 +8,73 @@
  * Exit 1: proxy not running or unexpected response.
  */
 
-const PORT = Number(process.env.OLLAMA_PROXY_PORT ?? "11435");
+const PORT = Number(process.env.OLLAMA_PROXY_PORT ?? '11435');
 const BASE = `http://127.0.0.1:${PORT}`;
 
 async function main() {
   const url = `${BASE}/v1/chat/completions`;
   const body = {
-    model: "gpt-4o",
-    messages: [{ role: "user", content: "Reply with exactly: ok" }],
     max_tokens: 10,
+    messages: [
+      {
+        content: 'Reply with exactly: ok',
+        role: 'user',
+      },
+    ],
+    model: 'gpt-4o',
   };
 
   let res;
   try {
     res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
     });
-  } catch (err) {
-    const code = err.cause?.code ?? err.code;
-    const msg = err.message ?? "";
+  } catch (error) {
+    const code = error.cause?.code ?? error.code;
+    const msg = error.message ?? '';
+
     if (
-      code === "ECONNREFUSED" ||
-      msg.includes("ECONNREFUSED") ||
-      msg.includes("fetch failed")
+      code === 'ECONNREFUSED' ||
+      msg.includes('ECONNREFUSED') ||
+      msg.includes('fetch failed')
     ) {
       console.error(
-        "E2E failed: proxy not running. Start it with: pnpm ollama-proxy"
+        'E2E failed: proxy not running. Start it with: pnpm ollama-proxy',
       );
       process.exit(1);
     }
-    throw err;
+
+    throw error;
   }
 
   if (res.status === 502) {
     const text = await res.text();
-    const msg = text.includes("Upstream request failed")
-      ? "Proxy is up and forwarding; Ollama is unreachable (start Ollama and/or Caddy at OLLAMA_BASE_URL)."
+    const msg = text.includes('Upstream request failed')
+      ? 'Proxy is up and forwarding; Ollama is unreachable (start Ollama and/or Caddy at OLLAMA_BASE_URL).'
       : text;
-    console.warn("E2E proxy check: " + msg);
+    console.warn('E2E proxy check: ' + msg);
     process.exit(0);
   }
 
   if (!res.ok) {
-    console.error("E2E failed: proxy returned", res.status, await res.text());
+    console.error('E2E failed: proxy returned', res.status, await res.text());
     process.exit(1);
   }
 
   const data = await res.json();
   if (!data.choices || !Array.isArray(data.choices)) {
-    console.error("E2E failed: response missing choices", JSON.stringify(data).slice(0, 200));
+    console.error(
+      'E2E failed: response missing choices',
+      JSON.stringify(data).slice(0, 200),
+    );
     process.exit(1);
   }
 
-  console.log("E2E passed: proxy forwarded to Ollama and returned a completion.");
+  console.log(
+    'E2E passed: proxy forwarded to Ollama and returned a completion.',
+  );
 }
 
 main().catch((err) => {

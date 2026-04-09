@@ -5,7 +5,7 @@
 
 import { spawn, spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { ChildProcessMetrics } from '../types/child-process-metrics';
 import type { WallClockMetrics } from '../types/wall-clock-metrics';
 import { createWallClockMetrics } from '../types/wall-clock-metrics';
@@ -14,7 +14,7 @@ import type {
   ChildJobResult,
   ChildJobStreamChunk,
 } from '../types/worktree';
-import type { CortexRalphConfig } from './cortex-ralph';
+import type { WorkflowRalphConfig } from './cortex-ralph';
 import {
   appendPlanOutput,
   ensureCortexReachable,
@@ -22,6 +22,7 @@ import {
   updatePlanStatus,
 } from './cortex-ralph';
 import { ralphDebugLogger } from './ralph-debug-logger';
+import { buildWorkflowRalphRunTuningArgv } from './workflow-ralph-nested-argv';
 import { createChildProcessMetricsCollector } from './child-process-metrics';
 import type { ChildProcessMetricsCollector } from './child-process-metrics';
 
@@ -108,7 +109,12 @@ function runRalphAsync(
       if (child.killed) return;
       child.kill('SIGTERM');
       const killTimeout = setTimeout(() => {
-        if (!child.killed) child.kill('SIGKILL');
+        // After SIGTERM, Node sets `killed` to true; still send SIGKILL if the child has not exited.
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          /* process may have exited */
+        }
       }, SIGKILL_GRACE_MS);
       child.once('close', () => clearTimeout(killTimeout));
     };
@@ -219,9 +225,16 @@ export async function runChildJob(
   input: ChildJobInput,
 ): Promise<ChildJobResult> {
   const {
+    backend,
     handoff,
-    planId,
+    iterationTimeoutSeconds,
     iterations,
+    model,
+    planId,
+    project,
+    prompt,
+    promptFile,
+    ralphDebugCli,
     timeoutMs,
     signal,
     onChunk,
@@ -234,14 +247,13 @@ export async function runChildJob(
   const startTimestamp = Date.now();
   const cpuAtStart = process.cpuUsage();
 
-  const rawConfig = getCortexPostgresConfig();
+  const rawConfig = getPostgresConfig();
   if (!rawConfig) {
     const endTimestamp = Date.now();
     const cpuAtEnd = process.cpuUsage();
     return {
       ok: false,
-      reason:
-        'Cortex is required. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_*.',
+      reason: `🚨 Postgres is not configured. Set POSTGRES_URL or POSTGRES_* env vars.`,
       wallClockMetrics: computeWallClockMetrics(
         startTimestamp,
         endTimestamp,
@@ -251,7 +263,7 @@ export async function runChildJob(
     };
   }
 
-  const config: CortexRalphConfig = {
+  const config: WorkflowRalphConfig = {
     connectionString: rawConfig.connectionString,
   };
   try {
@@ -272,10 +284,22 @@ export async function runChildJob(
     };
   }
 
-  const ralphArgs = ['exec', 'workflow-ralph', '--plan', planId];
-  if (iterations !== undefined && iterations !== null) {
-    ralphArgs.push('--iterations', String(iterations));
-  }
+  const ralphArgs = [
+    'exec',
+    'workflow-ralph',
+    '--plan',
+    planId,
+    ...buildWorkflowRalphRunTuningArgv({
+      backend,
+      debug: ralphDebugCli,
+      iterationTimeoutSeconds,
+      iterations,
+      model,
+      project,
+      prompt,
+      promptFile,
+    }),
+  ];
 
   const effectiveOnChunk: ((chunk: ChildJobStreamChunk) => void) | undefined =
     streamToCortex || onChunk

@@ -18,7 +18,7 @@ export class ServerHealthObject {
   api!: string;
 
   @Field(() => String, {
-    description: `OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic.`,
+    description: `OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.`,
   })
   database!: string;
 

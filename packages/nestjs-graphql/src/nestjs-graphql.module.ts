@@ -5,9 +5,9 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
 import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
 import {
-  type ApolloServerPluginCacheControlOptions,
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,
+  type ApolloServerPluginCacheControlOptions,
   type ApolloServerPluginResponseCacheOptions,
 } from './cache-plugins';
 
@@ -44,6 +44,7 @@ function buildCachePlugins(
   cache: NestjsGraphqlCacheOptions,
 ): NonNullable<ApolloDriverConfig['plugins']> {
   const plugins: NonNullable<ApolloDriverConfig['plugins']> = [];
+
   if (cache.cacheControl) {
     plugins.push(
       ApolloServerPluginCacheControl(
@@ -51,6 +52,7 @@ function buildCachePlugins(
       ),
     );
   }
+
   if (cache.responseCache) {
     const opts =
       cache.responseCache === true
@@ -83,6 +85,7 @@ function buildDriverConfig(
 
   if (!cacheOpts) {
     base.plugins = userPlugins;
+
     return base;
   }
 

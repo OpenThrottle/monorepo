@@ -1,12 +1,12 @@
 # openthrottle-server
 
-NestJS backend for the OpenThrottle platform. Exposes a GraphQL API for plans, tasks, embeddings, commit links, activity, and related resources. Uses the **Cortex** Postgres database (plans, tasks, pgvector embeddings) and Redis (BullMQ queues, GraphQL response cache).
+NestJS backend for the OpenThrottle platform. Exposes a GraphQL API for plans, tasks, embeddings, commit links, activity, and related resources. Uses the OpenThrottle Postgres database (plans, tasks, pgvector embeddings) and Redis (BullMQ queues, GraphQL response cache).
 
 ## Tech stack
 
 - **NestJS** – API framework
 - **GraphQL** – Apollo with code-first schema, JWT auth, RBAC, response caching
-- **Cortex** – Postgres database (`databases/cortex`): plans, tasks, plan/task embeddings, commit links, plan output stream, notes, documentation embeddings
+- **OpenThrottle** – Postgres database (`databases/`): plans, tasks, plan/task embeddings, commit links, plan output stream, notes, documentation embeddings
 - **Redis** – BullMQ (plans, daily-stats, doc-ingestion queues) and GraphQL cache
 - **Socket.IO** – Real-time notifications via `@openthrottle/nestjs-websockets`
 
@@ -14,25 +14,25 @@ NestJS backend for the OpenThrottle platform. Exposes a GraphQL API for plans, t
 
 - Node.js ≥ 22
 - pnpm (monorepo root)
-- **Postgres** – Cortex DB; see [databases/cortex/README.md](../../databases/cortex/README.md) for setup (e.g. `docker compose -f docker-compose-databases.yml up -d cortex`, then `pnpm run cortex:migrate`)
-- **Redis** – For BullMQ and GraphQL cache (e.g. from same compose: `docker compose -f docker-compose-databases.yml up -d redis` if present, or local Redis on default port)
+- **Postgres** – OpenThrottle DB; see [databases/README.md](../../databases/cortex/README.md) for setup (e.g. `docker compose up -d openthrottle-postgres`, then `pnpm run database:migrate`)
+- **Redis** – For BullMQ and GraphQL cache (e.g. from same compose: `docker compose up -d openthrottle-redis` if present, or local Redis on default port)
 
 ## Environment
 
 Copy `.env.default` to `.env` and adjust. Key variables:
 
-| Variable                           | Purpose                                                                                                                                                  |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`                             | HTTP port (default `6021`)                                                                                                                               |
-| `APP_URL`                          | Base URL (e.g. `http://localhost:6021`)                                                                                                                  |
-| `JWT_SECRET`                       | Secret for JWT signing/verification                                                                                                                      |
-| `POSTGRES_*` / `POSTGRES_URL`      | Cortex Postgres connection ([Cortex README](../../databases/cortex/README.md) uses `CORTEX_POSTGRES_*`; this app uses `POSTGRES_*` as in `.env.default`) |
-| `REDIS_HOST`, `REDIS_PORT`         | Redis for BullMQ and GraphQL cache                                                                                                                       |
-| `CORS_ORIGINS`, `CORS_CREDENTIALS` | Allowed frontend origins (e.g. openthrottle-developer, localhost)                                                                                        |
-| `GITHUB_TOKEN`                     | Optional; for GitHub API (e.g. listing PRs)                                                                                                              |
-| `BULLMQ_BOARD_*`                   | BullMQ Board admin credentials                                                                                                                           |
-| `STRIPE_SECRET_KEY`                | Stripe API secret (`sk_…`); required for checkout and webhook verification                                                                               |
-| `STRIPE_WEBHOOK_SECRET`            | Stripe webhook signing secret (`whsec_…`); set when webhooks are enabled                                                                                 |
+| Variable                           | Purpose                                                                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                             | HTTP port (default `6021`)                                                                                                   |
+| `APP_URL`                          | Base URL (e.g. `http://localhost:6021`)                                                                                      |
+| `JWT_SECRET`                       | Secret for JWT signing/verification                                                                                          |
+| `POSTGRES_*` / `POSTGRES_URL`      | Postgres connection ([README](../../databases/README.md) uses `POSTGRES_*`; this app uses `POSTGRES_*` as in `.env.default`) |
+| `REDIS_HOST`, `REDIS_PORT`         | Redis for BullMQ and GraphQL cache                                                                                           |
+| `CORS_ORIGINS`, `CORS_CREDENTIALS` | Allowed frontend origins (e.g. openthrottle-developer, localhost)                                                            |
+| `GITHUB_TOKEN`                     | Optional; for GitHub API (e.g. listing PRs)                                                                                  |
+| `BULLMQ_BOARD_*`                   | BullMQ Board admin credentials                                                                                               |
+| `STRIPE_SECRET_KEY`                | Stripe API secret (`sk_…`); required for checkout and webhook verification                                                   |
+| `STRIPE_WEBHOOK_SECRET`            | Stripe webhook signing secret (`whsec_…`); set when webhooks are enabled                                                     |
 
 See `.env.default` for full list and comments.
 
@@ -63,7 +63,7 @@ GraphQL endpoint: `http://localhost:6021/graphql` (or the configured `PORT`). He
 
 The app uses `@openthrottle/nestjs-modules` **Global CLS** (`GlobalClsModule` / `GlobalClsService`) so each HTTP or GraphQL request has an isolated store. The store’s `user` field holds a [`GlobalClsUser`](../../packages/mattscholta/nestjs-modules/src/global-cls/global-cls-user.ts) snapshot after authentication.
 
-- **Protected routes:** `GlobalJwtAuthGuard` runs after `GqlJwtAuthGuard` validates the JWT. It then calls `GlobalClsAuthHook.populateFromJwtPayload`, which loads the Cortex user (when present) plus permissions and roles from `UsersService` / `RolesService`, or falls back to a JWT-only mapping via `globalClsUserFromJwtLike`.
+- **Protected routes:** `GlobalJwtAuthGuard` runs after `GqlJwtAuthGuard` validates the JWT. It then calls `GlobalClsAuthHook.populateFromJwtPayload`, which loads the user (when present) plus permissions and roles from `UsersService` / `RolesService`, or falls back to a JWT-only mapping via `globalClsUserFromJwtLike`.
 - **Public routes** (`@Public()`): The global guard returns early; `user` is **not** set on CLS. Resolvers and services should treat `globalCls.get('user')` as absent or use `globalCls.has('user')` before reading it.
 
 **Reading the current user in code:** inject `GlobalClsService` and use `this.globalCls.get('user')` (optional) or `this.globalCls.has('user')`. Types live in `@openthrottle/nestjs-modules` (`GlobalClsUser`).
@@ -97,6 +97,6 @@ deactivate
 
 ## Related
 
-- **Cortex DB** – [databases/cortex/README.md](../../databases/cortex/README.md) (schema, migrations, ingest, embeddings)
+- **OpenThrottle DB** – [databases/README.md](../../databases/README.md) (schema, migrations, ingest, embeddings)
 - **MCP (mcp-developer)** – Talks to this server via GraphQL only; see `packages/openthrottle/mcp-developer` and `.cursor/rules/commands/cortex.mdc`
 - **OpenThrottle docs** – `docs/openthrottle/`

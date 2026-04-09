@@ -69,8 +69,10 @@ export class StripeWebhookHandlerService {
         signature,
         webhookSecret,
       );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : 'Unknown error';
+
       throw new BadRequestException(
         `Webhook signature verification failed: ${message}`,
       );

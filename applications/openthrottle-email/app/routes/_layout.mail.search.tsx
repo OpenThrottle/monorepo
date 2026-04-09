@@ -5,19 +5,19 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { getMockSearchResults } from '~/global/data/mock.mail';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MessageList } from '~/routing/inbox/components/MessageList';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.search';
 
-// Search results use the same MessageList as inbox/sent/drafts/trash for consistent UI (shadcn-ui Table).
-// Empty states: no query (prompt to use toolbar); no results (search-specific copy). Future: replace getMockSearchResults with API call; consider debounced request and Skeleton loading state.
+export const loader = async (args: Route.LoaderArgs) => {
+  const { request } = args;
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
   const url = new URL(request.url);
   const q = url.searchParams.get('q') ?? '';
   const messages = getMockSearchResults(q);
+
   return { messages, query: q };
 };
 
@@ -25,10 +25,25 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function MailSearchRoute({ loaderData }: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
+  // Hooks
+
+  // Setup
   const messages = loaderData?.messages ?? [];
   const query = loaderData?.query ?? '';
   const hasQuery = query.trim().length > 0;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   // No search term yet: prompt to use the toolbar (search bar submits and debounced typing navigate here).
   if (!hasQuery) {
@@ -88,5 +103,9 @@ export default function MailSearchRoute({ loaderData }: Route.ComponentProps) {
     </section>
   );
 }
+
+// export const action = async (_args: Route.ActionArgs) => {
+//   return {};
+// };
 
 export const ErrorBoundary = GlobalErrorBoundary;

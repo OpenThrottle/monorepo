@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import type { NoteRow } from '../cortex-client.js';
 import {
   createNote as cortexCreateNote,
@@ -44,7 +44,7 @@ async function createNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }
@@ -78,7 +78,7 @@ async function getNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }
@@ -115,7 +115,7 @@ async function listNotesHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }
@@ -149,7 +149,7 @@ async function updateNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }
@@ -186,7 +186,7 @@ async function deleteNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }

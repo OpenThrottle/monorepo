@@ -16,15 +16,15 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
    Set in `.env` or export before running scripts (see `.env.default` for defaults):
 
-   | Variable                         | Purpose           | Example                 |
-   | -------------------------------- | ----------------- | ----------------------- |
-   | `OPENTHROTTLE_POSTGRES_HOST`     | Postgres host     | `localhost`             |
-   | `OPENTHROTTLE_POSTGRES_PORT`     | Postgres port     | `6010`                  |
-   | `OPENTHROTTLE_POSTGRES_DB`       | Database name     | `openthrottle`          |
-   | `OPENTHROTTLE_POSTGRES_USER`     | Database user     | `openthrottle_user`     |
-   | `OPENTHROTTLE_POSTGRES_PASSWORD` | Database password | `openthrottle_password` |
+   | Variable            | Purpose           | Example                 |
+   | ------------------- | ----------------- | ----------------------- |
+   | `POSTGRES_HOST`     | Postgres host     | `localhost`             |
+   | `POSTGRES_PORT`     | Postgres port     | `6010`                  |
+   | `POSTGRES_DB`       | Database name     | `openthrottle`          |
+   | `POSTGRES_USER`     | Database user     | `openthrottle_user`     |
+   | `POSTGRES_PASSWORD` | Database password | `openthrottle_password` |
 
-   Optional: `OPENTHROTTLE_POSTGRES_URL` — full connection string (e.g. `postgresql://user:pass@host:port/db`). If set, openthrottle-server and scripts can use it directly (mcp-developer talks to OpenThrottle via GraphQL only); otherwise they build from the five vars above.
+   Optional: `POSTGRES_URL` — full connection string (e.g. `postgresql://user:pass@host:port/db`). If set, openthrottle-server and scripts can use it directly (mcp-developer talks to OpenThrottle via GraphQL only); otherwise they build from the five vars above.
 
 3. **Run migrations**
 

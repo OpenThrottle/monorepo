@@ -81,14 +81,14 @@ type PrsMergedPerPeriodObject {
 }
 
 type PrTimeInStateSummaryObject {
-  """PR state (e.g. open, closed, merged)."""
-  state: String!
+  """Average number of days PRs spent in this state."""
+  avgDaysInState: Float
 
   """Count of PRs in this state."""
   count: Int!
 
-  """Average number of days PRs spent in this state."""
-  avgDaysInState: Float
+  """PR state (e.g. open, closed, merged)."""
+  state: String!
 }
 
 type ReviewCycleTimeObject {
@@ -197,6 +197,36 @@ type EnqueuePlanRunResultObject {
 
   """Total number of jobs waiting in the queue (including this one)."""
   queueTotal: Int!
+}
+
+type CancelPlanRunResultObject {
+  """
+  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan.
+  """
+  activeJobIdsCouldNotCancel: [String!]!
+
+  """
+  True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
+  """
+  signaledActiveRunToStop: Boolean!
+
+  """
+  True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.
+  """
+  noMatchingJob: Boolean!
+
+  """
+  Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied.
+  """
+  planStatusAfter: String
+
+  """Plan id from the request."""
+  planId: String!
+
+  """
+  BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).
+  """
+  removedJobIds: [String!]!
 }
 
 type TaskObject {
@@ -440,7 +470,7 @@ type ServerHealthObject {
   api: String!
 
   """
-  OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic.
+  OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
   """
   database: String!
 
@@ -936,6 +966,27 @@ type StripeWebhookProcessedPayload {
   received: Boolean!
 }
 
+type SubscriptionObject {
+  cancelAtPeriodEnd: Boolean!
+  createdAt: DateTime!
+  currentPeriodEnd: DateTime
+  currentPeriodStart: DateTime
+  id: String!
+  status: String!
+  stripeCustomerId: String
+  stripePriceId: String!
+  stripeSubscriptionId: String
+  updatedAt: DateTime!
+  userId: String!
+}
+
+type CreateCheckoutSessionPayload {
+  """
+  Redirect URL to Stripe Checkout. Null if user not found or session creation failed.
+  """
+  url: String
+}
+
 type PlanEmbeddingObject {
   content: String!
   createdAt: DateTime!
@@ -960,27 +1011,6 @@ type PlanOutputStreamChunkObject {
   """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
-}
-
-type SubscriptionObject {
-  cancelAtPeriodEnd: Boolean!
-  createdAt: DateTime!
-  currentPeriodEnd: DateTime
-  currentPeriodStart: DateTime
-  id: String!
-  status: String!
-  stripeCustomerId: String
-  stripePriceId: String!
-  stripeSubscriptionId: String
-  updatedAt: DateTime!
-  userId: String!
-}
-
-type CreateCheckoutSessionPayload {
-  """
-  Redirect URL to Stripe Checkout. Null if user not found or session creation failed.
-  """
-  url: String
 }
 
 type PermissionObject {
@@ -1093,7 +1123,7 @@ type UserObject {
   disabledAt: DateTime
   email: String
 
-  """GitHub username (e.g. visormatt)"""
+  """GitHub user or Organization name (e.g. OpenThrottle)"""
   githubUsername: String!
   id: String!
   updatedAt: DateTime!
@@ -1101,12 +1131,12 @@ type UserObject {
 
 type Query {
   """
-  Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page.
+  Database health: ok | unconfigured | unreachable. Used by app status page.
   """
-  cortexHealth: String!
+  databaseHealth: String!
 
   """
-  Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.
+  Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable.
   """
   serverHealth: ServerHealthObject!
 
@@ -1250,6 +1280,15 @@ type Query {
   """List all notes, ordered by createdAt descending"""
   notes: [NoteObject!]!
 
+  """Active Stripe products (catalog). Does not require authentication."""
+  stripeProducts: [StripeProductObject!]!
+
+  """A single Stripe product by ID, or null if not found."""
+  stripeProduct(id: String!): StripeProductObject
+
+  """Current user's active subscription (entitlement). Null if none."""
+  mySubscription: SubscriptionObject
+
   """Get a plan embedding by ID"""
   planEmbedding(input: GetPlanEmbeddingInput!): PlanEmbeddingObject
 
@@ -1263,15 +1302,6 @@ type Query {
   List plan output stream chunks by plan ID, ordered by createdAt ascending
   """
   planOutputStreamChunks(input: ListPlanOutputStreamChunksInput!): [PlanOutputStreamChunkObject!]!
-
-  """Active Stripe products (catalog). Does not require authentication."""
-  stripeProducts: [StripeProductObject!]!
-
-  """A single Stripe product by ID, or null if not found."""
-  stripeProduct(id: String!): StripeProductObject
-
-  """Current user's active subscription (entitlement). Null if none."""
-  mySubscription: SubscriptionObject
 
   """Get a plan by ID"""
   plan(id: ID!): PlanObject
@@ -1449,6 +1479,12 @@ input GetGeneratorInput {
 }
 
 input ListPullsInput {
+  """Filter by base branch"""
+  base: String
+
+  """Filter by merged (true/false); omit for no filter"""
+  merged: Boolean
+
   """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
@@ -1457,12 +1493,6 @@ input ListPullsInput {
 
   """Filter by state: open, closed, or all"""
   state: String
-
-  """Filter by base branch"""
-  base: String
-
-  """Filter by merged (true/false); omit for no filter"""
-  merged: Boolean
 }
 
 input GitHubRepoInput {
@@ -1766,13 +1796,13 @@ type Mutation {
   """Delete a note by ID"""
   deleteNote(id: ID!): Boolean!
 
-  """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
-  appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
-
   """
   Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup.
   """
   createCheckoutSession(input: CreateCheckoutSessionInput!): CreateCheckoutSessionPayload!
+
+  """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
+  appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
 
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
@@ -1793,11 +1823,26 @@ type Mutation {
   """
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
 
+  """
+  Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.
+  """
+  enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
+
+  """
+  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
+  """
+  cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
+
   """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
 
   """Update a project"""
   updateProject(input: UpdateProjectInput!): ProjectObject
+
+  """
+  Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL).
+  """
+  deleteProject(input: DeleteProjectInput!): Boolean!
 
   """Create a role"""
   createRole(input: CreateRoleInput!): RoleObject!
@@ -1987,17 +2032,6 @@ input UpdateNoteInput {
   id: ID!
 }
 
-input AppendPlanOutputInput {
-  """Content of the output chunk"""
-  content: String!
-
-  """Optional iteration number for the output chunk"""
-  iteration: Int
-
-  """Plan id to append output to"""
-  planId: ID!
-}
-
 input CreateCheckoutSessionInput {
   """URL to redirect to if the user cancels checkout."""
   cancelUrl: String!
@@ -2007,6 +2041,17 @@ input CreateCheckoutSessionInput {
 
   """URL to redirect to after successful payment."""
   successUrl: String!
+}
+
+input AppendPlanOutputInput {
+  """Content of the output chunk"""
+  content: String!
+
+  """Optional iteration number for the output chunk"""
+  iteration: Int
+
+  """Plan id to append output to"""
+  planId: ID!
 }
 
 input CreatePlanInput {
@@ -2067,6 +2112,87 @@ input EnqueuePlanRunInput {
   Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority.
   """
   priority: Int
+
+  """
+  Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+  """
+  ralph: RalphPlanRunTuningInput
+}
+
+input RalphPlanRunTuningInput {
+  """Execution backend (e.g. cursor). Omit to use worktree defaults."""
+  backend: String
+
+  """Per-iteration timeout in seconds (positive integer)."""
+  iterationTimeoutSeconds: Int
+
+  """Max Ralph iterations for this run (positive integer)."""
+  iterations: Int
+
+  """Model id passed to workflow-ralph --model."""
+  model: String
+
+  """Nx project name for workflow-ralph --project."""
+  project: String
+
+  """Prompt profile path (e.g. /agents/ralph) for --prompt."""
+  prompt: String
+
+  """
+  Repo-relative or absolute path for --prompt-file (layer-1 prompt file).
+  """
+  promptFile: String
+
+  """Whether to pass --debug / --verbose to nested workflow-ralph."""
+  ralphDebugCli: RalphNestedDebugCli
+}
+
+"""
+Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.
+"""
+enum RalphNestedDebugCli {
+  omit
+  debug
+  verbose
+}
+
+input EnqueuePlanRalphOrchestratorInput {
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.
+  """
+  idempotencyKey: String
+
+  """
+  Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric).
+  """
+  mode: PlanRalphWorkflowMode
+
+  """Plan id to run the orchestrator for"""
+  planId: ID!
+
+  """Job priority (lower = higher priority). Same as enqueuePlanRun."""
+  priority: Int
+
+  """
+  Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.).
+  """
+  ralph: RalphPlanRunTuningInput
+
+  """Required when mode is task; must belong to the plan."""
+  taskId: ID
+}
+
+"""
+Plan-scoped run (default) or task-centric run (`task` requires taskId).
+"""
+enum PlanRalphWorkflowMode {
+  plan
+  task
+}
+
+input CancelPlanRunInput {
+  """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
+  planId: ID!
 }
 
 input CreateProjectInput {
@@ -2086,6 +2212,11 @@ input UpdateProjectInput {
 
   """NX project name (e.g. applications/openthrottle-server)"""
   nxProjectName: String
+}
+
+input DeleteProjectInput {
+  """Project id to delete"""
+  id: ID!
 }
 
 input CreateRoleInput {
@@ -2186,7 +2317,7 @@ input DeleteTaskInput {
 input CreateUserInput {
   email: String
 
-  """GitHub username (e.g. visormatt)"""
+  """GitHub user or Organization name (e.g. OpenThrottle)"""
   githubUsername: String!
 }
 

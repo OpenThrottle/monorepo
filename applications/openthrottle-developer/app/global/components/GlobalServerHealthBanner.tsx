@@ -9,7 +9,7 @@ export interface GlobalServerHealthBannerProps {
 }
 
 /**
- * @description Top bar shown when Cortex (AI MCP data source) is unreachable or unconfigured.
+ * @description Top bar shown when the openthrottle-server (or database) is unreachable or misconfigured.
  * Uses serverHealth.database as proxy for MCP data availability. Dismissible for the session.
  */
 export const GlobalServerHealthBanner = (
@@ -49,7 +49,8 @@ export const GlobalServerHealthBanner = (
       role="alert"
     >
       <span className="flex-1">
-        Cortex (AI MCP data) is unreachable. Plans and tasks may be unavailable.
+        The OpenThrottle Server is unreachable or misconfigured. Plans and tasks
+        may be unavailable.
       </span>
       <Button
         aria-label="Dismiss banner"

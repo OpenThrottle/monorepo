@@ -61,8 +61,6 @@ resolve_project_id() {
 REGISTRY_PREFIX="${OPENTHROTTLE_REGISTRY_PREFIX:-}"
 
 GIT_SHA_SHORT="$(git -C "${ROOT}" rev-parse --short=7 HEAD)"
-# Match CI tag shape sha-<git-sha>; local uses 7-char SHA (sha-XXXXXXX).
-SHA_TAG="sha-${GIT_SHA_SHORT}"
 
 # Source images (local tags) — same names as applications/openthrottle/docker-compose.yml image: lines.
 SOURCE_OPENTHROTTLE_SERVER="${SOURCE_OPENTHROTTLE_SERVER:-openthrottle-server:latest}"
@@ -78,7 +76,7 @@ echo ""
 echo "Artifact Registry host: ${REGISTRY_HOST}"
 echo "GCP project:            ${PROJECT_ID}"
 echo "Registry prefix:        ${REGISTRY_PREFIX}"
-echo "Git short SHA (7):      ${GIT_SHA_SHORT}  →  tags: latest + ${SHA_TAG}"
+echo "Git short SHA (7):      tags: latest + ${GIT_SHA_SHORT}"
 echo "PRODUCTION:             ${PRODUCTION}"
 echo ""
 
@@ -124,7 +122,7 @@ process_app() {
 
   local dest_base="${REGISTRY_PREFIX}/${app_name}"
   local latest_ref="${dest_base}:latest"
-  local sha_ref="${dest_base}:${SHA_TAG}"
+  local sha_ref="${dest_base}:${GIT_SHA_SHORT}"
 
   echo "Tagging ${source_ref} → ${latest_ref} and ${sha_ref}"
   run_cmd docker tag "${source_ref}" "${latest_ref}"
@@ -142,4 +140,4 @@ process_app() {
 process_app openthrottle-server "${SOURCE_OPENTHROTTLE_SERVER}"
 # process_app openthrottle-developer "${SOURCE_OPENTHROTTLE_DEVELOPER}"
 
-echo "Done. Images available at ${REGISTRY_PREFIX}/<app>:latest and :${SHA_TAG}"
+echo "Done. Images available at ${REGISTRY_PREFIX}/<app>:latest and :${GIT_SHA_SHORT}"

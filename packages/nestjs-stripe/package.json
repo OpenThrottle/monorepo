@@ -10,7 +10,7 @@
   "dependencies": {
     "@openthrottle/nestjs-auth": "workspace:*",
     "@nestjs/graphql": "^13.2.4",
-    "graphql": "^16.13.1",
+    "graphql": "^16.13.2",
     "stripe": "^20.3.1"
   },
   "exports": {
@@ -68,7 +68,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

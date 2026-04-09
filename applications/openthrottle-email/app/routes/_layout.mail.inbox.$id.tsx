@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { getMockMessageById } from '~/global/data/mock.mail';
-import { SITE_TITLE } from '~/global/config/settings';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MessageDetail } from '~/routing/inbox/components/MessageDetail';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.inbox.$id';
 
 // Reading pane: load single message by id. Replace with API when backend is wired. MessageDetail uses shadcn-ui Card.
@@ -16,9 +16,11 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function InboxMessageDetail({
-  loaderData,
-}: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
   // Hooks
 
   // Setup

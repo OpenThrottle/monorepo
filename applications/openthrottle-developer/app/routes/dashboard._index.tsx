@@ -23,7 +23,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const end = new Date();
   const endIso = end.toISOString();
 
-  const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();
 
   const variables: GetDashboardQueryVariables = {
@@ -38,14 +38,12 @@ export const loader = async (args: Route.LoaderArgs) => {
       GetDashboardDocument,
       variables,
     );
-    const { activityByDate, dailyStatsRange, queues } = result;
 
+    const { activityByDate, dailyStatsRange, queues } = result;
     const githubStats = await executeGraphqlWithAuth(
       args.request,
       GetDashboardGithubStatsDocument,
-      {
-        input: { owner: 'visormatt', repo: 'monorepo', state: 'draft' },
-      },
+      { input: { owner: 'visormatt', repo: 'monorepo', state: 'draft' } },
     );
 
     return { activityByDate, dailyStatsRange, githubStats, queues };
@@ -64,8 +62,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Dashboard | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
-  const { loaderData, matches: _m, params: _p } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { activityByDate, dailyStatsRange, githubStats, queues } = loaderData;
 
   // Hooks
@@ -87,14 +87,12 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full gap-4 lg:gap-8 flex flex-col">
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
+    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
+      <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
         <OpenThrottleStatCard title="Total plans" value={12} />
         <OpenThrottleStatCard title="Active tasks" value={3} />
         <OpenThrottleStatCard title="Scheduled tasks" value={23} />
       </div>
-
-      {/* <GlobalHeading heading="Dashboard" /> */}
 
       <div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
@@ -173,20 +171,21 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
 
-  if (intent !== 'triggerWebsocketNotification') {
-    return {};
+  if (intent === 'triggerWebsocketNotification') {
+    try {
+      await executeGraphqlWithAuth(args.request, TriggerNotificationDocument);
+
+      return { devTriggerWebsocket: { success: true } };
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { devTriggerWebsocket: { error: message } };
+    }
   }
 
-  try {
-    await executeGraphqlWithAuth(args.request, TriggerNotificationDocument);
-
-    return { devTriggerWebsocket: { success: true } };
-  } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
-
-    return { devTriggerWebsocket: { error: message } };
-  }
+  // 🚨 Default to invalid action error when no intent is provided.
+  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

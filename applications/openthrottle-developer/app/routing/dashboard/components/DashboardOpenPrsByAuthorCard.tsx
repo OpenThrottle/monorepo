@@ -21,6 +21,9 @@ export const DashboardOpenPrsByAuthorCard = (
 ) => {
   const { className, openPrCountByAuthor } = props;
 
+  // Hooks
+
+  // Setup
   const chartData = React.useMemo(
     () =>
       [...openPrCountByAuthor].map((node) => ({
@@ -32,6 +35,13 @@ export const DashboardOpenPrsByAuthorCard = (
 
   const isEmpty = chartData.length === 0;
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (isEmpty) {
     return (
       <div

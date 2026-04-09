@@ -68,7 +68,7 @@ Only **to-add** and **to-update** are sent to the existing docs ingestion pipeli
 
 **Decision: store prior state in the Cortex Postgres database** in a dedicated table (`doc_ingestion_state`). Read/write and lookup are implemented in `@tools/workflows/doc-ingestion` (`getPriorState`, `savePriorState`, `removePriorState`, `getPriorStateEntry`, `getDocIngestionStateConnectionString`).
 
-- **Why DB over manifest file:** Single source of truth with the rest of Cortex; no git noise or merge conflicts; safe for concurrent jobs if scoped by `scope`; already have `CORTEX_POSTGRES_*` and migrations. A manifest file under the repo would require deciding where it lives, who writes it (CI vs local), and could conflict with multiple jobs or branches.
+- **Why DB over manifest file:** Single source of truth with the rest of Cortex; no git noise or merge conflicts; safe for concurrent jobs if scoped by `scope`; already have `POSTGRES_*` and migrations. A manifest file under the repo would require deciding where it lives, who writes it (CI vs local), and could conflict with multiple jobs or branches.
 - **Table shape (conceptual):** One row per `(scope, path)` with at least `path`, `content_hash`, and `updated_at`. Primary or unique key on `(scope, path)`. This allows multiple jobs (or schedules) to maintain separate state via different `scope` values.
 
 ### Hash vs mtime

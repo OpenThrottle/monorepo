@@ -6,7 +6,6 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "expo.vscode-expo-tools",
-    // "firsttris.vscode-jest-runner",
     "folke.vscode-monorepo-workspace",
     "hashicorp.terraform",
     "nrwl.angular-console"

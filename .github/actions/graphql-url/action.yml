@@ -8,24 +8,21 @@
 #
 ################################################################################
 
-name: "🧠 Get GraphQL URL"
-description: "Get the appropriate GraphQL URL(s) for introspection."
+name: '🧠 Get GraphQL URL'
+description: 'Get the appropriate GraphQL URL(s) for introspection.'
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - shell: bash
       run: |
         if [[ "$BRANCH_NAME" == "main" ]];
         then
-          echo "BARGUIDE_ADMIN_API_URI=https://localhost:5100" >> "$GITHUB_ENV"
-          echo "ROCKETCMS_ADMIN_API_URI=https://localhost:3100" >> "$GITHUB_ENV"
+          echo "OPENTHROTTLE_DEVELOPER_API_URL=https://localhost:5100" >> "$GITHUB_ENV"
         else
-          echo "BARGUIDE_ADMIN_API_URI=https://localhost:5100" >> "$GITHUB_ENV"
-          echo "ROCKETCMS_ADMIN_API_URI=https://localhost:3100" >> "$GITHUB_ENV"
+          echo "OPENTHROTTLE_DEVELOPER_API_URL=https://localhost:5100" >> "$GITHUB_ENV"
         fi
 
     - shell: bash
       run: |
-        echo "🧠 BARGUIDE_ADMIN_API_URI: ${BARGUIDE_ADMIN_API_URI}"
-        echo "🧠 ROCKETCMS_ADMIN_API_URI: ${ROCKETCMS_ADMIN_API_URI}"
+        echo "🧠 OPENTHROTTLE_DEVELOPER_API_URL: ${OPENTHROTTLE_DEVELOPER_API_URL}"

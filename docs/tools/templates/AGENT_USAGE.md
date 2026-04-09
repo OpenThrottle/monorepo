@@ -134,6 +134,17 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --list=<list-ke
 
 Use for destinations, folders, and more — ensure you select valid targets!
 
+#### `openthrottle-developer` — Remix flags (reference)
+
+Nx project name: **`openthrottle-developer`**. Prefix all generator commands with **`NX_ISOLATE_PLUGINS=false`**.
+
+| Generator                   | Purpose                                          | Key flags                                                                                                                                                                                                                           |
+| --------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@tools/generators:remix`   | Route files under `app/routes/`                  | `--subGenerator=route --application=openthrottle-developer --name=<segment>` (comma-separated names allowed). No `--folder`; routes always land in `applications/openthrottle-developer/app/routes/`.                               |
+| `@tools/generators:remix`   | Components under `app/`                          | `--subGenerator=component --application=openthrottle-developer --folder=<path> --name=<Name>`. Valid `--folder` values: `nx g @tools/generators:remix --list=componentFolders --application=openthrottle-developer`.                |
+| `@tools/generators:folders` | New `routing/<slug>/` or `services/<slug>/` tree | `--application=openthrottle-developer --name=<slug>` with `--folder=routing` or `--folder=services`. Run **before** generating components into a new `routing/<slug>/components` folder so that path appears in `componentFolders`. |
+| `@tools/generators:react`   | Package or app components                        | `--destination=<project>` (not `--folder`). Shared UI: `--destination=@openthrottle/react-router-shadcn`. App-local: `--destination=openthrottle-developer`. List: `--list=destinations`.                                           |
+
 ### Generator Execution
 
 All new code should go through a generator:

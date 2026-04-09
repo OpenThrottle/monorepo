@@ -23,7 +23,11 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function Index(_props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+
   // Hooks
 
   // Setup
