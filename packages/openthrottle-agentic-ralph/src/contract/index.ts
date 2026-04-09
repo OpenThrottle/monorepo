@@ -40,4 +40,3 @@ export type {
   WorkflowStepId,
   WorkflowStepResult,
 } from './step-results.js';
-export type { WorkflowError } from './workflow-error.js';

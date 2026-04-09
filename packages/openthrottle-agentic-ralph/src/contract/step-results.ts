@@ -1,4 +1,7 @@
-import type { WorkflowError } from './workflow-error.js';
+import type {
+  WorkflowStepFailure,
+  WorkflowStepSuccess,
+} from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @description Logical steps along the Ralph main() pipeline; used to tag
@@ -17,18 +20,12 @@ export type WorkflowStepId =
   | 'tasks.apply_completions'
   | 'agent.parse_control';
 
+type StepFailure<TStep extends WorkflowStepId> = WorkflowStepFailure<TStep>;
+
 type StepSuccess<
   TStep extends WorkflowStepId,
   TData extends Record<string, unknown> | undefined = undefined,
-> = TData extends undefined
-  ? { readonly step: TStep; readonly outcome: 'success' }
-  : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
-
-type StepFailure<TStep extends WorkflowStepId> = {
-  readonly step: TStep;
-  readonly outcome: 'failure';
-  readonly error: WorkflowError;
-};
+> = WorkflowStepSuccess<TStep, TData>;
 
 export type StepBootstrapResult =
   | StepSuccess<'bootstrap'>

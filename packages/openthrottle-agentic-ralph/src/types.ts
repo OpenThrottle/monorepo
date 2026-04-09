@@ -1,24 +1,7 @@
-export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
-export type WorkflowConfigMode = 'plan' | 'task';
-
-export interface WorkflowConfig {
-  readonly debug: WorkflowConfigDebug;
-  readonly iterationMax: number;
-  readonly iterations: number;
-  readonly iterationTimeout: number | undefined;
-  readonly model: string;
-  readonly prompt: string;
-  readonly timeout: number | undefined;
-}
-
-/**
- * @description Stable error shape for workflow steps; callers map from transport or GraphQL errors.
- */
-export interface WorkflowError {
-  readonly cause: Error | undefined;
-  readonly code: string;
-  readonly message: string;
-}
+import type {
+  WorkflowConfig,
+  WorkflowError,
+} from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
@@ -26,14 +9,12 @@ export interface WorkflowError {
  * `iterations`).
  */
 export interface WorkflowOptions extends WorkflowConfig {
-  readonly mode: WorkflowConfigMode; // 🤠 (ralph specific)
+  readonly mode: 'plan' | 'task'; // 🤠 (ralph specific)
   readonly planId: string; // 🤠 (ralph specific)
   readonly project: string | undefined; // 🤠 (ralph specific)
   readonly runner: 'RALPH'; // 🤠 (ralph only right now)
   readonly taskId: string; // 🤠 (ralph specific)
 }
-
-export type WorkflowStatus = 'failed' | 'finished';
 
 /**
  * @description Terminal outcome of a workflow run (process exit semantics

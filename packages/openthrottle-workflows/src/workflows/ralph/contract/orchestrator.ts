@@ -12,8 +12,6 @@ export type WorkflowFailedReason =
   | 'input_required'
   | 'unhandled';
 
-export type WorkflowStatus = 'finished' | 'failed';
-
 /**
  * @description Terminal outcome of a workflow run (process exit semantics align with current Ralph CLI).
  */
