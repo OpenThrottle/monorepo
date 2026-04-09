@@ -28,3 +28,10 @@ if (globalThis.matchMedia === undefined) {
     removeListener: () => {},
   });
 }
+
+/**
+ * @description jsdom does not implement `scrollIntoView`; cmdk calls it on list items.
+ */
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = (): void => {};
+}

@@ -8,13 +8,13 @@ import {
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
-import type { WorkflowRalphContext } from '../contract/flow-context.js';
+// import type { WorkflowRalphContext } from '../contract/flow-context.js';
 import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
   WorkflowOrchestrator,
   WorkflowRunResult,
-} from '../contract/orchestrator.js';
+} from '../types.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {
   parseRalphAgentParseControl,
@@ -50,7 +50,7 @@ const failed = (reason: WorkflowFailedReason): WorkflowRunResult => ({
  */
 export const createWorkflowRalphOrchestrator = (
   deps: WorkflowRalphOrchestratorDeps,
-): WorkflowOrchestrator<WorkflowRalphContext> => ({
+): WorkflowOrchestrator => ({
   execute: async ({ context }) => {
     const { executeGraphqlV2, iterationRunner, onChunk } = deps;
 
@@ -198,7 +198,8 @@ export const createWorkflowRalphOrchestrator = (
             iteration,
             model: context.model,
             onChunk,
-            runner: context.runner,
+            // runner: context.runner, // FIXME: Swap this out...
+            runner: 'cursor',
             signal: abortSignal,
             timeoutMs,
           });

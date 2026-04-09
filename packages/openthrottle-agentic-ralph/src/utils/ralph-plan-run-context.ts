@@ -4,44 +4,14 @@
  * with the workflow flow-context contract (`contract/flow-context`).
  */
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
-import type {
-  WorkflowRalphContext,
-  WorkflowDebug,
-  WorkflowRunner,
-  WorkflowOptions,
-  WorkflowMode,
-} from '../contract/flow-context.js';
+import type { WorkflowRunner } from '../contract/flow-context.js';
+import type { WorkflowRalphContext, WorkflowOptions } from '../types.js';
 import {
   DEFAULT_RALPH_RUNNER,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
 } from '../contract/flow-context.js';
-
-/**
- * @description Maps GraphQL {@link RalphNestedDebugCli} to {@link WorkflowDebug}.
- */
-// const mapRalphNestedDebugCliToWorkflowDebugCli = (
-//   raw: RalphNestedDebugCli | null | undefined,
-// ): WorkflowDebug => {
-//   if (!raw || raw === null) {
-//     return 'omit';
-//   }
-
-//   switch (raw) {
-//     case RalphNestedDebugCli.Debug:
-//       return 'debug';
-
-//     case RalphNestedDebugCli.Omit:
-//       return 'omit';
-
-//     case RalphNestedDebugCli.Verbose:
-//       return 'verbose';
-
-//     default:
-//       return 'omit';
-//   }
-// };
 
 /**
  * @description `WorkflowRalphExecutionBackendId` is a single literal today; GraphQL `backend` is
@@ -83,7 +53,7 @@ const resolveIterationTimeoutSecondsFromTuning = (
 
 const resolveDebugFromTuning = (
   raw: string | null | undefined,
-): WorkflowDebug => {
+): WorkflowOptions['debug'] => {
   const t = raw?.trim() ?? '';
 
   switch (t) {
@@ -129,7 +99,7 @@ const resolveProjectFromTuning = (raw: string | null | undefined): string => {
 export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowMode;
+  readonly mode?: WorkflowOptions['mode'];
   readonly taskId?: string;
 }): WorkflowOptions {
   const r = params.ralph ?? {};

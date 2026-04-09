@@ -1,5 +1,5 @@
 import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowFlowContext } from './flow-context.js';
+import type { WorkflowRalphContext } from './flow-context.js';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'
@@ -14,7 +14,8 @@ export type WorkflowFailedReason =
   | 'unhandled';
 
 /**
- * @description Terminal outcome of a workflow run (process exit semantics align with current Ralph CLI).
+ * @description Terminal outcome of a workflow run (process exit semantics
+ * align with current Ralph CLI).
  */
 export type LegacyWorkflowResult = WorkflowRunResultBase<
   WorkflowFinishedReason,
@@ -24,13 +25,11 @@ export type LegacyWorkflowResult = WorkflowRunResultBase<
 /**
  * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
  */
-export interface WorkflowOrchestrator<
-  TContext extends WorkflowFlowContext = WorkflowFlowContext,
-> {
+export interface WorkflowOrchestrator {
   /**
    * @description Runs the workflow until a terminal {@link LegacyWorkflowResult}.
    */
   readonly execute: (params: {
-    readonly context: TContext;
+    readonly context: WorkflowRalphContext;
   }) => Promise<LegacyWorkflowResult>;
 }

@@ -14,10 +14,10 @@ import {
   resolveWorkflowGraphqlConfigFromEnv,
 } from '@openthrottle/openthrottle-workflows';
 import type {
-  RalphFlowContext,
   WorkflowExecuteGraphqlV2,
   WorkflowRalphOrchestratorDeps,
-  WorkflowRunResult,
+  LegacyWorkflowResult,
+  WorkflowRalphContext,
 } from '@openthrottle/openthrottle-workflows';
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './plans.types';
@@ -60,7 +60,7 @@ export const createPlansQueueWorkflowRalphOrchestratorDeps =
 export const runPlanOrchestratorJob = async (params: {
   readonly jobData: RunPlanOrchestratorJobData;
   readonly signal?: AbortSignal;
-}): Promise<WorkflowRunResult> => {
+}): Promise<LegacyWorkflowResult> => {
   const { jobData, signal } = params;
   const orchestrator = createWorkflowRalphOrchestrator(
     createPlansQueueWorkflowRalphOrchestratorDeps(),
@@ -73,7 +73,7 @@ export const runPlanOrchestratorJob = async (params: {
     taskId: jobData.taskId,
   });
 
-  const context: RalphFlowContext = {
+  const context: WorkflowRalphContext = {
     ...baseContext,
     ...(signal !== undefined ? { abortSignal: signal } : {}),
   };

@@ -91,7 +91,7 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly taskId: string;
 }
 
-export type WorkflowFlowContext = WorkflowRalphContext;
+// export type WorkflowFlowContext = WorkflowRalphContext;
 
 /**
  * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare
