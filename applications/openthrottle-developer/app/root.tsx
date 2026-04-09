@@ -42,7 +42,7 @@ import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { GlobalMetrics } from '~/global/components/GlobalMetrics';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { SITE_TITLE } from '#/app/global/config/settings';
-import { useCommanderOptions } from '~/routing/commander/config';
+import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 
@@ -56,6 +56,7 @@ const PROTECTED_PATH_PREFIXES = [
   '/pull-requests',
   '/queues',
   '/search',
+  '/settings',
 ];
 
 function decodeAuthTokenEmail(token: string): string {
@@ -125,7 +126,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const canonical: string = request.url;
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
-  const isRestrictedAccess = process.env.ENABLE_AUTHENTICATION === 'true';
+  const isRestrictedAccess = process.env.APP_ENABLE_AUTHENTICATION === 'true';
 
   let serverHealth: ServerHealthObject = {
     api: 'ok',
@@ -194,6 +195,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Setup
   const env = data?.env ?? {};
   const isAuthRoute = pathname.startsWith('/auth');
+  const isPromptsRoute = pathname.startsWith('/prompts');
   const html = `window.env = ${JSON.stringify(env)}`;
 
   const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
@@ -262,7 +264,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
               {!isAuthRoute && <GlobalHeader />}
               <main className="flex flex-1 flex-col">{children}</main>
-              {!isAuthRoute && (
+              {!isAuthRoute && !isPromptsRoute && (
                 <>
                   <GlobalMetrics />
                   <GlobalFooter health={data?.serverHealth} />
@@ -334,8 +336,9 @@ export const action = async (args: Route.ActionArgs) => {
       return redirect('/', {
         headers: { 'Set-Cookie': cookie },
       });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : 'Login failed';
 
       return { error: message };
     }

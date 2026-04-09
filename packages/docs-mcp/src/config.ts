@@ -1,5 +1,5 @@
 /**
- * @description Builds Cortex Postgres connection config from env (CORTEX_POSTGRES_URL, CORTEX_POSTGRES_*, or DOCS_MCP_*).
+ * @description Builds Postgres connection config from env (POSTGRES_URL, POSTGRES_*, or DOCS_MCP_*).
  */
 
 export interface CortexPostgresConfig {
@@ -7,10 +7,10 @@ export interface CortexPostgresConfig {
 }
 
 /**
- * @description Returns Cortex Postgres connection string from CORTEX_POSTGRES_URL, CORTEX_POSTGRES_*, or DOCS_MCP_* env vars.
+ * @description Returns Cortex Postgres connection string from POSTGRES_URL, POSTGRES_*, or DOCS_MCP_* env vars.
  * @returns Connection config or undefined if not configured.
  */
-export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
+export function getPostgresConfig(): CortexPostgresConfig | undefined {
   const url = process.env.POSTGRES_URL?.trim();
 
   if (url) {
@@ -24,7 +24,9 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
   const port = Number(process.env.POSTGRES_PORT);
 
   if (!db || !host || !password || !port || !user) {
-    throw new Error('Required Postgres environment variables are not set');
+    const message = `🚨 Postgres database is unreachable. Set POSTGRES_URL or POSTGRES_* env vars.`;
+
+    throw new Error(message);
   }
 
   const encodedPassword = encodeURIComponent(password);

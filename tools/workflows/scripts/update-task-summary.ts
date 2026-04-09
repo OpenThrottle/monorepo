@@ -3,7 +3,7 @@
  * One-off: update a Cortex task's summary. Usage: pnpm exec tsx scripts/update-task-summary.ts <task-id> <summary>
  */
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updateTaskSummary,
 } from '../src/utils/cortex-ralph';
@@ -19,7 +19,7 @@ if (!taskId || !summary) {
 
 (async (): Promise<void> => {
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
   const ok = await updateTaskSummary(config, taskId, summary);
   if (ok) {
     console.log('Updated task', taskId, 'summary');

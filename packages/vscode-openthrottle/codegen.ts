@@ -3,11 +3,11 @@ import { CodegenConfig } from '@graphql-codegen/cli';
 
 dotenv.config();
 
-const url = process.env.API_URL;
+const url = process.env.API_URL_INTERNAL;
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 if (isDevelopment && !url) {
-  throw new Error('🚨 API_URL is required');
+  throw new Error('🚨 API_URL_INTERNAL is required');
 }
 
 const config: CodegenConfig = {

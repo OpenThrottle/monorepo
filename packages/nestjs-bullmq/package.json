@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",
-    "@nestjs/common": "^11.1.12",
+    "@nestjs/common": "^11.1.18",
     "@nestjs/config": "^4.0.2",
-    "bullmq": "^5.66.5",
-    "joi": "^18.0.2"
+    "bullmq": "^5.73.0",
+    "joi": "^18.1.2"
   },
   "exports": {
     ".": {
@@ -61,7 +61,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

@@ -4,7 +4,7 @@
  * For multiline summary, pass the rest of the line in quotes or use a single argument.
  */
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updatePlanSummary,
 } from '../src/utils/cortex-ralph';
@@ -20,7 +20,7 @@ if (!planId || !summary) {
 
 (async (): Promise<void> => {
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
   const row = await updatePlanSummary(config, planId, summary);
   if (row) {
     console.log('Updated plan', row.id, 'summary');

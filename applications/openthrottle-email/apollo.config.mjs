@@ -26,7 +26,7 @@ export default {
       // headers: {
       //   Authorization: `Bearer ${supabaseJWT}`,
       // },
-      name: 'cortex codegen',
+      name: 'openthrottle-email GraphQL Codegen',
       url: `${url}/graphql`,
     },
     tagName: 'gql',

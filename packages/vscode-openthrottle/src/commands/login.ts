@@ -106,8 +106,10 @@ export async function runLogin(
     );
     void vscode.window.showInformationMessage('Signed in to OpenThrottle.');
     void treeProvider.refresh();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
     void vscode.window.showErrorMessage(
       `OpenThrottle sign in failed: ${message}`,
     );

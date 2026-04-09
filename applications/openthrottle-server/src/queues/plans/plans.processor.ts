@@ -13,7 +13,7 @@ import {
   WORKTREE_TRACKER_TOKEN,
 } from '@openthrottle/nestjs-worktrees';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
-import { runChildJob } from '@tools/workflows';
+import { buildWorkflowRalphRunTuningArgv, runChildJob } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
 import {
   PlanOutputStreamService,
@@ -21,6 +21,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
+import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
 import type {
   EnhancedTaskRunMetrics,
@@ -35,11 +36,17 @@ import {
   PLANS_WORKER_STALLED_INTERVAL_MS,
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
-import type {
-  PlanRunJobResult,
-  RunPlanJob,
-  RunPlanJobData,
+import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { runPlanOrchestratorJob } from './plans-workflow-ralph-orchestrator';
+import {
+  isRunPlanOrchestratorJobData,
+  type PlanRunJobResult,
+  type RunPlanJob,
+  type RunPlanJobData,
 } from './plans.types';
+
+/** Grace period in ms after SIGTERM before SIGKILL when stopping Ralph (matches tools/workflows child-job). */
+const RALPH_SIGKILL_GRACE_MS = 10_000;
 
 /**
  * @description Derives worker concurrency from WORKTREE_TARGETS env at module load time.
@@ -65,8 +72,14 @@ function getWorkspaceRoot(): string {
   return process.env.WORKSPACE_ROOT ?? process.cwd();
 }
 
+interface SpawnAndWaitResult {
+  readonly cancelled: boolean;
+  readonly exitCode: number | null;
+}
+
 /**
- * @description Waits for the child process to exit and resolves with its exit code (or null if signaled).
+ * @description Waits for the child process to exit. When `signal` aborts, sends SIGTERM then SIGKILL
+ * and sets `cancelled` so the processor can emit a user-cancel path (aligned with `runChildJob`).
  */
 function spawnAndWait(
   command: string,
@@ -74,7 +87,8 @@ function spawnAndWait(
   options: { cwd: string },
   onStdout: (chunk: string) => void,
   onStderr: (chunk: string) => void,
-): Promise<number | null> {
+  signal?: AbortSignal,
+): Promise<SpawnAndWaitResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       ...options,
@@ -85,8 +99,33 @@ function spawnAndWait(
     child.stderr?.on('data', (data: Buffer) => onStderr(data.toString()));
 
     child.on('error', reject);
-    child.on('close', (code, signal) => {
-      resolve(signal != null ? null : (code ?? null));
+
+    const killChild = (): void => {
+      if (child.killed) return;
+      child.kill('SIGTERM');
+      const killTimeout = setTimeout(() => {
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          /* process may have exited */
+        }
+      }, RALPH_SIGKILL_GRACE_MS);
+      child.once('close', () => clearTimeout(killTimeout));
+    };
+
+    const onAbort = (): void => {
+      if (signal?.aborted) killChild();
+    };
+
+    signal?.addEventListener('abort', onAbort);
+    if (signal?.aborted) killChild();
+
+    child.on('close', (code, sig) => {
+      signal?.removeEventListener('abort', onAbort);
+      const cancelled = signal?.aborted === true;
+      const exitCode = sig != null ? null : (code ?? null);
+
+      resolve({ cancelled, exitCode });
     });
   });
 }
@@ -95,7 +134,9 @@ function spawnAndWait(
  * @description Processes plan-run jobs for the plans queue. Concurrency is derived from the number
  * of configured worktrees (WORKTREE_TARGETS env), defaulting to 1 when no worktrees are configured.
  * When WORKTREE_TARGETS is set, runs the worktree workflow (acquire target → Ralph in worktree →
- * ensure commit → release). Otherwise runs Ralph in the process cwd (legacy behavior).
+ * ensure commit → release). Jobs with {@link RunPlanJobData.runKind} `orchestrator` use the
+ * in-process GraphQL orchestrator (no spawn, no worktree loop). Otherwise runs Ralph in the
+ * process cwd (legacy spawn behavior).
  *
  * Stalled job recovery: we set lockDuration, stalledInterval, and maxStalledCount so long-running
  * Ralph jobs are renewed (every lockDuration/2) and, after server restart, interrupted jobs become
@@ -130,6 +171,7 @@ export class PlansProcessor
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planOutputStreamService: PlanOutputStreamService,
+    private readonly planRunCancellation: PlanRunCancellationService,
     private readonly plansService: PlansService,
     private readonly processMetrics: ProcessMetricsService,
     @Inject(WORKTREE_TRACKER_TOKEN)
@@ -237,7 +279,9 @@ export class PlansProcessor
   async onPlanJobStalled(jobId: string): Promise<void> {
     const job = await this.plansQueue.getJob(jobId);
     const planId = job?.data?.planId;
+
     if (typeof planId !== 'string') return;
+
     await this.resetPlanStatusToQueued(planId, 'stalled', jobId);
   }
 
@@ -248,6 +292,7 @@ export class PlansProcessor
     try {
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
+
       return plan?.status ?? null;
     } catch {
       return null;
@@ -346,57 +391,74 @@ export class PlansProcessor
 
   async process(job: RunPlanJob): Promise<PlanRunJobResult> {
     const { planId } = job.data;
-    const jobId = String(job.id);
-    const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
+    const cancelSignal = this.planRunCancellation.attach(planId);
 
-    const metricsAtStart = this.processMetrics.getCurrentSnapshot();
+    try {
+      const jobId = String(job.id);
+      const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
 
-    this.logger.info(
-      `Plan job started: planId=${planId}, jobId=${jobId}`,
-      PlansProcessor.name,
-    );
+      const metricsAtStart = this.processMetrics.getCurrentSnapshot();
 
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
-    const planTitle = plan?.title ?? undefined;
+      this.logger.info(
+        `Plan job started: planId=${planId}, jobId=${jobId}`,
+        PlansProcessor.name,
+      );
 
-    await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
+      const repo = this.plansService.getRepository();
+      const plan = await repo.findOne({ where: { id: planId } });
+      const planTitle = plan?.title ?? undefined;
 
-    this.notifications.emitPlanUpdated({
-      message: `Plan run started: ${planId}`,
-      planId,
-      severity: 'info',
-    });
+      await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
 
-    this.notifications.emitPlanStatusChanged({
-      planId,
-      status: 'IN_PROGRESS',
-    });
+      this.notifications.emitPlanUpdated({
+        message: `Plan run started: ${planId}`,
+        planId,
+        severity: 'info',
+      });
 
-    const useWorktree = this.worktreeTracker.listTargets().length > 0;
+      this.notifications.emitPlanStatusChanged({
+        planId,
+        status: 'IN_PROGRESS',
+      });
 
-    const result = useWorktree
-      ? await this.processWithWorktree(
-          job,
-          planId,
-          logContext,
-          metricsAtStart,
-          planTitle,
-        )
-      : await this.processInProcessCwd(
-          planId,
-          jobId,
-          logContext,
-          metricsAtStart,
-        );
+      const useWorktree = this.worktreeTracker.listTargets().length > 0;
 
-    if (result.taskRunMetrics) {
-      const enhancedMetrics = this.buildEnhancedMetrics(result);
-      await this.appendTaskRunMetricsToPlanOutput(planId, enhancedMetrics);
-      this.logTaskRunMetrics(planId, jobId, enhancedMetrics);
+      const result = isRunPlanOrchestratorJobData(job.data)
+        ? await this.processOrchestrator(
+            job,
+            jobId,
+            logContext,
+            metricsAtStart,
+            cancelSignal,
+          )
+        : useWorktree
+          ? await this.processWithWorktree(
+              job,
+              planId,
+              logContext,
+              metricsAtStart,
+              planTitle,
+              cancelSignal,
+            )
+          : await this.processInProcessCwd(
+              job,
+              planId,
+              jobId,
+              logContext,
+              metricsAtStart,
+              cancelSignal,
+            );
+
+      if (result.taskRunMetrics) {
+        const enhancedMetrics = this.buildEnhancedMetrics(result);
+        await this.appendTaskRunMetricsToPlanOutput(planId, enhancedMetrics);
+        this.logTaskRunMetrics(planId, jobId, enhancedMetrics);
+      }
+
+      return result;
+    } finally {
+      this.planRunCancellation.detach(planId);
     }
-
-    return result;
   }
 
   /**
@@ -443,10 +505,13 @@ export class PlansProcessor
 
       await repo.save(entity);
     } catch (error) {
-      this.logger.warn(
-        `Failed to append task-run metrics to plan output: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
-        PlansProcessor.name,
-      );
+      const isError = error instanceof Error;
+
+      this.logger.warn(`Failed to append task-run metrics to plan output`, {
+        message: isError ? error.message : String(error),
+        name: PlansProcessor.name,
+        planId,
+      });
     }
   }
 
@@ -467,6 +532,97 @@ export class PlansProcessor
       }),
       PlansProcessor.name,
     );
+  }
+
+  /**
+   * @description In-process GraphQL Ralph via `createWorkflowRalphOrchestrator`. Does not use worktrees
+   * or `workflow-ralph` spawn; iteration uses `runIterationAsync` (Cursor) in the server process.
+   */
+  private async processOrchestrator(
+    job: RunPlanJob,
+    jobId: string,
+    logContext: string,
+    metricsAtStart: ProcessMetricsSnapshot,
+    cancelSignal: AbortSignal,
+  ): Promise<PlanRunJobResult> {
+    if (!isRunPlanOrchestratorJobData(job.data)) {
+      throw new Error('Expected orchestrator job data');
+    }
+
+    const data = job.data;
+    const outcome = await runPlanOrchestratorJob({
+      jobData: data,
+      signal: cancelSignal,
+    });
+
+    const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
+    const taskRunMetrics = { atEnd: metricsAtEnd, atStart: metricsAtStart };
+
+    if (outcome.status === 'failed') {
+      this.logger.warn(
+        `Orchestrator Ralph failed: reason=${outcome.reason}, ${logContext}`,
+        PlansProcessor.name,
+      );
+
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'plans',
+        message: `Plan run failed: ${data.planId} — ${outcome.reason}`,
+        planId: data.planId,
+        severity: 'error',
+      });
+
+      return { taskRunMetrics };
+    }
+
+    if (outcome.reason === 'cancelled') {
+      this.logger.info(
+        `Orchestrator Ralph cancelled (user or API), ${logContext}`,
+        PlansProcessor.name,
+      );
+
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'plans',
+        message: `Plan run cancelled: ${data.planId}`,
+        planId: data.planId,
+        severity: 'info',
+      });
+
+      return { taskRunMetrics };
+    }
+
+    const defaultMessage = `Plan run finished: ${data.planId} (${outcome.reason})`;
+
+    let message: string;
+    let severity: 'success' | 'warning';
+
+    if (outcome.reason === 'plan_already_terminal') {
+      message = `Plan run skipped: ${data.planId} (plan already terminal)`;
+      severity = 'success';
+    } else if (outcome.reason === 'max_iterations') {
+      const resolved = await this.getJobCompletedMessageAndSeverity(
+        data.planId,
+        defaultMessage,
+      );
+      message = resolved.message;
+      severity = resolved.severity;
+    } else {
+      message = defaultMessage;
+      severity = 'success';
+    }
+
+    this.logger.info(
+      `Orchestrator Ralph finished: reason=${outcome.reason}, jobId=${jobId}, ${logContext}`,
+      PlansProcessor.name,
+    );
+
+    this.notifications.emitQueueJobCompleted({
+      jobType: 'plans',
+      message,
+      planId: data.planId,
+      severity,
+    });
+
+    return { taskRunMetrics };
   }
 
   /**
@@ -494,6 +650,7 @@ export class PlansProcessor
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     planTitle: string | undefined,
+    cancelSignal: AbortSignal,
   ): Promise<PlanRunJobResult> {
     const jobId = String(job.id);
 
@@ -509,8 +666,9 @@ export class PlansProcessor
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
           handoff,
-          iterations: 10,
           planId,
+          ...ralphTuningForChildJob(job.data.ralph),
+          signal: cancelSignal,
         });
 
         if (childJobResult.ok) {
@@ -560,6 +718,26 @@ export class PlansProcessor
     }
 
     if (result.loop && !result.loop.ok) {
+      if (
+        childJobResult &&
+        !childJobResult.ok &&
+        childJobResult.reason === 'Ralph run was cancelled'
+      ) {
+        this.logger.info(
+          `Ralph loop cancelled (user or API), ${logContext}`,
+          PlansProcessor.name,
+        );
+
+        this.notifications.emitQueueJobCompleted({
+          jobType: 'plans',
+          message: `Plan run cancelled: ${planId}`,
+          planId,
+          severity: 'info',
+        });
+
+        return withMetrics(result);
+      }
+
       this.logger.warn(
         `Ralph loop failed: ${result.loop.reason}, ${logContext}`,
         PlansProcessor.name,
@@ -668,15 +846,24 @@ export class PlansProcessor
   /**
    * @description Legacy: run Ralph in process cwd (no worktrees configured).
    * Returns task-run metrics so job returnvalue includes CPU/memory at start and end.
+   * Forwards optional `job.data.ralph` run-tuning argv so queue runs match worktree path and manual CLI omission rules.
    */
   private async processInProcessCwd(
+    job: RunPlanJob,
     planId: string,
     jobId: string,
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
+    cancelSignal: AbortSignal,
   ): Promise<PlanRunJobResult> {
     const workspaceRoot = getWorkspaceRoot();
-    const args = ['exec', RALPH_CMD, '--plan', planId];
+    const args = [
+      'exec',
+      RALPH_CMD,
+      '--plan',
+      planId,
+      ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
+    ];
 
     const onStdout = (chunk: string): void => {
       this.logger.info(chunk.trimEnd(), logContext);
@@ -686,13 +873,34 @@ export class PlansProcessor
     };
 
     try {
-      const exitCode = await spawnAndWait(
+      const { cancelled, exitCode } = await spawnAndWait(
         'pnpm',
         args,
         { cwd: workspaceRoot },
         onStdout,
         onStderr,
+        cancelSignal,
       );
+
+      if (cancelled) {
+        this.logger.info(
+          `Ralph exited after cancel signal: jobId=${jobId}, planId=${planId}`,
+          PlansProcessor.name,
+        );
+
+        this.notifications.emitQueueJobCompleted({
+          jobType: 'plans',
+          message: `Plan run cancelled: ${planId}`,
+          planId,
+          severity: 'info',
+        });
+
+        const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
+
+        return {
+          taskRunMetrics: { atEnd: metricsAtEnd, atStart: metricsAtStart },
+        };
+      }
 
       const defaultSeverity = exitCode === 0 ? 'success' : 'warning';
       this.logger.info(

@@ -9,7 +9,9 @@ import {
 /**
  * @description Parses sortBy and sortOrder from URL search params; defaults to updatedAt-desc.
  */
-export function parseSortFromSearchParams(searchParams: URLSearchParams): {
+export function parsePromptsSortFromSearchParams(
+  searchParams: URLSearchParams,
+): {
   sortBy: PromptsSortBy;
   sortOrder: PromptsSortOrder;
 } {
@@ -49,7 +51,7 @@ export const TYPE_OPTIONS: readonly string[] = PROMPTS_TYPE_FILTER_OPTIONS.map(
  * @description Returns multiple prompt types from the URL (getAll("type") and comma-separated).
  * Returns empty array when none provided (show all types).
  */
-export function parseTypesFromSearchParams(
+export function parsePromptsTypesFromSearchParams(
   searchParams: URLSearchParams,
 ): string[] {
   const raw = searchParams

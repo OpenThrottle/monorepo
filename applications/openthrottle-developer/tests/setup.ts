@@ -37,3 +37,14 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 
 // cmdk calls scrollIntoView on items; jsdom does not implement it
 Element.prototype.scrollIntoView = (): void => {};
+
+// Radix Select uses pointer capture; jsdom does not implement these on Element
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = (): boolean => false;
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = (): void => {};
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = (): void => {};
+}

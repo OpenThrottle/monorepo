@@ -15,6 +15,15 @@ export function getGraphQLUrl(): string {
 }
 
 /**
+ * @description ...
+ */
+export function getGraphQLToken(): string | undefined {
+  const token = process.env.API_TOKEN;
+
+  return token;
+}
+
+/**
  * @description Recursively walks JSON and parses string values that look like ISO date-time into Date so loaders receive Date (codegen keeps DateTime → Date).
  */
 export function parseDateTimeInResponse(value: unknown): unknown {

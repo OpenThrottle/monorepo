@@ -37,10 +37,10 @@ const extractTechnologyTags = (tags: readonly string[]): string[] => {
  * @description Validates technology tags for a single project
  */
 interface ValidationResult {
-  readonly projectName: string;
   readonly hasTechnologyTag: boolean;
-  readonly technologyTags: readonly string[];
   readonly invalidTags: readonly string[];
+  readonly projectName: string;
+  readonly technologyTags: readonly string[];
 }
 
 const validateProjectTags = (
@@ -112,7 +112,9 @@ const getProjectInfo = (
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
     });
+
     const data = JSON.parse(output);
+
     return {
       tags: data.tags || [],
     };
@@ -130,7 +132,9 @@ const getAllProjectNames = (): readonly string[] => {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
     });
+
     const projects = JSON.parse(output);
+
     return Array.isArray(projects) ? projects : [];
   } catch {
     return [];
@@ -168,14 +172,16 @@ const main = async (): Promise<void> => {
       console.log(
         "\n💡 To view a project's tags, run: nx show project <project-name>",
       );
+
       process.exit(1);
-    } else {
-      process.exit(0);
     }
   } catch (error) {
     console.error('❌ Error validating technology tags:', error);
+
     process.exit(1);
   }
+
+  process.exit(0);
 };
 
 main();

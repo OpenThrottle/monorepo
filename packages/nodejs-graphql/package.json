@@ -5,7 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "graphql": "^16.13.1",
+    "graphql": "^16.13.2",
     "zod": "^4.3.6"
   },
   "description": "Fetch-based GraphQL client for React Router loaders and actions against openthrottle-server, using TypedDocumentNode from codegen.",
@@ -34,8 +34,7 @@
       "name:@openthrottle/nodejs-graphql",
       "production:true",
       "publish:false",
-      "technology:react",
-      "technology:react-router",
+      "technology:nodejs",
       "type:package"
     ],
     "targets": {
@@ -60,7 +59,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts",

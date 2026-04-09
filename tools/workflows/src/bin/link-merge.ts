@@ -5,7 +5,7 @@
  */
 
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   insertCommitLink,
 } from '../utils/cortex-ralph';
@@ -34,7 +34,7 @@ function parseArgs(): {
 Usage: workflow-link-merge --plan <uuid> --sha <sha> --repo <owner/repo> [--message <msg>] [--task <uuid>]
 
 Links the squash commit (after PR merge) to a Cortex plan.
-Cortex required (CORTEX_POSTGRES_URL or CORTEX_POSTGRES_*). See tools/workflows/README.md.
+Cortex required (POSTGRES_URL or POSTGRES_*). See tools/workflows/README.md.
 
 Options:
   --plan <uuid>   Cortex plan ID (required)
@@ -87,7 +87,7 @@ const main = async (): Promise<void> => {
   const { message, planId, repo, sha, taskId } = parseArgs();
 
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
 
   try {
     const link = await insertCommitLink(config, {

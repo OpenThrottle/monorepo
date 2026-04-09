@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@as-integrations/express5": "^1.1.2",
-    "@nestjs/platform-express": "^11.1.12",
+    "@nestjs/platform-express": "^11.1.18",
     "express": "^5.2.1"
   },
   "devDependencies": {},
@@ -61,7 +61,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

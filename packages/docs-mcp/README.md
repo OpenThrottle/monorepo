@@ -9,7 +9,7 @@ MCP server for documentation search: semantic search over `docs/` content ingest
 
 ## Environment
 
-- **CORTEX_POSTGRES_URL** or **CORTEX*POSTGRES*\*** (host, port, db, user, password) – Cortex Postgres connection. Same as ai-mcp.
+- **POSTGRES_URL** or **CORTEX*POSTGRES*\*** (host, port, db, user, password) – Cortex Postgres connection. Same as ai-mcp.
 - **DOCS_MCP_POSTGRES_URL** or **DOCS*MCP*\*** – Optional overrides if you want docs-mcp to use a different config.
 - **OPENAI_API_KEY** – Required for `documentation_semantic_search` (query embedding).
 

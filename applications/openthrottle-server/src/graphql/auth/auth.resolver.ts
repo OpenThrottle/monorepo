@@ -25,7 +25,7 @@ export class AuthResolver {
   ) {}
 
   /**
-   * @description Sign in with email and password. LocalStrategy validates against Cortex users; returns JWT with sub: user.id.
+   * @description Sign in with email and password. LocalStrategy validates against OpenThrottle users; returns JWT with sub: user.id.
    */
   @UseGuards(GqlLocalCredentialsGuard, GqlLocalAuthGuard)
   @Mutation(() => LoginResultObject, {

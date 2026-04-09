@@ -9,11 +9,22 @@ export interface SearchFormProps {
 
 export const SearchForm = (props: SearchFormProps) => {
   const { className, defaultQuery = '' } = props;
+
+  // Hooks
   const [query, setQuery] = React.useState(defaultQuery);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     setQuery(defaultQuery);
   }, [defaultQuery]);
+
+  // 🔌 Short Circuit
 
   return (
     <form

@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["Pressable", "revalidator", "supabase", "Swiper"],
+  "cSpell.words": ["OpenThrottle", "openthrottle"],
   "editor.codeActionsOnSave": {
     "eslint.experimental.useFlatConfig": "always",
     "source.fixAll.eslint": "explicit"

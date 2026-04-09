@@ -165,7 +165,7 @@ This filters the graph to show:
 nx graph --exclude=@tools/*,test-*
 
 # Multiple exclusions
-nx graph --exclude=@tools/* --exclude=@visormatt/*
+nx graph --exclude=@tools/* --exclude=@openthrottle/*
 ```
 
 ### Group by Folder
@@ -245,7 +245,7 @@ The monorepo automatically generates dependency graph visualizations on a regula
 
 #### From GitHub Actions Artifacts
 
-1. Navigate to the [GitHub Actions page](https://github.com/visormatt/monorepo/actions)
+1. Navigate to the [GitHub Actions page](https://github.com/OpenThrottle/monorepo/actions)
 2. Find the workflow run for "📊 Scheduled Dependency Graph Generation"
 3. Click on the workflow run
 4. Scroll down to the "Artifacts" section
@@ -273,7 +273,7 @@ To view a historical graph:
 
 You can manually trigger a dependency graph generation:
 
-1. Go to the [GitHub Actions page](https://github.com/visormatt/monorepo/actions)
+1. Go to the [GitHub Actions page](https://github.com/OpenThrottle/monorepo/actions)
 2. Select "📊 Scheduled Dependency Graph Generation" workflow
 3. Click "Run workflow"
 4. Select the branch (usually `main`)

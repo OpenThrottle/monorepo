@@ -18,7 +18,11 @@ import {
 } from '@nestjs/graphql';
 import { PlanObject } from '../plans/plan.object';
 import { TaskObject } from '../tasks/task.object';
-import { CreateProjectInput, UpdateProjectInput } from './project.input';
+import {
+  CreateProjectInput,
+  DeleteProjectInput,
+  UpdateProjectInput,
+} from './project.input';
 import { ProjectObject } from './project.object';
 
 @Resolver(() => ProjectObject)
@@ -106,5 +110,16 @@ export class ProjectsResolver {
     });
 
     return entity;
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.deleteProject')
+  @Mutation(() => Boolean, {
+    description: `Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL).`,
+  })
+  async deleteProject(
+    @Args('input', { type: () => DeleteProjectInput })
+    input: DeleteProjectInput,
+  ): Promise<boolean> {
+    return this.projectsService.delete(input.id);
   }
 }

@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-/**
- * @description Backs up the Cortex Postgres database to a timestamped zip file.
- * Uses CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
- * Writes to databases/cortex/backups/cortex-YYYYMMDD-HHMMSS.zip (plain SQL inside).
- */
 
 import { mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+
+/**
+ * @description Backs up the Cortex Postgres database to a timestamped zip file.
+ * Uses POSTGRES_URL or POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
+ * Writes to databases/cortex/backups/cortex-YYYYMMDD-HHMMSS.zip (plain SQL inside).
+ */
 
 const BACKUPS_DIR = join(process.cwd(), 'databases', 'backups');
 
@@ -24,24 +25,19 @@ function timestamp(): string {
 }
 
 async function main(): Promise<void> {
-  const config = getCortexPostgresConfig();
-  if (!config) {
-    throw new Error(
-      'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
-    );
-  }
-
+  const { connectionString } = getPostgresConfig();
   await mkdir(BACKUPS_DIR, { recursive: true });
 
   const ts = timestamp();
-  const sqlPath = join(BACKUPS_DIR, `cortex-${ts}.sql`);
-  const zipPath = join(BACKUPS_DIR, `cortex-${ts}.zip`);
+  const sqlPath = join(BACKUPS_DIR, `openthrottle-${ts}.sql`);
+  const zipPath = join(BACKUPS_DIR, `openthrottle-${ts}.zip`);
 
   const pgDump = spawnSync(
     'pg_dump',
-    ['--dbname', config.connectionString, '-F', 'p', '-f', sqlPath],
+    ['--dbname', connectionString, '-F', 'p', '-f', sqlPath],
     { shell: false, stdio: 'inherit' },
   );
+
   if (pgDump.status !== 0) {
     throw new Error(`pg_dump exited with code ${pgDump.status}`);
   }
@@ -50,6 +46,7 @@ async function main(): Promise<void> {
     shell: false,
     stdio: 'inherit',
   });
+
   if (zipResult.status !== 0) {
     await unlink(sqlPath).catch(() => {});
     throw new Error(`zip exited with code ${zipResult.status}`);

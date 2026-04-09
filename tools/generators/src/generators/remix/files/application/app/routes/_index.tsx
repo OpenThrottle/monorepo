@@ -13,7 +13,7 @@ export const meta = (_args: Route.MetaArgs) => {
   ];
 };
 
-export default function Index(_props: Route.ComponentProps) {
+export default function Component(_props: Route.ComponentProps) {
   // Hooks
 
   // Setup

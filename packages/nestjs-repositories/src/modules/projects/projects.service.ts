@@ -58,4 +58,12 @@ export class ProjectsService {
     this.projectRepository.merge(existing, data);
     return this.projectRepository.save(existing);
   }
+
+  /**
+   * @description Deletes a project by id. Returns true if a row was removed. Related plans/tasks keep their rows; `project_id` is set to null (ON DELETE SET NULL).
+   */
+  async delete(id: string): Promise<boolean> {
+    const result = await this.projectRepository.delete(id);
+    return (result.affected ?? 0) > 0;
+  }
 }

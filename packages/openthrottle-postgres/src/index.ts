@@ -1,5 +1,5 @@
 /**
- * @description Returns Cortex Postgres URL from CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.
+ * @description Returns Postgres URL from POSTGRES_URL or POSTGRES_* env vars.
  */
 export function getPostgresUrl(): string {
   const url = process.env.POSTGRES_URL?.trim();

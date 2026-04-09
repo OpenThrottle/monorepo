@@ -4,7 +4,21 @@ import { cn } from '../utils/cn';
 export interface InputProps extends React.ComponentProps<'input'> {}
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  (props, ref) => {
+    const { className, type, ...rest } = props;
+
+    // Hooks
+
+    // Setup
+
+    // Handlers
+
+    // Markup
+
+    // Life Cycle
+
+    // 🔌 Short Circuit
+
     return (
       <input
         className={cn(
@@ -13,9 +27,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         ref={ref}
         type={type}
-        {...props}
+        {...rest}
       />
     );
   },
 );
+
 Input.displayName = 'Input';

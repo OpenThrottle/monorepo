@@ -36,6 +36,9 @@ export const DashboardPrTimeInStateCard = (
 ) => {
   const { className, prTimeInStateSummary } = props;
 
+  // Hooks
+
+  // Setup
   const chartData = React.useMemo(
     () =>
       [...prTimeInStateSummary].map((node) => ({
@@ -43,11 +46,19 @@ export const DashboardPrTimeInStateCard = (
         count: node.count,
         state: node.state,
       })),
+
     [prTimeInStateSummary],
   );
 
   const isEmpty = chartData.length === 0;
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (isEmpty) {
     return (
       <div
@@ -80,7 +91,13 @@ export const DashboardPrTimeInStateCard = (
             tickMargin={8}
           />
           <YAxis axisLine={false} tickLine={false} tickMargin={4} width={36} />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value) => Number(value).toFixed(2)}
+              />
+            }
+          />
           <Bar
             dataKey="count"
             fill="var(--color-count)"

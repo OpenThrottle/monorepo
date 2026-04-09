@@ -3,7 +3,7 @@
  * One-off: update a Cortex task's status. Usage: pnpm exec tsx scripts/update-task-status.ts <task-id> <status>
  */
 import {
-  ensureCortexReachableOrExit,
+  ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updateTaskStatus,
 } from '../src/utils/cortex-ralph';
@@ -31,7 +31,7 @@ const status = STATUS_MAP[statusRaw.toLowerCase()] ?? statusRaw;
 
 (async (): Promise<void> => {
   const config = getCortexConfigOrExit();
-  await ensureCortexReachableOrExit(config);
+  await ensureDatabaseReachableOrExit(config);
   const row = await updateTaskStatus(config, taskId, status);
   if (row) {
     console.log('Updated task', row.id, 'to status', row.status);

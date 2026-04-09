@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-/* eslint-disable no-await-in-loop */
-
-/**
- * @description Ingests docs/ markdown and NX project READMEs into Cortex documentation + documentation_embeddings.
- * Idempotent per (repo, sha, path). Uses CORTEX_POSTGRES_* and OPENAI_API_KEY for embeddings.
- * Set DOCS_REPO and DOCS_SHA for source metadata (e.g. from workflow); defaults to local/repo and local.
- * Optional DOCS_PATHS: comma-separated relative paths to ingest only those files (used by BullMQ doc-ingestion job).
- */
-
 import { readFile, readdir } from 'node:fs/promises';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from 'pg';
 import { createProjectGraphAsync } from '@nx/devkit';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+
+/* eslint-disable no-await-in-loop */
+
+/**
+ * @description Ingests docs/ markdown and NX project READMEs into Cortex documentation + documentation_embeddings.
+ * Idempotent per (repo, sha, path). Uses POSTGRES_* and OPENAI_API_KEY for embeddings.
+ * Set DOCS_REPO and DOCS_SHA for source metadata (e.g. from workflow); defaults to local/repo and local.
+ * Optional DOCS_PATHS: comma-separated relative paths to ingest only those files (used by BullMQ doc-ingestion job).
+ */
 
 const DOCS_ROOT = join(process.cwd(), 'docs');
 const WORKSPACE_ROOT = process.cwd();
@@ -172,13 +172,7 @@ async function collectMdPaths(
 }
 
 async function main(): Promise<void> {
-  const config = getCortexPostgresConfig();
-
-  if (!config) {
-    throw new Error(
-      'Cortex Postgres not configured. Set CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.',
-    );
-  }
+  const { connectionString } = getPostgresConfig();
 
   const repo = process.env.DOCS_REPO?.trim() ?? 'local/repo';
   const sha = process.env.DOCS_SHA?.trim() ?? 'local';
@@ -253,7 +247,7 @@ async function main(): Promise<void> {
     embeddings = new OpenAIEmbeddings({ model: 'text-embedding-3-small' });
   }
 
-  const client = new Client({ connectionString: config.connectionString });
+  const client = new Client({ connectionString });
   await client.connect();
 
   let docsUpserted = 0;

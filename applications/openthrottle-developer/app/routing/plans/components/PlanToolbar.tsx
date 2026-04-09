@@ -6,6 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  toast,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -20,46 +21,104 @@ import {
 } from 'lucide-react';
 import { Link, useFetcher } from 'react-router';
 import { action } from '~/routes/plans.$planId._index';
+import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanToolbarProps {
   readonly className?: string;
   readonly planId: string;
+  /**
+   * @description Display title for Kill run confirmation (defaults when omitted).
+   */
+  readonly planTitle?: string;
   readonly planStatus?: string;
+  /**
+   * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
+   */
+  readonly ralphTuningJson?: string;
 }
 
 /**
- * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group), and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
+ * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group),
+ * and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
-  const { className, planId, planStatus } = props;
+  const {
+    className,
+    planId,
+    planTitle = 'Untitled',
+    planStatus,
+    ralphTuningJson = '',
+  } = props;
 
+  // Hooks
   const fetcherRunPlan = useFetcher<typeof action>();
   const fetcherSetPlanStatus = useFetcher<typeof action>();
+  const runPlanWasBusy = React.useRef(false);
 
+  // Setup
   const isCompleted = planStatus === 'COMPLETED';
+  const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =
-    fetcherSetPlanStatus.data != null &&
-    'setPlanStatusError' in fetcherSetPlanStatus.data
-      ? (fetcherSetPlanStatus.data as { setPlanStatusError: string })
-          .setPlanStatusError
+    setPlanStatusData != null &&
+    typeof setPlanStatusData === 'object' &&
+    'setPlanStatusError' in setPlanStatusData &&
+    typeof setPlanStatusData.setPlanStatusError === 'string'
+      ? setPlanStatusData.setPlanStatusError
+      : undefined;
+
+  const runPlanData = fetcherRunPlan.data;
+  const runPlanError =
+    runPlanData != null &&
+    typeof runPlanData === 'object' &&
+    'runPlanError' in runPlanData &&
+    typeof runPlanData.runPlanError === 'string'
+      ? runPlanData.runPlanError
       : undefined;
 
   const getRunButtonLabel = (): string => {
     switch (planStatus) {
-      case 'QUEUED':
-        return 'Queued';
       case 'COMPLETED':
         return 'Completed';
       case 'IN_PROGRESS':
         return 'In progress';
       case 'PENDING':
         return 'Add to Queue';
+      case 'QUEUED':
+        return 'Queued';
       case 'SKIPPED':
         return 'Skipped';
+
       default:
         return 'Run plan';
     }
   };
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    const busy = fetcherRunPlan.state !== 'idle';
+
+    if (runPlanWasBusy.current && !busy) {
+      const data = fetcherRunPlan.data;
+
+      if (data != null && typeof data === 'object') {
+        if ('runPlan' in data && data.runPlan != null) {
+          const message = `Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).`;
+          toast.success(message);
+        }
+      }
+    }
+
+    runPlanWasBusy.current = busy;
+
+    // 🪝 ...
+  }, [fetcherRunPlan.state, fetcherRunPlan.data]);
+
+  // 🔌 Short Circuit
 
   return (
     <TooltipProvider>
@@ -84,7 +143,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
                   }
                   size="sm"
                   type="submit"
-                  variant="outline"
+                  variant="ghost"
                 >
                   <CheckCircle />
                   {fetcherSetPlanStatus.state !== 'idle'
@@ -104,28 +163,47 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             <TooltipTrigger asChild={true}>
               <fetcherRunPlan.Form method="post">
                 <input name="intent" type="hidden" value="runPlan" />
+                <input
+                  name="ralphTuning"
+                  type="hidden"
+                  value={ralphTuningJson}
+                />
                 <Button
                   disabled={fetcherRunPlan.state !== 'idle'}
                   size="sm"
                   type="submit"
-                  variant="default"
+                  variant="outline"
                 >
                   <PlayCircle />
                   {getRunButtonLabel()}
                 </Button>
               </fetcherRunPlan.Form>
             </TooltipTrigger>
-            <TooltipContent side="top">
+            <TooltipContent className="max-w-xs" side="top">
               {fetcherRunPlan.state !== 'idle'
                 ? 'Submitting…'
-                : 'Run or queue this plan'}
+                : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
             </TooltipContent>
           </Tooltip>
+
+          <KillPlanRunButton
+            planId={planId}
+            planTitle={planTitle}
+            show={getPlanIsCancelable(planStatus)}
+            // show={true}
+            size="sm"
+          />
         </div>
 
         {setPlanStatusError != null && (
           <span className="text-destructive text-xs" role="alert">
             {setPlanStatusError}
+          </span>
+        )}
+
+        {runPlanError != null && (
+          <span className="text-destructive text-xs" role="alert">
+            {runPlanError}
           </span>
         )}
 

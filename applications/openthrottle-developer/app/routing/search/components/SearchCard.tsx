@@ -27,8 +27,19 @@ function normalizeSource(source: string): SearchSource {
  */
 export const SearchCard = (props: SearchCardProps) => {
   const { className, result } = props;
+
+  // Hooks
+
+  // Setup
   const source = normalizeSource(result.source);
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (source === 'documentation') {
     return <SearchDocumentationCard className={className} result={result} />;
   }

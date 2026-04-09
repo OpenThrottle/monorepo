@@ -17,6 +17,10 @@ export const dataNavigation: LinkProps[] = [
     children: 'Prompts',
     to: '/prompts',
   },
+  {
+    children: 'Settings',
+    to: '/settings',
+  },
   // {
   //   children: 'Notes',
   //   to: '/notes',

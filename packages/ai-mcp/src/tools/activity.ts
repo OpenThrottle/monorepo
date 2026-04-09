@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig } from '../config.js';
+import { getPostgresConfig } from '../config.js';
 import type { LastActivityResult as CortexLastActivityResult } from '../cortex-client.js';
 import {
   getActivityByDateRange as cortexGetActivityByDateRange,
@@ -42,7 +42,7 @@ async function handleGetActivityByDate(args: {
     };
   }
 
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     const text = `Cortex Postgres is not configured.`;
 
@@ -140,7 +140,7 @@ async function handleGetLastActivity(args: {
     };
   }
 
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     const text = `Cortex Postgres is not configured.`;
 

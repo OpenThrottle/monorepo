@@ -91,7 +91,7 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 ### 2.4 Port and env
 
 - **Port:** In `applications/openthrottle-developer/.env.default`: **6020** (`PORT="6020"`, `APP_URL="http://localhost:6020"`). Vite uses `process.env.PORT` or defaults to **3000** if unset.
-- **API:** Points at openthrottle-server: `API_URL_INTERNAL`, `API_URL_EXTERNAL`, `API_URL_WEBSOCKET` (e.g. `http://localhost:6021` in dev). Align **server** `CORS_ORIGINS` with the developer origin (see `applications/openthrottle-server/.env.default`).
+- **API:** Points at openthrottle-server: `API_URL_INTERNAL`, `API_URL_EXTERNAL` (e.g. `http://localhost:6021` in dev). Align **server** `CORS_ORIGINS` with the developer origin (see `applications/openthrottle-server/.env.default`).
 
 ### 2.5 Environment variables (relevant to run/build and deploy)
 
@@ -99,7 +99,7 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `PORT`                                                      | Dev/serve port (default **3000** in Vite if unset; **6020** in app `.env.default`). |
 | `NODE_ENV`, `APP_ENV`, `APP_NAME`, `APP_VERSION`, `APP_URL` | App identity.                                                                       |
-| `API_URL_INTERNAL`, `API_URL_EXTERNAL`, `API_URL_WEBSOCKET` | Backend GraphQL and WebSocket (openthrottle-server).                                |
+| `API_URL_INTERNAL`, `API_URL_EXTERNAL`                      | Backend GraphQL and WebSocket (openthrottle-server).                                |
 | `APP_URL_WEBSITE`                                           | Optional (e.g. 6014).                                                               |
 | `REACT_ROUTER_DEV_TOOLS`                                    | Dev tooling.                                                                        |
 | `VERCEL`                                                    | Vercel preset in `react-router.config.ts` when deploying to Vercel.                 |

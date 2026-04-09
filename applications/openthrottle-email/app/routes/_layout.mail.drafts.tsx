@@ -1,8 +1,8 @@
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import { getMockMessages } from '~/global/data/mock.mail';
-import { MessageList } from '~/routing/inbox/components/MessageList';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MAIL_FOLDER_IDS } from '~/types/mail';
+import { MessageList } from '~/routing/inbox/components/MessageList';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.drafts';
 
 // Drafts folder list; reuse MessageList. Wire to API when backend is ready.
@@ -15,7 +15,11 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function Index({ loaderData }: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+
   // Hooks
 
   // Setup

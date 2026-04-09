@@ -100,7 +100,7 @@ Env vars for the server (see run-build doc): `POSTGRES_HOST`, `POSTGRES_PORT`, `
 ### 5.3 App identity, CORS, API URL
 
 - **openthrottle-server:** `APP_URL` = `https://api.<domain>`; `CORS_ORIGINS` must include `https://developer.<domain>` (and any other front-end origins). JWT, Stripe, GitHub token, etc. from env or secrets.
-- **openthrottle-developer:** `API_URI` / `API_URL` / `API_URL_WEBSOCKET` = `https://api.<domain>` (so the browser talks to the same host as the user, via Caddy). `APP_URL` = `https://developer.<domain>`.
+- **openthrottle-developer:** `API_URL_EXTERNAL` = `https://api.<domain>` (so the browser talks to the same host as the user, via Caddy). `APP_URL` = `https://developer.<domain>`.
 
 ### 5.4 Where env comes from
 

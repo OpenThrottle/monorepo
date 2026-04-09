@@ -1,7 +1,7 @@
 import {
   embedQuery,
   getChunkById,
-  getCortexPostgresConfig,
+  getPostgresConfig,
   listSources,
   runSemanticSearch,
 } from '@openthrottle/ai-mcp/src/cortex-server';
@@ -12,7 +12,7 @@ import { SearchResolver } from './search.resolver';
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
   embedQuery: vi.fn(),
   getChunkById: vi.fn(),
-  getCortexPostgresConfig: vi.fn(),
+  getPostgresConfig: vi.fn(),
   listSources: vi.fn(),
   runSemanticSearch: vi.fn(),
 }));
@@ -30,7 +30,7 @@ describe('SearchResolver', () => {
 
   describe('search', () => {
     test('returns empty chunks when Cortex config is missing', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(undefined);
+      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
 
       const result = await resolver.search({
         limit: null,
@@ -43,7 +43,7 @@ describe('SearchResolver', () => {
     });
 
     test('returns empty chunks when query is empty after trim', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue({
+      vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/cortex',
       });
 
@@ -57,7 +57,7 @@ describe('SearchResolver', () => {
     });
 
     test('returns empty chunks when embedQuery returns undefined', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue({
+      vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/cortex',
       });
       vi.mocked(embedQuery).mockResolvedValue(undefined);
@@ -76,7 +76,7 @@ describe('SearchResolver', () => {
       const config = {
         connectionString: 'postgresql://localhost/cortex',
       };
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(config);
+      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1, 0.2]);
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
@@ -135,7 +135,7 @@ describe('SearchResolver', () => {
       const config = {
         connectionString: 'postgresql://localhost/cortex',
       };
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(config);
+      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
 
@@ -151,7 +151,7 @@ describe('SearchResolver', () => {
       const config = {
         connectionString: 'postgresql://localhost/cortex',
       };
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(config);
+      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
 
@@ -167,7 +167,7 @@ describe('SearchResolver', () => {
       const config = {
         connectionString: 'postgresql://localhost/cortex',
       };
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(config);
+      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
@@ -175,7 +175,7 @@ describe('SearchResolver', () => {
           id: 'doc-chunk-uuid',
           metadata: {},
           path: 'docs/openthrottle/desktop-notifications-testing.md',
-          repo: 'visormatt/monorepo',
+          repo: 'openthrottle/monorepo',
           sha: 'abc123def',
           similarity: 0.85,
           source: 'documentation',
@@ -194,7 +194,7 @@ describe('SearchResolver', () => {
         similarity: 0.85,
         source: 'documentation',
         sourcePath: 'docs/openthrottle/desktop-notifications-testing.md',
-        sourceRepo: 'visormatt/monorepo',
+        sourceRepo: 'openthrottle/monorepo',
         sourceSha: 'abc123def',
       });
       expect(result.chunks[0].planId).toBeNull();
@@ -205,7 +205,7 @@ describe('SearchResolver', () => {
       const config = {
         connectionString: 'postgresql://localhost/cortex',
       };
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(config);
+      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
@@ -232,7 +232,7 @@ describe('SearchResolver', () => {
 
   describe('getDocument', () => {
     test('returns null when Cortex config is missing', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(undefined);
+      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
 
       const result = await resolver.getDocument('chunk-uuid');
 
@@ -241,7 +241,7 @@ describe('SearchResolver', () => {
     });
 
     test('returns null when chunk not found', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue({
+      vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/cortex',
       });
       vi.mocked(getChunkById).mockResolvedValue(null);
@@ -256,7 +256,7 @@ describe('SearchResolver', () => {
     });
 
     test('returns mapped chunk when found', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue({
+      vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/cortex',
       });
       vi.mocked(getChunkById).mockResolvedValue({
@@ -287,7 +287,7 @@ describe('SearchResolver', () => {
 
   describe('listSources', () => {
     test('returns empty sources and plans when Cortex config is missing', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue(undefined);
+      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
 
       const result = await resolver.listSources();
 
@@ -296,7 +296,7 @@ describe('SearchResolver', () => {
     });
 
     test('returns mapped sources and plans when config present', async () => {
-      vi.mocked(getCortexPostgresConfig).mockReturnValue({
+      vi.mocked(getPostgresConfig).mockReturnValue({
         connectionString: 'postgresql://localhost/cortex',
       });
       vi.mocked(listSources).mockResolvedValue({

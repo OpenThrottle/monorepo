@@ -14,7 +14,9 @@ export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
 
-export default function Index(props: Route.ComponentProps) {
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
@@ -37,7 +39,7 @@ export default function Index(props: Route.ComponentProps) {
           <blockquote>
             OpenThrottle is a plans knowledge base: a Postgres-backed app and MCP
             server that stores plans, tasks, and semantic search over them. It
-            powers “ask Cortex,” agentic execution (Ralph), and a dashboard so
+            powers “ask OT,” agentic execution (Ralph), and a dashboard so
             you can see what's in progress and what shipped.
           </blockquote>
           */}

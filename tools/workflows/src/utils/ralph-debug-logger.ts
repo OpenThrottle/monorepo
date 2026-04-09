@@ -114,6 +114,7 @@ const loggerState: {
 
 function applyRalphDebugLevel(level: RalphDebugLevel): void {
   const next = createRalphDebugLogger(level);
+
   loggerState.level = next.level;
   loggerState.debug = next.debug;
   loggerState.verbose = next.verbose;

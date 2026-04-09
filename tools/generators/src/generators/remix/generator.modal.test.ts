@@ -10,7 +10,7 @@ describe('generatorRemixModal', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  const application = 'rocketcms';
+  const application = 'openthrottle';
   const folder = 'global/components';
   const name = 'TestModal';
 
@@ -25,8 +25,8 @@ describe('generatorRemixModal', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      'applications/rocketcms/app/global/components/TestModal.tsx',
-      'applications/rocketcms/app/global/components/__tests__/TestModal.test.tsx',
+      'applications/openthrottle/app/global/components/TestModal.tsx',
+      'applications/openthrottle/app/global/components/__tests__/TestModal.test.tsx',
     ]);
   });
 });

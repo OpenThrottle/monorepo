@@ -4,7 +4,7 @@ This folder contains UI and routing logic for the Stripe checkout flow on openth
 
 ## Server-side follow-up (out of scope here)
 
-Server-side Stripe work lives in **openthrottle-server** and is tracked separately. When implementing it, create a dedicated plan (e.g. in OpenThrottle/Cortex) or a GitHub issue for:
+Server-side Stripe work lives in **openthrottle-server** and is tracked separately. When implementing it, create a dedicated plan (e.g. in OpenThrottle) or a GitHub issue for:
 
 - **Checkout session**: Create Stripe Checkout Session and return URL/session ID to the website.
 - **Webhooks**: Handle Stripe webhook events (e.g. `checkout.session.completed`, payment success/failure).

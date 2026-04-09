@@ -22,12 +22,33 @@ export default {
     const list = files.join(', \n');
     const count = files.length;
     const prettierFiles = files.map((file) => JSON.stringify(file)).join(' ');
-    const eslintFiles = files.map((file) => JSON.stringify(file)).join(' ');
+    const normalized = files.map((f) => f.replace(/\\/g, '/'));
+    const openthrottleServerFiles = files.filter((_, i) =>
+      normalized[i]?.includes('applications/openthrottle-server/'),
+    );
+    const otherTsFiles = files.filter(
+      (_, i) => !normalized[i]?.includes('applications/openthrottle-server/'),
+    );
+    const eslintServer = openthrottleServerFiles
+      .map((file) => JSON.stringify(file))
+      .join(' ');
+    const eslintOther = otherTsFiles
+      .map((file) => JSON.stringify(file))
+      .join(' ');
+
+    const eslintCommands = [];
+    if (openthrottleServerFiles.length > 0) {
+      eslintCommands.push(
+        `pnpm exec eslint --config applications/openthrottle-server/eslint.config.mts --fix ${eslintServer}`,
+      );
+    }
+    if (otherTsFiles.length > 0) {
+      eslintCommands.push(`pnpm exec eslint --fix ${eslintOther}`);
+    }
 
     return [
       `echo "🤖 Lint + 🎨 Prettify ${count} staged files: \n\n${list}"`,
-      // `pnpm exec eslint --fix --max-warnings=0 ${eslintFiles}`, // FIXME: Bring this back - SUPER STRICT
-      `pnpm exec eslint --fix ${eslintFiles}`,
+      ...eslintCommands,
       `pnpm exec prettier --ignore-unknown --write ${prettierFiles}`,
     ];
   },

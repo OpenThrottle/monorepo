@@ -18,7 +18,7 @@ Ralph injects full plan/task context from Postgres into the prompt; no `@file` o
 
 ## Requirements
 
-- **Cortex required:** Set `CORTEX_POSTGRES_URL` or the five `CORTEX_POSTGRES_*` vars (host, port, db, user, password) in the environment when invoking Ralph. Export from this monorepo's `.env` or a shared config. The CLI fails fast at startup if Cortex is missing or unreachable (exit code 1, FATAL message).
+- **Cortex required:** Set `POSTGRES_URL` or the five `POSTGRES_*` vars (host, port, db, user, password) in the environment when invoking Ralph. Export from this monorepo's `.env` or a shared config. The CLI fails fast at startup if Cortex is missing or unreachable (exit code 1, FATAL message).
 - **Invocation:** Use the workflow binary from the other repo, e.g. `pnpm exec ../../../../monorepo/node_modules/.bin/workflow-ralph --plan <plan-uuid>`.
 
 Full details and examples: [README § Cross-repo usage](../README.md#cross-repo-usage).

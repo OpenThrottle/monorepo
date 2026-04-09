@@ -15,18 +15,19 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
 import { PromptCard } from '~/routing/prompts/components/PromptCard';
-import type { Route } from '@/app/routes/+types/prompts._index';
 import {
-  parseSortFromSearchParams as parsePromptsSortFromSearch,
-  parseTypesFromSearchParams,
+  parsePromptsSortFromSearchParams,
+  parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
+import type { Route } from '@/app/routes/+types/prompts._index';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
 
   const searchParams = url?.searchParams ?? new URLSearchParams();
-  const types = parseTypesFromSearchParams(searchParams);
+  const types = parsePromptsTypesFromSearchParams(searchParams);
   const pageRaw = url?.searchParams.get('page');
+
   const page = Math.max(
     DEFAULT_PAGINATION_PAGE,
     Number.isFinite(Number(pageRaw))
@@ -37,6 +38,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const limitRaw = url?.searchParams.get('limit');
   const limitParsed =
     limitRaw != null && limitRaw !== '' ? Number(limitRaw) : NaN;
+
   const limit = Math.max(
     1,
     Number.isFinite(limitParsed) && limitParsed >= 1
@@ -47,15 +49,11 @@ export const loader = async (args: Route.LoaderArgs) => {
   const q = searchParams.get('q')?.trim() ?? null;
   const search = q && q.length > 0 ? q : null;
 
+  const promptType = types.length === 1 ? (types[0] as CustomPromptType) : null;
   const result = await executeGraphqlWithAuth(
     args.request,
     GetPromptsDocument,
-    {
-      input: {
-        promptType: types.length === 1 ? (types[0] as CustomPromptType) : null,
-        search,
-      },
-    },
+    { input: { promptType, search } },
   );
 
   let prompts = result.customPrompts ?? [];
@@ -84,15 +82,17 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Prompts | ${SITE_TITLE}` }];
 });
 
-export default function Index(props: Route.ComponentProps) {
-  const { loaderData } = props;
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { limit, page, prompts, total, totalPages, types } = loaderData;
 
   // Hooks
   const [searchParams] = useSearchParams();
 
   // Setup
-  const { sortBy, sortOrder } = parsePromptsSortFromSearch(searchParams);
+  const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
 
   // Handlers
 
@@ -103,15 +103,9 @@ export default function Index(props: Route.ComponentProps) {
   // 🔌 Short Circuit
 
   return (
-    <main className="p-6 relative h-full" data-testid="prompts-index">
-      <h1 className="text-xl font-bold my-4">Prompts</h1>
-      <p className="text-muted-foreground mb-6">
-        Manage your AI workflow documents including agents, commands, prompts,
-        rules, and skills.
-      </p>
-
+    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
       <PromptToolbar
-        className="mb-6"
+        className="my-4"
         limit={limit}
         page={page}
         sortBy={sortBy}
@@ -135,16 +129,22 @@ export default function Index(props: Route.ComponentProps) {
           ) : null}
         </>
       ) : (
-        <div
-          className="text-center py-12 text-muted-foreground"
-          data-testid="prompts-empty"
-        >
-          <p className="text-lg">No prompts found.</p>
-          <p className="mt-2">Create your first prompt to get started.</p>
+        <div className="flex flex-col flex-1 justify-center">
+          <div
+            className="text-center py-12 text-muted-foreground"
+            data-testid="prompts-empty"
+          >
+            <p className="text-lg">No prompts found.</p>
+            <p className="mt-2">Create your first prompt to get started.</p>
+          </div>
         </div>
       )}
     </main>
   );
 }
+
+// export const action = async (args: Route.ActionArgs) => {
+//   return {};
+// };
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -10,7 +10,7 @@
 - **Collection:** `collectMdPaths(dir, baseRelative)` recursively finds `.md` paths under `DOCS_ROOT` (relative paths).
 - **Upsert:** For each path: read file, upsert into `documentation` (path, content, repo, sha, pr_number, authors, message). Idempotent per `(repo, sha, path)`.
 - **Embeddings:** Delete existing `documentation_embeddings` for the doc, then insert chunks via `chunkTextForEmbedding` and OpenAI `text-embedding-3-small` when `OPENAI_API_KEY` is set.
-- **Env:** `DOCS_REPO`, `DOCS_SHA`, `DOCS_AUTHORS`, `DOCS_MESSAGE`, `DOCS_PR_NUMBER` for metadata; `CORTEX_POSTGRES_*` / `CORTEX_POSTGRES_URL` for DB.
+- **Env:** `DOCS_REPO`, `DOCS_SHA`, `DOCS_AUTHORS`, `DOCS_MESSAGE`, `DOCS_PR_NUMBER` for metadata; `POSTGRES_*` / `POSTGRES_URL` for DB.
 
 ## How NX project graph is read elsewhere
 

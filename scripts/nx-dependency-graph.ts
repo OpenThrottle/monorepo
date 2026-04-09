@@ -38,6 +38,8 @@ const main = async (): Promise<void> => {
     console.error('❌ Error generating dependency graph:', error);
     process.exit(1);
   }
+
+  process.exit(0);
 };
 
 main();

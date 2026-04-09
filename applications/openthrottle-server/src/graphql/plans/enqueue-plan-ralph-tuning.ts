@@ -1,0 +1,226 @@
+/**
+ * @description Maps and validates GraphQL `ralph` enqueue options into {@link RalphNestedRunTuningInput}
+ * for BullMQ spawn payloads (nested `workflow-ralph` argv). Orchestrator jobs use
+ * `RunPlanOrchestratorJobData` and are built elsewhere when the enqueue API supports them.
+ */
+
+import type {
+  ChildJobInput,
+  RalphNestedDebugCli,
+  RalphNestedRunTuningInput,
+} from '@tools/workflows';
+import { parseRalphExecutionBackendId } from '@tools/workflows';
+import type {
+  RunPlanOrchestratorJobData,
+  RunPlanSpawnJobData,
+} from '../../queues/plans/plans.types';
+import type { RalphPlanRunTuningInput } from './plan.input';
+
+/** @description RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`. */
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * @description Returns true when `value` is a plausible Cortex plan/task UUID.
+ */
+export const isCortexPlanTaskUuid = (value: string): boolean =>
+  UUID_REGEX.test(value.trim());
+
+/** @description Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph. */
+const MAX_ITERATIONS = 1_000_000;
+
+/** @description One week in seconds — generous cap for per-iteration timeout. */
+const MAX_ITERATION_TIMEOUT_SECONDS = 7 * 24 * 3600;
+
+const MAX_TUNING_STRING_LEN = 8192;
+
+/**
+ * @description Trims and caps string tuning fields; returns undefined if empty after trim.
+ */
+const normalizeOptionalString = (
+  value: string | null | undefined,
+): string | undefined => {
+  if (value === undefined || value === null) return undefined;
+  const t = value.trim();
+  if (t === '') return undefined;
+  if (t.length > MAX_TUNING_STRING_LEN) {
+    throw new Error(
+      `Ralph tuning string fields must be at most ${MAX_TUNING_STRING_LEN} characters`,
+    );
+  }
+  return t;
+};
+
+type ChildJobRalphTuning = Pick<
+  ChildJobInput,
+  | 'backend'
+  | 'iterationTimeoutSeconds'
+  | 'iterations'
+  | 'model'
+  | 'project'
+  | 'prompt'
+  | 'promptFile'
+  | 'ralphDebugCli'
+>;
+
+/**
+ * @description Strips `null` from {@link RalphNestedRunTuningInput} so spreads satisfy {@link ChildJobInput}.
+ */
+export const ralphTuningForChildJob = (
+  r: RalphNestedRunTuningInput | undefined,
+): ChildJobRalphTuning => {
+  if (!r) return {};
+  return {
+    ...(r.backend != null ? { backend: r.backend } : {}),
+    ...(r.debug !== undefined ? { ralphDebugCli: r.debug } : {}),
+    ...(r.iterationTimeoutSeconds != null
+      ? { iterationTimeoutSeconds: r.iterationTimeoutSeconds }
+      : {}),
+    ...(r.iterations != null ? { iterations: r.iterations } : {}),
+    ...(r.model !== undefined ? { model: r.model } : {}),
+    ...(r.project !== undefined ? { project: r.project } : {}),
+    ...(r.prompt !== undefined ? { prompt: r.prompt } : {}),
+    ...(r.promptFile !== undefined ? { promptFile: r.promptFile } : {}),
+  } satisfies ChildJobRalphTuning;
+};
+
+/**
+ * @description Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
+ * @throws Error when values are out of range or backend is unknown.
+ */
+export const parseEnqueueRalphTuning = (
+  input: RalphPlanRunTuningInput | null | undefined,
+): RalphNestedRunTuningInput | undefined => {
+  if (input == null) return undefined;
+
+  const backendRaw = normalizeOptionalString(input.backend);
+
+  let iterations: number | undefined;
+  if (input.iterations !== undefined && input.iterations !== null) {
+    const n = input.iterations;
+    if (!Number.isInteger(n) || n < 1 || n > MAX_ITERATIONS) {
+      throw new Error(
+        `ralph.iterations must be an integer from 1 to ${MAX_ITERATIONS}`,
+      );
+    }
+    iterations = n;
+  }
+
+  let iterationTimeoutSeconds: number | undefined;
+  if (
+    input.iterationTimeoutSeconds !== undefined &&
+    input.iterationTimeoutSeconds !== null
+  ) {
+    const sec = input.iterationTimeoutSeconds;
+    if (
+      !Number.isInteger(sec) ||
+      sec < 1 ||
+      sec > MAX_ITERATION_TIMEOUT_SECONDS
+    ) {
+      throw new Error(
+        `ralph.iterationTimeoutSeconds must be an integer from 1 to ${MAX_ITERATION_TIMEOUT_SECONDS} (seconds)`,
+      );
+    }
+    iterationTimeoutSeconds = sec;
+  }
+
+  const model = normalizeOptionalString(input.model);
+  const project = normalizeOptionalString(input.project);
+  const prompt = normalizeOptionalString(input.prompt);
+  const promptFile = normalizeOptionalString(input.promptFile);
+
+  let ralphDebugCli: RalphNestedDebugCli | undefined;
+  if (input.ralphDebugCli != null) {
+    const d = input.ralphDebugCli;
+    if (d === 'omit' || d === 'debug' || d === 'verbose') {
+      ralphDebugCli = d;
+    }
+  }
+
+  const tuning: RalphNestedRunTuningInput = {
+    ...(backendRaw !== undefined
+      ? { backend: parseRalphExecutionBackendId(backendRaw, 'cli') }
+      : {}),
+    ...(iterations !== undefined ? { iterations } : {}),
+    ...(iterationTimeoutSeconds !== undefined
+      ? { iterationTimeoutSeconds }
+      : {}),
+    ...(model !== undefined ? { model } : {}),
+    ...(project !== undefined ? { project } : {}),
+    ...(prompt !== undefined ? { prompt } : {}),
+    ...(promptFile !== undefined ? { promptFile } : {}),
+    ...(ralphDebugCli !== undefined ? { ralphDebugCli } : {}),
+  };
+
+  if (Object.keys(tuning).length === 0) {
+    return undefined;
+  }
+
+  return tuning;
+};
+
+/**
+ * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
+ */
+export const buildRunPlanJobData = (input: {
+  readonly planId: string;
+  readonly ralph: RalphPlanRunTuningInput | null | undefined;
+}): RunPlanSpawnJobData => {
+  const ralph = parseEnqueueRalphTuning(input.ralph);
+  if (ralph === undefined) {
+    return { planId: input.planId };
+  }
+  return { planId: input.planId, ralph };
+};
+
+/**
+ * @description Builds {@link RunPlanOrchestratorJobData} for in-process Ralph (plans queue, `run-plan-orchestrator`).
+ * @throws Error when ids are invalid or task mode constraints fail.
+ */
+export const buildRunPlanOrchestratorJobData = (input: {
+  readonly planId: string;
+  readonly mode?: 'plan' | 'task' | null;
+  readonly ralph?: RalphPlanRunTuningInput | null;
+  readonly taskId?: string | null;
+}): RunPlanOrchestratorJobData => {
+  const planId = input.planId.trim();
+  if (!isCortexPlanTaskUuid(planId)) {
+    throw new Error('planId must be a valid Cortex UUID');
+  }
+
+  const mode = input.mode ?? null;
+  const taskRaw =
+    input.taskId !== undefined && input.taskId !== null
+      ? input.taskId.trim()
+      : '';
+
+  if (mode === 'task') {
+    if (taskRaw === '') {
+      throw new Error('taskId is required when mode is task');
+    }
+    if (!isCortexPlanTaskUuid(taskRaw)) {
+      throw new Error('taskId must be a valid Cortex UUID');
+    }
+    const ralph = parseEnqueueRalphTuning(input.ralph);
+    return {
+      mode: 'task',
+      planId,
+      ...(ralph !== undefined ? { ralph } : {}),
+      runKind: 'orchestrator',
+      taskId: taskRaw,
+    };
+  }
+
+  if (taskRaw !== '') {
+    throw new Error('taskId is only allowed when mode is task');
+  }
+
+  const ralph = parseEnqueueRalphTuning(input.ralph);
+  const data: RunPlanOrchestratorJobData = {
+    planId,
+    runKind: 'orchestrator',
+    ...(mode === 'plan' ? { mode: 'plan' } : {}),
+    ...(ralph !== undefined ? { ralph } : {}),
+  };
+  return data;
+};

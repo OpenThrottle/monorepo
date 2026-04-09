@@ -10,7 +10,7 @@ describe('generatorRemixComponent', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  const application = 'rocketcms';
+  const application = 'openthrottle-website';
   const folder = 'global/components';
   const name = 'TestComponent';
 
@@ -25,8 +25,8 @@ describe('generatorRemixComponent', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      'applications/rocketcms/app/global/components/TestComponent.tsx',
-      'applications/rocketcms/app/global/components/__tests__/TestComponent.test.tsx',
+      'applications/openthrottle-website/app/global/components/TestComponent.tsx',
+      'applications/openthrottle-website/app/global/components/__tests__/TestComponent.test.tsx',
     ]);
   });
 });

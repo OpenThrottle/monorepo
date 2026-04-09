@@ -1,25 +1,30 @@
 /**
  * @description Single-iteration runner for Ralph (sync and async). Injected by ralph.ts so tests can mock it.
+ * Dispatches to a {@link RalphExecutionBackendId} implementation (today: Cursor `cursor-agent`).
  */
 
 import { spawn } from 'child_process';
 import { spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
+import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
+import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 
-/** Chunk from cursor-agent stdout or stderr when using async spawn. */
+/** Chunk from runner stdout or stderr when using async spawn. */
 export interface CursorAgentChunk {
   readonly data: string;
   readonly stream: 'stdout' | 'stderr';
 }
 
 export interface RunIterationConfig {
-  /** Full prompt string for cursor-agent (-p value); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
+  /** Full prompt for the runner (e.g. Cursor `-p`); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
   agentPrompt: string;
+  /** @description Execution backend; defaults to {@link DEFAULT_RALPH_RUNNER}. */
+  backend?: RalphExecutionBackendId;
   /** Iteration number. */
   iteration: number;
-  /** Cursor model to use. */
+  /** Model preset when the backend supports it (Cursor: `--model`). */
   model?: string;
   /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
   timeoutMs?: number;
@@ -29,8 +34,19 @@ export interface RunIterationConfig {
   onChunk?: (chunk: CursorAgentChunk) => void;
 }
 
-/** Grace period in ms after SIGTERM before sending SIGKILL (cursor-agent). */
+/** Grace period in ms after SIGTERM before sending SIGKILL (runner child). */
 const SIGKILL_GRACE_MS = 10_000;
+
+const backendIterationLabel = (backend: RalphExecutionBackendId): string => {
+  switch (backend) {
+    case 'cursor':
+      return 'cursor-agent';
+    default: {
+      const _exhaustive: never = backend;
+      return _exhaustive;
+    }
+  }
+};
 
 /**
  * @description Escapes a string for safe use inside a double-quoted shell argument.
@@ -41,15 +57,10 @@ function escapeForShellDoubleQuoted(prompt: string): string {
 }
 
 /**
- * @description Executes a single iteration of the agentic process (sync). Use when running interactively (TTY).
+ * @description Cursor backend: one sync iteration (`cursor-agent --force -p …`).
  */
-export const runIteration = (config: RunIterationConfig): string => {
+const runCursorIterationSync = (config: RunIterationConfig): string => {
   const { agentPrompt, iteration, model } = config;
-  const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
-
-  console.log(`\n${ARTWORK_LINE}\n`);
-  console.log(message);
-
   const modelFlag = model ? ` --model ${model}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
   const command = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
@@ -83,21 +94,37 @@ export const runIteration = (config: RunIterationConfig): string => {
 };
 
 /**
- * @description Executes a single iteration using spawn + Promise. Use when non-interactive for streaming and per-iteration timeout/cancel.
- * On timeout or abort, kills child with SIGTERM then SIGKILL after grace; returns a string that triggers hasError so the CLI exits(1).
+ * @description Executes a single iteration of the agentic process (sync). Use when running interactively (TTY).
  */
-export const runIterationAsync = (
-  config: RunIterationConfig,
-): Promise<string> => {
-  const { agentPrompt, iteration, model, timeoutMs, signal, onChunk } = config;
+export const runIteration = (config: RunIterationConfig): string => {
+  const { backend = DEFAULT_RALPH_RUNNER, iteration } = config;
   const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
 
   console.log(`\n${ARTWORK_LINE}\n`);
   console.log(message);
 
+  switch (backend) {
+    case 'cursor':
+      return runCursorIterationSync(config);
+    default: {
+      const _exhaustive: never = backend;
+      throw new Error(`Unsupported execution backend: ${_exhaustive}`);
+    }
+  }
+};
+
+/**
+ * @description Cursor backend: one async iteration with streaming and timeout.
+ * On timeout or abort, kills child with SIGTERM then SIGKILL after grace; returns a string that triggers hasError so the CLI exits(1).
+ */
+const runCursorIterationAsync = (
+  config: RunIterationConfig,
+): Promise<string> => {
+  const { agentPrompt, iteration, model, timeoutMs, signal, onChunk } = config;
   const modelFlag = model ? ` --model ${model}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
   const command = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+  const runnerLabel = backendIterationLabel('cursor');
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning cursor-agent', {
@@ -147,7 +174,11 @@ export const runIterationAsync = (
       child.kill('SIGTERM');
 
       const killTimeout = setTimeout(() => {
-        if (!child.killed) child.kill('SIGKILL');
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          /* process may have exited */
+        }
       }, SIGKILL_GRACE_MS);
 
       child.once('close', () => clearTimeout(killTimeout));
@@ -175,7 +206,7 @@ export const runIterationAsync = (
           },
         );
         resolve(
-          `<promise>ERROR</promise>\ncursor-agent iteration timed out after ${timeoutMs}ms`,
+          `<promise>ERROR</promise>\n${runnerLabel} iteration timed out after ${timeoutMs}ms`,
         );
         return;
       }
@@ -190,9 +221,11 @@ export const runIterationAsync = (
             stdoutLen: stdout.length,
           },
         );
+
         resolve(
-          '<promise>ERROR</promise>\ncursor-agent iteration was cancelled',
+          `<promise>ERROR</promise>\n${runnerLabel} iteration was cancelled`,
         );
+
         return;
       }
 
@@ -239,4 +272,28 @@ export const runIterationAsync = (
       }
     });
   });
+};
+
+/**
+ * @description Executes a single iteration using spawn + Promise. Use when non-interactive for streaming and per-iteration timeout/cancel.
+ */
+export const runIterationAsync = (
+  config: RunIterationConfig,
+): Promise<string> => {
+  const { backend = DEFAULT_RALPH_RUNNER, iteration } = config;
+  const message = `🤖 Running iteration ${COLORS.green}${iteration}${COLORS.reset}\n`;
+
+  console.log(`\n${ARTWORK_LINE}\n`);
+  console.log(message);
+
+  switch (backend) {
+    case 'cursor':
+      return runCursorIterationAsync(config);
+    default: {
+      const _exhaustive: never = backend;
+      return Promise.reject(
+        new Error(`Unsupported execution backend: ${_exhaustive}`),
+      );
+    }
+  }
 };

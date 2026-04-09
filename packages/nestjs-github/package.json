@@ -10,8 +10,9 @@
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
     "@nestjs/graphql": "^13.2.4",
-    "graphql": "^16.13.1"
+    "graphql": "^16.13.2"
   },
+  "devDependencies": {},
   "peerDependencies": {
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
@@ -67,12 +68,8 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts",
-  "devDependencies": {
-    "@golevelup/ts-vitest": "^2.2.0",
-    "@nestjs/testing": "^11.1.17"
-  }
+  "types": "./src/index.ts"
 }

@@ -23,7 +23,7 @@
     "@graphql-codegen/typescript-resolvers": "^5.1.7",
     "@graphql-codegen/typescript-urql": "^5.0.0",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "graphql-codegen-typescript-mock-data": "^5.0.2",
+    "graphql-codegen-typescript-mock-data": "^5.1.1",
     "graphql-codegen-typescript-validation-schema": "^0.18.1"
   },
   "devDependencies": {},
@@ -38,8 +38,7 @@
       "name:@openthrottle/graphql-codegen",
       "production:true",
       "publish:false",
-      "technology:react",
-      "technology:react-router",
+      "technology:nodejs",
       "type:package"
     ],
     "targets": {
@@ -55,7 +54,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/visormatt/monorepo.git",
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

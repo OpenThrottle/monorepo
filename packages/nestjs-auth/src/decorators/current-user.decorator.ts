@@ -45,7 +45,8 @@ export const CurrentUser = createParamDecorator(
 );
 
 /**
- * @description Gets the request from ExecutionContext. For GraphQL, uses GqlExecutionContext so context.req is used; for HTTP, uses switchToHttp().getRequest().
+ * @description Gets the request from ExecutionContext. For GraphQL, uses
+ * GqlExecutionContext so context.req is used; for HTTP, uses switchToHttp().getRequest().
  */
 function getRequest(ctx: ExecutionContext): { user?: JwtPayload } | undefined {
   if (ctx.getType<'http' | 'graphql'>() === 'graphql') {

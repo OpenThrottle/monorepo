@@ -39,7 +39,7 @@ All generators can be invoked with flags only (no prompts). Missing/invalid opti
 ```bash
 pnpm nx g @tools/generators:react \
   --subGenerator=component \
-  --destination=@rocketcms/shared-ui \
+  --destination=@openthrottle/shared-ui \
   --name=MyComponent
 ```
 
@@ -48,7 +48,7 @@ pnpm nx g @tools/generators:react \
 ```bash
 pnpm nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=rocketcms \
+  --application=openthrottle \
   --folder=global/components \
   --name=MyComponent
 ```
@@ -70,7 +70,7 @@ React Native uses `--type` (not `--subGenerator`):
 pnpm nx g @tools/generators:react-native \
   --type=package \
   --packageType=package \
-  --organization=@rocketcms \
+  --organization=@openthrottle \
   --name=react-native-example-package
 ```
 
@@ -79,11 +79,11 @@ pnpm nx g @tools/generators:react-native \
 ```bash
 pnpm nx g @tools/generators:package \
   --type=react \
-  --organization=@rocketcms \
+  --organization=@openthrottle \
   --name=my-lib
 
 pnpm nx g @tools/generators:folders \
-  --application=rocketcms \
+  --application=openthrottle \
   --folder=routing \
   --name=forecasting
 ```
@@ -112,7 +112,7 @@ pnpm nx g @tools/generators:react --list=destinations
 pnpm nx g @tools/generators:remix --list=applications
 
 # Remix folders (requires application)
-pnpm nx g @tools/generators:remix --list=componentFolders --application=rocketcms
+pnpm nx g @tools/generators:remix --list=componentFolders --application=openthrottle
 
 # NestJS applications
 pnpm nx g @tools/generators:nestjs --list=nestjsApplications

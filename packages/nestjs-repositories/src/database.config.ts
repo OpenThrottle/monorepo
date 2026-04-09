@@ -1,5 +1,5 @@
 /**
- * @description Builds TypeORM DataSource options for Cortex Postgres from CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.
+ * @description Builds TypeORM DataSource options for Postgres from POSTGRES_URL or POSTGRES_* env vars.
  * Used by NestjsRepositoriesModule to register TypeORM with Cortex connection.
  */
 
@@ -22,7 +22,7 @@ import { User } from './modules/users/user.entity';
 // import { getPostgresUrl } from '@openthrottle/openthrottle-postgres';
 
 /**
- * @description Returns Cortex Postgres URL from CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.
+ * @description Returns Cortex Postgres URL from POSTGRES_URL or POSTGRES_* env vars.
  */
 function getPostgresUrl(): string {
   const url = process.env.POSTGRES_URL?.trim();
@@ -38,7 +38,9 @@ function getPostgresUrl(): string {
     : '6010';
 
   if (!db || !host || !password || !port || !user) {
-    throw new Error('Required Postgres environment variables are not set');
+    const message = `🚨 Postgres database is unreachable. Set POSTGRES_URL or POSTGRES_* env vars.`;
+
+    throw new Error(message);
   }
 
   const encodedPassword = encodeURIComponent(password);

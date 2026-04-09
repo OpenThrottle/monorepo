@@ -5,7 +5,7 @@
 /* eslint-disable no-await-in-loop */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getCortexPostgresConfig, getDefaultGitHubUser } from '../config.js';
+import { getPostgresConfig, getDefaultGitHubUser } from '../config.js';
 import type { TaskRow } from '../cortex-client.js';
 import {
   createTask as cortexCreateTask,
@@ -55,7 +55,7 @@ async function createTasksHandler(
     return invalidArgsContent(parsed.error.message);
   }
 
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }
@@ -119,7 +119,7 @@ async function handleGetRemainingTasksForPlan(args: {
     return invalidArgsContent(parsed.error.message);
   }
 
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   if (!config) {
     return configMissingContent();
   }
@@ -171,7 +171,7 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -239,7 +239,7 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -294,7 +294,7 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -348,7 +348,7 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -399,7 +399,7 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }
@@ -472,7 +472,7 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getCortexPostgresConfig();
+      const config = getPostgresConfig();
       if (!config) {
         return configMissingContent();
       }

@@ -1,10 +1,10 @@
+import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
-import { getTypeOrmOptions } from './database.config';
 import { CommitLinksModule } from './modules/commit-links/commit-links.module';
 import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module';
+import { getTypeOrmOptions } from './database.config';
 import { NestjsRepositoriesService } from './nestjs-repositories.service';
 import { NotesModule } from './modules/notes/notes.module';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module';

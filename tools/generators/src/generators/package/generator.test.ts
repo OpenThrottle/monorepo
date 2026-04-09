@@ -43,7 +43,7 @@ describe('package generator', () => {
 
   describe('@organization', () => {
     const type = 'node';
-    const org = '@visormatt';
+    const org = '@openthrottle';
     const orgName = org.replace('@', '');
     const name = 'example-xxx-package';
 

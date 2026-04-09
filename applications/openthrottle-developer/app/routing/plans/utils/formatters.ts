@@ -1,7 +1,8 @@
 import { format, formatDistanceToNow } from 'date-fns';
 
 /**
- * @description Parses requirementsJson and returns the number of requirements. Returns 0 if invalid or empty.
+ * @description Parses requirementsJson and returns the number of requirements.
+ * Returns 0 if invalid or empty.
  */
 export function getRequirementsCount(
   requirementsJson: string | null | undefined,
@@ -20,7 +21,8 @@ export function getRequirementsCount(
 }
 
 /**
- * @description Parses requirementsJson and returns an array of requirement labels (strings). Returns [] if invalid or not an array.
+ * @description Parses requirementsJson and returns an array of requirement
+ * labels (strings). Returns [] if invalid or not an array.
  */
 export function parseRequirementsList(
   requirementsJson: string | null | undefined,
@@ -40,7 +42,8 @@ export function parseRequirementsList(
 }
 
 /**
- * @description Formats an ISO date string as relative time (e.g. "2 days ago"). Returns null if invalid.
+ * @description Formats an ISO date string as relative time (e.g. "2 days ago").
+ * Returns null if invalid.
  */
 export function formatUpdatedAt(updatedAt: unknown): string | null {
   if (updatedAt == null) return null;
@@ -52,7 +55,8 @@ export function formatUpdatedAt(updatedAt: unknown): string | null {
 }
 
 /**
- * @description Formats an ISO date string for tooltip (short date and time). Returns null if invalid.
+ * @description Formats an ISO date string for tooltip (short date and time).
+ * Returns null if invalid.
  */
 export function formatDateShort(value: unknown): string | null {
   if (value == null) return null;
@@ -64,12 +68,14 @@ export function formatDateShort(value: unknown): string | null {
 }
 
 /**
- * @description Formats plan date (createdAt/updatedAt) for display; returns "—" if invalid.
+ * @description Formats plan date (createdAt/updatedAt) for display;
+ * returns "—" if invalid.
  */
 export function formatPlanDate(value: string | number | unknown): string {
   if (value == null) return '—';
-  const date =
-    typeof value === 'number' ? new Date(value) : new Date(String(value));
+
+  const isNumber = typeof value === 'number';
+  const date = isNumber ? new Date(value) : new Date(String(value));
 
   return Number.isNaN(date.getTime())
     ? '—'

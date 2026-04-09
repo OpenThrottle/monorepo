@@ -5,7 +5,7 @@
  */
 
 import { Client } from 'pg';
-import { getCortexPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 export interface DocIngestionStateEntry {
   readonly contentHash: string;
@@ -131,6 +131,6 @@ export async function getPriorStateEntry(
  * Convenience for callers that need to pass connectionString into getPriorState/savePriorState/removePriorState/getPriorStateEntry.
  */
 export function getDocIngestionStateConnectionString(): string | undefined {
-  const config = getCortexPostgresConfig();
+  const config = getPostgresConfig();
   return config?.connectionString;
 }

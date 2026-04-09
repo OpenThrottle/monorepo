@@ -1,5 +1,5 @@
 /**
- * @description Builds Cortex Postgres connection config from env (CORTEX_POSTGRES_URL or CORTEX_POSTGRES_*).
+ * @description Builds Postgres connection config from env (POSTGRES_URL or POSTGRES_*).
  */
 
 export interface CortexPostgresConfig {
@@ -7,10 +7,10 @@ export interface CortexPostgresConfig {
 }
 
 /**
- * @description Returns Cortex Postgres connection string from CORTEX_POSTGRES_URL or CORTEX_POSTGRES_* env vars.
+ * @description Returns Cortex Postgres connection string from POSTGRES_URL or POSTGRES_* env vars.
  * @returns Connection config or undefined if not configured.
  */
-export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
+export function getPostgresConfig(): CortexPostgresConfig {
   const url = process.env.POSTGRES_URL;
 
   if (url?.trim()) {
@@ -20,13 +20,12 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
   const db = process.env.POSTGRES_DB;
   const host = process.env.POSTGRES_HOST;
   const password = process.env.POSTGRES_PASSWORD;
-  const user = process.env.POSTGRES_USER;
   const port = Number(process.env.POSTGRES_PORT);
+  const user = process.env.POSTGRES_USER;
 
   if (!db || !host || !password || !port || !user) {
-    throw new Error(
-      '🚨 ai-mcp - Required Postgres environment variables are not set',
-    );
+    const message = `🚨 Postgres database is unreachable. Set POSTGRES_URL or POSTGRES_* env vars.`;
+    throw new Error(message);
   }
 
   const encodedPassword = encodeURIComponent(password);
@@ -39,10 +38,10 @@ export function getCortexPostgresConfig(): CortexPostgresConfig | undefined {
 /**
  * @description Returns the canonical GitHub username for author/assignee when set.
  * Used to enforce GitHub username (not display name) for plan and task author/assignee.
- * Reads GITHUB_USER or CORTEX_GITHUB_USER (trimmed).
+ * Reads GITHUB_USER (trimmed).
  */
 export function getDefaultGitHubUser(): string | undefined {
-  const v = process.env.GITHUB_USER?.trim() ?? process.env.GITHUB_USER?.trim();
+  const username = process.env.GITHUB_USER?.trim() ?? '';
 
-  return v === '' ? undefined : v;
+  return username === '' ? undefined : username;
 }

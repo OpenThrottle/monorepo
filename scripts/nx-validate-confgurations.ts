@@ -305,13 +305,13 @@ const main = async (): Promise<void> => {
 
     if (missingCount > 0) {
       process.exit(1);
-    } else {
-      process.exit(0);
     }
   } catch (error) {
     console.error('❌ Error auditing package.json files:', error);
     process.exit(1);
   }
+
+  process.exit(0);
 };
 
 main();

@@ -25,7 +25,7 @@ Tags follow the pattern `<type>:<value>`:
 {
   "nx": {
     "tags": [
-      "name:barguide",
+      "name:@openthrottle/xxxxxx",
       "type:application",
       "production:true",
       "technology:react",
@@ -61,7 +61,7 @@ Every project must have:
 {
   "nx": {
     "tags": [
-      "name:barguide",
+      "name:openthrottle-yyy",
       "type:application",
       "production:true",
       "technology:react",
@@ -77,7 +77,7 @@ Every project must have:
 {
   "nx": {
     "tags": [
-      "name:barguide-api",
+      "name:openthrottle-api",
       "type:application",
       "production:true",
       "technology:nestjs"
