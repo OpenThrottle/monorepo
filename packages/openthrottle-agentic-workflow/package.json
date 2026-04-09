@@ -1,5 +1,5 @@
 {
-  "name": "<%= org %>/<%= name %>",
+  "name": "@openthrottle/openthrottle-agentic-workflow",
   "description": "TODO: Add a description",
   "version": "1.0.0",
   "author": {
@@ -29,15 +29,15 @@
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:<%= org %>/<%= name %>",
+      "name:@openthrottle/openthrottle-agentic-workflow",
       "production:true",
       "publish:false",
       "technology:nodejs",
       "type:package"
     ],
     "targets": {
-      "__build": {},
-      "__build-package": {},
+      "build": {},
+      "build-package": {},
       "lint": {},
       "test": {},
       "typecheck": {}

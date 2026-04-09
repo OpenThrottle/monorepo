@@ -14,22 +14,22 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
+      "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nodejs-graphql/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/generators/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-worktrees/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/nodejs-graphql/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
+      "path": "../../packages/nestjs-utils/tsconfig.lib.json"
     },
     {
       "path": "../../tools/workflows/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/nestjs-utils/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-stripe/tsconfig.lib.json"
@@ -39,6 +39,9 @@
     },
     {
       "path": "../../packages/ai-mcp/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/nestjs-github/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-websockets/tsconfig.lib.json"
@@ -66,9 +69,6 @@
     },
     {
       "path": "../../packages/nestjs-modules/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/nestjs-github/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

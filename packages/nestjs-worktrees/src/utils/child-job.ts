@@ -27,7 +27,9 @@ function gitInWorktree(
   const child = spawnSync('git', ['-C', worktreePath, ...args], {
     encoding: 'utf-8',
   });
+
   if (child.status !== 0) return undefined;
+
   return child.stdout?.trim();
 }
 
@@ -49,7 +51,7 @@ export async function runChildJob(
     project,
     prompt,
     promptFile,
-    ralphDebugCli,
+    debug,
   } = input;
   const { worktreePath } = handoff;
 
@@ -78,13 +80,13 @@ export async function runChildJob(
     planId,
     ...buildWorkflowRalphRunTuningArgv({
       backend,
+      debug,
       iterationTimeoutSeconds,
       iterations,
       model,
       project,
       prompt,
       promptFile,
-      ralphDebugCli,
     }),
   ];
 

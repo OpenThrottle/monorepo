@@ -157,6 +157,12 @@
     },
     {
       "path": "./packages/nestjs-express"
+    },
+    {
+      "path": "./packages/openthrottle-agentic-ralph"
+    },
+    {
+      "path": "./packages/openthrottle-agentic-workflow"
     }
   ]
 }

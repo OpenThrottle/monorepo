@@ -124,6 +124,8 @@ export interface ChildJobInput {
    * Forwarded as `--backend` when set and not the default.
    */
   readonly backend?: RalphExecutionBackendId;
+  /** Shim debug for nested runs; forwarded as `--debug` or `--verbose`. */
+  readonly debug?: RalphNestedDebugCli;
   /** Prompt profile; omitted uses workflow-ralph default (`/agents/ralph`). */
   readonly prompt?: string;
   /** Prompt file path; forwarded as `--prompt-file` when set (takes precedence over `prompt`). */
@@ -134,8 +136,6 @@ export interface ChildJobInput {
   readonly project?: string;
   /** Per-iteration timeout in seconds for nested workflow-ralph. */
   readonly iterationTimeoutSeconds?: number;
-  /** Shim debug for nested runs; forwarded as `--debug` or `--verbose`. */
-  readonly ralphDebugCli?: RalphNestedDebugCli;
 }
 
 /** Successful result of the child job: branch and commit SHA for parent to validate before release. */

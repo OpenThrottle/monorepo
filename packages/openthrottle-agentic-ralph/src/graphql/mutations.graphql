@@ -1,0 +1,81 @@
+mutation createNote($input: CreateNoteInput!) {
+  createNote(input: $input) {
+    ...Note
+  }
+}
+
+mutation deleteNote($id: ID!) {
+  deleteNote(id: $id)
+}
+
+mutation register($input: RegisterInput!) {
+  register(input: $input) {
+    accessToken
+    email
+    id
+  }
+}
+
+mutation updateNote($input: UpdateNoteInput!) {
+  updateNote(input: $input) {
+    ...Note
+  }
+}
+
+mutation createPlan($input: CreatePlanInput!) {
+  createPlan(input: $input) {
+    ...Plan
+  }
+}
+
+mutation updatePlan($input: UpdatePlanInput!) {
+  updatePlan(input: $input) {
+    ...Plan
+  }
+}
+
+mutation deletePlan($input: DeletePlanInput!) {
+  deletePlan(input: $input)
+}
+
+mutation createTask($input: CreateTaskInput!) {
+  createTask(input: $input) {
+    ...Task
+  }
+}
+
+mutation updateTask($input: UpdateTaskInput!) {
+  updateTask(input: $input) {
+    ...Task
+  }
+}
+
+mutation deleteTask($input: DeleteTaskInput!) {
+  deleteTask(input: $input)
+}
+
+mutation appendPlanOutput($input: AppendPlanOutputInput!) {
+  appendPlanOutput(input: $input) {
+    content
+    createdAt
+    id
+    iteration
+    planId
+  }
+}
+
+mutation linkCommit($input: LinkCommitInput!) {
+  linkCommit(input: $input) {
+    ...CommitLink
+  }
+}
+
+mutation createProject($input: CreateProjectInput!) {
+  createProject(input: $input) {
+    ...Project
+  }
+}
+
+mutation deleteProject($input: DeleteProjectInput!) {
+  deleteProject(input: $input)
+}

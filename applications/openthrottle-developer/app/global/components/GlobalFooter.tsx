@@ -61,7 +61,10 @@ export const GlobalFooter = (props: GlobalFooterProps) => {
       data-testid="GlobalFooter"
     >
       <div className="border-t border-border p-8 pb-2 text-center text-sm text-muted-foreground">
-        <p>Built by engineers. Open source. No lock-in.</p>
+        <p>
+          Built by engineers &bull; Open source &bull; Run locally &bull; No
+          Commitment
+        </p>
       </div>
 
       <Link

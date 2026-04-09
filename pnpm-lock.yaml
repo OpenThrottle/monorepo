@@ -193,6 +193,12 @@ importers:
       '@openthrottle/nodejs-graphql':
         specifier: workspace:*
         version: link:packages/nodejs-graphql
+      '@openthrottle/openthrottle-agentic-ralph':
+        specifier: workspace:*
+        version: link:packages/openthrottle-agentic-ralph
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:*
+        version: link:packages/openthrottle-agentic-workflow
       '@openthrottle/openthrottle-mcp':
         specifier: workspace:*
         version: link:packages/openthrottle-mcp
@@ -1296,6 +1302,14 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
+
+  packages/openthrottle-agentic-ralph:
+    dependencies:
+      '@openthrottle/nodejs-graphql':
+        specifier: workspace:*
+        version: link:../nodejs-graphql
+
+  packages/openthrottle-agentic-workflow: {}
 
   packages/openthrottle-mcp: {}
 

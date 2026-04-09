@@ -1376,7 +1376,7 @@ export type Query = {
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
-  /** Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
+  /** Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;

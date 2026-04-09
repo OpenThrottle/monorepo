@@ -291,13 +291,13 @@ export async function runChildJob(
     planId,
     ...buildWorkflowRalphRunTuningArgv({
       backend,
+      debug: ralphDebugCli,
       iterationTimeoutSeconds,
       iterations,
       model,
       project,
       prompt,
       promptFile,
-      ralphDebugCli,
     }),
   ];
 

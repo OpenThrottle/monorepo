@@ -22,13 +22,13 @@ export type RalphNestedDebugCli = 'omit' | 'debug' | 'verbose';
  */
 export interface RalphNestedRunTuningInput {
   readonly backend?: RalphExecutionBackendId | null;
+  readonly debug?: RalphNestedDebugCli;
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
   readonly model?: string;
   readonly project?: string;
   readonly prompt?: string;
   readonly promptFile?: string;
-  readonly ralphDebugCli?: RalphNestedDebugCli;
 }
 
 /**
@@ -86,7 +86,7 @@ export const buildWorkflowRalphRunTuningArgv = (
     );
   }
 
-  switch (input.ralphDebugCli) {
+  switch (input.debug) {
     case 'debug':
       ralphArgs.push('--debug');
       break;
