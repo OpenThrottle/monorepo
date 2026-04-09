@@ -1,24 +1,26 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { BreadcrumbList } from '../BreadcrumbList';
-import type { BreadcrumbListProps } from '../BreadcrumbList';
 
-describe('BreadcrumbList Component', () => {
-  let component: RenderResult;
-  let props: BreadcrumbListProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <BreadcrumbList {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+describe('BreadcrumbList', () => {
+  it('renders an ordered list with layout and typography classes', () => {
+    render(<BreadcrumbList />);
+    const list = screen.getByRole('list');
+    expect(list).toHaveClass(
+      'flex',
+      'flex-wrap',
+      'items-center',
+      'gap-1.5',
+      'break-words',
+      'text-sm',
+      'text-muted-foreground',
+    );
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('merges custom className with defaults', () => {
+    render(<BreadcrumbList className="px-1 font-medium" />);
+    const list = screen.getByRole('list');
+    expect(list).toHaveClass('flex', 'px-1', 'font-medium');
   });
 });
