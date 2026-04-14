@@ -14,7 +14,7 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
-      "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
+      "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nodejs-graphql/tsconfig.lib.json"

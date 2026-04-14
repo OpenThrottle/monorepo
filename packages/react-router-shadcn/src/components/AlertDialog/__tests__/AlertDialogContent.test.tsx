@@ -1,24 +1,44 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { AlertDialogContent } from '../AlertDialogContent';
-import type { AlertDialogContentProps } from '../AlertDialogContent';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '../index';
 
-describe('AlertDialogContent Component', () => {
-  let component: RenderResult;
-  let props: AlertDialogContentProps;
+describe('AlertDialogContent', () => {
+  it('renders the dialog panel with role alertdialog and merges className', () => {
+    render(
+      <AlertDialog defaultOpen={true}>
+        <AlertDialogContent className="my-panel">
+          <AlertDialogTitle>Title</AlertDialogTitle>
+          <AlertDialogDescription>Panel description.</AlertDialogDescription>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <AlertDialogContent {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveClass('my-panel');
+    expect(dialog).toHaveClass('fixed', 'left-[50%]', 'top-[50%]', 'z-50');
+    expect(dialog).toHaveTextContent('Title');
+    expect(dialog).toHaveTextContent('Panel description.');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('forwards ref to the content element', () => {
+    const ref = React.createRef<HTMLDivElement>();
+
+    render(
+      <AlertDialog defaultOpen={true}>
+        <AlertDialogContent ref={ref}>
+          <AlertDialogTitle>T</AlertDialogTitle>
+          <AlertDialogDescription>D</AlertDialogDescription>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+
+    expect(ref.current).toBe(screen.getByRole('alertdialog'));
   });
 });

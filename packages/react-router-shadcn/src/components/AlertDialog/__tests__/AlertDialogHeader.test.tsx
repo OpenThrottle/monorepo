@@ -1,24 +1,26 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { AlertDialogHeader } from '../AlertDialogHeader';
-import type { AlertDialogHeaderProps } from '../AlertDialogHeader';
 
-describe('AlertDialogHeader Component', () => {
-  let component: RenderResult;
-  let props: AlertDialogHeaderProps;
+describe('AlertDialogHeader', () => {
+  it('renders a flex column with typography alignment classes and merged className', () => {
+    const { container } = render(
+      <AlertDialogHeader className="header-extra">
+        <span>Header content</span>
+      </AlertDialogHeader>,
+    );
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <AlertDialogHeader {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    const header = container.firstElementChild;
+    expect(header).toBeInTheDocument();
+    expect(header).toHaveClass('header-extra');
+    expect(header).toHaveClass(
+      'flex',
+      'flex-col',
+      'space-y-2',
+      'text-center',
+      'sm:text-left',
+    );
+    expect(screen.getByText('Header content')).toBeInTheDocument();
   });
 });

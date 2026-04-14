@@ -7,7 +7,7 @@ export interface AccordionTriggerProps extends React.ComponentPropsWithoutRef<
   typeof AccordionPrimitive.Trigger
 > {}
 
-const AccordionTrigger = React.forwardRef<
+export const AccordionTrigger = React.forwardRef<
   React.ComponentRef<typeof AccordionPrimitive.Trigger>,
   AccordionTriggerProps
 >((props, ref) => {

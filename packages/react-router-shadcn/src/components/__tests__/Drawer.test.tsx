@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   Drawer,
@@ -12,18 +12,22 @@ import {
 } from '../Drawer';
 
 describe('Drawer', () => {
-  it('should render Drawer root', () => {
-    const { container } = render(<Drawer />);
-    expect(container.firstChild).toBeInTheDocument();
+  it('should render Drawer root with children', () => {
+    const { container } = render(
+      <Drawer>
+        <span>child</span>
+      </Drawer>,
+    );
+    expect(container.textContent).toContain('child');
   });
 
   it('should render DrawerContent with expected content', () => {
-    const { container } = render(
-      <Drawer>
+    render(
+      <Drawer open={true}>
         <DrawerContent>Content</DrawerContent>
       </Drawer>,
     );
-    expect(container.textContent).toContain('Content');
+    expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
   it('should render DrawerHeader, DrawerTitle, DrawerDescription', () => {

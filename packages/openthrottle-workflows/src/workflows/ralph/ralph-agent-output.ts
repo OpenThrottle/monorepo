@@ -27,7 +27,8 @@ export const getRalphOutputMarkerFlags = (
 });
 
 /**
- * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`; returns unique task ids (lowercase).
+ * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`;
+ * returns unique task ids (lowercase).
  */
 export const parseRalphCompleteTaskSignals = (
   result: string,
@@ -52,7 +53,8 @@ export const ralphOutputHasPromiseComplete = (result: string): boolean => {
 };
 
 /**
- * @description Terminal control from promise markers (order matches `parseRalphResponse` in `ralph.ts`).
+ * @description Terminal control from promise markers (order matches
+ * `parseRalphResponse` in `ralph.ts`).
  */
 export const parseRalphAgentParseControl = (
   result: string,

@@ -22,11 +22,12 @@ describe('Card', () => {
     const { container } = render(<Card>Card</Card>);
     const card = container.querySelector('div');
     expect(card).toHaveClass(
-      'rounded-lg',
-      'border',
       'bg-card',
-      'text-card-foreground',
-      'shadow-sm',
+      'border',
+      'rounded-lg',
+      'transition-colors',
+      'ui-border',
+      'hover:border-color-border-dark',
     );
   });
 

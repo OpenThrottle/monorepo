@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ChartLegend Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="recharts-wrapper"
+      style="position: relative; cursor: default;"
+    />
+  </div>
+</body>
+`;

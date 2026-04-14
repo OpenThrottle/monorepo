@@ -54,7 +54,11 @@
     },
     "./config": "./src/config.ts",
     "./vite-config": "./src/vite-config.ts",
-    "./vitest-config": "./src/vitest-config.ts"
+    "./vitest-config": {
+      "types": "./dist/src/vitest-config.d.ts",
+      "import": "./dist/src/vitest-config.js",
+      "default": "./dist/src/vitest-config.js"
+    }
   },
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",

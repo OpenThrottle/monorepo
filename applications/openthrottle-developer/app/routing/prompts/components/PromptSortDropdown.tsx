@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { PROMPTS_SORT_OPTIONS } from '~/routing/prompts/config';
 import {
@@ -32,11 +39,8 @@ export const PromptSortDropdown = (
 
   // Handlers
   const handleChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const [by, order] = e.target.value.split('-') as [
-        PromptsSortBy,
-        PromptsSortOrder,
-      ];
+    (value: string) => {
+      const [by, order] = value.split('-') as [PromptsSortBy, PromptsSortOrder];
 
       onChange(by, order);
     },
@@ -51,18 +55,22 @@ export const PromptSortDropdown = (
   // 🔌 Short Circuit
 
   return (
-    <select
+    <Select
       aria-label="Sort prompts"
-      className="rounded-md border border-input px-3 py-1.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-[11rem] shrink-0"
       data-testid="PromptSortDropdown"
-      onChange={handleChange}
+      onValueChange={handleChange}
       value={resolvedValue}
     >
-      {PROMPTS_SORT_OPTIONS.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="w-[200px]">
+        <SelectValue placeholder="Poll interval…" />
+      </SelectTrigger>
+      <SelectContent>
+        {PROMPTS_SORT_OPTIONS.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };

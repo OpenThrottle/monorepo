@@ -7,6 +7,7 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
+  Label,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -70,16 +71,14 @@ export function TypeMultiSelect(
   // 🔌 Short Circuit
 
   return (
-    <label
+    <Label
       className={cn(
         'flex flex-col gap-1',
         compact ? 'min-w-0 shrink-0' : 'min-w-40',
       )}
       data-testid={dataTestId}
     >
-      <span className="text-sm font-medium hidden text-foreground/80">
-        Type
-      </span>
+      <span className="hidden">Type</span>
       <Popover onOpenChange={setOpen} open={open}>
         <PopoverTrigger asChild={true}>
           <Button
@@ -157,6 +156,6 @@ export function TypeMultiSelect(
           })}
         </div>
       ) : null}
-    </label>
+    </Label>
   );
 }
