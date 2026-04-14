@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TabsContent Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      role="tabpanel"
+    />
+  </div>
+</body>
+`;

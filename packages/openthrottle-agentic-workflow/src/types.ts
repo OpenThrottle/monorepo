@@ -1,11 +1,8 @@
 /**
- *
- *
- *      WORKFLOW - GENERAL
- *
- *
+ * @description The workflow config is meant to be common across any of
+ * our "agentic" workflows. Each workflow can and will have their own
+ * own set of config, but the common config will be used to create the workflow.
  */
-
 export interface WorkflowConfig {
   readonly debug: 'debug' | 'omit' | 'verbose';
   readonly iterationMax: number;
@@ -55,46 +52,47 @@ export type WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> =
       readonly status: 'failed';
     };
 
-/**
- *
- *
- *      WORKFLOW STEP(S)
- *
- *
- */
-
-export type WorkflowStepFailure<TStep extends string[] = string[]> = {
+export type WorkflowStepFailure<TStep extends string = string> = {
   readonly error: WorkflowError;
   readonly outcome: 'failure';
   readonly step: TStep;
 };
 
 export type WorkflowStepSuccess<
-  TStep extends string[] = string[],
+  TStep extends string = string,
   TData extends Record<string, unknown> | undefined = undefined,
 > = TData extends undefined
   ? { readonly step: TStep; readonly outcome: 'success' }
   : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
 
 /**
- *
- *
- *      WORKFLOW ORCHESTRATOR
- *
- *
+ * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare
+ * the `main` function in `tools/workflows/src/bin/ralph.ts`). Extends {@link WorkflowOptions}
+ * with `kind`, `mode`, and effective `iterations` after CLI rules.
  */
+export interface WorkflowFlowContext extends WorkflowConfig {
+  /**
+   * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
+   * checked between steps so user cancel matches the spawn-path behavior.
+   */
+  readonly abortSignal?: AbortSignal;
+  readonly kind: 'ralph';
+}
 
 /**
  * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
  */
 export interface WorkflowOrchestrator<
-  // TContext extends WorkflowFlowContext = WorkflowFlowContext,
-  TContext = unknown,
+  WorkflowFinishedReason,
+  WorkflowFailedReason,
+  TContext extends WorkflowFlowContext = WorkflowFlowContext,
 > {
   /**
    * @description Runs the workflow until a terminal {@link WorkflowRunResult}.
    */
   readonly execute: (params: {
     readonly context: TContext;
-  }) => Promise<WorkflowRunResult<any, any>>;
+  }) => Promise<
+    WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason>
+  >;
 }

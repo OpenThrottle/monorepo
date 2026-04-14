@@ -1,7 +1,13 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '../index';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../index';
 
 describe('Select', () => {
   it('should render root', () => {
@@ -23,23 +29,31 @@ describe('Select', () => {
   });
 
   it('should render SelectContent with expected classes', () => {
-    const { container } = render(
-      <Select>
+    render(
+      <Select defaultOpen={true}>
+        <SelectTrigger>
+          <SelectValue placeholder="Pick" />
+        </SelectTrigger>
         <SelectContent>Options</SelectContent>
       </Select>,
     );
-    const content = container.querySelector('.relative.z-50');
+    const content = document.body.querySelector('.relative.z-50');
     expect(content).toBeInTheDocument();
     expect(content).toHaveTextContent('Options');
   });
 
   it('should render SelectItem with role option', () => {
-    const { container } = render(
-      <Select>
-        <SelectItem>Option A</SelectItem>
+    render(
+      <Select defaultOpen={true}>
+        <SelectTrigger>
+          <SelectValue placeholder="Pick" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="a">Option A</SelectItem>
+        </SelectContent>
       </Select>,
     );
-    const item = container.querySelector('[role="option"]');
+    const item = document.body.querySelector('[role="option"]');
     expect(item).toBeInTheDocument();
     expect(item).toHaveTextContent('Option A');
   });

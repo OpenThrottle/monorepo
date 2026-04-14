@@ -6,7 +6,7 @@ export interface AccordionContentProps extends React.ComponentPropsWithoutRef<
   typeof AccordionPrimitive.Content
 > {}
 
-const AccordionContent = React.forwardRef<
+export const AccordionContent = React.forwardRef<
   React.ComponentRef<typeof AccordionPrimitive.Content>,
   AccordionContentProps
 >((props, ref) => {

@@ -1,57 +1,15 @@
 /**
- * @description Builds {@link WorkflowRalphContext} and {@link WorkflowOptions} from GraphQL
+ * @description Builds {@link WorkflowContext} from GraphQL
  * `RalphPlanRunTuningInput` (enqueue / job tuning). Keeps Ralph argv-equivalent defaults aligned
  * with the workflow flow-context contract (`contract/flow-context`).
  */
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
-import type {
-  WorkflowRalphContext,
-  WorkflowDebug,
-  WorkflowRunner,
-  WorkflowOptions,
-  WorkflowMode,
-} from '../contract/flow-context.js';
+import type { WorkflowContext } from '../types.js';
 import {
-  DEFAULT_RALPH_RUNNER,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
 } from '../contract/flow-context.js';
-
-/**
- * @description Maps GraphQL {@link RalphNestedDebugCli} to {@link WorkflowDebug}.
- */
-// const mapRalphNestedDebugCliToWorkflowDebugCli = (
-//   raw: RalphNestedDebugCli | null | undefined,
-// ): WorkflowDebug => {
-//   if (!raw || raw === null) {
-//     return 'omit';
-//   }
-
-//   switch (raw) {
-//     case RalphNestedDebugCli.Debug:
-//       return 'debug';
-
-//     case RalphNestedDebugCli.Omit:
-//       return 'omit';
-
-//     case RalphNestedDebugCli.Verbose:
-//       return 'verbose';
-
-//     default:
-//       return 'omit';
-//   }
-// };
-
-/**
- * @description `WorkflowRalphExecutionBackendId` is a single literal today; GraphQL `backend` is
- * accepted for parity and future union widening.
- */
-const resolveExecutionBackend = (
-  _raw: string | null | undefined,
-): WorkflowRunner => {
-  return DEFAULT_RALPH_RUNNER;
-};
 
 const resolveIterationsFromTuning = (
   raw: number | null | undefined,
@@ -83,7 +41,7 @@ const resolveIterationTimeoutSecondsFromTuning = (
 
 const resolveDebugFromTuning = (
   raw: string | null | undefined,
-): WorkflowDebug => {
+): WorkflowContext['debug'] => {
   const t = raw?.trim() ?? '';
 
   switch (t) {
@@ -124,14 +82,14 @@ const resolveProjectFromTuning = (raw: string | null | undefined): string => {
 /**
  * @description Merges optional `ralph` / nested tuning (GraphQL {@link RalphPlanRunTuningInput} or
  * worker job tuning with the same field names) with defaults so the result matches
- * {@link WorkflowOptions}. Ignores `promptFile` — layer-1 argv only; not on {@link WorkflowRalphContext}.
+ * {@link WorkflowContext}. Ignores `promptFile` — layer-1 argv only; not on {@link WorkflowContext}.
  */
 export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowMode;
+  readonly mode?: WorkflowContext['mode'];
   readonly taskId?: string;
-}): WorkflowOptions {
+}): WorkflowContext {
   const r = params.ralph ?? {};
   const planId = params.planId.trim();
   const mode = params.mode ?? 'plan';
@@ -146,25 +104,27 @@ export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
     iterationMax: iterations,
     iterationTimeout,
     iterations,
+    kind: 'ralph',
     mode,
     model: resolveModelFromTuning(r.model),
     planId,
     project: resolveProjectFromTuning(r.project),
     prompt: resolvePromptFromTuning(r.prompt),
-    runner: resolveExecutionBackend(r.backend),
+    // runner: resolveExecutionBackend(r.backend),
+    runner: 'RALPH',
     taskId,
     timeout: iterationTimeout,
   };
 }
 
 /**
- * @description Builds {@link WorkflowRalphContext} from a full {@link WorkflowOptions}
+ * @description Builds {@link WorkflowContext} from a full {@link WorkflowContext}
  * (e.g. developer UI / argv preview). Applies task `iterations === 1` rule; keeps
- * {@link WorkflowOptions.iterations} as the user-facing value.
+ * {@link WorkflowContext.iterations} as the user-facing value.
  */
 export function buildRalphFlowContextFromRunOptionsShape(
-  input: WorkflowOptions,
-): WorkflowRalphContext {
+  input: WorkflowContext,
+): WorkflowContext {
   const isTaskMode = input.mode === 'task';
 
   return {
@@ -176,16 +136,16 @@ export function buildRalphFlowContextFromRunOptionsShape(
 }
 
 /**
- * @description Resolves {@link WorkflowRalphContext} from enqueue / job tuning plus plan scope.
+ * @description Resolves {@link WorkflowContext} from enqueue / job tuning plus plan scope.
  * Queued runs: pass `mode: 'plan'` and omit `taskId` so context matches BullMQ plan-scoped argv
  * (see `openthrottle-ralph-parity.ts` queue vs CLI notes).
  */
 export function buildRalphFlowContextFromPlanRunTuning(params: {
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowMode;
+  readonly mode?: WorkflowContext['mode'];
   readonly taskId?: string;
-}): WorkflowRalphContext {
+}): WorkflowContext {
   return buildRalphFlowContextFromRunOptionsShape(
     resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params),
   );

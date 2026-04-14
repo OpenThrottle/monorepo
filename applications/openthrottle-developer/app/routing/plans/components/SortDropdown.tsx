@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import {
   PLANS_SORT_BY_OPTIONS,
@@ -27,11 +34,8 @@ export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
 
   // Handlers
   const handleChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const [by, order] = e.target.value.split('-') as [
-        PlansSortBy,
-        PlansSortOrder,
-      ];
+    (value: string) => {
+      const [by, order] = value.split('-') as [PlansSortBy, PlansSortOrder];
 
       onChange(by, order);
     },
@@ -46,17 +50,22 @@ export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
   // 🔌 Short Circuit
 
   return (
-    <select
+    <Select
       aria-label="Sort plans"
-      className="rounded-md border border-input px-3 py-1.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-[11rem] shrink-0"
-      onChange={handleChange}
+      // className="rounded-md border border-input px-3 py-1.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-[11rem] shrink-0"
+      onValueChange={handleChange}
       value={resolvedValue}
     >
-      {PLANS_SORT_BY_OPTIONS.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="w-[200px]">
+        <SelectValue placeholder="Add permission…" />
+      </SelectTrigger>
+      <SelectContent>
+        {PLANS_SORT_BY_OPTIONS.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

@@ -5,6 +5,12 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -112,21 +118,18 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
 
   // Handlers
-  const handleIntervalChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const valueMs = Number(e.target.value);
+  const handleIntervalChange = React.useCallback((value: string) => {
+    const valueMs = Number(value);
 
-      if (!Number.isFinite(valueMs) || !VALID_INTERVALS.has(valueMs)) return;
-      setIntervalMs(valueMs);
+    if (!Number.isFinite(valueMs) || !VALID_INTERVALS.has(valueMs)) return;
+    setIntervalMs(valueMs);
 
-      try {
-        window.localStorage.setItem(STORAGE_KEY, String(valueMs));
-      } catch {
-        // ignore
-      }
-    },
-    [],
-  );
+    try {
+      window.localStorage.setItem(STORAGE_KEY, String(valueMs));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Markup
 
@@ -200,24 +203,29 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <label className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">
-            Poll
-          </span>
-          <select
+        <Label className="flex items-center gap-2">
+          <span>Poll</span>
+          <Select
             aria-label="Metrics poll interval"
-            className="rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-[6.5rem] shrink-0"
             data-testid="GlobalMetrics-poll-interval"
-            onChange={handleIntervalChange}
-            value={intervalMs}
+            onValueChange={handleIntervalChange}
+            value={intervalMs.toString()}
           >
-            {POLL_INTERVAL_PRESETS.map((preset) => (
-              <option key={preset.valueMs} value={preset.valueMs}>
-                {preset.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            <SelectTrigger className="w-[80px]">
+              <SelectValue placeholder="Poll interval…" />
+            </SelectTrigger>
+            <SelectContent>
+              {POLL_INTERVAL_PRESETS.map((preset) => (
+                <SelectItem
+                  key={preset.valueMs}
+                  value={preset.valueMs.toString()}
+                >
+                  {preset.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Label>
       </div>
       {loading && <p data-testid="GlobalMetrics-loading">Loading…</p>}
       {error != null && (

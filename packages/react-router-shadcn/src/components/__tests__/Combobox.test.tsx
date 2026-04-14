@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { Combobox } from '../Combobox';
@@ -30,8 +30,11 @@ describe('Combobox', () => {
     const trigger = container.querySelector('button[role="combobox"]');
     expect(trigger).toBeInTheDocument();
     await user.click(trigger as HTMLButtonElement);
-    const listbox = container.ownerDocument.querySelector('[role="listbox"]');
-    expect(listbox).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        container.ownerDocument.querySelector('[role="listbox"]'),
+      ).toBeInTheDocument();
+    });
   });
 
   it('accepts options as string array', () => {

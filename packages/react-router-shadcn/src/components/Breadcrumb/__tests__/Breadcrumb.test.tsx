@@ -1,24 +1,25 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { Breadcrumb } from '../Breadcrumb';
-import type { BreadcrumbProps } from '../Breadcrumb';
 
-describe('Breadcrumb Component', () => {
-  let component: RenderResult;
-  let props: BreadcrumbProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <Breadcrumb {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+describe('Breadcrumb', () => {
+  it('renders a navigation landmark with breadcrumb accessible name', () => {
+    render(<Breadcrumb />);
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(nav).toHaveAttribute('aria-label', 'Breadcrumb');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  it('applies default flex class', () => {
+    render(<Breadcrumb />);
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveClass(
+      'flex',
+    );
+  });
+
+  it('merges custom className with defaults', () => {
+    render(<Breadcrumb className="mt-2 border-dashed" />);
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(nav).toHaveClass('flex', 'mt-2', 'border-dashed');
   });
 });

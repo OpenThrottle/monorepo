@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SheetFooter Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
+    />
+  </div>
+</body>
+`;

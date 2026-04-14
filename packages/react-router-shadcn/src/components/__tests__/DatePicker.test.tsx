@@ -17,7 +17,7 @@ describe('DatePicker', () => {
     const { container } = render(<DatePicker value={date} />);
     const trigger = container.querySelector('button');
     expect(trigger).toBeInTheDocument();
-    expect(trigger).toHaveTextContent('February 6, 2026');
+    expect(trigger).toHaveTextContent('February 6th, 2026');
   });
 
   it('opens popover when trigger is clicked', async () => {
