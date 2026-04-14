@@ -48,7 +48,7 @@ export const PlanForm = (props: PlanFormProps) => {
       <CardContent className="pt-8">
         <Form className="gap-4 md:gap-8 w-full flex" method="post">
           <div className="flex-1 space-y-4">
-            {isEdit ? <input name="id" type="hidden" value={plan.id} /> : null}
+            {isEdit ? <Input name="id" type="hidden" value={plan.id} /> : null}
             <div>
               <Label className="mb-2 block" htmlFor="plan-title">
                 Title

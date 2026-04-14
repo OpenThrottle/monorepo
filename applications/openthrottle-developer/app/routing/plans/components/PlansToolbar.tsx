@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import {
   Button,
+  Input,
   Switch,
   // ToggleGroup,
   // ToggleGroupItem,
@@ -162,7 +163,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
         onSubmit={handleSearchSubmit}
         role="search"
       >
-        <input
+        <Input
           aria-label="Search plans"
           className="min-w-[100px] w-[140px] shrink-0 rounded-md border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           name="q"

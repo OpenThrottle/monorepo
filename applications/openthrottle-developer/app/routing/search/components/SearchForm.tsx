@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
 export interface SearchFormProps {
   readonly className?: string;
@@ -34,10 +35,10 @@ export const SearchForm = (props: SearchFormProps) => {
       method="get"
       role="search"
     >
-      <label className="sr-only" htmlFor="search-query">
+      <Label className="sr-only" htmlFor="search-query">
         Search query
-      </label>
-      <input
+      </Label>
+      <Input
         id="search-query"
         name="q"
         onChange={(e) => setQuery(e.target.value)}
@@ -45,7 +46,7 @@ export const SearchForm = (props: SearchFormProps) => {
         type="search"
         value={query}
       />
-      <button type="submit">Search</button>
+      <Button type="submit">Search</Button>
     </form>
   );
 };

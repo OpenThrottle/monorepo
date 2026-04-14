@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Card } from '@openthrottle/react-router-shadcn';
+import { Button, Card, Input } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import { useFetcher } from 'react-router';
@@ -130,7 +130,7 @@ export default function Component(
               flow end-to-end. Check the notification bell for the alert.
             </p>
             <fetcher.Form method="post">
-              <input
+              <Input
                 name="intent"
                 type="hidden"
                 value="triggerWebsocketNotification"

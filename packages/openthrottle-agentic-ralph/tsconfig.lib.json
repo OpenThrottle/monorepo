@@ -9,6 +9,9 @@
   "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
     {
+      "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
+    },
+    {
       "path": "../nodejs-graphql/tsconfig.lib.json"
     },
     {

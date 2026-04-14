@@ -1,6 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
 import { PlusIcon } from 'lucide-react';
 import { TypeMultiSelect } from './TypeMultiSelect';
@@ -132,7 +132,7 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
         onSubmit={handleSearchSubmit}
         role="search"
       >
-        <input
+        <Input
           aria-label="Search prompts"
           className="min-w-[100px] w-[180px] shrink-0 rounded-md border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           data-testid="PromptToolbar-search-input"

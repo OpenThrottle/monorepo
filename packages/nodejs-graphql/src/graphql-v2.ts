@@ -51,7 +51,8 @@ export interface GraphqlV2GraphqlErrorItem {
 }
 
 /**
- * @description Normalized failure for V2 (transport, GraphQL errors, or missing data).
+ * @description Normalized failure for V2 (transport, GraphQL errors,
+ * missing data, or unknown).
  */
 export type GraphqlV2FailureKind =
   | 'graphql_errors'

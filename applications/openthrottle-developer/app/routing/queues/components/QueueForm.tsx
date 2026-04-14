@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Form } from 'react-router';
 import { Link } from 'react-router';
+import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
 export interface QueueFormProps {
   readonly actionData?: { error?: string } | null;
@@ -28,14 +29,8 @@ export const QueueForm = (props: QueueFormProps) => {
     <div className={classnames('p-4', className)} data-testid="QueueForm">
       <Form className="w-full space-y-4" method="post">
         <div>
-          <label
-            className="mb-1 block text-sm font-medium"
-            htmlFor="queue-name"
-          >
-            Queue name
-          </label>
-          <input
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          <Label htmlFor="queue-name">Queue name</Label>
+          <Input
             id="queue-name"
             name="name"
             placeholder="e.g. my-queue"
@@ -54,18 +49,12 @@ export const QueueForm = (props: QueueFormProps) => {
         ) : null}
 
         <div className="flex gap-3">
-          <button
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            type="submit"
-          >
+          <Button type="submit" variant="secondary">
             Create queue
-          </button>
-          <Link
-            className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
-            to="/queues"
-          >
-            Cancel
-          </Link>
+          </Button>
+          <Button asChild={true} type="submit" variant="outline">
+            <Link to="/queues">Cancel</Link>
+          </Button>
         </div>
       </Form>
     </div>

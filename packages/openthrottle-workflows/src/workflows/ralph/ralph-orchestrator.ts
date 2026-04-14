@@ -8,7 +8,6 @@ import {
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../../__generated__/graphql.js';
-import type { WorkflowRalphContext } from './contract/flow-context.js';
 import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
@@ -50,7 +49,7 @@ const failed = (reason: WorkflowFailedReason): LegacyWorkflowResult => ({
  */
 export const createWorkflowRalphOrchestrator = (
   deps: WorkflowRalphOrchestratorDeps,
-): WorkflowOrchestrator<WorkflowRalphContext> => ({
+): WorkflowOrchestrator => ({
   execute: async ({ context }) => {
     const { executeGraphqlV2, iterationRunner, onChunk } = deps;
 

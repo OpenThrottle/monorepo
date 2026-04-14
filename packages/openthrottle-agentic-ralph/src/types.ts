@@ -1,5 +1,6 @@
 import type { WorkflowConfig } from '@openthrottle/openthrottle-agentic-workflow';
 import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowOrchestrator as WorkflowOrchestratorBase } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'
@@ -18,26 +19,20 @@ export type WorkflowFailedReason =
  * {@link WorkflowRalphContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
  * `iterations`).
  */
-export interface WorkflowOptions extends WorkflowConfig {
-  readonly mode: 'plan' | 'task'; // 🤠 (ralph specific)
-  readonly planId: string; // 🤠 (ralph specific)
-  readonly project: string | undefined; // 🤠 (ralph specific)
-  readonly runner: 'RALPH'; // 🤠 (ralph only right now)
-  readonly taskId: string; // 🤠 (ralph specific)
-}
-
-/**
- * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare
- * the `main` function in `tools/workflows/src/bin/ralph.ts`). Extends {@link WorkflowOptions}
- * with `kind`, `mode`, and effective `iterations` after CLI rules.
- */
-export interface WorkflowRalphContext extends WorkflowOptions {
+export interface WorkflowContext extends WorkflowConfig {
   /**
    * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
    * checked between steps so user cancel matches the spawn-path behavior.
    */
   readonly abortSignal?: AbortSignal;
+
+  // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';
+  readonly mode: 'plan' | 'task';
+  readonly planId: string;
+  readonly project: string | undefined;
+  readonly runner: 'RALPH';
+  readonly taskId: string;
 }
 
 /**
@@ -49,14 +44,8 @@ export type WorkflowRunResult = WorkflowRunResultBase<
   WorkflowFailedReason
 >;
 
-/**
- * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
- */
-export interface WorkflowOrchestrator {
-  /**
-   * @description Runs the workflow until a terminal {@link WorkflowRunResult}.
-   */
-  readonly execute: (params: {
-    readonly context: WorkflowRalphContext;
-  }) => Promise<WorkflowRunResult>;
-}
+export type WorkflowOrchestrator = WorkflowOrchestratorBase<
+  WorkflowFinishedReason,
+  WorkflowFailedReason,
+  WorkflowContext
+>;

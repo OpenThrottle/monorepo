@@ -193,13 +193,9 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                   {plan.description}
                 </p>
                 {isLongDescription && (
-                  <button
-                    className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={() => setExpanded((e) => !e)}
-                    type="button"
-                  >
+                  <Button onClick={() => setExpanded((e) => !e)}>
                     {expanded ? 'Show less' : 'Show more'}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -215,13 +211,9 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                   {plan.summary}
                 </blockquote>
                 {isLongSummary && (
-                  <button
-                    className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={() => setSummary((e) => !e)}
-                    type="button"
-                  >
+                  <Button onClick={() => setSummary((e) => !e)}>
                     {summary ? 'Show less' : 'Show more'}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
