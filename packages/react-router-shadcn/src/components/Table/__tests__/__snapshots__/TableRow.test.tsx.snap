@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TableRow Component > should render 1`] = `
+<body>
+  <div>
+    <tr
+      class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+    />
+  </div>
+</body>
+`;

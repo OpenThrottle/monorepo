@@ -1,7 +1,15 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
-import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@openthrottle/react-router-shadcn';
 import { PROMPT_TYPE_OPTIONS } from '../config';
 import type { PromptType } from '../config';
 import { useEditor } from '../hooks/useEditor';
@@ -38,11 +46,12 @@ export const EditorToolbar = (props: EditorToolbarProps) => {
     onFileCreated?.(filename);
   };
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+  const handleTypeChange = (value: string): void => {
     // FIXME: Tighten this up
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const value = e.target.value as PromptType | '';
-    setSelectedType(value || undefined);
+    const type = value as PromptType | '';
+
+    setSelectedType(type || undefined);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -91,59 +100,41 @@ export const EditorToolbar = (props: EditorToolbarProps) => {
         <h1 className="text-lg font-semibold">{title}</h1>
 
         <div className="flex items-center gap-4">
-          {/* Search Input */}
-          <div className="relative">
-            <MagnifyingGlassIcon
-              className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-              size={16}
-            />
-            <input
-              className={classnames(
-                'pl-8 pr-3 py-1.5 text-sm rounded-md',
-                'bg-gray-800 border border-gray-700',
-                'focus:outline-none focus:border-blue-500',
-                'placeholder:text-gray-500',
-              )}
-              onChange={handleSearchChange}
-              placeholder="Search prompts..."
-              type="text"
-              value={searchQuery}
-            />
-          </div>
+          <Input
+            onChange={handleSearchChange}
+            placeholder="Search prompts..."
+            type="search"
+            value={searchQuery}
+          />
 
           {/* Type Filter */}
-          <select
-            className={classnames(
-              'px-3 py-1.5 text-sm rounded-md',
-              'bg-gray-800 border border-gray-700',
-              'focus:outline-none focus:border-blue-500',
-            )}
-            onChange={handleTypeChange}
-            value={selectedType ?? ''}
-          >
-            <option value="">All Types</option>
-            {PROMPT_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.name}
-              </option>
-            ))}
-          </select>
+          <Select onValueChange={handleTypeChange} value={selectedType ?? ''}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              {PROMPT_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Keyboard Shortcut Hint */}
-          <span className="text-xs text-gray-500">Ctrl + N</span>
+          <span className="text-xs whitespace-nowrap text-gray-500">
+            Ctrl + N
+          </span>
 
           {/* New File Button */}
-          <button
-            className={classnames(
-              'flex items-center gap-2 px-3 py-1.5 text-sm rounded-md',
-              'bg-blue-600 hover:bg-blue-700 transition-colors',
-            )}
+          <Button
             onClick={() => setShowCreateForm(true)}
-            type="button"
+            size="sm"
+            variant="outline"
           >
             <FileIcon size={16} weight="fill" />
             New Prompt
-          </button>
+          </Button>
         </div>
       </div>
 

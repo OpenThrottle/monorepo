@@ -40,9 +40,9 @@ export const TaskForm = (props: TaskFormProps) => {
     <Card className={classnames('w-full', className)} data-testid="TaskForm">
       <CardContent className="pt-8">
         <Form className="w-full space-y-4" method="post">
-          <input name="planId" type="hidden" value={planId} />
+          <Input name="planId" type="hidden" value={planId} />
           {isEdit && task ? (
-            <input name="id" type="hidden" value={task.id} />
+            <Input name="id" type="hidden" value={task.id} />
           ) : null}
 
           <div className="space-y-2">

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node ./dist/server.js",
-    "build": "nx run @tools/ollama-proxy:build:tsc --skip-nx-cache",
+    "build": "nx run @tools/ollama-proxy:build:tsc",
     "e2e": "node scripts/e2e.mjs"
   },
   "nx": {
@@ -28,7 +28,7 @@
         "options": {
           "cwd": "{projectRoot}",
           "commands": [
-            "nx run @tools/ollama-proxy:build:tsc --skip-nx-cache"
+            "nx run @tools/ollama-proxy:build:tsc"
           ]
         },
         "parallel": false
@@ -48,7 +48,7 @@
         "options": {
           "cwd": "{projectRoot}",
           "commands": [
-            "nx run @tools/ollama-proxy:build:tsc --skip-nx-cache",
+            "nx run @tools/ollama-proxy:build:tsc",
             "node --env-file=.env.default --env-file=.env ./dist/server.js"
           ],
           "parallel": false

@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["OpenThrottle", "openthrottle"],
+  "cSpell.words": ["agentic", "openthrottle", "OpenThrottle"],
   "editor.codeActionsOnSave": {
     "eslint.experimental.useFlatConfig": "always",
     "source.fixAll.eslint": "explicit"
@@ -21,6 +21,9 @@
   "terminal.integrated.shellArgs.osx": ["-l"],
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "workbench.colorCustomizations": {
+    "tab.activeBackground": "#000000",
+    "tab.activeBorderTop": "#42fd9f",
+    "tab.activeForeground": "#FFFFFF",
     "titleBar.activeBackground": "#42fd9f",
     "titleBar.activeForeground": "#333",
     "titleBar.inactiveBackground": "#42fd9f",

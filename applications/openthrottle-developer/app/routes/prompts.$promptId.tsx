@@ -3,6 +3,7 @@ import { redirect, useFetcher } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Editor, getLanguageFromExt } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Button } from '@openthrottle/react-router-shadcn';
 import {
   DeletePromptDocument,
   GetPromptDocument,
@@ -166,37 +167,23 @@ export default function Component(
           {/* Keyboard hint */}
           <span className="text-xs text-gray-500">⌘S to save</span>
 
-          {/* Write to file system */}
           {prompt.filePath && (
-            <button
-              className="px-3 py-1.5 text-sm rounded-md bg-gray-700 hover:bg-gray-600 transition-colors disabled:opacity-50"
-              disabled={isSubmitting}
-              onClick={handleWriteToFileSystem}
-              type="button"
-            >
+            <Button disabled={isSubmitting} onClick={handleWriteToFileSystem}>
               Write to File
-            </button>
+            </Button>
           )}
 
-          {/* Save button */}
-          <button
-            className="px-3 py-1.5 text-sm rounded-md bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
-            disabled={!isDirty || isSubmitting}
-            onClick={handleSave}
-            type="button"
-          >
+          <Button disabled={!isDirty || isSubmitting} onClick={handleSave}>
             {isSubmitting ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
 
-          {/* Delete button */}
-          <button
-            className="px-3 py-1.5 text-sm rounded-md bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+          <Button
             disabled={isSubmitting}
             onClick={handleDelete}
-            type="button"
+            variant="destructive"
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
 

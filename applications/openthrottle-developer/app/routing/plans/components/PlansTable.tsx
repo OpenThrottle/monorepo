@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   DataTable,
+  Input,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -183,7 +184,7 @@ function buildPlanTableColumns(
               size="xs"
             />
             <RunPlanForm action={`/plans/${planId}`} method="post">
-              <input name="intent" type="hidden" value="runPlan" />
+              <Input name="intent" type="hidden" value="runPlan" />
               <Button
                 aria-label={`Queue plan ${row.original.title} with default worker tuning (open plan details to set Workflow run options)`}
                 className="text-xs"

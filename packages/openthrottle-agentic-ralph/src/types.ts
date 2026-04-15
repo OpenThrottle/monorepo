@@ -1,80 +1,51 @@
-export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
-export type WorkflowConfigMode = 'plan' | 'task';
+import type { WorkflowConfig } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowOrchestrator as WorkflowOrchestratorBase } from '@openthrottle/openthrottle-agentic-workflow';
 
-export interface WorkflowConfig {
-  readonly debug: WorkflowConfigDebug;
-  readonly iterationMax: number;
-  readonly iterations: number;
-  readonly iterationTimeout: number | undefined;
-  readonly model: string;
-  readonly prompt: string;
-  readonly timeout: number | undefined;
-}
+export type WorkflowFinishedReason =
+  | 'agent_complete'
+  | 'cancelled'
+  | 'max_iterations'
+  | 'plan_already_terminal'
+  | 'tasks_exhausted';
 
-/**
- * @description Stable error shape for workflow steps; callers map from transport or GraphQL errors.
- */
-export interface WorkflowError {
-  readonly cause: Error | undefined;
-  readonly code: string;
-  readonly message: string;
-}
+export type WorkflowFailedReason =
+  | 'agent_error'
+  | 'input_required'
+  | 'unhandled';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
  * {@link WorkflowRalphContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
  * `iterations`).
  */
-export interface WorkflowOptions extends WorkflowConfig {
-  readonly mode: WorkflowConfigMode; // 🤠 (ralph specific)
-  readonly planId: string; // 🤠 (ralph specific)
-  readonly project: string | undefined; // 🤠 (ralph specific)
-  readonly runner: 'RALPH'; // 🤠 (ralph only right now)
-  readonly taskId: string; // 🤠 (ralph specific)
-}
+export interface WorkflowContext extends WorkflowConfig {
+  /**
+   * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
+   * checked between steps so user cancel matches the spawn-path behavior.
+   */
+  readonly abortSignal?: AbortSignal;
 
-export type WorkflowStatus = 'failed' | 'finished';
+  // 🤠 - agentic ralph workflow specifics
+  readonly kind: 'ralph';
+  readonly mode: 'plan' | 'task';
+  readonly planId: string;
+  readonly project: string | undefined;
+  readonly runner: 'RALPH';
+  readonly taskId: string;
+}
 
 /**
  * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).
+ * align with current Ralph CLI).z
  */
-export type WorkflowRunOutcome<WorkflowFinishedReason, WorkflowFailedReason> =
-  | {
-      readonly exitCode: 0;
-      readonly reason: WorkflowFinishedReason;
-      readonly status: 'finished';
-    }
-  | {
-      readonly exitCode: 1;
-      readonly reason: WorkflowFailedReason;
-      readonly status: 'failed';
-    };
+export type WorkflowRunResult = WorkflowRunResultBase<
+  WorkflowFinishedReason,
+  WorkflowFailedReason
+>;
 
-export type WorkflowStepFailure<TStep extends string[] = string[]> = {
-  readonly error: WorkflowError;
-  readonly outcome: 'failure';
-  readonly step: TStep;
-};
-
-export type WorkflowStepSuccess<
-  TStep extends string[] = string[],
-  TData extends Record<string, unknown> | undefined = undefined,
-> = TData extends undefined
-  ? { readonly step: TStep; readonly outcome: 'success' }
-  : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
-
-/**
- * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
- */
-export interface WorkflowOrchestrator<
-  // TContext extends WorkflowFlowContext = WorkflowFlowContext,
-  TContext = unknown,
-> {
-  /**
-   * @description Runs the workflow until a terminal {@link WorkflowRunOutcome}.
-   */
-  readonly execute: (params: {
-    readonly context: TContext;
-  }) => Promise<WorkflowRunOutcome<any, any>>;
-}
+export type WorkflowOrchestrator = WorkflowOrchestratorBase<
+  WorkflowFinishedReason,
+  WorkflowFailedReason,
+  WorkflowContext
+>;

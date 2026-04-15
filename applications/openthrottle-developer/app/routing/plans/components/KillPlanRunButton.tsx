@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   Button,
+  Input,
   toast,
 } from '@openthrottle/react-router-shadcn';
 import { StopCircle } from 'lucide-react';
@@ -101,7 +102,7 @@ export const KillPlanRunButton = (
           </AlertDialogDescription>
         </AlertDialogHeader>
         <CancelForm action={`/plans/${planId}`} method="post">
-          <input name="intent" type="hidden" value="cancelPlanRun" />
+          <Input name="intent" type="hidden" value="cancelPlanRun" />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting} type="button">
               Cancel

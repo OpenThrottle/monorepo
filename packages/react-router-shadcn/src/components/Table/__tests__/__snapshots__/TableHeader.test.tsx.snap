@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TableHeader Component > should render 1`] = `
+<body>
+  <div>
+    <thead
+      class="[&_tr]:border-b"
+    />
+  </div>
+</body>
+`;

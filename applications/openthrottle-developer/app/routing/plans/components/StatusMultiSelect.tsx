@@ -7,6 +7,7 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
+  Label,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -81,13 +82,7 @@ export function StatusMultiSelect(
   // 🔌 Short Circuit
 
   return (
-    <label
-      className={cn(
-        'flex flex-col gap-1',
-        compact ? 'min-w-0 shrink-0' : 'min-w-40',
-      )}
-      data-testid={dataTestId}
-    >
+    <Label data-testid={dataTestId}>
       <span className="text-sm font-medium hidden text-foreground/80">
         Status
       </span>
@@ -169,6 +164,6 @@ export function StatusMultiSelect(
           })}
         </div>
       ) : null}
-    </label>
+    </Label>
   );
 }

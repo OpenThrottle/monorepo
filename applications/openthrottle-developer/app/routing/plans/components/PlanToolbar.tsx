@@ -6,6 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Input,
   toast,
   Tooltip,
   TooltipContent,
@@ -134,9 +135,9 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           <Tooltip>
             <TooltipTrigger asChild={true}>
               <fetcherSetPlanStatus.Form method="post">
-                <input name="intent" type="hidden" value="setPlanStatus" />
-                <input name="planId" type="hidden" value={planId} />
-                <input name="status" type="hidden" value="COMPLETED" />
+                <Input name="intent" type="hidden" value="setPlanStatus" />
+                <Input name="planId" type="hidden" value={planId} />
+                <Input name="status" type="hidden" value="COMPLETED" />
                 <Button
                   disabled={
                     fetcherSetPlanStatus.state !== 'idle' || isCompleted
@@ -162,8 +163,8 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           <Tooltip>
             <TooltipTrigger asChild={true}>
               <fetcherRunPlan.Form method="post">
-                <input name="intent" type="hidden" value="runPlan" />
-                <input
+                <Input name="intent" type="hidden" value="runPlan" />
+                <Input
                   name="ralphTuning"
                   type="hidden"
                   value={ralphTuningJson}

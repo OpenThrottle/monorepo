@@ -8,6 +8,16 @@ import {
 import type { PromptType } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@openthrottle/react-router-shadcn';
+import {
   CreatePromptDocument,
   type CreateCustomPromptInput,
   CustomPromptType,
@@ -105,7 +115,6 @@ export default function Component(
 
   return (
     <main className="flex flex-col flex-1" data-testid="prompts-create">
-      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
           <a
@@ -123,18 +132,10 @@ export default function Component(
             <span className="text-sm text-red-400">{actionData.error}</span>
           )}
 
-          {/* Keyboard hint */}
           <span className="text-xs text-gray-500">⌘S to save</span>
-
-          {/* Create button */}
-          <button
-            className="px-3 py-1.5 text-sm rounded-md bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
-            disabled={!canSubmit || isSubmitting}
-            onClick={handleSubmit}
-            type="button"
-          >
+          <Button disabled={!canSubmit || isSubmitting} onClick={handleSubmit}>
             {isSubmitting ? 'Creating...' : 'Create Prompt'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -143,14 +144,8 @@ export default function Component(
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Title */}
           <div>
-            <label
-              className="block text-sm font-medium text-gray-400 mb-1"
-              htmlFor="title"
-            >
-              Title *
-            </label>
-            <input
-              className="w-full px-3 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500"
+            <Label htmlFor="title">Title *</Label>
+            <Input
               id="title"
               onChange={(e) => setTitle(e.target.value)}
               placeholder="My Custom Prompt"
@@ -162,36 +157,30 @@ export default function Component(
 
           {/* Type */}
           <div>
-            <label
-              className="block text-sm font-medium text-gray-400 mb-1"
-              htmlFor="promptType"
-            >
-              Type *
-            </label>
-            <select
-              className="w-full px-3 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500"
-              id="promptType"
-              onChange={(e) => setPromptType(e.target.value as PromptType)}
+            <Label htmlFor="promptType">Type *</Label>
+            <Select
+              aria-label="Prompt type"
+              name="promptType"
+              onValueChange={(value) => setPromptType(value as PromptType)}
               value={promptType}
             >
-              {PROMPT_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Poll interval…" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROMPT_TYPE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* File Path */}
           <div>
-            <label
-              className="block text-sm font-medium text-gray-400 mb-1"
-              htmlFor="filePath"
-            >
-              File Path (optional)
-            </label>
-            <input
-              className="w-full px-3 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500"
+            <Label htmlFor="filePath">File Path (optional)</Label>
+            <Input
               id="filePath"
               onChange={(e) => setFilePath(e.target.value)}
               placeholder=".cursor/rules/my-prompt.mdc"
@@ -204,14 +193,8 @@ export default function Component(
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Description */}
           <div>
-            <label
-              className="block text-sm font-medium text-gray-400 mb-1"
-              htmlFor="description"
-            >
-              Description (optional)
-            </label>
-            <input
-              className="w-full px-3 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500"
+            <Label htmlFor="description">Description (optional)</Label>
+            <Input
               id="description"
               onChange={(e) => setDescription(e.target.value)}
               placeholder="A brief description of this prompt"
@@ -222,14 +205,8 @@ export default function Component(
 
           {/* Labels */}
           <div>
-            <label
-              className="block text-sm font-medium text-gray-400 mb-1"
-              htmlFor="labels"
-            >
-              Labels (comma-separated, optional)
-            </label>
-            <input
-              className="w-full px-3 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500"
+            <Label htmlFor="labels">Labels (comma-separated, optional)</Label>
+            <Input
               id="labels"
               onChange={(e) => setLabels(e.target.value)}
               placeholder="coding, typescript, react"

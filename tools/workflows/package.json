@@ -60,7 +60,7 @@
         "options": {
           "cwd": "{projectRoot}",
           "commands": [
-            "nx run @tools/workflows:build:tsc --skip-nx-cache",
+            "nx run @tools/workflows:build:tsc",
             "chmod +x ./dist/src/bin/*.js"
           ],
           "parallel": false

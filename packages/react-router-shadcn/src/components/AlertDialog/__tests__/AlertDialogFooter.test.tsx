@@ -1,24 +1,26 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { AlertDialogFooter } from '../AlertDialogFooter';
-import type { AlertDialogFooterProps } from '../AlertDialogFooter';
 
-describe('AlertDialogFooter Component', () => {
-  let component: RenderResult;
-  let props: AlertDialogFooterProps;
+describe('AlertDialogFooter', () => {
+  it('renders a flex container with layout classes and merged className', () => {
+    const { container } = render(
+      <AlertDialogFooter className="footer-extra">
+        <span>Actions</span>
+      </AlertDialogFooter>,
+    );
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <AlertDialogFooter {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    const footer = container.firstElementChild;
+    expect(footer).toBeInTheDocument();
+    expect(footer).toHaveClass('footer-extra');
+    expect(footer).toHaveClass(
+      'flex',
+      'flex-col-reverse',
+      'sm:flex-row',
+      'sm:justify-end',
+      'sm:space-x-2',
+    );
+    expect(screen.getByText('Actions')).toBeInTheDocument();
   });
 });

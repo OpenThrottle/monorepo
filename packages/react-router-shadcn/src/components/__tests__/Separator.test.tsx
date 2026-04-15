@@ -7,13 +7,13 @@ describe('Separator', () => {
     const { container } = render(<Separator />);
     const separator = container.firstElementChild;
     expect(separator).toBeInTheDocument();
-    expect(separator).toHaveClass('h-[1px]', 'w-full', 'bg-border');
+    expect(separator).toHaveClass('h-px', 'w-full', 'bg-border', 'shrink-0');
   });
 
   it('should render vertical separator when orientation is vertical', () => {
     const { container } = render(<Separator orientation="vertical" />);
     const separator = container.firstElementChild;
-    expect(separator).toHaveClass('h-full', 'w-[1px]');
+    expect(separator).toHaveClass('h-full', 'w-px', 'shrink-0');
   });
 
   it('should merge custom className', () => {

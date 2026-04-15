@@ -136,7 +136,7 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
 
         <div
           aria-label="View mode"
-          className="flex shrink-0 items-center gap-1"
+          className="flex shrink-0 items-center gap-2"
           role="group"
         >
           <Button
