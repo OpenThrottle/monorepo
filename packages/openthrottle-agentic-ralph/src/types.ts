@@ -1,6 +1,8 @@
-import type { WorkflowConfig } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowOrchestrator as WorkflowOrchestratorBase } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowConfig,
+  WorkflowRunResult as WorkflowRunResultBase,
+  WorkflowOrchestrator as WorkflowOrchestratorBase,
+} from '@openthrottle/openthrottle-agentic-workflow';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'
@@ -44,6 +46,11 @@ export type WorkflowRunResult = WorkflowRunResultBase<
   WorkflowFailedReason
 >;
 
+/**
+ * @description Create an Orchestrator type for Ralph workflow customized
+ * with the Ralph-specific context(s) and results. Now this package can
+ * implement its own Ralph orchestrator.
+ */
 export type WorkflowOrchestrator = WorkflowOrchestratorBase<
   WorkflowFinishedReason,
   WorkflowFailedReason,

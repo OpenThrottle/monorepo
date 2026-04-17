@@ -1,5 +1,11 @@
 /* eslint-disable no-await-in-loop */ // FIXME: We can better handle these instances
 
+import type { WorkflowRunResult } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowFailedReason,
+  WorkflowFinishedReason,
+  WorkflowOrchestrator,
+} from '../types.js';
 import {
   GetPlanDocument,
   GetServerHealthDocument,
@@ -8,19 +14,12 @@ import {
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
-// import type { WorkflowRalphContext } from '../contract/flow-context.js';
-import type {
-  WorkflowFailedReason,
-  WorkflowFinishedReason,
-  WorkflowOrchestrator,
-  WorkflowRunResult,
-} from '../types.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {
-  parseRalphAgentParseControl,
-  parseRalphCompleteTaskSignals,
-  ralphOutputHasPromiseComplete,
-} from '../utils/workflow-output.js';
+  parseAgentOutput,
+  parseAgentCompleteTaskSignals,
+  agentOutputHasPromiseComplete,
+} from '../utils/output.js';
 import { formatPlanAndTasksForPrompt } from '../utils/index.js';
 
 const REMAINING_TASK_STATUS = new Set([
@@ -30,13 +29,17 @@ const REMAINING_TASK_STATUS = new Set([
   'BLOCKED',
 ]);
 
-const finished = (reason: WorkflowFinishedReason): WorkflowRunResult => ({
+const onFinished = (
+  reason: WorkflowFinishedReason,
+): WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> => ({
   exitCode: 0,
   reason,
   status: 'finished',
 });
 
-const failed = (reason: WorkflowFailedReason): WorkflowRunResult => ({
+const onFailure = (
+  reason: WorkflowFailedReason,
+): WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> => ({
   exitCode: 1,
   reason,
   status: 'failed',
@@ -48,7 +51,7 @@ const failed = (reason: WorkflowFailedReason): WorkflowRunResult => ({
  * task completions, and interprets `<promise>` markers (parity with `tools/workflows/src/bin/ralph.ts`
  * `main()`).
  */
-export const createWorkflowRalphOrchestrator = (
+export const createWorkflowOrchestrator = (
   deps: WorkflowRalphOrchestratorDeps,
 ): WorkflowOrchestrator => ({
   execute: async ({ context }) => {
@@ -71,12 +74,12 @@ export const createWorkflowRalphOrchestrator = (
         });
 
         if (!taskLookup.task) {
-          return failed('unhandled');
+          return onFailure('unhandled');
         }
 
         effectivePlanId = taskLookup.task.planId;
       } else if (planIdTrim === '' && taskIdTrim === '') {
-        return failed('unhandled');
+        return onFailure('unhandled');
       }
 
       // state.load
@@ -91,7 +94,7 @@ export const createWorkflowRalphOrchestrator = (
       const tasksRows = tasksResult.tasksByPlanId;
 
       if (!planRow) {
-        return failed('unhandled');
+        return onFailure('unhandled');
       }
 
       // prompt.build
@@ -105,7 +108,7 @@ export const createWorkflowRalphOrchestrator = (
       // plan.guard
       if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
         // 🟡 If the plan is already terminal, we return a finished outcome
-        return finished('plan_already_terminal');
+        return onFinished('plan_already_terminal');
       }
 
       // plan.mark_in_progress
@@ -120,37 +123,47 @@ export const createWorkflowRalphOrchestrator = (
         });
       }
 
-      const maxIterations = context.iterations;
-      const iterationTimeoutSeconds =
-        context.iterationTimeout ?? context.timeout ?? undefined;
+      const {
+        abortSignal,
+        iterations: maxIterations,
+        iterationTimeout,
+        timeout,
+      } = context;
 
+      const iterationTimeoutSeconds = iterationTimeout ?? timeout ?? undefined;
       const timeoutMs =
         iterationTimeoutSeconds != null
           ? iterationTimeoutSeconds * 1000
           : undefined;
 
-      const abortSignal = context.abortSignal;
-
       if (abortSignal?.aborted) {
-        return finished('cancelled');
+        return onFinished('cancelled');
       }
 
       let lastIterationTaskId: string | undefined;
       let lastIterationTaskCompleted = false;
 
+      /**
+       * This is where we run our guarded loop (max iterations) chipping away
+       * at the plan and its tasks.
+       */
       for (let iteration = 1; iteration <= maxIterations; iteration++) {
+        // iteration.guard
         if (abortSignal?.aborted) {
-          return finished('cancelled');
+          return onFinished('cancelled');
         }
 
         let agentPrompt = basePrompt;
         let firstPendingForIteration: string | undefined;
 
+        // task.guard
         if (!isTaskCentric) {
+          // task.load
           const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
             input: { planId: effectivePlanId },
           });
 
+          // task.filter
           const remaining = planTasks.tasksByPlanId.filter((t) =>
             REMAINING_TASK_STATUS.has(t.status),
           );
@@ -161,7 +174,7 @@ export const createWorkflowRalphOrchestrator = (
             });
 
             // 🟢 If we've exhausted the tasks, we return a finished outcome
-            return finished('tasks_exhausted');
+            return onFinished('tasks_exhausted');
           }
 
           // Grab any tasks that may already be marked in progress
@@ -169,18 +182,20 @@ export const createWorkflowRalphOrchestrator = (
             (t) => t.status === 'IN_PROGRESS',
           );
 
+          const nextAvailableTask = remaining.find((t) =>
+            ['QUEUED', 'PENDING'].includes(t.status),
+          );
+
           // Otherwise we'll pick up the next available task
-          const taskForIteration =
-            firstInProgress ??
-            remaining.find((t) => ['QUEUED', 'PENDING'].includes(t.status));
+          const taskForIteration = firstInProgress ?? nextAvailableTask;
 
           if (taskForIteration) {
             firstPendingForIteration = taskForIteration.id;
 
-            if (
-              taskForIteration.status === 'PENDING' ||
-              taskForIteration.status === 'QUEUED'
-            ) {
+            const isPending = taskForIteration.status === 'PENDING';
+            const isQueued = taskForIteration.status === 'QUEUED';
+
+            if (isPending || isQueued) {
               await executeGraphqlV2(UpdateTaskDocument, {
                 input: { id: taskForIteration.id, status: 'IN_PROGRESS' },
               });
@@ -189,6 +204,11 @@ export const createWorkflowRalphOrchestrator = (
             agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
           }
         }
+
+        /**
+         * All that setup and now we have our prompt ready to go on with a
+         * fresh invocation of the agent
+         */
 
         // iteration.run
         let agentOutput: string;
@@ -204,18 +224,18 @@ export const createWorkflowRalphOrchestrator = (
             timeoutMs,
           });
         } catch {
-          return failed('unhandled');
+          return onFailure('unhandled');
         }
 
         if (abortSignal?.aborted) {
-          return finished('cancelled');
+          return onFinished('cancelled');
         }
 
-        const completeTaskIds = [...parseRalphCompleteTaskSignals(agentOutput)];
+        const completeTaskIds = [...parseAgentCompleteTaskSignals(agentOutput)];
 
         if (
           taskIdTrim &&
-          ralphOutputHasPromiseComplete(agentOutput) &&
+          agentOutputHasPromiseComplete(agentOutput) &&
           !completeTaskIds.some((id) => id === taskIdTrim.toLowerCase())
         ) {
           completeTaskIds.push(taskIdTrim.toLowerCase());
@@ -230,7 +250,7 @@ export const createWorkflowRalphOrchestrator = (
         if (
           !taskIdTrim &&
           firstPendingForIteration &&
-          ralphOutputHasPromiseComplete(agentOutput) &&
+          agentOutputHasPromiseComplete(agentOutput) &&
           !currentTaskAlreadyMarked
         ) {
           completeTaskIds.push(firstPendingForIteration.toLowerCase());
@@ -248,29 +268,30 @@ export const createWorkflowRalphOrchestrator = (
         }
 
         const currentTaskId = taskIdTrim || firstPendingForIteration;
+
         lastIterationTaskId = currentTaskId;
         lastIterationTaskCompleted = currentTaskId
           ? completeTaskIds.some((id) => id === currentTaskId.toLowerCase())
           : false;
 
         // agent.parse_control (order is specific)
-        const control = parseRalphAgentParseControl(agentOutput);
+        const control = parseAgentOutput(agentOutput);
 
         // 1. 🔴 We check for any errors
         if (control === 'ERROR') {
-          return failed('agent_error');
+          return onFailure('agent_error');
         }
 
         // 2. 🟡 Then we check for any input required
         if (control === 'INPUT_REQUIRED') {
-          return failed('input_required');
+          return onFailure('input_required');
         }
 
         // 3. 🟢 Then we check for any completion
         if (control === 'COMPLETE') {
-          return finished('agent_complete');
+          return onFinished('agent_complete');
         }
-      }
+      } // ---> looping ... done
 
       // 4. 🟡 If we have a task id and it's not completed, we mark it as pending
       if (lastIterationTaskId && !lastIterationTaskCompleted) {
@@ -284,9 +305,9 @@ export const createWorkflowRalphOrchestrator = (
       }
 
       // 5. 🟡 We've successfully completed the iterations, but we've hit our limit
-      return finished('max_iterations');
+      return onFinished('max_iterations');
     } catch {
-      return failed('unhandled');
+      return onFailure('unhandled');
     }
   },
 });

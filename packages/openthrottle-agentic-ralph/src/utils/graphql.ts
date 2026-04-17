@@ -1,7 +1,7 @@
 /**
  * @description Workflow GraphQL: env helpers, {@link buildWorkflowExecuteGraphqlV2Options}, and
  * {@link executeWorkflowGraphqlV2} wrapping {@link executeGraphqlV2} from `@openthrottle/nodejs-graphql`.
- * Ralph plan-run helpers are re-exported from {@link ralph-plan-run-context.js}; codegen documents live
+ * Ralph plan-run helpers are re-exported from {@link context.js}; codegen documents live
  * under `graphql/*.graphql`.
  *
  * FIXME: richer thrown errors (full `errors[]`, extensions, HTTP metadata) when `@openthrottle/nodejs-graphql` exposes them.
@@ -13,8 +13,8 @@ import { executeGraphqlV2, getGraphQLUrl } from '@openthrottle/nodejs-graphql';
 export {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
-  resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning,
-} from './ralph-plan-run-context.js';
+  resolveWorkflowRunOptions,
+} from './context.js';
 
 /**
  * @description Configuration for building {@link ExecuteGraphqlOptionsV2} (auth, optional endpoint override, extra headers).

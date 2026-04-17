@@ -6,26 +6,24 @@
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type { WorkflowContext } from '../types.js';
 import {
-  DEFAULT_RALPH_ITERATIONS,
-  DEFAULT_RALPH_MODEL,
-  DEFAULT_RALPH_PROMPT,
-} from '../contract/flow-context.js';
+  DEFAULT_ITERATIONS,
+  DEFAULT_MODEL,
+  DEFAULT_PROMPT,
+} from '../config/index.js';
 
-const resolveIterationsFromTuning = (
-  raw: number | null | undefined,
-): number => {
+const resolveIterations = (raw: number | null | undefined): number => {
   if (raw == null) {
-    return DEFAULT_RALPH_ITERATIONS;
+    return DEFAULT_ITERATIONS;
   }
 
   if (!Number.isInteger(raw) || raw < 1) {
-    return DEFAULT_RALPH_ITERATIONS;
+    return DEFAULT_ITERATIONS;
   }
 
   return raw;
 };
 
-const resolveIterationTimeoutSecondsFromTuning = (
+const resolveIterationTimeoutSeconds = (
   raw: number | null | undefined,
 ): number | undefined => {
   if (raw == null) {
@@ -39,7 +37,7 @@ const resolveIterationTimeoutSecondsFromTuning = (
   return raw;
 };
 
-const resolveDebugFromTuning = (
+const resolveDebug = (
   raw: string | null | undefined,
 ): WorkflowContext['debug'] => {
   const t = raw?.trim() ?? '';
@@ -57,25 +55,25 @@ const resolveDebugFromTuning = (
   }
 };
 
-const resolveModelFromTuning = (raw: string | null | undefined): string => {
+const resolveModel = (raw: string | null | undefined): string => {
   const t = raw?.trim() ?? '';
   if (t === '') {
-    return DEFAULT_RALPH_MODEL;
+    return DEFAULT_MODEL;
   }
 
   return t;
 };
 
-const resolvePromptFromTuning = (raw: string | null | undefined): string => {
+const resolvePrompt = (raw: string | null | undefined): string => {
   const t = raw?.trim() ?? '';
   if (t === '') {
-    return DEFAULT_RALPH_PROMPT;
+    return DEFAULT_PROMPT;
   }
 
   return t;
 };
 
-const resolveProjectFromTuning = (raw: string | null | undefined): string => {
+const resolveProject = (raw: string | null | undefined): string => {
   return raw?.trim() ?? '';
 };
 
@@ -84,7 +82,7 @@ const resolveProjectFromTuning = (raw: string | null | undefined): string => {
  * worker job tuning with the same field names) with defaults so the result matches
  * {@link WorkflowContext}. Ignores `promptFile` — layer-1 argv only; not on {@link WorkflowContext}.
  */
-export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
+export function resolveWorkflowRunOptions(params: {
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
   readonly mode?: WorkflowContext['mode'];
@@ -94,22 +92,22 @@ export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
   const planId = params.planId.trim();
   const mode = params.mode ?? 'plan';
   const taskId = (params.taskId ?? '').trim();
-  const iterations = resolveIterationsFromTuning(r.iterations);
-  const iterationTimeout = resolveIterationTimeoutSecondsFromTuning(
+  const iterations = resolveIterations(r.iterations);
+  const iterationTimeout = resolveIterationTimeoutSeconds(
     r.iterationTimeoutSeconds,
   );
 
   return {
-    debug: resolveDebugFromTuning(r.ralphDebugCli),
+    debug: resolveDebug(r.ralphDebugCli),
     iterationMax: iterations,
     iterationTimeout,
     iterations,
     kind: 'ralph',
     mode,
-    model: resolveModelFromTuning(r.model),
+    model: resolveModel(r.model),
     planId,
-    project: resolveProjectFromTuning(r.project),
-    prompt: resolvePromptFromTuning(r.prompt),
+    project: resolveProject(r.project),
+    prompt: resolvePrompt(r.prompt),
     // runner: resolveExecutionBackend(r.backend),
     runner: 'RALPH',
     taskId,
@@ -147,6 +145,6 @@ export function buildRalphFlowContextFromPlanRunTuning(params: {
   readonly taskId?: string;
 }): WorkflowContext {
   return buildRalphFlowContextFromRunOptionsShape(
-    resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params),
+    resolveWorkflowRunOptions(params),
   );
 }

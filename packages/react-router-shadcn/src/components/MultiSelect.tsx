@@ -33,13 +33,12 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
 
     const setRefs = React.useCallback(
       (el: HTMLDivElement | null): void => {
-        (
-          containerRef as React.MutableRefObject<HTMLDivElement | null>
-        ).current = el;
+        (containerRef as React.RefObject<HTMLDivElement | null>).current = el;
+
         if (typeof ref === 'function') {
           ref(el);
         } else if (ref != null) {
-          (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          (ref as React.RefObject<HTMLDivElement | null>).current = el;
         }
       },
       [ref],
@@ -55,10 +54,12 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           setOpen(false);
         }
       };
+
       if (open) {
         document.addEventListener('mousedown', handleMouseDown);
         return () => document.removeEventListener('mousedown', handleMouseDown);
       }
+
       return undefined;
     }, [open]);
 
@@ -66,6 +67,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       const next = value.includes(optionValue)
         ? value.filter((v) => v !== optionValue)
         : [...value, optionValue];
+
       onChange(next);
     };
 
@@ -88,7 +90,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           ) : (
             selectedOptions.map((opt) => (
               <Badge
-                className="max-w-[8rem] truncate"
+                className="max-w-32 truncate"
                 key={opt.value}
                 variant="secondary"
               >
@@ -100,7 +102,7 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
         {open && (
           <div
             className={cn(
-              'absolute top-full left-0 z-50 mt-1 max-h-96 min-w-[8rem] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md',
+              'absolute top-full left-0 z-50 mt-1 max-h-96 min-w-32 overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md',
             )}
             role="listbox"
           >

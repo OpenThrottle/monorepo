@@ -1,8 +1,7 @@
-import type { AgentParseControlKind } from '../contract/step-results.js';
+import type { AgentOutputControlType } from '../contract/step-results.js';
 
-/** Matches `<ralph:task-complete>uuid</ralph:task-complete>`. */
-const RALPH_COMPLETE_TASK_REGEX =
-  /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi;
+/** @description Matches `<ralph:task-complete>uuid</ralph:task-complete>`. */
+const TASK_COMPLETE_REGEX = /<ralph:task-complete>([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})<\/ralph:task-complete>/gi; // prettier-ignore
 
 const PROMISE_COMPLETE = '<promise>COMPLETE</promise>';
 const PROMISE_ERROR = '<promise>ERROR</promise>';
@@ -28,15 +27,15 @@ export const getRalphOutputMarkerFlags = (
 /**
  * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`; returns unique task ids (lowercase).
  */
-export const parseRalphCompleteTaskSignals = (
+export const parseAgentCompleteTaskSignals = (
   result: string,
 ): readonly string[] => {
   const ids: string[] = [];
   let m: RegExpExecArray | null;
 
-  RALPH_COMPLETE_TASK_REGEX.lastIndex = 0;
+  TASK_COMPLETE_REGEX.lastIndex = 0;
 
-  while ((m = RALPH_COMPLETE_TASK_REGEX.exec(result)) !== null) {
+  while ((m = TASK_COMPLETE_REGEX.exec(result)) !== null) {
     ids.push(m[1]!.toLowerCase());
   }
 
@@ -46,16 +45,14 @@ export const parseRalphCompleteTaskSignals = (
 /**
  * @description True when output contains `<promise>COMPLETE</promise>`.
  */
-export const ralphOutputHasPromiseComplete = (result: string): boolean => {
+export const agentOutputHasPromiseComplete = (result: string): boolean => {
   return result.includes(PROMISE_COMPLETE);
 };
 
 /**
  * @description Terminal control from promise markers ~ ordering is intentional
  */
-export const parseRalphAgentParseControl = (
-  result: string,
-): AgentParseControlKind => {
+export const parseAgentOutput = (result: string): AgentOutputControlType => {
   const outputs = getRalphOutputMarkerFlags(result);
   const { hasComplete, hasError, hasInputRequired } = outputs;
 

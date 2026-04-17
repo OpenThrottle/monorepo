@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import type { WorkflowRunner } from './flow-context.js';
+import type { WorkflowRunner } from '../config/index.js';
 
 /**
  * @description Injectable GraphQL executor: same contract as `executeGraphqlV2` from
@@ -59,7 +59,7 @@ export interface WorkflowRalphIterationRunner {
 /**
  * @description Dependencies for constructing a Ralph-shaped `WorkflowOrchestrator`: GraphQL I/O and
  * iteration execution. Pass `executeGraphqlV2` from `@openthrottle/nodejs-graphql` with options from
- * `buildWorkflowExecuteGraphqlV2Options` in `workflow-graphql.ts`, or a test double.
+ * `buildWorkflowExecuteGraphqlV2Options` in `graphql.ts`, or a test double.
  */
 export interface WorkflowRalphOrchestratorDeps {
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
