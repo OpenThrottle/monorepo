@@ -1,14 +1,16 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { cn } from '../../utils/cn';
 
-export interface DialogDescriptionProps {
-  readonly className?: string;
-}
+export interface DialogDescriptionProps extends React.ComponentPropsWithoutRef<
+  typeof DialogPrimitive.Description
+> {}
 
-export const DialogDescription = (
-  props: DialogDescriptionProps,
-): React.ReactElement => {
-  const { className } = props;
+export const DialogDescription = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Description>,
+  DialogDescriptionProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
 
   // Hooks
 
@@ -23,11 +25,13 @@ export const DialogDescription = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="DialogDescription"
-    >
-      <h2>DialogDescription</h2>
-    </div>
+    <DialogPrimitive.Description
+      className={cn('text-sm text-muted-foreground', className)}
+      ref={ref}
+      {...rest}
+    />
   );
-};
+});
+
+DialogDescription.displayName =
+  DialogPrimitive.Description.displayName ?? 'DialogDescription';

@@ -1,12 +1,16 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { cn } from '../../utils/cn';
 
-export interface DialogTitleProps {
-  readonly className?: string;
-}
+export interface DialogTitleProps extends React.ComponentPropsWithoutRef<
+  typeof DialogPrimitive.Title
+> {}
 
-export const DialogTitle = (props: DialogTitleProps): React.ReactElement => {
-  const { className } = props;
+export const DialogTitle = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Title>,
+  DialogTitleProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
 
   // Hooks
 
@@ -21,8 +25,15 @@ export const DialogTitle = (props: DialogTitleProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="DialogTitle">
-      <h2>DialogTitle</h2>
-    </div>
+    <DialogPrimitive.Title
+      className={cn(
+        'text-lg font-semibold leading-none tracking-tight',
+        className,
+      )}
+      ref={ref}
+      {...rest}
+    />
   );
-};
+});
+
+DialogTitle.displayName = DialogPrimitive.Title.displayName ?? 'DialogTitle';

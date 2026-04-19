@@ -1,28 +1,35 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '../../utils/cn';
 
-export interface DialogFooterProps {
-  readonly className?: string;
-}
+export interface DialogFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export const DialogFooter = (props: DialogFooterProps): React.ReactElement => {
-  const { className } = props;
+export const DialogFooter = React.forwardRef<HTMLDivElement, DialogFooterProps>(
+  (props, ref): React.ReactElement => {
+    const { className, ...rest } = props;
 
-  // Hooks
+    // Hooks
 
-  // Setup
+    // Setup
 
-  // Handlers
+    // Handlers
 
-  // Markup
+    // Markup
 
-  // Life Cycle
+    // Life Cycle
 
-  // 🔌 Short Circuit
+    // 🔌 Short Circuit
 
-  return (
-    <div className={classnames('p-4', className)} data-testid="DialogFooter">
-      <h2>DialogFooter</h2>
-    </div>
-  );
-};
+    return (
+      <div
+        className={cn(
+          'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
+          className,
+        )}
+        ref={ref}
+        {...rest}
+      />
+    );
+  },
+);
+
+DialogFooter.displayName = 'DialogFooter';

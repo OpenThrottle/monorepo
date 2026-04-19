@@ -3,10 +3,11 @@
 exports[`Dialog Component > should render 1`] = `
 <body>
   <div>
-    <div
-      class=""
-      role="dialog"
-    />
+    <span
+      data-testid="dialog-child"
+    >
+      Child
+    </span>
   </div>
 </body>
 `;

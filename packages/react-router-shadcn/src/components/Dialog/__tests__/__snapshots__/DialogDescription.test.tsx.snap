@@ -3,14 +3,12 @@
 exports[`DialogDescription Component > should render 1`] = `
 <body>
   <div>
-    <div
-      class="p-4"
-      data-testid="DialogDescription"
+    <p
+      class="text-sm text-muted-foreground"
+      id="radix-_r_2_"
     >
-      <h2>
-        DialogDescription
-      </h2>
-    </div>
+      Description
+    </p>
   </div>
 </body>
 `;

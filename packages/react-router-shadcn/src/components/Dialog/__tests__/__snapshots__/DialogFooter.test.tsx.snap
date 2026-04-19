@@ -4,13 +4,8 @@ exports[`DialogFooter Component > should render 1`] = `
 <body>
   <div>
     <div
-      class="p-4"
-      data-testid="DialogFooter"
-    >
-      <h2>
-        DialogFooter
-      </h2>
-    </div>
+      class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
+    />
   </div>
 </body>
 `;

@@ -1,14 +1,21 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
+import { cn } from '../../utils/cn';
+import { DialogOverlay } from './DialogOverlay';
+import { DialogPortal } from './Dialog';
 
-export interface DialogContentProps {
-  readonly className?: string;
+export interface DialogContentProps extends React.ComponentPropsWithoutRef<
+  typeof DialogPrimitive.Content
+> {
+  readonly showClose?: boolean;
 }
 
-export const DialogContent = (
-  props: DialogContentProps,
-): React.ReactElement => {
-  const { className } = props;
+export const DialogContent = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Content>,
+  DialogContentProps
+>((props, ref): React.ReactElement => {
+  const { children, className, showClose = true, ...rest } = props;
 
   // Hooks
 
@@ -23,8 +30,27 @@ export const DialogContent = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="DialogContent">
-      <h2>DialogContent</h2>
-    </div>
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        className={cn(
+          'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg',
+          className,
+        )}
+        ref={ref}
+        {...rest}
+      >
+        {children}
+        {showClose ? (
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        ) : null}
+      </DialogPrimitive.Content>
+    </DialogPortal>
   );
-};
+});
+
+DialogContent.displayName =
+  DialogPrimitive.Content.displayName ?? 'DialogContent';
