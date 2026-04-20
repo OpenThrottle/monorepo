@@ -33,7 +33,7 @@ const CommandInput = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CmdkCommandInput
     className={cn(
-      'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+      'flex w-full rounded-md border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     ref={ref}
@@ -68,7 +68,7 @@ const CommandGroup = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CmdkCommandGroup
     className={cn(
-      'overflow-hidden p-1 text-foreground [&_[data-slot=command-group-heading]]:px-2 [&_[data-slot=command-group-heading]]:py-1.5 [&_[data-slot=command-group-heading]]:text-xs [&_[data-slot=command-group-heading]]:font-medium [&_[data-slot=command-group-heading]]:text-muted-foreground',
+      'overflow-hidden p-1 text-foreground [&_[data-slot=command-group-heading]]:px-2 [&_[data-slot=command-group-heading]]:py-1.5 [&_[data-slot=command-group-heading]]:text-md [&_[data-slot=command-group-heading]]:font-extrabold [&_[data-slot=command-group-heading]]:text-muted-foreground',
       className,
     )}
     ref={ref}
@@ -111,7 +111,7 @@ const CommandDialog = React.forwardRef<
 >(({ contentClassName, overlayClassName, ...props }, ref) => (
   <CmdkCommandDialog
     contentClassName={cn(
-      'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-popover p-0 text-popover-foreground shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg overflow-hidden',
+      'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-popover p-0 text-popover-foreground shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-center-1/2 data-[state=closed]:slide-out-to-center-[48%] data-[state=open]:slide-in-from-center-1/2 data-[state=open]:slide-in-from-center-[48%] sm:rounded-lg overflow-hidden',
       contentClassName,
     )}
     overlayClassName={cn(

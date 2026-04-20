@@ -30,23 +30,27 @@ import type {
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import {
-  WORKFLOW_QUEUE_NAME,
+  WORKFLOW_NAME,
   WORKER_LOCK_DURATION_MS,
   WORKER_MAX_STALLED_COUNT,
   WORKER_STALLED_INTERVAL_MS,
   WORKTREE_RETRY_DELAY_MS,
+  WORKFLOW_SIGKILL_GRACE_MS,
 } from './workflow.constants';
 import { WorkflowService } from './workflow.service';
 import { runPlanOrchestratorJob } from './workflow.orchestrator';
 import {
   isRunPlanOrchestratorJobData,
-  type PlanRunJobResult,
-  type RunPlanJob,
-  type RunPlanJobData,
-} from './plans.types';
-
-/** Grace period in ms after SIGTERM before SIGKILL when stopping Ralph (matches tools/workflows child-job). */
-const RALPH_SIGKILL_GRACE_MS = 10_000;
+  WorkflowJobResult,
+  // type WorkflowJob,
+  type WorkflowJob,
+} from './workflow.types';
+// import {
+//   isRunPlanOrchestratorJobData,
+//   type WorkflowJob,
+//   type WorkflowJob,
+//   type WorkflowJobData,
+// } from './plans.types';
 
 /**
  * @description Derives worker concurrency from WORKTREE_TARGETS env at module load time.
@@ -109,7 +113,7 @@ function spawnAndWait(
         } catch {
           /* process may have exited */
         }
-      }, RALPH_SIGKILL_GRACE_MS);
+      }, WORKFLOW_SIGKILL_GRACE_MS);
       child.once('close', () => clearTimeout(killTimeout));
     };
 
@@ -134,7 +138,7 @@ function spawnAndWait(
  * @description Processes plan-run jobs for the plans queue. Concurrency is derived from the number
  * of configured worktrees (WORKTREE_TARGETS env), defaulting to 1 when no worktrees are configured.
  * When WORKTREE_TARGETS is set, runs the worktree workflow (acquire target → Ralph in worktree →
- * ensure commit → release). Jobs with {@link RunPlanJobData.runKind} `orchestrator` use the
+ * ensure commit → release). Jobs with {@link WorkflowJobData.runKind} `orchestrator` use the
  * in-process GraphQL orchestrator (no spawn, no worktree loop). Otherwise runs Ralph in the
  * process cwd (legacy spawn behavior).
  *
@@ -148,7 +152,7 @@ function spawnAndWait(
  * run succeeds (exit 0) but the plan is still IN_PROGRESS, we emit a warning notification so the
  * UI can show "Plan hit iteration limit; tasks still pending. Re-run to continue."
  */
-@Processor(WORKFLOW_QUEUE_NAME, {
+@Processor(WORKFLOW_NAME, {
   concurrency: CONCURRENCY,
   /**
    * @description Sets a hard limit on how often a worker picks up new jobs,
@@ -176,12 +180,11 @@ export class WorkflowProcessor
     private readonly processMetrics: ProcessMetricsService,
     @Inject(WORKTREE_TRACKER_TOKEN)
     private readonly worktreeTracker: IWorktreeTargetsTracker,
-    @InjectQueue(WORKFLOW_QUEUE_NAME)
-    private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
+    @InjectQueue(WORKFLOW_NAME)
+    private readonly plansQueue: Queue<WorkflowJob, WorkflowJobResult | void>,
   ) {
     super();
   }
-
   async onModuleInit(): Promise<void> {
     const worktreeTargetsCount = this.worktreeTracker.listTargets().length;
     const concurrencySource =
@@ -222,6 +225,7 @@ export class WorkflowProcessor
     const inProgressPlans = await repo.find({
       where: { status: 'IN_PROGRESS' },
     });
+
     if (inProgressPlans.length === 0) {
       return;
     }
@@ -259,11 +263,11 @@ export class WorkflowProcessor
    */
   @OnWorkerEvent('failed')
   async onPlanJobFailed(
-    payload: { job?: RunPlanJob; error?: Error } | RunPlanJob,
+    payload: { job?: WorkflowJob; error?: Error } | WorkflowJob,
     errorArg?: Error,
   ): Promise<void> {
     const job =
-      'job' in payload && payload.job ? payload.job : (payload as RunPlanJob);
+      'job' in payload && payload.job ? payload.job : (payload as WorkflowJob);
     const error = ('error' in payload && payload.error) || errorArg;
     const planId = job?.data?.planId;
 
@@ -356,7 +360,7 @@ export class WorkflowProcessor
    * Throws DelayedError to signal BullMQ that the job was moved (not failed).
    */
   private async handleAllWorktreesLocked(
-    job: RunPlanJob,
+    job: WorkflowJob,
     planId: string,
     logContext: string,
   ): Promise<never> {
@@ -389,7 +393,7 @@ export class WorkflowProcessor
     await this.worker.close();
   }
 
-  async process(job: RunPlanJob): Promise<PlanRunJobResult> {
+  async process(job: WorkflowJob): Promise<WorkflowJobResult> {
     const { planId } = job.data;
     const cancelSignal = this.workflowService.attach(planId);
 
@@ -452,6 +456,7 @@ export class WorkflowProcessor
       if (result.taskRunMetrics) {
         const enhancedMetrics = this.buildEnhancedMetrics(result);
         await this.appendTaskRunMetricsToPlanOutput(planId, enhancedMetrics);
+
         this.logTaskRunMetrics(planId, jobId, enhancedMetrics);
       }
 
@@ -462,11 +467,11 @@ export class WorkflowProcessor
   }
 
   /**
-   * @description Builds an EnhancedTaskRunMetrics object from PlanRunJobResult.
+   * @description Builds an EnhancedTaskRunMetrics object from WorkflowJob.
    * Combines taskRunMetrics with optional childProcessMetrics and wallClockMetrics.
    */
   private buildEnhancedMetrics(
-    result: PlanRunJobResult,
+    result: WorkflowJobResult,
   ): EnhancedTaskRunMetrics {
     const base = result.taskRunMetrics ?? {
       atEnd: this.processMetrics.getCurrentSnapshot(),
@@ -539,12 +544,12 @@ export class WorkflowProcessor
    * or `workflow-ralph` spawn; iteration uses `runIterationAsync` (Cursor) in the server process.
    */
   private async processOrchestrator(
-    job: RunPlanJob,
+    job: WorkflowJob,
     jobId: string,
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     cancelSignal: AbortSignal,
-  ): Promise<PlanRunJobResult> {
+  ): Promise<WorkflowJobResult> {
     if (!isRunPlanOrchestratorJobData(job.data)) {
       throw new Error('Expected orchestrator job data');
     }
@@ -645,13 +650,13 @@ export class WorkflowProcessor
    * to wait for a worktree to become available.
    */
   private async processWithWorktree(
-    job: RunPlanJob,
+    job: WorkflowJob,
     planId: string,
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     planTitle: string | undefined,
     cancelSignal: AbortSignal,
-  ): Promise<PlanRunJobResult> {
+  ): Promise<WorkflowJobResult> {
     const jobId = String(job.id);
 
     let childJobResult: ChildJobResult | undefined;
@@ -685,7 +690,7 @@ export class WorkflowProcessor
       tracker: this.worktreeTracker,
     });
 
-    const withMetrics = (r: typeof result): PlanRunJobResult => {
+    const withMetrics = (r: typeof result): WorkflowJobResult => {
       const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
       return {
         ...r,
@@ -849,13 +854,13 @@ export class WorkflowProcessor
    * Forwards optional `job.data.ralph` run-tuning argv so queue runs match worktree path and manual CLI omission rules.
    */
   private async processInProcessCwd(
-    job: RunPlanJob,
+    job: WorkflowJob,
     planId: string,
     jobId: string,
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     cancelSignal: AbortSignal,
-  ): Promise<PlanRunJobResult> {
+  ): Promise<WorkflowJobResult> {
     const workspaceRoot = getWorkspaceRoot();
     const args = [
       'exec',
@@ -904,15 +909,19 @@ export class WorkflowProcessor
 
       const defaultSeverity = exitCode === 0 ? 'success' : 'warning';
       this.logger.info(
-        `Ralph exited: exitCode=${exitCode ?? 'signal'}, jobId=${jobId}, planId=${planId}, severity=${defaultSeverity}`,
+        `Ralph Workflow exited: exitCode=${exitCode ?? 'signal'}, jobId=${jobId}, planId=${planId}, severity=${defaultSeverity}`,
         WorkflowProcessor.name,
       );
 
       const defaultMessage = `Plan run finished: ${planId} (exit ${exitCode ?? 'signal'})`;
-      const { message, severity } =
-        exitCode === 0
-          ? await this.getJobCompletedMessageAndSeverity(planId, defaultMessage)
-          : { message: defaultMessage, severity: defaultSeverity as 'warning' };
+      const isSuccess = exitCode === 0;
+
+      const result = isSuccess
+        ? await this.getJobCompletedMessageAndSeverity(planId, defaultMessage)
+        : { message: defaultMessage, severity: defaultSeverity as 'warning' };
+
+      const { message, severity } = result;
+
       this.notifications.emitQueueJobCompleted({
         jobType: 'plans',
         message,
@@ -921,14 +930,18 @@ export class WorkflowProcessor
       });
 
       const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
+
       return {
-        taskRunMetrics: { atEnd: metricsAtEnd, atStart: metricsAtStart },
+        taskRunMetrics: {
+          atEnd: metricsAtEnd,
+          atStart: metricsAtStart,
+        },
       };
     } catch (error) {
       const isError = error instanceof Error;
 
       const msgError = isError ? error.message : String(error);
-      const message = `Ralph failed to spawn: ${logContext}, error=${msgError}`;
+      const message = `Ralph Workflow failed to spawn: ${logContext}, error=${msgError}`;
 
       this.logger.error(message, WorkflowProcessor.name);
       this.notifications.emitQueueJobCompleted({

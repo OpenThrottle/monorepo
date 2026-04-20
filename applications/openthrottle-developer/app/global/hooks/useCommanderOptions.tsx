@@ -1,46 +1,91 @@
 import type { CommanderGroup } from '@openthrottle/react-router-ui';
 import { useCallback } from 'react';
+import {
+  BotIcon,
+  ChartLineIcon,
+  FolderIcon,
+  HomeIcon,
+  MapIcon,
+  NotebookIcon,
+  SettingsIcon,
+  SpeechIcon,
+} from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 /**
  * @description Returns commander groups for the developer app: Navigation (Dashboard, Plans, Projects, Prompts, Queues, Notes, Generators, Settings) and optional Actions. Items use onSelect with useNavigate for React Router.
  */
 export function useCommanderOptions(): CommanderGroup[] {
+  // Hooks
   const navigate = useNavigate();
 
+  // Setup
+
+  // Handlers
   const nav = useCallback(
     (path: string) => () => {
       navigate(path);
     },
+
     [navigate],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   const groups: CommanderGroup[] = [
     {
       heading: 'Navigation',
       items: [
         {
+          icon: <HomeIcon className="w-3! h-3!" />,
           id: 'nav-dashboard',
           label: 'Dashboard',
           onSelect: nav('/dashboard'),
-          shortcut: '⌘D',
+          // shortcut: '⌘D',
         },
         {
+          icon: <MapIcon className="w-3! h-3!" />,
           id: 'nav-plans',
           label: 'Plans',
           onSelect: nav('/plans'),
-          shortcut: '⌘P',
+          // shortcut: '⌘P',
         },
-        { id: 'nav-projects', label: 'Projects', onSelect: nav('/projects') },
-        { id: 'nav-prompts', label: 'Prompts', onSelect: nav('/prompts') },
-        { id: 'nav-queues', label: 'Queues', onSelect: nav('/queues') },
-        { id: 'nav-notes', label: 'Notes', onSelect: nav('/notes') },
         {
+          icon: <FolderIcon className="w-3! h-3!" />,
+          id: 'nav-projects',
+          label: 'Projects',
+          onSelect: nav('/projects'),
+        },
+        {
+          icon: <SpeechIcon className="w-3! h-3!" />,
+          id: 'nav-prompts',
+          label: 'Prompts',
+          onSelect: nav('/prompts'),
+        },
+        {
+          icon: <ChartLineIcon className="w-3! h-3!" />,
+          id: 'nav-queues',
+          label: 'Queues',
+          onSelect: nav('/queues'),
+        },
+        {
+          icon: <NotebookIcon className="w-3! h-3!" />,
+          id: 'nav-notes',
+          label: 'Notes',
+          onSelect: nav('/notes'),
+        },
+        {
+          icon: <BotIcon className="w-3! h-3!" />,
           id: 'nav-generators',
           label: 'Generators',
           onSelect: nav('/generators'),
         },
         {
+          icon: <SettingsIcon className="w-3! h-3!" />,
           id: 'nav-settings',
           label: 'Settings',
           onSelect: nav('/settings'),

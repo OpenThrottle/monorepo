@@ -138,22 +138,31 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
     Boolean(onEmptyStateSearch) && search.trim().length > 0;
 
   return (
-    <CommandDialog className={className} onOpenChange={setOpen} open={open}>
-      {/* <Command> */}
+    <CommandDialog
+      className={className}
+      modal={true}
+      onOpenChange={setOpen}
+      open={open}
+      translate="no"
+    >
       <CommandInput
-        className="border-b border-green-500 text-green-500"
+        className="p-4 flex-1 leading-none text-sm! pb-4"
         onValueChange={setSearch}
         placeholder={placeholder}
         value={search}
       />
 
-      <CommandList>
+      <CommandList className="visormatt-testing m-0! p-0! pt-4!">
         {groups.map((group, groupIndex) => (
           <React.Fragment key={group.heading}>
-            {groupIndex > 0 ? <CommandSeparator /> : null}
-            <CommandGroup heading={group.heading}>
+            {groupIndex > 0 ? <CommandSeparator className="my-4" /> : null}
+            <CommandGroup
+              className="visormatt-testing m-0! p-0!"
+              heading={group.heading}
+            >
               {group.items.map((item) => (
                 <CommandItem
+                  className="rounded-none! p-2! px-4! m-0! h-auto!"
                   key={item.id}
                   onSelect={() => handleSelect(item)}
                   value={item.id}
@@ -161,7 +170,9 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
                   {item.icon ?? null}
                   <span>{item.label}</span>
                   {item.shortcut ? (
-                    <CommandShortcut>{item.shortcut}</CommandShortcut>
+                    <CommandShortcut className="w-auto whitespace-nowrap">
+                      {item.shortcut}
+                    </CommandShortcut>
                   ) : null}
                 </CommandItem>
               ))}
@@ -182,8 +193,28 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
         ) : (
           <CommandEmpty>No results found.</CommandEmpty>
         )}
-        {/* </Command> */}
       </CommandList>
+
+      <div className="text-[10px] px-2 py-2 border-t border-border text-muted-foreground gap-4 flex justify-end items-center">
+        <div className="gap-1.5 flex items-center">
+          <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+            ↑↓
+          </CommandShortcut>
+          <span className="font-regular">navigate</span>
+        </div>
+        <div className="gap-1.5 flex items-center">
+          <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+            ↵
+          </CommandShortcut>
+          <span className="font-regular">select</span>
+        </div>
+        <div className="gap-1.5 flex items-center">
+          <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+            esc
+          </CommandShortcut>
+          <span className="font-regular">close</span>
+        </div>
+      </div>
     </CommandDialog>
   );
 };

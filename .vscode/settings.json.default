@@ -1,5 +1,11 @@
 {
-  "cSpell.words": ["agentic", "openthrottle", "OpenThrottle"],
+  "cSpell.words": [
+    "agentic",
+    "openthrottle",
+    "OpenThrottle",
+    "Worktree",
+    "worktree"
+  ],
   "editor.codeActionsOnSave": {
     "eslint.experimental.useFlatConfig": "always",
     "source.fixAll.eslint": "explicit"

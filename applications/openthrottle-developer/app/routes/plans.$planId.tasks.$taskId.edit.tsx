@@ -1,27 +1,22 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, redirect } from 'react-router';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
+import { redirect } from 'react-router';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import {
   GetTaskByIdDocument,
   UpdateTaskDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { TaskForm } from '~/routing/plans/components/TaskForm';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.edit';
 
@@ -30,15 +25,18 @@ export const loader = async (args: Route.LoaderArgs) => {
   if (taskId == null || taskId === '') {
     return { task: null };
   }
+
   const result = await executeGraphqlWithAuth(
     args.request,
     GetTaskByIdDocument,
     { id: taskId },
   );
+
   const task = result.task ?? null;
   if (task?.planId != null && planId != null && task.planId !== planId) {
     return redirect(`/plans/${task.planId}/tasks/${taskId}/edit`);
   }
+
   return { task };
 };
 
@@ -98,30 +96,14 @@ export default function Component(
   return (
     <>
       <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-        <Breadcrumb className="mb-4 md:mb-8">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild={true}>
-                <Link to="/plans" viewTransition={true}>
-                  Plans
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild={true}>
-                <Link to={`/plans/${planId}`} viewTransition={true}>
-                  {planId}
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Edit Task</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
+        <OpenThrottleBreadcrumbs
+          children="Edit Task"
+          className="mb-4"
+          links={[
+            { children: 'Plans', to: `/plans` },
+            { children: planId, to: `/plans/${planId}` },
+          ]}
+        />
         <TaskForm actionData={actionData} planId={planId} task={task} />
       </main>
     </>

@@ -41,6 +41,7 @@ import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embe
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
+import { WorkflowModule } from './queues/workflow/workflow.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
@@ -85,6 +86,7 @@ import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
     GeneratorsModule,
     PaymentsModule,
     PlansQueueModule,
+    WorkflowModule,
 
     // 🧩 GraphQL Modules
     ActivityGraphqlModule,

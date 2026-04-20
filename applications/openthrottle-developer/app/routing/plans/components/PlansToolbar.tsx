@@ -159,13 +159,19 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
   return (
     <div className={classnames('w-full', className)} data-testid="PlansToolbar">
       <form
-        className="flex flex-wrap items-center gap-2 w-full"
+        className={classnames(
+          'flex flex-wrap items-center w-full',
+          // 'gap-2',
+          '-space-x-px',
+          `[&__button]:rounded-none! [&__input]:rounded-none! [&__select]:rounded-none! [&__label]:rounded-none!`,
+          `[&__button]:focus:z-10! [&__input]:focus:z-10! [&__select]:focus:z-10! [&__label]:active:z-10!`,
+        )}
         onSubmit={handleSearchSubmit}
         role="search"
       >
         <Input
           aria-label="Search plans"
-          className="min-w-[100px] w-[140px] shrink-0 rounded-md border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-w-[100px] w-[140px] shrink-0 border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           name="q"
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="By title or meaning…"

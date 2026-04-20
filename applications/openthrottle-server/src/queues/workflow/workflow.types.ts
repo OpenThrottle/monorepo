@@ -8,13 +8,6 @@ import type {
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 
 /**
- * @description Plan vs task-centric scope for orchestrator runs. Matches `WorkflowMode` on
- * `WorkflowRalphContext` in `@openthrottle/openthrottle-workflows`. Spawn path ignores `mode` and
- * `taskId` (queue remains plan-scoped argv: `--plan <planId>` only).
- */
-export type RunPlanJobWorkflowMode = 'plan' | 'task';
-
-/**
  * ## Plans queue job shape (design)
  *
  * **Queue:** Keep a single BullMQ queue (`PLANS_QUEUE_NAME`, `plans`). Do not add a separate queue
@@ -54,31 +47,28 @@ export interface RunPlanSpawnJobData {
 }
 
 /**
- * @description In-process GraphQL-backed Ralph (orchestrator) job. `runKind` must be `orchestrator`
+ * In-process GraphQL-backed Ralph (orchestrator) job. `runKind` must be `orchestrator`
  * so the worker uses `createWorkflowRalphOrchestrator` instead of spawning `workflow-ralph`.
  */
 export interface RunPlanOrchestratorJobData {
-  readonly runKind: 'orchestrator';
+  readonly mode?: 'plan' | 'task';
   readonly planId: string;
   readonly ralph?: RalphNestedRunTuningInput;
-  /**
-   * @description Defaults to `plan` when omitted. When `task`, set `taskId` for task-centric runs.
-   */
-  readonly mode?: RunPlanJobWorkflowMode;
+  readonly runKind: 'orchestrator';
   readonly taskId?: string;
 }
 
 export type RunPlanJobData = RunPlanSpawnJobData | RunPlanOrchestratorJobData;
 
 /**
- * @description Narrows to orchestrator payload for the plans worker.
+ * Narrows to orchestrator payload for the plans worker.
  */
 export const isRunPlanOrchestratorJobData = (
   data: RunPlanJobData,
 ): data is RunPlanOrchestratorJobData => data.runKind === 'orchestrator';
 
 /**
- * @description Additional metrics captured from the child job (runChildJob).
+ * Additional metrics captured from the child job (runChildJob).
  * childProcessMetrics: peak/avg CPU%, peak/avg RSS from pidusage polling.
  * wallClockMetrics: wall-clock duration vs CPU time (ratio, interpretation).
  */
@@ -93,11 +83,10 @@ interface ChildJobMetrics {
  * at job start and end so "CPU and memory while running" can be reported.
  * childProcessMetrics and wallClockMetrics are captured from runChildJob for detailed resource usage.
  */
-export type PlanRunJobResult =
+export type WorkflowJobResult =
   | (WorktreeWorkflowResult &
       ChildJobMetrics & { readonly taskRunMetrics?: TaskRunMetrics })
   | { readonly taskRunMetrics: TaskRunMetrics };
 
-export type PlansQueue = Queue<RunPlanJobData, PlanRunJobResult | void>;
-
-export type RunPlanJob = Job<RunPlanJobData, PlanRunJobResult | void>;
+export type WorkflowQueue = Queue<RunPlanJobData, WorkflowJobResult | void>;
+export type WorkflowJob = Job<RunPlanJobData, WorkflowJobResult | void>;

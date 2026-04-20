@@ -1,19 +1,12 @@
 import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@openthrottle/react-router-shadcn';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import { redirect } from 'react-router';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { CreatePlanDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.create';
 
 // export const loader = async (_args: Route.LoaderArgs) => {
@@ -51,22 +44,11 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4 md:mb-8">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/plans" viewTransition={true}>
-                Plans
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Create Plan</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
+      <OpenThrottleBreadcrumbs
+        children="Create Plan"
+        className="mb-4"
+        links={[{ children: 'Plans', to: '/plans' }]}
+      />
       <PlanForm actionData={actionData} />
     </main>
   );

@@ -103,7 +103,7 @@ export const createWorkflowOrchestrator = (
         `${context.prompt}\n\n${injectedContext}\n\n` +
         `Plan-Id: ${effectivePlanId}.` +
         (taskIdTrim ? ` Task-Id: ${taskIdTrim}.` : '') +
-        ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
+        ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
 
       // plan.guard
       if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {

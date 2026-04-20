@@ -359,6 +359,7 @@ export async function runChildJob(
       wallClockMetrics,
     };
   }
+
   if (ralph.killReason === 'abort') {
     return {
       childProcessMetrics: childMetrics,
@@ -368,6 +369,7 @@ export async function runChildJob(
       wallClockMetrics,
     };
   }
+
   if (ralph.status !== 0) {
     return {
       childProcessMetrics: childMetrics,

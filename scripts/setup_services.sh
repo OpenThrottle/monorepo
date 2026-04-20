@@ -34,7 +34,9 @@ DIR_START=$PWD
 cd "$DIR_START/services"
 
 # 🌎 Repositories - https://github.com/OpenThrottle?tab=repositories&q=&type=source&language=&sort=
-# [ ! -d "$DIR_START/services/openthrottle-github" ] && git clone git@github.com:OpenThrottle/.github.git openthrottle-github || echo " - openthrottle-github"
+
+# TODO: We should move this behind an optional setup prompt
+[ ! -d "$DIR_START/services/openclaw" ] && git clone git@github.com:openclaw/openclaw.git openclaw || echo " - openclaw"
 
 # 👋 Archived Repositories - https://github.com/OpenThrottle?tab=repositories&q=&type=archived&language=&sort=
 # [ ! -d "$DIR_START/services/learning-langchain" ] && git clone git@github.com:OpenThrottle/learning-langchain.git  || echo " - learning-langchain"
