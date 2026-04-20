@@ -1,4 +1,3 @@
-import * as readline from 'readline';
 import { COLORS } from '../config/index';
 import { MESSAGE_TOOL_USAGE } from '../config/messages';
 import type { RalphArgs } from './parsers';
@@ -8,12 +7,12 @@ import {
   RALPH_VERBOSE_ENV,
 } from './ralph-debug-logger';
 
-/**
- * @description Checks if the result contains an error signal
- */
+/* Dead code (2026 dead-code audit): string marker checks below were unused; CLI uses
+   getRalphOutputMarkerFlags / parseRalphResponse in parsers instead of these helpers.
 export const hasError = (result: string): boolean => {
   return result.includes('<promise>ERROR</promise>');
 };
+*/
 
 /**
  * @description Checks if the result contains a complete signal
@@ -22,16 +21,13 @@ export const isComplete = (result: string): boolean => {
   return result.includes('<promise>COMPLETE</promise>');
 };
 
-/**
- * @description Checks if the result contains an input required signal
- */
+/* Dead code (2026 dead-code audit): unused; no call sites in this package or monorepo.
 export const requiresInput = (result: string): boolean => {
   return result.includes('<promise>INPUT_REQUIRED</promise>');
 };
+*/
 
-/**
- * @description Prompts the user for confirmation
- */
+/* Dead code (2026 dead-code audit): unused; Ralph is non-interactive start (no confirmation prompt).
 export const promptConfirmation = (): Promise<boolean> => {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -47,6 +43,7 @@ export const promptConfirmation = (): Promise<boolean> => {
     });
   });
 };
+*/
 
 export const showConfiguration = (parsedArgs: RalphArgs): void => {
   const {
@@ -92,9 +89,7 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
   }
 };
 
-/**
- * @description Displays usage information and exits
- */
+/* Dead code (2026 dead-code audit): only referenced by removed parseNxArgs(); nx-validate uses Commander. Body same as showRalphUsage.
 export const showNxUsage = (message?: string): void => {
   if (message) {
     console.error(`${COLORS.yellow}Error:${COLORS.reset} ${message}`);
@@ -102,6 +97,7 @@ export const showNxUsage = (message?: string): void => {
 
   console.log(MESSAGE_TOOL_USAGE);
 };
+*/
 
 /**
  * @description Displays usage information and exits

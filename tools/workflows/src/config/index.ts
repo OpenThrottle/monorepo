@@ -1,10 +1,10 @@
 export const COLORS = {
-  blue: "\x1b[0;34m",
-  cyan: "\x1b[0;36m",
-  gray: "\x1b[0;90m",
-  green: "\x1b[0;32m",
-  reset: "\x1b[0m",
-  yellow: "\x1b[1;33m",
+  blue: '\x1b[0;34m',
+  cyan: '\x1b[0;36m',
+  gray: '\x1b[0;90m',
+  green: '\x1b[0;32m',
+  reset: '\x1b[0m',
+  yellow: '\x1b[1;33m',
 } as const;
 
 export const ARTWORK_LINE = `${COLORS.gray}--------------------------------------------------------------------------------${COLORS.reset}`;
@@ -38,6 +38,7 @@ export const ARTWORK_RALPH = `
     ⠀⠀⠀⠀⠀⠉⠛⠲⠤⠤⢤⣤⣄⣀⣀⣀⣀⡸⠇⠀⠀⠀⠉⠉⠉⠉⠉⠉⠁⠀
 `;
 
+/* Dead code (2026 dead-code audit): unused ASCII art exports; retained for history.
 export const ARTWORK_THANK_RALPH = `
 
     ╻╻┏┳┓   ╻ ╻┏━╸╻  ┏━┓╻┏┓╻┏━╸╻
@@ -53,6 +54,7 @@ export const ARTWORK_HELP = `
     ╹ ╹┗━╸┗━╸╹     ╹ ╹┗━╸╹
 
 `;
+*/
 
 export const ARTWORK_THANK_YOU = `
 

@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { COLORS } from '../config/index';
 import { MESSAGE_OUTRO } from '../config/messages';
-import { showNxUsage, showRalphUsage } from '../utils/index';
+import { showRalphUsage } from '../utils/index';
 import type { RalphDebugLevel } from './ralph-debug-logger';
 import {
   ralphDebugLogger,
@@ -101,13 +101,11 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
   return unique;
 };
 
+/* Dead code (2026 dead-code audit): no call sites; workflow-nx-validate uses Commander (src/bin/nx-validate.ts).
 export interface NxArgs {
   project: string;
 }
 
-/**
- * @description Parses command-line arguments from process.argv
- */
 export const parseNxArgs = (): NxArgs => {
   const args = process.argv.slice(2);
   const parsed: Partial<NxArgs> = {
@@ -117,7 +115,6 @@ export const parseNxArgs = (): NxArgs => {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    // 🔍 If the user has requested help show the usage info and exit
     if (arg === '--help') {
       showNxUsage();
       process.exit(0);
@@ -133,6 +130,7 @@ export const parseNxArgs = (): NxArgs => {
   };
   return result;
 };
+*/
 
 export interface RalphArgs {
   /** @description Layer 2: which runner invokes each iteration (default: Cursor `cursor-agent`). */
