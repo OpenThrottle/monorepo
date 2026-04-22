@@ -18,6 +18,11 @@
       "require": "./dist/src/index.js",
       "types": "./dist/src/index.d.ts"
     },
+    "./testing": {
+      "import": "./dist/src/testing/index.js",
+      "require": "./dist/src/testing/index.js",
+      "types": "./dist/src/testing/index.d.ts"
+    },
     "./*": {
       "import": "./dist/*.js",
       "require": "./dist/*.js",
@@ -70,6 +75,11 @@
         "require": "./src/index.js",
         "types": "./src/index.d.ts"
       },
+      "./testing": {
+        "import": "./src/testing/index.js",
+        "require": "./src/testing/index.js",
+        "types": "./src/testing/index.d.ts"
+      },
       "./*": {
         "import": "./*.js",
         "require": "./*.js",
@@ -83,5 +93,10 @@
   "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "@golevelup/ts-vitest": "^4.0.0",
+    "@nestjs/testing": "^11.1.18",
+    "@openthrottle/nestjs-modules": "workspace:*"
+  }
 }

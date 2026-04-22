@@ -1,11 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { ModuleMetadata } from '@nestjs/common';
-import { Global, Module } from '@nestjs/common';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
+import { Module } from '@nestjs/common';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type {
   AgenticWorkflowExecuteGraphqlV2,
@@ -17,6 +12,7 @@ import {
 } from './agentic-workflow-worker-graphql';
 import { NestjsAgenticWorkflowModule } from './nestjs-agentic-workflow.module';
 import { NestjsAgenticWorkflowService } from './nestjs-agentic-workflow.service';
+import { compileAgenticWorkflowTestingModule } from './testing';
 
 const workerAuthFixture = (): AgenticWorkflowWorkerGraphqlAuth => ({
   token: 'worker-test-token',
@@ -51,32 +47,6 @@ const WORKER_GRAPHQL_URL = Symbol('WORKER_GRAPHQL_URL');
 })
 class WorkerGraphqlUrlStubModule {}
 
-/**
- * @description Supplies {@link LoggerService} globally so nested dynamic modules resolve it under Vitest
- * (nested `LoggerModule` imports do not always merge with `TestingModule` the same way as in `NestFactory`).
- */
-@Global()
-@Module({
-  exports: [LoggerService],
-  providers: [
-    {
-      provide: LoggerService,
-      useValue: createMock<LoggerService>(),
-    },
-  ],
-})
-class GlobalLoggerStubModule {}
-
-/**
- * @description Compiles a testing module that includes agentic workflow registration plus global logger wiring.
- */
-const compileAgenticWorkflowModule = async (
-  imports: NonNullable<ModuleMetadata['imports']>,
-): Promise<TestingModule> =>
-  Test.createTestingModule({
-    imports: [GlobalLoggerStubModule, ...(imports ?? [])],
-  }).compile();
-
 describe('NestjsAgenticWorkflowModule', () => {
   describe('register', () => {
     let executeGraphqlV2: AgenticWorkflowExecuteGraphqlV2;
@@ -87,7 +57,7 @@ describe('NestjsAgenticWorkflowModule', () => {
 
     it('resolves executor and worker GraphQL auth tokens', async () => {
       const workerGraphqlAuth = workerAuthFixture();
-      const moduleRef = await compileAgenticWorkflowModule([
+      const moduleRef = await compileAgenticWorkflowTestingModule([
         NestjsAgenticWorkflowModule.register({
           executeGraphqlV2,
           workerGraphqlAuth,
@@ -103,7 +73,7 @@ describe('NestjsAgenticWorkflowModule', () => {
     });
 
     it('resolves NestjsAgenticWorkflowService', async () => {
-      const moduleRef = await compileAgenticWorkflowModule([
+      const moduleRef = await compileAgenticWorkflowTestingModule([
         NestjsAgenticWorkflowModule.register({
           executeGraphqlV2,
           workerGraphqlAuth: workerAuthFixture(),
@@ -121,7 +91,7 @@ describe('NestjsAgenticWorkflowModule', () => {
       const executeGraphqlV2 = createExecuteGraphqlV2Stub();
       const workerGraphqlAuth = workerAuthFixture();
 
-      const moduleRef = await compileAgenticWorkflowModule([
+      const moduleRef = await compileAgenticWorkflowTestingModule([
         NestjsAgenticWorkflowModule.registerAsync({
           useFactory: async () => ({
             executeGraphqlV2,
@@ -141,7 +111,7 @@ describe('NestjsAgenticWorkflowModule', () => {
     it('resolves tokens when useFactory uses inject', async () => {
       const executeGraphqlV2 = createExecuteGraphqlV2Stub();
 
-      const moduleRef = await compileAgenticWorkflowModule([
+      const moduleRef = await compileAgenticWorkflowTestingModule([
         NestjsAgenticWorkflowModule.registerAsync({
           imports: [WorkerGraphqlUrlStubModule],
           inject: [WORKER_GRAPHQL_URL],

@@ -988,6 +988,16 @@ importers:
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:*
         version: link:../openthrottle-agentic-workflow
+    devDependencies:
+      '@golevelup/ts-vitest':
+        specifier: ^4.0.0
+        version: 4.0.0
+      '@nestjs/testing':
+        specifier: ^11.1.18
+        version: 11.1.18(@nestjs/common@11.1.18(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.18)(@nestjs/platform-express@11.1.18)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:*
+        version: link:../nestjs-modules
 
   packages/nestjs-auth:
     dependencies:

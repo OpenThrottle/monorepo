@@ -112,6 +112,10 @@ import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-a
 export class PlansQueueModule {}
 ```
 
+## Testing processors and queues
+
+Unit tests for BullMQ processors or other workers that inject `AGENTIC_WORKFLOW_*` tokens should compile a `TestingModule` with stubbed `executeGraphqlV2`, worker auth, and (when needed) Ralph deps. Import **`compileAgenticWorkflowTestingModule`** and **`GlobalLoggerStubModule`** from **`@openthrottle/nestjs-agentic-workflow/testing`** so `LoggerService` resolves the same way as in this package’s tests. See [`src/testing/README.md`](./src/testing/README.md) for the full recipe.
+
 ## API surface
 
 Exports include registration types, `@openthrottle/openthrottle-agentic-workflow` types (re-exported), tokens in `agentic-workflow-worker-graphql.ts`, Ralph registration helpers in `agentic-workflow-ralph-registration.ts`, and `NestjsAgenticWorkflowModule`.
