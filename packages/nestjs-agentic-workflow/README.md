@@ -4,11 +4,11 @@ NestJS wiring for OpenThrottle agentic workflows: DI tokens for **worker-scoped 
 
 ## Dependency direction
 
-| Layer | Role |
-| --- | --- |
-| `@openthrottle/openthrottle-agentic-workflow` | Shared contracts only (orchestrator shapes, run results). No Nest, GraphQL transport, or database. |
-| **This package** | Nest `DynamicModule` registration, injection tokens (`AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH`, `AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2`). No Ralph, no Postgres. |
-| App / `@openthrottle/openthrottle-server` | Supplies real auth (env, secrets, service token) and binds `executeGraphqlV2` from `@openthrottle/nodejs-graphql`. |
+| Layer                                         | Role                                                                                                                                                                                                                                                                       |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@openthrottle/openthrottle-agentic-workflow` | Shared contracts only (orchestrator shapes, run results). No Nest, GraphQL transport, or database.                                                                                                                                                                         |
+| **This package**                              | Nest `DynamicModule` registration, injection tokens (`AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH`, `AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2`). Optional Ralph-specific token (`AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS`) plus stable id (`AGENTIC_WORKFLOW_RALPH_ID`). No Postgres. |
+| App / `@openthrottle/openthrottle-server`     | Supplies real auth (env, secrets, service token) and binds `executeGraphqlV2` from `@openthrottle/nodejs-graphql`.                                                                                                                                                         |
 
 Consumers import `NestjsAgenticWorkflowModule.register` or `registerAsync` and implement the factory in the server layer so credentials never hard-code inside this library.
 
@@ -68,6 +68,50 @@ Workers do not reuse browser or API-gateway sessions. The application must:
 
 Registration binds both to Nest providers so orchestrators and processors inject **`AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH`** and **`AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2`** explicitly.
 
+### Ralph orchestrator deps (optional)
+
+Apps that run the GraphQL-backed Ralph orchestrator (`@openthrottle/openthrottle-agentic-ralph`) register **`AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS`** with a factory that merges the two worker GraphQL tokens into a bound `executeGraphqlV2` and supplies an iteration runner (for example `createCursorWorkflowRalphIterationRunner` from `@tools/workflows`). **`AGENTIC_WORKFLOW_RALPH_ID`** (`'ralph'`) is the stable workflow id for registration and logging; it matches `WorkflowContext.kind` in agentic-ralph.
+
+```typescript
+import {
+  AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
+  AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS,
+  AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
+  NestjsAgenticWorkflowModule,
+} from '@openthrottle/nestjs-agentic-workflow';
+import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
+
+@Module({
+  imports: [
+    NestjsAgenticWorkflowModule.registerAsync({
+      /* ...workerGraphqlAuth + executeGraphqlV2... */
+    }),
+  ],
+  providers: [
+    {
+      inject: [
+        AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
+        AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
+      ],
+      provide: AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS,
+      useFactory: (
+        executeGraphqlV2,
+        workerGraphqlAuth,
+      ): WorkflowRalphOrchestratorDeps => ({
+        executeGraphqlV2: (document, variables, options) =>
+          executeGraphqlV2(document, variables, {
+            ...workerGraphqlAuth,
+            ...options,
+          }),
+        iterationRunner: myIterationRunner,
+      }),
+    },
+    RalphOrchestratorService,
+  ],
+})
+export class PlansQueueModule {}
+```
+
 ## API surface
 
-Exports include registration types, `@openthrottle/openthrottle-agentic-workflow` types (re-exported), tokens in `agentic-workflow-worker-graphql.ts`, and `NestjsAgenticWorkflowModule`.
+Exports include registration types, `@openthrottle/openthrottle-agentic-workflow` types (re-exported), tokens in `agentic-workflow-worker-graphql.ts`, Ralph registration helpers in `agentic-workflow-ralph-registration.ts`, and `NestjsAgenticWorkflowModule`.

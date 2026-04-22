@@ -1,25 +1,14 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { Inject, Injectable } from '@nestjs/common';
-import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import {
-  AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
-  AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
-} from '@openthrottle/nestjs-agentic-workflow';
-import type {
-  AgenticWorkflowExecuteGraphqlV2,
-  AgenticWorkflowWorkerGraphqlAuth,
-} from '@openthrottle/nestjs-agentic-workflow';
+import { AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS } from '@openthrottle/nestjs-agentic-workflow';
 import {
   buildRalphFlowContextFromPlanRunTuning,
   createWorkflowRalphOrchestrator,
 } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   WorkflowContext,
-  WorkflowExecuteGraphqlV2,
   WorkflowRalphOrchestratorDeps,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './plans.types';
 
 type PlanRunTuningInput = NonNullable<
@@ -27,17 +16,16 @@ type PlanRunTuningInput = NonNullable<
 >;
 
 /**
- * @description In-process Ralph for the plans queue: binds injected worker GraphQL auth with
- * {@link createWorkflowRalphOrchestrator} from `@openthrottle/openthrottle-agentic-ralph` (not the
- * legacy `@openthrottle/openthrottle-workflows` orchestrator).
+ * @description In-process Ralph for the plans queue: injects {@link AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS}
+ * from the plans queue Nest module with {@link createWorkflowRalphOrchestrator} from
+ * `@openthrottle/openthrottle-agentic-ralph` (not the legacy `@openthrottle/openthrottle-workflows`
+ * orchestrator).
  */
 @Injectable()
 export class PlansRalphOrchestratorService {
   constructor(
-    @Inject(AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2)
-    private readonly executeGraphqlV2: AgenticWorkflowExecuteGraphqlV2,
-    @Inject(AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH)
-    private readonly workerGraphqlAuth: AgenticWorkflowWorkerGraphqlAuth,
+    @Inject(AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS)
+    private readonly ralphOrchestratorDeps: WorkflowRalphOrchestratorDeps,
   ) {}
 
   /**
@@ -49,7 +37,7 @@ export class PlansRalphOrchestratorService {
   }): Promise<WorkflowRunResult> {
     const { jobData, signal } = params;
     const orchestrator = createWorkflowRalphOrchestrator(
-      this.createOrchestratorDeps(),
+      this.ralphOrchestratorDeps,
     );
 
     const baseContext = buildRalphFlowContextFromPlanRunTuning({
@@ -65,24 +53,5 @@ export class PlansRalphOrchestratorService {
     };
 
     return orchestrator.execute({ context });
-  }
-
-  private createBoundExecuteGraphqlV2(): WorkflowExecuteGraphqlV2 {
-    return async <TData, TVariables extends Record<string, unknown>>(
-      document: TypedDocumentNode<TData, TVariables>,
-      variables?: TVariables,
-      overrideOptions?: ExecuteGraphqlOptionsV2,
-    ): Promise<TData> =>
-      this.executeGraphqlV2(document, variables, {
-        ...this.workerGraphqlAuth,
-        ...overrideOptions,
-      });
-  }
-
-  private createOrchestratorDeps(): WorkflowRalphOrchestratorDeps {
-    return {
-      executeGraphqlV2: this.createBoundExecuteGraphqlV2(),
-      iterationRunner: createCursorWorkflowRalphIterationRunner(),
-    };
   }
 }
