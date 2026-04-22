@@ -133,6 +133,9 @@ importers:
       '@openthrottle/mcp-developer':
         specifier: workspace:*
         version: link:packages/mcp-developer
+      '@openthrottle/nestjs-agentic-workflow':
+        specifier: workspace:*
+        version: link:packages/nestjs-agentic-workflow
       '@openthrottle/nestjs-auth':
         specifier: workspace:*
         version: link:packages/nestjs-auth
@@ -971,6 +974,8 @@ importers:
         specifier: workspace:*
         version: link:../nodejs-graphql
 
+  packages/nestjs-agentic-workflow: {}
+
   packages/nestjs-auth:
     dependencies:
       '@nestjs/config':
@@ -1308,6 +1313,9 @@ importers:
       '@openthrottle/nodejs-graphql':
         specifier: workspace:*
         version: link:../nodejs-graphql
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:*
+        version: link:../openthrottle-agentic-workflow
 
   packages/openthrottle-agentic-workflow: {}
 

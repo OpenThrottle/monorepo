@@ -39,7 +39,7 @@ export interface WorkflowContext extends WorkflowConfig {
 
 /**
  * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).z
+ * align with current Ralph CLI).
  */
 export type WorkflowRunResult = WorkflowRunResultBase<
   WorkflowFinishedReason,

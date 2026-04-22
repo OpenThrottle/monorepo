@@ -51,7 +51,7 @@ const onFailure = (
  * task completions, and interprets `<promise>` markers (parity with `tools/workflows/src/bin/ralph.ts`
  * `main()`).
  */
-export const createWorkflowOrchestrator = (
+export const createWorkflowRalphOrchestrator = (
   deps: WorkflowRalphOrchestratorDeps,
 ): WorkflowOrchestrator => ({
   execute: async ({ context }) => {
