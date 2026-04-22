@@ -37,7 +37,7 @@ import {
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { runPlanOrchestratorJob } from './plans-workflow-ralph-orchestrator';
+import { PlansRalphOrchestratorService } from './plans-ralph-orchestrator.service';
 import {
   isRunPlanOrchestratorJobData,
   type PlanRunJobResult,
@@ -172,6 +172,7 @@ export class PlansProcessor
     private readonly notifications: NotificationsService,
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunCancellation: PlanRunCancellationService,
+    private readonly plansRalphOrchestrator: PlansRalphOrchestratorService,
     private readonly plansService: PlansService,
     private readonly processMetrics: ProcessMetricsService,
     @Inject(WORKTREE_TRACKER_TOKEN)
@@ -535,8 +536,9 @@ export class PlansProcessor
   }
 
   /**
-   * @description In-process GraphQL Ralph via `createWorkflowRalphOrchestrator`. Does not use worktrees
-   * or `workflow-ralph` spawn; iteration uses `runIterationAsync` (Cursor) in the server process.
+   * @description In-process GraphQL Ralph via {@link PlansRalphOrchestratorService} and
+   * `@openthrottle/openthrottle-agentic-ralph`. Does not use worktrees or `workflow-ralph` spawn;
+   * iteration uses `runIterationAsync` (Cursor) in the server process.
    */
   private async processOrchestrator(
     job: RunPlanJob,
@@ -550,7 +552,7 @@ export class PlansProcessor
     }
 
     const data = job.data;
-    const outcome = await runPlanOrchestratorJob({
+    const outcome = await this.plansRalphOrchestrator.runPlanOrchestratorJob({
       jobData: data,
       signal: cancelSignal,
     });

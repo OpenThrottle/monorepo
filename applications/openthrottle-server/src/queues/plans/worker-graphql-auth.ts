@@ -1,5 +1,5 @@
-import type { WorkflowGraphqlConfig } from '@openthrottle/openthrottle-workflows';
-import { resolveWorkflowGraphqlUrlOverrideFromEnv } from '@openthrottle/openthrottle-workflows';
+import type { WorkflowGraphqlConfig } from '@openthrottle/openthrottle-agentic-ralph';
+import { resolveWorkflowGraphqlUrlOverrideFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
 
 /**
  * @description Returns trimmed `process.env[key]` or `undefined` when missing/blank.

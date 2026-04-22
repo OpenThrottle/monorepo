@@ -22,7 +22,7 @@ import {
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { runPlanOrchestratorJob } from './plans-workflow-ralph-orchestrator';
+import { PlansRalphOrchestratorService } from './plans-ralph-orchestrator.service';
 import { PlansProcessor } from './plans.processor';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -32,15 +32,11 @@ vi.mock('child_process', () => ({
   spawn: vi.fn(),
 }));
 
-vi.mock('./plans-workflow-ralph-orchestrator', () => ({
-  runPlanOrchestratorJob: vi.fn().mockResolvedValue({
-    exitCode: 0,
-    reason: 'tasks_exhausted',
-    status: 'finished',
-  }),
-}));
-
-const mockRunPlanOrchestratorJob = vi.mocked(runPlanOrchestratorJob);
+const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
+  exitCode: 0,
+  reason: 'tasks_exhausted',
+  status: 'finished',
+});
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -134,6 +130,12 @@ describe('PlansProcessor', () => {
       providers: [
         PlanRunCancellationService,
         PlansProcessor,
+        {
+          provide: PlansRalphOrchestratorService,
+          useValue: {
+            runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
+          },
+        },
         {
           provide: LoggerService,
           useValue: createMock<LoggerService>(),
@@ -597,6 +599,12 @@ describe('PlansProcessor', () => {
         providers: [
           PlanRunCancellationService,
           PlansProcessor,
+          {
+            provide: PlansRalphOrchestratorService,
+            useValue: {
+              runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
+            },
+          },
           {
             provide: LoggerService,
             useValue: createMock<LoggerService>(),

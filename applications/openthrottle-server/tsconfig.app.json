@@ -71,6 +71,12 @@
       "path": "../../packages/nestjs-modules/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nestjs-agentic-workflow/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

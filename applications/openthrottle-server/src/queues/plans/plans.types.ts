@@ -9,7 +9,7 @@ import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 
 /**
  * @description Plan vs task-centric scope for orchestrator runs. Matches `WorkflowMode` on
- * `WorkflowRalphContext` in `@openthrottle/openthrottle-workflows`. Spawn path ignores `mode` and
+ * `WorkflowContext` in `@openthrottle/openthrottle-agentic-ralph`. Spawn path ignores `mode` and
  * `taskId` (queue remains plan-scoped argv: `--plan <planId>` only).
  */
 export type RunPlanJobWorkflowMode = 'plan' | 'task';
@@ -25,14 +25,14 @@ export type RunPlanJobWorkflowMode = 'plan' | 'task';
  * - **Spawn (default / legacy):** Omit `runKind` or set `runKind: 'spawn'`. Worker runs nested
  *   `pnpm exec workflow-ralph --plan <planId>` (worktree workflow when `WORKTREE_TARGETS` is set;
  *   legacy cwd spawn otherwise). Same behavior as today.
- * - **Orchestrator:** `runKind: 'orchestrator'`. Worker calls
- *   `createWorkflowRalphOrchestrator` with server-side `executeGraphqlV2` and an in-process
- *   `iterationRunner` (no child `workflow-ralph` process). Use optional `mode` / `taskId` for
- *   task-centric parity with CLI `--task` and {@link WorkflowRalphContext}.
+ * - **Orchestrator:** `runKind: 'orchestrator'`. Worker uses `PlansRalphOrchestratorService`
+ *   (`createWorkflowRalphOrchestrator` from `@openthrottle/openthrottle-agentic-ralph`) with
+ *   worker-scoped `executeGraphqlV2` and an in-process `iterationRunner` (no child `workflow-ralph`
+ *   process). Use optional `mode` / `taskId` for task-centric parity with CLI `--task`.
  *
  * **Tuning:** `ralph` is always {@link RalphNestedRunTuningInput} (argv-equivalent nested flags).
- * Map to {@link WorkflowRalphContext} via `buildRalphFlowContextFromPlanRunTuning` in
- * `@openthrottle/openthrottle-workflows` (orchestrator path) or `buildWorkflowRalphRunTuningArgv`
+ * Map to workflow context via `buildRalphFlowContextFromPlanRunTuning` in
+ * `@openthrottle/openthrottle-agentic-ralph` (orchestrator path) or `buildWorkflowRalphRunTuningArgv`
  * (spawn path), consistent with GraphQL enqueue and `tools/workflows` CLI.
  *
  * **Migration from CLI-only / spawn-only:** Existing persisted jobs `{ planId, ralph? }` remain
