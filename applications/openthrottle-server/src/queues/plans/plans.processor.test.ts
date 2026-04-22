@@ -13,6 +13,7 @@ import {
 import 'reflect-metadata';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types';
 import {
   PLANS_QUEUE_NAME,
@@ -22,7 +23,6 @@ import {
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { PlansRalphOrchestratorService } from './plans-ralph-orchestrator.service';
 import { PlansProcessor } from './plans.processor';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -131,7 +131,7 @@ describe('PlansProcessor', () => {
         PlanRunCancellationService,
         PlansProcessor,
         {
-          provide: PlansRalphOrchestratorService,
+          provide: AgenticRalphOrchestratorService,
           useValue: {
             runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
           },
@@ -223,6 +223,11 @@ describe('PlansProcessor', () => {
 
     expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
     expect(mockRunPlanOrchestratorJob).toHaveBeenCalledWith({
+      correlation: {
+        correlationId: 'job-1',
+        queueJobId: 'job-1',
+        queueName: 'plans',
+      },
       jobData: mockJob.data,
       signal: expect.any(AbortSignal),
     });
@@ -600,7 +605,7 @@ describe('PlansProcessor', () => {
           PlanRunCancellationService,
           PlansProcessor,
           {
-            provide: PlansRalphOrchestratorService,
+            provide: AgenticRalphOrchestratorService,
             useValue: {
               runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
             },

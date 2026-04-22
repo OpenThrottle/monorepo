@@ -10,20 +10,19 @@ import type {
   WorkflowRalphOrchestratorDeps,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import type { RunPlanOrchestratorJobData } from './plans.types';
+import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
 
 type PlanRunTuningInput = NonNullable<
   Parameters<typeof buildRalphFlowContextFromPlanRunTuning>[0]['ralph']
 >;
 
 /**
- * @description In-process Ralph for the plans queue: injects {@link AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS}
- * from the plans queue Nest module with {@link createWorkflowRalphOrchestrator} from
- * `@openthrottle/openthrottle-agentic-ralph` (not the legacy `@openthrottle/openthrottle-workflows`
- * orchestrator).
+ * @description In-process Ralph for the `plans` queue: injects {@link AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS}
+ * from {@link AgenticRalphModule} with {@link createWorkflowRalphOrchestrator} from
+ * `@openthrottle/openthrottle-agentic-ralph` (not the legacy `@openthrottle/openthrottle-workflows` orchestrator).
  */
 @Injectable()
-export class PlansRalphOrchestratorService {
+export class AgenticRalphOrchestratorService {
   constructor(
     @Inject(AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS)
     private readonly ralphOrchestratorDeps: WorkflowRalphOrchestratorDeps,

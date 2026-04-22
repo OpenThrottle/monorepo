@@ -33,6 +33,7 @@ import type {
 } from '../../metrics/process-metrics.types';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -41,7 +42,6 @@ import {
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { PlansRalphOrchestratorService } from './plans-ralph-orchestrator.service';
 import {
   isRunPlanOrchestratorJobData,
   type PlanRunJobResult,
@@ -176,7 +176,7 @@ export class PlansProcessor
     private readonly notifications: NotificationsService,
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunCancellation: PlanRunCancellationService,
-    private readonly plansRalphOrchestrator: PlansRalphOrchestratorService,
+    private readonly agenticRalphOrchestrator: AgenticRalphOrchestratorService,
     private readonly plansService: PlansService,
     private readonly processMetrics: ProcessMetricsService,
     @Inject(WORKTREE_TRACKER_TOKEN)
@@ -572,7 +572,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description In-process GraphQL Ralph via {@link PlansRalphOrchestratorService} and
+   * @description In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
    * `@openthrottle/openthrottle-agentic-ralph`. Does not use worktrees or `workflow-ralph` spawn;
    * iteration uses `runIterationAsync` (Cursor) in the server process.
    */
@@ -604,7 +604,7 @@ export class PlansProcessor
       workflowKind: 'ralph',
     });
 
-    const outcome = await this.plansRalphOrchestrator.runPlanOrchestratorJob({
+    const outcome = await this.agenticRalphOrchestrator.runPlanOrchestratorJob({
       correlation,
       jobData: data,
       signal: cancelSignal,

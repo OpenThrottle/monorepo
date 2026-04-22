@@ -1,11 +1,16 @@
 import type { Job, Queue } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
-import type {
-  ChildProcessMetrics,
-  RalphNestedRunTuningInput,
-  WallClockMetrics,
-} from '@tools/workflows';
+import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
+import type {
+  RunPlanJobData,
+  RunPlanOrchestratorJobData,
+  RunPlanSpawnJobData,
+} from '../plans/plans.types';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
+
+export type { RunPlanOrchestratorJobData, RunPlanSpawnJobData, RunPlanJobData };
+export { isRunPlanOrchestratorJobData };
 
 /**
  * ## Plans queue job shape (design)
@@ -23,7 +28,7 @@ import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
  *   `iterationRunner` (no child `workflow-ralph` process). Use optional `mode` / `taskId` for
  *   task-centric parity with CLI `--task` and {@link WorkflowRalphContext}.
  *
- * **Tuning:** `ralph` is always {@link RalphNestedRunTuningInput} (argv-equivalent nested flags).
+ * **Tuning:** `ralph` is always `RalphNestedRunTuningInput` from `@tools/workflows` (argv-equivalent nested flags).
  * Map to {@link WorkflowRalphContext} via `buildRalphFlowContextFromPlanRunTuning` in
  * `@openthrottle/openthrottle-workflows` (orchestrator path) or `buildWorkflowRalphRunTuningArgv`
  * (spawn path), consistent with GraphQL enqueue and `tools/workflows` CLI.
@@ -33,42 +38,9 @@ import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
  * Product default can stay spawn until orchestrator is wired; local `pnpm exec workflow-ralph`
  * remains unchanged for out-of-band runs.
  */
-export interface RunPlanSpawnJobData {
-  readonly planId: string;
-  /**
-   * Optional Ralph runtime (layers 1–3): prompt profile, execution backend, run tuning.
-   * When omitted, nested `workflow-ralph` uses env / `.workflow-ralph.json` in the worktree or workspace cwd (same precedence as manual CLI).
-   */
-  readonly ralph?: RalphNestedRunTuningInput;
-  /**
-   * Explicit spawn path; omit for backward compatibility (treated as spawn).
-   */
-  readonly runKind?: 'spawn';
-}
 
 /**
- * In-process GraphQL-backed Ralph (orchestrator) job. `runKind` must be `orchestrator`
- * so the worker uses `createWorkflowRalphOrchestrator` instead of spawning `workflow-ralph`.
- */
-export interface RunPlanOrchestratorJobData {
-  readonly mode?: 'plan' | 'task';
-  readonly planId: string;
-  readonly ralph?: RalphNestedRunTuningInput;
-  readonly runKind: 'orchestrator';
-  readonly taskId?: string;
-}
-
-export type RunPlanJobData = RunPlanSpawnJobData | RunPlanOrchestratorJobData;
-
-/**
- * Narrows to orchestrator payload for the plans worker.
- */
-export const isRunPlanOrchestratorJobData = (
-  data: RunPlanJobData,
-): data is RunPlanOrchestratorJobData => data.runKind === 'orchestrator';
-
-/**
- * Additional metrics captured from the child job (runChildJob).
+ * @description Additional metrics captured from the child job (runChildJob).
  * childProcessMetrics: peak/avg CPU%, peak/avg RSS from pidusage polling.
  * wallClockMetrics: wall-clock duration vs CPU time (ratio, interpretation).
  */

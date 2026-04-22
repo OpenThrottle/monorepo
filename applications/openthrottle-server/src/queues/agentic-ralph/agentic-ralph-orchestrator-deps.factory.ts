@@ -8,10 +8,10 @@ import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-a
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 
 /**
- * @description Builds {@link WorkflowRalphOrchestratorDeps} for the plans queue by merging injected
+ * @description Builds {@link WorkflowRalphOrchestratorDeps} for the OpenThrottle server by merging injected
  * worker GraphQL defaults with each operation and registering the Cursor iteration runner.
  */
-export const createPlansQueueRalphOrchestratorDeps = (
+export const createAgenticRalphOrchestratorDeps = (
   executeGraphqlV2: AgenticWorkflowExecuteGraphqlV2,
   workerGraphqlAuth: AgenticWorkflowWorkerGraphqlAuth,
 ): WorkflowRalphOrchestratorDeps => ({

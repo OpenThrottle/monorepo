@@ -12,7 +12,7 @@ const readTrimmedEnv = (key: string): string | undefined => {
 };
 
 /**
- * @description Bearer token for plans-queue / BullMQ workers calling OpenThrottle GraphQL (Ralph in-process orchestrator).
+ * @description Bearer token for BullMQ workers calling OpenThrottle GraphQL (in-process Ralph orchestrator).
  *
  * **Resolution order**
  *
@@ -21,7 +21,7 @@ const readTrimmedEnv = (key: string): string | undefined => {
  * 3. `MCP_DEVELOPER_AUTH_TOKEN` — local parity with mcp-developer.
  * 4. Non-production only: `OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN` — explicit opt-in dev/test token when no real credential is set. Ignored when `NODE_ENV` is `production`; replace with a secrets-managed or workload token before shipping.
  */
-export function resolvePlansWorkerGraphqlAuthTokenFromEnv():
+export function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
   | string
   | undefined {
   const primary =
@@ -41,9 +41,9 @@ export function resolvePlansWorkerGraphqlAuthTokenFromEnv():
 }
 
 /**
- * @description GraphQL HTTP endpoint override for the plans worker. `OPENTHROTTLE_WORKER_GRAPHQL_URL` wins over `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`; otherwise callers use internal URL resolution (`API_URL_INTERNAL` + `/graphql`).
+ * @description GraphQL HTTP endpoint override for the agentic Ralph worker. `OPENTHROTTLE_WORKER_GRAPHQL_URL` wins over `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`; otherwise callers use internal URL resolution (`API_URL_INTERNAL` + `/graphql`).
  */
-export function resolvePlansWorkerGraphqlUrlOverrideFromEnv():
+export function resolveAgenticRalphWorkerGraphqlUrlOverrideFromEnv():
   | string
   | undefined {
   return (
@@ -53,11 +53,12 @@ export function resolvePlansWorkerGraphqlUrlOverrideFromEnv():
 }
 
 /**
- * @description Worker-scoped GraphQL auth + URL overrides for the plans queue. Pass to `buildWorkflowExecuteGraphqlV2Options` so each orchestrator `executeGraphqlV2` call merges worker credentials as defaults.
+ * @description Worker-scoped GraphQL auth + URL overrides. Pass to `buildWorkflowExecuteGraphqlV2Options` so each
+ * orchestrator `executeGraphqlV2` call merges worker credentials as defaults.
  */
-export function resolvePlansWorkerWorkflowGraphqlConfigFromEnv(): WorkflowGraphqlConfig {
+export function resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv(): WorkflowGraphqlConfig {
   return {
-    graphqlUrl: resolvePlansWorkerGraphqlUrlOverrideFromEnv(),
-    token: resolvePlansWorkerGraphqlAuthTokenFromEnv(),
+    graphqlUrl: resolveAgenticRalphWorkerGraphqlUrlOverrideFromEnv(),
+    token: resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv(),
   };
 }

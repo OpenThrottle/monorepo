@@ -6,13 +6,14 @@ import type {
   WallClockMetrics,
 } from '@tools/workflows';
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
+import type {
+  RunPlanJobWorkflowMode,
+  RunPlanOrchestratorJobData,
+} from '../agentic-ralph/agentic-ralph.types';
+import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
 
-/**
- * @description Plan vs task-centric scope for orchestrator runs. Matches `WorkflowMode` on
- * `WorkflowContext` in `@openthrottle/openthrottle-agentic-ralph`. Spawn path ignores `mode` and
- * `taskId` (queue remains plan-scoped argv: `--plan <planId>` only).
- */
-export type RunPlanJobWorkflowMode = 'plan' | 'task';
+export type { RunPlanJobWorkflowMode, RunPlanOrchestratorJobData };
+export { isRunPlanOrchestratorJobData };
 
 /**
  * ## Plans queue job shape (design)
@@ -25,8 +26,8 @@ export type RunPlanJobWorkflowMode = 'plan' | 'task';
  * - **Spawn (default / legacy):** Omit `runKind` or set `runKind: 'spawn'`. Worker runs nested
  *   `pnpm exec workflow-ralph --plan <planId>` (worktree workflow when `WORKTREE_TARGETS` is set;
  *   legacy cwd spawn otherwise). Same behavior as today.
- * - **Orchestrator:** `runKind: 'orchestrator'`. Worker uses `PlansRalphOrchestratorService`
- *   (`createWorkflowRalphOrchestrator` from `@openthrottle/openthrottle-agentic-ralph`) with
+ * - **Orchestrator:** `runKind: 'orchestrator'`. Worker uses `AgenticRalphOrchestratorService` from
+ *   `queues/agentic-ralph` (`createWorkflowRalphOrchestrator` from `@openthrottle/openthrottle-agentic-ralph`) with
  *   worker-scoped `executeGraphqlV2` and an in-process `iterationRunner` (no child `workflow-ralph`
  *   process). Use optional `mode` / `taskId` for task-centric parity with CLI `--task`.
  *
@@ -53,29 +54,7 @@ export interface RunPlanSpawnJobData {
   readonly runKind?: 'spawn';
 }
 
-/**
- * @description In-process GraphQL-backed Ralph (orchestrator) job. `runKind` must be `orchestrator`
- * so the worker uses `createWorkflowRalphOrchestrator` instead of spawning `workflow-ralph`.
- */
-export interface RunPlanOrchestratorJobData {
-  readonly runKind: 'orchestrator';
-  readonly planId: string;
-  readonly ralph?: RalphNestedRunTuningInput;
-  /**
-   * @description Defaults to `plan` when omitted. When `task`, set `taskId` for task-centric runs.
-   */
-  readonly mode?: RunPlanJobWorkflowMode;
-  readonly taskId?: string;
-}
-
 export type RunPlanJobData = RunPlanSpawnJobData | RunPlanOrchestratorJobData;
-
-/**
- * @description Narrows to orchestrator payload for the plans worker.
- */
-export const isRunPlanOrchestratorJobData = (
-  data: RunPlanJobData,
-): data is RunPlanOrchestratorJobData => data.runKind === 'orchestrator';
 
 /**
  * @description Additional metrics captured from the child job (runChildJob).
