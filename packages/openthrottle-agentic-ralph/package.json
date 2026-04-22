@@ -38,6 +38,7 @@
       "type:package"
     ],
     "targets": {
+      "__codegen-graphql-watch": {},
       "build": {
         "dependsOn": [
           "^build",
@@ -46,10 +47,17 @@
       },
       "build-package": {},
       "codegen-graphql": {},
-      "__codegen-graphql-watch": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "verify-graphql-codegen": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
   "private": true,

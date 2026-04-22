@@ -106,6 +106,9 @@ jobs:
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck --parallel --verbose
 
+      - name: '🔒 Agentic Ralph GraphQL codegen drift guard'
+        run: pnpm dlx nx@${{ env.NX_VERSION }} run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen
+
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"
       #   run: |
