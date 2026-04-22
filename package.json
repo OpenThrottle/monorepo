@@ -46,6 +46,7 @@
     "@openthrottle/docs-mcp": "workspace:*",
     "@openthrottle/graphql-codegen": "workspace:*",
     "@openthrottle/mcp-developer": "workspace:*",
+    "@openthrottle/nestjs-agentic-workflow": "workspace:*",
     "@openthrottle/nestjs-auth": "workspace:*",
     "@openthrottle/nestjs-bullmq": "workspace:*",
     "@openthrottle/nestjs-bullmq-board": "workspace:*",
