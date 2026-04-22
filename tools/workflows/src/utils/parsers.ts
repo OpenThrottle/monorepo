@@ -101,37 +101,6 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
   return unique;
 };
 
-/* Dead code (2026 dead-code audit): no call sites; workflow-nx-validate uses Commander (src/bin/nx-validate.ts).
-export interface NxArgs {
-  project: string;
-}
-
-export const parseNxArgs = (): NxArgs => {
-  const args = process.argv.slice(2);
-  const parsed: Partial<NxArgs> = {
-    project: '',
-  };
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-
-    if (arg === '--help') {
-      showNxUsage();
-      process.exit(0);
-    }
-
-    if (arg.startsWith('--')) {
-      throw new Error(`Unknown flag: ${arg}`);
-    }
-  }
-
-  const result: NxArgs = {
-    project: parsed.project ?? '',
-  };
-  return result;
-};
-*/
-
 export interface RalphArgs {
   /** @description Layer 2: which runner invokes each iteration (default: Cursor `cursor-agent`). */
   backend: RalphExecutionBackendId;

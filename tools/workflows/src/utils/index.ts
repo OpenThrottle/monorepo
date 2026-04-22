@@ -7,43 +7,12 @@ import {
   RALPH_VERBOSE_ENV,
 } from './ralph-debug-logger';
 
-/* Dead code (2026 dead-code audit): string marker checks below were unused; CLI uses
-   getRalphOutputMarkerFlags / parseRalphResponse in parsers instead of these helpers.
-export const hasError = (result: string): boolean => {
-  return result.includes('<promise>ERROR</promise>');
-};
-*/
-
 /**
  * @description Checks if the result contains a complete signal
  */
 export const isComplete = (result: string): boolean => {
   return result.includes('<promise>COMPLETE</promise>');
 };
-
-/* Dead code (2026 dead-code audit): unused; no call sites in this package or monorepo.
-export const requiresInput = (result: string): boolean => {
-  return result.includes('<promise>INPUT_REQUIRED</promise>');
-};
-*/
-
-/* Dead code (2026 dead-code audit): unused; Ralph is non-interactive start (no confirmation prompt).
-export const promptConfirmation = (): Promise<boolean> => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    const question = `${COLORS.cyan}Ready to get started?${COLORS.reset} Type '${COLORS.green}y${COLORS.reset}' to proceed, or any other key to cancel: `;
-
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === 'y');
-    });
-  });
-};
-*/
 
 export const showConfiguration = (parsedArgs: RalphArgs): void => {
   const {
@@ -88,16 +57,6 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
     );
   }
 };
-
-/* Dead code (2026 dead-code audit): only referenced by removed parseNxArgs(); nx-validate uses Commander. Body same as showRalphUsage.
-export const showNxUsage = (message?: string): void => {
-  if (message) {
-    console.error(`${COLORS.yellow}Error:${COLORS.reset} ${message}`);
-  }
-
-  console.log(MESSAGE_TOOL_USAGE);
-};
-*/
 
 /**
  * @description Displays usage information and exits

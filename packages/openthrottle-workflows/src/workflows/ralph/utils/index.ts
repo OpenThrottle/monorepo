@@ -49,22 +49,3 @@ export const formatPlanAndTasksForPrompt = (
 
   return lines.join('\n');
 };
-
-/*
- * Dead code (2026 dead-code audit): `fetchServerHealth` had no monorepo importers; kept commented for
- * parity reference with `tools/workflows` / `getServerHealth` docs in openthrottle-ralph-parity.ts.
- *
- * @description Runs the public `getServerHealth` query via executeWorkflowGraphqlV2 (throws on
- * failure; error message reflects HTTP status / first GraphQL error). Uses workflow GraphQL env
- * (`OPENTHROTTLE_WORKFLOWS_*`); wrap in try/catch when callers need non-throwing control flow. Optional
- * preflight for api/database/redis/websocket when the HTTP POST succeeds. Does not replace Ralph's
- * OpenThrottle TCP check (`ensureDatabaseReachableOrExit`). See `tools/workflows/README.md` (getServerHealth vs
- * transport).
- *
- * import { executeWorkflowGraphqlV2 } from '../workflow-graphql.js';
- * import { GetServerHealthDocument, type GetServerHealthQuery } from '../../../__generated__/graphql.js';
- *
- * export async function fetchServerHealth(): Promise<GetServerHealthQuery> {
- *   return executeWorkflowGraphqlV2(GetServerHealthDocument, {});
- * }
- */

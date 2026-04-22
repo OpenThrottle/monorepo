@@ -1,7 +1,8 @@
 /**
- * @description The workflow config is meant to be common across any of
- * our "agentic" workflows. Each workflow can and will have their own
- * own set of config, but the common config will be used to create the workflow.
+ * @description The workflow config is meant to be common across all of
+ * our "agentic" workflows. Each workflow can and will have its own
+ * set of config, these are the common configurations options to drive
+ * our workflows (e.g. model, prompt, timeouts, etc.)
  */
 export interface WorkflowConfig {
   readonly debug: 'debug' | 'omit' | 'verbose';
@@ -23,22 +24,18 @@ export interface WorkflowError {
   readonly message: string;
 }
 
-// /**
-//  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
-//  * {@link WorkflowRalphContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
-//  * `iterations`).
-//  */
+/**
+ * An example of what the 'openthrottle-agentic-ralph' workflow might look like.
+ */
 // export interface WorkflowOptions extends WorkflowConfig {
 //   readonly mode: 'plan' | 'task'; // 🤠 (ralph specific)
 //   readonly planId: string; // 🤠 (ralph specific)
 //   readonly project: string | undefined; // 🤠 (ralph specific)
-//   readonly runner: 'RALPH'; // 🤠 (ralph only right now)
 //   readonly taskId: string; // 🤠 (ralph specific)
 // }
 
 /**
- * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).
+ * Terminal outcome of a workflow run
  */
 export type WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> =
   | {
@@ -66,9 +63,7 @@ export type WorkflowStepSuccess<
   : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
 
 /**
- * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare
- * the `main` function in `tools/workflows/src/bin/ralph.ts`). Extends {@link WorkflowOptions}
- * with `kind`, `mode`, and effective `iterations` after CLI rules.
+ * @description Immutable snapshot of inputs driving the workflow.
  */
 export interface WorkflowFlowContext extends WorkflowConfig {
   /**
@@ -76,7 +71,6 @@ export interface WorkflowFlowContext extends WorkflowConfig {
    * checked between steps so user cancel matches the spawn-path behavior.
    */
   readonly abortSignal?: AbortSignal;
-  readonly kind: 'ralph';
 }
 
 /**

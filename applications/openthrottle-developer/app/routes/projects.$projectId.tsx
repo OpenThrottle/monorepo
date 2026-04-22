@@ -17,6 +17,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   OpenThrottleBreadcrumbs,
+  OpenThrottleClipboard,
   OpenThrottlePagination,
 } from '@openthrottle/react-router-ui';
 import { formatProjectDate } from '~/routing/projects/utils/format';
@@ -157,7 +158,7 @@ export default function Component(
                   )}
               </div>
               <Badge className="shrink-0" variant="secondary">
-                {project.id}
+                <OpenThrottleClipboard label={project.id} text={project.id} />
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4">

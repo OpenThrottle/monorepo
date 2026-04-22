@@ -146,7 +146,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
       translate="no"
     >
       <CommandInput
-        className="p-4 flex-1 leading-none text-sm! pb-4"
+        className="p-4 flex-1 leading-none text-sm! pb-4 border-b! border-border!"
         onValueChange={setSearch}
         placeholder={placeholder}
         value={search}
@@ -155,7 +155,9 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
       <CommandList className="visormatt-testing m-0! p-0! pt-4!">
         {groups.map((group, groupIndex) => (
           <React.Fragment key={group.heading}>
-            {groupIndex > 0 ? <CommandSeparator className="my-4" /> : null}
+            {groupIndex > 0 ? (
+              <CommandSeparator className="px-4! my-4" />
+            ) : null}
             <CommandGroup
               className="visormatt-testing m-0! p-0!"
               heading={group.heading}

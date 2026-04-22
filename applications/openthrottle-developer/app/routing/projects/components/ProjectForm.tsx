@@ -75,10 +75,12 @@ export const ProjectForm = (props: ProjectFormProps) => {
             </p>
           ) : null}
 
-          <CardFooter className="flex gap-3 p-0 pt-4">
-            <Button type="submit">Create project</Button>
-            <Button asChild={true} variant="outline">
+          <CardFooter className="flex justify-end gap-3 p-0 pt-4">
+            <Button asChild={true} variant="ghost">
               <Link to="/projects">Cancel</Link>
+            </Button>
+            <Button type="submit" variant="outline">
+              Create project
             </Button>
           </CardFooter>
         </Form>

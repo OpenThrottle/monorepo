@@ -14,13 +14,13 @@ export const DEFAULT_STATUSES: readonly string[] = [
 ];
 
 export const PLAN_STATUS_FILTER_OPTIONS = [
+  { label: 'Backlog', value: 'BACKLOG' },
   { label: 'Pending', value: 'PENDING' },
   { label: 'In Progress', value: 'IN_PROGRESS' },
+  { label: 'Queued', value: 'QUEUED' },
   { label: 'Completed', value: 'COMPLETED' },
-  { label: 'Backlog', value: 'BACKLOG' },
   { label: 'Blocked', value: 'BLOCKED' },
   { label: 'Canceled', value: 'CANCELED' },
-  { label: 'Queued', value: 'QUEUED' },
   { label: 'Skipped', value: 'SKIPPED' },
 ] as const;
 

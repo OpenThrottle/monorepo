@@ -1,12 +1,11 @@
 import type { CommanderGroup } from '@openthrottle/react-router-ui';
 import { useCallback } from 'react';
 import {
-  BotIcon,
-  ChartLineIcon,
   FolderIcon,
+  FolderPlusIcon,
   HomeIcon,
   MapIcon,
-  NotebookIcon,
+  PlusCircleIcon,
   SettingsIcon,
   SpeechIcon,
 } from 'lucide-react';
@@ -66,24 +65,24 @@ export function useCommanderOptions(): CommanderGroup[] {
           label: 'Prompts',
           onSelect: nav('/prompts'),
         },
-        {
-          icon: <ChartLineIcon className="w-3! h-3!" />,
-          id: 'nav-queues',
-          label: 'Queues',
-          onSelect: nav('/queues'),
-        },
-        {
-          icon: <NotebookIcon className="w-3! h-3!" />,
-          id: 'nav-notes',
-          label: 'Notes',
-          onSelect: nav('/notes'),
-        },
-        {
-          icon: <BotIcon className="w-3! h-3!" />,
-          id: 'nav-generators',
-          label: 'Generators',
-          onSelect: nav('/generators'),
-        },
+        // {
+        //   icon: <ChartLineIcon className="w-3! h-3!" />,
+        //   id: 'nav-queues',
+        //   label: 'Queues',
+        //   onSelect: nav('/queues'),
+        // },
+        // {
+        //   icon: <NotebookIcon className="w-3! h-3!" />,
+        //   id: 'nav-notes',
+        //   label: 'Notes',
+        //   onSelect: nav('/notes'),
+        // },
+        // {
+        //   icon: <BotIcon className="w-3! h-3!" />,
+        //   id: 'nav-generators',
+        //   label: 'Generators',
+        //   onSelect: nav('/generators'),
+        // },
         {
           icon: <SettingsIcon className="w-3! h-3!" />,
           id: 'nav-settings',
@@ -96,47 +95,50 @@ export function useCommanderOptions(): CommanderGroup[] {
       heading: 'Actions',
       items: [
         {
+          icon: <PlusCircleIcon className="w-3! h-3!" />,
           id: 'action-plan-create',
           label: 'Create plan',
           onSelect: nav('/plans/new/create'),
         },
         {
+          icon: <FolderPlusIcon className="w-3! h-3!" />,
           id: 'action-project-create',
           label: 'Create project',
           onSelect: nav('/projects/create'),
         },
-        {
-          id: 'action-queue-create',
-          label: 'Create queue',
-          onSelect: nav('/queues/create'),
-        },
-        {
-          id: 'action-note-create',
-          label: 'Create note',
-          onSelect: nav('/notes/create'),
-        },
-        {
-          id: 'action-generator-create',
-          label: 'Create generator',
-          onSelect: nav('/generators/create'),
-        },
+        // {
+        //   icon: <ChartLineIcon className="w-3! h-3!" />,
+        //   id: 'action-queue-create',
+        //   label: 'Create queue',
+        //   onSelect: nav('/queues/create'),
+        // },
+        // {
+        //   id: 'action-note-create',
+        //   label: 'Create note',
+        //   onSelect: nav('/notes/create'),
+        // },
+        // {
+        //   id: 'action-generator-create',
+        //   label: 'Create generator',
+        //   onSelect: nav('/generators/create'),
+        // },
       ],
     },
-    {
-      heading: 'Filters',
-      items: [
-        {
-          id: 'filter-pull-requests',
-          label: 'Pull requests',
-          onSelect: nav('/pull-requests'),
-        },
-        {
-          id: 'filter-plans',
-          label: 'Create plan',
-          onSelect: nav('/plans'),
-        },
-      ],
-    },
+    // {
+    //   heading: 'Filters',
+    //   items: [
+    //     {
+    //       id: 'filter-pull-requests',
+    //       label: 'Pull requests',
+    //       onSelect: nav('/pull-requests'),
+    //     },
+    //     {
+    //       id: 'filter-plans',
+    //       label: 'Create plan',
+    //       onSelect: nav('/plans'),
+    //     },
+    //   ],
+    // },
   ];
 
   return groups;
