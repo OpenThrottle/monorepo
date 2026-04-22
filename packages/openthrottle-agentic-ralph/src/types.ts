@@ -1,5 +1,6 @@
 import type {
   WorkflowConfig,
+  WorkflowRunCorrelation,
   WorkflowRunResult as WorkflowRunResultBase,
   WorkflowOrchestrator as WorkflowOrchestratorBase,
 } from '@openthrottle/openthrottle-agentic-workflow';
@@ -27,6 +28,12 @@ export interface WorkflowContext extends WorkflowConfig {
    * checked between steps so user cancel matches the spawn-path behavior.
    */
   readonly abortSignal?: AbortSignal;
+
+  /**
+   * Optional tracing metadata from {@link WorkflowRunCorrelation}; forwarded with the context for
+   * application-layer structured logs (no plan/task ids at the shared-contract layer).
+   */
+  readonly correlation?: WorkflowRunCorrelation;
 
   // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';

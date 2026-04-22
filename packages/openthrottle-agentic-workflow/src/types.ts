@@ -14,6 +14,42 @@ export interface WorkflowConfig {
 }
 
 /**
+ * @description Generic identifiers for tracing an agentic workflow run through logs and metrics.
+ * Keep this free of domain-specific ids (no plan/task ids); callers attach those in application logs.
+ *
+ * Align structured logs with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}: include `correlationId`
+ * (and optionally `queueJobId`, `queueName`) so aggregators can join with queue metrics such as
+ * {@link PLAN_RUN_METRICS_LOG_EVENT}.
+ */
+export interface WorkflowRunCorrelation {
+  /**
+   * Primary key for cross-service correlation (often a BullMQ job id or generated run id).
+   */
+  readonly correlationId: string;
+  /**
+   * Queue-backed job identifier when applicable (may match {@link WorkflowRunCorrelation.correlationId}).
+   */
+  readonly queueJobId?: string;
+  /**
+   * Logical queue name (e.g. BullMQ queue name) for log filtering.
+   */
+  readonly queueName?: string;
+}
+
+/**
+ * @description Structured log event name for agentic workflow lifecycle lines (start/end).
+ * Application code should emit JSON payloads that include correlation fields from
+ * {@link WorkflowRunCorrelation} plus workflow-specific attributes at the app layer.
+ */
+export const AGENTIC_WORKFLOW_RUN_LOG_EVENT = 'agentic_workflow_run' as const;
+
+/**
+ * @description Structured log event name used by plan-queue workers for task-run metrics payloads.
+ * Pair with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT} for full observability of one queue job.
+ */
+export const PLAN_RUN_METRICS_LOG_EVENT = 'plan_run_metrics' as const;
+
+/**
  * @description Optional runtime hooks merged into {@link WorkflowFlowContext}.
  * Downstream workflows may add fields by extending {@link WorkflowFlowContext}.
  *
@@ -32,6 +68,10 @@ export interface WorkflowExecutionHooks {
    * implementations should forward this to each iteration and honor cancellation between steps.
    */
   readonly abortSignal?: AbortSignal;
+  /**
+   * Optional tracing metadata for structured logging; must not encode plan/task identifiers.
+   */
+  readonly correlation?: WorkflowRunCorrelation;
 }
 
 /**

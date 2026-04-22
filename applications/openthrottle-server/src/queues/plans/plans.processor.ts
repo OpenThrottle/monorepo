@@ -21,6 +21,10 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
+import {
+  AGENTIC_WORKFLOW_RUN_LOG_EVENT,
+  PLAN_RUN_METRICS_LOG_EVENT,
+} from '@openthrottle/nestjs-agentic-workflow';
 import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
 import type {
@@ -526,10 +530,42 @@ export class PlansProcessor
   ): void {
     this.logger.info(
       JSON.stringify({
-        event: 'plan_run_metrics',
+        event: PLAN_RUN_METRICS_LOG_EVENT,
         jobId,
         planId,
         taskRunMetrics,
+      }),
+      PlansProcessor.name,
+    );
+  }
+
+  /**
+   * @description Structured JSON log for in-process Ralph orchestrator lifecycle. Uses
+   * {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}; pair with {@link PLAN_RUN_METRICS_LOG_EVENT} via shared
+   * `correlationId` / `jobId`. Plan id is included here at the application layer only.
+   */
+  private logAgenticOrchestratorRunStructured(params: {
+    readonly correlationId: string;
+    readonly outcome?: {
+      readonly reason: string;
+      readonly status: 'failed' | 'finished';
+    };
+    readonly phase: 'end' | 'start';
+    readonly planId: string;
+    readonly queueJobId: string;
+    readonly queueName: string;
+    readonly workflowKind: 'ralph';
+  }): void {
+    this.logger.info(
+      JSON.stringify({
+        correlationId: params.correlationId,
+        event: AGENTIC_WORKFLOW_RUN_LOG_EVENT,
+        outcome: params.outcome,
+        phase: params.phase,
+        planId: params.planId,
+        queueJobId: params.queueJobId,
+        queueName: params.queueName,
+        workflowKind: params.workflowKind,
       }),
       PlansProcessor.name,
     );
@@ -552,9 +588,39 @@ export class PlansProcessor
     }
 
     const data = job.data;
+
+    const correlation = {
+      correlationId: jobId,
+      queueJobId: jobId,
+      queueName: PLANS_QUEUE_NAME,
+    } as const;
+
+    this.logAgenticOrchestratorRunStructured({
+      correlationId: correlation.correlationId,
+      phase: 'start',
+      planId: data.planId,
+      queueJobId: correlation.queueJobId,
+      queueName: correlation.queueName,
+      workflowKind: 'ralph',
+    });
+
     const outcome = await this.plansRalphOrchestrator.runPlanOrchestratorJob({
+      correlation,
       jobData: data,
       signal: cancelSignal,
+    });
+
+    this.logAgenticOrchestratorRunStructured({
+      correlationId: correlation.correlationId,
+      outcome: {
+        reason: outcome.reason,
+        status: outcome.status,
+      },
+      phase: 'end',
+      planId: data.planId,
+      queueJobId: correlation.queueJobId,
+      queueName: correlation.queueName,
+      workflowKind: 'ralph',
     });
 
     const metricsAtEnd = this.processMetrics.getCurrentSnapshot();

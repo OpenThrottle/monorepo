@@ -21,6 +21,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
+import { PLAN_RUN_METRICS_LOG_EVENT } from '@openthrottle/nestjs-agentic-workflow';
 import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
 import type {
@@ -530,7 +531,7 @@ export class WorkflowProcessor
   ): void {
     this.logger.info(
       JSON.stringify({
-        event: 'plan_run_metrics',
+        event: PLAN_RUN_METRICS_LOG_EVENT,
         jobId,
         planId,
         taskRunMetrics,
