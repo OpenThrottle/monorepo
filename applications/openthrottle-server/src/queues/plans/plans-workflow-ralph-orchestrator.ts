@@ -11,7 +11,6 @@ import {
   buildRalphFlowContextFromPlanRunTuning,
   buildWorkflowExecuteGraphqlV2Options,
   createWorkflowRalphOrchestrator,
-  resolveWorkflowGraphqlConfigFromEnv,
 } from '@openthrottle/openthrottle-workflows';
 import type {
   WorkflowExecuteGraphqlV2,
@@ -21,19 +20,20 @@ import type {
 } from '@openthrottle/openthrottle-workflows';
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './plans.types';
+import { resolvePlansWorkerWorkflowGraphqlConfigFromEnv } from './worker-graphql-auth';
 
 type PlanRunTuningInput = NonNullable<
   Parameters<typeof buildRalphFlowContextFromPlanRunTuning>[0]['ralph']
 >;
 
 /**
- * @description Binds {@link executeGraphqlV2} with {@link resolveWorkflowGraphqlConfigFromEnv} so
- * the worker calls the API the same way as `executeWorkflowGraphqlV2` in local workflows.
+ * @description Binds {@link executeGraphqlV2} with {@link resolvePlansWorkerWorkflowGraphqlConfigFromEnv} so
+ * the BullMQ worker always merges worker-scoped GraphQL credentials (env + optional non-production placeholder).
  */
 const createPlansQueueWorkflowExecuteGraphqlV2 =
   (): WorkflowExecuteGraphqlV2 => {
     const options = buildWorkflowExecuteGraphqlV2Options(
-      resolveWorkflowGraphqlConfigFromEnv(),
+      resolvePlansWorkerWorkflowGraphqlConfigFromEnv(),
     );
 
     return async <TData, TVariables extends Record<string, unknown>>(
