@@ -8,6 +8,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@openthrottle/nodejs-graphql": "workspace:*",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:*"
   },
   "exports": {

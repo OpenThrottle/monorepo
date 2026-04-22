@@ -1,3 +1,4 @@
+export * from './agentic-workflow-worker-graphql';
 export * from './nestjs-agentic-workflow.module';
 export * from './nestjs-agentic-workflow.service';
 
