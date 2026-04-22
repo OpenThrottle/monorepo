@@ -1,8 +1,7 @@
 /**
- * @description The workflow config is meant to be common across all of
- * our "agentic" workflows. Each workflow can and will have its own
- * set of config, these are the common configurations options to drive
- * our workflows (e.g. model, prompt, timeouts, etc.)
+ * @description Shared configuration fields for agentic workflows (model, prompts,
+ * iteration limits, timeouts). Workflow-specific options belong in downstream packages
+ * via {@link WorkflowFlowContext} extensions.
  */
 export interface WorkflowConfig {
   readonly debug: 'debug' | 'omit' | 'verbose';
@@ -15,8 +14,35 @@ export interface WorkflowConfig {
 }
 
 /**
- * @description Stable error shape for workflow steps; callers map from
- * transport or GraphQL errors.
+ * @description Optional runtime hooks merged into {@link WorkflowFlowContext}.
+ * Downstream workflows may add fields by extending {@link WorkflowFlowContext}.
+ *
+ * @example Workflow-specific context in a consumer package
+ * ```ts
+ * interface RalphFlowContext extends WorkflowFlowContext {
+ *   readonly mode: 'plan' | 'task';
+ *   readonly planId: string;
+ *   readonly taskId: string | undefined;
+ * }
+ * ```
+ */
+export interface WorkflowExecutionHooks {
+  /**
+   * When set (for example a BullMQ worker plus an in-process abort controller),
+   * implementations should forward this to each iteration and honor cancellation between steps.
+   */
+  readonly abortSignal?: AbortSignal;
+}
+
+/**
+ * @description Immutable snapshot of inputs driving a workflow run: shared
+ * {@link WorkflowConfig} plus optional {@link WorkflowExecutionHooks}.
+ */
+export interface WorkflowFlowContext
+  extends WorkflowConfig, WorkflowExecutionHooks {}
+
+/**
+ * @description Stable error shape for workflow steps; callers map from transport-layer errors.
  */
 export interface WorkflowError {
   readonly cause: Error | undefined;
@@ -25,17 +51,8 @@ export interface WorkflowError {
 }
 
 /**
- * An example of what the 'openthrottle-agentic-ralph' workflow might look like.
- */
-// export interface WorkflowOptions extends WorkflowConfig {
-//   readonly mode: 'plan' | 'task'; // 🤠 (ralph specific)
-//   readonly planId: string; // 🤠 (ralph specific)
-//   readonly project: string | undefined; // 🤠 (ralph specific)
-//   readonly taskId: string; // 🤠 (ralph specific)
-// }
-
-/**
- * Terminal outcome of a workflow run
+ * @description Terminal outcome of a workflow run. Downstream packages supply
+ * discriminated reason types for finished vs failed branches.
  */
 export type WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> =
   | {
@@ -59,31 +76,25 @@ export type WorkflowStepSuccess<
   TStep extends string = string,
   TData extends Record<string, unknown> | undefined = undefined,
 > = TData extends undefined
-  ? { readonly step: TStep; readonly outcome: 'success' }
-  : { readonly step: TStep; readonly outcome: 'success'; readonly data: TData };
+  ? { readonly outcome: 'success'; readonly step: TStep }
+  : {
+      readonly data: TData;
+      readonly outcome: 'success';
+      readonly step: TStep;
+    };
 
 /**
- * @description Immutable snapshot of inputs driving the workflow.
- */
-export interface WorkflowFlowContext extends WorkflowConfig {
-  /**
-   * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
-   * checked between steps so user cancel matches the spawn-path behavior.
-   */
-  readonly abortSignal?: AbortSignal;
-}
-
-/**
- * @description Minimal contract for future GraphQL-backed flows (no implementation in this phase).
+ * @description Runs a workflow until a terminal {@link WorkflowRunResult}.
+ * Implementations live in downstream packages; this package defines only the contract.
+ *
+ * Use {@link WorkflowFlowContext} or a subtype for `TContext` so workflow-specific
+ * fields stay outside this package.
  */
 export interface WorkflowOrchestrator<
   WorkflowFinishedReason,
   WorkflowFailedReason,
   TContext extends WorkflowFlowContext = WorkflowFlowContext,
 > {
-  /**
-   * @description Runs the workflow until a terminal {@link WorkflowRunResult}.
-   */
   readonly execute: (params: {
     readonly context: TContext;
   }) => Promise<
