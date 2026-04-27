@@ -30,6 +30,7 @@ import {
   OpenThrottleCommander,
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Toaster } from '@openthrottle/react-router-shadcn';
 import { AdminLayout } from '~/global/components/AdminLayout';
 import {
   GetMeDocument,
@@ -182,6 +183,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           groups={groups}
           onEmptyStateSearch={handleCommanderEmptyStateSearch}
         />
+        <Toaster />
 
         <ScrollRestoration />
         {/* FIXME: Uncomment this when we have a production environment */}
