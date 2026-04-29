@@ -193,6 +193,8 @@ export class WorkflowProcessor
         ? `worktree count (${worktreeTargetsCount})`
         : 'default (no worktrees)';
 
+    console.log('🟢 🟢 🟢 🟢 🟢 worktreeTargetsCount', worktreeTargetsCount);
+
     this.logger.info(
       `Plans queue worker started (concurrency=${CONCURRENCY}, source=${concurrencySource})`,
       WorkflowProcessor.name,
@@ -219,7 +221,8 @@ export class WorkflowProcessor
   }
 
   /**
-   * @description On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart). Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
+   * @description On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart).
+   * Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
    */
   private async reconcilePlanStatusOnStartup(): Promise<void> {
     const repo = this.plansService.getRepository();

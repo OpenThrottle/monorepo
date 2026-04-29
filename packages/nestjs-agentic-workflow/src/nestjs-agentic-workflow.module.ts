@@ -9,16 +9,12 @@ import {
   AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
   AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
 } from './agentic-workflow-worker-graphql';
-import { NestjsAgenticWorkflowService } from './nestjs-agentic-workflow.service';
 
-const AGENTIC_WORKFLOW_REGISTRATION = Symbol(
-  'AGENTIC_WORKFLOW_REGISTRATION',
-);
+const AGENTIC_WORKFLOW_REGISTRATION = Symbol('AGENTIC_WORKFLOW_REGISTRATION');
 
 const moduleExports = [
   AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
   AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
-  NestjsAgenticWorkflowService,
 ];
 
 @Module({})
@@ -38,7 +34,6 @@ export class NestjsAgenticWorkflowModule {
       imports: [LoggerModule],
       module: NestjsAgenticWorkflowModule,
       providers: [
-        NestjsAgenticWorkflowService,
         {
           provide: AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
           useValue: executeGraphqlV2,
@@ -80,7 +75,6 @@ export class NestjsAgenticWorkflowModule {
           useFactory: (registration: AgenticWorkflowRegistrationOptions) =>
             registration.workerGraphqlAuth,
         },
-        NestjsAgenticWorkflowService,
       ],
     };
   }

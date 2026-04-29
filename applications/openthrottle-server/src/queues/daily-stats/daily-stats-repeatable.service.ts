@@ -8,7 +8,7 @@ import type { AggregateDailyStatsJobData } from './daily-stats.types';
 /** @description Cron pattern for 6am UTC daily (sec min hour day month dow). */
 const CRON_PATTERN = '0 0 6 * * *';
 
-const JOB_NAME = 'aggregate-daily-stats';
+const JOB_NAME = 'Aggregate Daily Stats';
 
 /**
  * @description Registers the repeatable daily stats job on app bootstrap.

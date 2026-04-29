@@ -5,6 +5,18 @@
 - `echo $OPENCLAW_CONFIG_DIR`
 - OpenRouter - https://docs.openclaw.ai/concepts/models#scanning-openrouter-free-models
 
+**Startup:**
+
+```bash
+# 📂 From our OpenClaw installation
+cd services/openclaw
+
+docker compose up -d
+docker compose exec -it openclaw-gateway bash
+
+openclaw dashboard
+```
+
 ```bash
 # 📂 From our OpenClaw installation
 cd services/openclaw

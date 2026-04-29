@@ -50,6 +50,7 @@ import {
             applyGlobalClsUser(cls, user);
           },
         });
+
         // nestjs-cls exposes one ClsService singleton; attach setUser without replacing the instance.
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- structural GlobalClsService for DI
         return augmented as GlobalClsService;

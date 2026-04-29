@@ -8,7 +8,7 @@ import { spawn } from 'node:child_process';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
-import { defaultWorkerOptionsForRecovery } from '@openthrottle/nestjs-bullmq';
+import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import {
   computeDocIngestionDiff,
   deindexDocumentationByPath,
@@ -60,7 +60,7 @@ function spawnIngestDocs(
  * @description Processes doc-ingestion jobs: diff → deindex to-remove → ingest to-add/to-update → persist state.
  */
 @Processor(DOC_INGESTION_QUEUE_NAME, {
-  ...defaultWorkerOptionsForRecovery,
+  ...defaultWorkerOptions,
   concurrency: CONCURRENCY,
 })
 export class DocIngestionProcessor

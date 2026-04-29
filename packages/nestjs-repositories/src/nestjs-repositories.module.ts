@@ -5,7 +5,6 @@ import { CommitLinksModule } from './modules/commit-links/commit-links.module';
 import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module';
 import { getTypeOrmOptions } from './database.config';
-import { NestjsRepositoriesService } from './nestjs-repositories.service';
 import { NotesModule } from './modules/notes/notes.module';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module';
@@ -23,7 +22,6 @@ import { UsersModule } from './modules/users/users.module';
     CommitLinksModule,
     CustomPromptsModule,
     DailyStatsModule,
-    NestjsRepositoriesService,
     NotesModule,
     PlanEmbeddingsModule,
     PlanOutputStreamModule,
@@ -55,6 +53,6 @@ import { UsersModule } from './modules/users/users.module';
     TasksModule,
     UsersModule,
   ],
-  providers: [NestjsRepositoriesService],
+  providers: [],
 })
 export class NestjsRepositoriesModule {}

@@ -17,7 +17,7 @@ export const WORKFLOW_JOB_PRIORITY = {
   NORMAL: 10,
 } as const;
 
-export const WORKFLOW_NAME = 'Workflow | Agentic Ralph';
+export const WORKFLOW_NAME = 'Workflow (v2)';
 
 /**
  * @description BullMQ **job name** for in-process Ralph via `createWorkflowRalphOrchestrator`

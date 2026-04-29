@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { NestjsThrottlerService } from './nestjs-throttler.service';
 
 /**
  * @external https://docs.nestjs.com/security/rate-limiting
@@ -9,7 +8,7 @@ import { NestjsThrottlerService } from './nestjs-throttler.service';
  */
 @Module({
   controllers: [],
-  exports: [NestjsThrottlerService],
+  exports: [],
   imports: [
     ThrottlerModule.forRoot({
       throttlers: [
@@ -21,6 +20,6 @@ import { NestjsThrottlerService } from './nestjs-throttler.service';
     }),
     LoggerModule,
   ],
-  providers: [NestjsThrottlerService],
+  providers: [],
 })
 export class NestjsThrottlerModule {}

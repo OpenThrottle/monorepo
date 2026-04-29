@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createProfileExecutionFileWriter } from './profile-execution-file-writer';
 import { setProfileExecutionReporter } from './profile-execution.reporter';
 import { profileExecution } from './profile-execution.util';
@@ -10,7 +10,10 @@ describe('createProfileExecutionFileWriter', () => {
   let outputPath: string;
 
   beforeEach(() => {
-    outputPath = path.join(os.tmpdir(), `profile-exec-${Date.now()}-${Math.random().toString(36).slice(2)}.ndjson`);
+    outputPath = path.join(
+      os.tmpdir(),
+      `profile-exec-${Date.now()}-${Math.random().toString(36).slice(2)}.ndjson`,
+    );
   });
 
   afterEach(async () => {
@@ -56,7 +59,11 @@ describe('createProfileExecutionFileWriter', () => {
   });
 
   it('appends to existing file', async () => {
-    await fs.writeFile(outputPath, JSON.stringify({ label: 'existing' }) + '\n', 'utf8');
+    await fs.writeFile(
+      outputPath,
+      JSON.stringify({ label: 'existing' }) + '\n',
+      'utf8',
+    );
     setProfileExecutionReporter(
       createProfileExecutionFileWriter({ outputPath }),
     );

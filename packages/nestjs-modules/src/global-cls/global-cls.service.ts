@@ -12,6 +12,7 @@ export interface GlobalClsStore extends ClsStore {
     name: string;
     version: string;
   };
+
   /**
    * @description Present after auth populates it (see {@link applyGlobalClsUser});
    * omitted on public or pre-auth requests.

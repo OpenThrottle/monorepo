@@ -1,1 +1,1 @@
-export const DOC_INGESTION_QUEUE_NAME = 'doc-ingestion';
+export const DOC_INGESTION_QUEUE_NAME = 'Doc Ingestion';

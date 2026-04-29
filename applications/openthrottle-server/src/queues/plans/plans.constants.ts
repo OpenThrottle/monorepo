@@ -1,6 +1,6 @@
 import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants';
 
-export const PLANS_QUEUE_NAME = 'plans';
+export const PLANS_QUEUE_NAME = 'Plans';
 
 /**
  * @description BullMQ **job name** for spawn plan runs (nested `workflow-ralph`). Same string as historical

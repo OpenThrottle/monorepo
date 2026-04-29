@@ -130,7 +130,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  console.log('open', open, groups);
+  // console.log('open', open, groups);
 
   // 🔌 Short Circuit
 

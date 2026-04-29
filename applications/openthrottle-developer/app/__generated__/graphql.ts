@@ -2755,6 +2755,33 @@ export type GetTaskByIdQuery = {
   } | null;
 };
 
+export type GetTaskForEditByIdQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type GetTaskForEditByIdQuery = {
+  __typename?: 'Query';
+  task?: {
+    __typename?: 'TaskObject';
+    assignee?: string | null;
+    category?: string | null;
+    createdAt: any;
+    description?: string | null;
+    id: string;
+    planId: string;
+    requirementsJson: string;
+    status: string;
+    summary?: string | null;
+    title: string;
+    updatedAt: any;
+    projectRelation?: {
+      __typename?: 'ProjectObject';
+      id: string;
+      name: string;
+    } | null;
+  } | null;
+};
+
 export type UpdateTaskMutationVariables = Exact<{
   input: UpdateTaskInput;
 }>;
@@ -2867,6 +2894,19 @@ export type GetPlansByStatusQuery = {
         name: string;
       } | null;
     }>;
+  };
+};
+
+export type TestWorkflowMutationVariables = Exact<{
+  input: EnqueuePlanRunInput;
+}>;
+
+export type TestWorkflowMutation = {
+  __typename?: 'Mutation';
+  enqueuePlanRun: {
+    __typename?: 'EnqueuePlanRunResultObject';
+    jobId: string;
+    planId: string;
   };
 };
 
@@ -5381,6 +5421,78 @@ export const GetTaskByIdDocument = {
     },
   ],
 } as unknown as DocumentNode<GetTaskByIdQuery, GetTaskByIdQueryVariables>;
+export const GetTaskForEditByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getTaskForEditById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'task' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'projectRelation' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'requirementsJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetTaskForEditByIdQuery,
+  GetTaskForEditByIdQueryVariables
+>;
 export const UpdateTaskDocument = {
   kind: 'Document',
   definitions: [
@@ -5653,6 +5765,61 @@ export const GetPlansByStatusDocument = {
 } as unknown as DocumentNode<
   GetPlansByStatusQuery,
   GetPlansByStatusQueryVariables
+>;
+export const TestWorkflowDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TestWorkflow' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'EnqueuePlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'enqueuePlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TestWorkflowMutation,
+  TestWorkflowMutationVariables
 >;
 export const GetProjectByIdDocument = {
   kind: 'Document',

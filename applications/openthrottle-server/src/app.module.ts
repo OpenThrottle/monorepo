@@ -35,13 +35,10 @@ import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { PaymentsGraphqlModule } from './graphql/payments/payments-graphql.module';
-import { PaymentsModule } from './modules/payments/payments.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
-import { WorkflowModule } from './queues/workflow/workflow.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
 import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
@@ -49,6 +46,10 @@ import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
+import { WorkflowModule } from './queues/workflow/workflow.module';
+
+// import { PaymentsGraphqlModule } from './graphql/payments/payments-graphql.module';
+// import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   controllers: [],
@@ -84,7 +85,6 @@ import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
     DevelopmentModule,
     DocIngestionQueueModule,
     GeneratorsModule,
-    PaymentsModule,
     PlansQueueModule,
     WorkflowModule,
 
@@ -99,7 +99,6 @@ import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
     HealthGraphqlModule,
     MetricsGraphqlModule,
     NotesGraphqlModule,
-    PaymentsGraphqlModule,
     PlanEmbeddingsGraphqlModule,
     PlanOutputStreamGraphqlModule,
     PlansGraphqlModule,
