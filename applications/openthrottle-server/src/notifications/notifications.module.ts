@@ -5,9 +5,11 @@
  * EMIT_NOTIFICATION_EMITTER so EmitNotificationInterceptor can emit via NotificationsService.
  */
 
-import { EMIT_NOTIFICATION_EMITTER } from '@openthrottle/nestjs-websockets';
 import { Module } from '@nestjs/common';
-import { NestjsWebsocketsModule } from '@openthrottle/nestjs-websockets';
+import {
+  EMIT_NOTIFICATION_EMITTER,
+  NestjsWebsocketsModule,
+} from '@openthrottle/nestjs-websockets';
 import { NotificationEmitterAdapter } from './notification-emitter.adapter';
 import { NotificationsService } from './notifications.service';
 

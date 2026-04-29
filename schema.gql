@@ -939,28 +939,6 @@ type PlanOutputStreamChunkObject {
   planId: String!
 }
 
-type PermissionObject {
-  createdAt: DateTime!
-  description: String
-  id: String!
-
-  """Permission identifier (e.g. users:read, settings:write)"""
-  name: String!
-}
-
-type RoleObject {
-  createdAt: DateTime!
-  description: String
-  id: String!
-
-  """Role identifier (e.g. admin, user, viewer)"""
-  name: String!
-
-  """Permissions assigned to this role"""
-  permissions: [PermissionObject!]!
-  updatedAt: DateTime!
-}
-
 type SearchChunk {
   """Chunk content (plan or task text)."""
   content: String!
@@ -1255,26 +1233,6 @@ type Query {
 
   """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
-
-  """List all roles with their permissions"""
-  roles: [RoleObject!]!
-
-  """Get a role by ID"""
-  role(id: ID!): RoleObject
-
-  """List all permissions"""
-  permissions: [PermissionObject!]!
-
-  """Get roles assigned to a user"""
-  rolesForUser(userId: ID!): [RoleObject!]!
-
-  """
-  Get permission names for a user (union of all their roles' permissions)
-  """
-  permissionsForUser(userId: ID!): [String!]!
-
-  """Get permission names for the current user"""
-  myPermissions: [String!]!
 
   """
   Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
@@ -1756,27 +1714,6 @@ type Mutation {
   """
   deleteProject(input: DeleteProjectInput!): Boolean!
 
-  """Create a role"""
-  createRole(input: CreateRoleInput!): RoleObject!
-
-  """Update a role"""
-  updateRole(input: UpdateRoleInput!): RoleObject
-
-  """Delete a role"""
-  deleteRole(id: ID!): Boolean!
-
-  """Assign a role to a user"""
-  assignRoleToUser(input: AssignRoleToUserInput!): Boolean!
-
-  """Remove a role from a user"""
-  removeRoleFromUser(input: RemoveRoleFromUserInput!): Boolean!
-
-  """Add a permission to a role"""
-  addPermissionToRole(input: AddPermissionToRoleInput!): Boolean!
-
-  """Remove a permission from a role"""
-  removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
-
   """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
 
@@ -2108,55 +2045,6 @@ input UpdateProjectInput {
 input DeleteProjectInput {
   """Project id to delete"""
   id: ID!
-}
-
-input CreateRoleInput {
-  description: String
-
-  """Role name (e.g. admin, user, viewer). Must be unique."""
-  name: String!
-}
-
-input UpdateRoleInput {
-  description: String
-
-  """Role id to update"""
-  id: ID!
-
-  """Role name. Pass null to leave unchanged."""
-  name: String
-}
-
-input AssignRoleToUserInput {
-  """Role id to assign"""
-  roleId: ID!
-
-  """User id to assign the role to"""
-  userId: ID!
-}
-
-input RemoveRoleFromUserInput {
-  """Role id to remove"""
-  roleId: ID!
-
-  """User id to remove the role from"""
-  userId: ID!
-}
-
-input AddPermissionToRoleInput {
-  """Permission id to add"""
-  permissionId: ID!
-
-  """Role id to add the permission to"""
-  roleId: ID!
-}
-
-input RemovePermissionFromRoleInput {
-  """Permission id to remove"""
-  permissionId: ID!
-
-  """Role id to remove the permission from"""
-  roleId: ID!
 }
 
 input CreateTaskInput {
