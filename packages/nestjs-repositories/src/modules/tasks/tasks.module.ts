@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Task } from './task.entity';
 import { TasksService } from './tasks.service';
 

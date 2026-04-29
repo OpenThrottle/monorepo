@@ -1,14 +1,14 @@
-import { GlobalClsModule } from '@openthrottle/nestjs-modules/src/global-cls/global-cls.module';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { GlobalClsModule } from '@openthrottle/nestjs-modules';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
-import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { NestjsRedisModule } from '@openthrottle/nestjs-redis/src/nestjs-redis.module';
-import { NestjsGraphqlModule as _NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
 import { NestjsBullmqBoardModule as _NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
-import { NestjsRedisModule as _NestjsRedisModule } from '@openthrottle/nestjs-redis/src/nestjs-redis.module';
+import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
+import { NestjsGraphqlModule as _NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
+import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
+import { NestjsRedisModule as _NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsThrottlerModule as _NestjsThrottlerModule } from '@openthrottle/nestjs-throttler/src/nestjs-throttler.module';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AppController } from './app.controller';
 
 @Module({
   controllers: [AppController],

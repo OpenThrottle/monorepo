@@ -7,7 +7,7 @@
 import { spawn } from 'node:child_process';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import {
   computeDocIngestionDiff,

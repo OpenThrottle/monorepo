@@ -2,7 +2,7 @@ import { Global, Module, type ModuleMetadata } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 
 /**
  * @description Global stub for `LoggerService` so nested dynamic modules resolve logging when using

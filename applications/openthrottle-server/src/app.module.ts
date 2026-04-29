@@ -1,7 +1,7 @@
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { GlobalClsModule } from '@openthrottle/nestjs-modules/src/global-cls/global-cls.module';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { GlobalClsModule } from '@openthrottle/nestjs-modules';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
 import type { Provider } from '@nestjs/common';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';

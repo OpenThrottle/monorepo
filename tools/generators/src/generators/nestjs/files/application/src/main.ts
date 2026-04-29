@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { AppModule } from './app.module';
 // import { NextFunction, Request, Response } from 'express';
 

@@ -7,7 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard';

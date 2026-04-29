@@ -2,8 +2,8 @@ import type { BaseContext } from '@apollo/server';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { DynamicModule, Module } from '@nestjs/common';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,

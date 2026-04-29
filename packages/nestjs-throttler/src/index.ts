@@ -1,2 +1,1 @@
-export * from './nestjs-throttler.module';
-export * from './nestjs-throttler.service';
+export * from './modules/nestjs-throttler.module';

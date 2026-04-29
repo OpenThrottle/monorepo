@@ -2,7 +2,7 @@ import { spawn as nodeSpawn } from 'child_process';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
 import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';

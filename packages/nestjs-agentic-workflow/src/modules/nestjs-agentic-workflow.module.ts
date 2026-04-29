@@ -1,6 +1,6 @@
 import type { DynamicModule } from '@nestjs/common';
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import type {
   AgenticWorkflowModuleAsyncOptions,
   AgenticWorkflowRegistrationOptions,

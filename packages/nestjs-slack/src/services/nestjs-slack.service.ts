@@ -1,4 +1,4 @@
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { NestjsSlackError } from '../config/nestjs-slack.error';
 import type { NestjsSlackModuleOptions } from '../config/nestjs-slack.options';

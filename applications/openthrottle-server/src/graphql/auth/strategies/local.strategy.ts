@@ -8,7 +8,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import type { User } from '@openthrottle/nestjs-repositories';
 import { UsersService } from '@openthrottle/nestjs-repositories';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 
 /** Strategy name for use with AuthGuard('local'). */
 export const LOCAL_STRATEGY_NAME = 'local';

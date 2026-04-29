@@ -1,5 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import type { NestjsSlackModuleOptions } from '../config/nestjs-slack.options';
 import {
   NESTJS_SLACK_OPTIONS,

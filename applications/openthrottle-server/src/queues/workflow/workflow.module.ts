@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { Module } from '@nestjs/common';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
