@@ -5,14 +5,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import type {
   AgenticWorkflowExecuteGraphqlV2,
   AgenticWorkflowWorkerGraphqlAuth,
-} from './agentic-workflow-worker-graphql';
+} from '../agentic-workflow-worker-graphql';
 import {
   AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
   AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
-} from './agentic-workflow-worker-graphql';
+} from '../agentic-workflow-worker-graphql';
+import { compileAgenticWorkflowTestingModule } from '../testing';
 import { NestjsAgenticWorkflowModule } from './nestjs-agentic-workflow.module';
-import { NestjsAgenticWorkflowService } from './nestjs-agentic-workflow.service';
-import { compileAgenticWorkflowTestingModule } from './testing';
 
 const workerAuthFixture = (): AgenticWorkflowWorkerGraphqlAuth => ({
   token: 'worker-test-token',
@@ -69,19 +68,6 @@ describe('NestjsAgenticWorkflowModule', () => {
       );
       expect(moduleRef.get(AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH)).toBe(
         workerGraphqlAuth,
-      );
-    });
-
-    it('resolves NestjsAgenticWorkflowService', async () => {
-      const moduleRef = await compileAgenticWorkflowTestingModule([
-        NestjsAgenticWorkflowModule.register({
-          executeGraphqlV2,
-          workerGraphqlAuth: workerAuthFixture(),
-        }),
-      ]);
-
-      expect(moduleRef.get(NestjsAgenticWorkflowService)).toBeInstanceOf(
-        NestjsAgenticWorkflowService,
       );
     });
   });

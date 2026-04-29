@@ -9,7 +9,7 @@ import {
   createResponseCachePlugin,
   type ApolloServerPluginCacheControlOptions,
   type ApolloServerPluginResponseCacheOptions,
-} from './cache-plugins';
+} from '../config/nestjs-graphql.plugins';
 
 /** Opt-in cache configuration for NestjsGraphqlModule.forRoot(). */
 export interface NestjsGraphqlCacheOptions {

@@ -1,3 +1,2 @@
-export * from './cache-plugins';
-export * from './nestjs-graphql.module';
-export * from './nestjs-graphql.service';
+export * from './config/nestjs-graphql.plugins';
+export * from './modules/nestjs-graphql.module';

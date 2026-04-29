@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 import { Mutex } from 'async-mutex';
-import { getWorktreeTargetsFromEnv } from './worktree-targets.env';
-import type { IWorktreeTargetsTracker } from './types/worktree';
-import { MutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
-import { WorktreeTargetsTracker } from './utils/worktree-targets';
-import { WORKTREE_TRACKER_TOKEN } from './nestjs-worktrees.constants';
+import { getWorktreeTargetsFromEnv } from '../worktree-targets.env';
+import { MutexWorktreeTargetsTracker } from '../utils/mutex-worktree-targets';
+import { WORKTREE_TRACKER_TOKEN } from '../config/nestjs-worktrees.constants';
+import { WorktreeTargetsTracker } from '../utils/worktree-targets';
+import type { IWorktreeTargetsTracker } from '../types/worktree';
 
 /**
  * @description Provides a mutex-wrapped worktree targets tracker from WORKTREE_TARGETS env.

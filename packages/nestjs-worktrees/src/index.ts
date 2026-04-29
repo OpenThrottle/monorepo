@@ -1,5 +1,5 @@
-export { NestjsWorktreesModule } from './nestjs-worktrees.module';
-export { WORKTREE_TRACKER_TOKEN } from './nestjs-worktrees.constants';
+export { NestjsWorktreesModule } from './modules/nestjs-worktrees.module';
+export { WORKTREE_TRACKER_TOKEN } from './config/nestjs-worktrees.constants';
 export { getWorktreeTargetsFromEnv } from './worktree-targets.env';
 
 export type {

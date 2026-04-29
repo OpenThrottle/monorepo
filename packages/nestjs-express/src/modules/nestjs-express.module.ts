@@ -7,4 +7,4 @@ import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.mod
   imports: [LoggerModule],
   providers: [],
 })
-export class NestjsPostgresModule {}
+export class NestjsExpressModule {}

@@ -7,7 +7,7 @@ import type { Provider } from '@nestjs/common';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql/src/nestjs-graphql.module';
+import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
