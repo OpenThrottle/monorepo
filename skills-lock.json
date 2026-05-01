@@ -7,6 +7,12 @@
       "skillPath": "skills/brag-sheet/SKILL.md",
       "computedHash": "235eebe934fdf6348d018178d13ccbf2c36307ba6030d79561f44887322043e9"
     },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/create-readme/SKILL.md",
+      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
+    },
     "git-commit": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
