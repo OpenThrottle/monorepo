@@ -6,7 +6,7 @@ import {
   CardHeader,
   Markdown,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronDown, ChevronUp, ClipboardCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { mockOutput } from '~/routing/plans/data/mock.output';
 
 export interface PlanLoggerOutputProps {

@@ -1,7 +1,7 @@
 import { describe, expect, beforeEach, test } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
-import { generatorRemixForm } from './generator.form';
+import { generatorReactRouterForm } from './generator.form';
 
 describe('remix form generator', () => {
   let tree: Tree;
@@ -15,7 +15,7 @@ describe('remix form generator', () => {
   });
 
   test('should run successfully', async () => {
-    await generatorRemixForm(tree, { application, folder, name });
+    await generatorReactRouterForm(tree, { application, folder, name });
 
     const changes = tree.listChanges();
     const _files = changes.map((change) => change.path);

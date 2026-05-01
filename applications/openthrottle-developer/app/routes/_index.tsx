@@ -1,5 +1,6 @@
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { HomeBuiltWith } from '~/routing/home/components/HomeBuiltWith';
 import { HomeComingSoon } from '~/routing/home/components/HomeComingSoon';
 import { HomeFeatures } from '~/routing/home/components/HomeFeatures';
 import { HomeHeroV1 } from '~/routing/home/components/HomeHeroV1';
@@ -35,15 +36,8 @@ export default function Component(
     <>
       {FEATURE_BETA_PREVIEW ? (
         <>
-          {/*
-          <blockquote>
-            OpenThrottle is a plans knowledge base: a Postgres-backed app and MCP
-            server that stores plans, tasks, and semantic search over them. It
-            powers “ask OT,” agentic execution (Ralph), and a dashboard so
-            you can see what's in progress and what shipped.
-          </blockquote>
-          */}
           <HomeHeroV1 className="flex-1 flex items-center min-h-svh" />
+          <HomeBuiltWith />
           <HomeFeatures />
         </>
       ) : (

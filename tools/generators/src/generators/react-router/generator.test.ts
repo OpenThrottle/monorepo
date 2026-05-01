@@ -1,9 +1,9 @@
 import { describe, expect, beforeEach, test } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { remixGenerator } from './generator';
+import { reactRouterGenerator } from './generator';
 
-describe('remixGenerator', () => {
+describe('reactRouterGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -16,7 +16,7 @@ describe('remixGenerator', () => {
   const name = 'TestComponentName';
 
   test('should run successfully', async () => {
-    await remixGenerator(tree, {
+    await reactRouterGenerator(tree, {
       application,
       folder,
       name,

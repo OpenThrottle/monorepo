@@ -1,21 +1,21 @@
 import { describe, expect, beforeEach, test } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { generatorRemixComponent } from './generator.component';
+import { generatorReactRouterModal } from './generator.modal';
 
-describe('generatorRemixComponent', () => {
+describe('generatorReactRouterModal', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  const application = 'openthrottle-website';
+  const application = 'openthrottle';
   const folder = 'global/components';
-  const name = 'TestComponent';
+  const name = 'TestModal';
 
   test('should run successfully', async () => {
-    await generatorRemixComponent(tree, { application, folder, name });
+    await generatorReactRouterModal(tree, { application, folder, name });
 
     const changes = tree.listChanges();
     const files = changes.map((change) => change.path);
@@ -25,8 +25,8 @@ describe('generatorRemixComponent', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      'applications/openthrottle-website/app/global/components/TestComponent.tsx',
-      'applications/openthrottle-website/app/global/components/__tests__/TestComponent.test.tsx',
+      'applications/openthrottle/app/global/components/TestModal.tsx',
+      'applications/openthrottle/app/global/components/__tests__/TestModal.test.tsx',
     ]);
   });
 });

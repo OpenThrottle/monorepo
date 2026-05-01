@@ -47,20 +47,16 @@ export const HomeFeatures = (props: HomeFeaturesProps) => {
             docs/openthrottle/features.md
           </a>
         </p>
-        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {HOME_FEATURES.map((feature) => (
-            <li key={feature.title}>
-              <Card className="h-full p-8">
-                <CardHeader>
-                  <CardTitle className="text-lg mb-2">
-                    {feature.title}
-                  </CardTitle>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            </li>
+            <Card className="h-full" key={feature.title}>
+              <CardHeader>
+                <CardTitle className="text-lg mb-2">{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+            </Card>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );

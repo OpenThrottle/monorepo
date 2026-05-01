@@ -101,7 +101,17 @@ export const DashboardDailyStatsCard = (
         className="min-h-[240px] mt-4 w-full"
         config={CHART_CONFIG}
       >
-        <BarChart data={chartData} margin={{ left: 0, right: 12 }}>
+        <BarChart
+          data={chartData}
+          margin={{ left: 0, right: 12 }}
+          onClick={(...args) => {
+            const activeIndex = args[0]?.activeIndex;
+
+            if (activeIndex !== null && activeIndex !== undefined) {
+              console.log('clicked', chartData[activeIndex as number]);
+            }
+          }}
+        >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
             axisLine={false}

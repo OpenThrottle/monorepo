@@ -14,16 +14,16 @@ import {
 } from '../../utils/questions';
 import { REGEX_PASCAL_CASE_V2 } from '../../utils/regex';
 
-export interface RemixComponentGeneratorSchema {
+export interface ReactRouterComponentGeneratorSchema {
   readonly application?: string;
   readonly folder?: string;
   readonly interactive?: boolean;
   readonly name?: string;
 }
 
-export const generatorRemixComponent = async (
+export const generatorReactRouterComponent = async (
   tree: Tree,
-  schema: RemixComponentGeneratorSchema,
+  schema: ReactRouterComponentGeneratorSchema,
 ): Promise<void> => {
   const interactive = schema.interactive === true;
 

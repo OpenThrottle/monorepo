@@ -20,10 +20,10 @@
       "factory": "./src/generators/react/generator",
       "schema": "./src/generators/react/schema.json"
     },
-    "remix": {
-      "description": "Generate a new Remix application, component, or route.",
-      "factory": "./src/generators/remix/generator",
-      "schema": "./src/generators/remix/schema.json"
+    "react-router": {
+      "description": "Generate a new react-router application, component, hook, util, or route.",
+      "factory": "./src/generators/react-router/generator",
+      "schema": "./src/generators/react-router/schema.json"
     }
   }
 }

@@ -1,7 +1,7 @@
 import { describe, expect, beforeEach, test } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
-import { generatorRemixTable } from './generator.table';
+import { generatorReactRouterTable } from './generator.table';
 
 describe('remix table generator', () => {
   let tree: Tree;
@@ -15,7 +15,7 @@ describe('remix table generator', () => {
   });
 
   test('should run successfully', async () => {
-    await generatorRemixTable(tree, { application, folder, name });
+    await generatorReactRouterTable(tree, { application, folder, name });
 
     const changes = tree.listChanges();
     const _files = changes.map((change) => change.path);

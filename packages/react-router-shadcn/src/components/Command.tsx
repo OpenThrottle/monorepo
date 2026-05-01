@@ -111,7 +111,13 @@ const CommandDialog = React.forwardRef<
 >(({ contentClassName, overlayClassName, ...props }, ref) => (
   <CmdkCommandDialog
     contentClassName={cn(
-      'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-popover p-0 text-popover-foreground shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-center-1/2 data-[state=closed]:slide-out-to-center-[48%] data-[state=open]:slide-in-from-center-1/2 data-[state=open]:slide-in-from-center-[48%] sm:rounded-lg overflow-hidden',
+      // 'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-center-1/2 data-[state=closed]:slide-out-to-center-[48%] data-[state=open]:slide-in-from-center-1/2 data-[state=open]:slide-in-from-center-[48%] sm:rounded-lg overflow-hidden',
+      `fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 sm:rounded-lg ` +
+        `bg-popover duration-300 p-0 text-popover-foreground shadow-lg ` +
+        `data-[state=open]:animate-in data-[state=closed]:animate-out ` +
+        `data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 ` +
+        // `data-[state=open]:slide-in-from-top-[50%] data-[state=closed]:slide-out-to-center-[50%]! ` +
+        `data-[state=open]:zoom-in-80 data-[state=closed]:zoom-out-80 `,
       contentClassName,
     )}
     overlayClassName={cn(

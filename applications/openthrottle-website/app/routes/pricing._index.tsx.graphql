@@ -22,8 +22,8 @@
 #   }
 # }
 
-query getPricing {
-  stripeProducts {
-    ...Product
-  }
-}
+# query getPricing {
+#   stripeProducts {
+#     ...Product
+#   }
+# }

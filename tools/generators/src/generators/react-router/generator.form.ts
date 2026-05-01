@@ -1,24 +1,29 @@
 import { join } from 'path';
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
-import { getCommonVariables, getRemixRoutingFolders } from '../../utils';
+import prompts from 'prompts';
+import { camelCase } from 'lodash';
+import {
+  getCommonVariables,
+  getRemixRoutingFolders,
+  getRemixServiceFolders,
+} from '../../utils';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
-import { REGEX_PASCAL_CASE } from '../../utils/regex';
+import { MESSAGE_ON_CANCEL } from '../../utils/messages';
 
-export interface RemixModalGeneratorSchema {
+export interface ReactRouterFormGeneratorSchema {
   readonly application?: string;
   readonly folder?: string;
   readonly interactive?: boolean;
   readonly name?: string;
 }
 
-export const generatorRemixModal = async (
+export const generatorReactRouterForm = async (
   tree: Tree,
-  schema: RemixModalGeneratorSchema,
+  schema: ReactRouterFormGeneratorSchema,
 ): Promise<void> => {
   const interactive = schema.interactive === true;
 
@@ -33,6 +38,7 @@ export const generatorRemixModal = async (
   }
 
   const foldersRouting = getRemixRoutingFolders(application);
+  const foldersServices = getRemixServiceFolders(application);
 
   const choicesGlobal = ['global'].map((_name) => ({
     title: `global/components`,
@@ -44,14 +50,15 @@ export const generatorRemixModal = async (
     value: `routing/${name}/components`,
   }));
 
-  // const choicesServices = foldersServices.map((name) => ({
-  //   title: `services/${name}/components`,
-  //   value: `services/${name}/components`,
-  // }));
+  const choicesServices = foldersServices.map((name) => ({
+    title: `services/${name}/components`,
+    value: `services/${name}/components`,
+  }));
 
   const allowedFolders = [
     ...choicesGlobal.map((c) => c.value),
     ...choicesRouting.map((c) => c.value),
+    ...choicesServices.map((c) => c.value),
   ];
 
   const folder =
@@ -59,8 +66,7 @@ export const generatorRemixModal = async (
     (interactive
       ? (
           await prompts({
-            choices: [...choicesGlobal, ...choicesRouting],
-            // choices: [...choicesGlobal, ...choicesRouting, ...choicesServices],
+            choices: [...choicesGlobal, ...choicesRouting, ...choicesServices],
             message: 'Please select the destination folder.',
             name: 'folder',
             type: 'select',
@@ -71,16 +77,16 @@ export const generatorRemixModal = async (
   if (!folder) throw new Error('No folder selected');
   if (!allowedFolders.includes(folder)) {
     throw new Error(
-      `Invalid folder "${folder}". Use --list=modalFolders with --application=${application} to enumerate valid values.`,
+      `Invalid folder "${folder}". Use --list=formFolders with --application=${application} to enumerate valid values.`,
     );
   }
 
   const nameString =
-    schema.name ?? (interactive ? await getModalNames() : undefined);
+    schema.name ?? (interactive ? await getFormNames() : undefined);
 
   if (!nameString) {
     throw new Error(
-      `Missing required option: "name". Re-run with --interactive or pass --name=<NameModal[,MoreModals]>.`,
+      `Missing required option: "name". Re-run with --interactive or pass --name=<NameForm[,MoreForms]>.`,
     );
   }
 
@@ -90,49 +96,50 @@ export const generatorRemixModal = async (
     if (value.length < 3) {
       errors.push(`Must be at least 3 characters: ${value}`);
     }
-    if (!value.endsWith('Modal')) {
-      errors.push(`Must end with "Modal": ${value}`);
-    }
-    if (!REGEX_PASCAL_CASE.test(value)) {
-      errors.push(`Must be pascal case: ${value}`);
+    if (!value.endsWith('Form')) {
+      errors.push(`Must end with the "Form" suffix: ${value}`);
     }
   });
   if (errors.length > 0) throw new Error(errors.join('\n'));
 
-  names.forEach((name) => {
+  names.forEach((name: string) => {
     const variables = getCommonVariables(name);
+    const directory = folder.replace('/components', '');
 
-    const destination = join('applications', application, 'app', folder);
-    const templates = join(__dirname, 'files/modal');
+    const destination = join('applications', application, 'app', directory);
+    const templates = join(__dirname, 'files/form');
+    const options = {
+      ...variables,
+      directory,
+      schema: camelCase(name).replace('Form', ''),
+    };
 
-    generateFiles(tree, templates, destination, variables);
+    generateFiles(tree, templates, destination, options);
   });
 
   await formatFiles(tree);
 
-  logger.info(`\n✅ Modal generated!\n`);
+  logger.info(`\n✅ Form(s) generated!\n`);
 };
 
-export const getModalNames = async () => {
+const getFormNames = async () => {
   const { name } = await prompts({
-    message: 'Modal name(s)?',
+    message: 'Form name(s)?',
     name: 'name',
     type: 'text',
-    validate: (value) => {
+    validate: (value: string) => {
       const values = parsePossibleNames(value);
       const errors: string[] = [];
 
       values.forEach((value: string) => {
+        const endsWithForm = value.endsWith('Form');
+
         if (value.length < 3) {
-          errors.push('Please at least 3 characters');
+          errors.push(`Must be at least 3 characters: ${value}`);
         }
 
-        if (!value.endsWith('Modal')) {
-          errors.push('Must end with "Modal"');
-        }
-
-        if (!REGEX_PASCAL_CASE.test(value)) {
-          errors.push('Must be pascal case');
+        if (!endsWithForm) {
+          errors.push(`Must end with the "Form" suffix: ${value}`);
         }
       });
 
@@ -144,7 +151,7 @@ export const getModalNames = async () => {
     },
   });
 
-  if (!name) throw new Error('No name provided');
+  if (!name) throw new Error(MESSAGE_ON_CANCEL);
 
   return name;
 };

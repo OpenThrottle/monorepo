@@ -13,16 +13,16 @@ import {
 } from '../../utils/questions';
 import { REGEX_PASCAL_CASE } from '../../utils/regex';
 
-export interface RemixTableGeneratorSchema {
+export interface ReactRouterTableGeneratorSchema {
   readonly application?: string;
   readonly folder?: string;
   readonly interactive?: boolean;
   readonly name?: string;
 }
 
-export const generatorRemixTable = async (
+export const generatorReactRouterTable = async (
   tree: Tree,
-  schema: RemixTableGeneratorSchema,
+  schema: ReactRouterTableGeneratorSchema,
 ): Promise<void> => {
   const interactive = schema.interactive === true;
 

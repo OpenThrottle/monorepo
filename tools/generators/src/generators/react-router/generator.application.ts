@@ -5,14 +5,14 @@ import prompts from 'prompts';
 import { getCommonVariables } from '../../utils/index';
 import { REGEX_SLUG } from '../../utils/regex';
 
-export interface RemixApplicationGeneratorSchema {
+export interface ReactRouterApplicationGeneratorSchema {
   readonly interactive?: boolean;
   readonly name?: string;
 }
 
-export const generatorRemixApplication = async (
+export const generatorReactRouterApplication = async (
   tree: Tree,
-  schema: RemixApplicationGeneratorSchema,
+  schema: ReactRouterApplicationGeneratorSchema,
 ): Promise<void> => {
   const interactive = schema.interactive === true;
 

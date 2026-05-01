@@ -1,9 +1,9 @@
 import { describe, expect, beforeEach, test } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { generatorRemixApplication } from './generator.application';
+import { generatorReactRouterApplication } from './generator.application';
 
-describe('generatorRemixApplication', () => {
+describe('generatorReactRouterApplication', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe('generatorRemixApplication', () => {
   const name = 'application-name';
 
   test('should run successfully', async () => {
-    await generatorRemixApplication(tree, { name });
+    await generatorReactRouterApplication(tree, { name });
 
     const changes = tree.listChanges();
     const _files = changes.map((change) => change.path);

@@ -8,14 +8,14 @@ import {
 import { writeJsonToStdout } from '../../utils/output';
 import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { generatorRemixApplication } from './generator.application';
-import { generatorRemixComponent } from './generator.component';
-import { generatorRemixForm } from './generator.form';
-import { generatorRemixModal } from './generator.modal';
-import { generatorRemixRoute } from './generator.route';
-import { generatorRemixTable } from './generator.table';
+import { generatorReactRouterApplication } from './generator.application';
+import { generatorReactRouterComponent } from './generator.component';
+import { generatorReactRouterForm } from './generator.form';
+import { generatorReactRouterModal } from './generator.modal';
+import { generatorReactRouterRoute } from './generator.route';
+import { generatorReactRouterTable } from './generator.table';
 
-export interface RemixGeneratorSchema {
+export interface ReactRouterGeneratorSchema {
   readonly application?: string;
   readonly describe?: boolean;
   readonly folder?: string;
@@ -31,9 +31,9 @@ export interface RemixGeneratorSchema {
   readonly withPrompts?: boolean;
 }
 
-export async function remixGenerator(
+export async function reactRouterGenerator(
   tree: Tree,
-  schema: RemixGeneratorSchema = {},
+  schema: ReactRouterGeneratorSchema = {},
 ): Promise<void> {
   const interactive = schema.withPrompts === true || isInteractiveArgPresent();
 
@@ -220,11 +220,14 @@ export async function remixGenerator(
 
   switch (generator) {
     case 'application':
-      await generatorRemixApplication(tree, { interactive, name: schema.name });
+      await generatorReactRouterApplication(tree, {
+        interactive,
+        name: schema.name,
+      });
       break;
 
     case 'component':
-      await generatorRemixComponent(tree, {
+      await generatorReactRouterComponent(tree, {
         application: schema.application,
         folder: schema.folder,
         interactive,
@@ -233,7 +236,7 @@ export async function remixGenerator(
       break;
 
     case 'form':
-      await generatorRemixForm(tree, {
+      await generatorReactRouterForm(tree, {
         application: schema.application,
         folder: schema.folder,
         interactive,
@@ -242,7 +245,7 @@ export async function remixGenerator(
       break;
 
     case 'modal':
-      await generatorRemixModal(tree, {
+      await generatorReactRouterModal(tree, {
         application: schema.application,
         folder: schema.folder,
         interactive,
@@ -251,7 +254,7 @@ export async function remixGenerator(
       break;
 
     case 'route':
-      await generatorRemixRoute(tree, {
+      await generatorReactRouterRoute(tree, {
         application: schema.application,
         interactive,
         name: schema.name,
@@ -259,7 +262,7 @@ export async function remixGenerator(
       break;
 
     case 'table':
-      await generatorRemixTable(tree, {
+      await generatorReactRouterTable(tree, {
         application: schema.application,
         folder: schema.folder,
         interactive,
@@ -272,4 +275,4 @@ export async function remixGenerator(
   }
 }
 
-export default remixGenerator;
+export default reactRouterGenerator;

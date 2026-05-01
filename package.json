@@ -349,6 +349,11 @@
       "msgpackr-extract",
       "puppeteer",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ],
     "overrides": {
@@ -404,7 +409,7 @@
     "generate:nestjs": "nx generate @tools/generators:nestjs --interactive",
     "generate:package": "nx generate @tools/generators:package --interactive",
     "generate:react": "nx generate @tools/generators:react --interactive",
-    "generate:remix": "nx generate @tools/generators:remix --interactive",
+    "generate:react-router": "nx generate @tools/generators:react-router --interactive",
     "ollama-proxy": "nx run @tools/ollama-proxy:serve",
     "nx:validate": "pnpm run \"/^nx:validate-.*/\"",
     "nx:validate-configurations": "tsx ./scripts/nx-validate-confgurations.ts",

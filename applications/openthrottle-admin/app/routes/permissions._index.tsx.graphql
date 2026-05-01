@@ -1,11 +1,11 @@
-fragment PermissionRow on PermissionObject {
-  description
-  id
-  name
-}
+# fragment PermissionRow on PermissionObject {
+#   description
+#   id
+#   name
+# }
 
-query getPermissions {
-  permissions {
-    ...PermissionRow
-  }
-}
+# query getPermissions {
+#   permissions {
+#     ...PermissionRow
+#   }
+# }

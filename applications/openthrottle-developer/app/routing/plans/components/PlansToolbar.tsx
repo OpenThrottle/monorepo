@@ -5,7 +5,6 @@ import {
   Input,
   Label,
   ToggleGroup,
-  ToggleGroupContext,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
@@ -128,7 +127,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     [applyParams],
   );
 
-  const onClickStatus =
+  const _onClickStatus =
     (value: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
       const { altKey, metaKey, shiftKey } = event;
       const _isSpecialKey = altKey || metaKey || shiftKey;

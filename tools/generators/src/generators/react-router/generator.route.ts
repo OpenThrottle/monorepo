@@ -8,15 +8,15 @@ import {
   parsePossibleNames,
 } from '../../utils/questions';
 
-export interface RemixRouteGeneratorSchema {
+export interface ReactRouterRouteGeneratorSchema {
   readonly application?: string;
   readonly interactive?: boolean;
   readonly name?: string;
 }
 
-export const generatorRemixRoute = async (
+export const generatorReactRouterRoute = async (
   tree: Tree,
-  schema: RemixRouteGeneratorSchema,
+  schema: ReactRouterRouteGeneratorSchema,
 ): Promise<void> => {
   const interactive = schema.interactive === true;
 

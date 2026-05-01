@@ -2,7 +2,12 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "include": ["**/*.json", "**/*.ts", "**/*.tsx"],
-  "exclude": ["applications/**/*", "packages/**/*"],
+  "exclude": [
+    ".agents/skills/**/*",
+    "applications/**/*",
+    "packages/**/*",
+    "skills/**/*"
+  ],
   "files": [],
   "references": [
     {
