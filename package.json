@@ -340,7 +340,8 @@
       "nx": true,
       "unrs-resolver": true,
       "weak": false,
-      "zeromq": false
+      "zeromq": false,
+      "puppeteer": true
     },
     "ignoredBuiltDependencies": [
       "@scarf/scarf",
