@@ -103,13 +103,6 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
-export type AddPermissionToRoleInput = {
-  /** Permission id to add */
-  permissionId: Scalars['ID']['input'];
-  /** Role id to add the permission to */
-  roleId: Scalars['ID']['input'];
-};
-
 export type AppendPlanOutputInput = {
   /** Content of the output chunk */
   content: Scalars['String']['input'];
@@ -117,13 +110,6 @@ export type AppendPlanOutputInput = {
   iteration?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to append output to */
   planId: Scalars['ID']['input'];
-};
-
-export type AssignRoleToUserInput = {
-  /** Role id to assign */
-  roleId: Scalars['ID']['input'];
-  /** User id to assign the role to */
-  userId: Scalars['ID']['input'];
 };
 
 export type CancelPlanRunInput = {
@@ -214,21 +200,6 @@ export type CommitsPerPrRowObject = {
   prNumber: Scalars['Int']['output'];
 };
 
-export type CreateCheckoutSessionInput = {
-  /** URL to redirect to if the user cancels checkout. */
-  cancelUrl: Scalars['String']['input'];
-  /** Stripe Price ID (e.g. price_xxx) for the subscription. */
-  priceId: Scalars['String']['input'];
-  /** URL to redirect to after successful payment. */
-  successUrl: Scalars['String']['input'];
-};
-
-export type CreateCheckoutSessionPayload = {
-  __typename?: 'CreateCheckoutSessionPayload';
-  /** Redirect URL to Stripe Checkout. Null if user not found or session creation failed. */
-  url?: Maybe<Scalars['String']['output']>;
-};
-
 /** Input for creating a new custom prompt */
 export type CreateCustomPromptInput = {
   content: Scalars['String']['input'];
@@ -282,12 +253,6 @@ export type CreateQueueResultObject = {
   queueName?: Maybe<Scalars['String']['output']>;
   /** Whether the queue was created (or accepted for registration). */
   success: Scalars['Boolean']['output'];
-};
-
-export type CreateRoleInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
-  /** Role name (e.g. admin, user, viewer). Must be unique. */
-  name: Scalars['String']['input'];
 };
 
 export type CreateTaskInput = {
@@ -748,16 +713,10 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  /** Add a permission to a role */
-  addPermissionToRole: Scalars['Boolean']['output'];
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
   appendPlanOutput: PlanOutputStreamChunkObject;
-  /** Assign a role to a user */
-  assignRoleToUser: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
-  /** Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup. */
-  createCheckoutSession: CreateCheckoutSessionPayload;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -768,8 +727,6 @@ export type Mutation = {
   createProject: ProjectObject;
   /** Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error. */
   createQueue: CreateQueueResultObject;
-  /** Create a role */
-  createRole: RoleObject;
   /** Create a task */
   createTask: TaskObject;
   /** Create a user */
@@ -782,8 +739,6 @@ export type Mutation = {
   deletePlan: Scalars['Boolean']['output'];
   /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
   deleteProject: Scalars['Boolean']['output'];
-  /** Delete a role */
-  deleteRole: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
   /** Disable a user; they will not be able to log in. */
@@ -804,16 +759,10 @@ export type Mutation = {
   linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
-  /** Verify and process a Stripe webhook. Pass the exact raw body bytes as base64 and the Stripe-Signature header value. */
-  processStripeWebhook: StripeWebhookProcessedPayload;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
-  /** Remove a permission from a role */
-  removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
-  /** Remove a role from a user */
-  removeRoleFromUser: Scalars['Boolean']['output'];
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
@@ -832,34 +781,22 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
-  /** Update a role */
-  updateRole?: Maybe<RoleObject>;
   /** Update a task */
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
+  /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
+  workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
-};
-
-export type MutationAddPermissionToRoleArgs = {
-  input: AddPermissionToRoleInput;
 };
 
 export type MutationAppendPlanOutputArgs = {
   input: AppendPlanOutputInput;
 };
 
-export type MutationAssignRoleToUserArgs = {
-  input: AssignRoleToUserInput;
-};
-
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
-};
-
-export type MutationCreateCheckoutSessionArgs = {
-  input: CreateCheckoutSessionInput;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -880,10 +817,6 @@ export type MutationCreateProjectArgs = {
 
 export type MutationCreateQueueArgs = {
   input: CreateQueueInput;
-};
-
-export type MutationCreateRoleArgs = {
-  input: CreateRoleInput;
 };
 
 export type MutationCreateTaskArgs = {
@@ -908,10 +841,6 @@ export type MutationDeletePlanArgs = {
 
 export type MutationDeleteProjectArgs = {
   input: DeleteProjectInput;
-};
-
-export type MutationDeleteRoleArgs = {
-  id: Scalars['ID']['input'];
 };
 
 export type MutationDeleteTaskArgs = {
@@ -954,24 +883,12 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
-export type MutationProcessStripeWebhookArgs = {
-  input: ProcessStripeWebhookInput;
-};
-
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
-export type MutationRemovePermissionFromRoleArgs = {
-  input: RemovePermissionFromRoleInput;
-};
-
 export type MutationRemoveRepeatableJobArgs = {
   input: RemoveRepeatableJobInput;
-};
-
-export type MutationRemoveRoleFromUserArgs = {
-  input: RemoveRoleFromUserInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -1002,16 +919,16 @@ export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
 };
 
-export type MutationUpdateRoleArgs = {
-  input: UpdateRoleInput;
-};
-
 export type MutationUpdateTaskArgs = {
   input: UpdateTaskInput;
 };
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
+};
+
+export type MutationWorkflowPlanRunArgs = {
+  input: EnqueuePlanRunInput;
 };
 
 export type MutationWriteCustomPromptToFileSystemArgs = {
@@ -1054,15 +971,6 @@ export type OpenToMergedCycleTimeObject = {
   period?: Maybe<Scalars['String']['output']>;
   /** Number of merged PRs in this bucket. */
   prCount: Scalars['Int']['output'];
-};
-
-export type PermissionObject = {
-  __typename?: 'PermissionObject';
-  createdAt: Scalars['DateTime']['output'];
-  description?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  /** Permission identifier (e.g. users:read, settings:write) */
-  name: Scalars['String']['output'];
 };
 
 export type PlanEmbeddingObject = {
@@ -1188,13 +1096,6 @@ export type ProcessMetricsSnapshot = {
   rssMb: Scalars['Float']['output'];
 };
 
-export type ProcessStripeWebhookInput = {
-  /** Canonical raw request body encoded as standard base64. Must match the bytes Stripe signed. */
-  rawPayloadBase64: Scalars['String']['input'];
-  /** Value of the Stripe-Signature header from the original HTTP request. */
-  stripeSignature: Scalars['String']['input'];
-};
-
 export type ProjectObject = {
   __typename?: 'ProjectObject';
   createdAt: Scalars['DateTime']['output'];
@@ -1314,10 +1215,6 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
-  /** Get permission names for the current user */
-  myPermissions: Array<Scalars['String']['output']>;
-  /** Current user's active subscription (entitlement). Null if none. */
-  mySubscription?: Maybe<SubscriptionObject>;
   /** Get a note by ID */
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
@@ -1326,10 +1223,6 @@ export type Query = {
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
   /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
-  /** List all permissions */
-  permissions: Array<PermissionObject>;
-  /** Get permission names for a user (union of all their roles' permissions) */
-  permissionsForUser: Array<Scalars['String']['output']>;
   /** Get a plan by ID */
   plan?: Maybe<PlanObject>;
   /** Plan count per status for sidebar/filters */
@@ -1366,12 +1259,6 @@ export type Query = {
   repeatableJobs: Array<RepeatableJobObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
-  /** Get a role by ID */
-  role?: Maybe<RoleObject>;
-  /** List all roles with their permissions */
-  roles: Array<RoleObject>;
-  /** Get roles assigned to a user */
-  rolesForUser: Array<RoleObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
@@ -1380,10 +1267,6 @@ export type Query = {
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
-  /** A single Stripe product by ID, or null if not found. */
-  stripeProduct?: Maybe<StripeProductObject>;
-  /** Active Stripe products (catalog). Does not require authentication. */
-  stripeProducts: Array<StripeProductObject>;
   /** Get a task by ID */
   task?: Maybe<TaskObject>;
   /** Get a task embedding by ID */
@@ -1480,10 +1363,6 @@ export type QueryOpenToMergedCycleTimeArgs = {
   input: OpenToMergedCycleTimeInput;
 };
 
-export type QueryPermissionsForUserArgs = {
-  userId: Scalars['ID']['input'];
-};
-
 export type QueryPlanArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1540,24 +1419,12 @@ export type QueryReviewCycleTimeArgs = {
   input: ReviewCycleTimeInput;
 };
 
-export type QueryRoleArgs = {
-  id: Scalars['ID']['input'];
-};
-
-export type QueryRolesForUserArgs = {
-  userId: Scalars['ID']['input'];
-};
-
 export type QuerySearchArgs = {
   input: SearchInput;
 };
 
 export type QuerySearchPlansArgs = {
   input: SearchPlansInput;
-};
-
-export type QueryStripeProductArgs = {
-  id: Scalars['String']['input'];
 };
 
 export type QueryTaskArgs = {
@@ -1681,13 +1548,6 @@ export type RemainingTasksByPlanIdInput = {
   planId: Scalars['ID']['input'];
 };
 
-export type RemovePermissionFromRoleInput = {
-  /** Permission id to remove */
-  permissionId: Scalars['ID']['input'];
-  /** Role id to remove the permission from */
-  roleId: Scalars['ID']['input'];
-};
-
 export type RemoveRepeatableJobInput = {
   /** Repeatable job key (from repeatableJobs query). Required to remove a repeatable job. */
   key: Scalars['String']['input'];
@@ -1701,13 +1561,6 @@ export type RemoveRepeatableJobResultObject = {
   error?: Maybe<Scalars['String']['output']>;
   /** Whether the repeatable job was removed. */
   success: Scalars['Boolean']['output'];
-};
-
-export type RemoveRoleFromUserInput = {
-  /** Role id to remove */
-  roleId: Scalars['ID']['input'];
-  /** User id to remove the role from */
-  userId: Scalars['ID']['input'];
 };
 
 export type RepeatableJobObject = {
@@ -1779,18 +1632,6 @@ export type ReviewCycleTimeObject = {
   period?: Maybe<Scalars['String']['output']>;
   /** Number of merged PRs in this bucket that had at least one CHANGES_REQUESTED and then an APPROVED or merge. */
   prCount: Scalars['Int']['output'];
-};
-
-export type RoleObject = {
-  __typename?: 'RoleObject';
-  createdAt: Scalars['DateTime']['output'];
-  description?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  /** Role identifier (e.g. admin, user, viewer) */
-  name: Scalars['String']['output'];
-  /** Permissions assigned to this role */
-  permissions: Array<PermissionObject>;
-  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type SearchChunk = {
@@ -1879,65 +1720,6 @@ export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
   success: Scalars['Boolean']['output'];
-};
-
-/** Stripe price for catalog or checkout. */
-export type StripePriceObject = {
-  __typename?: 'StripePriceObject';
-  active: Scalars['Boolean']['output'];
-  /** Three-letter ISO currency code. */
-  currency: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  /** Present when type is recurring. */
-  recurring?: Maybe<StripePriceRecurringObject>;
-  /** Stripe price type: one_time or recurring. */
-  type: Scalars['String']['output'];
-  /** Unit amount in the smallest currency unit (e.g. cents). Null for some metered or custom schemes. */
-  unitAmount?: Maybe<Scalars['Int']['output']>;
-};
-
-/** Recurring billing details when a Stripe price is recurring. */
-export type StripePriceRecurringObject = {
-  __typename?: 'StripePriceRecurringObject';
-  /** Billing interval (e.g. month, year). */
-  interval: Scalars['String']['output'];
-  /** Number of intervals between billings. */
-  intervalCount: Scalars['Int']['output'];
-};
-
-/** Stripe catalog product. */
-export type StripeProductObject = {
-  __typename?: 'StripeProductObject';
-  active: Scalars['Boolean']['output'];
-  /** Default Stripe Price ID when set on the product. */
-  defaultPriceId?: Maybe<Scalars['String']['output']>;
-  description?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  images: Array<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-  /** Active prices for this product. Populated by resolvers that batch-fetch prices to avoid N+1 queries. */
-  prices: Array<StripePriceObject>;
-};
-
-export type StripeWebhookProcessedPayload = {
-  __typename?: 'StripeWebhookProcessedPayload';
-  /** True when the webhook was verified and handled (including ignored event types). */
-  received: Scalars['Boolean']['output'];
-};
-
-export type SubscriptionObject = {
-  __typename?: 'SubscriptionObject';
-  cancelAtPeriodEnd: Scalars['Boolean']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  currentPeriodEnd?: Maybe<Scalars['DateTime']['output']>;
-  currentPeriodStart?: Maybe<Scalars['DateTime']['output']>;
-  id: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  stripeCustomerId?: Maybe<Scalars['String']['output']>;
-  stripePriceId: Scalars['String']['output'];
-  stripeSubscriptionId?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  userId: Scalars['String']['output'];
 };
 
 /** Complete system CPU metrics for a job, including start/end snapshots and pressure interpretation. */
@@ -2092,14 +1874,6 @@ export type UpdateProjectInput = {
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type UpdateRoleInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
-  /** Role id to update */
-  id: Scalars['ID']['input'];
-  /** Role name. Pass null to leave unchanged. */
-  name?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type UpdateTaskInput = {
   assignee?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
@@ -2212,19 +1986,6 @@ export type GetRootHealthQuery = {
   };
 };
 
-export type GetSubscriptionQueryVariables = Exact<{ [key: string]: never }>;
-
-export type GetSubscriptionQuery = {
-  __typename?: 'Query';
-  mySubscription?: {
-    __typename?: 'SubscriptionObject';
-    cancelAtPeriodEnd: boolean;
-    status: string;
-    stripeCustomerId?: string | null;
-    stripePriceId: string;
-  } | null;
-};
-
 export type RootMetricsFragment = {
   __typename?: 'ServerMetricsObject';
   cpuSystemMs: number;
@@ -2248,6 +2009,21 @@ export type GetRootMetricsQuery = {
     heapUsedMb: number;
     rssMb: number;
   };
+};
+
+export type GetMyUserQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetMyUserQuery = {
+  __typename?: 'Query';
+  me?: {
+    __typename?: 'UserObject';
+    createdAt: any;
+    disabledAt?: any | null;
+    email?: string | null;
+    githubUsername: string;
+    id: string;
+    updatedAt: any;
+  } | null;
 };
 
 export type DashboardActivityCardFragment = {
@@ -2683,29 +2459,6 @@ export type PlanDetailUpdateTaskMutation = {
   } | null;
 };
 
-export type CreatePlanMutationVariables = Exact<{
-  input: CreatePlanInput;
-}>;
-
-export type CreatePlanMutation = {
-  __typename?: 'Mutation';
-  createPlan: {
-    __typename?: 'PlanObject';
-    id: string;
-    title: string;
-    author: string;
-    category: string;
-    status: string;
-    createdAt: any;
-    updatedAt: any;
-    description?: string | null;
-    assignee?: string | null;
-    project?: string | null;
-    projectId?: string | null;
-    summary?: string | null;
-  };
-};
-
 export type UpdatePlanMutationVariables = Exact<{
   input: UpdatePlanInput;
 }>;
@@ -2714,17 +2467,17 @@ export type UpdatePlanMutation = {
   __typename?: 'Mutation';
   updatePlan?: {
     __typename?: 'PlanObject';
-    id: string;
-    title: string;
+    assignee?: string | null;
     author: string;
     category: string;
-    status: string;
     createdAt: any;
-    updatedAt: any;
     description?: string | null;
-    assignee?: string | null;
+    id: string;
     projectId?: string | null;
+    status: string;
     summary?: string | null;
+    title: string;
+    updatedAt: any;
   } | null;
 };
 
@@ -2894,6 +2647,29 @@ export type GetPlansByStatusQuery = {
         name: string;
       } | null;
     }>;
+  };
+};
+
+export type CreatePlanMutationVariables = Exact<{
+  input: CreatePlanInput;
+}>;
+
+export type CreatePlanMutation = {
+  __typename?: 'Mutation';
+  createPlan: {
+    __typename?: 'PlanObject';
+    id: string;
+    title: string;
+    author: string;
+    category: string;
+    status: string;
+    createdAt: any;
+    updatedAt: any;
+    description?: string | null;
+    assignee?: string | null;
+    project?: string | null;
+    projectId?: string | null;
+    summary?: string | null;
   };
 };
 
@@ -3972,46 +3748,6 @@ export const GetRootHealthDocument = {
     },
   ],
 } as unknown as DocumentNode<GetRootHealthQuery, GetRootHealthQueryVariables>;
-export const GetSubscriptionDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getSubscription' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'mySubscription' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'cancelAtPeriodEnd' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stripeCustomerId' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'stripePriceId' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetSubscriptionQuery,
-  GetSubscriptionQueryVariables
->;
 export const GetRootMetricsDocument = {
   kind: 'Document',
   definitions: [
@@ -4059,6 +3795,39 @@ export const GetRootMetricsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetRootMetricsQuery, GetRootMetricsQueryVariables>;
+export const GetMyUserDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMyUser' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'me' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'githubUsername' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
 export const GetDashboardDocument = {
   kind: 'Document',
   definitions: [
@@ -5229,68 +4998,6 @@ export const PlanDetailUpdateTaskDocument = {
   PlanDetailUpdateTaskMutation,
   PlanDetailUpdateTaskMutationVariables
 >;
-export const CreatePlanDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'createPlan' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'CreatePlanInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'createPlan' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<CreatePlanMutation, CreatePlanMutationVariables>;
 export const UpdatePlanDocument = {
   kind: 'Document',
   definitions: [
@@ -5333,17 +5040,17 @@ export const UpdatePlanDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'author' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
           },
@@ -5766,6 +5473,68 @@ export const GetPlansByStatusDocument = {
   GetPlansByStatusQuery,
   GetPlansByStatusQueryVariables
 >;
+export const CreatePlanDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createPlan' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreatePlanInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createPlan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreatePlanMutation, CreatePlanMutationVariables>;
 export const TestWorkflowDocument = {
   kind: 'Document',
   definitions: [

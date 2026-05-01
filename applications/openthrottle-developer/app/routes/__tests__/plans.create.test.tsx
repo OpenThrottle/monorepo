@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../plans.$planId.create';
+// import { default as Route } from '../plans.create';
 
-describe('routes/plans.$planId.create.tsx', () => {
+describe('routes/plans.create.tsx', () => {
   // let component: RenderResult;
 
   // beforeEach(() => {

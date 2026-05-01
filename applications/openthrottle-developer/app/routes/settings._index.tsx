@@ -59,8 +59,20 @@ export default function Component(
           </p>
         </header> */}
 
-        <NotificationPreferencesSection />
-        <EventSubscriptionsSection />
+        <div className="flex gap-8">
+          <div className="flex flex-col gap-4">
+            <NotificationPreferencesSection />
+            <EventSubscriptionsSection />
+          </div>
+          <div className="flex-0 min-w-1/3">
+            <p>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Delectus,
+              ducimus ipsum ab in dolores eos amet? Repellendus repellat
+              praesentium eveniet fugit ullam obcaecati numquam fugiat, rerum
+              unde doloribus nihil quam?
+            </p>
+          </div>
+        </div>
       </div>
     </main>
   );

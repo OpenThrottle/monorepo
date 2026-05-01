@@ -98,7 +98,7 @@ export function useCommanderOptions(): CommanderGroup[] {
           icon: <PlusCircleIcon className="w-3! h-3!" />,
           id: 'action-plan-create',
           label: 'Create plan',
-          onSelect: nav('/plans/new/create'),
+          onSelect: nav('/plans/create'),
         },
         {
           icon: <FolderPlusIcon className="w-3! h-3!" />,

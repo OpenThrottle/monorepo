@@ -8,12 +8,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Markdown,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { Link, useSearchParams } from 'react-router';
-import { ChevronDown } from 'lucide-react';
 import { PlanDetailsFragment } from '~/__generated__/graphql';
 import {
   PlanStatusBadge,
@@ -37,7 +35,8 @@ import {
   isWorkflowRunOptionsExpandedFromSearchParams as isWorkflowOptionsExpanded,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
 import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
-import { mockOutput } from '~/routing/plans/data/mock.output';
+import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
+import { PlanWorkflowConfigCollapsed } from '~/routing/plans/components/PlanWorkflowConfigCollapsed';
 
 export interface PlanDetailsProps {
   readonly className?: string;
@@ -89,6 +88,14 @@ export const PlanDetails = (props: PlanDetailsProps) => {
     hasDescription && isLongDescription && !expanded;
 
   // Handlers
+  const onResetToDefaults = (): void => {
+    setWorkflowInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
+    );
+
+    setWorkflowTimeout('');
+  };
+
   const onToggleExpanded = (expanded: boolean): void => {
     const next = new URLSearchParams(searchParams);
     if (expanded) {
@@ -230,64 +237,22 @@ export const PlanDetails = (props: PlanDetailsProps) => {
         </CardFooter>
       </Card>
 
-      <Card className="mb-6" data-testid="workflow-run-options-collapsed">
-        <CardHeader className="flex flex-row w-full gap-4">
-          <div className="min-w-0 space-y-1.5 flex-1">
-            <h2 className="text-lg font-semibold leading-none tracking-tight">
-              Output
-            </h2>
-            <Markdown
-              className="overflow-x-auto text-xs text-muted-foreground"
-              content={mockOutput}
-            />
-          </div>
-        </CardHeader>
-      </Card>
-
       {isExpanded ? (
         <PlanWorkflowConfig
           className="mb-6"
           iterationTimeoutText={workflowTimeout}
           onCollapse={() => onToggleExpanded(false)}
           onIterationTimeoutTextChange={setWorkflowTimeout}
-          onResetToDefaults={() => {
-            setWorkflowInput(
-              getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
-            );
-            setWorkflowTimeout('');
-          }}
+          onResetToDefaults={onResetToDefaults}
           onValueChange={setWorkflowInput}
           planId={plan.id}
           value={workflowInput}
         />
       ) : (
-        <Card className="mb-6" data-testid="workflow-run-options-collapsed">
-          <CardHeader className="flex flex-row w-full gap-4">
-            <div className="min-w-0 space-y-1.5 flex-1">
-              <h2 className="text-lg font-semibold leading-none tracking-tight">
-                Workflow options
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Tuning for{' '}
-                <code className="text-xs">pnpm exec workflow-ralph</code> and
-                for queued runs from the toolbar. Defaults apply while
-                collapsed; expand to change iterations, model, prompt, and more.
-              </p>
-            </div>
-
-            <Button
-              aria-controls="workflow-run-options"
-              aria-expanded={false}
-              className="shrink-0 size-8"
-              data-testid="workflow-run-options-expand"
-              onClick={() => onToggleExpanded(true)}
-              variant="ghost"
-            >
-              <ChevronDown aria-hidden={true} className="size-4" />
-            </Button>
-          </CardHeader>
-        </Card>
+        <PlanWorkflowConfigCollapsed onClick={() => onToggleExpanded(true)} />
       )}
+
+      <PlanLoggerOutput />
     </div>
   );
 };

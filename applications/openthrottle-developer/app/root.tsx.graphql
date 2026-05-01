@@ -25,14 +25,14 @@ query getRootHealth {
   }
 }
 
-query getSubscription {
-  mySubscription {
-    cancelAtPeriodEnd
-    status
-    stripeCustomerId
-    stripePriceId
-  }
-}
+# query getSubscription {
+#   mySubscription {
+#     cancelAtPeriodEnd
+#     status
+#     stripeCustomerId
+#     stripePriceId
+#   }
+# }
 
 fragment RootMetrics on ServerMetricsObject {
   cpuSystemMs
@@ -46,5 +46,16 @@ fragment RootMetrics on ServerMetricsObject {
 query getRootMetrics {
   serverMetrics {
     ...RootMetrics
+  }
+}
+
+query getMyUser {
+  me {
+    createdAt
+    disabledAt
+    email
+    githubUsername
+    id
+    updatedAt
   }
 }

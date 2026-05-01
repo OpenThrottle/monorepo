@@ -4,25 +4,20 @@ import {
   Button,
   Input,
   Label,
-  // Switch,
   ToggleGroup,
+  ToggleGroupContext,
   ToggleGroupItem,
-  // ToggleGroup,
-  // ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
 import { PlusIcon } from 'lucide-react';
 import {
   PLAN_STATUS_FILTER_OPTIONS,
-  // PLAN_STATUS_FILTER_OPTIONS,
   STATUS_OPTIONS,
 } from '~/routing/plans/config/status-options';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
 import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
-
-export type ViewMode = 'table' | 'card';
 
 export interface PlansToolbarProps {
   readonly assigneeOptions: readonly string[];
@@ -33,7 +28,7 @@ export interface PlansToolbarProps {
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
   statuses: readonly string[];
-  view: ViewMode;
+  view: 'card' | 'table';
 }
 
 /**
@@ -111,7 +106,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     (updates: {
       sortBy?: PlansSortBy;
       sortOrder?: PlansSortOrder;
-      view?: ViewMode;
+      view?: PlansToolbarProps['view'];
     }) => {
       const next = new URLSearchParams(searchParams);
       if (updates.sortBy !== undefined) next.set('sortBy', updates.sortBy);
@@ -132,6 +127,14 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     },
     [applyParams],
   );
+
+  const onClickStatus =
+    (value: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
+      const { altKey, metaKey, shiftKey } = event;
+      const _isSpecialKey = altKey || metaKey || shiftKey;
+
+      console.log('🧩 🧩 🧩 🧩 event 🧩 🧩', { value });
+    };
 
   const handleSearchSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
@@ -224,7 +227,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
           />
           <div className="flex-1 min-w-0" />
           <Button asChild={true} className="shrink-0" variant="outline">
-            <Link to="/plans/new/create">
+            <Link to="/plans/create">
               <PlusIcon className="w-4 h-4" /> Create plan
             </Link>
           </Button>
@@ -237,6 +240,8 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
             aria-label="Filter by status"
             className="flex flex-wrap gap-1 items-center"
             data-testid="PlansToolbar-status-toggle"
+            // onClick={onClickStatus}
+            // onChange={(event) => console.log('🧩 🧩 event 🧩 🧩', event)}
             onValueChange={(value) => handleStatusChange(value ?? [])}
             size="xs"
             type="multiple"
@@ -246,7 +251,9 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
             {PLAN_STATUS_FILTER_OPTIONS.map((opt) => (
               <ToggleGroupItem
                 aria-label={opt.label}
+                data-value={opt.value}
                 key={opt.value}
+                // onClick={onClickStatus(opt.value)}
                 value={opt.value}
               >
                 {opt.label}

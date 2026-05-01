@@ -51,6 +51,9 @@ installSoftware () {
   installBrewPackage "openjdk@17"
   installBrewPackage "terraform"
 
+  # TEMP
+  brew install anomalyco/tap/opencode
+
   installMaestro
 
   # Install the dependencies

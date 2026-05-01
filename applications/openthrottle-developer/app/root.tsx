@@ -31,11 +31,14 @@ import {
   NotificationsSocketBridge,
   NotificationsStoreProvider,
 } from '@openthrottle/react-router-notifications';
+import { useAtom } from 'jotai';
 import {
+  GetMyUserDocument,
   GetRootHealthDocument,
   LoginDocument,
   RegisterDocument,
   ServerHealthObject,
+  UserObject,
 } from '~/__generated__/graphql';
 import { GlobalFooter } from '~/global/components/GlobalFooter';
 import { GlobalHeader } from '~/global/components/GlobalHeader';
@@ -43,6 +46,7 @@ import { GlobalMetrics } from '~/global/components/GlobalMetrics';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
+import { userAtom } from '~/global/data/atom.user';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 
@@ -59,7 +63,7 @@ const PROTECTED_PATH_PREFIXES = [
   '/settings',
 ];
 
-function decodeAuthTokenEmail(token: string): string {
+export function decodeAuthTokenEmail(token: string): string {
   try {
     const payload = token.split('.')[1];
     if (!payload) return '';
@@ -148,12 +152,19 @@ export const loader = async (args: Route.LoaderArgs) => {
     const authToken = getAuthTokenFromCookie(cookieHeader);
     const isTokenNull = authToken === null;
 
-    const user = !isTokenNull
-      ? { email: decodeAuthTokenEmail(authToken) }
-      : null;
+    let user: UserObject | null = null;
 
-    console.log('🧩 🧩 authToken 🧩 🧩', authToken);
-    console.log('🧩 🧩 user 🧩 🧩', user);
+    if (!isTokenNull) {
+      const queryMyUser = await executeGraphqlWithAuth(
+        request,
+        GetMyUserDocument,
+      );
+
+      user = queryMyUser.me ?? null;
+
+      // const testing = decodeAuthTokenEmail(authToken);
+      // console.log('🧩 🟢 data 🟢 🧩', { testing, user });
+    }
 
     if (FEATURE_BETA_PREVIEW && isRestrictedAccess && user === null) {
       const pathname = new URL(request.url).pathname;
@@ -191,6 +202,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
   const { pathname } = useLocation();
+  const [_user, setUser] = useAtom(userAtom);
 
   // Setup
   const env = data?.env ?? {};
@@ -228,6 +240,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    if (data?.user) {
+      setUser(data.user);
+    }
+  }, [data?.user]);
 
   // 🔌 Short Circuit
 

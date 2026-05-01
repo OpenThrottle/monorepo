@@ -17,7 +17,7 @@ import { NotificationsService } from './notifications.service';
   exports: [NotificationsService, EMIT_NOTIFICATION_EMITTER],
   imports: [NestjsWebsocketsModule],
   providers: [
-    NotificationEmitterAdapter,
+    // NotificationEmitterAdapter,
     NotificationsService,
     {
       provide: EMIT_NOTIFICATION_EMITTER,

@@ -17,15 +17,15 @@ import {
   EMIT_NOTIFICATION_KEY,
 } from './emit-notification.decorator';
 
+/** Injection token for the emitter used by {@link EmitNotificationInterceptor}. */
+export const EMIT_NOTIFICATION_EMITTER = 'EMIT_NOTIFICATION_EMITTER';
+
 /**
  * @description Minimal interface for the injectable emitter. The consuming app provides a provider that implements this (e.g. maps event names to emitPlanUpdated/emitTaskCompleted or implements a single emit(event, payload)).
  */
 export interface EmitNotificationEmitter {
   emit(event: string, payload: unknown): void;
 }
-
-/** Injection token for the emitter used by {@link EmitNotificationInterceptor}. */
-export const EMIT_NOTIFICATION_EMITTER = 'EMIT_NOTIFICATION_EMITTER';
 
 /**
  * @description Interceptor that, after the handler completes, reads emit-notification metadata from the handler; if present and the payload mapper returns non-null, calls the injected emitter with the event name and payload.

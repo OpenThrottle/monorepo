@@ -7,7 +7,7 @@ import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { CreatePlanDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans.$planId.create';
+import type { Route } from '@/app/routes/+types/plans.create';
 
 // export const loader = async (_args: Route.LoaderArgs) => {
 //   return {};
