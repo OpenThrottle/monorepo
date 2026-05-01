@@ -19,6 +19,18 @@
       "skillPath": "skills/productivity/grill-me/SKILL.md",
       "computedHash": "784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea"
     },
+    "my-pull-requests": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/my-pull-requests/SKILL.md",
+      "computedHash": "79d5b3c35f5358322bf650f86afbdbf00bb6304ee8464fb424e91b461e3fd412"
+    },
+    "secret-scanning": {
+      "source": "github/copilot-plugins",
+      "sourceType": "github",
+      "skillPath": "plugins/advanced-security/skills/secret-scanning/SKILL.md",
+      "computedHash": "58eea7977fc2410c8ab5b162c12e484d6678530a844efcc22776cb7865b0d45f"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
