@@ -5,6 +5,10 @@ Skills are reusable capabilities for AI agents. Install them with a single comma
 ## Installation
 
 ```bash
+# NX Agents
+npx nx configure-ai-agents
+
+# Skills.sh
 npx skills add https://github.com/shadcn/ui --skill shadcn
 npx skills add https://github.com/mattpocock/skills --skill grill-me
 ```
