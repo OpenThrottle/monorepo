@@ -481,6 +481,59 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     expect(ok.nextByteOffset).toBe(999);
   });
 
+  it('logs.replay maps records to JSONL wire objects including optional fields', async () => {
+    const records: StructuredLogRecord[] = [
+      {
+        context: '',
+        correlationId: undefined,
+        extra: { replay: true },
+        hostname: 'replay.host',
+        level: NESTJS_LOGGING_LEVELS.warn,
+        message: 'replay optional',
+        pid: 3030,
+        spanId: 'span-replay',
+        timestampIso: '2026-05-02T16:00:00.000Z',
+        traceId: undefined,
+      },
+    ];
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 42,
+        records,
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      maxReplayLines: 50,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+
+    const ok = await gateway.onLogsReplay({
+      fromByteOffset: 0,
+      maxLines: 10,
+    });
+
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) {
+      throw new Error('expected replay ok');
+    }
+
+    expect(ok.lines[0]).toEqual({
+      extra: { replay: true },
+      hostname: 'replay.host',
+      level: 'warn',
+      message: 'replay optional',
+      pid: 3030,
+      spanId: 'span-replay',
+      timestamp: '2026-05-02T16:00:00.000Z',
+    });
+    expect(ok.nextByteOffset).toBe(42);
+  });
+
   it('logs.tail requires follow boolean and returns cursor when the active file exists', async () => {
     const relative = 'application.jsonl';
     const fullPath = path.join(logDirectory, relative);
@@ -540,6 +593,71 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
 
     expect(follow.ok).toBe(true);
     expect(hub.subscribe).toHaveBeenCalled();
+  });
+
+  it('live log.record emits JSONL-shaped payloads including optional fields', async () => {
+    let hubListener: ((record: StructuredLogRecord) => void) | undefined;
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn((listener) => {
+        hubListener = listener;
+
+        return () => undefined;
+      }),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client, emit } = createMockSocket();
+
+    gateway.handleConnection(client);
+    gateway.onLogsSubscribe(client, {});
+
+    if (hubListener === undefined) {
+      throw new Error('expected hub listener');
+    }
+
+    hubListener({
+      context: 'LiveCtx',
+      correlationId: 'c-live',
+      extra: { route: '/health' },
+      hostname: 'ws-worker',
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'live optional',
+      pid: 7001,
+      spanId: 'span-live',
+      timestampIso: '2026-05-02T18:00:00.000Z',
+      traceId: 't-live',
+    });
+
+    await Promise.resolve();
+
+    const recordCalls = emit.mock.calls.filter(
+      (call) => call[0] === 'log.record',
+    );
+
+    expect(recordCalls).toHaveLength(1);
+    expect(recordCalls[0]?.[1]).toEqual({
+      record: {
+        context: 'LiveCtx',
+        correlationId: 'c-live',
+        extra: { route: '/health' },
+        hostname: 'ws-worker',
+        level: 'log',
+        message: 'live optional',
+        pid: 7001,
+        spanId: 'span-live',
+        timestamp: '2026-05-02T18:00:00.000Z',
+        traceId: 't-live',
+      },
+    });
   });
 
   it('emits backpressure notice when pending records exceed the per-socket cap', async () => {

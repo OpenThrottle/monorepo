@@ -106,6 +106,32 @@ describe('FileBackedLogStreamHub', () => {
     expect(tail.map((r) => r.message)).toEqual(['m2', 'm3']);
   });
 
+  it('readReplayTailLines parses minimal JSONL without context as empty context', async () => {
+    const hub = await createHub({
+      fileBasename: 'minimal',
+      logDirectory,
+      maxReplayLines: 100,
+    });
+    const line = JSON.stringify({
+      level: 'log',
+      message: 'no explicit context',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+
+    await writeFile(
+      path.join(logDirectory, 'minimal.jsonl'),
+      `${line}\n`,
+      'utf8',
+    );
+
+    const tail = await hub.readReplayTailLines(5);
+
+    expect(tail).toHaveLength(1);
+    expect(tail[0]?.context).toBe('');
+    expect(tail[0]?.message).toBe('no explicit context');
+    expect(tail[0]?.level).toBe(NESTJS_LOGGING_LEVELS.log);
+  });
+
   it('readReplayTailLines preserves spanId, pid, hostname, and extra from JSONL', async () => {
     const hub = await createHub({
       fileBasename: 'rich',
