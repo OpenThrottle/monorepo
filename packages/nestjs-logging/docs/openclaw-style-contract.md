@@ -40,6 +40,14 @@ Each **line** is one **complete JSON object** (UTF-8, no pretty-printing, `\n` l
 | `hostname`      | string | Host name (optional; may be omitted in tests).                                                  |
 | `extra`         | object | Arbitrary structured payload; **must** be JSON-serializable. Implementations may omit if empty. |
 
+### 1.2.1 Parser vs writer notes (alignment)
+
+**Required minimum on the wire:** A valid line **must** include `timestamp`, `level`, and `message` (§1.1). All fields listed under §1.2 are **optional** on the wire, including `context`.
+
+**`context`:** Writers **may omit** this key when no Nest logger context applies, or **may emit** `""` for an explicit empty context. JSONL readers **must** accept omission and **should** normalize a missing `context` to an empty string for in-process APIs that use a string slot, so that lines with only the three required fields still parse successfully.
+
+**Implementation status (maintainers):** The TypeScript `StructuredLogRecord` type and `parseJsonlLineToStructuredRecord` historically treated `context` as required; aligning code with §1.1–§1.2 is an explicit package goal (optional `context` on write, tolerant parse).
+
 ### 1.3 Ordering and rotation
 
 - **Ordering:** Records are **append-only** in file order; `timestamp` should reflect emission order but must not be relied on for strict causality across threads without additional sequencing.
