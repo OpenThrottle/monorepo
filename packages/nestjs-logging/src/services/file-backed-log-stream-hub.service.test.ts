@@ -50,6 +50,21 @@ describe('FileBackedLogStreamHub', () => {
     return moduleRef.get(FileBackedLogStreamHub);
   };
 
+  it('readReplayTailLines returns an empty array when the active file is missing', async () => {
+    const hub = await createHub({ logDirectory, maxReplayLines: 10 });
+    const tail = await hub.readReplayTailLines(5);
+
+    expect(tail).toEqual([]);
+  });
+
+  it('readReplayFromByteOffset returns empty records when the active file is missing', async () => {
+    const hub = await createHub({ logDirectory });
+    const chunk = await hub.readReplayFromByteOffset(0);
+
+    expect(chunk.records).toEqual([]);
+    expect(chunk.nextByteOffset).toBe(0);
+  });
+
   it('readReplayTailLines returns last N records from JSONL file', async () => {
     const hub = await createHub({
       fileBasename: 'tail',
@@ -118,6 +133,48 @@ describe('FileBackedLogStreamHub', () => {
 
     expect(second.records).toHaveLength(0);
     expect(second.nextByteOffset).toBe(first.nextByteOffset);
+  });
+
+  it('readReplayTailLines skips a leading partial line when the read window starts mid-line', async () => {
+    const hub = await createHub({
+      fileBasename: 'partial',
+      logDirectory,
+      maxReplayBytes: 120,
+      maxReplayLines: 10,
+    });
+    const good = `${JSON.stringify({
+      context: 'X',
+      level: 'log',
+      message: 'ok',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    })}\n`;
+    const prefix = `${'x'.repeat(200)}\n`;
+
+    await writeFile(
+      path.join(logDirectory, 'partial.jsonl'),
+      prefix + good,
+      'utf8',
+    );
+
+    const tail = await hub.readReplayTailLines(5);
+
+    expect(tail.map((r) => r.message)).toEqual(['ok']);
+  });
+
+  it('publish isolates subscriber errors so other listeners still receive records', async () => {
+    const hub = await createHub({ logDirectory });
+    const ok: string[] = [];
+
+    hub.subscribe(() => {
+      throw new Error('boom');
+    });
+    hub.subscribe((r) => {
+      ok.push(r.message);
+    });
+
+    hub.publish(baseRecord('x'));
+
+    expect(ok).toEqual(['x']);
   });
 
   it('publish fans out to subscribers for allowed levels', async () => {

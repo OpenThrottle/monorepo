@@ -54,10 +54,15 @@ import { NestjsLoggingModule } from '@openthrottle/nestjs-logging';
       websocketGatewayNamespace: '/ot-logging',
       useFactory: (config: ConfigService) => {
         const maxReplayRaw = config.get<string>('OT_LOG_MAX_REPLAY_LINES');
+        const maxReplayBytesRaw = config.get<string>('OT_LOG_MAX_REPLAY_BYTES');
         const maxPendingRaw = config.get<string>('OT_LOG_WS_MAX_PENDING');
 
         return {
           logDirectory: config.getOrThrow<string>('OT_LOG_DIRECTORY'),
+          maxReplayBytes:
+            maxReplayBytesRaw !== undefined && maxReplayBytesRaw !== ''
+              ? Number(maxReplayBytesRaw)
+              : undefined,
           maxReplayLines:
             maxReplayRaw !== undefined && maxReplayRaw !== ''
               ? Number(maxReplayRaw)
@@ -83,13 +88,18 @@ export class AppModule {}
 
 ### Example environment flags (app-defined)
 
+This package does not read environment variables directly. Map the names below (or your own) inside `useFactory` / config as shown above.
+
 | Variable                  | Purpose                                                                 |
 | ------------------------- | ----------------------------------------------------------------------- |
 | `OT_LOG_DIRECTORY`        | Directory for `*.jsonl` files (required in options as `logDirectory`).  |
 | `OT_LOG_WS_ENABLED`       | When `true`, enable the logging Socket.IO namespace.                    |
 | `OT_LOG_WS_NAMESPACE`     | Override namespace path (must start with `/`).                          |
 | `OT_LOG_MAX_REPLAY_LINES` | Cap for `logs.history` / `logs.tail` / `logs.replay` line counts.       |
+| `OT_LOG_MAX_REPLAY_BYTES` | Approximate max bytes read per tail/replay window from disk (optional). |
 | `OT_LOG_WS_MAX_PENDING`   | Per-socket pending `log.record` buffer before oldest lines are dropped. |
+
+In production, also wire **handshake authentication** for the logging namespace (for example validate `socket.handshake.auth.token` against a secret from `OT_LOG_WS_TOKEN` or your existing auth module) and restrict **CORS origin** on the host Socket.IO adapter; the gateway in this package sets `cors: { origin: true }` for developer convenience—tighten at the application level when exposing beyond localhost.
 
 ## WebSocket streaming and `@openthrottle/nestjs-websockets`
 
@@ -137,4 +147,9 @@ From the repo root:
 pnpm nx run @openthrottle/nestjs-logging:test
 ```
 
-Vitest covers the JSONL sink, file-backed hub, module wiring, and Socket.IO gateway handlers (including mocked hub I/O and subscription lifecycle).
+Vitest covers:
+
+- **JSONL sink** (`FileLogJsonlSink`): append/flush, level filter, basename / pattern, size and daily rotation, optional `correlationId` / `traceId` on disk.
+- **File-backed hub** (`FileBackedLogStreamHub`): tail and byte-offset replay, missing file, partial leading line when tailing from a mid-file window, fan-out and subscriber error isolation, integration with the sink for live + replay consistency.
+- **Socket.IO gateway**: filter matching, connection guard when WebSocket is disabled, subscribe/unsubscribe/history/replay/tail acks, backpressure `log.notice`, and lifecycle (`handleDisconnect`, `onModuleDestroy`) using a **mock Socket.IO client** and mock `LogStreamHub` I/O.
+- **Module** (`NestjsLoggingModule`): `forRoot` / `forRootAsync` token wiring and dynamic registration of the gateway when enabled.

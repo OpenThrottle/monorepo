@@ -188,6 +188,84 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     expect(ack).toEqual({ error: 'Socket is not initialized.', ok: false });
   });
 
+  it('logs.unsubscribe validates payload and subscriptionId', async () => {
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client } = createMockSocket();
+
+    gateway.handleConnection(client);
+
+    expect(gateway.onLogsUnsubscribe(client, null)).toMatchObject({
+      ok: false,
+    });
+    expect(gateway.onLogsUnsubscribe(client, {})).toMatchObject({ ok: false });
+    expect(
+      gateway.onLogsUnsubscribe(client, { subscriptionId: '   ' }),
+    ).toMatchObject({ ok: false });
+  });
+
+  it('handleDisconnect unsubscribes the hub when the client had an active subscription', async () => {
+    const hubUnsubscribe = vi.fn();
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => hubUnsubscribe),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const { client } = createMockSocket();
+
+    gateway.handleConnection(client);
+    gateway.onLogsSubscribe(client, {});
+    gateway.handleDisconnect(client);
+
+    expect(hubUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('onModuleDestroy disconnects all sockets on the server', async () => {
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => []),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+    const disconnectSockets = vi.fn();
+
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- minimal Socket.IO server stub
+    gateway.server = { disconnectSockets } as unknown as typeof gateway.server;
+
+    gateway.onModuleDestroy();
+
+    expect(disconnectSockets).toHaveBeenCalledWith(true);
+  });
+
   it('logs.subscribe validates payload shape and level/context arrays', async () => {
     const hub: LogStreamHub = {
       publish: vi.fn(),

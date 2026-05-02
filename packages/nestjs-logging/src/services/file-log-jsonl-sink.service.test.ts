@@ -51,6 +51,30 @@ describe('FileLogJsonlSink', () => {
     return moduleRef.get(FileLogJsonlSink);
   };
 
+  it('appends correlationId and traceId when present on the record', async () => {
+    const sink = await createSink({ logDirectory });
+
+    sink.append({
+      ...baseRecord('with ids'),
+      correlationId: 'corr-1',
+      traceId: 'trace-9',
+    });
+    await sink.flush();
+
+    const text = await readFile(
+      path.join(logDirectory, 'application.jsonl'),
+      'utf8',
+    );
+    const parsed = JSON.parse(text.trim().split('\n')[0] ?? '{}');
+
+    expect(parsed).toMatchObject({
+      correlationId: 'corr-1',
+      message: 'with ids',
+      traceId: 'trace-9',
+    });
+    await sink.onModuleDestroy();
+  });
+
   it('appends JSONL lines and respects level filter', async () => {
     const sink = await createSink({
       levels: [NESTJS_LOGGING_LEVELS.log],
