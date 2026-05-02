@@ -219,18 +219,20 @@ export const pruneKeyedRunOutputDirectory = async (
       try {
         await unlink(absPath);
 
-        return { ok: true as const, size: row?.size ?? 0 };
+        return { absPath, ok: true as const, size: row?.size ?? 0 };
       } catch {
-        return { ok: false as const };
+        return { absPath, ok: false as const };
       }
     }),
   );
 
+  const successfullyDeleted = new Set<string>();
   let deletedFileCount = 0;
   let freedBytes = 0;
 
   for (const outcome of unlinkOutcomes) {
     if (outcome.ok) {
+      successfullyDeleted.add(outcome.absPath);
       deletedFileCount += 1;
       freedBytes += outcome.size;
     } else {
@@ -238,7 +240,7 @@ export const pruneKeyedRunOutputDirectory = async (
     }
   }
 
-  const survivors = rows.filter((r) => !toDelete.has(r.absPath));
+  const survivors = rows.filter((r) => !successfullyDeleted.has(r.absPath));
   const remainingTotalBytes = survivors.reduce((acc, r) => acc + r.size, 0);
 
   return {
