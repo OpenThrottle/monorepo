@@ -771,6 +771,8 @@ export type Mutation = {
   setPlanStatus?: Maybe<PlanObject>;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
+  /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
+  triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
   /** Update an existing custom prompt */

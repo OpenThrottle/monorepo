@@ -17,7 +17,7 @@ import { parseJsonlLineToStructuredRecord } from './jsonl-payload';
 const DEFAULT_MAX_REPLAY_BYTES = 256 * 1024;
 
 /**
- * @description Parses complete UTF-8 lines from a byte slice; skips a leading partial line when {@link skipLeadingPartial} is true.
+ * Parses complete UTF-8 lines from a byte slice; skips a leading partial line when {@link skipLeadingPartial} is true.
  */
 const parseCompleteLinesFromBuffer = (
   buf: Buffer,
@@ -57,7 +57,8 @@ const parseCompleteLinesFromBuffer = (
 };
 
 /**
- * @description Next file byte offset after the last complete newline consumed within {@link buf} when scanning from {@link startIndex} (0-based index in buf).
+ * Next file byte offset after the last complete newline
+ * consumed within {@link buf} when scanning from {@link startIndex} (0-based index in buf).
  */
 const nextOffsetAfterCompleteLines = (
   fileOffset: number,
@@ -80,7 +81,7 @@ const nextOffsetAfterCompleteLines = (
 };
 
 /**
- * @description In-process subscribers plus replay from the active JSONL file (tail / byte offset).
+ * In-process subscribers plus replay from the active JSONL file (tail / byte offset).
  */
 @Injectable()
 export class FileBackedLogStreamHub implements LogStreamHub {
@@ -92,7 +93,7 @@ export class FileBackedLogStreamHub implements LogStreamHub {
   ) {}
 
   /**
-   * @description Absolute path to the currently active JSONL file (same naming as {@link FileLogJsonlSink}).
+   * Absolute path to the currently active JSONL file (same naming as {@link FileLogJsonlSink}).
    */
   private activeJsonlPath(): string {
     const relative = getActiveJsonlRelativePath(this.options);
@@ -133,6 +134,7 @@ export class FileBackedLogStreamHub implements LogStreamHub {
       lineCount ?? this.options.maxReplayLines,
       this.options.maxReplayLines,
     );
+
     const fullPath = this.activeJsonlPath();
 
     let handle: FileHandle | undefined;
@@ -145,6 +147,7 @@ export class FileBackedLogStreamHub implements LogStreamHub {
       }
 
       handle = await open(fullPath, 'r');
+
       const st = await handle.stat();
       const size = st.size;
       const maxBytes = this.maxReplayBytes();
@@ -173,6 +176,7 @@ export class FileBackedLogStreamHub implements LogStreamHub {
 
     try {
       handle = await open(fullPath, 'r');
+
       const st = await handle.stat();
       const size = st.size;
 

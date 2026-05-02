@@ -35,15 +35,11 @@ import { serializeStructuredLogLine } from './jsonl-payload';
 export class FileLogJsonlSink
   implements LogJsonlSink, OnModuleInit, OnModuleDestroy
 {
-  private tail: Promise<void> = Promise.resolve();
-
-  private fd: FileHandle | undefined;
-
-  private flushTimer: ReturnType<typeof setInterval> | undefined;
-
   private activeRelativeName: string | undefined;
-
   private bytesOnFile = 0;
+  private fd: FileHandle | undefined;
+  private flushTimer: ReturnType<typeof setInterval> | undefined;
+  private tail: Promise<void> = Promise.resolve();
 
   constructor(
     @Inject(NESTJS_LOGGING_MODULE_OPTIONS)
@@ -131,6 +127,7 @@ export class FileLogJsonlSink
     }
 
     await this.fd.write(line, null, 'utf8');
+
     this.bytesOnFile += lineBytes;
     this.streamHub?.publish(record);
 
@@ -179,7 +176,6 @@ export class FileLogJsonlSink
     };
 
     await shiftNumberedUp(rotation.keepFiles - 1);
-
     const firstArchive = path.join(dir, `${stem}.1.jsonl`);
 
     try {
