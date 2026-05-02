@@ -9,6 +9,9 @@
   "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
     {
+      "path": "../react-router-shadcn/tsconfig.lib.json"
+    },
+    {
       "path": "../react-router-utils/tsconfig.lib.json"
     },
     {

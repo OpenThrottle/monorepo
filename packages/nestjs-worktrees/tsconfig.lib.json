@@ -12,9 +12,6 @@
       "path": "../ai-mcp/tsconfig.lib.json"
     },
     {
-      "path": "../nestjs-modules/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {

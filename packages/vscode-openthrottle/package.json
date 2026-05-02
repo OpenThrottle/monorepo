@@ -130,8 +130,9 @@
     ],
     "targets": {
       "build": {
+        "executor": "nx:noop",
         "dependsOn": [
-          "project:build"
+          "codegen-graphql"
         ]
       },
       "codegen-graphql": {},

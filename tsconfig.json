@@ -168,6 +168,9 @@
     },
     {
       "path": "./packages/openthrottle-agentic-workflow"
+    },
+    {
+      "path": "./packages/nestjs-agentic-workflow"
     }
   ]
 }
