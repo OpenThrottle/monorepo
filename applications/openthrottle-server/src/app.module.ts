@@ -12,10 +12,15 @@ import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
+import { NestjsLoggingModule } from '@openthrottle/nestjs-logging';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import type { Provider } from '@nestjs/common';
+import {
+  getOpenthrottleServerDevJsonlLogDirectory,
+  isOpenthrottleServerDevJsonlLoggingEnabled,
+} from './config/openthrottle-server-dev-jsonl-logging';
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
@@ -79,6 +84,16 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     NestjsRepositoriesModule,
     NestjsWebsocketsModule,
     NotificationsModule,
+    ...(isOpenthrottleServerDevJsonlLoggingEnabled()
+      ? [
+          NestjsLoggingModule.forRoot({
+            fileBasename: 'openthrottle-server',
+            isGlobal: true,
+            logDirectory: getOpenthrottleServerDevJsonlLogDirectory(),
+            websocket: { enabled: true },
+          }),
+        ]
+      : []),
 
     // 🧩 Application Modules
     DailyStatsQueueModule,
