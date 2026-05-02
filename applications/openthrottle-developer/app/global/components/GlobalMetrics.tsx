@@ -30,8 +30,9 @@ import {
   type GetRootMetricsQuery,
 } from '~/__generated__/graphql';
 import {
-  GLOBAL_METRICS_CHART_MAX_SAMPLES,
   readStoredMetricsChartHistory,
+  trimMetricsChartData,
+  writeStoredMetricsChartHistory,
   type MetricsChartDatum,
 } from '~/global/components/global-metrics-chart-history-storage';
 
@@ -146,15 +147,16 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   React.useEffect(() => {
     if (serverMetrics == null) return;
 
+    let trimmed: readonly MetricsChartDatum[] = [];
     setMetricsHistory((prev) => {
       const next: MetricsChartDatum[] = [
         ...prev,
         { ...serverMetrics, i: prev.length },
       ];
-      const sliced = next.slice(-GLOBAL_METRICS_CHART_MAX_SAMPLES);
-
-      return sliced.map((d, idx) => ({ ...d, i: idx }));
+      trimmed = trimMetricsChartData(next);
+      return trimmed;
     });
+    writeStoredMetricsChartHistory(trimmed);
 
     // 🪝 Update metrics history as our interval elapses
   }, [serverMetrics]);
