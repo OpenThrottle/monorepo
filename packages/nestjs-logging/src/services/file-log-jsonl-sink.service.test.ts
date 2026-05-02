@@ -75,6 +75,35 @@ describe('FileLogJsonlSink', () => {
     await sink.onModuleDestroy();
   });
 
+  it('appends spanId, pid, hostname, and extra when present on the record', async () => {
+    const sink = await createSink({ logDirectory });
+
+    sink.append({
+      ...baseRecord('rich optional fields'),
+      extra: { detail: 'x', nested: { n: 1 } },
+      hostname: 'worker-1.example',
+      pid: 4242,
+      spanId: 'span-abc',
+    });
+    await sink.flush();
+
+    const text = await readFile(
+      path.join(logDirectory, 'application.jsonl'),
+      'utf8',
+    );
+    const parsed = JSON.parse(text.trim().split('\n')[0] ?? '{}');
+
+    expect(parsed).toMatchObject({
+      extra: { detail: 'x', nested: { n: 1 } },
+      hostname: 'worker-1.example',
+      message: 'rich optional fields',
+      pid: 4242,
+      spanId: 'span-abc',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+    await sink.onModuleDestroy();
+  });
+
   it('appends JSONL lines and respects level filter', async () => {
     const sink = await createSink({
       levels: [NESTJS_LOGGING_LEVELS.log],

@@ -106,6 +106,40 @@ describe('FileBackedLogStreamHub', () => {
     expect(tail.map((r) => r.message)).toEqual(['m2', 'm3']);
   });
 
+  it('readReplayTailLines preserves spanId, pid, hostname, and extra from JSONL', async () => {
+    const hub = await createHub({
+      fileBasename: 'rich',
+      logDirectory,
+      maxReplayLines: 100,
+    });
+    const line = JSON.stringify({
+      context: 'Svc',
+      extra: { k: 'v' },
+      hostname: 'host.local',
+      level: 'log',
+      message: 'full shape',
+      pid: 9001,
+      spanId: 's-1',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+
+    await writeFile(path.join(logDirectory, 'rich.jsonl'), `${line}\n`, 'utf8');
+
+    const tail = await hub.readReplayTailLines(5);
+
+    expect(tail).toHaveLength(1);
+    expect(tail[0]).toMatchObject({
+      context: 'Svc',
+      extra: { k: 'v' },
+      hostname: 'host.local',
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'full shape',
+      pid: 9001,
+      spanId: 's-1',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
   it('readReplayFromByteOffset resumes after complete lines', async () => {
     const hub = await createHub({ logDirectory });
     const filePath = path.join(logDirectory, 'application.jsonl');
@@ -226,6 +260,51 @@ describe('FileBackedLogStreamHub', () => {
 
     expect(live).toEqual(['persisted']);
     expect(tail.map((t) => t.message)).toContain('persisted');
+
+    await sink.onModuleDestroy();
+  });
+
+  it('FileLogJsonlSink append + flush optional fields match hub tail replay', async () => {
+    const resolved = applyNestjsLoggingModuleDefaults({
+      levels: [NESTJS_LOGGING_LEVELS.log],
+      logDirectory,
+    });
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        FileBackedLogStreamHub,
+        FileLogJsonlSink,
+        { provide: NESTJS_LOGGING_MODULE_OPTIONS, useValue: resolved },
+        { provide: LOG_STREAM_HUB, useExisting: FileBackedLogStreamHub },
+      ],
+    }).compile();
+
+    await moduleRef.init();
+
+    const sink = moduleRef.get(FileLogJsonlSink);
+    const hub = moduleRef.get(FileBackedLogStreamHub);
+
+    sink.append({
+      ...baseRecord('optional round-trip'),
+      extra: { flag: true },
+      hostname: 'hub-int.local',
+      pid: 77,
+      spanId: 'hub-span',
+    });
+    await sink.flush();
+
+    const replayed = await hub.readReplayTailLines(5);
+
+    expect(replayed.some((r) => r.message === 'optional round-trip')).toBe(
+      true,
+    );
+    const row = replayed.find((r) => r.message === 'optional round-trip');
+
+    expect(row).toMatchObject({
+      extra: { flag: true },
+      hostname: 'hub-int.local',
+      pid: 77,
+      spanId: 'hub-span',
+    });
 
     await sink.onModuleDestroy();
   });

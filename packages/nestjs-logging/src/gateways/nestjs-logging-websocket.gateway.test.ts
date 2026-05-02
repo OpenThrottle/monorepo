@@ -364,6 +364,58 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     expect(ok.lines[0]).toMatchObject({ message: 'a' });
   });
 
+  it('logs.history maps records to JSONL wire objects including optional fields', async () => {
+    const tailLines: StructuredLogRecord[] = [
+      {
+        context: 'WsCtx',
+        correlationId: 'corr-ws',
+        extra: { unit: 'test' },
+        hostname: 'gateway.host',
+        level: NESTJS_LOGGING_LEVELS.log,
+        message: 'history optional',
+        pid: 8080,
+        spanId: 'span-ws',
+        timestampIso: '2026-05-02T15:30:00.000Z',
+        traceId: 'trace-ws',
+      },
+    ];
+    const hub: LogStreamHub = {
+      publish: vi.fn(),
+      readReplayFromByteOffset: vi.fn(async () => ({
+        nextByteOffset: 0,
+        records: [],
+      })),
+      readReplayTailLines: vi.fn(async () => tailLines),
+      subscribe: vi.fn(() => () => undefined),
+    };
+    const resolved = applyNestjsLoggingModuleDefaults({
+      logDirectory,
+      maxReplayLines: 50,
+      websocket: { enabled: true },
+    });
+    const gateway = await compileGateway(hub, resolved);
+
+    const ok = await gateway.onLogsHistory({ maxLines: 10 });
+
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) {
+      throw new Error('expected history ok');
+    }
+
+    expect(ok.lines[0]).toMatchObject({
+      context: 'WsCtx',
+      correlationId: 'corr-ws',
+      extra: { unit: 'test' },
+      hostname: 'gateway.host',
+      level: 'log',
+      message: 'history optional',
+      pid: 8080,
+      spanId: 'span-ws',
+      timestamp: '2026-05-02T15:30:00.000Z',
+      traceId: 'trace-ws',
+    });
+  });
+
   it('logs.history rejects invalid maxLines', async () => {
     const hub: LogStreamHub = {
       publish: vi.fn(),
