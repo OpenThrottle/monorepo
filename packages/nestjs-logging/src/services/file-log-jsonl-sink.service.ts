@@ -10,6 +10,7 @@ import * as path from 'node:path';
 import {
   Inject,
   Injectable,
+  Optional,
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
@@ -18,10 +19,14 @@ import {
   type JsonlRotationPolicy,
   type ResolvedNestjsLoggingModuleOptions,
 } from '../config/nestjs-logging.options';
-import type { LogJsonlSink, StructuredLogRecord } from '../ports/logging-ports';
+import type {
+  LogJsonlSink,
+  LogStreamHub,
+  StructuredLogRecord,
+} from '../ports/logging-ports';
+import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens';
+import { getActiveJsonlRelativePath } from './get-active-jsonl-relative-path';
 import { serializeStructuredLogLine } from './jsonl-payload';
-
-const utcDateStamp = (): string => new Date().toISOString().slice(0, 10);
 
 /**
  * @description Append-only JSONL sink: structured lines, periodic `fsync`, optional size/daily rotation.
@@ -43,6 +48,9 @@ export class FileLogJsonlSink
   constructor(
     @Inject(NESTJS_LOGGING_MODULE_OPTIONS)
     private readonly options: ResolvedNestjsLoggingModuleOptions,
+    @Optional()
+    @Inject(LOG_STREAM_HUB)
+    private readonly streamHub?: LogStreamHub,
   ) {}
 
   /**
@@ -124,6 +132,7 @@ export class FileLogJsonlSink
 
     await this.fd.write(line, null, 'utf8');
     this.bytesOnFile += lineBytes;
+    this.streamHub?.publish(record);
 
     if (rotation.type === 'size' && this.bytesOnFile >= rotation.maxBytes) {
       await this.closeFd();
@@ -197,17 +206,7 @@ export class FileLogJsonlSink
   }
 
   private computeActiveRelativeName(): string {
-    const rotation = this.options.rotation;
-
-    if (rotation.type === 'daily') {
-      return `${this.options.fileBasename}.${utcDateStamp()}.jsonl`;
-    }
-
-    if (this.options.fileNamePattern !== undefined) {
-      return path.basename(this.options.fileNamePattern);
-    }
-
-    return `${this.options.fileBasename}.jsonl`;
+    return getActiveJsonlRelativePath(this.options);
   }
 
   private async ensureOpen(): Promise<void> {

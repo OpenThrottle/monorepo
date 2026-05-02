@@ -9,8 +9,8 @@ import {
   validateNestjsLoggingModuleOptions,
 } from './config/nestjs-logging.options';
 import { NestjsLoggingService } from './nestjs-logging.service';
+import { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
 import { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
-import { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 import { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
 
 @Module({})
@@ -28,18 +28,18 @@ export class NestjsLoggingModule {
         LOG_STREAM_HUB,
         NestjsLoggingService,
         NESTJS_LOGGING_MODULE_OPTIONS,
+        FileBackedLogStreamHub,
         FileLogJsonlSink,
-        StubLogStreamHub,
       ],
       global: options.isGlobal === true,
       imports: [LoggerModule],
       module: NestjsLoggingModule,
       providers: [
         NestjsLoggingService,
+        FileBackedLogStreamHub,
         FileLogJsonlSink,
-        StubLogStreamHub,
         { provide: LOG_JSONL_SINK, useExisting: FileLogJsonlSink },
-        { provide: LOG_STREAM_HUB, useExisting: StubLogStreamHub },
+        { provide: LOG_STREAM_HUB, useExisting: FileBackedLogStreamHub },
         { provide: NESTJS_LOGGING_MODULE_OPTIONS, useValue: resolved },
       ],
     };
@@ -55,18 +55,18 @@ export class NestjsLoggingModule {
         LOG_STREAM_HUB,
         NestjsLoggingService,
         NESTJS_LOGGING_MODULE_OPTIONS,
+        FileBackedLogStreamHub,
         FileLogJsonlSink,
-        StubLogStreamHub,
       ],
       global: options.isGlobal === true,
       imports: [LoggerModule, ...(options.imports ?? [])],
       module: NestjsLoggingModule,
       providers: [
         NestjsLoggingService,
+        FileBackedLogStreamHub,
         FileLogJsonlSink,
-        StubLogStreamHub,
         { provide: LOG_JSONL_SINK, useExisting: FileLogJsonlSink },
-        { provide: LOG_STREAM_HUB, useExisting: StubLogStreamHub },
+        { provide: LOG_STREAM_HUB, useExisting: FileBackedLogStreamHub },
         {
           inject: options.inject ?? [],
           provide: NESTJS_LOGGING_MODULE_OPTIONS,

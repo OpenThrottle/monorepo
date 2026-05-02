@@ -28,9 +28,34 @@ export interface LogJsonlSink {
 }
 
 /**
+ * @description Chunk of parsed JSONL records and the next byte offset for incremental replay.
+ */
+export interface LogReplayChunk {
+  readonly nextByteOffset: number;
+  readonly records: ReadonlyArray<StructuredLogRecord>;
+}
+
+/**
  * @description In-process fan-out for WebSocket tail/subscribe and replay helpers.
  */
 export interface LogStreamHub {
+  /**
+   * @description Fan-out one record to subscribers (after persistence); respects configured levels.
+   */
+  publish(record: StructuredLogRecord): void;
+
+  /**
+   * @description Read up to {@link lineCount} complete records from the tail of the active JSONL file (bounded by module replay limits).
+   */
+  readReplayTailLines(
+    lineCount?: number,
+  ): Promise<ReadonlyArray<StructuredLogRecord>>;
+
+  /**
+   * @description Read complete JSONL lines starting at {@link byteOffset} (skip a leading partial line when offset is mid-line); caps read size for backpressure.
+   */
+  readReplayFromByteOffset(byteOffset: number): Promise<LogReplayChunk>;
+
   /**
    * @description Register a listener; returned function unsubscribes.
    */

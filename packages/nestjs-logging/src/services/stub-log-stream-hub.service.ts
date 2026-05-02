@@ -1,12 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import type { LogStreamHub } from '../ports/logging-ports';
-import type { StructuredLogRecord } from '../ports/logging-ports';
+import type {
+  LogReplayChunk,
+  LogStreamHub,
+  StructuredLogRecord,
+} from '../ports/logging-ports';
 
 /**
- * @description Placeholder hub until fan-out + replay wiring lands.
+ * @description No-op hub for tests or apps that disable streaming while keeping the token.
  */
 @Injectable()
 export class StubLogStreamHub implements LogStreamHub {
+  publish(_record: StructuredLogRecord): void {
+    void _record;
+  }
+
+  readReplayTailLines(): Promise<ReadonlyArray<StructuredLogRecord>> {
+    return Promise.resolve([]);
+  }
+
+  readReplayFromByteOffset(byteOffset: number): Promise<LogReplayChunk> {
+    return Promise.resolve({
+      nextByteOffset: byteOffset,
+      records: [],
+    });
+  }
+
   subscribe(_listener: (record: StructuredLogRecord) => void): () => void {
     void _listener;
 

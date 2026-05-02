@@ -20,11 +20,17 @@ export { NestjsLoggingModule } from './nestjs-logging.module';
 export { NestjsLoggingService } from './nestjs-logging.service';
 export type {
   LogJsonlSink,
+  LogReplayChunk,
   LogStreamHub,
   StructuredLogRecord,
 } from './ports/logging-ports';
+export { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
 export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
 export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
-export { structuredLogRecordToJsonlPayload } from './services/jsonl-payload';
+export {
+  parseJsonlLineToStructuredRecord,
+  serializeStructuredLogLine,
+  structuredLogRecordToJsonlPayload,
+} from './services/jsonl-payload';
 export { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 export { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';

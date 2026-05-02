@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels';
 import type { StructuredLogRecord } from '../ports/logging-ports';
 import {
+  parseJsonlLineToStructuredRecord,
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
 } from './jsonl-payload';
@@ -43,6 +44,28 @@ describe('structuredLogRecordToJsonlPayload', () => {
       timestamp: '2026-05-02T12:00:00.000Z',
       traceId: 'trace-9',
     });
+  });
+});
+
+describe('parseJsonlLineToStructuredRecord', () => {
+  it('round-trips serialize output', () => {
+    const record: StructuredLogRecord = {
+      context: 'App',
+      correlationId: 'c1',
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'hi',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: 't1',
+    };
+
+    const line = serializeStructuredLogLine(record).trimEnd();
+    const parsed = parseJsonlLineToStructuredRecord(line);
+
+    expect(parsed).toEqual(record);
+  });
+
+  it('returns undefined for invalid JSON', () => {
+    expect(parseJsonlLineToStructuredRecord('{not json')).toBeUndefined();
   });
 });
 
