@@ -29,6 +29,10 @@ import {
   GetRootMetricsDocument,
   type GetRootMetricsQuery,
 } from '~/__generated__/graphql';
+import {
+  GLOBAL_METRICS_CHART_MAX_SAMPLES,
+  type MetricsChartDatum,
+} from '~/global/components/global-metrics-chart-history-storage';
 
 const STORAGE_KEY = 'openthrottle-developer:metricsPollInterval';
 const DEFAULT_POLL_INTERVAL_MS = 60_000;
@@ -45,15 +49,6 @@ const POLL_INTERVAL_PRESETS: readonly {
 ];
 
 const VALID_INTERVALS = new Set(POLL_INTERVAL_PRESETS.map((p) => p.valueMs));
-
-const MAX_METRICS_SAMPLES = 25;
-
-type ServerMetricsSnapshot = GetRootMetricsQuery['serverMetrics'];
-
-/** One sample in the metrics history for the time-series chart. */
-interface MetricsChartDatum extends ServerMetricsSnapshot {
-  readonly i: number;
-}
 
 /** Muted, low-saturation colors for chart lines (background-style). */
 const METRICS_CHART_CONFIG: ChartConfig = {
@@ -146,7 +141,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
         ...prev,
         { ...serverMetrics, i: prev.length },
       ];
-      const sliced = next.slice(-MAX_METRICS_SAMPLES);
+      const sliced = next.slice(-GLOBAL_METRICS_CHART_MAX_SAMPLES);
 
       return sliced.map((d, idx) => ({ ...d, i: idx }));
     });
