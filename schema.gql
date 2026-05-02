@@ -1597,6 +1597,11 @@ type Mutation {
   triggerWebsocketNotification: Boolean!
 
   """
+  Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README.
+  """
+  triggerDevJsonlLogSample: Boolean!
+
+  """
   Sign in with email and password. Returns JWT access token for Authorization header or cookie.
   """
   login(input: LoginInput!): LoginResultObject!

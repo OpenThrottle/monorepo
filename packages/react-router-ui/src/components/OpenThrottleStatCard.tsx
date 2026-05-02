@@ -22,10 +22,10 @@ export const OpenThrottleStatCard = (props: OpenThrottleStatCardProps) => {
   // Setup
   const formattedValue = value.toLocaleString();
   const formattedSubValue = subValue?.toLocaleString();
-  const formattedString =
-    subValue !== undefined
-      ? `${formattedValue} / ${formattedSubValue}`
-      : formattedValue;
+  // const formattedString =
+  //   subValue !== undefined
+  //     ? `${formattedValue} / ${formattedSubValue}`
+  //     : formattedValue;
 
   // Handlers
 
@@ -45,8 +45,16 @@ export const OpenThrottleStatCard = (props: OpenThrottleStatCardProps) => {
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <p className="text-2xl font-bold">{formattedString}</p>
+      <CardContent className="p-0 flex gap-1">
+        <p className="text-2xl font-bold">{formattedValue}</p>
+        {formattedSubValue ? (
+          <>
+            <span className="text-2xl text-muted-foreground">/</span>
+            <p className="text-2xl text-muted-foreground">
+              {formattedSubValue}
+            </p>
+          </>
+        ) : null}
       </CardContent>
     </Card>
   );

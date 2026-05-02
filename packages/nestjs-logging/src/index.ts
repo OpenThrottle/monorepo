@@ -7,15 +7,23 @@ export {
 export {
   applyNestjsLoggingModuleDefaults,
   type CorrelationIdExtractor,
+  DEFAULT_MAX_PENDING_WS_RECORDS,
+  DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
   type JsonlRotationPolicy,
   NESTJS_LOGGING_MODULE_OPTIONS,
   type NestjsLoggingModuleAsyncOptions,
-  parseNestjsLoggingModuleOptions,
   type NestjsLoggingModuleOptions,
+  type NestjsLoggingWebsocketOptions,
+  parseNestjsLoggingModuleOptions,
   type ResolvedNestjsLoggingModuleOptions,
   type TraceIdExtractor,
+  validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
 } from './config/nestjs-logging.options';
+export {
+  buildNestjsLoggingWebsocketGatewayClass,
+  recordMatchesLogSubscriptionFilter,
+} from './gateways/nestjs-logging-websocket.gateway';
 export { NestjsLoggingModule } from './nestjs-logging.module';
 export { NestjsLoggingService } from './nestjs-logging.service';
 export type {

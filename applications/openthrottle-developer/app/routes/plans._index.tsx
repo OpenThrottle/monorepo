@@ -99,6 +99,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     statusCounts,
     statuses,
     totalCount: result.listPlansByStatus.totalCount,
+    totalCountAll: result.allPlansCount.totalCount,
   };
 };
 
@@ -123,6 +124,7 @@ export default function Component(
     statusCounts,
     statuses,
     totalCount,
+    totalCountAll,
   } = loaderData;
 
   // Hooks
@@ -169,7 +171,11 @@ export default function Component(
     <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
         <OpenThrottleStatCard title="In progress" value={countInProgress} />
-        <OpenThrottleStatCard title="Matching plans" value={totalCount} />
+        <OpenThrottleStatCard
+          subValue={totalCountAll}
+          title="Matching / Total plans"
+          value={totalCount}
+        />
         <OpenThrottleStatCard title="Completed (all)" value={countCompleted} />
       </div>
 

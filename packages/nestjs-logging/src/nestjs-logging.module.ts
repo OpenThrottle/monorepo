@@ -2,12 +2,15 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
   applyNestjsLoggingModuleDefaults,
+  DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
   NESTJS_LOGGING_MODULE_OPTIONS,
   type NestjsLoggingModuleAsyncOptions,
   type NestjsLoggingModuleOptions,
   parseNestjsLoggingModuleOptions,
+  validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
 } from './config/nestjs-logging.options';
+import { buildNestjsLoggingWebsocketGatewayClass } from './gateways/nestjs-logging-websocket.gateway';
 import { NestjsLoggingService } from './nestjs-logging.service';
 import { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
 import { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
@@ -21,6 +24,14 @@ export class NestjsLoggingModule {
   static forRoot(options: NestjsLoggingModuleOptions): DynamicModule {
     validateNestjsLoggingModuleOptions(options);
     const resolved = applyNestjsLoggingModuleDefaults(options);
+    const websocketGatewayProviders =
+      resolved.websocket.enabled === true
+        ? [
+            buildNestjsLoggingWebsocketGatewayClass(
+              resolved.websocket.namespace ?? DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+            ),
+          ]
+        : [];
 
     return {
       exports: [
@@ -30,6 +41,7 @@ export class NestjsLoggingModule {
         NESTJS_LOGGING_MODULE_OPTIONS,
         FileBackedLogStreamHub,
         FileLogJsonlSink,
+        ...websocketGatewayProviders,
       ],
       global: options.isGlobal === true,
       imports: [LoggerModule],
@@ -41,6 +53,7 @@ export class NestjsLoggingModule {
         { provide: LOG_JSONL_SINK, useExisting: FileLogJsonlSink },
         { provide: LOG_STREAM_HUB, useExisting: FileBackedLogStreamHub },
         { provide: NESTJS_LOGGING_MODULE_OPTIONS, useValue: resolved },
+        ...websocketGatewayProviders,
       ],
     };
   }
@@ -49,6 +62,17 @@ export class NestjsLoggingModule {
    * @description Register logging when options come from ConfigService or another async factory.
    */
   static forRootAsync(options: NestjsLoggingModuleAsyncOptions): DynamicModule {
+    validateNestjsLoggingModuleAsyncOptions(options);
+    const websocketGatewayProviders =
+      options.registerWebsocketGateway === true
+        ? [
+            buildNestjsLoggingWebsocketGatewayClass(
+              options.websocketGatewayNamespace ??
+                DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+            ),
+          ]
+        : [];
+
     return {
       exports: [
         LOG_JSONL_SINK,
@@ -57,6 +81,7 @@ export class NestjsLoggingModule {
         NESTJS_LOGGING_MODULE_OPTIONS,
         FileBackedLogStreamHub,
         FileLogJsonlSink,
+        ...websocketGatewayProviders,
       ],
       global: options.isGlobal === true,
       imports: [LoggerModule, ...(options.imports ?? [])],
@@ -82,6 +107,7 @@ export class NestjsLoggingModule {
             );
           },
         },
+        ...websocketGatewayProviders,
       ],
     };
   }

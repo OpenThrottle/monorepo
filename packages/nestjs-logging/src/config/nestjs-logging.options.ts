@@ -28,6 +28,24 @@ export type CorrelationIdExtractor = (
 export type TraceIdExtractor = (ctx: ExecutionContext) => string | undefined;
 
 /**
+ * @description Socket.IO streaming for log tail/replay (see `docs/openclaw-style-contract.md`). Disabled by default.
+ */
+export interface NestjsLoggingWebsocketOptions {
+  /**
+   * @description When true, registers the logging WebSocket gateway (Socket.IO namespace from {@link NestjsLoggingWebsocketOptions.namespace}).
+   */
+  readonly enabled?: boolean | undefined;
+  /**
+   * @description Maximum buffered `log.record` payloads per connected socket before oldest events are dropped (backpressure).
+   */
+  readonly maxPendingRecordsPerSocket?: number | undefined;
+  /**
+   * @description Socket.IO namespace path (must start with `/`).
+   */
+  readonly namespace?: string | undefined;
+}
+
+/**
  * @description File rotation strategy for JSONL sinks.
  */
 export type JsonlRotationPolicy =
@@ -87,6 +105,10 @@ export interface NestjsLoggingModuleOptions {
    * @description Optional trace id extractor (OpenTelemetry, W3C traceparent, etc.).
    */
   readonly traceIdExtractor?: TraceIdExtractor;
+  /**
+   * @description Optional Socket.IO gateway for `logs.*` control messages and `log.*` pushes (requires host Socket.IO adapter).
+   */
+  readonly websocket?: NestjsLoggingWebsocketOptions | undefined;
 }
 
 /**
@@ -96,12 +118,22 @@ export interface NestjsLoggingModuleAsyncOptions {
   readonly imports?: ModuleMetadata['imports'];
   readonly inject?: FactoryProvider<NestjsLoggingModuleOptions>['inject'];
   readonly isGlobal?: boolean | undefined;
+  /**
+   * @description When true, registers the Socket.IO logging gateway (Nest needs the class at module definition time). Set when your async factory returns `websocket.enabled: true`.
+   */
+  readonly registerWebsocketGateway?: boolean | undefined;
   readonly useFactory: FactoryProvider<NestjsLoggingModuleOptions>['useFactory'];
+  /**
+   * @description Namespace for the gateway when {@link NestjsLoggingModuleAsyncOptions.registerWebsocketGateway} is true; should match the resolved `websocket.namespace` from your factory (default `/ot-logging`).
+   */
+  readonly websocketGatewayNamespace?: string | undefined;
 }
 
 const DEFAULT_FILE_BASENAME = 'application';
 const DEFAULT_FLUSH_MS = 1_000;
 const DEFAULT_MAX_REPLAY_LINES = 10_000;
+export const DEFAULT_MAX_PENDING_WS_RECORDS = 1_000;
+export const DEFAULT_NESTJS_LOGGING_WS_NAMESPACE = '/ot-logging';
 const DEFAULT_ROTATION: JsonlRotationPolicy = { type: 'none' };
 
 /**
@@ -118,10 +150,13 @@ export const applyNestjsLoggingModuleDefaults = (
       | 'levels'
       | 'maxReplayLines'
       | 'rotation'
+      | 'websocket'
     >
   > &
     NestjsLoggingModuleOptions
 > => {
+  const websocketEnabled = options.websocket?.enabled === true;
+
   return {
     ...options,
     fileBasename: options.fileBasename ?? DEFAULT_FILE_BASENAME,
@@ -129,6 +164,14 @@ export const applyNestjsLoggingModuleDefaults = (
     levels: options.levels ?? ALL_NESTJS_LOGGING_LEVELS,
     maxReplayLines: options.maxReplayLines ?? DEFAULT_MAX_REPLAY_LINES,
     rotation: options.rotation ?? DEFAULT_ROTATION,
+    websocket: {
+      enabled: websocketEnabled,
+      maxPendingRecordsPerSocket:
+        options.websocket?.maxPendingRecordsPerSocket ??
+        DEFAULT_MAX_PENDING_WS_RECORDS,
+      namespace:
+        options.websocket?.namespace ?? DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+    },
   };
 };
 
@@ -280,6 +323,81 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
         `rotation.type must be "none", "size", or "daily". Got: ${String(type)}.`,
       );
     }
+  }
+
+  const websocket = opts.websocket;
+
+  if (websocket !== undefined) {
+    if (typeof websocket !== 'object' || websocket === null) {
+      throw new NestjsLoggingError(
+        'websocket must be an object when provided.',
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const ws = websocket as Record<string, unknown>;
+    const enabled = ws.enabled;
+
+    if (
+      enabled !== undefined &&
+      typeof enabled !== 'boolean'
+    ) {
+      throw new NestjsLoggingError(
+        'websocket.enabled, when provided, must be a boolean.',
+      );
+    }
+
+    const namespace = ws.namespace;
+
+    if (
+      namespace !== undefined &&
+      (typeof namespace !== 'string' ||
+        namespace.trim() === '' ||
+        !namespace.startsWith('/'))
+    ) {
+      throw new NestjsLoggingError(
+        'websocket.namespace, when provided, must be a non-empty string starting with "/".',
+      );
+    }
+
+    const maxPending = ws.maxPendingRecordsPerSocket;
+
+    if (
+      maxPending !== undefined &&
+      (typeof maxPending !== 'number' || !isPositiveInt(maxPending))
+    ) {
+      throw new NestjsLoggingError(
+        'websocket.maxPendingRecordsPerSocket, when provided, must be a positive integer.',
+      );
+    }
+  }
+};
+
+/**
+ * @description Validates async module registration options (sync fields on {@link NestjsLoggingModuleAsyncOptions}).
+ */
+export const validateNestjsLoggingModuleAsyncOptions = (
+  options: NestjsLoggingModuleAsyncOptions,
+): void => {
+  const register = options.registerWebsocketGateway;
+
+  if (register !== undefined && typeof register !== 'boolean') {
+    throw new NestjsLoggingError(
+      'registerWebsocketGateway, when provided, must be a boolean.',
+    );
+  }
+
+  const gatewayNs = options.websocketGatewayNamespace;
+
+  if (
+    gatewayNs !== undefined &&
+    (typeof gatewayNs !== 'string' ||
+      gatewayNs.trim() === '' ||
+      !gatewayNs.startsWith('/'))
+  ) {
+    throw new NestjsLoggingError(
+      'websocketGatewayNamespace, when provided, must be a non-empty string starting with "/".',
+    );
   }
 };
 

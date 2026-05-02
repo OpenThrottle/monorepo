@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NestjsLoggingError } from './nestjs-logging.error';
 import {
   applyNestjsLoggingModuleDefaults,
+  validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
 } from './nestjs-logging.options';
 
@@ -54,5 +55,38 @@ describe('applyNestjsLoggingModuleDefaults', () => {
     expect(merged.fileBasename).toBe('application');
     expect(merged.rotation).toEqual({ type: 'none' });
     expect(merged.flushIntervalMs).toBe(1_000);
+    expect(merged.websocket.enabled).toBe(false);
+    expect(merged.websocket.namespace).toBe('/ot-logging');
+  });
+
+  it('preserves websocket.enabled when set to true', () => {
+    const merged = applyNestjsLoggingModuleDefaults({
+      logDirectory: '/tmp',
+      websocket: { enabled: true, namespace: '/custom' },
+    });
+
+    expect(merged.websocket.enabled).toBe(true);
+    expect(merged.websocket.namespace).toBe('/custom');
+  });
+});
+
+describe('validateNestjsLoggingModuleAsyncOptions', () => {
+  it('throws when websocketGatewayNamespace is invalid', () => {
+    expect(() =>
+      validateNestjsLoggingModuleAsyncOptions({
+        useFactory: async () => ({ logDirectory: '/tmp' }),
+        websocketGatewayNamespace: 'no-leading-slash',
+      }),
+    ).toThrow(NestjsLoggingError);
+  });
+
+  it('accepts valid registerWebsocketGateway options', () => {
+    expect(() =>
+      validateNestjsLoggingModuleAsyncOptions({
+        registerWebsocketGateway: true,
+        useFactory: async () => ({ logDirectory: '/tmp' }),
+        websocketGatewayNamespace: '/custom',
+      }),
+    ).not.toThrow();
   });
 });

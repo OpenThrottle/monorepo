@@ -2625,6 +2625,10 @@ export type GetPlansByStatusQueryVariables = Exact<{
 
 export type GetPlansByStatusQuery = {
   __typename?: 'Query';
+  allPlansCount: {
+    __typename?: 'ListPlansByStatusResultObject';
+    totalCount: number;
+  };
   listPlansByStatus: {
     __typename?: 'ListPlansByStatusResultObject';
     totalCount: number;
@@ -5397,6 +5401,33 @@ export const GetPlansByStatusDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            alias: { kind: 'Name', value: 'allPlansCount' },
+            name: { kind: 'Name', value: 'listPlansByStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'statuses' },
+                      value: { kind: 'ListValue', values: [] },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'listPlansByStatus' },

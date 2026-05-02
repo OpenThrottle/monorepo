@@ -37,4 +37,57 @@ describe('NestjsLoggingModule', () => {
     );
     expect(svc.getResolvedOptions().fileBasename).toBe('async-app');
   });
+
+  it('forRoot registers the websocket gateway when websocket.enabled is true', async () => {
+    const dynamic = NestjsLoggingModule.forRoot({
+      logDirectory: '/tmp/nestjs-logging-ws',
+      websocket: { enabled: true, namespace: '/test-logs' },
+    });
+
+    const isWebsocketGatewayProvider = (p: unknown): boolean =>
+      typeof p === 'function' && p.name === 'NestjsLoggingWebsocketGatewayImpl';
+
+    expect(dynamic.providers?.some(isWebsocketGatewayProvider)).toBe(true);
+    expect(dynamic.exports?.some(isWebsocketGatewayProvider)).toBe(true);
+
+    const app = await Test.createTestingModule({
+      imports: [
+        NestjsLoggingModule.forRoot({
+          logDirectory: '/tmp/nestjs-logging-ws-runtime',
+          websocket: { enabled: true },
+        }),
+      ],
+    }).compile();
+
+    expect(app.get(NestjsLoggingService)).toBeDefined();
+  });
+
+  it('forRootAsync can register the websocket gateway via registerWebsocketGateway', async () => {
+    const dynamic = NestjsLoggingModule.forRootAsync({
+      registerWebsocketGateway: true,
+      useFactory: async () => ({
+        logDirectory: '/tmp/nestjs-logging-ws-async',
+        websocket: { enabled: true },
+      }),
+    });
+
+    const isWebsocketGatewayProvider = (p: unknown): boolean =>
+      typeof p === 'function' && p.name === 'NestjsLoggingWebsocketGatewayImpl';
+
+    expect(dynamic.providers?.some(isWebsocketGatewayProvider)).toBe(true);
+
+    const app = await Test.createTestingModule({
+      imports: [
+        NestjsLoggingModule.forRootAsync({
+          registerWebsocketGateway: true,
+          useFactory: async () => ({
+            logDirectory: '/tmp/nestjs-logging-ws-async-runtime',
+            websocket: { enabled: true },
+          }),
+        }),
+      ],
+    }).compile();
+
+    expect(app.get(NestjsLoggingService)).toBeDefined();
+  });
 });

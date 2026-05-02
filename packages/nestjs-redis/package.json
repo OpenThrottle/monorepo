@@ -8,6 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@apollo/server-plugin-response-cache": "^5.0.0",
+    "@apollo/utils.keyvadapter": "^4.0.1",
+    "@apollo/utils.keyvaluecache": "^4.0.0",
+    "@keyv/redis": "^4.4.0",
     "joi": "^18.1.2"
   },
   "exports": {
