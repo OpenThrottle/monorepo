@@ -45,6 +45,70 @@ describe('structuredLogRecordToJsonlPayload', () => {
       traceId: 'trace-9',
     });
   });
+
+  it('omits context when empty string', () => {
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'minimal',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).toEqual({
+      level: 'log',
+      message: 'minimal',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('includes spanId, pid, hostname, extra when set', () => {
+    const record: StructuredLogRecord = {
+      context: 'Nest',
+      correlationId: undefined,
+      extra: { key: 'value', nested: { n: 1 } },
+      hostname: 'Matthews-MacBook-Pro-2.local',
+      level: NESTJS_LOGGING_LEVELS.debug,
+      message: 'detailed',
+      pid: 4242,
+      spanId: 'span-a',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload(record)).toEqual({
+      context: 'Nest',
+      extra: { key: 'value', nested: { n: 1 } },
+      hostname: 'Matthews-MacBook-Pro-2.local',
+      level: 'debug',
+      message: 'detailed',
+      pid: 4242,
+      spanId: 'span-a',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+  });
+
+  it('omits extra when undefined or empty object', () => {
+    const base: Omit<StructuredLogRecord, 'extra'> = {
+      context: '',
+      correlationId: undefined,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'x',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    expect(structuredLogRecordToJsonlPayload({ ...base })).not.toHaveProperty(
+      'extra',
+    );
+    expect(
+      structuredLogRecordToJsonlPayload({
+        ...base,
+        extra: {},
+      }),
+    ).not.toHaveProperty('extra');
+  });
 });
 
 describe('parseJsonlLineToStructuredRecord', () => {
@@ -67,6 +131,52 @@ describe('parseJsonlLineToStructuredRecord', () => {
   it('returns undefined for invalid JSON', () => {
     expect(parseJsonlLineToStructuredRecord('{not json')).toBeUndefined();
   });
+
+  it('parses minimal line with only timestamp, level, message (context normalizes to empty)', () => {
+    const line =
+      '{"level":"log","message":"only core","timestamp":"2026-05-02T12:00:00.000Z"}';
+    expect(parseJsonlLineToStructuredRecord(line)).toEqual({
+      context: '',
+      correlationId: undefined,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'only core',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    });
+  });
+
+  it('parses optional spanId, pid, hostname, extra', () => {
+    const line = JSON.stringify({
+      extra: { a: 1 },
+      hostname: 'box.local',
+      level: 'warn',
+      message: 'with optionals',
+      pid: 9000,
+      spanId: 's1',
+      timestamp: '2026-05-02T12:00:00.000Z',
+    });
+
+    expect(parseJsonlLineToStructuredRecord(line)).toEqual({
+      context: '',
+      correlationId: undefined,
+      extra: { a: 1 },
+      hostname: 'box.local',
+      level: NESTJS_LOGGING_LEVELS.warn,
+      message: 'with optionals',
+      pid: 9000,
+      spanId: 's1',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    });
+  });
+
+  it('returns undefined when context is present but not a string', () => {
+    expect(
+      parseJsonlLineToStructuredRecord(
+        '{"context":99,"level":"log","message":"bad","timestamp":"2026-05-02T12:00:00.000Z"}',
+      ),
+    ).toBeUndefined();
+  });
 });
 
 describe('serializeStructuredLogLine', () => {
@@ -88,5 +198,43 @@ describe('serializeStructuredLogLine', () => {
       level: 'error',
       message: 'oops',
     });
+  });
+
+  it('round-trips empty context via omission', () => {
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'no ctx',
+      timestampIso: '2026-05-02T12:00:00.000Z',
+      traceId: undefined,
+    };
+
+    const parsed = parseJsonlLineToStructuredRecord(
+      serializeStructuredLogLine(record).trimEnd(),
+    );
+
+    expect(parsed).toEqual(record);
+  });
+
+  it('round-trips all optional wire fields', () => {
+    const record: StructuredLogRecord = {
+      context: 'Svc',
+      correlationId: 'cid',
+      extra: { tags: ['a'] },
+      hostname: 'h.local',
+      level: NESTJS_LOGGING_LEVELS.verbose,
+      message: 'full',
+      pid: 7,
+      spanId: 'sp',
+      timestampIso: '2026-05-02T12:00:00.001Z',
+      traceId: 'tr',
+    };
+
+    const parsed = parseJsonlLineToStructuredRecord(
+      serializeStructuredLogLine(record).trimEnd(),
+    );
+
+    expect(parsed).toEqual(record);
   });
 });

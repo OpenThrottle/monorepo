@@ -2,12 +2,63 @@ import {
   ALL_NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
 } from '../config/nestjs-logging-levels';
-import type { StructuredLogRecord } from '../ports/logging-ports';
+import type {
+  JsonPrimitive,
+  JsonValue,
+  StructuredLogRecord,
+} from '../ports/logging-ports';
 
 const ALLOWED_LEVELS = new Set<string>(ALL_NESTJS_LOGGING_LEVELS);
 
 const isNestjsLoggingLevel = (value: unknown): value is NestjsLoggingLevel =>
   typeof value === 'string' && ALLOWED_LEVELS.has(value);
+
+const isJsonPrimitive = (value: unknown): value is JsonPrimitive =>
+  value === null ||
+  typeof value === 'boolean' ||
+  typeof value === 'number' ||
+  typeof value === 'string';
+
+/**
+ * @description Validates JSON-serializable values for {@link StructuredLogRecord.extra}.
+ */
+const isJsonValue = (value: unknown): value is JsonValue => {
+  if (isJsonPrimitive(value)) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.entries(value).every(
+      ([key, entry]) => typeof key === 'string' && isJsonValue(entry),
+    );
+  }
+  return false;
+};
+
+/**
+ * @description Plain JSON object suitable for {@link StructuredLogRecord.extra}.
+ */
+const isJsonRecord = (
+  value: unknown,
+): value is Readonly<Record<string, JsonValue>> =>
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  isJsonValue(value);
+
+/**
+ * @description Parses wire `extra` when present; returns undefined if absent or invalid.
+ */
+const parseExtraField = (
+  raw: unknown,
+): Readonly<Record<string, JsonValue>> | undefined => {
+  if (raw === undefined || !isJsonRecord(raw)) {
+    return undefined;
+  }
+  return raw;
+};
 
 /**
  * @description Maps {@link StructuredLogRecord} to the on-disk JSONL object shape (see `docs/openclaw-style-contract.md`).
@@ -16,14 +67,33 @@ export const structuredLogRecordToJsonlPayload = (
   record: StructuredLogRecord,
 ): Readonly<Record<string, unknown>> => {
   const payload: Record<string, unknown> = {
-    context: record.context,
     level: record.level,
     message: record.message,
     timestamp: record.timestampIso,
   };
 
+  if (record.context !== '') {
+    payload.context = record.context;
+  }
+
   if (record.correlationId !== undefined) {
     payload.correlationId = record.correlationId;
+  }
+
+  if (record.extra !== undefined && Object.keys(record.extra).length > 0) {
+    payload.extra = record.extra;
+  }
+
+  if (record.hostname !== undefined) {
+    payload.hostname = record.hostname;
+  }
+
+  if (record.pid !== undefined) {
+    payload.pid = record.pid;
+  }
+
+  if (record.spanId !== undefined) {
+    payload.spanId = record.spanId;
   }
 
   if (record.traceId !== undefined) {
@@ -55,7 +125,15 @@ export const parseJsonlLineToStructuredRecord = (
   try {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- JSON.parse is unknown; validated below
     const raw = JSON.parse(trimmed) as Record<string, unknown>;
-    const context = raw.context;
+    let context: string;
+    if (raw.context === undefined) {
+      context = '';
+    } else if (typeof raw.context === 'string') {
+      context = raw.context;
+    } else {
+      return undefined;
+    }
+
     const level = raw.level;
     const message = raw.message;
     const timestamp =
@@ -66,7 +144,6 @@ export const parseJsonlLineToStructuredRecord = (
           : undefined;
 
     if (
-      typeof context !== 'string' ||
       typeof message !== 'string' ||
       timestamp === undefined ||
       !isNestjsLoggingLevel(level)
@@ -76,6 +153,17 @@ export const parseJsonlLineToStructuredRecord = (
 
     const correlationId = raw.correlationId;
     const traceId = raw.traceId;
+    const spanId = raw.spanId;
+    const hostname = raw.hostname;
+    const pidRaw = raw.pid;
+    const extra = parseExtraField(raw.extra);
+
+    const parsedPid =
+      typeof pidRaw === 'number' &&
+      Number.isFinite(pidRaw) &&
+      Number.isInteger(pidRaw)
+        ? pidRaw
+        : undefined;
 
     return {
       context,
@@ -85,6 +173,10 @@ export const parseJsonlLineToStructuredRecord = (
       message,
       timestampIso: timestamp,
       traceId: typeof traceId === 'string' ? traceId : undefined,
+      ...(typeof spanId === 'string' ? { spanId } : {}),
+      ...(typeof hostname === 'string' ? { hostname } : {}),
+      ...(parsedPid !== undefined ? { pid: parsedPid } : {}),
+      ...(extra !== undefined ? { extra } : {}),
     };
   } catch {
     return undefined;
