@@ -13,7 +13,11 @@ describe('Dialog Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <Dialog {...props} />;
+    const Component = () => (
+      <Dialog {...props}>
+        <span data-testid="dialog-child">Child</span>
+      </Dialog>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

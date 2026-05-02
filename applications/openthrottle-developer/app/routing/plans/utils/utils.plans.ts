@@ -2,7 +2,7 @@ import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-option
 import { PlanStatusKey } from '~/routing/plans/types';
 
 /**
- * @description Whether the UI should offer stopping a Ralph / plan-run job
+ * Whether the UI should offer stopping a Ralph / plan-run job
  * for this plan status (queue or active worker).
  */
 export const getPlanIsCancelable = (
@@ -12,7 +12,7 @@ export const getPlanIsCancelable = (
 };
 
 /**
- * @description Returns a human-readable label for a plan status
+ * Returns a human-readable label for a plan status
  * (e.g. IN_PROGRESS → "In progress"). Falls back to the raw value if unknown.
  */
 export function getPlanStatusLabel(status: string | null | undefined): string {
@@ -26,14 +26,14 @@ export function getPlanStatusLabel(status: string | null | undefined): string {
 }
 
 /**
- * @description Returns the color for a plan status badge
+ * Returns the color for a plan status badge
  */
 export const getPlanStatusBadgeColor = (status: PlanStatusKey): string => {
   let color = `border-muted-foreground/50 bg-muted-foreground/20 hover:bg-muted-foreground/50`;
 
   switch (status) {
     case 'BACKLOG':
-      color = `border-slate-400/50 bg-slate-400/20 hover:bg-slate-400/50`;
+      color = `border-yellow-500/50 bg-yellow-500/20 hover:bg-yellow-500/50`;
       break;
     case 'BLOCKED':
       color = `border-amber-500/50 bg-amber-500/20 hover:bg-amber-500/50`;
@@ -48,13 +48,14 @@ export const getPlanStatusBadgeColor = (status: PlanStatusKey): string => {
       color = `border-orange-500/50 bg-orange-500/20 hover:bg-orange-500/50`;
       break;
     case 'PENDING':
-      color = `border-blue-500/50 bg-blue-500/20 hover:bg-blue-500/50`;
+      color = `border-accent/50 bg-accent/20 hover:bg-accent/50`;
       break;
     case 'QUEUED':
       color = `border-yellow-500/50 bg-yellow-500/20 hover:bg-yellow-500/50`;
       break;
     case 'SKIPPED':
-      color = `border-muted-foreground/50 bg-muted-foreground/20 hover:bg-muted-foreground/50`;
+      color = `border-orange-500/50 bg-orange-500/20 hover:bg-orange-500/50`;
+
       break;
   }
 

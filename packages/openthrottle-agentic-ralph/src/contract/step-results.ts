@@ -68,14 +68,14 @@ type StepTasksApplyCompletionsResult =
 /**
  * @description Outcome of interpreting `<promise>…</promise>` / terminal markers in agent output.
  */
-export type AgentParseControlKind =
+export type AgentOutputControlType =
   | 'COMPLETE'
   | 'ERROR'
   | 'INPUT_REQUIRED'
   | 'NONE';
 
 export type StepAgentParseControlResult =
-  | StepSuccess<'agent.parse_control', { readonly control: AgentParseControlKind }> // prettier-ignore
+  | StepSuccess<'agent.parse_control', { readonly control: AgentOutputControlType }> // prettier-ignore
   | StepFailure<'agent.parse_control'>;
 
 /**

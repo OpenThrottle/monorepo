@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PlanOutputStreamChunk } from './plan-output-stream.entity';
 import { planOutputStreamFactory } from './plan-output-stream.factory';
 import { PlanOutputStreamService } from './plan-output-stream.service';

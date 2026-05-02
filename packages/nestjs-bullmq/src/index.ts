@@ -1,4 +1,2 @@
-export * from './default-worker-options';
-export * from './nestjs-bullmq.config';
-export * from './nestjs-bullmq.module';
-export * from './nestjs-bullmq.service';
+export { defaultWorkerOptions } from './config/nestjs-bullmq.defaults';
+export * from './modules/nestjs-bullmq.module';

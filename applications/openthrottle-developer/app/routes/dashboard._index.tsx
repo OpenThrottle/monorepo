@@ -18,6 +18,7 @@ import { DashboardRecentActivity } from '~/routing/dashboard/components/Dashboar
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
+import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const end = new Date();
@@ -163,6 +164,8 @@ export default function Component(
           <DashboardRecentActivity data={activityByDate} />
         </div>
       </div>
+
+      <DashboardDailyStatsModal />
     </main>
   );
 }

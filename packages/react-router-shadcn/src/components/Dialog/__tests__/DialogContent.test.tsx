@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { Dialog } from '../Dialog';
 import { DialogContent } from '../DialogContent';
 import type { DialogContentProps } from '../DialogContent';
 
@@ -13,7 +14,11 @@ describe('DialogContent Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <DialogContent {...props} />;
+    const Component = () => (
+      <Dialog open={true}>
+        <DialogContent {...props}>Dialog body</DialogContent>
+      </Dialog>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

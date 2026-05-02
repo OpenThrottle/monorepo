@@ -115,7 +115,7 @@ export const runIteration = (config: RunIterationConfig): string => {
 
 /**
  * @description Cursor backend: one async iteration with streaming and timeout.
- * On timeout or abort, kills child with SIGTERM then SIGKILL after grace; returns a string that triggers hasError so the CLI exits(1).
+ * On timeout or abort, kills child with SIGTERM then SIGKILL after grace; returned output includes markers so parseRalphResponse exits(1) or the orchestrator treats the run as failed.
  */
 const runCursorIterationAsync = (
   config: RunIterationConfig,

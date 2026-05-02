@@ -1,10 +1,10 @@
 export const COLORS = {
-  blue: "\x1b[0;34m",
-  cyan: "\x1b[0;36m",
-  gray: "\x1b[0;90m",
-  green: "\x1b[0;32m",
-  reset: "\x1b[0m",
-  yellow: "\x1b[1;33m",
+  blue: '\x1b[0;34m',
+  cyan: '\x1b[0;36m',
+  gray: '\x1b[0;90m',
+  green: '\x1b[0;32m',
+  reset: '\x1b[0m',
+  yellow: '\x1b[1;33m',
 } as const;
 
 export const ARTWORK_LINE = `${COLORS.gray}--------------------------------------------------------------------------------${COLORS.reset}`;

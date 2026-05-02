@@ -21,15 +21,17 @@ export class NotificationEmitterAdapter implements EmitNotificationEmitter {
         );
         break;
 
-      case NOTIFICATION_EVENT_NAMES.PLAN_UPDATED:
-        this.notifications.emitPlanUpdated(
-          payload as Parameters<NotificationsService['emitPlanUpdated']>[0],
+      case NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED:
+        this.notifications.emitPlanStatusChanged(
+          payload as Parameters<
+            NotificationsService['emitPlanStatusChanged']
+          >[0],
         );
         break;
 
-      case NOTIFICATION_EVENT_NAMES.TASK_COMPLETED:
-        this.notifications.emitTaskCompleted(
-          payload as Parameters<NotificationsService['emitTaskCompleted']>[0],
+      case NOTIFICATION_EVENT_NAMES.PLAN_UPDATED:
+        this.notifications.emitPlanUpdated(
+          payload as Parameters<NotificationsService['emitPlanUpdated']>[0],
         );
         break;
 
@@ -41,17 +43,15 @@ export class NotificationEmitterAdapter implements EmitNotificationEmitter {
         );
         break;
 
-      case NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED:
-        this.notifications.emitPlanStatusChanged(
-          payload as Parameters<
-            NotificationsService['emitPlanStatusChanged']
-          >[0],
-        );
-        break;
-
       case NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT:
         this.notifications.emitSystemAlert(
           payload as Parameters<NotificationsService['emitSystemAlert']>[0],
+        );
+        break;
+
+      case NOTIFICATION_EVENT_NAMES.TASK_COMPLETED:
+        this.notifications.emitTaskCompleted(
+          payload as Parameters<NotificationsService['emitTaskCompleted']>[0],
         );
         break;
 

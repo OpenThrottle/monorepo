@@ -1,7 +1,11 @@
+import { resolve } from 'path';
 import * as dotenv from 'dotenv';
 import { CodegenConfig } from '@graphql-codegen/cli';
 
 dotenv.config();
+
+/** Use repo schema file so codegen/typecheck work without a running server. */
+const schemaFile = resolve(__dirname, '../../schema.gql');
 
 const url = process.env.API_URL_INTERNAL;
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -11,7 +15,7 @@ if (isDevelopment && !url) {
 }
 
 const config: CodegenConfig = {
-  documents: ['src/*.graphql', 'src/**/*.graphql', '!src/__generated__/**/*'],
+  documents: ['src/graphql/ralph/**/*.graphql', '!src/__generated__/**/*'],
   generates: {
     './src/__generated__/': {
       overwrite: true,
@@ -40,7 +44,7 @@ const config: CodegenConfig = {
   },
   // emitLegacyCommonJSImports: true,
   importExtension: '.js',
-  schema: `../../schema.gql`,
+  schema: schemaFile,
   // schema: isDevelopment ? `${url}/graphql` : `../../schema.gql`,
 
   // schema: {

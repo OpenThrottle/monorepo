@@ -47,6 +47,7 @@ const config: CodegenConfig = {
     afterAllFileWrite: ['prettier --write'],
   },
   schema: schemaFile,
+  // schema: isDevelopment ? `${url}/graphql` : `../../schema.gql`,
 
   // schema: {
   //   [supabaseURL]: {

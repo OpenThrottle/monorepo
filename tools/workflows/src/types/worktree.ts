@@ -110,8 +110,8 @@ export type ParentJobAcquireResult =
   | { ok: true; handoff: ParentJobHandoff }
   | {
       ok: false;
-      reason: 'acquire_failed' | 'create_branch_failed';
       detail?: string;
+      reason: 'acquire_failed' | 'create_branch_failed';
     };
 
 /** Chunk of stdout or stderr from the Ralph child process (for streaming). */

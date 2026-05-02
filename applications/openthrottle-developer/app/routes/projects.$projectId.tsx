@@ -1,12 +1,6 @@
 import * as React from 'react';
 import {
   Badge,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Card,
   CardContent,
   CardHeader,
@@ -19,17 +13,20 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  OpenThrottleBreadcrumbs,
+  OpenThrottleClipboard,
+  OpenThrottlePagination,
+} from '@openthrottle/react-router-ui';
+import { formatProjectDate } from '~/routing/projects/utils/format';
+import { GetProjectByIdDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
-import { formatProjectDate } from '~/routing/projects/utils/format';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/projects.$projectId';
-import { GetProjectByIdDocument } from '~/__generated__/graphql';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
@@ -108,21 +105,14 @@ export default function Component(
       aria-label="Project details"
       className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full"
     >
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/projects" viewTransition={true}>
-                Projects
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{project.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <OpenThrottleBreadcrumbs
+        children={project.name}
+        className="mb-4"
+        links={[
+          { children: 'Projects', to: `/projects` },
+          // { children: planId, to: `/plans/${planId}` },
+        ]}
+      />
 
       <Tabs className="w-full">
         <TabsList aria-label="Project sections" className="mb-4">
@@ -168,7 +158,7 @@ export default function Component(
                   )}
               </div>
               <Badge className="shrink-0" variant="secondary">
-                {project.id}
+                <OpenThrottleClipboard label={project.id} text={project.id} />
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4">

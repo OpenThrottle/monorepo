@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { COLORS } from '../config/index';
 import { MESSAGE_OUTRO } from '../config/messages';
-import { showNxUsage, showRalphUsage } from '../utils/index';
+import { showRalphUsage } from '../utils/index';
 import type { RalphDebugLevel } from './ralph-debug-logger';
 import {
   ralphDebugLogger,
@@ -99,39 +99,6 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
     );
   }
   return unique;
-};
-
-export interface NxArgs {
-  project: string;
-}
-
-/**
- * @description Parses command-line arguments from process.argv
- */
-export const parseNxArgs = (): NxArgs => {
-  const args = process.argv.slice(2);
-  const parsed: Partial<NxArgs> = {
-    project: '',
-  };
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-
-    // 🔍 If the user has requested help show the usage info and exit
-    if (arg === '--help') {
-      showNxUsage();
-      process.exit(0);
-    }
-
-    if (arg.startsWith('--')) {
-      throw new Error(`Unknown flag: ${arg}`);
-    }
-  }
-
-  const result: NxArgs = {
-    project: parsed.project ?? '',
-  };
-  return result;
 };
 
 export interface RalphArgs {

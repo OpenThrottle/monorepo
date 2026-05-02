@@ -2,7 +2,7 @@ import { spawn as nodeSpawn } from 'child_process';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
 import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
@@ -13,6 +13,7 @@ import {
 import 'reflect-metadata';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types';
 import {
   PLANS_QUEUE_NAME,
@@ -22,7 +23,6 @@ import {
   WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { runPlanOrchestratorJob } from './plans-workflow-ralph-orchestrator';
 import { PlansProcessor } from './plans.processor';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -32,15 +32,11 @@ vi.mock('child_process', () => ({
   spawn: vi.fn(),
 }));
 
-vi.mock('./plans-workflow-ralph-orchestrator', () => ({
-  runPlanOrchestratorJob: vi.fn().mockResolvedValue({
-    exitCode: 0,
-    reason: 'tasks_exhausted',
-    status: 'finished',
-  }),
-}));
-
-const mockRunPlanOrchestratorJob = vi.mocked(runPlanOrchestratorJob);
+const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
+  exitCode: 0,
+  reason: 'tasks_exhausted',
+  status: 'finished',
+});
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -135,6 +131,12 @@ describe('PlansProcessor', () => {
         PlanRunCancellationService,
         PlansProcessor,
         {
+          provide: AgenticRalphOrchestratorService,
+          useValue: {
+            runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
+          },
+        },
+        {
           provide: LoggerService,
           useValue: createMock<LoggerService>(),
         },
@@ -221,6 +223,11 @@ describe('PlansProcessor', () => {
 
     expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
     expect(mockRunPlanOrchestratorJob).toHaveBeenCalledWith({
+      correlation: {
+        correlationId: 'job-1',
+        queueJobId: 'job-1',
+        queueName: 'plans',
+      },
       jobData: mockJob.data,
       signal: expect.any(AbortSignal),
     });
@@ -597,6 +604,12 @@ describe('PlansProcessor', () => {
         providers: [
           PlanRunCancellationService,
           PlansProcessor,
+          {
+            provide: AgenticRalphOrchestratorService,
+            useValue: {
+              runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
+            },
+          },
           {
             provide: LoggerService,
             useValue: createMock<LoggerService>(),

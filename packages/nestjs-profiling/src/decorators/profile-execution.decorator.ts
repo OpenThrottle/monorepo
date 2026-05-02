@@ -23,6 +23,7 @@ function buildResult(
     ...(metadata !== undefined && { metadata }),
     ...(output !== undefined && { output }),
   };
+
   return result;
 }
 
@@ -43,6 +44,7 @@ export function ProfileExecution(label?: string): MethodDecorator {
 
     descriptor.value = function (this: unknown, ...args: unknown[]): unknown {
       const startTime = performance.now();
+
       let output: unknown;
       let error: { message: string; name: string } | undefined;
 
@@ -57,6 +59,7 @@ export function ProfileExecution(label?: string): MethodDecorator {
           output,
           error,
         );
+
         notifyProfileExecutionReporter(execution);
       };
 
@@ -64,6 +67,7 @@ export function ProfileExecution(label?: string): MethodDecorator {
         const result = originalMethod.apply(this, args) as
           | Promise<unknown>
           | unknown;
+
         if (result instanceof Promise) {
           return result
             .then((value) => {
@@ -77,13 +81,17 @@ export function ProfileExecution(label?: string): MethodDecorator {
             })
             .finally(report) as Promise<unknown>;
         }
+
         output = result;
         report();
+
         return result;
       } catch (err: unknown) {
         const e = err instanceof Error ? err : new Error(String(err));
         error = { message: e.message, name: e.name };
+
         report();
+
         throw err;
       }
     };

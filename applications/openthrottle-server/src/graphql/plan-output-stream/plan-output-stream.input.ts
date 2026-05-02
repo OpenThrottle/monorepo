@@ -18,7 +18,9 @@ export class ListPlanOutputStreamChunksInput {
 
 @InputType()
 export class AppendPlanOutputInput {
-  @Field(() => String, { description: `Content of the output chunk` })
+  @Field(() => String, {
+    description: `Content of the output chunk`,
+  })
   content!: string;
 
   @Field(() => Int, {
@@ -27,6 +29,8 @@ export class AppendPlanOutputInput {
   })
   iteration!: number | null;
 
-  @Field(() => ID, { description: `Plan id to append output to` })
+  @Field(() => ID, {
+    description: `Plan id to append output to`,
+  })
   planId!: string;
 }

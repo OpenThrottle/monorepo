@@ -16,6 +16,7 @@ function copyMethodMetadata(
   ) {
     return;
   }
+
   const ReflectWithKeys = Reflect as {
     getMetadataKeys: (t: object) => (string | symbol)[];
     getMetadata: (key: string | symbol, t: object) => unknown;

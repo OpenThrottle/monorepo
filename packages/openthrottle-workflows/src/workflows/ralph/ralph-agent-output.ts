@@ -8,7 +8,8 @@ const PROMISE_COMPLETE = '<promise>COMPLETE</promise>';
 const PROMISE_ERROR = '<promise>ERROR</promise>';
 const PROMISE_INPUT_REQUIRED = '<promise>INPUT_REQUIRED</promise>';
 
-export interface RalphOutputMarkerFlags {
+/** Return shape for {@link getRalphOutputMarkerFlags}; not imported by name elsewhere in the monorepo. */
+interface RalphOutputMarkerFlags {
   readonly hasComplete: boolean;
   readonly hasError: boolean;
   readonly hasInputRequired: boolean;

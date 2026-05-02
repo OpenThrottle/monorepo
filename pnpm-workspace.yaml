@@ -1,13 +1,14 @@
 #
-#
-#
 #     https://pnpm.io/docker
-#
-#
 #
 # injectWorkspacePackages: true
 # syncInjectedDepsAfterScripts:
 # - build
+
+# 🔐 💂 👀 https://pnpm.io/settings#minimumreleaseage 👀 💂 🔐
+minimumReleaseAge: 10080 # 7 days (in minutes)
+minimumReleaseAgeExclude:
+  - '@openthrottle/*'
 
 packages:
   - 'applications/*'

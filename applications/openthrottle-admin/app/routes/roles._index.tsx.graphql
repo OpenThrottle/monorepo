@@ -1,23 +1,23 @@
-fragment RoleRow on RoleObject {
-  id
-  name
-  description
-  createdAt
-  updatedAt
-  permissions {
-    id
-    name
-  }
-}
+# fragment RoleRow on RoleObject {
+#   id
+#   name
+#   description
+#   createdAt
+#   updatedAt
+#   permissions {
+#     id
+#     name
+#   }
+# }
 
-query getRoles {
-  roles {
-    ...RoleRow
-  }
-}
+# query getRoles {
+#   roles {
+#     ...RoleRow
+#   }
+# }
 
-mutation createRole($input: CreateRoleInput!) {
-  createRole(input: $input) {
-    ...RoleRow
-  }
-}
+# mutation createRole($input: CreateRoleInput!) {
+#   createRole(input: $input) {
+#     ...RoleRow
+#   }
+# }

@@ -7,6 +7,11 @@ import {
   CardFooter,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';
@@ -50,9 +55,7 @@ export const PlanForm = (props: PlanFormProps) => {
           <div className="flex-1 space-y-4">
             {isEdit ? <Input name="id" type="hidden" value={plan.id} /> : null}
             <div>
-              <Label className="mb-2 block" htmlFor="plan-title">
-                Title
-              </Label>
+              <Label htmlFor="plan-title">Title</Label>
               <Input
                 defaultValue={plan?.title ?? ''}
                 id="plan-title"
@@ -64,29 +67,28 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <div>
-              <Label className="mb-2 block" htmlFor="plan-category">
-                Category
-              </Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              <Label htmlFor="plan-category">Category</Label>
+              <Select
                 defaultValue={plan?.category ?? ''}
-                id="plan-category"
                 name="category"
                 required={true}
               >
-                <option value="">Select category</option>
-                {PLAN_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Add permission…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {PLAN_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <Label className="mb-2 block" htmlFor="plan-author">
-                Author
-              </Label>
+              <Label htmlFor="plan-author">Author</Label>
               <Input
                 defaultValue={plan?.author ?? ''}
                 id="plan-author"
@@ -98,7 +100,7 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <div>
-              <Label className="mb-2 block" htmlFor="plan-assignee">
+              <Label htmlFor="plan-assignee">
                 Assignee{' '}
                 <span className="text-muted-foreground italic">(optional)</span>
               </Label>
@@ -112,7 +114,7 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <div>
-              <Label className="mb-2 block" htmlFor="plan-project">
+              <Label htmlFor="plan-project">
                 Project{' '}
                 <span className="text-muted-foreground italic">(optional)</span>
               </Label>
@@ -125,7 +127,7 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <div>
-              <Label className="mb-2 block" htmlFor="plan-project-id">
+              <Label htmlFor="plan-project-id">
                 Project ID{' '}
                 <span className="text-muted-foreground italic">(optional)</span>
               </Label>
@@ -139,7 +141,7 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <div>
-              <Label className="mb-2 block" htmlFor="plan-status">
+              <Label htmlFor="plan-status">
                 Status{' '}
                 <span className="text-muted-foreground italic">(optional)</span>
               </Label>
@@ -161,7 +163,7 @@ export const PlanForm = (props: PlanFormProps) => {
 
           <div className="gap-8 flex flex-col flex-2">
             <div>
-              <Label className="mb-2 block" htmlFor="plan-summary">
+              <Label htmlFor="plan-summary">
                 Summary{' '}
                 <span className="text-muted-foreground italic">(optional)</span>
               </Label>
@@ -175,7 +177,7 @@ export const PlanForm = (props: PlanFormProps) => {
             </div>
 
             <div className="flex-1">
-              <Label className="mb-2 block" htmlFor="plan-description">
+              <Label htmlFor="plan-description">
                 Description{' '}
                 <span className="text-muted-foreground italic">(optional)</span>
               </Label>

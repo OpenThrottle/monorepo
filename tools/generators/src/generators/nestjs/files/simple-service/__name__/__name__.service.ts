@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 // import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.args';
 
 @Injectable()

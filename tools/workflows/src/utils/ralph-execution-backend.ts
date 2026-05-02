@@ -6,6 +6,7 @@
 
 /** Known backend ids; extend when adding a runner implementation. */
 export const RALPH_EXECUTION_BACKEND_IDS = ['cursor'] as const;
+// export const RALPH_EXECUTION_BACKEND_IDS = ['cursor', 'claude'] as const;
 
 /** @description Which CLI/process runs each agentic iteration. */
 export type RalphExecutionBackendId =

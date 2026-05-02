@@ -1,6 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Avatar, AvatarImage, Button } from '@openthrottle/react-router-shadcn';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { ListCheckIcon } from 'lucide-react';
 import { NavLink } from 'react-router';
@@ -10,8 +10,10 @@ import {
   OPEN_THROTTLE_GITHUB_URL,
 } from '@openthrottle/react-router-utils';
 import { NotificationBell } from '@openthrottle/react-router-notifications';
+import { useAtom } from 'jotai';
 import { dataNavigation } from '~/global/data/data.navigation';
 import { SITE_URL_QUEUES, SITE_SUBDOMAIN } from '~/global/config/settings';
+import { userAtom } from '~/global/data/atom.user';
 
 export interface GlobalHeaderProps {
   className?: string;
@@ -21,6 +23,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
   const { className } = props;
 
   // Hooks
+  const [user] = useAtom(userAtom);
 
   // Setup
 
@@ -42,6 +45,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
             {item.children}
           </NavLink>
         ))}
+        {/* {renderUserProfile()} */}
       </>
     );
   };
@@ -79,6 +83,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
               <GithubLogoIcon className="size-8" />
             </NavLink>
           </Button>
+
           {FEATURE_BETA_PREVIEW && (
             <Button
               asChild={true}
@@ -90,7 +95,16 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
               </NavLink>
             </Button>
           )}
+
           {FEATURE_BETA_PREVIEW && <NotificationBell />}
+
+          {!!user && (
+            <NavLink to="/settings" viewTransition={true}>
+              <Avatar className="size-6 ml-2">
+                <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
+              </Avatar>
+            </NavLink>
+          )}
         </div>
       </div>
     </nav>
