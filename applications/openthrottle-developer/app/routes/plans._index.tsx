@@ -100,6 +100,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     statuses,
     totalCount: result.listPlansByStatus.totalCount,
     totalCountAll: result.allPlansCount.totalCount,
+    totalCountQueued: result.queuedPlansCount.totalCount,
   };
 };
 
@@ -125,6 +126,7 @@ export default function Component(
     statuses,
     totalCount,
     totalCountAll,
+    totalCountQueued,
   } = loaderData;
 
   // Hooks
@@ -170,13 +172,23 @@ export default function Component(
   return (
     <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
-        <OpenThrottleStatCard title="In progress" value={countInProgress} />
         <OpenThrottleStatCard
+          color="bg-yellow-300"
+          subValue={totalCountQueued}
+          title="In progress / Queued"
+          value={countInProgress}
+        />
+        <OpenThrottleStatCard
+          color="bg-green-300"
           subValue={totalCountAll}
           title="Matching / Total plans"
           value={totalCount}
         />
-        <OpenThrottleStatCard title="Completed (all)" value={countCompleted} />
+        <OpenThrottleStatCard
+          color="bg-green-300"
+          title="Completed (all)"
+          value={countCompleted}
+        />
       </div>
 
       <PlansToolbar

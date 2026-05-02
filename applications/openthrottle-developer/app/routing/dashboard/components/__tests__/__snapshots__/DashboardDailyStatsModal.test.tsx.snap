@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DashboardDailyStatsModal Component > should render 1`] = `
+<body>
+  <div>
+    <button
+      class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-sm font-medium whitespace-nowrap rounded-md [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+    >
+      Open
+    </button>
+  </div>
+</body>
+`;

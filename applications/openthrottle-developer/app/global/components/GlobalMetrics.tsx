@@ -161,6 +161,24 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     // 🪝 Update metrics history as our interval elapses
   }, [serverMetrics]);
 
+  /**
+   * @description Chart points: prefer accumulated history; when the first live sample arrives before the append effect runs, show a single synthetic row so the chart is not blank for one frame.
+   */
+  const chartLineData = React.useMemo((): MetricsChartDatum[] => {
+    if (metricsHistory.length > 0) {
+      return [...metricsHistory];
+    }
+    if (serverMetrics != null && !loading) {
+      return [{ ...serverMetrics, i: 0 }];
+    }
+    return [];
+  }, [loading, metricsHistory, serverMetrics]);
+
+  const showStatCards =
+    !loading && error == null && serverMetrics != null;
+  const showMetricsChart = error == null && chartLineData.length > 0;
+  const showGlobalLoadingBanner = loading && metricsHistory.length === 0;
+
   // 🔌 Short Circuit
   // if (!IS_PRODUCTION) {
   //   return null;
@@ -236,85 +254,100 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           </Select>
         </Label>
       </div>
-      {loading && <p data-testid="GlobalMetrics-loading">Loading…</p>}
+      {showGlobalLoadingBanner && (
+        <p data-testid="GlobalMetrics-loading">Loading…</p>
+      )}
       {error != null && (
         <p data-testid="GlobalMetrics-error" role="alert">
           {error.message}
         </p>
       )}
-      {!loading && error == null && serverMetrics != null && (
-        <>
-          <div
-            className="grid grid-cols-2 md:grid-cols-3 gap-4"
-            data-testid="GlobalMetrics-data"
-          >
-            <OpenThrottleStatCard
-              subValue={formatMb(serverMetrics.externalMb)}
-              title="RSS / External (MB)"
-              value={formatMb(serverMetrics.rssMb)}
-            />
-            <OpenThrottleStatCard
-              subValue={formatMb(serverMetrics.heapTotalMb)}
-              title="Heap (MB)"
-              value={formatMb(serverMetrics.heapUsedMb)}
-            />
-            <OpenThrottleStatCard
-              subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
-              title="CPU (ms) user / system"
-              value={formatCpuMs(serverMetrics.cpuUserMs)}
-            />
-          </div>
-          <Card className="mt-4 p-4" data-testid="GlobalMetrics-chart-card">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+      {showStatCards && serverMetrics != null && (
+        <div
+          className="grid grid-cols-2 md:grid-cols-3 gap-4"
+          data-testid="GlobalMetrics-data"
+        >
+          <OpenThrottleStatCard
+            subValue={formatMb(serverMetrics.externalMb)}
+            title="RSS / External (MB)"
+            value={formatMb(serverMetrics.rssMb)}
+          />
+          <OpenThrottleStatCard
+            subValue={formatMb(serverMetrics.heapTotalMb)}
+            title="Heap (MB)"
+            value={formatMb(serverMetrics.heapUsedMb)}
+          />
+          <OpenThrottleStatCard
+            subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
+            title="CPU (ms) user / system"
+            value={formatCpuMs(serverMetrics.cpuUserMs)}
+          />
+        </div>
+      )}
+      {showMetricsChart && (
+        <Card
+          className={classnames('p-4', showStatCards ? 'mt-4' : 'mt-0')}
+          data-testid="GlobalMetrics-chart-card"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
               Metrics over time
             </h3>
-            <ChartContainer
-              className="min-h-[160px] w-full -ml-1 text-sm"
-              config={METRICS_CHART_CONFIG}
-            >
-              <LineChart
-                data={[...metricsHistory]}
-                margin={{ bottom: 8, left: 0, right: 12, top: 4 }}
+            {loading && metricsHistory.length > 0 ? (
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="GlobalMetrics-chart-stale-hint"
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  axisLine={false}
-                  dataKey="i"
-                  tickLine={false}
-                  tickMargin={8}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tickMargin={4}
-                  width={36}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  dataKey="rssMb"
-                  dot={false}
-                  stroke="var(--color-rssMb)"
-                  strokeWidth={1.5}
-                  type="monotone"
-                />
-                <Line
-                  dataKey="heapUsedMb"
-                  dot={false}
-                  stroke="var(--color-heapUsedMb)"
-                  strokeWidth={1.5}
-                  type="monotone"
-                />
-                <Line
-                  dataKey="cpuUserMs"
-                  dot={false}
-                  stroke="var(--color-cpuUserMs)"
-                  strokeWidth={1.5}
-                  type="monotone"
-                />
-              </LineChart>
+                Loading latest metrics…
+              </p>
+            ) : null}
+          </div>
+          <ChartContainer
+            className="min-h-[160px] w-full -ml-1 text-sm"
+            config={METRICS_CHART_CONFIG}
+          >
+            <LineChart
+              data={chartLineData}
+              margin={{ bottom: 8, left: 0, right: 12, top: 4 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                axisLine={false}
+                dataKey="i"
+                tickLine={false}
+                tickMargin={8}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tickMargin={4}
+                width={36}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line
+                dataKey="rssMb"
+                dot={false}
+                stroke="var(--color-rssMb)"
+                strokeWidth={1.5}
+                type="monotone"
+              />
+              <Line
+                dataKey="heapUsedMb"
+                dot={false}
+                stroke="var(--color-heapUsedMb)"
+                strokeWidth={1.5}
+                type="monotone"
+              />
+              <Line
+                dataKey="cpuUserMs"
+                dot={false}
+                stroke="var(--color-cpuUserMs)"
+                strokeWidth={1.5}
+                type="monotone"
+              />
+            </LineChart>
             </ChartContainer>
-          </Card>
-        </>
+        </Card>
       )}
     </div>
   );
