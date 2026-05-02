@@ -1,3 +1,10 @@
+/**
+ * @description JSONL root object key order is **explicit per contract** (see
+ * `docs/openclaw-style-contract.md` §1.2.2): `timestamp`, `level`, `message`, then
+ * optional fields in §1.2 table order. Lexicographic sort was rejected so required
+ * fields stay human-first on the wire. Ordering applies only at the root; nested
+ * `extra` is unchanged unless the contract says otherwise.
+ */
 import {
   ALL_NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
@@ -111,7 +118,7 @@ export const serializeStructuredLogLine = (
 ): string => `${JSON.stringify(structuredLogRecordToJsonlPayload(record))}\n`;
 
 /**
- * @description Parses one JSONL object line into {@link StructuredLogRecord}; returns undefined for empty or invalid lines.
+ * @description Parses one JSONL object line into {@link StructuredLogRecord}; returns undefined for empty or invalid lines. Extra top-level keys are ignored (see `docs/openclaw-style-contract.md` §4).
  */
 export const parseJsonlLineToStructuredRecord = (
   line: string,

@@ -48,9 +48,30 @@ Each **line** is one **complete JSON object** (UTF-8, no pretty-printing, `\n` l
 
 **Implementation status (maintainers):** The TypeScript `StructuredLogRecord` type and `parseJsonlLineToStructuredRecord` historically treated `context` as required; aligning code with §1.1–§1.2 is an explicit package goal (optional `context` on write, tolerant parse).
 
+### 1.2.2 Canonical top-level key order (writers)
+
+**Decision:** Use an **explicit ordered list** derived from §1.1 then §1.2 (not lexicographic key sort). Lexicographic order would reorder keys alphabetically (for example `timestamp` would appear after `pid` and `spanId`), which is worse for human scanning, diffs, and alignment with the contract tables.
+
+Writers in this package **must** serialize the root JSON object with top-level keys in this order, omitting absent optional keys:
+
+1. `timestamp` — §1.1
+2. `level` — §1.1
+3. `message` — §1.1
+4. `context` — §1.2
+5. `correlationId` — §1.2
+6. `traceId` — §1.2
+7. `spanId` — §1.2
+8. `pid` — §1.2
+9. `hostname` — §1.2
+10. `extra` — §1.2
+
+When this contract adds a new optional top-level field, **append** it to this list (and to §1.2) in the same revision so emission order stays documented in one place.
+
+**Parsers:** Unchanged — §4.2 still applies; readers **ignore** unknown top-level keys and **must not** depend on key order inside the JSON object.
+
 ### 1.3 Ordering and rotation
 
-- **Ordering:** Records are **append-only** in file order; `timestamp` should reflect emission order but must not be relied on for strict causality across threads without additional sequencing.
+- **Ordering:** Records are **append-only** in file order; `timestamp` should reflect emission order but must not be relied on for strict causality across threads without additional sequencing. **Per-object key order** on the wire is defined in §1.2.2 (deterministic emission for writers in this package).
 - **Rotation:** File sink configuration (separate spec in implementation) may rotate by date and/or size; rotated files remain JSONL. Consumers **must** tolerate **file switch** notices delivered on the WebSocket (see §2.3).
 
 ### 1.4 Redaction
