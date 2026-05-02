@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
@@ -7,12 +7,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import { GlobalMetrics } from '../GlobalMetrics';
 import type { GlobalMetricsProps } from '../GlobalMetrics';
+import {
+  GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION,
+  GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY,
+  type MetricsChartDatum,
+} from '../global-metrics-chart-history-storage';
 
 const STORAGE_KEY = 'openthrottle-developer:metricsPollInterval';
-
-/** Matches {@link OpenThrottleStatCard} display: value/subValue with locale-aware grouping. */
-const formatStatPair = (value: number, subValue: number): string =>
-  `${value.toLocaleString()} / ${subValue.toLocaleString()}`;
 
 vi.mock('@openthrottle/react-router-ui', async (importOriginal) => {
   const actual =
@@ -36,6 +37,8 @@ describe('GlobalMetrics Component', () => {
   beforeEach(() => {
     props = {};
     localStorageStub = {};
+    sessionStorage.removeItem(GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY);
+    delete localStorageStub[GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY];
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => {
       return localStorageStub[key] ?? null;
     });
@@ -62,6 +65,7 @@ describe('GlobalMetrics Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
+    delete localStorageStub[GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY];
   });
 
   test('should render server metrics section', () => {
@@ -74,7 +78,7 @@ describe('GlobalMetrics Component', () => {
   test('should show poll-interval select with default 60s', () => {
     const select = component.getByTestId('GlobalMetrics-poll-interval');
     expect(select).toBeInTheDocument();
-    expect(select).toHaveValue('60000');
+    expect(select).toHaveTextContent('60s');
   });
 
   test('should show loading when usePollServerMetrics returns loading true', () => {
@@ -130,14 +134,15 @@ describe('GlobalMetrics Component', () => {
     );
 
     const select = getByTestId('GlobalMetrics-poll-interval');
-    expect(select).toHaveValue('5000');
+    expect(select).toHaveTextContent('5s');
   });
 
   test('should update interval and persist to localStorage when user selects a preset', async () => {
     const user = userEvent.setup();
     const select = component.getByTestId('GlobalMetrics-poll-interval');
-    await user.selectOptions(select, '15000');
-    expect(select).toHaveValue('15000');
+    await user.click(select);
+    await user.click(await screen.findByRole('option', { name: '15s' }));
+    expect(select).toHaveTextContent('15s');
     expect(localStorageStub[STORAGE_KEY]).toBe('15000');
     expect(mockUsePollServerMetrics).toHaveBeenLastCalledWith(
       expect.objectContaining({ intervalMs: 15_000 }),
@@ -147,8 +152,9 @@ describe('GlobalMetrics Component', () => {
   test('should persist Off (0) when user selects Off', async () => {
     const user = userEvent.setup();
     const select = component.getByTestId('GlobalMetrics-poll-interval');
-    await user.selectOptions(select, '0');
-    expect(select).toHaveValue('0');
+    await user.click(select);
+    await user.click(await screen.findByRole('option', { name: 'Off' }));
+    expect(select).toHaveTextContent('Off');
     expect(localStorageStub[STORAGE_KEY]).toBe('0');
     expect(mockUsePollServerMetrics).toHaveBeenLastCalledWith(
       expect.objectContaining({ intervalMs: 0 }),
@@ -194,18 +200,29 @@ describe('GlobalMetrics Component', () => {
     });
     const Component = () => <GlobalMetrics />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByText } = render(<RoutesStub />);
-    const dataEl = getByText(formatStatPair(128.5, 2.1)).closest(
-      '[data-testid="GlobalMetrics-data"]',
-    );
-    expect(dataEl).toBeInTheDocument();
-    if (!(dataEl instanceof HTMLElement)) {
-      throw new Error('expected GlobalMetrics-data container');
-    }
+    render(<RoutesStub />);
+    const dataEl = screen.getByTestId('GlobalMetrics-data');
     const data = within(dataEl);
-    expect(data.getByText(formatStatPair(128.5, 2.1))).toBeInTheDocument();
-    expect(data.getByText(formatStatPair(64.25, 96.75))).toBeInTheDocument();
-    expect(data.getByText(formatStatPair(1000, 250))).toBeInTheDocument();
+    const statCards = data.getAllByTestId('OpenThrottleStatCard');
+    expect(statCards).toHaveLength(3);
+    expect(
+      within(statCards[0]).getByText((128.5).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[0]).getByText((2.1).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[1]).getByText((64.25).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[1]).getByText((96.75).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[2]).getByText((1000).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[2]).getByText((250).toLocaleString()),
+    ).toBeInTheDocument();
   });
 
   test('should show stat card titles for RSS/External, Heap, and CPU', () => {
@@ -325,6 +342,95 @@ describe('GlobalMetrics Component', () => {
       );
       expect(tooltip).toHaveTextContent('Cumulative user/system CPU time');
       expect(tooltip).toHaveTextContent('Rising steadily is normal');
+    });
+  });
+
+  describe('Chart history hydration', () => {
+    const chartSample = (i: number): MetricsChartDatum => ({
+      cpuSystemMs: 1,
+      cpuUserMs: 2,
+      externalMb: 3,
+      heapTotalMb: 4,
+      heapUsedMb: 5,
+      i,
+      rssMb: 6 + i,
+    });
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-05-02T12:00:00.000Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test('should hydrate chart from storage and show stale hint while first poll is in flight', () => {
+      cleanup();
+      mockUsePollServerMetrics.mockReturnValue({
+        error: null,
+        loading: true,
+        serverMetrics: null,
+      });
+      localStorageStub[GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY] =
+        JSON.stringify({
+          samples: [chartSample(0), chartSample(1)],
+          savedAt: Date.now(),
+          v: GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION,
+        });
+
+      const Component = () => <GlobalMetrics {...props} />;
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      const { getByTestId, queryByTestId } = render(<RoutesStub />);
+
+      expect(queryByTestId('GlobalMetrics-loading')).not.toBeInTheDocument();
+      expect(queryByTestId('GlobalMetrics-data')).not.toBeInTheDocument();
+      expect(getByTestId('GlobalMetrics-chart-card')).toBeInTheDocument();
+      expect(getByTestId('GlobalMetrics-chart-stale-hint')).toHaveTextContent(
+        'Loading latest metrics…',
+      );
+    });
+
+    test('should keep global loading banner when poll is in flight and stored history is expired', () => {
+      cleanup();
+      mockUsePollServerMetrics.mockReturnValue({
+        error: null,
+        loading: true,
+        serverMetrics: null,
+      });
+      localStorageStub[GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY] =
+        JSON.stringify({
+          samples: [chartSample(0)],
+          savedAt: Date.now() - 1000 * 60 * 60 * 25,
+          v: GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION,
+        });
+
+      const Component = () => <GlobalMetrics {...props} />;
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      const { getByTestId, queryByTestId } = render(<RoutesStub />);
+
+      expect(getByTestId('GlobalMetrics-loading')).toBeInTheDocument();
+      expect(queryByTestId('GlobalMetrics-chart-card')).not.toBeInTheDocument();
+      expect(
+        queryByTestId('GlobalMetrics-chart-stale-hint'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('should keep global loading banner when poll is in flight and stored payload is corrupt', () => {
+      cleanup();
+      mockUsePollServerMetrics.mockReturnValue({
+        error: null,
+        loading: true,
+        serverMetrics: null,
+      });
+      localStorageStub[GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY] = 'not-json{';
+
+      const Component = () => <GlobalMetrics {...props} />;
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      const { getByTestId, queryByTestId } = render(<RoutesStub />);
+
+      expect(getByTestId('GlobalMetrics-loading')).toBeInTheDocument();
+      expect(queryByTestId('GlobalMetrics-chart-card')).not.toBeInTheDocument();
     });
   });
 });
