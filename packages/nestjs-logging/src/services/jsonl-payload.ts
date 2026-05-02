@@ -12,15 +12,20 @@
  * with `docs/openclaw-style-contract.md` §1.2.2 (append new contract keys here).
  */
 const JSONL_ROOT_KEY_ORDER: readonly string[] = [
-  'timestamp',
+  // First 3 narrow the what and where significantly
   'level',
-  'message',
   'context',
-  'correlationId',
   'traceId',
-  'spanId',
-  'pid',
+
+  // ABC the rest of it...
   'hostname',
+  'message',
+  'correlationId',
+  'pid',
+  'spanId',
+  'timestamp',
+
+  // Extra is a generic bucket, put it last
   'extra',
 ];
 

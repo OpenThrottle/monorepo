@@ -40,6 +40,29 @@ export class DevelopmentService {
       message: `Development test notification — websocket flow triggered from GraphQL`,
       severity: 'info',
     });
+
+    this.logJsonlSink?.append({
+      context: '🤖 - ONE',
+      correlationId: undefined,
+      extra: {
+        array: [1, 2, 3],
+        boolean: true,
+        message: `Some data in an object`,
+      },
+      level: 'debug',
+      message: `Development JSONL sample — append from GraphQL (nestjs-logging integration smoke test).`,
+      timestampIso: new Date().toISOString(),
+      traceId: undefined,
+    });
+
+    this.logJsonlSink?.append({
+      context: '🤖 - ANOTHER',
+      correlationId: undefined,
+      level: 'debug',
+      message: `Another Message here, a warn...`,
+      timestampIso: new Date().toISOString(),
+      traceId: undefined,
+    });
   }
 
   /**
@@ -63,8 +86,7 @@ export class DevelopmentService {
       context: 'DevelopmentGraphql',
       correlationId: undefined,
       level: 'log',
-      message:
-        'Development JSONL sample — append from GraphQL (nestjs-logging integration smoke test).',
+      message: `Development JSONL sample — append from GraphQL (nestjs-logging integration smoke test).`,
       timestampIso: new Date().toISOString(),
       traceId: undefined,
     });

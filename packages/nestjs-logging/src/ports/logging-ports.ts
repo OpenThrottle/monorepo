@@ -10,8 +10,8 @@ export type JsonPrimitive = boolean | null | number | string;
  */
 export type JsonValue =
   | JsonPrimitive
-  | readonly JsonValue[]
-  | Readonly<Record<string, JsonValue>>;
+  | readonly JsonPrimitive[]
+  | Readonly<Record<string, JsonPrimitive>>;
 
 /**
  * @description Single structured line persisted as JSON and broadcast on the hub.

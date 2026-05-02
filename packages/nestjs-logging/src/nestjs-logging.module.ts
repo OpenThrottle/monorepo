@@ -28,7 +28,8 @@ export class NestjsLoggingModule {
       resolved.websocket.enabled === true
         ? [
             buildNestjsLoggingWebsocketGatewayClass(
-              resolved.websocket.namespace ?? DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+              resolved.websocket.namespace ??
+                DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
             ),
           ]
         : [];
@@ -90,8 +91,14 @@ export class NestjsLoggingModule {
         NestjsLoggingService,
         FileBackedLogStreamHub,
         FileLogJsonlSink,
-        { provide: LOG_JSONL_SINK, useExisting: FileLogJsonlSink },
-        { provide: LOG_STREAM_HUB, useExisting: FileBackedLogStreamHub },
+        {
+          provide: LOG_JSONL_SINK,
+          useExisting: FileLogJsonlSink,
+        },
+        {
+          provide: LOG_STREAM_HUB,
+          useExisting: FileBackedLogStreamHub,
+        },
         {
           inject: options.inject ?? [],
           provide: NESTJS_LOGGING_MODULE_OPTIONS,

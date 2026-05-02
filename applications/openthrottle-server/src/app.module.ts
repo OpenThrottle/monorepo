@@ -90,7 +90,10 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
             fileBasename: 'openthrottle-server',
             isGlobal: true,
             logDirectory: getOpenthrottleServerDevJsonlLogDirectory(),
-            websocket: { enabled: true },
+            websocket: {
+              enabled: true,
+              namespace: '/openthrottle-server',
+            },
           }),
         ]
       : []),

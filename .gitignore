@@ -9,6 +9,7 @@
 .cache
 .langgraph_api
 .nx
+.openthrottle
 .pnpm-store
 .vercel
 build

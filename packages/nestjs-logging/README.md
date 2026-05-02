@@ -153,6 +153,7 @@ See [docs/openclaw-style-contract.md](./docs/openclaw-style-contract.md) for eve
 
 ## Limits and operational notes
 
+- **Deterministic emission:** Each JSONL line’s **root** object is written with the canonical top-level key order in [§1.2.2](./docs/openclaw-style-contract.md#122-canonical-top-level-key-order-writers) so the same logical fields serialize to the same bytes; nested `extra` is unchanged. Readers stay order-agnostic and forward compatible—see [Determinism](./docs/openclaw-style-contract.md#determinism-writers-vs-readers) and §4.2 in the contract doc.
 - **Forward compatibility:** JSONL lines may include extra top-level keys not listed in the contract. `parseJsonlLineToStructuredRecord` ignores unknown keys and still returns a valid record when required fields are present (normative readers rule in §4.2). The contract reserves an optional future top-level `schemaVersion` (§4.3) without invalidating lines that omit it. Maintainers bump this contract doc when introducing **required** fields or breaking semantics (§4.1)—see [Versioning and forward compatibility](./docs/openclaw-style-contract.md#4-versioning-and-forward-compatibility).
 - **Replay:** `maxReplayLines` (default 10,000) caps history/tail/replay responses; large values increase memory while serving a client.
 - **Backpressure:** `websocket.maxPendingRecordsPerSocket` (default 1,000) bounds buffered `log.record` events per socket; overflow drops the oldest pending records and emits `log.notice` with `type: 'backpressure'`.

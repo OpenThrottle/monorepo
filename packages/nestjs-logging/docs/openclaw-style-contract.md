@@ -20,6 +20,10 @@ Official project entry points (naming, repo, docs hub) are summarized in this mo
 
 Each **line** is one **complete JSON object** (UTF-8, no pretty-printing, `\n` line terminator). Writers **must** end every record with `\n` so tail readers can treat `\n` as record boundaries. After a crash, readers **may** encounter a final **partial line**; they should **skip or buffer** until a full line is available on the next read (same resilience expectation as generic JSONL tailers).
 
+### Determinism (writers vs readers)
+
+Writers in `@openthrottle/nestjs-logging` serialize the **root** JSON object with **canonical top-level key order** (§1.2.2) so equivalent logical records produce **identical** serialized lines for the same field values—stable for diffs, aggregation, and byte comparisons. Key order inside nested objects (for example `extra`) is not normalized unless the contract says otherwise. **Parsers** must not rely on object key order (§4.2); they **ignore** unknown top-level keys and remain forward compatible when new optional fields appear.
+
 ### 1.1 Required fields
 
 | Field       | Type   | Description                                                                                             |

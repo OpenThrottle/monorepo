@@ -1,4 +1,4 @@
-const PACKAGE_NAME = '@openthrottle/nestjs-logging';
+import { PACKAGE_NAME } from './nestjs-logging.config';
 
 /**
  * @description Fail-fast validation or wiring errors for nestjs-logging.
