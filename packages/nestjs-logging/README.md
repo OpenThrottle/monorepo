@@ -86,6 +86,47 @@ export class AppModule {}
 
 **Important:** With `forRootAsync`, Nest must know at **module compile time** whether to include the gateway class. Set `registerWebsocketGateway: true` when your factory can return `websocket.enabled: true` in any environment you care about; keep `websocketGatewayNamespace` aligned with the resolved `websocket.namespace` (both default to `/ot-logging`).
 
+## Writing to JSONL
+
+After `NestjsLoggingModule` is registered, the active file lives under **`logDirectory`** (created on startup). Names follow **`fileBasename`** and optional **`rotation`** / **`fileNamePattern`**; the default is append-only **JSON Lines**—one **JSON object per line**, not a single editable JSON document.
+
+**Programmatic writes:** inject the **`LOG_JSONL_SINK`** token (type **`LogJsonlSink`**), call **`append`** with a **`StructuredLogRecord`**, then **`flush()`** when you need the line on disk immediately (the sink also flushes on an interval).
+
+```typescript
+import { Inject, Injectable } from '@nestjs/common';
+import type {
+  LogJsonlSink,
+  StructuredLogRecord,
+} from '@openthrottle/nestjs-logging';
+import { LOG_JSONL_SINK } from '@openthrottle/nestjs-logging';
+
+@Injectable()
+export class ExampleService {
+  constructor(
+    @Inject(LOG_JSONL_SINK)
+    private readonly logJsonlSink: LogJsonlSink,
+  ) {}
+
+  writeSample(): void {
+    const record: StructuredLogRecord = {
+      context: 'ExampleService',
+      correlationId: undefined,
+      level: 'log',
+      message: 'Structured line appended to JSONL.',
+      timestampIso: new Date().toISOString(),
+      traceId: undefined,
+    };
+
+    this.logJsonlSink.append(record);
+    void Promise.resolve(this.logJsonlSink.flush());
+  }
+}
+```
+
+Only records whose **`level`** is included in the module’s **`levels`** option are written; others are ignored by the sink. Optional **`correlationId`** / **`traceId`** are persisted when set.
+
+**Not wired automatically:** your app’s usual Nest **`LoggerService`** / Winston setup (for example from `@openthrottle/nestjs-modules`) does **not** stream into these files unless you build that bridge yourself. Use **`LOG_JSONL_SINK`** (or integrate at the transport layer) to emit JSONL lines.
+
 ### Example environment flags (app-defined)
 
 This package does not read environment variables directly. Map the names below (or your own) inside `useFactory` / config as shown above.
@@ -112,6 +153,7 @@ See [docs/openclaw-style-contract.md](./docs/openclaw-style-contract.md) for eve
 
 ## Limits and operational notes
 
+- **Forward compatibility:** JSONL lines may include extra top-level keys not listed in the contract. `parseJsonlLineToStructuredRecord` ignores unknown keys and still returns a valid record when required fields are present (normative readers rule in §4.2). The contract reserves an optional future top-level `schemaVersion` (§4.3) without invalidating lines that omit it. Maintainers bump this contract doc when introducing **required** fields or breaking semantics (§4.1)—see [Versioning and forward compatibility](./docs/openclaw-style-contract.md#4-versioning-and-forward-compatibility).
 - **Replay:** `maxReplayLines` (default 10,000) caps history/tail/replay responses; large values increase memory while serving a client.
 - **Backpressure:** `websocket.maxPendingRecordsPerSocket` (default 1,000) bounds buffered `log.record` events per socket; overflow drops the oldest pending records and emits `log.notice` with `type: 'backpressure'`.
 - **Rotation:** Size and daily rotation are supported on the JSONL sink; replay reads the **active** file (see contract doc for multi-file behavior).
@@ -149,6 +191,7 @@ pnpm nx run @openthrottle/nestjs-logging:test
 
 Vitest covers:
 
+- **JSONL payload** (`jsonl-payload`): serialize/parse round-trip, optional fields, and forward compatibility (unknown top-level keys still parse core fields per contract §4).
 - **JSONL sink** (`FileLogJsonlSink`): append/flush, level filter, basename / pattern, size and daily rotation, optional `correlationId` / `traceId` on disk.
 - **File-backed hub** (`FileBackedLogStreamHub`): tail and byte-offset replay, missing file, partial leading line when tailing from a mid-file window, fan-out and subscriber error isolation, integration with the sink for live + replay consistency.
 - **Socket.IO gateway**: filter matching, connection guard when WebSocket is disabled, subscribe/unsubscribe/history/replay/tail acks, backpressure `log.notice`, and lifecycle (`handleDisconnect`, `onModuleDestroy`) using a **mock Socket.IO client** and mock `LogStreamHub` I/O.

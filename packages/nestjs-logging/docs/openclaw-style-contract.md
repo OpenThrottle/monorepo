@@ -108,6 +108,23 @@ Security is **opt-in** and documented in the implementation (handshake auth, ori
 
 ---
 
-## 4. Versioning
+## 4. Versioning and forward compatibility
 
-Bump this document when adding required JSON fields or changing WS event semantics. JSONL readers should **ignore unknown fields** on each line for forward compatibility.
+### 4.1 Document bumps (breaking vs additive)
+
+- **Bump this document** (and note the change in package changelog when shipping) when you add new **required** JSONL fields, **rename** or **repurpose** existing fields, tighten validation in a way that rejects lines previously accepted, or change WebSocket event names or payload semantics in §2.
+- **Additive changes** that stay backward compatible for readers following §4.2—new **optional** §1.2 fields, new ignored top-level keys—still belong in §1 and should be documented here so writers and parsers agree; they do not require consumers to change code unless they opt into new fields.
+
+### 4.2 Readers: ignore unknown top-level keys (normative)
+
+For each JSONL object line, parsers **must** map only the fields defined in §1.1–§1.2 (and any optional field explicitly added in a future revision). Any **additional top-level keys**—for example vendor-specific metadata, experimental keys, or **§4.3 `schemaVersion`** until this package defines parsing rules for it—**must** be **ignored**. They **must not** cause a line to be rejected when `timestamp`, `level`, and `message` satisfy §1.1 and optional fields present match their documented types.
+
+Unknown keys are **not** surfaced on `StructuredLogRecord`; callers that need raw vendor keys must read the JSON line outside this mapping.
+
+### 4.3 Writers and optional future `schemaVersion` (reserved)
+
+- **Reserved name:** `schemaVersion` is reserved for a future optional top-level field (e.g. string or number identifying the contract snapshot used when writing the line). Existing JSONL files and writers that **omit** `schemaVersion` remain valid; omission means “implicit legacy / pre-versioned line” until a revision documents interpretation.
+- Until documented here, **`schemaVersion` is treated like any other unknown key**: readers **ignore** it and still produce `StructuredLogRecord` from §1 fields only.
+- When this document later defines semantics for `schemaVersion`, writers **may** emit it without breaking old readers that continue to ignore unknown keys.
+
+**Writers (general):** May emit forward-compatible optional keys; old readers keep working until they opt into new semantics via an updated contract revision.
