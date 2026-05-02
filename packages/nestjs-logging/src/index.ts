@@ -23,6 +23,8 @@ export type {
   LogStreamHub,
   StructuredLogRecord,
 } from './ports/logging-ports';
+export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
 export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
+export { structuredLogRecordToJsonlPayload } from './services/jsonl-payload';
 export { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 export { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';

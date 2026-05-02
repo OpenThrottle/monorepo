@@ -9,7 +9,7 @@ import {
   validateNestjsLoggingModuleOptions,
 } from './config/nestjs-logging.options';
 import { NestjsLoggingService } from './nestjs-logging.service';
-import { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
+import { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
 import { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 import { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
 
@@ -28,7 +28,7 @@ export class NestjsLoggingModule {
         LOG_STREAM_HUB,
         NestjsLoggingService,
         NESTJS_LOGGING_MODULE_OPTIONS,
-        StubLogJsonlSink,
+        FileLogJsonlSink,
         StubLogStreamHub,
       ],
       global: options.isGlobal === true,
@@ -36,9 +36,9 @@ export class NestjsLoggingModule {
       module: NestjsLoggingModule,
       providers: [
         NestjsLoggingService,
-        StubLogJsonlSink,
+        FileLogJsonlSink,
         StubLogStreamHub,
-        { provide: LOG_JSONL_SINK, useExisting: StubLogJsonlSink },
+        { provide: LOG_JSONL_SINK, useExisting: FileLogJsonlSink },
         { provide: LOG_STREAM_HUB, useExisting: StubLogStreamHub },
         { provide: NESTJS_LOGGING_MODULE_OPTIONS, useValue: resolved },
       ],
@@ -55,7 +55,7 @@ export class NestjsLoggingModule {
         LOG_STREAM_HUB,
         NestjsLoggingService,
         NESTJS_LOGGING_MODULE_OPTIONS,
-        StubLogJsonlSink,
+        FileLogJsonlSink,
         StubLogStreamHub,
       ],
       global: options.isGlobal === true,
@@ -63,9 +63,9 @@ export class NestjsLoggingModule {
       module: NestjsLoggingModule,
       providers: [
         NestjsLoggingService,
-        StubLogJsonlSink,
+        FileLogJsonlSink,
         StubLogStreamHub,
-        { provide: LOG_JSONL_SINK, useExisting: StubLogJsonlSink },
+        { provide: LOG_JSONL_SINK, useExisting: FileLogJsonlSink },
         { provide: LOG_STREAM_HUB, useExisting: StubLogStreamHub },
         {
           inject: options.inject ?? [],
