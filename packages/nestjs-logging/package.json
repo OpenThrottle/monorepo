@@ -1,14 +1,18 @@
 {
   "name": "@openthrottle/nestjs-logging",
-  "description": "TODO: Add a description",
+  "description": "NestJS JSONL file logging with optional Socket.IO tail/replay streaming",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@nestjs/platform-socket.io": "^11.1.18",
+    "@nestjs/websockets": "^11.1.18",
+    "@openthrottle/nestjs-modules": "workspace:*",
+    "socket.io": "^4.8.3"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -55,7 +59,16 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
+    "@openthrottle/nestjs-websockets": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@openthrottle/nestjs-websockets": {
+      "optional": true
+    }
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted",
