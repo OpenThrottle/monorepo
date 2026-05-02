@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels';
-import type { StructuredLogRecord } from '../ports/logging-ports';
+import type { JsonValue, StructuredLogRecord } from '../ports/logging-ports';
 import {
+  orderJsonlRootObjectKeys,
   parseJsonlLineToStructuredRecord,
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
@@ -177,6 +178,49 @@ describe('parseJsonlLineToStructuredRecord', () => {
       ),
     ).toBeUndefined();
   });
+
+  describe('forward compatibility: unknown top-level keys (contract §4)', () => {
+    it('parses core fields when the line includes unrecognized keys', () => {
+      const line = JSON.stringify({
+        experimentalPayload: { nested: true },
+        level: 'log',
+        message: 'future-proof line',
+        schemaVersion: 2,
+        timestamp: '2026-05-02T12:00:00.000Z',
+        vendorReserved: 'ignored',
+      });
+
+      expect(parseJsonlLineToStructuredRecord(line)).toEqual({
+        context: '',
+        correlationId: undefined,
+        level: NESTJS_LOGGING_LEVELS.log,
+        message: 'future-proof line',
+        timestampIso: '2026-05-02T12:00:00.000Z',
+        traceId: undefined,
+      });
+    });
+
+    it('maps known optional fields and still ignores unknown keys', () => {
+      const line = JSON.stringify({
+        context: 'App',
+        customTags: ['a', 'b'],
+        level: 'warn',
+        message: 'mixed keys',
+        reservedForV2: null,
+        timestamp: '2026-05-02T12:00:00.000Z',
+        traceId: 't-1',
+      });
+
+      expect(parseJsonlLineToStructuredRecord(line)).toEqual({
+        context: 'App',
+        correlationId: undefined,
+        level: NESTJS_LOGGING_LEVELS.warn,
+        message: 'mixed keys',
+        timestampIso: '2026-05-02T12:00:00.000Z',
+        traceId: 't-1',
+      });
+    });
+  });
 });
 
 describe('serializeStructuredLogLine', () => {
@@ -236,5 +280,134 @@ describe('serializeStructuredLogLine', () => {
     );
 
     expect(parsed).toEqual(record);
+  });
+});
+
+describe('deterministic JSONL root serialization', () => {
+  it('orderJsonlRootObjectKeys: shuffled input key order yields identical JSON.stringify', () => {
+    const orderedA = orderJsonlRootObjectKeys({
+      correlationId: 'c',
+      level: 'log',
+      message: 'm',
+      timestamp: '2026-05-02T12:00:00.000Z',
+      traceId: 't',
+    });
+
+    const shuffledSource: Record<string, unknown> = {};
+    shuffledSource.traceId = 't';
+    shuffledSource.message = 'm';
+    shuffledSource.timestamp = '2026-05-02T12:00:00.000Z';
+    shuffledSource.correlationId = 'c';
+    shuffledSource.level = 'log';
+
+    const orderedB = orderJsonlRootObjectKeys(shuffledSource);
+
+    expect(JSON.stringify(orderedB)).toBe(JSON.stringify(orderedA));
+    expect(JSON.stringify(orderedA)).toBe(
+      '{"timestamp":"2026-05-02T12:00:00.000Z","level":"log","message":"m","correlationId":"c","traceId":"t"}',
+    );
+  });
+
+  it('appends unknown top-level keys in lexicographic order after contract keys', () => {
+    const ordered = orderJsonlRootObjectKeys({
+      apple: 2,
+      experimental: true,
+      level: 'warn',
+      message: 'x',
+      timestamp: '2026-05-02T12:00:00.000Z',
+      zebra: 1,
+    });
+
+    expect(JSON.stringify(ordered)).toBe(
+      '{"timestamp":"2026-05-02T12:00:00.000Z","level":"warn","message":"x","apple":2,"experimental":true,"zebra":1}',
+    );
+  });
+
+  it('serializeStructuredLogLine: same logical optionals produce exact wire strings (regression on key order)', () => {
+    const ts = '2026-05-02T12:00:00.000Z';
+    const minimal: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'core',
+      timestampIso: ts,
+      traceId: undefined,
+    };
+
+    expect(serializeStructuredLogLine(minimal).trimEnd()).toBe(
+      `{"timestamp":"${ts}","level":"log","message":"core"}`,
+    );
+
+    const withCorrelationOnly: StructuredLogRecord = {
+      ...minimal,
+      correlationId: 'req-7',
+      message: 'with-cid',
+    };
+
+    expect(serializeStructuredLogLine(withCorrelationOnly).trimEnd()).toBe(
+      `{"timestamp":"${ts}","level":"log","message":"with-cid","correlationId":"req-7"}`,
+    );
+
+    const withTraceOnly: StructuredLogRecord = {
+      ...minimal,
+      message: 'with-trace',
+      traceId: 'tr-9',
+    };
+
+    expect(serializeStructuredLogLine(withTraceOnly).trimEnd()).toBe(
+      `{"timestamp":"${ts}","level":"log","message":"with-trace","traceId":"tr-9"}`,
+    );
+
+    const withHostnameNoCorrelation: StructuredLogRecord = {
+      ...minimal,
+      hostname: 'box.local',
+      message: 'host-only',
+    };
+
+    expect(
+      serializeStructuredLogLine(withHostnameNoCorrelation).trimEnd(),
+    ).toBe(
+      `{"timestamp":"${ts}","level":"log","message":"host-only","hostname":"box.local"}`,
+    );
+  });
+
+  it('optional fields after message follow contract order; omitting one does not shift later keys before earlier contract slots', () => {
+    const ts = '2026-05-02T12:00:00.000Z';
+    const withSpanNoCorrelation: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'span-no-cid',
+      spanId: 'sp-1',
+      timestampIso: ts,
+      traceId: 'tr-1',
+    };
+
+    const line = serializeStructuredLogLine(withSpanNoCorrelation).trimEnd();
+    expect(line).toBe(
+      `{"timestamp":"${ts}","level":"log","message":"span-no-cid","traceId":"tr-1","spanId":"sp-1"}`,
+    );
+    expect(line.indexOf('"traceId"')).toBeLessThan(line.indexOf('"spanId"'));
+  });
+
+  it('does not reorder keys inside nested extra', () => {
+    const ts = '2026-05-02T12:00:00.000Z';
+    const extraOutOfLexOrder: Record<string, JsonValue> = {};
+    extraOutOfLexOrder.zzz = 1;
+    extraOutOfLexOrder.aaa = 2;
+
+    const record: StructuredLogRecord = {
+      context: '',
+      correlationId: undefined,
+      extra: extraOutOfLexOrder,
+      level: NESTJS_LOGGING_LEVELS.log,
+      message: 'nested-order',
+      timestampIso: ts,
+      traceId: undefined,
+    };
+
+    expect(serializeStructuredLogLine(record).trimEnd()).toContain(
+      '"extra":{"zzz":1,"aaa":2}',
+    );
   });
 });
