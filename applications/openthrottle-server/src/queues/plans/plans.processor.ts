@@ -45,6 +45,7 @@ import {
   closeRunOutputForJob,
   createSpawnRunOutputHandlers,
 } from '../bullmq-keyed-run-logging';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
 import {
   PLANS_QUEUE_NAME,
@@ -198,6 +199,7 @@ export class PlansProcessor
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
     private readonly bullMqRunOutputWriter: KeyedJsonlWriter | undefined,
+    private readonly bullMqRunOutputRetention: BullMqRunOutputRetentionService,
   ) {
     super();
   }
@@ -496,6 +498,7 @@ export class PlansProcessor
         queueName,
         writer: this.bullMqRunOutputWriter,
       });
+      this.bullMqRunOutputRetention.maybePruneAfterJobClose();
       this.planRunCancellation.detach(planId);
     }
   }

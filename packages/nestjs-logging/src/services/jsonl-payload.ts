@@ -1,3 +1,13 @@
+import {
+  ALL_NESTJS_LOGGING_LEVELS,
+  type NestjsLoggingLevel,
+} from '../config/nestjs-logging-levels';
+import type {
+  JsonPrimitive,
+  JsonValue,
+  StructuredLogRecord,
+} from '../ports/logging-ports';
+
 /**
  * @description JSONL root object key order is **explicit per contract** (see
  * {@link JSONL_ROOT_KEY_ORDER} and `docs/openclaw-style-contract.md` §1.2.2).
@@ -12,20 +22,15 @@
  * with `docs/openclaw-style-contract.md` §1.2.2 (append new contract keys here).
  */
 const JSONL_ROOT_KEY_ORDER: readonly string[] = [
-  // First 3 narrow the what and where significantly
-  'level',
-  'context',
-  'traceId',
-
-  // ABC the rest of it...
-  'hostname',
-  'message',
-  'correlationId',
-  'pid',
-  'spanId',
   'timestamp',
-
-  // Extra is a generic bucket, put it last
+  'level',
+  'message',
+  'context',
+  'correlationId',
+  'traceId',
+  'spanId',
+  'pid',
+  'hostname',
   'extra',
 ];
 
@@ -57,15 +62,6 @@ export const orderJsonlRootObjectKeys = (
 
   return ordered;
 };
-import {
-  ALL_NESTJS_LOGGING_LEVELS,
-  type NestjsLoggingLevel,
-} from '../config/nestjs-logging-levels';
-import type {
-  JsonPrimitive,
-  JsonValue,
-  StructuredLogRecord,
-} from '../ports/logging-ports';
 
 const ALLOWED_LEVELS = new Set<string>(ALL_NESTJS_LOGGING_LEVELS);
 

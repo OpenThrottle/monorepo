@@ -145,7 +145,11 @@ Two supported modes (config-time, not per-call):
 
 ---
 
-## 7. Follow-ups (out of scope for this spec)
+## 7. Retention / TTL / disk quotas (implemented in package + openthrottle-server)
 
-- Retention / TTL / disk quotas: separate task.
+- **Library:** `pruneKeyedRunOutputDirectory` in `@openthrottle/nestjs-logging` deletes only `*.jsonl` and `*.log` leaves under a resolved base directory (realpath-safe). Optional **`maxAgeMs`** (mtime) then optional **`maxTotalBytes`** (delete oldest by mtime until under cap). Best-effort per-file `unlink` (counts `skippedUnlinkErrors` instead of throwing).
+- **openthrottle-server:** env `OT_BULLMQ_RUN_OUTPUT_MAX_AGE_MS`, `OT_BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES`, optional throttle `OT_BULLMQ_RUN_OUTPUT_PRUNE_MIN_INTERVAL_MS` (default 5 minutes). Requires **`OT_BULLMQ_RUN_OUTPUT_DIR`** plus at least one of max-age or max-total-bytes. **`BullMqRunOutputRetentionService.maybePruneAfterJobClose()`** runs after each plan/workflow job’s run-output `close` (throttled). No `@nestjs/schedule` cron in-tree; call `pruneKeyedRunOutputDirectory` from a cron job or ops script if you need time-based pruning without job traffic.
+
+## 8. Follow-ups
+
 - Per-job Socket.IO: explicit non-goal for initial plan.

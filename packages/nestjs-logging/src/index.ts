@@ -43,6 +43,11 @@ export {
   type KeyedJsonlWriterOptions,
 } from './services/keyed-jsonl-writer';
 export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error';
+export {
+  type PruneKeyedRunOutputDirectoryParams,
+  type PruneKeyedRunOutputDirectoryResult,
+  pruneKeyedRunOutputDirectory,
+} from './services/keyed-run-output-retention';
 export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
 export {
   orderJsonlRootObjectKeys,
