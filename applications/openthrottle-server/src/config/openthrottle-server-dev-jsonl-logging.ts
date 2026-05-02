@@ -9,14 +9,8 @@ const DEV_JSONL_LOG_DIR = 'OT_SERVER_DEV_JSONL_LOG_DIR';
  */
 export const isOpenthrottleServerDevJsonlLoggingEnabled = (): boolean => {
   const value = process.env[DEV_JSONL_FLAG];
-  const isEnabled = value === 'true';
 
-  console.log(
-    '🤖 🤖 🤖 🤖 isOpenthrottleServerDevJsonlLoggingEnabled',
-    value,
-    isEnabled,
-  );
-  return isEnabled;
+  return value === 'true';
 };
 
 /**

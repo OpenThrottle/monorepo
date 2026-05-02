@@ -43,6 +43,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
+import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
@@ -65,6 +66,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
       isGlobal: true,
     }),
 
+    BullMqRunOutputModule,
     GlobalClsModule,
     HealthModule,
     LoggerModule,

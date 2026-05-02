@@ -5,7 +5,12 @@ import {
   Processor,
   WorkerHost,
 } from '@nestjs/bullmq';
-import { Inject, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Optional,
+  OnApplicationShutdown,
+  OnModuleInit,
+} from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getWorktreeTargetsFromEnv,
@@ -19,6 +24,7 @@ import {
   PlanOutputStreamService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
+import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
 import {
@@ -34,6 +40,12 @@ import type {
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
+import {
+  appendChildJobChunkToRunOutput,
+  closeRunOutputForJob,
+  createSpawnRunOutputHandlers,
+} from '../bullmq-keyed-run-logging';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -183,6 +195,9 @@ export class PlansProcessor
     private readonly worktreeTracker: IWorktreeTargetsTracker,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
+    @Optional()
+    @Inject(BULLMQ_RUN_OUTPUT_WRITER)
+    private readonly bullMqRunOutputWriter: KeyedJsonlWriter | undefined,
   ) {
     super();
   }
@@ -391,15 +406,27 @@ export class PlansProcessor
       PlansProcessor.name,
     );
 
+    try {
+      await this.bullMqRunOutputWriter?.closeAll();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      this.logger.warn(
+        `BullMQ run output: KeyedJsonlWriter.closeAll failed during shutdown: ${message}`,
+        PlansProcessor.name,
+      );
+    }
+
     await this.worker.close();
   }
 
   async process(job: RunPlanJob): Promise<PlanRunJobResult> {
     const { planId } = job.data;
     const cancelSignal = this.planRunCancellation.attach(planId);
+    const jobId = String(job.id);
+    const queueName = PLANS_QUEUE_NAME;
 
     try {
-      const jobId = String(job.id);
       const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
 
       const metricsAtStart = this.processMetrics.getCurrentSnapshot();
@@ -462,6 +489,13 @@ export class PlansProcessor
 
       return result;
     } finally {
+      await closeRunOutputForJob({
+        jobId,
+        logLabel: PlansProcessor.name,
+        logger: this.logger,
+        queueName,
+        writer: this.bullMqRunOutputWriter,
+      });
       this.planRunCancellation.detach(planId);
     }
   }
@@ -734,6 +768,14 @@ export class PlansProcessor
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
           handoff,
+          onChunk: (chunk) => {
+            appendChildJobChunkToRunOutput(
+              this.bullMqRunOutputWriter,
+              PLANS_QUEUE_NAME,
+              jobId,
+              chunk,
+            );
+          },
           planId,
           ...ralphTuningForChildJob(job.data.ralph),
           signal: cancelSignal,
@@ -933,12 +975,13 @@ export class PlansProcessor
       ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
     ];
 
-    const onStdout = (chunk: string): void => {
-      this.logger.info(chunk.trimEnd(), logContext);
-    };
-    const onStderr = (chunk: string): void => {
-      this.logger.warn(chunk.trimEnd(), logContext);
-    };
+    const { onStderr, onStdout } = createSpawnRunOutputHandlers({
+      jobId,
+      logContext,
+      logger: this.logger,
+      queueName: PLANS_QUEUE_NAME,
+      writer: this.bullMqRunOutputWriter,
+    });
 
     try {
       const { cancelled, exitCode } = await spawnAndWait(

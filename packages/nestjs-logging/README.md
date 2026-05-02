@@ -129,6 +129,12 @@ Only records whose **`level`** is included in the module’s **`levels`** option
 
 **Not wired automatically:** your app’s usual Nest **`LoggerService`** / Winston setup (for example from `@openthrottle/nestjs-modules`) does **not** stream into these files unless you build that bridge yourself. Use **`LOG_JSONL_SINK`** (or integrate at the transport layer) to emit JSONL lines.
 
+### BullMQ per-job run transcripts (`KeyedJsonlWriter`)
+
+Per-queue, per-job Ralph **stdout/stderr** is a **separate** concern from the single application JSONL stream: use **`KeyedJsonlWriter`** (same package) with its own base directory, lazy open, LRU FD cap, and per-job `close` after the processor finishes. Lines are JSON objects with `timestamp`, `type` (`stdout` | `stderr`), and `data` (string). Do **not** point `runOutputBaseDirectory` at the same tree as `logDirectory` unless you intend to mix artifacts—see [bullmq-run-output-spec.md](./docs/bullmq-run-output-spec.md).
+
+**openthrottle-server:** set **`OT_BULLMQ_RUN_OUTPUT_DIR`** to an absolute or cwd-relative directory. When set, `PlansProcessor` and `WorkflowProcessor` append spawn/worktree Ralph chunks to `{base}/{sanitizedQueue}/{sanitizedJobId}.jsonl` and call **`close(queueName, jobId)`** in a `finally` block after each job. On worker shutdown they best-effort call **`closeAll()`**. When the env var is unset, no writer is registered and behavior matches the previous logger-only path.
+
 ### Example environment flags (app-defined)
 
 This package does not read environment variables directly. Map the names below (or your own) inside `useFactory` / config as shown above.
@@ -141,6 +147,12 @@ This package does not read environment variables directly. Map the names below (
 | `OT_LOG_MAX_REPLAY_LINES` | Cap for `logs.history` / `logs.tail` / `logs.replay` line counts.       |
 | `OT_LOG_MAX_REPLAY_BYTES` | Approximate max bytes read per tail/replay window from disk (optional). |
 | `OT_LOG_WS_MAX_PENDING`   | Per-socket pending `log.record` buffer before oldest lines are dropped. |
+
+**BullMQ run output (openthrottle-server only):**
+
+| Variable                   | Purpose                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `OT_BULLMQ_RUN_OUTPUT_DIR` | Base directory for per-job JSONL transcripts from plan/workflow workers. Unset = disabled. |
 
 In production, also wire **handshake authentication** for the logging namespace (for example validate `socket.handshake.auth.token` against a secret from `OT_LOG_WS_TOKEN` or your existing auth module) and restrict **CORS origin** on the host Socket.IO adapter; the gateway in this package sets `cors: { origin: true }` for developer convenience—tighten at the application level when exposing beyond localhost.
 
