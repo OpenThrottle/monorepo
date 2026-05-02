@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
@@ -9,10 +9,6 @@ import { GlobalMetrics } from '../GlobalMetrics';
 import type { GlobalMetricsProps } from '../GlobalMetrics';
 
 const STORAGE_KEY = 'openthrottle-developer:metricsPollInterval';
-
-/** Matches {@link OpenThrottleStatCard} display: value/subValue with locale-aware grouping. */
-const formatStatPair = (value: number, subValue: number): string =>
-  `${value.toLocaleString()} / ${subValue.toLocaleString()}`;
 
 vi.mock('@openthrottle/react-router-ui', async (importOriginal) => {
   const actual =
@@ -76,7 +72,7 @@ describe('GlobalMetrics Component', () => {
   test('should show poll-interval select with default 60s', () => {
     const select = component.getByTestId('GlobalMetrics-poll-interval');
     expect(select).toBeInTheDocument();
-    expect(select).toHaveValue('60000');
+    expect(select).toHaveTextContent('60s');
   });
 
   test('should show loading when usePollServerMetrics returns loading true', () => {
@@ -131,14 +127,15 @@ describe('GlobalMetrics Component', () => {
       expect.objectContaining({ intervalMs: 5_000 }),
     );
     const select = getByTestId('GlobalMetrics-poll-interval');
-    expect(select).toHaveValue('5000');
+    expect(select).toHaveTextContent('5s');
   });
 
   test('should update interval and persist to localStorage when user selects a preset', async () => {
     const user = userEvent.setup();
     const select = component.getByTestId('GlobalMetrics-poll-interval');
-    await user.selectOptions(select, '15000');
-    expect(select).toHaveValue('15000');
+    await user.click(select);
+    await user.click(await screen.findByRole('option', { name: '15s' }));
+    expect(select).toHaveTextContent('15s');
     expect(localStorageStub[STORAGE_KEY]).toBe('15000');
     expect(mockUsePollServerMetrics).toHaveBeenLastCalledWith(
       expect.objectContaining({ intervalMs: 15_000 }),
@@ -148,8 +145,9 @@ describe('GlobalMetrics Component', () => {
   test('should persist Off (0) when user selects Off', async () => {
     const user = userEvent.setup();
     const select = component.getByTestId('GlobalMetrics-poll-interval');
-    await user.selectOptions(select, '0');
-    expect(select).toHaveValue('0');
+    await user.click(select);
+    await user.click(await screen.findByRole('option', { name: 'Off' }));
+    expect(select).toHaveTextContent('Off');
     expect(localStorageStub[STORAGE_KEY]).toBe('0');
     expect(mockUsePollServerMetrics).toHaveBeenLastCalledWith(
       expect.objectContaining({ intervalMs: 0 }),
@@ -195,21 +193,38 @@ describe('GlobalMetrics Component', () => {
     });
     const Component = () => <GlobalMetrics />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByText } = render(<RoutesStub />);
-    const dataEl = getByText(formatStatPair(128.5, 2.1)).closest(
-      '[data-testid="GlobalMetrics-data"]',
-    );
+    const { getByTestId } = render(<RoutesStub />);
+    const dataEl = getByTestId('GlobalMetrics-data');
     expect(dataEl).toBeInTheDocument();
-    expect(dataEl).toBeInstanceOf(HTMLElement);
-
-    if (!(dataEl instanceof HTMLElement)) {
-      throw new Error('expected GlobalMetrics-data container');
-    }
 
     const data = within(dataEl);
-    expect(data.getByText(formatStatPair(128.5, 2.1))).toBeInTheDocument();
-    expect(data.getByText(formatStatPair(64.25, 96.75))).toBeInTheDocument();
-    expect(data.getByText(formatStatPair(1000, 250))).toBeInTheDocument();
+    const statCards = data.getAllByTestId('OpenThrottleStatCard');
+    expect(statCards).toHaveLength(3);
+    expect(
+      within(statCards[0]).getByText('RSS / External (MB)'),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[0]).getByText((128.5).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[0]).getByText((2.1).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(within(statCards[1]).getByText('Heap (MB)')).toBeInTheDocument();
+    expect(
+      within(statCards[1]).getByText((64.25).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[1]).getByText((96.75).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[2]).getByText('CPU (ms) user / system'),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[2]).getByText((1000).toLocaleString()),
+    ).toBeInTheDocument();
+    expect(
+      within(statCards[2]).getByText((250).toLocaleString()),
+    ).toBeInTheDocument();
   });
 
   test('should show stat card titles for RSS/External, Heap, and CPU', () => {

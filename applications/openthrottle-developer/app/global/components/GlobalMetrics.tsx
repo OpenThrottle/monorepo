@@ -31,6 +31,7 @@ import {
 } from '~/__generated__/graphql';
 import {
   GLOBAL_METRICS_CHART_MAX_SAMPLES,
+  readStoredMetricsChartHistory,
   type MetricsChartDatum,
 } from '~/global/components/global-metrics-chart-history-storage';
 
@@ -100,6 +101,15 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const [metricsHistory, setMetricsHistory] = React.useState<
     readonly MetricsChartDatum[]
   >([]);
+
+  /**
+   * @description Restore chart samples from sessionStorage after mount. Initial state stays `[]` on server and on the client’s first render so SSR/hydration markup matches; `useLayoutEffect` runs only in the browser.
+   */
+  React.useLayoutEffect(() => {
+    const restored = readStoredMetricsChartHistory();
+    if (restored.length === 0) return;
+    setMetricsHistory(restored);
+  }, []);
 
   const [intervalMs, setIntervalMs] = React.useState<number>(() => {
     if (propPollIntervalMs !== undefined) return propPollIntervalMs;
@@ -202,11 +212,13 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           <span>Poll</span>
           <Select
             aria-label="Metrics poll interval"
-            data-testid="GlobalMetrics-poll-interval"
             onValueChange={handleIntervalChange}
             value={intervalMs.toString()}
           >
-            <SelectTrigger className="w-[80px]">
+            <SelectTrigger
+              className="w-[80px]"
+              data-testid="GlobalMetrics-poll-interval"
+            >
               <SelectValue placeholder="Poll interval…" />
             </SelectTrigger>
             <SelectContent>
