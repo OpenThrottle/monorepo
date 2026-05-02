@@ -1,13 +1,30 @@
 import type { NestjsLoggingLevel } from '../config/nestjs-logging-levels';
 
 /**
+ * @description JSON primitives allowed inside {@link JsonValue}.
+ */
+export type JsonPrimitive = boolean | null | number | string;
+
+/**
+ * @description JSON-serializable value (for {@link StructuredLogRecord.extra} and similar).
+ */
+export type JsonValue =
+  | JsonPrimitive
+  | readonly JsonValue[]
+  | Readonly<Record<string, JsonValue>>;
+
+/**
  * @description Single structured line persisted as JSON and broadcast on the hub.
  */
 export interface StructuredLogRecord {
   readonly context: string;
   readonly correlationId: string | undefined;
+  readonly extra?: Readonly<Record<string, JsonValue>>;
+  readonly hostname?: string;
   readonly level: NestjsLoggingLevel;
   readonly message: string;
+  readonly pid?: number;
+  readonly spanId?: string;
   readonly timestampIso: string;
   readonly traceId: string | undefined;
 }

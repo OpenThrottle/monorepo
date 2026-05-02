@@ -27,6 +27,8 @@ export {
 export { NestjsLoggingModule } from './nestjs-logging.module';
 export { NestjsLoggingService } from './nestjs-logging.service';
 export type {
+  JsonPrimitive,
+  JsonValue,
   LogJsonlSink,
   LogReplayChunk,
   LogStreamHub,
