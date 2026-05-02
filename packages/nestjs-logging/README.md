@@ -1,6 +1,10 @@
 # @openthrottle/nestjs-logging
 
-Add a short description of this package (purpose, main exports, and who consumes it).
+NestJS logging utilities: durable **JSON Lines** log files plus optional **WebSocket** streaming (OpenClaw-style hybrid). Status: in active development; see [docs/openclaw-style-contract.md](./docs/openclaw-style-contract.md) for the frozen JSONL schema and Socket.IO control/push contract.
+
+## Maintainer docs
+
+- [OpenClaw-style contract (JSONL + WebSocket)](./docs/openclaw-style-contract.md) — line schema, `logs.*` messages, backpressure, and upstream OpenClaw reference.
 
 ## Installation
 
