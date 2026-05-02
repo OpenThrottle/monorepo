@@ -1,3 +1,16 @@
+import type { EslintFlatConfig } from '@tools/dotfiles';
 import { eslintConfig } from '@tools/dotfiles';
 
-export default [{ ignores: ['!**/*'] }, ...eslintConfig];
+const eslintRootConfig = [
+  {
+    ignores: [
+      '!**/*',
+      '.agents/skills/**/*',
+      '.opencode/skills/**/*',
+      'skills/**/*',
+    ],
+  },
+  ...eslintConfig,
+] as EslintFlatConfig[];
+
+export default eslintRootConfig;

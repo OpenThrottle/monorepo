@@ -4,7 +4,7 @@ import {
   type PlanFragment,
   type TaskFragment,
 } from '../__generated__/graphql.js';
-import { executeWorkflowGraphqlV2 } from './workflow-graphql.js';
+import { executeWorkflowGraphqlV2 } from './graphql.js';
 
 /**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with

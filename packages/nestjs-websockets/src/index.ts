@@ -12,4 +12,4 @@ export {
 export { IoAdapter } from '@nestjs/platform-socket.io';
 export { NestjsWebsocketsGateway } from './nestjs-websockets.gateway';
 export { NestjsWebsocketsModule } from './nestjs-websockets.module';
-export { NestjsWebsocketsService } from './nestjs-websockets.service';
+// export { NestjsWebsocketsService } from './nestjs-websockets.service';

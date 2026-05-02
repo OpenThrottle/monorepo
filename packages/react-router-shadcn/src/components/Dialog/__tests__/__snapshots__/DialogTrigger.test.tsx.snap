@@ -3,14 +3,15 @@
 exports[`DialogTrigger Component > should render 1`] = `
 <body>
   <div>
-    <div
-      class="p-4"
-      data-testid="DialogTrigger"
+    <button
+      aria-controls="radix-_r_0_"
+      aria-expanded="false"
+      aria-haspopup="dialog"
+      data-state="closed"
+      type="button"
     >
-      <h2>
-        DialogTrigger
-      </h2>
-    </div>
+      Open dialog
+    </button>
   </div>
 </body>
 `;

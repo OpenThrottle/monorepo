@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-agentic-workflow",
-  "description": "TODO: Add a description",
+  "description": "Shared contracts for OpenThrottle agentic workflows (config, orchestrator, run results). No transport or persistence dependencies.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

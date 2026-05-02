@@ -61,6 +61,7 @@ export default function Component(
     if (!canSubmit || isSubmitting) return;
 
     const formData = new FormData();
+
     formData.set('title', title.trim());
     formData.set('content', content);
     formData.set('promptType', promptType);

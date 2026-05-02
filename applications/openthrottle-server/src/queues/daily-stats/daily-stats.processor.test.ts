@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
 import {
   DailyStatsService,

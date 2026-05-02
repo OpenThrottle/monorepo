@@ -1,26 +1,34 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 import { MetricsModule } from '../../metrics/metrics.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
-import { PLANS_QUEUE_NAME } from './plans.constants';
+import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module';
+import {
+  PLANS_QUEUE_NAME,
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+} from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
 
 /**
  * @description Registers the single BullMQ **queue** {@link PLANS_QUEUE_NAME} (`plans`) and the plans worker.
  * In-process Ralph orchestrator jobs share this queue with spawn jobs (see `plans.types.ts`); there is no
- * separate Ralph queue. Bull Board lists this queue via {@link NestjsBullmqBoardModule.forFeature}.
+ * separate Ralph queue. Agentic Ralph Nest wiring (`NestjsAgenticWorkflowModule`, orchestrator service) lives in
+ * {@link AgenticRalphModule}. Bull Board lists this queue via {@link NestjsBullmqBoardModule.forFeature}.
  */
 @Module({
   exports: [BullModule, PlanRunCancellationService],
   imports: [
+    AgenticRalphModule,
     LoggerModule,
     MetricsModule,
+    NestjsBullmqModule.registerQueue(RUN_PLAN_ORCHESTRATOR_JOB_NAME),
+    NestjsBullmqBoardModule.forFeature(RUN_PLAN_ORCHESTRATOR_JOB_NAME),
     NestjsBullmqModule.registerQueue(PLANS_QUEUE_NAME),
     NestjsBullmqBoardModule.forFeature(PLANS_QUEUE_NAME),
     NestjsRepositoriesModule,

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "brag-sheet": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/brag-sheet/SKILL.md",
+      "computedHash": "235eebe934fdf6348d018178d13ccbf2c36307ba6030d79561f44887322043e9"
+    },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/create-readme/SKILL.md",
+      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
+    },
+    "git-commit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/git-commit/SKILL.md",
+      "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea"
+    },
+    "my-pull-requests": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/my-pull-requests/SKILL.md",
+      "computedHash": "79d5b3c35f5358322bf650f86afbdbf00bb6304ee8464fb424e91b461e3fd412"
+    },
+    "secret-scanning": {
+      "source": "github/copilot-plugins",
+      "sourceType": "github",
+      "skillPath": "plugins/advanced-security/skills/secret-scanning/SKILL.md",
+      "computedHash": "58eea7977fc2410c8ab5b162c12e484d6678530a844efcc22776cb7865b0d45f"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
+    }
+  }
+}

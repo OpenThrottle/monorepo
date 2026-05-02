@@ -913,80 +913,6 @@ type NoteObject {
   updatedAt: DateTime!
 }
 
-"""Recurring billing details when a Stripe price is recurring."""
-type StripePriceRecurringObject {
-  """Billing interval (e.g. month, year)."""
-  interval: String!
-
-  """Number of intervals between billings."""
-  intervalCount: Int!
-}
-
-"""Stripe price for catalog or checkout."""
-type StripePriceObject {
-  id: String!
-  active: Boolean!
-
-  """Three-letter ISO currency code."""
-  currency: String!
-
-  """
-  Unit amount in the smallest currency unit (e.g. cents). Null for some metered or custom schemes.
-  """
-  unitAmount: Int
-
-  """Stripe price type: one_time or recurring."""
-  type: String!
-
-  """Present when type is recurring."""
-  recurring: StripePriceRecurringObject
-}
-
-"""Stripe catalog product."""
-type StripeProductObject {
-  active: Boolean!
-
-  """Default Stripe Price ID when set on the product."""
-  defaultPriceId: String
-  description: String
-  id: String!
-  images: [String!]!
-  name: String!
-
-  """
-  Active prices for this product. Populated by resolvers that batch-fetch prices to avoid N+1 queries.
-  """
-  prices: [StripePriceObject!]!
-}
-
-type StripeWebhookProcessedPayload {
-  """
-  True when the webhook was verified and handled (including ignored event types).
-  """
-  received: Boolean!
-}
-
-type SubscriptionObject {
-  cancelAtPeriodEnd: Boolean!
-  createdAt: DateTime!
-  currentPeriodEnd: DateTime
-  currentPeriodStart: DateTime
-  id: String!
-  status: String!
-  stripeCustomerId: String
-  stripePriceId: String!
-  stripeSubscriptionId: String
-  updatedAt: DateTime!
-  userId: String!
-}
-
-type CreateCheckoutSessionPayload {
-  """
-  Redirect URL to Stripe Checkout. Null if user not found or session creation failed.
-  """
-  url: String
-}
-
 type PlanEmbeddingObject {
   content: String!
   createdAt: DateTime!
@@ -1011,28 +937,6 @@ type PlanOutputStreamChunkObject {
   """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
-}
-
-type PermissionObject {
-  createdAt: DateTime!
-  description: String
-  id: String!
-
-  """Permission identifier (e.g. users:read, settings:write)"""
-  name: String!
-}
-
-type RoleObject {
-  createdAt: DateTime!
-  description: String
-  id: String!
-
-  """Role identifier (e.g. admin, user, viewer)"""
-  name: String!
-
-  """Permissions assigned to this role"""
-  permissions: [PermissionObject!]!
-  updatedAt: DateTime!
 }
 
 type SearchChunk {
@@ -1280,15 +1184,6 @@ type Query {
   """List all notes, ordered by createdAt descending"""
   notes: [NoteObject!]!
 
-  """Active Stripe products (catalog). Does not require authentication."""
-  stripeProducts: [StripeProductObject!]!
-
-  """A single Stripe product by ID, or null if not found."""
-  stripeProduct(id: String!): StripeProductObject
-
-  """Current user's active subscription (entitlement). Null if none."""
-  mySubscription: SubscriptionObject
-
   """Get a plan embedding by ID"""
   planEmbedding(input: GetPlanEmbeddingInput!): PlanEmbeddingObject
 
@@ -1338,26 +1233,6 @@ type Query {
 
   """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
-
-  """List all roles with their permissions"""
-  roles: [RoleObject!]!
-
-  """Get a role by ID"""
-  role(id: ID!): RoleObject
-
-  """List all permissions"""
-  permissions: [PermissionObject!]!
-
-  """Get roles assigned to a user"""
-  rolesForUser(userId: ID!): [RoleObject!]!
-
-  """
-  Get permission names for a user (union of all their roles' permissions)
-  """
-  permissionsForUser(userId: ID!): [String!]!
-
-  """Get permission names for the current user"""
-  myPermissions: [String!]!
 
   """
   Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
@@ -1722,11 +1597,6 @@ type Mutation {
   triggerWebsocketNotification: Boolean!
 
   """
-  Verify and process a Stripe webhook. Pass the exact raw body bytes as base64 and the Stripe-Signature header value.
-  """
-  processStripeWebhook(input: ProcessStripeWebhookInput!): StripeWebhookProcessedPayload!
-
-  """
   Sign in with email and password. Returns JWT access token for Authorization header or cookie.
   """
   login(input: LoginInput!): LoginResultObject!
@@ -1796,11 +1666,6 @@ type Mutation {
   """Delete a note by ID"""
   deleteNote(id: ID!): Boolean!
 
-  """
-  Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup.
-  """
-  createCheckoutSession(input: CreateCheckoutSessionInput!): CreateCheckoutSessionPayload!
-
   """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
   appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
 
@@ -1824,6 +1689,11 @@ type Mutation {
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
 
   """
+  Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
+  """
+  workflowPlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
+
+  """
   Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.
   """
   enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
@@ -1843,27 +1713,6 @@ type Mutation {
   Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL).
   """
   deleteProject(input: DeleteProjectInput!): Boolean!
-
-  """Create a role"""
-  createRole(input: CreateRoleInput!): RoleObject!
-
-  """Update a role"""
-  updateRole(input: UpdateRoleInput!): RoleObject
-
-  """Delete a role"""
-  deleteRole(id: ID!): Boolean!
-
-  """Assign a role to a user"""
-  assignRoleToUser(input: AssignRoleToUserInput!): Boolean!
-
-  """Remove a role from a user"""
-  removeRoleFromUser(input: RemoveRoleFromUserInput!): Boolean!
-
-  """Add a permission to a role"""
-  addPermissionToRole(input: AddPermissionToRoleInput!): Boolean!
-
-  """Remove a permission from a role"""
-  removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
 
   """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
@@ -1885,16 +1734,6 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
-}
-
-input ProcessStripeWebhookInput {
-  """
-  Canonical raw request body encoded as standard base64. Must match the bytes Stripe signed.
-  """
-  rawPayloadBase64: String!
-
-  """Value of the Stripe-Signature header from the original HTTP request."""
-  stripeSignature: String!
 }
 
 input LoginInput {
@@ -2030,17 +1869,6 @@ input UpdateNoteInput {
 
   """Note id to update"""
   id: ID!
-}
-
-input CreateCheckoutSessionInput {
-  """URL to redirect to if the user cancels checkout."""
-  cancelUrl: String!
-
-  """Stripe Price ID (e.g. price_xxx) for the subscription."""
-  priceId: String!
-
-  """URL to redirect to after successful payment."""
-  successUrl: String!
 }
 
 input AppendPlanOutputInput {
@@ -2217,55 +2045,6 @@ input UpdateProjectInput {
 input DeleteProjectInput {
   """Project id to delete"""
   id: ID!
-}
-
-input CreateRoleInput {
-  description: String
-
-  """Role name (e.g. admin, user, viewer). Must be unique."""
-  name: String!
-}
-
-input UpdateRoleInput {
-  description: String
-
-  """Role id to update"""
-  id: ID!
-
-  """Role name. Pass null to leave unchanged."""
-  name: String
-}
-
-input AssignRoleToUserInput {
-  """Role id to assign"""
-  roleId: ID!
-
-  """User id to assign the role to"""
-  userId: ID!
-}
-
-input RemoveRoleFromUserInput {
-  """Role id to remove"""
-  roleId: ID!
-
-  """User id to remove the role from"""
-  userId: ID!
-}
-
-input AddPermissionToRoleInput {
-  """Permission id to add"""
-  permissionId: ID!
-
-  """Role id to add the permission to"""
-  roleId: ID!
-}
-
-input RemovePermissionFromRoleInput {
-  """Permission id to remove"""
-  permissionId: ID!
-
-  """Role id to remove the permission from"""
-  roleId: ID!
 }
 
 input CreateTaskInput {

@@ -82,7 +82,7 @@ export function StatusMultiSelect(
   // 🔌 Short Circuit
 
   return (
-    <Label data-testid={dataTestId}>
+    <Label className="focus:[&__button]:z-10!" data-testid={dataTestId}>
       <span className="text-sm font-medium hidden text-foreground/80">
         Status
       </span>

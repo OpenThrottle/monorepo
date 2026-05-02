@@ -1,4 +1,6 @@
-export const PLANS_QUEUE_NAME = 'plans';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants';
+
+export const PLANS_QUEUE_NAME = 'Plans';
 
 /**
  * @description BullMQ **job name** for spawn plan runs (nested `workflow-ralph`). Same string as historical
@@ -6,12 +8,7 @@ export const PLANS_QUEUE_NAME = 'plans';
  */
 export const RUN_PLAN_SPAWN_JOB_NAME = 'run-plan';
 
-/**
- * @description BullMQ **job name** for in-process Ralph via `createWorkflowRalphOrchestrator`
- * ({@link RunPlanOrchestratorJobData}). Same {@link PLANS_QUEUE_NAME} queue as spawn jobs; discriminated by
- * name + payload `runKind`.
- */
-export const RUN_PLAN_ORCHESTRATOR_JOB_NAME = 'run-plan-orchestrator';
+export { RUN_PLAN_ORCHESTRATOR_JOB_NAME };
 
 /**
  * @description Job names on the plans queue that represent a Ralph/plan run (spawn or orchestrator).

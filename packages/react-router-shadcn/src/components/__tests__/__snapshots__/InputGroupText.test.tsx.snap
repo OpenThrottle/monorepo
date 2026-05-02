@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InputGroupText Component > should render 1`] = `
+<body>
+  <div>
+    <span
+      class="flex items-center gap-2 text-sm text-muted-foreground [&_svg:not([class*="size-"])]:size-4 [&_svg]:pointer-events-none"
+      data-slot="input-group-text"
+    />
+  </div>
+</body>
+`;

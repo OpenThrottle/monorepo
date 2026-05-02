@@ -5,7 +5,10 @@ import {
   DEFAULT_PAGINATION_PAGE,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottlePagination,
+  OpenThrottleStatCard,
+} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GetPromptsDocument,
@@ -94,6 +97,10 @@ export default function Component(
   // Setup
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
 
+  const v1 = 11;
+  const v2 = 21;
+  const v3 = v1 + v2;
+
   // Handlers
 
   // Markup
@@ -104,8 +111,13 @@ export default function Component(
 
   return (
     <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
+      <div className="mt-4 grid md:grid-cols-3 gap-4 lg:gap-8">
+        <OpenThrottleStatCard title="Custom prompts" value={v1} />
+        <OpenThrottleStatCard title="System prompts" value={v2} />
+        <OpenThrottleStatCard title="Total prompts" value={v3} />
+      </div>
+
       <PromptToolbar
-        className="my-4"
         limit={limit}
         page={page}
         sortBy={sortBy}

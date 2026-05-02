@@ -4,7 +4,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { User } from '../users/user.entity';
 import { Permission } from './permission.entity';
 import { PermissionsService } from './permissions.service';

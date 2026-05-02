@@ -15,6 +15,9 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
 import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 import tslint from 'typescript-eslint';
+import { getDirname } from './vite-config.js';
+
+export type { Config as EslintFlatConfig } from 'eslint/config';
 export {
   createViteConfig,
   defineViteConfig,
@@ -22,8 +25,6 @@ export {
   type CreateViteConfigOptions,
   type PackageType,
 } from './vite-config.js';
-import { getDirname } from './vite-config.js';
-
 export {
   createVitestConfig,
   createVitestConfigJsdom,

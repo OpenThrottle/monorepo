@@ -1,16 +1,13 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Card,
   Empty,
   EmptyDescription,
-  EmptyMedia,
   EmptyTitle,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { ColumnsIcon } from '@phosphor-icons/react/dist/ssr/Columns';
-import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { TableIcon } from '@phosphor-icons/react/dist/ssr/Table';
 import {
   Outlet,
@@ -52,6 +49,7 @@ import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
 
 const PLAN_TASKS_VIEW_STORAGE_KEY = 'openthrottle-developer.planTasksView';
 
@@ -110,6 +108,8 @@ export default function Component(
   const socketContext = useNotificationsSocket();
 
   // Setup
+  const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
+  const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
   const planId = params.planId ?? '';
@@ -187,9 +187,6 @@ export default function Component(
       if (payload.planId === planId) revalidator.revalidate();
     };
 
-    const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
-    const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
-
     socket.on(PLAN_STATUS_CHANGED, onPlanStatusChanged);
     socket.on(TASK_STATUS_CHANGED, onTaskStatusChanged);
 
@@ -200,32 +197,8 @@ export default function Component(
   }, [planId, revalidator, socketContext?.socket]);
 
   // 🔌 Short Circuit
-
-  // When planId is "new", render outlet so plans.$planId.create can show the create form.
-  if (!plan && planId === 'new') {
-    return <Outlet />;
-  }
-
-  // 🔌 Short Circuit
   if (!plan) {
-    return (
-      <main
-        className={classnames(
-          'h-full max-w-7xl w-full mx-auto',
-          'flex flex-1 items-center justify-center',
-        )}
-      >
-        <Empty>
-          <EmptyMedia variant="icon">
-            <PuzzlePieceIcon size={48} />
-          </EmptyMedia>
-          <EmptyTitle>Plan not found</EmptyTitle>
-          <EmptyDescription>
-            The plan you are looking for does not exist.
-          </EmptyDescription>
-        </Empty>
-      </main>
-    );
+    return <PlanNotFound />;
   }
 
   return (

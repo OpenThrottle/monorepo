@@ -2,7 +2,7 @@
  * @description Copies GraphQL login mutation input onto the request body so AuthGuard('local') can read credentials. Run before AuthGuard('local') on the login mutation.
  */
 
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type ExecutionContext,
   Injectable,

@@ -1,5 +1,5 @@
 # plans.$planId.tasks.edit.$taskId
-query getTaskById($id: ID!) {
+query getTaskForEditById($id: ID!) {
   task(id: $id) {
     assignee
     category

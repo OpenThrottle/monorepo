@@ -90,9 +90,12 @@ export const buildWorkflowRalphRunTuningArgv = (
     case 'debug':
       ralphArgs.push('--debug');
       break;
+
     case 'verbose':
       ralphArgs.push('--verbose');
       break;
+
+    case 'omit':
     default:
       break;
   }

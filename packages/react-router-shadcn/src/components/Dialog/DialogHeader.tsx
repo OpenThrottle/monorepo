@@ -1,28 +1,35 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { cn } from '../../utils/cn';
 
-export interface DialogHeaderProps {
-  readonly className?: string;
-}
+export interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export const DialogHeader = (props: DialogHeaderProps): React.ReactElement => {
-  const { className } = props;
+export const DialogHeader = React.forwardRef<HTMLDivElement, DialogHeaderProps>(
+  (props, ref): React.ReactElement => {
+    const { className, ...rest } = props;
 
-  // Hooks
+    // Hooks
 
-  // Setup
+    // Setup
 
-  // Handlers
+    // Handlers
 
-  // Markup
+    // Markup
 
-  // Life Cycle
+    // Life Cycle
 
-  // 🔌 Short Circuit
+    // 🔌 Short Circuit
 
-  return (
-    <div className={classnames('p-4', className)} data-testid="DialogHeader">
-      <h2>DialogHeader</h2>
-    </div>
-  );
-};
+    return (
+      <div
+        className={cn(
+          'flex flex-col space-y-1.5 text-center sm:text-left',
+          className,
+        )}
+        ref={ref}
+        {...rest}
+      />
+    );
+  },
+);
+
+DialogHeader.displayName = 'DialogHeader';

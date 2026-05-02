@@ -3,21 +3,20 @@ import classnames from 'classnames';
 import {
   Button,
   Input,
-  Switch,
-  // ToggleGroup,
-  // ToggleGroupItem,
+  Label,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
+import { PlusIcon } from 'lucide-react';
 import {
-  // PLAN_STATUS_FILTER_OPTIONS,
+  PLAN_STATUS_FILTER_OPTIONS,
   STATUS_OPTIONS,
 } from '~/routing/plans/config/status-options';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
 import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
-
-export type ViewMode = 'table' | 'card';
 
 export interface PlansToolbarProps {
   readonly assigneeOptions: readonly string[];
@@ -28,7 +27,7 @@ export interface PlansToolbarProps {
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
   statuses: readonly string[];
-  view: ViewMode;
+  view: 'card' | 'table';
 }
 
 /**
@@ -106,7 +105,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     (updates: {
       sortBy?: PlansSortBy;
       sortOrder?: PlansSortOrder;
-      view?: ViewMode;
+      view?: PlansToolbarProps['view'];
     }) => {
       const next = new URLSearchParams(searchParams);
       if (updates.sortBy !== undefined) next.set('sortBy', updates.sortBy);
@@ -127,6 +126,14 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     },
     [applyParams],
   );
+
+  const _onClickStatus =
+    (value: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
+      const { altKey, metaKey, shiftKey } = event;
+      const _isSpecialKey = altKey || metaKey || shiftKey;
+
+      console.log('🧩 🧩 🧩 🧩 event 🧩 🧩', { value });
+    };
 
   const handleSearchSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
@@ -159,72 +166,100 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
   return (
     <div className={classnames('w-full', className)} data-testid="PlansToolbar">
       <form
-        className="flex flex-wrap items-center gap-2 w-full"
+        // className={classnames(
+        //   'flex flex-wrap items-center w-full',
+        //   // 'gap-4',
+        //   '-space-x-px',
+        //   `[&__button]:rounded-none! [&__input]:rounded-none! [&__select]:rounded-none! [&__label]:rounded-none!`,
+        //   `[&__button]:focus:z-10! [&__input]:focus:z-10! [&__select]:focus:z-10! [&__label]:active:z-10!`,
+        // )}
         onSubmit={handleSearchSubmit}
         role="search"
       >
-        <Input
-          aria-label="Search plans"
-          className="min-w-[100px] w-[140px] shrink-0 rounded-md border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          name="q"
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="By title or meaning…"
-          type="search"
-          value={searchInput}
-        />
-        <Switch
-          aria-label="Semantic search"
-          checked={semanticChecked}
-          id="plans-toolbar-semantic"
-          onCheckedChange={setSemanticChecked}
-          title="Semantic search"
-        />
-        <Button type="submit" variant="outline">
-          Search
-        </Button>
-        {/* Alternative to ToggleGroup: compact StatusMultiSelect popover; we may revert to the ToggleGroup below.
-        <ToggleGroup
-          aria-label="Filter by status"
-          className="flex flex-wrap gap-1"
-          data-testid="PlansToolbar-status-toggle"
-          onValueChange={(value) => handleStatusChange(value ?? [])}
-          size="sm"
-          type="multiple"
-          value={statuses.length > 0 ? [...statuses] : []}
-          variant="outline"
+        <div
+          className={classnames(
+            'flex flex-wrap items-center w-full',
+            'gap-2',
+            // '-space-x-px',
+            // `[&__button]:rounded-none! [&__input]:rounded-none! [&__select]:rounded-none! [&__label]:rounded-none!`,
+            // `[&__button]:focus:z-10! [&__input]:focus:z-10! [&__select]:focus:z-10! [&__label]:active:z-10!`,
+          )}
         >
-          {PLAN_STATUS_FILTER_OPTIONS.map((opt) => (
-            <ToggleGroupItem
-              aria-label={opt.label}
-              key={opt.value}
-              value={opt.value}
-            >
-              {opt.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        */}
-        <StatusMultiSelect
-          compact={true}
-          data-testid="PlansToolbar-status-filter"
-          onChange={handleStatusChange}
-          options={STATUS_OPTIONS}
-          value={statuses}
-        />
-        <AssigneeMultiSelect
-          onChange={handleAssigneeChange}
-          options={assigneeOptions}
-          value={assignees}
-        />
-        <SortDropdown
-          onChange={handleSortChange}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-        />
-        <div className="flex-1 min-w-0" />
-        <Button asChild={true} className="shrink-0" variant="default">
-          <Link to="/plans/new/create">Create plan</Link>
-        </Button>
+          {/*
+          <Switch
+            aria-label="Semantic search"
+            checked={semanticChecked}
+            id="plans-toolbar-semantic"
+            onCheckedChange={setSemanticChecked}
+            title="Semantic search"
+          />
+          */}
+          <Input
+            aria-label="Search plans"
+            className="min-w-[100px] w-[170px] border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            name="q"
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search plans & tasks"
+            type="search"
+            value={searchInput}
+          />
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
+
+          <StatusMultiSelect
+            compact={true}
+            data-testid="PlansToolbar-status-filter"
+            onChange={handleStatusChange}
+            options={STATUS_OPTIONS}
+            value={statuses}
+          />
+          <AssigneeMultiSelect
+            onChange={handleAssigneeChange}
+            options={assigneeOptions}
+            value={assignees}
+          />
+          <SortDropdown
+            onChange={handleSortChange}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+          />
+          <div className="flex-1 min-w-0" />
+          <Button asChild={true} className="shrink-0" variant="outline">
+            <Link to="/plans/create">
+              <PlusIcon className="w-4 h-4" /> Create plan
+            </Link>
+          </Button>
+        </div>
+
+        {/* Alternative to ToggleGroup: compact StatusMultiSelect popover; we may revert to the ToggleGroup below. */}
+        <div className="mt-4 flex items-center gap-2">
+          <Label>Status:</Label>
+          <ToggleGroup
+            aria-label="Filter by status"
+            className="flex flex-wrap gap-1 items-center"
+            data-testid="PlansToolbar-status-toggle"
+            // onClick={onClickStatus}
+            // onChange={(event) => console.log('🧩 🧩 event 🧩 🧩', event)}
+            onValueChange={(value) => handleStatusChange(value ?? [])}
+            size="xs"
+            type="multiple"
+            value={statuses.length > 0 ? [...statuses] : []}
+            variant="outline"
+          >
+            {PLAN_STATUS_FILTER_OPTIONS.map((opt) => (
+              <ToggleGroupItem
+                aria-label={opt.label}
+                data-value={opt.value}
+                key={opt.value}
+                // onClick={onClickStatus(opt.value)}
+                value={opt.value}
+              >
+                {opt.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
       </form>
     </div>
   );

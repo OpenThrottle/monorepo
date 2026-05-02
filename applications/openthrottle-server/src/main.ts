@@ -4,7 +4,7 @@ import {
   createProfileExecutionFileWriter,
   setProfileExecutionReporter,
 } from '@openthrottle/nestjs-profiling';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
 import { IoAdapter } from '@openthrottle/nestjs-websockets';
 import { AppModule } from './app.module';

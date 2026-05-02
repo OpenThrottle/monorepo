@@ -1,16 +1,16 @@
 # plans.$planId.edit
 mutation updatePlan($input: UpdatePlanInput!) {
   updatePlan(input: $input) {
-    id
-    title
+    assignee
     author
     category
-    status
     createdAt
-    updatedAt
     description
-    assignee
+    id
     projectId
+    status
     summary
+    title
+    updatedAt
   }
 }

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { <%= namePascal %>Service } from './<%= name %>.service';
 
 @Module({

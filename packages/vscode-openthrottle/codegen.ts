@@ -1,7 +1,11 @@
+import { resolve } from 'path';
 import * as dotenv from 'dotenv';
 import { CodegenConfig } from '@graphql-codegen/cli';
 
 dotenv.config();
+
+/** Use repo schema file so codegen/typecheck work without a running server. */
+const schemaFile = resolve(__dirname, '../../schema.gql');
 
 const url = process.env.API_URL_INTERNAL;
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -42,7 +46,7 @@ const config: CodegenConfig = {
   hooks: {
     afterAllFileWrite: ['prettier --write'],
   },
-  schema: `../../schema.gql`,
+  schema: schemaFile,
   // schema: isDevelopment ? `${url}/graphql` : `../../schema.gql`,
 
   // schema: {

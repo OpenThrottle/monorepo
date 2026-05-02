@@ -52,7 +52,7 @@ export const OpenThrottleBreadcrumbs = (
           </React.Fragment>
         ))}
         <BreadcrumbItem>
-          <BreadcrumbPage>{children}</BreadcrumbPage>
+          <BreadcrumbPage className="text-accent!">{children}</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

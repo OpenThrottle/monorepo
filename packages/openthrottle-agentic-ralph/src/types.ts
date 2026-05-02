@@ -1,6 +1,9 @@
-import type { WorkflowConfig } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowOrchestrator as WorkflowOrchestratorBase } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowConfig,
+  WorkflowRunCorrelation,
+  WorkflowRunResult as WorkflowRunResultBase,
+  WorkflowOrchestrator as WorkflowOrchestratorBase,
+} from '@openthrottle/openthrottle-agentic-workflow';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'
@@ -26,6 +29,12 @@ export interface WorkflowContext extends WorkflowConfig {
    */
   readonly abortSignal?: AbortSignal;
 
+  /**
+   * Optional tracing metadata from {@link WorkflowRunCorrelation}; forwarded with the context for
+   * application-layer structured logs (no plan/task ids at the shared-contract layer).
+   */
+  readonly correlation?: WorkflowRunCorrelation;
+
   // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';
   readonly mode: 'plan' | 'task';
@@ -37,13 +46,18 @@ export interface WorkflowContext extends WorkflowConfig {
 
 /**
  * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).z
+ * align with current Ralph CLI).
  */
 export type WorkflowRunResult = WorkflowRunResultBase<
   WorkflowFinishedReason,
   WorkflowFailedReason
 >;
 
+/**
+ * @description Create an Orchestrator type for Ralph workflow customized
+ * with the Ralph-specific context(s) and results. Now this package can
+ * implement its own Ralph orchestrator.
+ */
 export type WorkflowOrchestrator = WorkflowOrchestratorBase<
   WorkflowFinishedReason,
   WorkflowFailedReason,

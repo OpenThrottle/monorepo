@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { defaultWorkerOptionsForRecovery } from '@openthrottle/nestjs-bullmq';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   DailyStatsService,
   PlansService,
@@ -50,7 +50,7 @@ function getPreviousUtcDayBounds(): {
  * @description Processes daily stats aggregation jobs. Runs on a schedule (e.g. 6am UTC) and aggregates plans/tasks stats for the previous day.
  */
 @Processor(DAILY_STATS_QUEUE_NAME, {
-  ...defaultWorkerOptionsForRecovery,
+  ...defaultWorkerOptions,
   concurrency: CONCURRENCY,
 })
 export class DailyStatsProcessor

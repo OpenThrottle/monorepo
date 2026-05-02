@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
+import { PlusIcon } from 'lucide-react';
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
 import {
   ProjectsSortBy,
@@ -163,8 +164,10 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
 
         <div className="flex-1 min-w-0" />
 
-        <Button asChild={true} className="shrink-0" size="sm" variant="default">
-          <Link to="/projects/create">Create project</Link>
+        <Button asChild={true} className="shrink-0" variant="outline">
+          <Link to="/projects/create">
+            <PlusIcon className="w-4 h-4" /> Create project
+          </Link>
         </Button>
       </form>
     </div>

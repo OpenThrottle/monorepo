@@ -1,21 +1,21 @@
-import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { GlobalClsModule } from '@openthrottle/nestjs-modules/src/global-cls/global-cls.module';
-import { LoggerModule } from '@openthrottle/nestjs-modules/src/logger/logger.module';
-import { Module } from '@nestjs/common';
-import type { Provider } from '@nestjs/common';
-import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
-import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql/src/nestjs-graphql.module';
-import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
-import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import { ConfigModule } from '@nestjs/config';
 import {
   EmitNotificationInterceptor,
   NestjsWebsocketsModule,
 } from '@openthrottle/nestjs-websockets';
 import { GithubGraphqlModule } from '@openthrottle/nestjs-github';
+import { GlobalClsModule } from '@openthrottle/nestjs-modules';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { Module } from '@nestjs/common';
+import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
+import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
+import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
+import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+import type { Provider } from '@nestjs/common';
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
@@ -35,19 +35,21 @@ import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { PaymentsGraphqlModule } from './graphql/payments/payments-graphql.module';
-import { PaymentsModule } from './modules/payments/payments.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
-import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
+import { WorkflowModule } from './queues/workflow/workflow.module';
+
+// import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
+// import { PaymentsGraphqlModule } from './graphql/payments/payments-graphql.module';
+// import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   controllers: [],
@@ -83,8 +85,8 @@ import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
     DevelopmentModule,
     DocIngestionQueueModule,
     GeneratorsModule,
-    PaymentsModule,
     PlansQueueModule,
+    WorkflowModule,
 
     // 🧩 GraphQL Modules
     ActivityGraphqlModule,
@@ -97,13 +99,12 @@ import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
     HealthGraphqlModule,
     MetricsGraphqlModule,
     NotesGraphqlModule,
-    PaymentsGraphqlModule,
     PlanEmbeddingsGraphqlModule,
     PlanOutputStreamGraphqlModule,
     PlansGraphqlModule,
     ProjectsGraphqlModule,
     QueuesGraphqlModule,
-    RolesGraphqlModule,
+    // RolesGraphqlModule,
     SearchGraphqlModule,
     TaskEmbeddingsGraphqlModule,
     TasksGraphqlModule,

@@ -1,3 +1,4 @@
+export { NestjsProfilingModule } from './modules/nestjs-profiling.module';
 export {
   createProfileExecutionFileWriter,
   getProfileExecutionReporter,
@@ -12,5 +13,3 @@ export type {
   ProfileExecutionResult,
   ProfileExecutionUtilResult,
 } from './decorators';
-export { NestjsProfilingModule } from './nestjs-profiling.module';
-export { NestjsProfilingService } from './nestjs-profiling.service';
