@@ -1,5 +1,9 @@
 import { mkdir, open, type FileHandle } from 'node:fs/promises';
 import * as path from 'node:path';
+import {
+  appendUtf8ToFileHandle,
+  flushFileHandle,
+} from './jsonl-file-handle-io';
 import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error';
 import {
   buildKeyedJsonlRelativePath,
@@ -114,7 +118,7 @@ export class KeyedJsonlWriter {
         return;
       }
 
-      await entry.fd.sync();
+      await flushFileHandle(entry.fd);
     });
   }
 
@@ -140,7 +144,7 @@ export class KeyedJsonlWriter {
           const entry = this.openByCompound.get(k);
 
           if (entry !== undefined) {
-            await entry.fd.sync();
+            await flushFileHandle(entry.fd);
           }
         }),
       ),
@@ -302,9 +306,8 @@ export class KeyedJsonlWriter {
       type: chunk.type,
     };
     const payload = `${JSON.stringify(line)}\n`;
-    const buf = Buffer.from(payload, 'utf8');
 
-    await entry.fd.write(buf, 0, buf.length, null);
+    await appendUtf8ToFileHandle(entry.fd, payload);
     this.lruTouch(compound);
   }
 
@@ -315,9 +318,8 @@ export class KeyedJsonlWriter {
     text: string,
   ): Promise<void> {
     const entry = await this.openForCompound(compound, queueName, jobId);
-    const buf = Buffer.from(text, 'utf8');
 
-    await entry.fd.write(buf, 0, buf.length, null);
+    await appendUtf8ToFileHandle(entry.fd, text);
     this.lruTouch(compound);
   }
 
@@ -331,7 +333,7 @@ export class KeyedJsonlWriter {
     this.openByCompound.delete(compound);
 
     try {
-      await entry.fd.sync();
+      await flushFileHandle(entry.fd);
     } finally {
       await entry.fd.close();
     }

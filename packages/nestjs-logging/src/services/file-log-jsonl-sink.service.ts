@@ -26,6 +26,10 @@ import type {
 } from '../ports/logging-ports';
 import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens';
 import { getActiveJsonlRelativePath } from './get-active-jsonl-relative-path';
+import {
+  appendUtf8ToFileHandle,
+  flushFileHandle,
+} from './jsonl-file-handle-io';
 import { serializeStructuredLogLine } from './jsonl-payload';
 
 /**
@@ -93,7 +97,7 @@ export class FileLogJsonlSink
         return;
       }
 
-      await this.fd.sync();
+      await flushFileHandle(this.fd);
     });
   }
 
@@ -126,7 +130,7 @@ export class FileLogJsonlSink
       return;
     }
 
-    await this.fd.write(line, null, 'utf8');
+    await appendUtf8ToFileHandle(this.fd, line);
 
     this.bytesOnFile += lineBytes;
     this.streamHub?.publish(record);
