@@ -5,6 +5,7 @@ NestJS logging utilities: durable **JSON Lines** log files plus optional **WebSo
 ## Maintainer docs
 
 - [BullMQ run output: placement discovery (keyed JSONL vs global sink)](./docs/bullmq-run-output-discovery.md) — where keyed per-job writers live, hub/rotation/DI tradeoffs.
+- [BullMQ run output: path, sanitization, FD limits, flush/close](./docs/bullmq-run-output-spec.md) — normative spec for keyed writer implementation and processor lifecycle.
 - [OpenClaw-style contract (JSONL + WebSocket)](./docs/openclaw-style-contract.md) — line schema, `logs.*` messages, backpressure, and upstream OpenClaw reference.
 
 ## Quick start (`AppModule`)
