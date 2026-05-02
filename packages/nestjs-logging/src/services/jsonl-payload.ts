@@ -1,10 +1,57 @@
 /**
  * @description JSONL root object key order is **explicit per contract** (see
- * `docs/openclaw-style-contract.md` §1.2.2): `timestamp`, `level`, `message`, then
- * optional fields in §1.2 table order. Lexicographic sort was rejected so required
- * fields stay human-first on the wire. Ordering applies only at the root; nested
- * `extra` is unchanged unless the contract says otherwise.
+ * {@link JSONL_ROOT_KEY_ORDER} and `docs/openclaw-style-contract.md` §1.2.2).
+ * Lexicographic sort of all keys was rejected so required fields stay human-first;
+ * any **unknown** top-level keys are appended in lexicographic order for stable
+ * forward-compatible emission. Ordering applies only at the root; nested `extra`
+ * is unchanged unless the contract says otherwise.
  */
+
+/**
+ * @description Canonical top-level key order for JSONL root objects. Keep in sync
+ * with `docs/openclaw-style-contract.md` §1.2.2 (append new contract keys here).
+ */
+const JSONL_ROOT_KEY_ORDER: readonly string[] = [
+  'timestamp',
+  'level',
+  'message',
+  'context',
+  'correlationId',
+  'traceId',
+  'spanId',
+  'pid',
+  'hostname',
+  'extra',
+];
+
+/**
+ * @description Reorders a plain object's **own** enumerable keys for deterministic
+ * {@link JSON.stringify} output. Known contract keys follow {@link JSONL_ROOT_KEY_ORDER};
+ * any other keys are appended in lexicographic order.
+ */
+export const orderJsonlRootObjectKeys = (
+  payload: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> => {
+  const ordered: Record<string, unknown> = {};
+  const seen = new Set<string>();
+
+  for (const key of JSONL_ROOT_KEY_ORDER) {
+    if (Object.prototype.hasOwnProperty.call(payload, key)) {
+      ordered[key] = payload[key];
+      seen.add(key);
+    }
+  }
+
+  const remainder = Object.keys(payload)
+    .filter((key) => !seen.has(key))
+    .sort((a, b) => a.localeCompare(b));
+
+  for (const key of remainder) {
+    ordered[key] = payload[key];
+  }
+
+  return ordered;
+};
 import {
   ALL_NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
@@ -107,7 +154,7 @@ export const structuredLogRecordToJsonlPayload = (
     payload.traceId = record.traceId;
   }
 
-  return payload;
+  return orderJsonlRootObjectKeys(payload);
 };
 
 /**

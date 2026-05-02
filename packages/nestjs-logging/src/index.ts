@@ -38,6 +38,7 @@ export { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.se
 export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
 export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
 export {
+  orderJsonlRootObjectKeys,
   parseJsonlLineToStructuredRecord,
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
