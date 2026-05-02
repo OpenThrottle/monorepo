@@ -106,8 +106,10 @@ function runRalphAsync(
     const killChild = (reason: 'timeout' | 'abort'): void => {
       if (killReason !== undefined) return;
       killReason = reason;
+
       if (child.killed) return;
       child.kill('SIGTERM');
+
       const killTimeout = setTimeout(() => {
         // After SIGTERM, Node sets `killed` to true; still send SIGKILL if the child has not exited.
         try {
@@ -116,6 +118,7 @@ function runRalphAsync(
           /* process may have exited */
         }
       }, SIGKILL_GRACE_MS);
+
       child.once('close', () => clearTimeout(killTimeout));
     };
 
@@ -168,6 +171,7 @@ function runRalphAsync(
         stderrLen: stderr.length,
         stdoutLen: stdout.length,
       });
+
       if (!resolved) {
         resolved = true;
         clearTimeout(timeoutId);
@@ -189,6 +193,7 @@ function gitInWorktree(
     encoding: 'utf-8',
   });
   if (child.status !== 0) return undefined;
+
   return child.stdout?.trim();
 }
 
@@ -359,6 +364,7 @@ export async function runChildJob(
       wallClockMetrics,
     };
   }
+
   if (ralph.killReason === 'abort') {
     return {
       childProcessMetrics: childMetrics,
@@ -368,6 +374,7 @@ export async function runChildJob(
       wallClockMetrics,
     };
   }
+
   if (ralph.status !== 0) {
     return {
       childProcessMetrics: childMetrics,

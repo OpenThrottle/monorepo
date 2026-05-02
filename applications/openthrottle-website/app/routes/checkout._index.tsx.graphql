@@ -1,29 +1,38 @@
-fragment ProductPrice on StripePriceObject {
-  active
-  currency
-  id
-  recurring {
-    interval
-    intervalCount
-  }
-  type
-  unitAmount
-}
+# fragment ProductPrice on StripePriceObject {
+#   active
+#   currency
+#   id
+#   recurring {
+#     interval
+#     intervalCount
+#   }
+#   type
+#   unitAmount
+# }
 
-fragment Product on StripeProductObject {
-  active
-  defaultPriceId
-  description
-  id
-  images
-  name
-  prices {
-    ...ProductPrice
-  }
-}
+# fragment Product on StripeProductObject {
+#   active
+#   defaultPriceId
+#   description
+#   id
+#   images
+#   name
+#   prices {
+#     ...ProductPrice
+#   }
+# }
 
-query getStripeProducts($id: String!) {
-  stripeProduct(id: $id) {
-    ...Product
+# query getStripeProducts($id: String!) {
+#   stripeProduct(id: $id) {
+#     ...Product
+#   }
+# }
+
+query websiteTest {
+  serverHealth {
+    api
+    database
+    redis
+    websocket
   }
 }

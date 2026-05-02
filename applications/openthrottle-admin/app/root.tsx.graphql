@@ -56,3 +56,12 @@ mutation signout {
     success
   }
 }
+
+query adminHealthTest {
+  serverHealth {
+    api
+    database
+    redis
+    websocket
+  }
+}

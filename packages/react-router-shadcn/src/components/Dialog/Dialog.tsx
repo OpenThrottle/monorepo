@@ -1,29 +1,10 @@
-import * as React from 'react';
-import { cn } from '../../utils/cn';
+import type { ComponentPropsWithoutRef } from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 
-export interface DialogProps {
-  readonly className?: string;
-}
+export type DialogProps = ComponentPropsWithoutRef<typeof DialogPrimitive.Root>;
 
-export const Dialog = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->((props, ref): React.ReactElement => {
-  const { className, ...rest } = props;
+export const Dialog = DialogPrimitive.Root;
 
-  // Hooks
+export const DialogPortal = DialogPrimitive.Portal;
 
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return <div className={cn(className)} ref={ref} role="dialog" {...rest} />;
-});
-
-Dialog.displayName = 'Dialog';
+export const DialogClose = DialogPrimitive.Close;

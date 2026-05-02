@@ -163,7 +163,7 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
               className="text-lg font-semibold leading-none tracking-tight"
               id="workflow-run-options-title"
             >
-              Workflow configuration
+              Workflow Configuration
             </h2>
             <CardDescription>
               Compose flags aligned with{' '}

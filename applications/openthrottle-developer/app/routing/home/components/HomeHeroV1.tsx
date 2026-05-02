@@ -35,10 +35,12 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
             <span className="text-highlight">Started!</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            Take a look around and see what we're working on. This site is a
-            living representation of the tool and how we're using it to build
-            itself out.
+            OpenThrottle is a plans knowledge base: a Postgres-backed app and
+            MCP server that stores plans, tasks, and semantic search over them.
+            It powers “ask OT,” agentic execution (Ralph), and a dashboard so
+            you can see what's in progress and what shipped.
           </p>
+
           {/* <div className="flex flex-col justify-center sm:flex-row gap-4">
             <Button
               asChild={true}

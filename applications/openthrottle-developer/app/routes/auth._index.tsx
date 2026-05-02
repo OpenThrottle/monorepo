@@ -3,13 +3,24 @@ import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
 } from '@openthrottle/react-router-ui';
+import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
+import { redirect } from 'react-router';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = async (args: Route.LoaderArgs) => {
+  const { request } = args;
+
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const token = getAuthTokenFromCookie(cookieHeader);
+
+  if (token) {
+    return redirect('/dashboard');
+  }
+
+  return {};
+};
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];

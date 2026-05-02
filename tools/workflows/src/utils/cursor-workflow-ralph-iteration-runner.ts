@@ -84,12 +84,14 @@ export const createCursorWorkflowRalphIterationRunner = (
       factoryOnChunk !== undefined ||
       appendPlanOutput !== undefined ||
       paramsOnChunk !== undefined;
+
     const mergedOnChunk = !hasHooks
       ? undefined
       : (chunk: CursorAgentChunk): void => {
           if (factoryOnChunk !== undefined) {
             void Promise.resolve(factoryOnChunk(chunk));
           }
+
           if (paramsOnChunk !== undefined) {
             void Promise.resolve(
               paramsOnChunk({
@@ -98,6 +100,7 @@ export const createCursorWorkflowRalphIterationRunner = (
               }),
             );
           }
+
           if (appendPlanOutput !== undefined) {
             void Promise.resolve(
               appendPlanOutput({

@@ -3,7 +3,7 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { getChatModel } from '@openthrottle/nestjs-langchain';
 import { HumanMessage } from '@langchain/core/messages';
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { tool } from 'langchain';
 import { z } from 'zod';
 // import { LanguageModelLike } from '@langchain/core/language_models/base';

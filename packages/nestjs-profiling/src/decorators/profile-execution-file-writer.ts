@@ -6,14 +6,15 @@ import type { ProfileExecutionResult } from './profile-execution.types';
  */
 export interface ProfileExecutionFileWriterOptions {
   /**
-   * Output file path. Directory must exist; file is created if missing and appended to.
-   */
-  readonly outputPath: string;
-  /**
    * Format: 'ndjson' (one JSON object per line, append-friendly).
    * @default 'ndjson'
    */
   readonly format?: 'ndjson';
+
+  /**
+   * Output file path. Directory must exist; file is created if missing and appended to.
+   */
+  readonly outputPath: string;
 }
 
 /**

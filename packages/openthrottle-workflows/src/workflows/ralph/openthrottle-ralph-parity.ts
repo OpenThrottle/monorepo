@@ -10,7 +10,8 @@
  *
  * ## Optional GraphQL preflight (`getServerHealth`)
  *
- * - `fetchServerHealth` runs the public `getServerHealth` query via `executeWorkflowGraphqlV2` in
+ * - `fetchServerHealth` (commented in `utils/index.ts` — no package consumers; same behavior if
+ *   restored) would run the public `getServerHealth` query via `executeWorkflowGraphqlV2` in
  *   `workflow-graphql.ts` (wraps `executeGraphqlV2` with workflow env + URL options; throws on
  *   HTTP/GraphQL errors; message includes status / first GraphQL error). Health JSON is only available
  *   after a successful HTTP POST; wrong URL, TLS, or proxy errors remain transport failures without

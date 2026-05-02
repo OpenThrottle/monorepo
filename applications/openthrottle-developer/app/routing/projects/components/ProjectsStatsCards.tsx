@@ -32,6 +32,8 @@ export const ProjectsStatsCards = (props: ProjectsStatsCardsProps) => {
       {plansLinkedCount != null && (
         <OpenThrottleStatCard title="Plans linked" value={plansLinkedCount} />
       )}
+      {/* TODO: Get tasks linked count from the API */}
+      <OpenThrottleStatCard title="Tasks linked" value={123} />
     </div>
   );
 };

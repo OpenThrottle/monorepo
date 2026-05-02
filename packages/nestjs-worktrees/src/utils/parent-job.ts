@@ -55,13 +55,16 @@ const UNIQUENESS_SUFFIX_LENGTH = 6;
 export function deriveBranchName(lockedBy: string, planTitle?: string): string {
   if (planTitle) {
     const slug = slugifyForBranch(planTitle);
+
     if (slug.length > 0) {
       const suffix = Date.now().toString(36).slice(-UNIQUENESS_SUFFIX_LENGTH);
+
       return `ralph/${slug}-${suffix}`;
     }
   }
 
   const slug = lockedBy.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 12);
+
   return `ralph/${slug}-${Date.now()}`;
 }
 
@@ -78,15 +81,21 @@ export function createBranchInWorktree(
     ['-C', worktreePath, 'checkout', '-b', branchName, baseBranch],
     { encoding: 'utf-8' },
   );
+
   if (child.status === 0) {
     return { ok: true };
   }
+
   const stderr = (
     child.stderr ??
     child.error?.message ??
     'unknown error'
   ).trim();
-  return { ok: false, stderr };
+
+  return {
+    ok: false,
+    stderr,
+  };
 }
 
 /**
@@ -111,6 +120,7 @@ export async function parentJobAcquireAndCreateBranch(
     id: worktreeId,
     lockedBy,
   });
+
   if (!acquireResult.ok) {
     return {
       detail: acquireResult.reason,
@@ -127,6 +137,7 @@ export async function parentJobAcquireAndCreateBranch(
     branchName,
     baseBranch,
   );
+
   if (!branchResult.ok) {
     await tracker.release({ id: targetId, lockedBy });
     return {
@@ -141,7 +152,11 @@ export async function parentJobAcquireAndCreateBranch(
     targetId,
     worktreePath,
   };
-  return { handoff, ok: true };
+
+  return {
+    handoff,
+    ok: true,
+  };
 }
 
 /**
@@ -153,8 +168,11 @@ export function isWorktreeClean(worktreePath: string): boolean {
     ['-C', worktreePath, 'status', '--porcelain'],
     { encoding: 'utf-8' },
   );
+
   if (child.status !== 0) return false;
+
   const out = (child.stdout ?? '').trim();
+
   return out.length === 0;
 }
 
@@ -168,10 +186,13 @@ export function hasCommitsAheadOfRemote(worktreePath: string): boolean {
     ['-C', worktreePath, 'rev-list', '--count', '@{upstream}..HEAD'],
     { encoding: 'utf-8' },
   );
+
   if (child.status !== 0) {
     return true;
   }
+
   const count = parseInt((child.stdout ?? '0').trim(), 10);
+
   return count > 0;
 }
 
@@ -188,15 +209,21 @@ export function pushBranchToRemote(
     ['-C', worktreePath, 'push', '-u', 'origin', branchName],
     { encoding: 'utf-8' },
   );
+
   if (child.status === 0) {
     return { ok: true };
   }
+
   const stderr = (
     child.stderr ??
     child.error?.message ??
     'unknown error'
   ).trim();
-  return { ok: false, stderr };
+
+  return {
+    ok: false,
+    stderr,
+  };
 }
 
 const CHECKS: readonly ['lint', 'typecheck'] = [

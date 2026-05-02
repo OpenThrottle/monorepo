@@ -1,18 +1,11 @@
 import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@openthrottle/react-router-shadcn';
-import { CreateProjectDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import { redirect } from 'react-router';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { CreateProjectDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/projects.create';
 
@@ -51,21 +44,11 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <Breadcrumb className="mb-4 md:mb-8">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild={true}>
-              <Link to="/projects" viewTransition={true}>
-                Projects
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Create Project</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <OpenThrottleBreadcrumbs
+        children="Create Project"
+        className="mb-4"
+        links={[{ children: 'Projects', to: '/projects' }]}
+      />
 
       <div className="max-w-7xl mx-auto">
         <ProjectForm actionData={actionData} />

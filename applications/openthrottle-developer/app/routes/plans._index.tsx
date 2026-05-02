@@ -129,15 +129,15 @@ export default function Component(
   const [searchParams] = useSearchParams();
 
   // Setup
+  const isCard = searchParams.get('view') === 'card';
+
   const countByStatus = (status: string): number =>
     statusCounts.find((s) => s.status === status)?.count ?? 0;
 
-  const inProgressCount = countByStatus('IN_PROGRESS');
-  const completedCount = countByStatus('COMPLETED');
+  const countInProgress = countByStatus('IN_PROGRESS');
+  const countCompleted = countByStatus('COMPLETED');
 
-  const view = (searchParams.get('view') === 'card' ? 'card' : 'table') as
-    | 'table'
-    | 'card';
+  const view = (isCard ? 'card' : 'table') as 'card' | 'table';
 
   // Handlers
 
@@ -151,14 +151,14 @@ export default function Component(
 
   const statusFilterUrls = React.useMemo(() => {
     return Object.fromEntries(
-      PLAN_STATUS_FILTER_OPTIONS.map((opt) => {
-        const p = new URLSearchParams(searchParams);
+      PLAN_STATUS_FILTER_OPTIONS.map((option) => {
+        const params = new URLSearchParams(searchParams);
 
-        p.delete('status');
-        p.append('status', opt.value);
-        p.set('page', '1');
+        params.delete('status');
+        params.append('status', option.value);
+        params.set('page', '1');
 
-        return [opt.value, `/plans?${p.toString()}`] as const;
+        return [option.value, `/plans?${params.toString()}`] as const;
       }),
     );
   }, [searchParams]);
@@ -168,12 +168,9 @@ export default function Component(
   return (
     <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
-        <OpenThrottleStatCard title="Total" value={totalCount} />
-        <OpenThrottleStatCard
-          title="In progress (all)"
-          value={inProgressCount}
-        />
-        <OpenThrottleStatCard title="Completed (all)" value={completedCount} />
+        <OpenThrottleStatCard title="In progress" value={countInProgress} />
+        <OpenThrottleStatCard title="Matching plans" value={totalCount} />
+        <OpenThrottleStatCard title="Completed (all)" value={countCompleted} />
       </div>
 
       <PlansToolbar

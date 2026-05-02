@@ -143,6 +143,7 @@ export const PlanTasksTable = (
 
   // Hooks
   const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);
+  const [data, _setData] = React.useState(tasks);
 
   // Setup
   const getRowId = React.useCallback(
@@ -158,6 +159,15 @@ export const PlanTasksTable = (
   );
 
   // Handlers
+  // const addRowBetween = (index: number) => {
+  //   const newRow = { id: "new-id", name: "New Entry", status: "pending" };
+  //   const updatedData = [...data];
+  //
+  //   // Inserts newRow at the specified index without deleting any items
+  //   updatedData.splice(index, 0, newRow);
+  //
+  //   setData(updatedData);
+  // };
 
   // Markup
 
@@ -170,7 +180,7 @@ export const PlanTasksTable = (
       <TooltipProvider>
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
-          data={tasks}
+          data={data}
           getRowId={getRowId}
           getRowProps={getRowProps}
         />

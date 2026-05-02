@@ -1,4 +1,4 @@
-import { LoggerService } from '@openthrottle/nestjs-modules/src/logger/logger.service';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

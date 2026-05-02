@@ -11,8 +11,8 @@ export interface ProfileExecutionResult {
   };
   readonly inputs?: readonly unknown[];
   readonly label: string;
-  readonly methodName?: string;
   readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly methodName?: string;
   readonly output?: unknown;
   readonly startTime: number;
 }

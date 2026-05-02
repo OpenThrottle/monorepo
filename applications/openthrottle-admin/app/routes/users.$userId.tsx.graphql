@@ -1,32 +1,32 @@
-fragment UserDetails on UserObject {
-  id
-  createdAt
-  disabledAt
-  email
-  githubUsername
-  updatedAt
-}
+# fragment UserDetails on UserObject {
+#   id
+#   createdAt
+#   disabledAt
+#   email
+#   githubUsername
+#   updatedAt
+# }
 
-query getUser($id: ID!) {
-  user(id: $id) {
-    ...UserDetails
-  }
-}
+# query getUser($id: ID!) {
+#   user(id: $id) {
+#     ...UserDetails
+#   }
+# }
 
-mutation updateUser($input: UpdateUserInput!) {
-  updateUser(input: $input) {
-    ...UserDetails
-  }
-}
+# mutation updateUser($input: UpdateUserInput!) {
+#   updateUser(input: $input) {
+#     ...UserDetails
+#   }
+# }
 
-mutation disableUser($id: ID!) {
-  disableUser(id: $id) {
-    ...UserDetails
-  }
-}
+# mutation disableUser($id: ID!) {
+#   disableUser(id: $id) {
+#     ...UserDetails
+#   }
+# }
 
-mutation enableUser($id: ID!) {
-  enableUser(id: $id) {
-    ...UserDetails
-  }
-}
+# mutation enableUser($id: ID!) {
+#   enableUser(id: $id) {
+#     ...UserDetails
+#   }
+# }

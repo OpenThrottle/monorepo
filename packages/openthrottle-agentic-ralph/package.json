@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/openthrottle-agentic-ralph",
-  "description": "TODO: Add a description",
+  "description": "Ralph agentic workflow: codegen GraphQL client for Cortex plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -8,9 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nodejs-graphql": "workspace:*"
+    "@openthrottle/nodejs-graphql": "workspace:*",
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:*"
   },
-  "devDependencies": {},
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -38,6 +38,7 @@
       "type:package"
     ],
     "targets": {
+      "__codegen-graphql-watch": {},
       "build": {
         "dependsOn": [
           "^build",
@@ -46,13 +47,19 @@
       },
       "build-package": {},
       "codegen-graphql": {},
-      "__codegen-graphql-watch": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "verify-graphql-codegen": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",

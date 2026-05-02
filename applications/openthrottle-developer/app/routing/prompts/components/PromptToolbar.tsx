@@ -171,19 +171,16 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
           </Button>
         ) : null}
         <div className="flex-1 min-w-0" />
-        <Link to="/prompts/create">
-          <Button
-            asChild={true}
-            className="shrink-0"
-            data-testid="PromptToolbar-create-button"
-            variant="outline"
-          >
-            <div>
-              <PlusIcon className="w-4 h-4" />
-              Create prompt
-            </div>
-          </Button>
-        </Link>
+        <Button
+          asChild={true}
+          className="shrink-0"
+          data-testid="PromptToolbar-create-button"
+          variant="outline"
+        >
+          <Link to="/prompts/create">
+            <PlusIcon className="w-4 h-4" /> Create prompt
+          </Link>
+        </Button>
       </form>
     </div>
   );

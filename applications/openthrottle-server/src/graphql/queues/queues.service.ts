@@ -147,16 +147,19 @@ export class QueuesService implements OnModuleDestroy {
     if (trimmed.length < MIN_QUEUE_NAME_LENGTH) {
       return { error: 'Queue name is required' };
     }
+
     if (trimmed.length > MAX_QUEUE_NAME_LENGTH) {
       return {
         error: `Queue name must be at most ${MAX_QUEUE_NAME_LENGTH} characters`,
       };
     }
+
     if (!QUEUE_NAME_REGEX.test(trimmed)) {
       return {
         error: `Queue name must match ${QUEUE_NAME_REGEX.source}`,
       };
     }
+
     if (
       REGISTERED_QUEUES.includes(trimmed as (typeof REGISTERED_QUEUES)[number])
     ) {
@@ -173,6 +176,7 @@ export class QueuesService implements OnModuleDestroy {
     const port =
       this.configService.get<number>('redis.port') ??
       Number(process.env.REDIS_PORT ?? 6379);
+
     if (!host) {
       return { error: 'Redis is not configured (REDIS_HOST)' };
     }
@@ -181,7 +185,9 @@ export class QueuesService implements OnModuleDestroy {
       const queue = new BullQueue<DynamicJobData, void>(trimmed, {
         connection: { host, port },
       });
+
       this.dynamicQueues.set(trimmed, queue);
+
       return { queueName: trimmed };
     } catch (error) {
       const isError = error instanceof Error;
@@ -198,13 +204,17 @@ export class QueuesService implements OnModuleDestroy {
     if (name === DAILY_STATS_QUEUE_NAME) {
       return this.dailyStatsQueue as Queue<AnyJobData, void>;
     }
+
     if (name === DOC_INGESTION_QUEUE_NAME) {
       return this.docIngestionQueue as unknown as Queue<AnyJobData, void>;
     }
+
     if (name === PLANS_QUEUE_NAME) {
       return this.plansQueue as Queue<AnyJobData, void>;
     }
+
     const dynamic = this.dynamicQueues.get(name) ?? null;
+
     return dynamic as Queue<AnyJobData, void> | null;
   }
 
@@ -213,6 +223,7 @@ export class QueuesService implements OnModuleDestroy {
    */
   async getStatsForQueue(name: string): Promise<QueueStats | null> {
     const stats = await this.getStats();
+
     return stats.find((s) => s.name === name) ?? null;
   }
 
@@ -239,6 +250,7 @@ export class QueuesService implements OnModuleDestroy {
     const types = states.filter((s) =>
       (VALID_JOB_STATES as readonly string[]).includes(s),
     ) as JobState[];
+
     if (types.length === 0) {
       return { hasNext: false, jobs: [] };
     }
@@ -283,11 +295,13 @@ export class QueuesService implements OnModuleDestroy {
       if (matched.length >= cappedLimit) {
         break;
       }
+
       const data = this.parseJobDataPlanId(job.data);
       if (data !== null && data === planId) {
         matched.push(job);
       }
     }
+
     return matched;
   }
 
@@ -332,6 +346,7 @@ export class QueuesService implements OnModuleDestroy {
 
     await job.retry();
     const id = job.id ?? jobId;
+
     return { jobId: String(id) };
   }
 
@@ -349,10 +364,12 @@ export class QueuesService implements OnModuleDestroy {
           'Doc-ingestion requires at least one of directories or files to be non-empty.',
       };
     }
+
     const job = await this.docIngestionQueue.add('doc-ingestion', payload);
     if (job.id == null) {
       return { error: 'Failed to get new job id' };
     }
+
     return { jobId: String(job.id) };
   }
 
@@ -373,16 +390,19 @@ export class QueuesService implements OnModuleDestroy {
       if (raw.length < MIN_IDEMPOTENCY_KEY_LENGTH) {
         return { error: 'idempotencyKey cannot be empty when provided' };
       }
+
       if (raw.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
         return {
           error: `idempotencyKey must be at most ${MAX_IDEMPOTENCY_KEY_LENGTH} characters`,
         };
       }
+
       if (!IDEMPOTENCY_KEY_REGEX.test(raw)) {
         return {
           error: 'idempotencyKey must contain only letters, digits, and ._:-',
         };
       }
+
       idempotencyKey = raw;
     }
 

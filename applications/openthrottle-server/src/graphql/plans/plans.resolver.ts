@@ -65,9 +65,7 @@ import {
 } from './plan.object';
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
-
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
-  'Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.';
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`;
 
 /**
  * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
@@ -595,6 +593,102 @@ export class PlansResolver {
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
+
+      throw new BadRequestException(message);
+    }
+
+    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
+    const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
+      priority: jobPriority,
+    });
+
+    await repo.update({ id: planId }, { status: 'QUEUED' });
+
+    const taskRepo = this.tasksService.getRepository();
+    const statusesToReset = [
+      'PENDING',
+      'IN_PROGRESS',
+      'BLOCKED',
+      'BACKLOG',
+      'SKIPPED',
+      'CANCELED',
+    ] as const;
+    await taskRepo.update(
+      {
+        planId,
+        status: In(statusesToReset),
+      },
+      { status: 'QUEUED' },
+    );
+
+    const waitingCount = await this.plansQueue.getWaitingCount();
+    const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
+    const jobIndex = waitingJobs.findIndex((j) => j.id === job.id);
+    const queuePosition = jobIndex >= 0 ? jobIndex + 1 : waitingCount;
+    const queueTotal = waitingCount;
+
+    this.notificationsService.emitPlanEnqueued({
+      planId,
+      queuePosition,
+      queueTotal,
+    });
+
+    const result = new EnqueuePlanRunResultObject();
+    result.jobId = String(job.id ?? job.name);
+    result.planId = planId;
+    result.queuePosition = queuePosition;
+    result.queueTotal = queueTotal;
+
+    return result;
+  }
+
+  // @ProfileResponseTime('PlansResolver.enqueuePlanRun')
+  @Mutation(() => EnqueuePlanRunResultObject, {
+    description: `Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) =>
+        ret != null
+          ? {
+              message: 'Plan queued for run',
+              planId: (ret as EnqueuePlanRunResultObject).planId,
+              severity: 'info' as const,
+            }
+          : null,
+    },
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
+      payload: (ret) =>
+        ret != null
+          ? {
+              planId: (ret as EnqueuePlanRunResultObject).planId,
+              status: 'QUEUED',
+            }
+          : null,
+    },
+  ])
+  async workflowPlanRun(
+    @Args('input', { type: () => EnqueuePlanRunInput })
+    input: EnqueuePlanRunInput,
+  ): Promise<EnqueuePlanRunResultObject> {
+    const { planId, priority, ralph } = input;
+
+    const repo = this.plansService.getRepository();
+    const plan = await repo.findOne({ where: { id: planId } });
+
+    if (!plan) {
+      throw new Error(`Plan not found: ${planId}`);
+    }
+
+    let jobData: RunPlanJobData;
+    try {
+      jobData = buildRunPlanJobData({ planId, ralph });
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
       throw new BadRequestException(message);
     }
 
@@ -723,6 +817,7 @@ export class PlansResolver {
     }
 
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
+
     const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
       {
         idempotencyKey: idempotencyKey ?? undefined,

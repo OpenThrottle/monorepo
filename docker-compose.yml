@@ -41,6 +41,17 @@ x-openthrottle-server: &openthrottle-server
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
 name: OT
+
+#############################################################################
+#
+#     🐳 Compose Links | https://docs.docker.com/compose/compose-file/14-include
+#
+include:
+  - ./services/openclaw/docker-compose.yml
+  # - env_file: ./services/openclaw/.env
+  #   path: ./services/openclaw/docker-compose.yml
+  #   project_directory: ./services/openclaw/
+
 services:
   #############################################################################
   #
@@ -157,10 +168,10 @@ services:
       interval: 30s
       retries: 3
       start_period: 40s
-      test:
-        [
+      test: [
           'CMD-SHELL',
-          'wget -q --spider http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1',
+          'wget -q --spider
+          http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1',
         ]
       timeout: 10s
     image: openthrottle-server:latest

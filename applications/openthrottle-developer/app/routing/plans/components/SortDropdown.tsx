@@ -52,7 +52,6 @@ export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
   return (
     <Select
       aria-label="Sort plans"
-      // className="rounded-md border border-input px-3 py-1.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-[11rem] shrink-0"
       onValueChange={handleChange}
       value={resolvedValue}
     >

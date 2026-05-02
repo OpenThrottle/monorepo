@@ -1,20 +1,20 @@
-fragment UserRow on UserObject {
-  id
-  createdAt
-  disabledAt
-  email
-  githubUsername
-  updatedAt
-}
+# fragment UserRow on UserObject {
+#   id
+#   createdAt
+#   disabledAt
+#   email
+#   githubUsername
+#   updatedAt
+# }
 
-query getUsers {
-  users {
-    ...UserRow
-  }
-}
+# query getUsers {
+#   users {
+#     ...UserRow
+#   }
+# }
 
-mutation createUser($input: CreateUserInput!) {
-  createUser(input: $input) {
-    ...UserRow
-  }
-}
+# mutation createUser($input: CreateUserInput!) {
+#   createUser(input: $input) {
+#     ...UserRow
+#   }
+# }

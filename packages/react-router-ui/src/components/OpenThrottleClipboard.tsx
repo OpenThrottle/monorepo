@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classnames from 'classnames';
 
 export interface OpenThrottleClipboardProps {
   readonly className?: string;
@@ -75,7 +76,7 @@ export function OpenThrottleClipboard(props: OpenThrottleClipboardProps) {
   return (
     <button
       aria-label={copied ? 'Copied' : label}
-      className={className}
+      className={classnames('cursor-pointer', className)}
       onClick={onClick}
       type="button"
     >
