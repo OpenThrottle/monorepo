@@ -1,19 +1,26 @@
+import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { Injectable } from '@nestjs/common';
+import {
+  NESTJS_LOGGING_MODULE_OPTIONS,
+  type ResolvedNestjsLoggingModuleOptions,
+} from './config/nestjs-logging.options';
 
 @Injectable()
 export class NestjsLoggingService {
-  private name = 'nestjs-logging';
-
-  // Inject and initialize as needed
-  constructor(private readonly logger: LoggerService) {
-    this.logger.debug(`🧩 ${this.name} 🧩`);
-
-    // TODO: If we need to do anything in here
+  constructor(
+    private readonly logger: LoggerService,
+    @Inject(NESTJS_LOGGING_MODULE_OPTIONS)
+    private readonly options: ResolvedNestjsLoggingModuleOptions,
+  ) {
+    this.logger.debug(
+      `nestjs-logging: JSONL directory="${this.options.logDirectory}" basename="${this.options.fileBasename}"`,
+    );
   }
 
-  // TODO: Fill in the actual tool calls
-  exampleMethod() {
-    return `${this.name} says Hello API`;
+  /**
+   * @description Resolved module options (defaults applied) for callers that need paths or limits.
+   */
+  getResolvedOptions(): ResolvedNestjsLoggingModuleOptions {
+    return this.options;
   }
 }
