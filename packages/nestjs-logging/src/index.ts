@@ -36,6 +36,13 @@ export type {
 } from './ports/logging-ports';
 export { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
 export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
+export {
+  KeyedJsonlWriter,
+  type KeyedJsonlRunChunkInput,
+  type KeyedJsonlRunRecord,
+  type KeyedJsonlWriterOptions,
+} from './services/keyed-jsonl-writer';
+export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error';
 export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
 export {
   orderJsonlRootObjectKeys,
