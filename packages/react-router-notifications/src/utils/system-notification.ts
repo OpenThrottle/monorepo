@@ -31,7 +31,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Defaults to disabled so we only show system notifications after the user opts in.
  */
 export function getSystemNotificationsPreference(): SystemNotificationsPreference {
-  console.log('🟢 6 - getSystemNotificationsPreference');
+  // console.log('🟢 6 - getSystemNotificationsPreference');
+
   if (!IS_BROWSER) {
     return DEFAULT_PREFERENCE;
   }
@@ -47,7 +48,7 @@ export function getSystemNotificationsPreference(): SystemNotificationsPreferenc
     const enabled = o.enabled === true;
     const onlyWhenBackground = o.onlyWhenBackground === true ? true : undefined;
 
-    console.log('🟢 7 - ', { enabled, onlyWhenBackground });
+    // console.log('🟢 7 - ', { enabled, onlyWhenBackground });
 
     return { enabled, onlyWhenBackground };
   } catch {

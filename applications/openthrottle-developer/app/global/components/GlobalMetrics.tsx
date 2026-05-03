@@ -73,10 +73,13 @@ const METRICS_CHART_CONFIG: ChartConfig = {
  */
 function getStoredPollIntervalMs(): number | null {
   if (typeof window === 'undefined') return null;
+
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw == null) return null;
+
     const n = Number(raw);
+
     return Number.isFinite(n) && VALID_INTERVALS.has(n) ? n : null;
   } catch {
     return null;
@@ -108,7 +111,10 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
    */
   React.useLayoutEffect(() => {
     const restored = readStoredMetricsChartHistory();
+    console.log('⏲︎ 🟢 restored', restored);
+
     if (restored.length === 0) return;
+
     setMetricsHistory(restored);
   }, []);
 
@@ -148,15 +154,18 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     if (serverMetrics == null) return;
 
     let trimmed: readonly MetricsChartDatum[] = [];
+
     setMetricsHistory((prev) => {
       const next: MetricsChartDatum[] = [
         ...prev,
         { ...serverMetrics, i: prev.length },
       ];
       trimmed = trimMetricsChartData(next);
+
+      writeStoredMetricsChartHistory(trimmed);
+
       return trimmed;
     });
-    writeStoredMetricsChartHistory(trimmed);
 
     // 🪝 Update metrics history as our interval elapses
   }, [serverMetrics]);
@@ -174,8 +183,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     return [];
   }, [loading, metricsHistory, serverMetrics]);
 
-  const showStatCards =
-    !loading && error == null && serverMetrics != null;
+  const showStatCards = !loading && error == null && serverMetrics != null;
   const showMetricsChart = error == null && chartLineData.length > 0;
   const showGlobalLoadingBanner = loading && metricsHistory.length === 0;
 
@@ -346,7 +354,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 type="monotone"
               />
             </LineChart>
-            </ChartContainer>
+          </ChartContainer>
         </Card>
       )}
     </div>

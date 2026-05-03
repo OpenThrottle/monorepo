@@ -126,10 +126,13 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
         ...prev,
         { ...serverMetrics, i: prev.length },
       ];
+
       trimmed = trimMetricsChartData(next);
+
+      writeStoredMetricsChartHistory(trimmed);
+
       return trimmed;
     });
-    writeStoredMetricsChartHistory(trimmed);
   }, [serverMetrics]);
 
   /**

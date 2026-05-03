@@ -49,6 +49,7 @@ const METRIC_NUM_KEYS: readonly (keyof ServerMetricsSnapshot)[] = [
  */
 const getSessionChartStorage = (): Storage | null => {
   if (typeof window === 'undefined') return null;
+
   return window.sessionStorage;
 };
 
@@ -62,13 +63,18 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * @description Validates one chart row (metrics fields + sequential index `i`).
  */
 const isMetricsChartDatum = (value: unknown): value is MetricsChartDatum => {
-  if (!isPlainObject(value)) return false;
+  if (!isPlainObject(value)) {
+    return false;
+  }
+
   if (!isFiniteNumber(value.i) || !Number.isInteger(value.i) || value.i < 0) {
     return false;
   }
+
   for (const key of METRIC_NUM_KEYS) {
     if (!isFiniteNumber(value[key])) return false;
   }
+
   return true;
 };
 
@@ -90,18 +96,28 @@ const parsePayload = (raw: string): StoredMetricsChartHistoryPayload | null => {
   } catch {
     return null;
   }
+
   if (!isPlainObject(parsed)) return null;
+
   if (parsed.v !== GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION) return null;
+
   if (!isFiniteNumber(parsed.savedAt) || !Number.isInteger(parsed.savedAt)) {
     return null;
   }
+
   if (!Array.isArray(parsed.samples)) return null;
+
   const samples: MetricsChartDatum[] = [];
   for (const item of parsed.samples) {
     if (!isMetricsChartDatum(item)) return null;
     samples.push(item);
   }
-  return { samples, savedAt: parsed.savedAt, v: parsed.v };
+
+  return {
+    samples,
+    savedAt: parsed.savedAt,
+    v: parsed.v,
+  };
 };
 
 /**
@@ -113,14 +129,19 @@ export const readStoredMetricsChartHistory = (
   maxAgeMs: number = GLOBAL_METRICS_CHART_HISTORY_DEFAULT_MAX_AGE_MS,
 ): readonly MetricsChartDatum[] => {
   const storage = getSessionChartStorage();
-  if (storage == null) return [];
+  if (storage == null) {
+    console.log('⏲︎ 🔴 HISTORYs storage is null');
+    return [];
+  }
 
   let raw: string | null;
   try {
     raw = storage.getItem(GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY);
+    console.log('⏲︎ 🟢 🟡 🟢 READ', JSON.parse(raw ?? '{}'));
   } catch {
     return [];
   }
+
   if (raw == null) return [];
 
   const payload = parsePayload(raw);
