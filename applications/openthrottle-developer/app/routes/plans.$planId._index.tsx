@@ -84,7 +84,22 @@ export const loader = async (args: Route.LoaderArgs) => {
   const plan = planResult.plan ?? null;
   const tasks = tasksResult.tasksByPlanId ?? [];
 
-  return { plan, tasks };
+  // const jsonLogs = (await import('../../.openthrottle/11.jsonl')).default;
+  // const jsonLogs = await fetch('/logs/small.jsonl');
+  // const jsonLogs = await fetch('/logs/line.json');
+  const jsonLogs = await fetch('http://localhost:6020/logs/11.jsonl');
+  const jsonData = await jsonLogs.text();
+  const logs = jsonData
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => JSON.parse(line));
+
+  console.log('---> logs', logs);
+
+  // // // const jsonLogs = (await import('../../.openthrottle/line.json')).default;
+  // console.log('---> logs', logs);
+
+  return { logs, plan, tasks };
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
@@ -100,7 +115,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, tasks } = loaderData;
+  const { logs, plan, tasks } = loaderData;
 
   // Hooks
   const revalidator = useRevalidator();
@@ -216,7 +231,7 @@ export default function Component(
           links={[{ children: 'Plans', to: '/plans' }]}
         />
 
-        <PlanDetails plan={plan} />
+        <PlanDetails logs={logs} plan={plan} />
 
         {tasks.length === 0 ? (
           <>

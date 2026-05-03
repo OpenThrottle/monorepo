@@ -26,8 +26,9 @@ describe('ProjectsStatsCards Component', () => {
       expect(component.getByTestId('ProjectsStatsCards')).toBeInTheDocument();
       expect(component.getByText('Total projects')).toBeInTheDocument();
       expect(component.getByText('3')).toBeInTheDocument();
+      expect(component.getByText('Tasks linked')).toBeInTheDocument();
       expect(component.queryByText('Plans linked')).not.toBeInTheDocument();
-      expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(1);
+      expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(2);
     });
   });
 
@@ -44,7 +45,7 @@ describe('ProjectsStatsCards Component', () => {
       expect(getByText('2')).toBeInTheDocument();
       expect(getByText('Plans linked')).toBeInTheDocument();
       expect(getByText('5')).toBeInTheDocument();
-      expect(getAllByTestId('OpenThrottleStatCard')).toHaveLength(2);
+      expect(getAllByTestId('OpenThrottleStatCard')).toHaveLength(3);
     });
   });
 });

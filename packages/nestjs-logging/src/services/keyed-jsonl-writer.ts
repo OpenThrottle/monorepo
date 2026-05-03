@@ -25,9 +25,9 @@ export interface KeyedJsonlWriterOptions {
  * @description One JSONL line for structured run output (`lineFormat: 'jsonl'`).
  */
 export interface KeyedJsonlRunRecord {
+  readonly data: string | Readonly<Record<string, unknown>>;
   readonly timestamp: string;
   readonly type: string;
-  readonly data: string | Readonly<Record<string, unknown>>;
 }
 
 /**

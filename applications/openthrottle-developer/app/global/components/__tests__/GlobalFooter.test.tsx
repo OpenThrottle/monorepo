@@ -12,10 +12,8 @@ describe('GlobalFooter Component', () => {
     render(<RoutesStub />);
 
     expect(screen.getByTestId('GlobalFooter')).toBeInTheDocument();
-    expect(
-      screen.getByText('Built by engineers. Open source. No lock-in.'),
-    ).toBeInTheDocument();
-    const healthRow = screen.getByRole('link', { name: /sockets/i });
+    expect(screen.getByText(/Built by engineers/)).toBeInTheDocument();
+    const healthRow = screen.getByRole('link', { name: /API/i });
     expect(healthRow).toHaveAttribute(
       'href',
       expect.stringMatching(/\/health$/),

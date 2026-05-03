@@ -5,7 +5,7 @@ exports[`PlanLoggerOutput Component > should render 1`] = `
   <div>
     <div
       class="bg-card border rounded-lg transition-colors ui-border hover:border-color-border-dark mb-6"
-      data-testid="workflow-run-options-collapsed"
+      data-testid="PlanLoggerOutput"
     >
       <div
         class="space-y-1.5 p-6 flex flex-row w-full gap-4"
@@ -24,7 +24,7 @@ exports[`PlanLoggerOutput Component > should render 1`] = `
             <button
               aria-controls="workflow-run-options"
               aria-expanded="true"
-              aria-label="Hide workflow run options"
+              aria-label="Toggle workflow output"
               class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-sm font-medium whitespace-nowrap rounded-md [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 hover:bg-accent hover:text-accent-foreground shrink-0 size-8"
             >
               <svg

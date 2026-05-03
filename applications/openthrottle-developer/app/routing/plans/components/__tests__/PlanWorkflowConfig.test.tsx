@@ -50,7 +50,7 @@ describe('PlanWorkflowConfig Component', () => {
     expect(
       component.getByRole('heading', {
         level: 2,
-        name: 'Workflow configuration',
+        name: /workflow configuration/i,
       }),
     ).toBeInTheDocument();
     expect(component.getByTestId('workflow-run-cli-preview')).toHaveTextContent(
@@ -118,7 +118,7 @@ describe('PlanWorkflowConfig Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText, getByRole } = render(<RoutesStub />);
 
-    const planInput = getByLabelText('plan UUID for --plan');
+    const planInput = getByLabelText('Plan UUID for --plan');
     await user.clear(planInput);
     await user.type(planInput, 'not-a-valid-uuid');
 
@@ -296,7 +296,7 @@ describe('PlanWorkflowConfig Component', () => {
       const { getByRole } = render(<RoutesStub />);
 
       expect(
-        getByRole('heading', { level: 2, name: 'Workflow configuration' }),
+        getByRole('heading', { level: 2, name: /workflow configuration/i }),
       ).toHaveAttribute('id', 'workflow-run-options-title');
     });
   });

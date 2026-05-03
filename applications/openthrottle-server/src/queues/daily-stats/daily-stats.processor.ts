@@ -39,10 +39,13 @@ function getPreviousUtcDayBounds(): {
   );
   const dayStart = new Date(dayEnd);
   dayStart.setUTCDate(dayStart.getUTCDate() - 1);
+
   const y = dayStart.getUTCFullYear();
   const m = String(dayStart.getUTCMonth() + 1).padStart(2, '0');
   const d = String(dayStart.getUTCDate()).padStart(2, '0');
+
   const dateYmd = `${y}-${m}-${d}`;
+
   return { dateYmd, dayEnd, dayStart };
 }
 
@@ -85,27 +88,37 @@ export class DailyStatsProcessor
 
     this.logger.info(message, DailyStatsProcessor.name);
 
-    const aggregate = await this.aggregateDailyStats();
-    await this.dailyStatsService.upsertForDate(aggregate.date, {
-      plansByStatus: aggregate.plansByStatus,
-      plansCompleted: aggregate.plansCompleted,
-      plansCreated: aggregate.plansCreated,
-      plansUpdated: aggregate.plansUpdated,
-      tasksByStatus: aggregate.tasksByStatus,
-      tasksCompleted: aggregate.tasksCompleted,
-      tasksCreated: aggregate.tasksCreated,
-      tasksUpdated: aggregate.tasksUpdated,
-    });
-    this.logger.log(
-      `Daily stats aggregated for ${aggregate.date}: plans created=${aggregate.plansCreated} completed=${aggregate.plansCompleted} updated=${aggregate.plansUpdated}; tasks created=${aggregate.tasksCreated} completed=${aggregate.tasksCompleted} updated=${aggregate.tasksUpdated}`,
-      DailyStatsProcessor.name,
-    );
+    try {
+      const aggregate = await this.aggregateDailyStats();
+      await this.dailyStatsService.upsertForDate(aggregate.date, {
+        plansByStatus: aggregate.plansByStatus,
+        plansCompleted: aggregate.plansCompleted,
+        plansCreated: aggregate.plansCreated,
+        plansUpdated: aggregate.plansUpdated,
+        tasksByStatus: aggregate.tasksByStatus,
+        tasksCompleted: aggregate.tasksCompleted,
+        tasksCreated: aggregate.tasksCreated,
+        tasksUpdated: aggregate.tasksUpdated,
+      });
+      this.logger.log(
+        `Daily stats aggregated for ${aggregate.date}: plans created=${aggregate.plansCreated} completed=${aggregate.plansCompleted} updated=${aggregate.plansUpdated}; tasks created=${aggregate.tasksCreated} completed=${aggregate.tasksCompleted} updated=${aggregate.tasksUpdated}`,
+        DailyStatsProcessor.name,
+      );
 
-    this.notifications.emitQueueJobCompleted({
-      jobType: 'daily-stats',
-      message: `Daily stats aggregated for ${aggregate.date}`,
-      severity: 'success',
-    });
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'daily-stats',
+        message: `Daily stats aggregated for ${aggregate.date}`,
+        severity: 'success',
+      });
+    } catch (error) {
+      const message = `♦️ Daily stats job failed: jobId=${job.id}, error=${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(message, DailyStatsProcessor.name);
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'daily-stats',
+        message: `Daily stats job failed: ${job.id}`,
+        severity: 'error',
+      });
+    }
   }
 
   /**

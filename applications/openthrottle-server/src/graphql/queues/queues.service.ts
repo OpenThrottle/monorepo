@@ -154,16 +154,16 @@ export class QueuesService implements OnModuleDestroy {
       };
     }
 
-    if (!QUEUE_NAME_REGEX.test(trimmed)) {
-      return {
-        error: `Queue name must match ${QUEUE_NAME_REGEX.source}`,
-      };
-    }
-
     if (
       REGISTERED_QUEUES.includes(trimmed as (typeof REGISTERED_QUEUES)[number])
     ) {
       return { error: `Queue name "${trimmed}" is reserved` };
+    }
+
+    if (!QUEUE_NAME_REGEX.test(trimmed)) {
+      return {
+        error: `Queue name must match ${QUEUE_NAME_REGEX.source}`,
+      };
     }
 
     const existing = this.dynamicQueues.get(trimmed);

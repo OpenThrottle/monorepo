@@ -41,10 +41,9 @@ describe('PlansToolbar Component', () => {
     expect(component.getByText('Status (3)')).toBeInTheDocument();
   });
 
-  test('renders semantic search switch with accessible name', () => {
-    const switchEl = component.getByRole('switch', {
-      name: /semantic search/i,
-    });
-    expect(switchEl).toBeInTheDocument();
+  test('renders plans search input', () => {
+    expect(
+      component.getByRole('searchbox', { name: /search plans/i }),
+    ).toBeInTheDocument();
   });
 });

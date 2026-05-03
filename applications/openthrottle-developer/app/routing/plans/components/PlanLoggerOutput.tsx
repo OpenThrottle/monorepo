@@ -7,14 +7,18 @@ import {
   Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { mockOutput } from '~/routing/plans/data/mock.output';
+
+// const stripAnsi = (str: string): string => str.replace(/\x1b\[[0-9;]*m/g, '');
 
 export interface PlanLoggerOutputProps {
   readonly className?: string;
+  readonly logs: any[];
 }
 
 export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
-  const { className } = props;
+  const { className, logs } = props;
+
+  console.log('---> logs', typeof logs);
 
   // Hooks
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -36,7 +40,7 @@ export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
   return (
     <Card
       className={classnames('mb-6', className)}
-      data-testid="workflow-run-options-collapsed"
+      data-testid="PlanLoggerOutput"
     >
       <CardHeader className="flex flex-row w-full gap-4">
         <div className="min-w-0 space-y-1.5 flex-1">
@@ -47,7 +51,7 @@ export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
             <Button
               aria-controls="workflow-run-options"
               aria-expanded={true}
-              aria-label="Hide workflow run options"
+              aria-label="Toggle workflow output"
               className="shrink-0 size-8"
               onClick={onToggleExpanded}
               variant="ghost"
@@ -58,8 +62,12 @@ export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
 
           {isExpanded ? (
             <Markdown
-              className="overflow-x-auto text-xs text-muted-foreground"
-              content={mockOutput}
+              className="overflow-x-auto max-h-screen sticky top-0 text-xs text-muted-foreground"
+              content={logs
+                .map((log) => {
+                  return `${log.timestamp}: \n\n${log.data}`;
+                })
+                .join('\n')}
             />
           ) : null}
         </div>

@@ -40,11 +40,12 @@ import { PlanWorkflowConfigCollapsed } from '~/routing/plans/components/PlanWork
 
 export interface PlanDetailsProps {
   readonly className?: string;
+  readonly logs: any[];
   readonly plan: PlanDetailsFragment;
 }
 
 export const PlanDetails = (props: PlanDetailsProps) => {
-  const { className, plan } = props;
+  const { className, logs, plan } = props;
   const { projectRelation: project } = plan;
 
   // Hooks
@@ -252,7 +253,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
         <PlanWorkflowConfigCollapsed onClick={() => onToggleExpanded(true)} />
       )}
 
-      <PlanLoggerOutput />
+      <PlanLoggerOutput logs={logs} />
     </div>
   );
 };

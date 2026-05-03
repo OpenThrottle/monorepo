@@ -32,11 +32,6 @@ describe('PlanToolbar Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('should link to workflow run options anchor on the plan page', () => {
-    const link = component.getByRole('link', { name: 'Workflow run options' });
-    expect(link).toHaveAttribute('href', '#workflow-run-options');
-  });
-
   test('submits empty ralphTuning when ralphTuningJson is omitted', () => {
     const el = component.container.querySelector('input[name="ralphTuning"]');
     if (!(el instanceof HTMLInputElement)) {

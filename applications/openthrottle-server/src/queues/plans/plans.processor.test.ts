@@ -14,6 +14,7 @@ import 'reflect-metadata';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types';
 import {
   PLANS_QUEUE_NAME,
@@ -164,6 +165,12 @@ describe('PlansProcessor', () => {
           provide: getQueueToken(PLANS_QUEUE_NAME),
           useValue: mockPlansQueue,
         },
+        {
+          provide: BullMqRunOutputRetentionService,
+          useValue: createMock<BullMqRunOutputRetentionService>({
+            maybePruneAfterJobClose: vi.fn(),
+          }),
+        },
       ],
     }).compile();
 
@@ -222,15 +229,16 @@ describe('PlansProcessor', () => {
     const result = await processor.process(mockJob);
 
     expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
-    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledWith({
+    const orchestratorCall = mockRunPlanOrchestratorJob.mock.calls[0]?.[0];
+    expect(orchestratorCall).toMatchObject({
       correlation: {
         correlationId: 'job-1',
         queueJobId: 'job-1',
-        queueName: 'plans',
+        queueName: PLANS_QUEUE_NAME,
       },
       jobData: mockJob.data,
-      signal: expect.any(AbortSignal),
     });
+    expect(orchestratorCall?.signal).toBeInstanceOf(AbortSignal);
     expect(mockSpawn).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       taskRunMetrics: {
@@ -637,6 +645,12 @@ describe('PlansProcessor', () => {
           {
             provide: getQueueToken(PLANS_QUEUE_NAME),
             useValue: mockPlansQueue,
+          },
+          {
+            provide: BullMqRunOutputRetentionService,
+            useValue: createMock<BullMqRunOutputRetentionService>({
+              maybePruneAfterJobClose: vi.fn(),
+            }),
           },
         ],
       }).compile();

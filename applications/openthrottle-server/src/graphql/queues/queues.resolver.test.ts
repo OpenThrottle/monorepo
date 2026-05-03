@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { QueuesResolver } from './queues.resolver';
 import { QueuesService } from './queues.service';
 
@@ -13,7 +14,7 @@ describe('QueuesResolver', () => {
       completedCount: 5,
       delayedCount: 0,
       failedCount: 1,
-      name: 'plans',
+      name: PLANS_QUEUE_NAME,
       waitingCount: 2,
     },
   ];
@@ -57,10 +58,10 @@ describe('QueuesResolver', () => {
     });
 
     test('returns QueueDetailsObject with stats and no jobs when limit not provided', async () => {
-      const result = await resolver.queue({ name: 'plans' });
+      const result = await resolver.queue({ name: PLANS_QUEUE_NAME });
 
       expect(result).not.toBeNull();
-      expect(result?.name).toBe('plans');
+      expect(result?.name).toBe(PLANS_QUEUE_NAME);
       expect(result?.activeCount).toBe(0);
       expect(result?.completedCount).toBe(5);
       expect(result?.jobs).toBeNull();
@@ -89,7 +90,7 @@ describe('QueuesResolver', () => {
       const result = await resolver.queue({
         asc: false,
         limit: 10,
-        name: 'plans',
+        name: PLANS_QUEUE_NAME,
         offset: 0,
         states: ['waiting', 'active'],
       });
@@ -102,7 +103,7 @@ describe('QueuesResolver', () => {
       expect(result?.jobs?.hasNext).toBe(true);
       expect(result?.jobs?.jobs[0].taskRunMetrics).toBeNull();
       expect(mockQueuesService.getJobs).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         ['waiting', 'active'],
         0,
         10,
@@ -152,7 +153,7 @@ describe('QueuesResolver', () => {
       const result = await resolver.queue({
         asc: false,
         limit: 10,
-        name: 'plans',
+        name: PLANS_QUEUE_NAME,
         offset: 0,
         states: ['completed'],
       });
@@ -168,10 +169,13 @@ describe('QueuesResolver', () => {
     test('returns null when getJob returns null', async () => {
       vi.mocked(mockQueuesService.getJob).mockResolvedValueOnce(null);
 
-      const result = await resolver.job('job-1', 'plans');
+      const result = await resolver.job('job-1', PLANS_QUEUE_NAME);
 
       expect(result).toBeNull();
-      expect(mockQueuesService.getJob).toHaveBeenCalledWith('plans', 'job-1');
+      expect(mockQueuesService.getJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+      );
     });
 
     test('returns JobObject when job exists', async () => {
@@ -188,7 +192,7 @@ describe('QueuesResolver', () => {
         timestamp: 1234567700,
       });
 
-      const result = await resolver.job('job-1', 'plans');
+      const result = await resolver.job('job-1', PLANS_QUEUE_NAME);
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe('job-1');
@@ -196,7 +200,10 @@ describe('QueuesResolver', () => {
       expect(result?.state).toBe('completed');
       expect(result?.data).toBe('{"planId":"p1"}');
       expect(result?.taskRunMetrics).toBeNull();
-      expect(mockQueuesService.getJob).toHaveBeenCalledWith('plans', 'job-1');
+      expect(mockQueuesService.getJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+      );
     });
 
     test('returns JobObject with taskRunMetrics when plans queue job has returnvalue with taskRunMetrics', async () => {
@@ -233,7 +240,7 @@ describe('QueuesResolver', () => {
         timestamp: 1234567700,
       });
 
-      const result = await resolver.job('job-1', 'plans');
+      const result = await resolver.job('job-1', PLANS_QUEUE_NAME);
 
       expect(result).not.toBeNull();
       expect(result?.taskRunMetrics).not.toBeNull();
@@ -335,7 +342,7 @@ describe('QueuesResolver', () => {
         timestamp: 1234567700,
       });
 
-      const result = await resolver.job('job-1', 'plans');
+      const result = await resolver.job('job-1', PLANS_QUEUE_NAME);
 
       expect(result).not.toBeNull();
       expect(result?.taskRunMetrics).not.toBeNull();
@@ -375,7 +382,7 @@ describe('QueuesResolver', () => {
 
       const result = await resolver.repeatableJobs({
         asc: true,
-        queueName: 'plans',
+        queueName: PLANS_QUEUE_NAME,
       });
 
       expect(result).toHaveLength(1);
@@ -384,7 +391,7 @@ describe('QueuesResolver', () => {
       expect(result[0].pattern).toBe('0 9 * * 1-5');
       expect(result[0].next).toBe(1739012400000);
       expect(mockQueuesService.getRepeatableJobs).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         undefined,
         undefined,
         true,
@@ -397,13 +404,13 @@ describe('QueuesResolver', () => {
       const result = await resolver.repeatableJobs({
         asc: false,
         end: 10,
-        queueName: 'plans',
+        queueName: PLANS_QUEUE_NAME,
         start: 0,
       });
 
       expect(result).toHaveLength(0);
       expect(mockQueuesService.getRepeatableJobs).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         0,
         10,
         false,
@@ -422,7 +429,7 @@ describe('QueuesResolver', () => {
         completedCount: 5,
         delayedCount: 0,
         failedCount: 1,
-        name: 'plans',
+        name: PLANS_QUEUE_NAME,
         waitingCount: 2,
       });
     });
@@ -519,14 +526,14 @@ describe('QueuesResolver', () => {
         jobId: 'job-123',
       });
 
-      const input = { jobId: 'job-123', queueName: 'plans' };
+      const input = { jobId: 'job-123', queueName: PLANS_QUEUE_NAME };
       const result = await resolver.retryJob(input);
 
       expect(result.success).toBe(true);
       expect(result.jobId).toBe('job-123');
       expect(result.error).toBeNull();
       expect(mockQueuesService.retryJob).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         'job-123',
       );
     });
@@ -536,7 +543,7 @@ describe('QueuesResolver', () => {
         error: 'Job is not in failed state (current: completed)',
       });
 
-      const input = { jobId: 'job-1', queueName: 'plans' };
+      const input = { jobId: 'job-1', queueName: PLANS_QUEUE_NAME };
       const result = await resolver.retryJob(input);
 
       expect(result.success).toBe(false);
@@ -544,7 +551,10 @@ describe('QueuesResolver', () => {
       expect(result.error).toBe(
         'Job is not in failed state (current: completed)',
       );
-      expect(mockQueuesService.retryJob).toHaveBeenCalledWith('plans', 'job-1');
+      expect(mockQueuesService.retryJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+      );
     });
   });
 
@@ -554,14 +564,14 @@ describe('QueuesResolver', () => {
         jobId: 'new-job-456',
       });
 
-      const input = { jobId: 'job-1', queueName: 'plans' };
+      const input = { jobId: 'job-1', queueName: PLANS_QUEUE_NAME };
       const result = await resolver.duplicateJob(input);
 
       expect(result.success).toBe(true);
       expect(result.jobId).toBe('new-job-456');
       expect(result.error).toBeNull();
       expect(mockQueuesService.duplicateJob).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         'job-1',
       );
     });
@@ -571,14 +581,14 @@ describe('QueuesResolver', () => {
         error: 'Job not found',
       });
 
-      const input = { jobId: 'job-1', queueName: 'plans' };
+      const input = { jobId: 'job-1', queueName: PLANS_QUEUE_NAME };
       const result = await resolver.duplicateJob(input);
 
       expect(result.success).toBe(false);
       expect(result.jobId).toBeNull();
       expect(result.error).toBe('Job not found');
       expect(mockQueuesService.duplicateJob).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         'job-1',
       );
     });
@@ -592,14 +602,14 @@ describe('QueuesResolver', () => {
 
       const input = {
         key: 'repeat:plans::abc-123',
-        queueName: 'plans',
+        queueName: PLANS_QUEUE_NAME,
       };
       const result = await resolver.removeRepeatableJob(input);
 
       expect(result.success).toBe(true);
       expect(result.error).toBeNull();
       expect(mockQueuesService.removeRepeatableByKey).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         'repeat:plans::abc-123',
       );
     });
@@ -609,7 +619,7 @@ describe('QueuesResolver', () => {
         error: 'Repeatable job not found or could not be removed',
       });
 
-      const input = { key: 'bad-key', queueName: 'plans' };
+      const input = { key: 'bad-key', queueName: PLANS_QUEUE_NAME };
       const result = await resolver.removeRepeatableJob(input);
 
       expect(result.success).toBe(false);
@@ -617,7 +627,7 @@ describe('QueuesResolver', () => {
         'Repeatable job not found or could not be removed',
       );
       expect(mockQueuesService.removeRepeatableByKey).toHaveBeenCalledWith(
-        'plans',
+        PLANS_QUEUE_NAME,
         'bad-key',
       );
     });

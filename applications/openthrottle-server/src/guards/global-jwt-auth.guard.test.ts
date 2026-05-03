@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createMock } from '@golevelup/ts-vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { GlobalJwtAuthGuard } from './global-jwt-auth.guard';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
@@ -23,6 +23,7 @@ describe('GlobalJwtAuthGuard', () => {
   let globalClsAuthHook: GlobalClsAuthHook;
 
   beforeEach(() => {
+    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'true');
     reflector = createMock<Reflector>({
       getAllAndOverride: vi.fn(),
     });
@@ -34,6 +35,10 @@ describe('GlobalJwtAuthGuard', () => {
     });
 
     guard = new GlobalJwtAuthGuard(reflector, jwtAuthGuard, globalClsAuthHook);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('allows @Public routes without running JWT or CLS hook', async () => {

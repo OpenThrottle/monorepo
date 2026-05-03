@@ -25,7 +25,7 @@ describe('HomeHeroV1 Component', () => {
     expect(heading).toHaveTextContent(/Started/);
 
     expect(
-      screen.getByText(/Take a look around and see what we're working on/),
+      screen.getByText(/OpenThrottle is a plans knowledge base/),
     ).toBeInTheDocument();
   });
 });
