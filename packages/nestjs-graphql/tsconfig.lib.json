@@ -9,6 +9,9 @@
   "exclude": ["dist", "package.json", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
     {
+      "path": "../nestjs-redis/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {

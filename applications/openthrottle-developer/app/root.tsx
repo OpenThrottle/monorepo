@@ -3,6 +3,10 @@ import * as React from 'react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import { executeGraphql } from '@openthrottle/react-router-graphql';
 import {
+  GlobalLayout,
+  GlobalProviders,
+} from '@openthrottle/react-router-ui-global';
+import {
   Links,
   Meta,
   Outlet,
@@ -40,13 +44,11 @@ import {
   ServerHealthObject,
   UserObject,
 } from '~/__generated__/graphql';
-import { GlobalFooter } from '~/global/components/GlobalFooter';
-import { GlobalHeader } from '~/global/components/GlobalHeader';
-import { GlobalMetrics } from '~/global/components/GlobalMetrics';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { userAtom } from '~/global/data/atom.user';
+import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 
@@ -201,13 +203,10 @@ export const meta = (_args: Route.MetaArgs) => {
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
-  const { pathname } = useLocation();
   const [_user, setUser] = useAtom(userAtom);
 
   // Setup
   const env = data?.env ?? {};
-  const isAuthRoute = pathname.startsWith('/auth');
-  const isPromptsRoute = pathname.startsWith('/prompts');
   const html = `window.env = ${JSON.stringify(env)}`;
 
   const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
@@ -271,37 +270,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="min-h-screen flex flex-col relative">
-        {FEATURE_BETA_PREVIEW ? (
-          <NotificationsStoreProvider>
-            <NotificationsSocketBridge
-              webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
-            >
-              {data?.serverHealth?.database !== 'ok' && (
-                <GlobalServerHealthBanner health={data?.serverHealth} />
-              )}
-              {!isAuthRoute && <GlobalHeader />}
-              <main className="flex flex-1 flex-col">{children}</main>
-              {!isAuthRoute && !isPromptsRoute && (
+        <NotificationsStoreProvider>
+          <NotificationsSocketBridge
+            webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
+          >
+            {data?.serverHealth?.database !== 'ok' && (
+              <GlobalServerHealthBanner health={data?.serverHealth} />
+            )}
+            {/* {!isAuthRoute && <GlobalHeader />} */}
+            <main className="flex flex-1 flex-col">{children}</main>
+            {/* {!isAuthRoute && !isPromptsRoute && (
                 <>
                   <GlobalMetrics />
                   <GlobalFooter health={data?.serverHealth} />
                 </>
-              )}
-              <OpenThrottleCommander
-                className="m-0! p-0!"
-                groups={groups}
-                onEmptyStateSearch={handleCommanderEmptyStateSearch}
-              />
-              <Toaster />
-            </NotificationsSocketBridge>
-          </NotificationsStoreProvider>
-        ) : (
-          <>
-            <GlobalHeader />
-            <main className="flex flex-1 flex-col">{children}</main>
-          </>
-        )}
+              )} */}
+            <OpenThrottleCommander
+              className="m-0! p-0!"
+              groups={groups}
+              onEmptyStateSearch={handleCommanderEmptyStateSearch}
+            />
+          </NotificationsSocketBridge>
+        </NotificationsStoreProvider>
 
+        <Toaster />
         <ScrollRestoration />
 
         {/* FIXME: Uncomment this when we have a production environment */}
@@ -318,7 +310,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App(): React.ReactElement {
-  return <Outlet />;
+  // Hooks
+  const data = useRouteLoaderData<typeof loader>('root');
+
+  // Setup
+  const { pathname } = useLocation();
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isPromptsRoute = pathname.startsWith('/prompts');
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <GlobalProviders>
+      <GlobalLayout
+        data={dataNavigationV2}
+        health={data?.serverHealth}
+        overrides={{
+          footer: isAuthRoute || isPromptsRoute,
+          header: isAuthRoute || isPromptsRoute,
+          metrics: isAuthRoute || isPromptsRoute,
+        }}
+      >
+        <Outlet />
+      </GlobalLayout>
+    </GlobalProviders>
+  );
 }
 
 /**

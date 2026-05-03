@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "rootDirs": ["./src", "./tests"]
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../openthrottle-developer-codegen/tsconfig.lib.json"
+    },
+    {
+      "path": "../react-router-ui/tsconfig.lib.json"
+    },
+    {
+      "path": "../react-router-notifications/tsconfig.lib.json"
+    },
+    {
+      "path": "../react-router-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../react-router-shadcn/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

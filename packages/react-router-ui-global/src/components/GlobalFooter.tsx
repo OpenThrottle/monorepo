@@ -6,10 +6,11 @@ import {
   FEATURE_BETA_PREVIEW,
 } from '@openthrottle/react-router-utils';
 import { NotificationStatusBadge } from '@openthrottle/react-router-notifications';
-import { ServerHealthObject } from '~/__generated__/graphql';
+// import { ServerHealthObject } from '~/__generated__/graphql';
 
 export interface GlobalFooterProps {
-  readonly health?: ServerHealthObject;
+  readonly health?: any;
+  // readonly health?: ServerHealthObject;
 }
 
 export const GlobalFooter = (props: GlobalFooterProps) => {
@@ -23,7 +24,8 @@ export const GlobalFooter = (props: GlobalFooterProps) => {
   // Handlers
 
   // Markup
-  const renderStatus = (key: keyof ServerHealthObject) => {
+  // const renderStatus = (key: keyof ServerHealthObject) => {
+  const renderStatus = (key: any) => {
     const value = health?.[key];
 
     let color = 'bg-amber-500'; // Same as un-configured but if we don't know set it to orange
@@ -32,9 +34,11 @@ export const GlobalFooter = (props: GlobalFooterProps) => {
       case 'ok':
         color = 'bg-green-500';
         break;
+
       case 'unconfigured':
         color = 'bg-amber-500';
         break;
+
       case 'unreachable':
         color = 'bg-red-500';
         break;

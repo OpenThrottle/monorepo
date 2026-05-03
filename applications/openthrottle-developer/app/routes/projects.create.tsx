@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { redirect } from 'react-router';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
@@ -15,10 +14,6 @@ import type { Route } from '@/app/routes/+types/projects.create';
 
 // export const links: LinksFunction = () => {
 //   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
-
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `ProjectsCreate | ${SITE_TITLE}` }];
 // };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
@@ -44,11 +39,11 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
+      {/* <OpenThrottleBreadcrumbs
         children="Create Project"
         className="mb-4"
         links={[{ children: 'Projects', to: '/projects' }]}
-      />
+      /> */}
 
       <div className="max-w-7xl mx-auto">
         <ProjectForm actionData={actionData} />

@@ -35,7 +35,7 @@ export const MailLayout = (props: MailLayoutProps) => {
           data-testid="MailLayout"
         >
           <MailToolbar />
-          <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+          <main className="w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
             {children}
           </main>
         </SidebarInset>

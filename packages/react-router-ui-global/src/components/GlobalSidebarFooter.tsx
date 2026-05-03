@@ -1,0 +1,63 @@
+import * as React from 'react';
+import classnames from 'classnames';
+import { Link } from 'react-router';
+import {
+  ENV_SOURCE,
+  FEATURE_BETA_PREVIEW,
+} from '@openthrottle/react-router-utils';
+import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import {
+  SidebarFooter,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+} from '@openthrottle/react-router-shadcn';
+
+export interface GlobalSidebarFooterProps {
+  readonly health?: ServerHealthObject;
+}
+
+export const GlobalSidebarFooter = (props: GlobalSidebarFooterProps) => {
+  const { health } = props;
+
+  // Hooks
+
+  // Setup
+  const { api, database, redis } = health ?? {};
+  const allOnline = api === 'ok' && database === 'ok' && redis === 'ok';
+  const color = allOnline ? 'bg-green-500' : 'bg-amber-500';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (!FEATURE_BETA_PREVIEW) return null;
+
+  return (
+    <SidebarFooter className="border-t border-border bg-card px-6 py-4 overflow-hidden text-center">
+      <SidebarMenu>
+        <SidebarMenuItem>
+          {/* <SidebarMenuButton> */}
+          {/* <User2 /> Usernames */}
+          <Link
+            className="flex items-center text-xs text-muted-foreground"
+            target="_blank"
+            to={`${ENV_SOURCE.API_URL_EXTERNAL}/health`}
+          >
+            <div
+              className={classnames(
+                'inline-block h-2 w-2 shrink-0 rounded-full',
+                color,
+              )}
+            />{' '}
+            <SidebarGroupLabel>&nbsp; System Status</SidebarGroupLabel>
+          </Link>
+          {/* </SidebarMenuButton> */}
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarFooter>
+  );
+};

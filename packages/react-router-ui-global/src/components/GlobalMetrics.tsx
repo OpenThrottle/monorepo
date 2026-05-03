@@ -15,7 +15,6 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  type ChartConfig,
 } from '@openthrottle/react-router-shadcn';
 import { print } from 'graphql';
 import { Info } from 'lucide-react';
@@ -27,74 +26,26 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import {
   GetRootMetricsDocument,
-  type GetRootMetricsQuery,
-} from '~/__generated__/graphql';
+  GetRootMetricsQuery,
+} from '@openthrottle/openthrottle-developer-codegen';
 import {
+  getStoredPollIntervalMs,
   readStoredMetricsChartHistory,
   trimMetricsChartData,
   writeStoredMetricsChartHistory,
   type MetricsChartDatum,
-} from '~/global/components/global-metrics-chart-history-storage';
-
-const STORAGE_KEY = 'openthrottle-developer:metricsPollInterval';
-const DEFAULT_POLL_INTERVAL_MS = 60_000;
-
-const POLL_INTERVAL_PRESETS: readonly {
-  readonly label: string;
-  readonly valueMs: number;
-}[] = [
-  { label: '60s', valueMs: 60_000 },
-  { label: '30s', valueMs: 30_000 },
-  { label: '15s', valueMs: 15_000 },
-  { label: '5s', valueMs: 5_000 },
-  { label: 'Off', valueMs: 0 },
-];
-
-const VALID_INTERVALS = new Set(POLL_INTERVAL_PRESETS.map((p) => p.valueMs));
-
-/** Muted, low-saturation colors for chart lines (background-style). */
-const METRICS_CHART_CONFIG: ChartConfig = {
-  cpuUserMs: {
-    color: 'hsl(30 18% 55%)',
-    label: 'CPU user (ms)',
-  },
-  heapUsedMb: {
-    color: 'hsl(160 18% 48%)',
-    label: 'Heap used (MB)',
-  },
-  rssMb: {
-    color: 'hsl(220 18% 52%)',
-    label: 'RSS (MB)',
-  },
-};
-
-/**
- * @description Reads persisted poll interval from localStorage; returns null if missing or invalid.
- */
-function getStoredPollIntervalMs(): number | null {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw == null) return null;
-
-    const n = Number(raw);
-
-    return Number.isFinite(n) && VALID_INTERVALS.has(n) ? n : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Format MB values to 2 decimal places for display in stat cards. */
-const formatMb = (value: number): number => Number(value.toFixed(2));
-
-/** Format CPU ms (cumulative) for display; show integer when possible. */
-const formatCpuMs = (value: number): number => Number(value.toFixed(0));
+} from '../utils/storage';
+import {
+  GLOBAL_METRICS_CHART_CONFIG,
+  GLOBAL_METRICS_POLL_INTERVAL_DEFAULT,
+  GLOBAL_METRICS_POLL_INTERVAL_PRESETS,
+  GLOBAL_METRICS_STORAGE_KEY,
+  GLOBAL_METRICS_VALID_INTERVALS,
+} from '../config';
+import { formatCpuMs, formatMb } from '../utils/utils.global';
 
 export interface GlobalMetricsProps {
   readonly className?: string;
-  /** Optional initial poll interval (ms). When not provided, restored from localStorage or 60s default. */
   readonly pollIntervalMs?: number;
 }
 
@@ -111,7 +62,6 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
    */
   React.useLayoutEffect(() => {
     const restored = readStoredMetricsChartHistory();
-    console.log('⏲︎ 🟢 restored', restored);
 
     if (restored.length === 0) return;
 
@@ -121,7 +71,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const [intervalMs, setIntervalMs] = React.useState<number>(() => {
     if (propPollIntervalMs !== undefined) return propPollIntervalMs;
 
-    return getStoredPollIntervalMs() ?? DEFAULT_POLL_INTERVAL_MS;
+    return getStoredPollIntervalMs() ?? GLOBAL_METRICS_POLL_INTERVAL_DEFAULT;
   });
 
   // Setup
@@ -129,15 +79,22 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hdHRAZG9tYWluLmNvbSIsInN1YiI6IjI5ZTNmOWY0LTNhMzEtNDM2OC05MTE1LTc1YjA3NjQ4YjA2YSIsImlhdCI6MTc3MTU3NTgyNiwiZXhwIjoxNzcxNjYyMjI2fQ.BA3W_-b-GUZGvGJm0n0SJGEdedqrqlIoMzp74H1YR48`;
   const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
 
+  console.log('⏲︎ 🟢 ENV_SOURCE.API_URL_EXTERNAL', ENV_SOURCE.API_URL_EXTERNAL);
+
   // Handlers
   const handleIntervalChange = React.useCallback((value: string) => {
     const valueMs = Number(value);
 
-    if (!Number.isFinite(valueMs) || !VALID_INTERVALS.has(valueMs)) return;
+    if (
+      !Number.isFinite(valueMs) ||
+      !GLOBAL_METRICS_VALID_INTERVALS.has(valueMs)
+    ) {
+      return;
+    }
     setIntervalMs(valueMs);
 
     try {
-      window.localStorage.setItem(STORAGE_KEY, String(valueMs));
+      window.localStorage.setItem(GLOBAL_METRICS_STORAGE_KEY, String(valueMs));
     } catch {
       // ignore
     }
@@ -193,7 +150,10 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   // }
 
   return (
-    <div className={classnames('p-4', className)} data-testid="GlobalMetrics">
+    <div
+      className={classnames('p-4 md:p-8 w-full', className)}
+      data-testid="GlobalMetrics"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-muted">Server metrics</h2>
@@ -210,26 +170,29 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 </button>
               </TooltipTrigger>
               <TooltipContent
-                className="max-w-xs text-sm"
+                className="max-w-xs text-sm text-muted-foreground"
                 data-testid="GlobalMetrics-info-tooltip"
                 side="right"
               >
                 <p className="font-semibold mb-1">
                   Understanding these metrics:
                 </p>
-                <ul className="list-disc pl-4 space-y-1">
+                <ul className="list-disc font-normal pl-4 space-y-1">
                   <li>
-                    <strong>RSS</strong> – Total process memory including shared
-                    libraries. Under 500MB is typical.
+                    <strong className="text-card-foreground">RSS</strong> –
+                    Total process memory including shared libraries. Under 500MB
+                    is typical.
                   </li>
                   <li>
-                    <strong>Heap</strong> – JS heap memory (used / total). Used
-                    near total may indicate memory pressure.
+                    <strong className="text-card-foreground">Heap</strong> – JS
+                    heap memory (used / total). Used near total may indicate
+                    memory pressure.
                   </li>
                   <li>
-                    <strong>CPU ms</strong> – Cumulative user/system CPU time
-                    since process start. Rising steadily is normal; sudden jumps
-                    may indicate heavy computation.
+                    <strong className="text-card-foreground">CPU ms</strong> –
+                    Cumulative user/system CPU time since process start. Rising
+                    steadily is normal; sudden jumps may indicate heavy
+                    computation.
                   </li>
                 </ul>
               </TooltipContent>
@@ -250,7 +213,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
               <SelectValue placeholder="Poll interval…" />
             </SelectTrigger>
             <SelectContent>
-              {POLL_INTERVAL_PRESETS.map((preset) => (
+              {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
                 <SelectItem
                   key={preset.valueMs}
                   value={preset.valueMs.toString()}
@@ -312,7 +275,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           </div>
           <ChartContainer
             className="min-h-[160px] w-full -ml-1 text-sm"
-            config={METRICS_CHART_CONFIG}
+            config={GLOBAL_METRICS_CHART_CONFIG}
           >
             <LineChart
               data={chartLineData}

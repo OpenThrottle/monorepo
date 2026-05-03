@@ -200,7 +200,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
+    <main className="gap-8 p-4 md:px-8 relative flex flex-col">
       <ProjectsStatsCards
         className="mt-4"
         plansLinkedCount={plansLinkedCount}

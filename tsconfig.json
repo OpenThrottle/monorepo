@@ -171,6 +171,15 @@
     },
     {
       "path": "./packages/nestjs-agentic-workflow"
+    },
+    {
+      "path": "./packages/openthrottle-developer-codegen"
+    },
+    {
+      "path": "./packages/react-router-ui-global"
+    },
+    {
+      "path": "./packages/nestjs-logging"
     }
   ]
 }

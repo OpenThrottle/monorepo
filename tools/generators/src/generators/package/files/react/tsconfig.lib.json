@@ -8,14 +8,5 @@
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
-    {
-      "path": "../../../../../tsconfig.lib.json"
-    },
-    {
-      "path": "../../../../../../../packages/nestjs-modules/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../../../../dotfiles/tsconfig.lib.json"
-    }
   ]
 }

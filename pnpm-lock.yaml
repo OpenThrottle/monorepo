@@ -208,6 +208,9 @@ importers:
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:*
         version: link:packages/openthrottle-agentic-workflow
+      '@openthrottle/openthrottle-developer-codegen':
+        specifier: workspace:*
+        version: link:packages/openthrottle-developer-codegen
       '@openthrottle/openthrottle-mcp':
         specifier: workspace:*
         version: link:packages/openthrottle-mcp
@@ -247,6 +250,9 @@ importers:
       '@openthrottle/react-router-ui':
         specifier: workspace:*
         version: link:packages/react-router-ui
+      '@openthrottle/react-router-ui-global':
+        specifier: workspace:*
+        version: link:packages/react-router-ui-global
       '@openthrottle/react-router-utils':
         specifier: workspace:*
         version: link:packages/react-router-utils
@@ -1384,6 +1390,8 @@ importers:
 
   packages/openthrottle-agentic-workflow: {}
 
+  packages/openthrottle-developer-codegen: {}
+
   packages/openthrottle-mcp: {}
 
   packages/openthrottle-notifications: {}
@@ -1597,6 +1605,8 @@ importers:
       framer-motion:
         specifier: ^12.26.2
         version: 12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
+  packages/react-router-ui-global: {}
 
   packages/react-router-utils: {}
 

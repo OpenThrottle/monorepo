@@ -2,6 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import {
   Badge,
+  Blockquote,
   Button,
   Card,
   CardContent,
@@ -194,7 +195,9 @@ export const PlanDetails = (props: PlanDetailsProps) => {
               <div className="space-y-1">
                 <p
                   className={classnames(
-                    'text-sm text-muted-foreground',
+                    'text-md leading-relaxed transition-colors',
+                    'text-muted-foreground hover:text-foreground',
+                    // 'text-sidebar-foreground',
                     showDescriptionPreview && 'line-clamp-4',
                   )}
                 >
@@ -210,14 +213,14 @@ export const PlanDetails = (props: PlanDetailsProps) => {
             {hasDescription && hasSummary && <Separator />}
             {hasSummary && (
               <div className="space-y-1">
-                <blockquote
+                <Blockquote
                   className={classnames(
-                    'border-l-4 border-muted-foreground/30 pl-4 text-sm italic text-muted-foreground',
+                    'border-l-4 border-muted-foreground/30 pl-4 italic text-muted-foreground',
                     showSummaryPreview && 'line-clamp-3',
                   )}
                 >
                   {plan.summary}
-                </blockquote>
+                </Blockquote>
                 {isLongSummary && (
                   <Button onClick={() => setSummary((e) => !e)}>
                     {summary ? 'Show less' : 'Show more'}

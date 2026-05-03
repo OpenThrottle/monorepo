@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
@@ -13,10 +12,6 @@ import type { Route } from '@/app/routes/+types/settings._index';
 
 // export const links: LinksFunction = () => {
 //   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
-
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `SettingsIndex | ${SITE_TITLE}` }];
 // };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
@@ -41,14 +36,15 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
+    <main className="p-8 md:p-16 gap-8">
+      {/* <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full"> */}
+      {/* <OpenThrottleBreadcrumbs
         children="Settings"
         className="mb-4"
         links={[{ children: 'Dashboard', to: '/dashboard' }]}
-      />
+      /> */}
 
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="mx-auto ---max-w-7xl space-y-8">
         {/* <header>
           <h1 className="my-4 text-3xl font-semibold tracking-tight">
             Settings
