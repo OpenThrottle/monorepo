@@ -39,6 +39,13 @@ vitest.config.*.timestamp*
 vitest.config.ts.timestamp*
 
 #############################################################################
+# graphify
+#############################################################################
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/manifest.json
+
+#############################################################################
 # Includes
 #############################################################################
 !.cursor/commands
@@ -52,3 +59,4 @@ vitest.config.ts.timestamp*
 
 .claude/worktrees
 .claude/settings.local.json
+
