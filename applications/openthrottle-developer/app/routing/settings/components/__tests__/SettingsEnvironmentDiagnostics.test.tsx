@@ -85,7 +85,18 @@ describe('SettingsEnvironmentDiagnostics', () => {
 
   it('links to Settings → Debug for devtools context', () => {
     renderDiagnostics({ env: baseEnv, supportBundle: {} });
-    const link = screen.getByRole('link', { name: /settings → debug/i });
+    const link = screen.getByRole('link', { name: /^settings → debug$/i });
     expect(link).toHaveAttribute('href', '/settings/debug');
+  });
+
+  it('links to ports & API troubleshooting on Settings → Debug', () => {
+    renderDiagnostics({ env: baseEnv, supportBundle: {} });
+    const link = screen.getByRole('link', {
+      name: /settings → debug: ports & api troubleshooting/i,
+    });
+    expect(link).toHaveAttribute(
+      'href',
+      '/settings/debug#ports-hosts-api-troubleshooting',
+    );
   });
 });

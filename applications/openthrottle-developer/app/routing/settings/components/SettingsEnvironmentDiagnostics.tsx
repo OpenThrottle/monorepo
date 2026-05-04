@@ -13,6 +13,7 @@ import {
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
 } from '../utils/settings-docs-links';
+import { SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID } from './SettingsPortsTroubleshootingCard';
 
 const URL_MATRIX_ROWS: readonly {
   readonly key: keyof OpenThrottleEnv;
@@ -174,7 +175,16 @@ export function SettingsEnvironmentDiagnostics({
               Copy support bundle
             </span>{' '}
             for tickets; secrets like{' '}
-            <code className="text-xs">ROLLBAR_TOKEN</code> are masked.
+            <code className="text-xs">ROLLBAR_TOKEN</code> are masked. For
+            ports, <code className="text-xs">host.docker.internal</code>, and
+            internal vs external API bases, see{' '}
+            <Link
+              className="text-primary underline-offset-4 hover:underline"
+              to={`/settings/debug#${SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID}`}
+            >
+              Settings → Debug: ports &amp; API troubleshooting
+            </Link>
+            .
           </p>
           {origin !== null && (
             <p

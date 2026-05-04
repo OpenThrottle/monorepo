@@ -11,3 +11,8 @@ export const VITE_DEVTOOLS_DOC_PROFILING_HREF = `${VITE_DEVTOOLS_DOC_HREF}#vite-
 
 export const LOCAL_SERVICES_PORTS_DOC_HREF =
   'https://github.com/OpenThrottle/OpenThrottle/blob/main/docs/monorepo/local-services-and-ports.md';
+
+/**
+ * @description Jump to the services/port matrix in {@link LOCAL_SERVICES_PORTS_DOC_HREF}.
+ */
+export const LOCAL_SERVICES_PORTS_SERVICES_TABLE_HREF = `${LOCAL_SERVICES_PORTS_DOC_HREF}#services-to-expose`;

@@ -12,10 +12,10 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BugIcon } from 'lucide-react';
 import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-env';
 import {
-  LOCAL_SERVICES_PORTS_DOC_HREF,
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
 } from '~/routing/settings/utils/settings-docs-links';
+import { SettingsPortsTroubleshootingCard } from '~/routing/settings/components/SettingsPortsTroubleshootingCard';
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
 const STORAGE_PREVIEW_MAX = 140;
@@ -242,68 +242,7 @@ export function SettingsDebugPanel({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Local dev: ports, hosts &amp; API URLs
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <ul className="list-inside list-disc space-y-2">
-            <li>
-              <span className="font-medium text-foreground">Vite port:</span>{' '}
-              <code className="text-xs">PORT</code> in{' '}
-              <code className="text-xs">.env</code> overrides the default (3000
-              in <code className="text-xs">vite.config.ts</code>); the monorepo
-              template often uses 6020—browse the same port Vite logs on
-              startup.
-            </li>
-            <li>
-              <span className="font-medium text-foreground">
-                API_URL_EXTERNAL vs API_URL_INTERNAL:
-              </span>{' '}
-              the browser uses external; SSR/loaders use internal. Point both at
-              a reachable openthrottle-server origin in local dev; mismatches
-              often show up as client-only or navigation-only failures.
-            </li>
-            <li>
-              <span className="font-medium text-foreground">
-                Docker / containers:
-              </span>{' '}
-              <code className="text-xs">localhost</code> inside a container is
-              not the host—use{' '}
-              <code className="text-xs">host.docker.internal</code> (or your
-              host IP) for the API from server-side fetches.
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Hostnames:</span>{' '}
-              Caddy / <code className="text-xs">developer.local</code> setups
-              are covered in the ports doc; align{' '}
-              <code className="text-xs">APP_URL_*</code> with the URL you
-              actually open.
-            </li>
-          </ul>
-          <p>
-            <a
-              className="text-primary underline-offset-4 hover:underline"
-              href={VITE_DEVTOOLS_DOC_HREF}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Vite &amp; devtools (analyzers, when to enable)
-            </a>
-            {' · '}
-            <a
-              className="text-primary underline-offset-4 hover:underline"
-              href={LOCAL_SERVICES_PORTS_DOC_HREF}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Local services &amp; ports
-            </a>
-          </p>
-        </CardContent>
-      </Card>
+      <SettingsPortsTroubleshootingCard />
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
