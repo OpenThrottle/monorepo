@@ -8,6 +8,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import type { Route } from '@/app/routes/+types/settings.debug';
 
+const VITE_DEVTOOLS_DOC_HREF =
+  'https://github.com/OpenThrottle/OpenThrottle/blob/main/docs/monorepo/openthrottle-developer-vite-devtools.md';
+
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => 'Debug',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
@@ -45,9 +48,27 @@ export default function Component(
   return (
     <GlobalScreen>
       <OpenThrottleEmptyState
-        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis, architecto ea?"
-        title="Debug - Coming Soon"
+        description="Vite levers for this app include REACT_ROUTER_DEV_TOOLS, dev-only bundle analysis, and vite-plugin-devtools-json. Full reference lives in the monorepo doc linked below."
+        title="Debug — Vite & devtools"
       />
+      <div className="mt-6 max-w-prose space-y-3 text-sm text-muted-foreground">
+        <p>
+          <span className="font-medium text-foreground">Clone path:</span>{' '}
+          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+            docs/monorepo/openthrottle-developer-vite-devtools.md
+          </code>
+        </p>
+        <p>
+          <a
+            className="text-primary underline-offset-4 hover:underline"
+            href={VITE_DEVTOOLS_DOC_HREF}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Open monorepo documentation (GitHub)
+          </a>
+        </p>
+      </div>
       <hr className="my-8" />
     </GlobalScreen>
   );

@@ -26,6 +26,10 @@ Developer portal for [OpenThrottle](https://developer.openthrottle.ai)—dashboa
 pnpm nx run openthrottle-developer:dev
 ```
 
+## Local Vite and devtools
+
+Opt-in and dev-only tooling (React Router DevTools, bundle analyzer, plugin order) are documented in **[docs/monorepo/openthrottle-developer-vite-devtools.md](../../docs/monorepo/openthrottle-developer-vite-devtools.md)**. The **Settings → Debug** screen in the app links to the same reference.
+
 ## Scripts
 
 Run via Nx from the monorepo root:
