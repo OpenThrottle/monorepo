@@ -1,25 +1,15 @@
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../settings.logs';
+import LogsRoute from '../settings.logs';
 
 describe('routes/settings.logs.tsx', () => {
-  // let component: RenderResult;
+  test('renders logs panel', () => {
+    const RoutesStub = createRoutesStub([{ Component: LogsRoute, path: '/' }]);
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+    render(<RoutesStub />);
 
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(screen.getByText(/Client console sink/i)).toBeInTheDocument();
   });
 });

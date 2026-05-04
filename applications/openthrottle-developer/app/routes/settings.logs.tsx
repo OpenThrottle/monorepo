@@ -3,9 +3,9 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { SettingsLogsPanel } from '~/routing/settings/components/SettingsLogsPanel';
 import type { Route } from '@/app/routes/+types/settings.logs';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -26,29 +26,11 @@ export const meta = (_args: Route.MetaArgs) => {
 };
 
 export default function Component(
-  props: Route.ComponentProps,
+  _props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
   return (
     <GlobalScreen>
-      <OpenThrottleEmptyState
-        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis, architecto ea?"
-        title=" Logs - Coming Soon"
-      />
-      <hr className="my-8" />
+      <SettingsLogsPanel />
     </GlobalScreen>
   );
 }
