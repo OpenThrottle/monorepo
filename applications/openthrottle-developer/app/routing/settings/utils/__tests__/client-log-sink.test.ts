@@ -4,6 +4,7 @@ import {
   formatLogArgs,
   getClientLogEntries,
   installClientLogSink,
+  redactSensitiveLogText,
   resetClientLogSinkForTesting,
 } from '~/routing/settings/client-log-sink';
 
@@ -13,6 +14,19 @@ afterEach(() => {
 });
 
 describe('client-log-sink', () => {
+  test('redactSensitiveLogText masks Bearer and token-like fragments', () => {
+    expect(redactSensitiveLogText('Authorization: Bearer eyJhb')).toBe(
+      'authorization: [REDACTED]',
+    );
+    expect(
+      redactSensitiveLogText('prefix Bearer loose-token suffix'),
+    ).toContain('Bearer [REDACTED]');
+    expect(redactSensitiveLogText('x access_token=secret-token-here y')).toBe(
+      'x access_token=[REDACTED] y',
+    );
+    expect(redactSensitiveLogText('api_key=abc123')).toBe('api_key=[REDACTED]');
+  });
+
   test('formatLogArgs stringifies objects and errors', () => {
     const err = new Error('x');
     const line = formatLogArgs(['a', 1, { b: 2 }, err]);
@@ -34,6 +48,23 @@ describe('client-log-sink', () => {
     expect(entries.length).toBe(1000);
     expect(entries[0]?.message).toBe('1');
     expect(entries.at(-1)?.message).toBe('tail');
+  });
+
+  test('detached console method still forwards to native via Reflect.apply', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    installClientLogSink();
+    const detached = console.log;
+    detached.call(console, 'via-detached');
+    expect(spy).toHaveBeenCalledWith('via-detached');
+  });
+
+  test('stores redacted Bearer text from console', () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    installClientLogSink();
+    console.log('tok Bearer secret-value-not-stored end');
+    const last = getClientLogEntries().at(-1);
+    expect(last?.message).toContain('Bearer [REDACTED]');
+    expect(last?.message).not.toContain('secret-value-not-stored');
   });
 
   test('clearClientLogSink empties buffer', () => {

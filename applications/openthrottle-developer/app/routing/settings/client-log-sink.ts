@@ -1,9 +1,44 @@
 /**
  * @description In-memory ring buffer of browser console output for Settings → Logs and support bundles.
+ *
+ * **Captured**
+ * - Each call to `console.log`, `console.info`, `console.warn`, `console.error`, and `console.debug`
+ *   after {@link installClientLogSink} runs (see `app/entry.client.tsx`).
+ * - Global `error` events (`window.addEventListener('error', …)`) and `unhandledrejection`, normalized
+ *   to synthetic `error`-level lines.
+ *
+ * **Not captured**
+ * - Output before install (early boot), Web Workers, Service Workers, or network traffic (no HAR).
+ *
+ * **Memory**
+ * - Ring buffer: last {@link CLIENT_LOG_BUFFER_MAX_ENTRIES} entries.
+ * - Additional approximate cap on total stored message characters ({@link CLIENT_LOG_BUFFER_MAX_APPROX_CHARS});
+ *   oldest entries drop first. Single lines longer than {@link CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS} are
+ *   truncated before storage.
+ *
+ * **Redaction (best-effort)**
+ * - Before storing a line, {@link redactSensitiveLogText} masks common secret shapes: full `authorization:`
+ *   header segments (through newline), standalone `Bearer` / `Basic` token prefixes, and `access_token` /
+ *   `refresh_token` / `id_token` / `api_key`-style key=value fragments. This is **not** a guarantee against
+ *   leaking secrets inside arbitrary JSON or prose—treat copied logs like other diagnostic material.
+ *
+ * **Safe console proxy**
+ * - Original methods are invoked with `Reflect.apply(fn, console, args)` so detached references like
+ *   `const log = console.log; log(1)` still reach the native implementation correctly.
  */
 
 /** @description Max lines retained in the in-memory ring buffer (oldest dropped). */
 export const CLIENT_LOG_BUFFER_MAX_ENTRIES = 1000;
+
+/**
+ * @description Soft ceiling on total characters of stored `message` strings; oldest entries removed first.
+ */
+export const CLIENT_LOG_BUFFER_MAX_APPROX_CHARS = 512 * 1024;
+
+/**
+ * @description Max characters stored for a single log line; remainder replaced with a truncation suffix.
+ */
+export const CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS = 50_000;
 
 const LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const;
 
@@ -34,6 +69,29 @@ const notify = (): void => {
 };
 
 /**
+ * @description Best-effort removal of common credential substrings from one captured line.
+ */
+export const redactSensitiveLogText = (text: string): string => {
+  let out = text;
+  // Whole header segment first so we do not leave `Authorization: Bearer` after standalone Bearer redaction.
+  out = out.replace(
+    /\bauthorization\s*:\s*[^\n]+/gi,
+    'authorization: [REDACTED]',
+  );
+  out = out.replace(/\bBearer\s+[^\s'"]+/gi, 'Bearer [REDACTED]');
+  out = out.replace(/\bBasic\s+[^\s'"]+/gi, 'Basic [REDACTED]');
+  out = out.replace(
+    /\b(access_token|refresh_token|id_token)\s*[=:]\s*[^\s&"',]+/gi,
+    '$1=[REDACTED]',
+  );
+  out = out.replace(
+    /\b(api[_-]?key|apikey)\s*[=:]\s*[^\s&"',]+/gi,
+    '$1=[REDACTED]',
+  );
+  return out;
+};
+
+/**
  * @description Stringifies console argument list for a single line.
  */
 export const formatLogArgs = (args: readonly unknown[]): string => {
@@ -54,11 +112,28 @@ export const formatLogArgs = (args: readonly unknown[]): string => {
     .join(' ');
 };
 
+const truncateMessage = (message: string): string => {
+  if (message.length <= CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS) {
+    return message;
+  }
+  return `${message.slice(0, CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS)}… (truncated)`;
+};
+
 const push = (level: ClientLogLevel, args: readonly unknown[]): void => {
-  const message = formatLogArgs(args);
-  buffer = [...buffer, { level, message, t: Date.now() }].slice(
-    -CLIENT_LOG_BUFFER_MAX_ENTRIES,
-  );
+  const raw = redactSensitiveLogText(formatLogArgs(args));
+  const message = truncateMessage(raw);
+  buffer = [...buffer, { level, message, t: Date.now() }];
+  if (buffer.length > CLIENT_LOG_BUFFER_MAX_ENTRIES) {
+    buffer = buffer.slice(-CLIENT_LOG_BUFFER_MAX_ENTRIES);
+  }
+  let totalChars = buffer.reduce((sum, e) => sum + e.message.length, 0);
+  while (totalChars > CLIENT_LOG_BUFFER_MAX_APPROX_CHARS && buffer.length > 0) {
+    const dropped = buffer[0];
+    buffer = buffer.slice(1);
+    if (dropped) {
+      totalChars -= dropped.message.length;
+    }
+  }
   notify();
 };
 
@@ -101,7 +176,7 @@ export const installClientLogSink = (): void => {
     savedConsole[level] = previous;
     console[level] = (...args: unknown[]) => {
       push(level, args);
-      previous(...args);
+      Reflect.apply(previous, console, args);
     };
   }
 
