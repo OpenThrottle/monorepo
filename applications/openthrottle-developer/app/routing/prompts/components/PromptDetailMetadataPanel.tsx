@@ -41,6 +41,35 @@ function fnv1a32Hex(text: string): string {
 }
 
 /**
+ * @description JSON snapshot for support / diff tools; keys are alphabetized for stable copy-paste.
+ */
+function buildPromptDebugSnapshotJson(
+  prompt: NonNullable<GetPromptQuery['customPrompt']>,
+  debugContent: string,
+): string {
+  const bufferFp = fnv1a32Hex(debugContent);
+  const savedFp = fnv1a32Hex(prompt.content);
+  return JSON.stringify(
+    {
+      contentFingerprint: bufferFp,
+      createdAt: prompt.createdAt,
+      filePath: prompt.filePath ?? null,
+      hasUnsavedEditorBuffer: debugContent !== prompt.content,
+      labels: prompt.labels,
+      projectId: prompt.projectId ?? null,
+      promptId: prompt.id,
+      promptType: String(prompt.promptType),
+      savedContentFingerprint: savedFp,
+      title: prompt.title,
+      updatedAt: prompt.updatedAt,
+      userId: prompt.userId ?? null,
+    },
+    null,
+    2,
+  );
+}
+
+/**
  * @description Debug-oriented versioning metadata (timestamps, ids, repo path) for custom prompts.
  */
 export function PromptDetailMetadataPanel(
@@ -55,6 +84,10 @@ export function PromptDetailMetadataPanel(
     } catch {
       // ignore
     }
+  };
+
+  const handleCopyDebugSnapshot = (): void => {
+    void handleCopy(buildPromptDebugSnapshotJson(prompt, debugContent));
   };
 
   const labelsJoined =
@@ -137,6 +170,14 @@ export function PromptDetailMetadataPanel(
               variant="outline"
             >
               Copy prompt ID
+            </Button>
+            <Button
+              onClick={handleCopyDebugSnapshot}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Copy debug snapshot (JSON)
             </Button>
             {prompt.filePath ? (
               <Button

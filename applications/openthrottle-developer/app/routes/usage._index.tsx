@@ -18,6 +18,7 @@ import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
+import { UsageAgentsAnalyticsGuide } from '~/routing/usage/components/UsageAgentsAnalyticsGuide';
 import type { Route } from '@/app/routes/+types/usage._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -99,6 +100,8 @@ export default function Component(
         <h2 className="text-lg font-semibold">Daily activity</h2>
         <DashboardDailyStatsCard dailyStats={dailyStats} />
       </div>
+
+      <UsageAgentsAnalyticsGuide rangeDays={rangeDays} />
     </GlobalScreen>
   );
 }

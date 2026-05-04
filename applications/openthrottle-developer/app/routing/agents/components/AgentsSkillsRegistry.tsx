@@ -6,6 +6,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
+  Label,
 } from '@openthrottle/react-router-shadcn';
 import { ExternalLink } from 'lucide-react';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
@@ -14,6 +16,22 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
 export interface AgentsSkillsRegistryProps {
   readonly className?: string;
   readonly entries?: ReadonlyArray<RepoSkillEntry>;
+}
+
+function filterEntries(
+  entries: ReadonlyArray<RepoSkillEntry>,
+  query: string,
+): RepoSkillEntry[] {
+  const q = query.trim().toLowerCase();
+  if (q.length === 0) {
+    return [...entries];
+  }
+  return entries.filter(
+    (e) =>
+      e.slug.toLowerCase().includes(q) ||
+      e.repoRelativePath.toLowerCase().includes(q) ||
+      e.summary.toLowerCase().includes(q),
+  );
 }
 
 function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
@@ -41,7 +59,14 @@ export function AgentsSkillsRegistry(
   props: AgentsSkillsRegistryProps,
 ): React.ReactElement {
   const { className, entries = [] } = props;
-  const { agents, cursor } = groupByLayout(entries);
+  const [filterQuery, setFilterQuery] = React.useState('');
+
+  const filtered = React.useMemo(
+    () => filterEntries(entries, filterQuery),
+    [entries, filterQuery],
+  );
+
+  const { agents, cursor } = groupByLayout(filtered);
 
   const handleCopyPath = async (path: string): Promise<void> => {
     try {
@@ -111,6 +136,22 @@ export function AgentsSkillsRegistry(
             listed here.
           </CardDescription>
         </CardHeader>
+        <CardContent className="space-y-2 pt-0">
+          <Label
+            className="text-xs text-muted-foreground"
+            htmlFor="skills-registry-filter"
+          >
+            Filter by slug, path, or summary
+          </Label>
+          <Input
+            autoComplete="off"
+            id="skills-registry-filter"
+            onChange={(e) => setFilterQuery(e.target.value)}
+            placeholder="e.g. nx-workspace or .agents/skills"
+            type="search"
+            value={filterQuery}
+          />
+        </CardContent>
       </Card>
 
       <section className="space-y-4">
@@ -122,7 +163,13 @@ export function AgentsSkillsRegistry(
             Primary registry for automation tied to this monorepo—use when a
             model picks the wrong skill slug or path.
           </p>
-          {renderGrid(agents)}
+          {agents.length > 0 ? (
+            renderGrid(agents)
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No matching entries in this section.
+            </p>
+          )}
         </div>
 
         <div>
@@ -134,7 +181,13 @@ export function AgentsSkillsRegistry(
             may exist in both trees—compare paths when debugging which file was
             loaded.
           </p>
-          {renderGrid(cursor)}
+          {cursor.length > 0 ? (
+            renderGrid(cursor)
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No matching entries in this section.
+            </p>
+          )}
         </div>
       </section>
     </div>
