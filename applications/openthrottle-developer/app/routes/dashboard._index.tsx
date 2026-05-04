@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Card, Input } from '@openthrottle/react-router-shadcn';
+import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import { useFetcher } from 'react-router';
@@ -105,35 +105,35 @@ export default function Component(
       </div>
 
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
+        className="gap-4 md:gap-8 lg:gap-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
         data-testid="dashboard-content-grid"
       >
         <div
-          className="col-span-1 flex min-w-0 flex-col gap-4 lg:gap-8"
+          className="gap-4 md:gap-8 lg:gap-12 col-span-1 flex min-w-0 flex-col"
           data-testid="dashboard-charts-column"
         >
-          <Card className="p-8 rounded-xl">
-            <h2 className="text-lg font-bold">Daily Stats</h2>
+          <div>
+            <h2 className="text-lg font-bold mb-4">Daily Stats</h2>
             <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
-          </Card>
+          </div>
 
-          <Card className="p-4 lg:p-8">
+          <div>
             <h3 className="text-lg font-bold">PR Time in State</h3>
             <DashboardPrTimeInStateCard
               prTimeInStateSummary={githubStats.prTimeInStateSummary}
             />
-          </Card>
+          </div>
 
           <DashboardQueueStats data={queues} />
 
-          <Card className="p-4 lg:p-8">
+          <div>
             <h3 className="text-lg font-bold">Open PRs by Author</h3>
             <DashboardOpenPrsByAuthorCard
               openPrCountByAuthor={githubStats.openPrCountByAuthor}
             />
-          </Card>
+          </div>
 
-          <Card className="p-4 lg:p-8">
+          <div>
             <h3 className="text-lg font-bold mb-4">Development</h3>
             <p className="text-muted-foreground text-sm mb-4">
               Trigger a test websocket notification to verify the notification
@@ -162,7 +162,7 @@ export default function Component(
                   : devMessage.error}
               </p>
             )}
-          </Card>
+          </div>
           <div className="flex-1" />
         </div>
 

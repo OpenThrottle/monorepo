@@ -70,16 +70,17 @@ export const TaskDetails = (props: TaskDetailsProps) => {
       <Card className="mb-6">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
-            <CardTitle className="flex items-center gap-2 justify-between">
-              <h1 className="text-2xl text-highlight">{task.title}</h1>
-              <Badge variant="secondary">Task</Badge>
-            </CardTitle>
-
-            <div className="flex flex-wrap items-center gap-2 text-sm mb-6">
+            <CardTitle className="flex items-center gap-2">
               <PlanStatusBadge
                 status={task.status as keyof typeof PlanStatusBadge}
               />
-            </div>
+              <h1 className="text-xl text-highlight">{task.title}</h1>
+
+              <div className="flex-1" />
+              <Badge variant="secondary">Task</Badge>
+            </CardTitle>
+
+            <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
 
             <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
               {task.assignee != null && task.assignee !== '' && (

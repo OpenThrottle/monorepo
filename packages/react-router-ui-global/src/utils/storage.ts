@@ -108,6 +108,7 @@ export const trimMetricsChartData = (
   samples: readonly MetricsChartDatum[],
 ): readonly MetricsChartDatum[] => {
   const tail = samples.slice(-GLOBAL_METRICS_CHART_MAX_SAMPLES);
+
   return tail.map((row, idx) => ({ ...row, i: idx }));
 };
 

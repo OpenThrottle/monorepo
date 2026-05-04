@@ -7,6 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalCollapsible,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -14,6 +15,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { redirect } from 'react-router';
+import { ListCheckIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import {
   GetPlanByIdDocument,
@@ -114,8 +116,14 @@ export default function Component(
   const effectivePlanId = task.planId ?? '';
 
   return (
-    <GlobalScreen>
-      <TaskDetails planId={effectivePlanId} task={task} />
+    <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8">
+      <GlobalCollapsible icon={PuzzlePieceIcon} title="Task Details">
+        <TaskDetails planId={effectivePlanId} task={task} />
+      </GlobalCollapsible>
+
+      <GlobalCollapsible icon={ListCheckIcon} title="Task Requirements">
+        <TaskDetails planId={effectivePlanId} task={task} />
+      </GlobalCollapsible>
     </GlobalScreen>
   );
 }

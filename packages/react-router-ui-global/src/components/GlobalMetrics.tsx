@@ -11,12 +11,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { print } from 'graphql';
-import { Info } from 'lucide-react';
 import {
   OpenThrottleStatCard,
   usePollServerMetrics,
@@ -42,6 +38,7 @@ import {
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
 import { formatCpuMs, formatMb } from '../utils/utils.global';
+import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
 
 export interface GlobalMetricsProps {
   readonly className?: string;
@@ -114,8 +111,8 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
         ...prev,
         { ...serverMetrics, i: prev.length },
       ];
-      trimmed = trimMetricsChartData(next);
 
+      trimmed = trimMetricsChartData(next);
       writeStoredMetricsChartHistory(trimmed);
 
       return trimmed;
@@ -136,6 +133,8 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     }
     return [];
   }, [loading, metricsHistory, serverMetrics]);
+
+  console.log('chartLineData', chartLineData);
 
   const showStatCards = !loading && error == null && serverMetrics != null;
   const showMetricsChart = error == null && chartLineData.length > 0;
@@ -159,46 +158,8 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-muted">Server metrics</h2>
-            <Tooltip>
-              <TooltipTrigger asChild={true}>
-                <button
-                  aria-label="Metrics interpretation help"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                  data-testid="GlobalMetrics-info-trigger"
-                  type="button"
-                >
-                  <Info className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent
-                className="max-w-xs text-sm p-4 text-muted-foreground"
-                data-testid="GlobalMetrics-info-tooltip"
-                side="right"
-              >
-                <p className="font-semibold text-base mb-4">
-                  Understanding these metrics:
-                </p>
-                <ul className="list-disc font-normal pl-4 space-y-1">
-                  <li>
-                    <strong className="text-card-foreground">RSS</strong> –
-                    Total process memory including shared libraries. Under 500MB
-                    is typical.
-                  </li>
-                  <li>
-                    <strong className="text-card-foreground">Heap</strong> – JS
-                    heap memory (used / total). Used near total may indicate
-                    memory pressure.
-                  </li>
-                  <li>
-                    <strong className="text-card-foreground">CPU</strong> –
-                    Cumulative user/system CPU time since process start. Rising
-                    steadily is normal; sudden jumps may indicate heavy
-                    computation.
-                  </li>
-                </ul>
-              </TooltipContent>
-            </Tooltip>
+            <h2 className="text-muted-foreground">Server metrics</h2>
+            <GlobalMetricsTooltip />
           </div>
           <Label className="flex items-center gap-2">
             <span>Poll</span>
@@ -243,19 +204,19 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
             data-testid="GlobalMetrics-data"
           >
             <OpenThrottleStatCard
-              className="p-4 md:p-8 flex-1"
+              className="p-4 md:p-8 flex-1 bg-transparent"
               subValue={formatMb(serverMetrics.externalMb)}
               title="RSS / External (MB)"
               value={formatMb(serverMetrics.rssMb)}
             />
             <OpenThrottleStatCard
-              className="p-4 md:p-8 flex-1"
+              className="p-4 md:p-8 flex-1 bg-transparent"
               subValue={formatMb(serverMetrics.heapTotalMb)}
               title="Heap (MB)"
               value={formatMb(serverMetrics.heapUsedMb)}
             />
             <OpenThrottleStatCard
-              className="p-4 md:p-8 flex-1"
+              className="p-4 md:p-8 flex-1 bg-transparent"
               subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
               title="CPU (ms) user / system"
               value={formatCpuMs(serverMetrics.cpuUserMs)}
@@ -270,7 +231,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           data-testid="GlobalMetrics-chart-card"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-4">
-            <h3 className="text-sm font-medium text-muted-foreground">
+            <h3 className="text-sm font-medium text-muted-foreground mb-4">
               Metrics over time
             </h3>
             {loading && metricsHistory.length > 0 ? (
@@ -304,7 +265,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 tickMargin={4}
                 width={36}
               />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelKey="i" />} />
               <Line
                 dataKey="rssMb"
                 dot={false}

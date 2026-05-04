@@ -1,21 +1,10 @@
-/**
- * Queue stats card: renders queue name and counts (waiting, active, completed, failed, delayed).
- * Compact one-line-per-queue list with tooltip for full stats on hover/focus.
- */
 import * as React from 'react';
-import classnames from 'classnames';
 import {
-  Card,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
-
-export interface DashboardQueueStatsProps {
-  readonly className?: string;
-  readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;
-}
 
 const COLUMNS: ReadonlyArray<{
   readonly key: keyof Pick<
@@ -51,8 +40,13 @@ function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
   return `W:${queue.waitingCount} A:${queue.activeCount} C:${queue.completedCount} F:${queue.failedCount} D:${queue.delayedCount}`;
 }
 
+export interface DashboardQueueStatsProps {
+  // readonly className?: string;
+  readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;
+}
+
 export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
-  const { className, data } = props;
+  const { data } = props;
 
   // Hooks
 
@@ -68,11 +62,8 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card
-      className={classnames('p-3', className)}
-      data-testid="DashboardQueueStats"
-    >
-      <h2 className="text-sm font-semibold">Queue Stats</h2>
+    <div data-testid="DashboardQueueStats">
+      <h2 className="text-lg font-bold mb-4">Queue Stats</h2>
       {isEmpty ? (
         <p className="mt-2 text-sm text-muted-foreground">No queues</p>
       ) : (
@@ -108,6 +99,6 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
           </ul>
         </div>
       )}
-    </Card>
+    </div>
   );
 };

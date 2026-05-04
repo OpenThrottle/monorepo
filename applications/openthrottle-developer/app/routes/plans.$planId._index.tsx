@@ -17,8 +17,9 @@ import type {
 } from '@openthrottle/openthrottle-notifications';
 import {
   CogIcon,
+  ListChecksIcon,
+  ListOrderedIcon,
   LucideIcon,
-  NotebookTabsIcon,
   NotebookTextIcon,
   TerminalSquareIcon,
 } from 'lucide-react';
@@ -248,7 +249,12 @@ export default function Component(
     },
     {
       content: <PlanTasksTable tasks={tasks} />,
-      icon: NotebookTabsIcon,
+      icon: ListChecksIcon,
+      title: 'Requirements',
+    },
+    {
+      content: <PlanTasksTable tasks={tasks} />,
+      icon: ListOrderedIcon,
       title: 'Tasks',
     },
     {

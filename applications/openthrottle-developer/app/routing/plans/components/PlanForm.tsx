@@ -47,7 +47,7 @@ export const PlanForm = (props: PlanFormProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card className="w-full p-12 gap-12" data-testid="PlanForm">
+    <Card className="w-full p-8 gap-8" data-testid="PlanForm">
       <CardContent className="pt-8">
         <Form className="gap-4 md:gap-12 w-full flex" method="post">
           <div className="flex-1 space-y-4">
