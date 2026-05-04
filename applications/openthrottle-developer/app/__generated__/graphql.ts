@@ -3044,6 +3044,19 @@ export type JobDetailsCardFragment = {
   returnvalue?: string | null;
   state: string;
   timestamp?: number | null;
+  taskRunMetrics?: {
+    __typename?: 'TaskRunMetrics';
+    atEnd: {
+      __typename?: 'ProcessMetricsSnapshot';
+      heapUsedMb: number;
+      rssMb: number;
+    };
+    atStart: {
+      __typename?: 'ProcessMetricsSnapshot';
+      heapUsedMb: number;
+      rssMb: number;
+    };
+  } | null;
 };
 
 export type GetQueueJobDetailsQueryVariables = Exact<{
@@ -3065,7 +3078,51 @@ export type GetQueueJobDetailsQuery = {
     returnvalue?: string | null;
     state: string;
     timestamp?: number | null;
+    taskRunMetrics?: {
+      __typename?: 'TaskRunMetrics';
+      atEnd: {
+        __typename?: 'ProcessMetricsSnapshot';
+        heapUsedMb: number;
+        rssMb: number;
+      };
+      atStart: {
+        __typename?: 'ProcessMetricsSnapshot';
+        heapUsedMb: number;
+        rssMb: number;
+      };
+    } | null;
   } | null;
+};
+
+export type QueueJobDetailRetryMutationVariables = Exact<{
+  input: RetryJobInput;
+}>;
+
+export type QueueJobDetailRetryMutation = {
+  __typename?: 'Mutation';
+  retryJob: {
+    __typename?: 'RetryJobResultObject';
+    error?: string | null;
+    jobId?: string | null;
+    success: boolean;
+  };
+};
+
+export type QueueJobDetailCancelPlanRunMutationVariables = Exact<{
+  input: CancelPlanRunInput;
+}>;
+
+export type QueueJobDetailCancelPlanRunMutation = {
+  __typename?: 'Mutation';
+  cancelPlanRun: {
+    __typename?: 'CancelPlanRunResultObject';
+    activeJobIdsCouldNotCancel: Array<string>;
+    noMatchingJob: boolean;
+    planId: string;
+    planStatusAfter?: string | null;
+    removedJobIds: Array<string>;
+    signaledActiveRunToStop: boolean;
+  };
 };
 
 export type GetQueueQueryVariables = Exact<{
@@ -3693,6 +3750,43 @@ export const JobDetailsCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
           { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
           { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskRunMetrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atEnd' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atStart' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
         ],
       },
@@ -6909,6 +7003,43 @@ export const GetQueueJobDetailsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
           { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
           { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskRunMetrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atEnd' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atStart' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
         ],
       },
@@ -6917,6 +7048,136 @@ export const GetQueueJobDetailsDocument = {
 } as unknown as DocumentNode<
   GetQueueJobDetailsQuery,
   GetQueueJobDetailsQueryVariables
+>;
+export const QueueJobDetailRetryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'QueueJobDetailRetry' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RetryJobInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'retryJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  QueueJobDetailRetryMutation,
+  QueueJobDetailRetryMutationVariables
+>;
+export const QueueJobDetailCancelPlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'QueueJobDetailCancelPlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CancelPlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelPlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noMatchingJob' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'planStatusAfter' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'removedJobIds' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  QueueJobDetailCancelPlanRunMutation,
+  QueueJobDetailCancelPlanRunMutationVariables
 >;
 export const GetQueueDocument = {
   kind: 'Document',

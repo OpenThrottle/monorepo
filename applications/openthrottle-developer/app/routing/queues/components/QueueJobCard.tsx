@@ -9,7 +9,9 @@ import {
   CardTitle,
   Separator,
 } from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
 import type { GetQueueQuery } from '~/__generated__/graphql';
+import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 
 type QueueJob = NonNullable<
   NonNullable<GetQueueQuery['queue']>['jobs']
@@ -29,13 +31,15 @@ const JOB_STATE_BADGE_VARIANT: Record<
 export interface QueueJobCardProps {
   readonly className?: string;
   readonly job: QueueJob;
+  /** When set, links to the queue job detail route for operational introspection. */
+  readonly queueName?: string;
 }
 
 /**
  * @description Renders a single queue job using Card layout: header (state + name), content (id, data, failedReason).
  */
 export const QueueJobCard = (props: QueueJobCardProps) => {
-  const { className, job } = props;
+  const { className, job, queueName } = props;
 
   // Hooks
 
@@ -85,6 +89,17 @@ export const QueueJobCard = (props: QueueJobCardProps) => {
             data-testid={`job-failedReason-${job.id}`}
           >
             {job.failedReason}
+          </p>
+        )}
+        {queueName != null && queueName !== '' && (
+          <p className="pt-1">
+            <Link
+              className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+              data-testid={`job-detail-link-${job.id}`}
+              to={queueJobDetailPath(queueName, job.id)}
+            >
+              View job details
+            </Link>
           </p>
         )}
       </CardContent>

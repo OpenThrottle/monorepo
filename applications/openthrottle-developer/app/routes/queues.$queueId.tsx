@@ -82,7 +82,7 @@ export default function Component(
           <ul className="space-y-3 mb-4">
             {jobs.map((job) => (
               <li key={job.id}>
-                <QueueJobCard job={job} />
+                <QueueJobCard job={job} queueName={queue.name} />
               </li>
             ))}
           </ul>

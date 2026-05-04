@@ -37,6 +37,15 @@ describe('QueueJobCard Component', () => {
     expect(component.getByTestId('job-id-job-1')).toHaveTextContent('job-1');
   });
 
+  test('should link to job detail when queueName is set', () => {
+    const { getByTestId } = renderCard({
+      job: minimalJob,
+      queueName: 'Plans',
+    });
+    const link = getByTestId('job-detail-link-job-1');
+    expect(link).toHaveAttribute('href', '/queues/Plans/job-1');
+  });
+
   test('should render job-failedReason-* when failedReason is set', () => {
     const jobWithFailure: QueueJobCardProps['job'] = {
       ...minimalJob,
