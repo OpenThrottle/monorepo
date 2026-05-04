@@ -1,8 +1,5 @@
 import { LinkProps } from 'react-router';
 
-/** Base path for all mail routes. Use for links and active-state checks. */
-export const ADMIN_BASE_PATH = '/';
-
 /** Canonical paths for admin areas. Use these for Link `to` and comparisons. */
 export const ADMIN_PATHS = {
   dashboard: `/dashboard`,
