@@ -1117,6 +1117,9 @@ type Query {
   """List pull requests for a repository (GitHub API)"""
   pulls(input: ListPullsInput!): [PullListItemObject!]!
 
+  """Get one pull request by repository and PR number (GitHub API)"""
+  pull(input: GetPullInput!): PullListItemObject
+
   """Open PR count per author for a repository (GitHub stats)."""
   openPrCountByAuthor(input: GitHubRepoInput!): [OpenPrCountByAuthorObject!]!
 
@@ -1351,6 +1354,17 @@ input ListCustomPromptsInput {
 input GetGeneratorInput {
   """Generator name (e.g. from @tools/generators)"""
   name: String!
+}
+
+input GetPullInput {
+  """Pull request number"""
+  number: Int!
+
+  """Repository owner (e.g. GitHub username or org)"""
+  owner: String!
+
+  """Repository name"""
+  repo: String!
 }
 
 input ListPullsInput {

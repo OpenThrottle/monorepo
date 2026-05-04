@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- GitHub REST JSON responses lack runtime schema; assertions match documented API shapes */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { IssueWithLabelsDto } from './dto/issue-with-labels.dto';
@@ -106,6 +105,37 @@ export class GitHubService {
     }
 
     return list;
+  }
+
+  /**
+   * @description Fetches one PR by number; maps to the same shape as list pulls (conversation metadata).
+   */
+  async getPullListItem(
+    owner: string,
+    repo: string,
+    pullNumber: number,
+  ): Promise<PullListItemDto | null> {
+    const token = this.config.get<string>('GITHUB_TOKEN');
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}`;
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(url, { headers });
+    if (res.status === 404) {
+      return null;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data = (await res.json()) as GitHubPullItem;
+    return toPullListItemDto(data);
   }
 
   /**

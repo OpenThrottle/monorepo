@@ -6,6 +6,7 @@ import {
   FileChartColumn,
   FoldersIcon,
   GaugeIcon,
+  GitPullRequest,
   ListChevronsUpDownIcon,
   ListOrderedIcon,
   NotebookTextIcon,
@@ -42,6 +43,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Notes',
       icon: NotebookTextIcon,
       to: '/notes',
+    },
+    {
+      children: 'Pull requests',
+      icon: GitPullRequest,
+      to: '/pull-requests',
     },
   ],
   Agents: [

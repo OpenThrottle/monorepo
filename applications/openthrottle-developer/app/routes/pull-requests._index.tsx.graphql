@@ -1,12 +1,16 @@
 fragment PullRequestCard on PullListItemObject {
+  author
   createdAt
+  htmlUrl
+  mergedAt
   number
+  state
   title
   updatedAt
 }
 
-query getPullRequests {
-  pulls(input: { owner: "visormatt", repo: "monorepo" }) {
+query getPullRequests($input: ListPullsInput!) {
+  pulls(input: $input) {
     ...PullRequestCard
   }
 }

@@ -24,6 +24,7 @@ describe('GithubResolver', () => {
 
   beforeAll(async () => {
     const mockGitHubService = createMock<GitHubService>({
+      getPullListItem: vi.fn(),
       listPulls: vi.fn(),
     });
     const mockGitHubStatsService = createMock<GitHubStatsService>({
@@ -120,6 +121,37 @@ describe('GithubResolver', () => {
         merged: undefined,
         state: 'open',
       });
+    });
+  });
+
+  describe('pull', () => {
+    test('returns PullListItemObject from GitHubService', async () => {
+      vi.mocked(githubService.getPullListItem).mockResolvedValue(mockPullDto);
+
+      const result = await resolver.pull({
+        number: 1,
+        owner: 'owner',
+        repo: 'repo',
+      });
+
+      expect(result).toEqual(mockPullDto);
+      expect(githubService.getPullListItem).toHaveBeenCalledWith(
+        'owner',
+        'repo',
+        1,
+      );
+    });
+
+    test('returns null when GitHubService returns null', async () => {
+      vi.mocked(githubService.getPullListItem).mockResolvedValue(null);
+
+      const result = await resolver.pull({
+        number: 404,
+        owner: 'owner',
+        repo: 'repo',
+      });
+
+      expect(result).toBeNull();
     });
   });
 

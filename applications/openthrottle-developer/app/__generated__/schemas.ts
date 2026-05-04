@@ -26,6 +26,7 @@ import {
   GetGeneratorInput,
   GetPlanEmbeddingInput,
   GetPlanOutputStreamChunkInput,
+  GetPullInput,
   GetTaskEmbeddingInput,
   GitHubRepoInput,
   LastActivityInput,
@@ -340,6 +341,14 @@ export function GetPlanOutputStreamChunkInputSchema(): z.ZodObject<
 > {
   return z.object({
     id: z.string(),
+  });
+}
+
+export function GetPullInputSchema(): z.ZodObject<Properties<GetPullInput>> {
+  return z.object({
+    number: z.number(),
+    owner: z.string(),
+    repo: z.string(),
   });
 }
 

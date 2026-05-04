@@ -457,6 +457,15 @@ export type GetPlanOutputStreamChunkInput = {
   id: Scalars['ID']['input'];
 };
 
+export type GetPullInput = {
+  /** Pull request number */
+  number: Scalars['Int']['input'];
+  /** Repository owner (e.g. GitHub username or org) */
+  owner: Scalars['String']['input'];
+  /** Repository name */
+  repo: Scalars['String']['input'];
+};
+
 export type GetTaskEmbeddingInput = {
   /** Task embedding id */
   id: Scalars['ID']['input'];
@@ -1249,6 +1258,8 @@ export type Query = {
   projects: Array<ProjectObject>;
   /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. */
   prsMergedPerPeriod: Array<PrsMergedPerPeriodObject>;
+  /** Get one pull request by repository and PR number (GitHub API) */
+  pull?: Maybe<PullListItemObject>;
   /** List pull requests for a repository (GitHub API) */
   pulls: Array<PullListItemObject>;
   /** Single queue by name with optional paginated jobs (limit/offset/states/asc). */
@@ -1399,6 +1410,10 @@ export type QueryProjectArgs = {
 
 export type QueryPrsMergedPerPeriodArgs = {
   input: PrsMergedPerPeriodInput;
+};
+
+export type QueryPullArgs = {
+  input: GetPullInput;
 };
 
 export type QueryPullsArgs = {
@@ -2901,22 +2916,51 @@ export type CreatePromptMutation = {
   };
 };
 
+export type GetPullRequestDetailQueryVariables = Exact<{
+  input: GetPullInput;
+}>;
+
+export type GetPullRequestDetailQuery = {
+  __typename?: 'Query';
+  pull?: {
+    __typename?: 'PullListItemObject';
+    author: string;
+    createdAt: string;
+    htmlUrl: string;
+    mergedAt?: string | null;
+    number: number;
+    state: string;
+    title: string;
+    updatedAt: string;
+  } | null;
+};
+
 export type PullRequestCardFragment = {
   __typename?: 'PullListItemObject';
+  author: string;
   createdAt: string;
+  htmlUrl: string;
+  mergedAt?: string | null;
   number: number;
+  state: string;
   title: string;
   updatedAt: string;
 };
 
-export type GetPullRequestsQueryVariables = Exact<{ [key: string]: never }>;
+export type GetPullRequestsQueryVariables = Exact<{
+  input: ListPullsInput;
+}>;
 
 export type GetPullRequestsQuery = {
   __typename?: 'Query';
   pulls: Array<{
     __typename?: 'PullListItemObject';
+    author: string;
     createdAt: string;
+    htmlUrl: string;
+    mergedAt?: string | null;
     number: number;
+    state: string;
     title: string;
     updatedAt: string;
   }>;
@@ -3548,8 +3592,12 @@ export const PullRequestCardFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -6300,6 +6348,67 @@ export const CreatePromptDocument = {
   CreatePromptMutation,
   CreatePromptMutationVariables
 >;
+export const GetPullRequestDetailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPullRequestDetail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'GetPullInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pull' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPullRequestDetailQuery,
+  GetPullRequestDetailQueryVariables
+>;
 export const GetPullRequestsDocument = {
   kind: 'Document',
   definitions: [
@@ -6307,6 +6416,22 @@ export const GetPullRequestsDocument = {
       kind: 'OperationDefinition',
       operation: 'query',
       name: { kind: 'Name', value: 'getPullRequests' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ListPullsInput' },
+            },
+          },
+        },
+      ],
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
@@ -6318,27 +6443,8 @@ export const GetPullRequestsDocument = {
                 kind: 'Argument',
                 name: { kind: 'Name', value: 'input' },
                 value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'owner' },
-                      value: {
-                        kind: 'StringValue',
-                        value: 'visormatt',
-                        block: false,
-                      },
-                    },
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'repo' },
-                      value: {
-                        kind: 'StringValue',
-                        value: 'monorepo',
-                        block: false,
-                      },
-                    },
-                  ],
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
                 },
               },
             ],
@@ -6365,8 +6471,12 @@ export const GetPullRequestsDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],

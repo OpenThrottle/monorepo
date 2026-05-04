@@ -49,6 +49,59 @@ describe('GitHubService', () => {
     vi.unstubAllGlobals();
   });
 
+  test('getPullListItem returns null when GitHub returns 404', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 404,
+      }),
+    );
+
+    const service = new GitHubService(mockConfig);
+    const result = await service.getPullListItem('owner', 'repo', 99);
+
+    expect(result).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  test('getPullListItem returns mapped DTO from single PR endpoint', async () => {
+    const mockPull = {
+      created_at: '2025-01-01T00:00:00Z',
+      html_url: 'https://github.com/owner/repo/pull/2',
+      merged_at: null,
+      number: 2,
+      state: 'open' as const,
+      title: 'fix: thing',
+      updated_at: '2025-01-02T00:00:00Z',
+      user: { login: 'dev' },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve(mockPull),
+        ok: true,
+        status: 200,
+      }),
+    );
+
+    const service = new GitHubService(mockConfig);
+    const result = await service.getPullListItem('owner', 'repo', 2);
+
+    expect(result).toEqual({
+      author: 'dev',
+      createdAt: '2025-01-01T00:00:00Z',
+      htmlUrl: 'https://github.com/owner/repo/pull/2',
+      mergedAt: null,
+      number: 2,
+      state: 'open',
+      title: 'fix: thing',
+      updatedAt: '2025-01-02T00:00:00Z',
+    });
+
+    vi.unstubAllGlobals();
+  });
+
   test('getPullDetail returns additions, deletions, changed_files from single PR endpoint', async () => {
     const mockPull = {
       additions: 50,
