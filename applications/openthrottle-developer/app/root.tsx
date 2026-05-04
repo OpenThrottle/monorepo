@@ -293,12 +293,14 @@ export default function App(): React.ReactElement {
   // Setup
   const isAuthRoute = pathname.startsWith('/auth');
   const isPromptsRoute = pathname.startsWith('/prompts/');
+  const isProfileRoute = pathname.startsWith('/profile');
   const isSettingsRoute = pathname.startsWith('/settings');
+  // const isSettingsIndexRoute = pathname === '/settings';
   const isCreateRoute = pathname.endsWith('/create');
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
   const isHeaderHidden = isAuthRoute || isPromptsRoute;
-  const isMetricsHidden = isAuthRoute || isPromptsRoute || isSettingsRoute || isCreateRoute; // prettier-ignore
+  const isMetricsHidden = isAuthRoute || isProfileRoute ||isPromptsRoute || isSettingsRoute || isCreateRoute; // prettier-ignore
 
   // Handlers
   const handleSearch = React.useCallback(
