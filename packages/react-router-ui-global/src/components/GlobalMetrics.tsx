@@ -134,8 +134,6 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     return [];
   }, [loading, metricsHistory, serverMetrics]);
 
-  console.log('chartLineData', chartLineData);
-
   const showStatCards = !loading && error == null && serverMetrics != null;
   const showMetricsChart = error == null && chartLineData.length > 0;
   const showGlobalLoadingBanner = loading && metricsHistory.length === 0;
