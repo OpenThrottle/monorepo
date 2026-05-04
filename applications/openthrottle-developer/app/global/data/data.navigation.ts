@@ -82,7 +82,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
     {
       children: 'Profile',
       icon: UserCircle,
-      to: '/settings/',
+      to: '/profile',
     },
   ],
 };
