@@ -24,6 +24,18 @@ describe('SettingsLogsPanel', () => {
       screen.getByText('Support bundle', { exact: true }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Workflow & agent logs/i)).toBeInTheDocument();
+    expect(screen.getByTestId('logs-buffer-summary')).toHaveTextContent(
+      '0/1000',
+    );
+    expect(
+      screen.getByText(/Logs may include URLs or user-visible strings/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Copy log JSON' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Copy bundle JSON' }),
+    ).toBeInTheDocument();
   });
 
   test('buildSupportBundlePayload includes kind and workflow placeholder', () => {

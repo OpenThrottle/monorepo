@@ -2,11 +2,15 @@
  * @description In-memory ring buffer of browser console output for Settings → Logs and support bundles.
  */
 
-const MAX_ENTRIES = 1000;
+/** @description Max lines retained in the in-memory ring buffer (oldest dropped). */
+export const CLIENT_LOG_BUFFER_MAX_ENTRIES = 1000;
 
 const LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const;
 
 export type ClientLogLevel = (typeof LEVELS)[number];
+
+/** @description All capture levels (for level-filter UI). */
+export const CLIENT_LOG_LEVELS: readonly ClientLogLevel[] = LEVELS;
 
 export interface ClientLogEntry {
   readonly level: ClientLogLevel;
@@ -52,7 +56,9 @@ export const formatLogArgs = (args: readonly unknown[]): string => {
 
 const push = (level: ClientLogLevel, args: readonly unknown[]): void => {
   const message = formatLogArgs(args);
-  buffer = [...buffer, { level, message, t: Date.now() }].slice(-MAX_ENTRIES);
+  buffer = [...buffer, { level, message, t: Date.now() }].slice(
+    -CLIENT_LOG_BUFFER_MAX_ENTRIES,
+  );
   notify();
 };
 

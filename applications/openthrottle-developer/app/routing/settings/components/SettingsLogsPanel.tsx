@@ -6,13 +6,21 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Input,
+  Label,
+  Skeleton,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ScrollText } from 'lucide-react';
 import {
   clearClientLogSink,
+  CLIENT_LOG_BUFFER_MAX_ENTRIES,
+  CLIENT_LOG_LEVELS,
   getClientLogEntries,
   type ClientLogEntry,
+  type ClientLogLevel,
   subscribeClientLogSink,
 } from '~/routing/settings/client-log-sink';
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
@@ -111,8 +119,32 @@ const formatEntryLine = (entry: ClientLogEntry): string => {
   return `${iso} [${entry.level}] ${entry.message}`;
 };
 
+const entryToJsonRecord = (
+  entry: ClientLogEntry,
+): {
+  readonly isoTime: string;
+  readonly level: ClientLogEntry['level'];
+  readonly message: string;
+  readonly t: number;
+} => ({
+  isoTime: new Date(entry.t).toISOString(),
+  level: entry.level,
+  message: entry.message,
+  t: entry.t,
+});
+
 export function SettingsLogsPanel(): React.ReactElement {
   const logPreRef = React.useRef<HTMLPreElement>(null);
+  const searchFieldId = React.useId();
+  const [isClient, setIsClient] = React.useState(false);
+  const [levelSelection, setLevelSelection] = React.useState<
+    readonly ClientLogLevel[]
+  >([...CLIENT_LOG_LEVELS]);
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const entries = React.useSyncExternalStore(
     subscribeClientLogSink,
@@ -120,9 +152,30 @@ export function SettingsLogsPanel(): React.ReactElement {
     getEmptyServerSnapshot,
   );
 
+  const selectedLevelSet = React.useMemo(
+    () => new Set(levelSelection),
+    [levelSelection],
+  );
+
+  const filteredEntries = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return entries.filter((entry) => {
+      if (!selectedLevelSet.has(entry.level)) {
+        return false;
+      }
+      if (!q) {
+        return true;
+      }
+      return (
+        entry.message.toLowerCase().includes(q) ||
+        entry.level.toLowerCase().includes(q)
+      );
+    });
+  }, [entries, searchQuery, selectedLevelSet]);
+
   const logText = React.useMemo(
-    () => entries.map(formatEntryLine).join('\n'),
-    [entries],
+    () => filteredEntries.map(formatEntryLine).join('\n'),
+    [filteredEntries],
   );
 
   React.useEffect(() => {
@@ -131,10 +184,22 @@ export function SettingsLogsPanel(): React.ReactElement {
       return;
     }
     el.scrollTop = el.scrollHeight;
-  }, [entries]);
+  }, [filteredEntries]);
 
-  const handleCopyLogs = async (): Promise<void> => {
+  const handleCopyLines = async (): Promise<void> => {
     await copyText(logText || '(empty)');
+  };
+
+  const handleCopyLogJson = async (): Promise<void> => {
+    const payload = filteredEntries.map(entryToJsonRecord);
+    await copyText(JSON.stringify(payload, null, 2));
+  };
+
+  const handleCopyLogNdjson = async (): Promise<void> => {
+    const lines = filteredEntries.map((e) =>
+      JSON.stringify(entryToJsonRecord(e)),
+    );
+    await copyText(lines.join('\n') || '');
   };
 
   const handleCopyBundle = async (): Promise<void> => {
@@ -148,6 +213,42 @@ export function SettingsLogsPanel(): React.ReactElement {
 
   const handleClear = (): void => {
     clearClientLogSink();
+  };
+
+  const levelsDisabled = levelSelection.length === 0;
+  const viewerEmptyReason =
+    entries.length === 0
+      ? 'empty-buffer'
+      : levelsDisabled
+        ? 'levels-none'
+        : filteredEntries.length === 0
+          ? 'no-match'
+          : 'none';
+
+  const renderViewerBody = (): React.ReactNode => {
+    if (!isClient) {
+      return (
+        <div
+          aria-busy="true"
+          className="space-y-2"
+          data-testid="logs-viewer-loading"
+        >
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+          <Skeleton className="h-3 w-4/6" />
+        </div>
+      );
+    }
+    if (viewerEmptyReason === 'empty-buffer') {
+      return 'No entries yet. Use the app or open the browser console to produce logs.';
+    }
+    if (viewerEmptyReason === 'levels-none') {
+      return 'Select at least one level above to view captured lines.';
+    }
+    if (viewerEmptyReason === 'no-match') {
+      return 'No entries match your level selection or search.';
+    }
+    return logText;
   };
 
   return (
@@ -165,6 +266,12 @@ export function SettingsLogsPanel(): React.ReactElement {
         exists, optional tailing can plug into the same bundle shape.
       </p>
 
+      <p className="max-w-3xl rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
+        Logs may include URLs or user-visible strings. Only copy or export what
+        you intend to share; the support bundle redacts env secrets but not
+        every substring inside log lines.
+      </p>
+
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Client console sink</CardTitle>
@@ -178,31 +285,94 @@ export function SettingsLogsPanel(): React.ReactElement {
               Clear
             </Button>
             <Button
-              onClick={handleCopyLogs}
+              disabled={!isClient || viewerEmptyReason !== 'none'}
+              onClick={handleCopyLines}
               size="sm"
               type="button"
               variant="outline"
             >
               Copy lines
             </Button>
+            <Button
+              disabled={!isClient || viewerEmptyReason !== 'none'}
+              onClick={handleCopyLogJson}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Copy log JSON
+            </Button>
+            <Button
+              disabled={!isClient || viewerEmptyReason !== 'none'}
+              onClick={handleCopyLogNdjson}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Copy log NDJSON
+            </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" role="status">
+            <span aria-live="polite" data-testid="logs-buffer-summary">
+              Buffer {entries.length}/{CLIENT_LOG_BUFFER_MAX_ENTRIES}
+              {filteredEntries.length !== entries.length &&
+                entries.length > 0 &&
+                ` · Shown ${filteredEntries.length}`}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-foreground">Levels</span>
+            <ToggleGroup
+              aria-label="Filter by log level"
+              className="flex flex-wrap justify-start gap-1"
+              onValueChange={(next) => {
+                setLevelSelection(next as ClientLogLevel[]);
+              }}
+              size="sm"
+              type="multiple"
+              value={[...levelSelection]}
+              variant="outline"
+            >
+              {CLIENT_LOG_LEVELS.map((level) => (
+                <ToggleGroupItem aria-label={level} key={level} value={level}>
+                  {level}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-foreground" htmlFor={searchFieldId}>
+              Search
+            </Label>
+            <Input
+              autoComplete="off"
+              className="font-mono text-xs"
+              id={searchFieldId}
+              onChange={(ev) => setSearchQuery(ev.target.value)}
+              placeholder="Filter messages (case-insensitive)"
+              type="search"
+              value={searchQuery}
+            />
+          </div>
+
+          <p className="text-xs">
             <span className="font-medium text-foreground">
               log / info / warn / error / debug
             </span>{' '}
             plus uncaught <code className="text-xs">window.onerror</code> and{' '}
             <code className="text-xs">unhandledrejection</code>. Buffer keeps
-            the last 1000 lines in this tab only (memory).
+            the last {CLIENT_LOG_BUFFER_MAX_ENTRIES} lines in this tab only
+            (memory). Data stays on this device unless you copy or export.
           </p>
           <pre
             className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 font-mono text-xs text-foreground"
             ref={logPreRef}
           >
-            {logText.length > 0
-              ? logText
-              : 'No entries yet. Use the app or open the browser console to produce logs.'}
+            {renderViewerBody()}
           </pre>
         </CardContent>
       </Card>
@@ -217,7 +387,7 @@ export function SettingsLogsPanel(): React.ReactElement {
               type="button"
               variant="outline"
             >
-              Copy JSON
+              Copy bundle JSON
             </Button>
             <Button
               onClick={handleDownloadBundle}
@@ -225,16 +395,18 @@ export function SettingsLogsPanel(): React.ReactElement {
               type="button"
               variant="secondary"
             >
-              Download JSON
+              Download bundle JSON
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
             Includes sanitized <code className="text-xs">window.env</code>, page
-            URL, user agent, language, and the client log lines above. Attach
-            the file or pasted JSON to bug reports; omit sensitive context
-            outside this bundle if needed.
+            URL, user agent, language, and the{' '}
+            <strong className="font-medium text-foreground">full</strong> client
+            log buffer (not the filtered view). Attach the file or pasted JSON
+            to bug reports; omit sensitive context outside this bundle if
+            needed.
           </p>
         </CardContent>
       </Card>
