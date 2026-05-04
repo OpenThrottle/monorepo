@@ -25,6 +25,7 @@ import {
   getDefaultWorkflowRalphRunOptionsInput,
   isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
+  WORKFLOW_RALPH_DEFAULTS_FILE_NAME,
   WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
   WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphDebugCli,
@@ -207,6 +208,21 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
                 ,{' '}
                 <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.debug}</code>
                 .
+              </p>
+              <p className="text-xs">
+                Optional{' '}
+                <code className="text-xs">
+                  ./{WORKFLOW_RALPH_DEFAULTS_FILE_NAME}
+                </code>
+                : <code className="text-xs">backend</code>,{' '}
+                <code className="text-xs">iterations</code>,{' '}
+                <code className="text-xs">iterationTimeout</code> (seconds),{' '}
+                <code className="text-xs">model</code>,{' '}
+                <code className="text-xs">project</code>,{' '}
+                <code className="text-xs">prompt</code> |{' '}
+                <code className="text-xs">promptFile</code> (exclusive). Same
+                semantics as <code className="text-xs">parseRalphArgs</code> +
+                defaults merge.
               </p>
             </CardDescription>
           </div>

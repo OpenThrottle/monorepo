@@ -15,6 +15,7 @@ import {
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
   validateWorkflowRalphRunOptionsState,
+  WORKFLOW_RALPH_DEFAULTS_FILE_NAME,
   WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
   WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphRunOptionsInput,
@@ -230,6 +231,27 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
                 </code>
                 . <code className="text-xs">--debug=verbose</code> matches{' '}
                 <code className="text-xs">--verbose</code> in the CLI.
+              </p>
+              <p className="text-xs">
+                Optional{' '}
+                <code className="text-xs">
+                  ./{WORKFLOW_RALPH_DEFAULTS_FILE_NAME}
+                </code>{' '}
+                in the shell cwd merges before argv (
+                <code className="text-xs">mergeRalphRuntimeSeed</code>,{' '}
+                <code className="text-xs">tools/workflows</code>
+                ): JSON keys <code className="text-xs">backend</code>,{' '}
+                <code className="text-xs">iterations</code>,{' '}
+                <code className="text-xs">iterationTimeout</code> (seconds —
+                same unit as{' '}
+                <code className="text-xs">--iteration-timeout</code>),{' '}
+                <code className="text-xs">model</code>,{' '}
+                <code className="text-xs">project</code>, and either{' '}
+                <code className="text-xs">prompt</code> or{' '}
+                <code className="text-xs">promptFile</code> (not both — matches
+                CLI <code className="text-xs">--prompt</code> /{' '}
+                <code className="text-xs">--prompt-file</code> mutual
+                exclusion).
               </p>
             </CardDescription>
           </div>

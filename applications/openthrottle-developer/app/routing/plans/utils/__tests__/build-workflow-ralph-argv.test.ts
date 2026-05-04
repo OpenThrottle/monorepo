@@ -552,6 +552,28 @@ describe('validateWorkflowRalphRunOptionsState', () => {
     expect(result.issues.some((i) => i.code === 'prompt_conflict')).toBe(true);
   });
 
+  test('fails when prompt-file layer is selected with an empty path (parseRalphArgs parity)', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({
+        prompt: DEFAULT_RALPH_PROMPT,
+        promptFile: '',
+        promptLayer: 'file',
+      }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'prompt_file_empty')).toBe(
+      true,
+    );
+    expect(
+      result.issues.find((i) => i.code === 'prompt_file_empty')?.message,
+    ).toBe('--prompt-file requires a non-empty path');
+  });
+
   test('fails in task mode when task id is empty', () => {
     const result = validateWorkflowRalphRunOptionsState(
       baseTaskInput({ taskId: '' }),

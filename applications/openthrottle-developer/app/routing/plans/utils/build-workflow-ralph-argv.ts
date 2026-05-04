@@ -28,6 +28,13 @@ export const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
   'CLI flags → WORKFLOW_RALPH_* / RALPH_* env → .workflow-ralph.json → built-in defaults';
 
 /**
+ * @description Basename of the optional repo-local defaults file (see
+ * `WORKFLOW_RALPH_DEFAULTS_FILE` in `tools/workflows/src/utils/ralph-runtime-config.ts`).
+ */
+export const WORKFLOW_RALPH_DEFAULTS_FILE_NAME =
+  '.workflow-ralph.json' as const;
+
+/**
  * @description Env vars for run tuning and layer-1 prompt (matches {@link WORKFLOW_RALPH_DEFAULT_PRECEDENCE}
  * and `tools/workflows/src/utils/ralph-runtime-config.ts` {@link WORKFLOW_RALPH_ENV}).
  */
@@ -387,6 +394,12 @@ export const validateWorkflowRalphRunOptionsState = (
       issues.push({
         code: 'prompt_conflict',
         message: '--prompt-file cannot be combined with --prompt',
+      });
+    }
+    if (input.promptFile.trim() === '') {
+      issues.push({
+        code: 'prompt_file_empty',
+        message: '--prompt-file requires a non-empty path',
       });
     }
   }
