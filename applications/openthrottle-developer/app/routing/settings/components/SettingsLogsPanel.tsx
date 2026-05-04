@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { getEnvironment } from '@openthrottle/react-router-utils';
-import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import {
   Button,
   Card,
@@ -8,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { ScrollText } from 'lucide-react';
 import {
   clearClientLogSink,
   getClientLogEntries,
@@ -111,6 +112,8 @@ const formatEntryLine = (entry: ClientLogEntry): string => {
 };
 
 export function SettingsLogsPanel(): React.ReactElement {
+  const logPreRef = React.useRef<HTMLPreElement>(null);
+
   const entries = React.useSyncExternalStore(
     subscribeClientLogSink,
     getClientLogEntries,
@@ -121,6 +124,14 @@ export function SettingsLogsPanel(): React.ReactElement {
     () => entries.map(formatEntryLine).join('\n'),
     [entries],
   );
+
+  React.useEffect(() => {
+    const el = logPreRef.current;
+    if (!el) {
+      return;
+    }
+    el.scrollTop = el.scrollHeight;
+  }, [entries]);
 
   const handleCopyLogs = async (): Promise<void> => {
     await copyText(logText || '(empty)');
@@ -141,10 +152,18 @@ export function SettingsLogsPanel(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      <OpenThrottleEmptyState
-        description="Capture browser console output for debugging and export sanitized diagnostics (JSON) with env + logs. Workflow/agent server logs will appear here when an API is available."
+      <GlobalHeading
+        className="mb-2"
+        heading="h3"
+        icon={ScrollText}
         title="Logs"
       />
+      <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+        Capture browser console output in this tab, copy lines, and export a
+        sanitized support bundle (JSON) with env metadata and log lines. Server
+        workflow and agent streams are described below—when an operator API
+        exists, optional tailing can plug into the same bundle shape.
+      </p>
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
@@ -177,7 +196,10 @@ export function SettingsLogsPanel(): React.ReactElement {
             <code className="text-xs">unhandledrejection</code>. Buffer keeps
             the last 1000 lines in this tab only (memory).
           </p>
-          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 font-mono text-xs text-foreground">
+          <pre
+            className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 font-mono text-xs text-foreground"
+            ref={logPreRef}
+          >
             {logText.length > 0
               ? logText
               : 'No entries yet. Use the app or open the browser console to produce logs.'}

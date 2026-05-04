@@ -15,8 +15,14 @@ describe('SettingsLogsPanel', () => {
       },
     ]);
 
+    expect(screen.getByTestId('GlobalHeading')).toHaveTextContent('Logs');
+    expect(
+      screen.getByText(/Capture browser console output/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Client console sink/i)).toBeInTheDocument();
-    expect(screen.getByText(/Support bundle/i)).toBeInTheDocument();
+    expect(
+      screen.getByText('Support bundle', { exact: true }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Workflow & agent logs/i)).toBeInTheDocument();
   });
 
