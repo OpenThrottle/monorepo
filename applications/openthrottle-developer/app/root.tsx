@@ -16,6 +16,7 @@ import {
   ScrollRestoration,
   useFetcher,
   useLocation,
+  useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
 import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
@@ -46,7 +47,17 @@ import {
   ServerHealthObject,
   UserObject,
 } from '~/__generated__/graphql';
+import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
+import type {
+  RootLoaderDiagnostics,
+  RootLoaderFailure,
+} from '~/global/utils/root-loader-diagnostics';
+import {
+  ROOT_LOADER_UNREACHABLE_HEALTH,
+  classifyRootLoaderError,
+  rootLoaderErrorMessage,
+} from '~/global/utils/root-loader-diagnostics';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { userAtom } from '~/global/data/atom.user';
@@ -141,50 +152,86 @@ export const loader = async (args: Route.LoaderArgs) => {
     websocket: 'ok',
   };
 
-  try {
-    if (FEATURE_BETA_PREVIEW && isRestrictedAccess) {
+  const diagnostics: RootLoaderDiagnostics = {};
+  let rootLoaderFailure: RootLoaderFailure | null = null;
+
+  const authToken = getAuthTokenFromCookie(cookieHeader);
+  const isTokenNull = authToken === null;
+  let user: UserObject | null = null;
+  /** When false, the `me` query failed; do not treat as logged out for redirects. */
+  let userLoadOk: boolean = isTokenNull;
+
+  if (FEATURE_BETA_PREVIEW && isRestrictedAccess) {
+    const t0 = Date.now();
+    try {
       const response = await executeGraphqlWithAuth(
         request,
         GetRootHealthDocument,
       );
-
+      diagnostics.healthLatencyMs = Date.now() - t0;
       serverHealth = response?.serverHealth;
+    } catch (error) {
+      diagnostics.healthLatencyMs = Date.now() - t0;
+      console.error('root loader: GetRootHealth failed', error);
+      serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
+      rootLoaderFailure = {
+        kind: classifyRootLoaderError(error),
+        message: rootLoaderErrorMessage(error),
+        step: 'health',
+      };
     }
+  }
 
-    const authToken = getAuthTokenFromCookie(cookieHeader);
-    const isTokenNull = authToken === null;
-
-    let user: UserObject | null = null;
-
-    if (!isTokenNull) {
+  if (!isTokenNull) {
+    const t0 = Date.now();
+    try {
       const queryMyUser = await executeGraphqlWithAuth(
         request,
         GetMyUserDocument,
       );
-
+      diagnostics.userLatencyMs = Date.now() - t0;
       user = queryMyUser.me ?? null;
-
-      // const testing = decodeAuthTokenEmail(authToken);
-      // console.log('🧩 🟢 data 🟢 🧩', { testing, user });
-    }
-
-    if (FEATURE_BETA_PREVIEW && isRestrictedAccess && user === null) {
-      const pathname = new URL(request.url).pathname;
-      const isProtected = PROTECTED_PATH_PREFIXES.some(
-        (p) => pathname === p || pathname.startsWith(`${p}/`),
-      );
-
-      if (isProtected) {
-        return redirect('/auth');
+      userLoadOk = true;
+    } catch (error) {
+      diagnostics.userLatencyMs = Date.now() - t0;
+      console.error('root loader: GetMyUser failed', error);
+      user = null;
+      userLoadOk = false;
+      if (rootLoaderFailure == null) {
+        rootLoaderFailure = {
+          kind: classifyRootLoaderError(error),
+          message: rootLoaderErrorMessage(error),
+          step: 'user',
+        };
       }
     }
-
-    return { canonical, env, serverHealth, user };
-  } catch (error) {
-    console.error('🚨 🚨 error 🚨 🚨', error);
-
-    return { canonical, env, serverHealth, user: null };
   }
+
+  if (
+    FEATURE_BETA_PREVIEW &&
+    isRestrictedAccess &&
+    userLoadOk &&
+    user === null
+  ) {
+    const pathname = new URL(request.url).pathname;
+    const isProtected = PROTECTED_PATH_PREFIXES.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`),
+    );
+
+    if (isProtected) {
+      return redirect('/auth');
+    }
+  }
+
+  return {
+    canonical,
+    env,
+    rootLoaderDiagnostics: diagnostics,
+    rootLoaderFailure,
+    serverHealth,
+    user,
+    userLoadOk,
+  };
 };
 
 /**
@@ -230,10 +277,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Life Cycle
   React.useEffect(() => {
+    if (data?.userLoadOk === false) {
+      return;
+    }
     if (data?.user) {
       setUser(data.user);
     }
-  }, [data?.user]);
+  }, [data?.user, data?.userLoadOk, setUser]);
 
   // 🔌 Short Circuit
 
@@ -291,6 +341,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App(): React.ReactElement {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
+  const revalidator = useRevalidator();
   const fetcher = useFetcher();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
@@ -313,6 +364,10 @@ export default function App(): React.ReactElement {
     isCreateRoute;
 
   // Handlers
+  const handleRootLoaderRetry = React.useCallback(() => {
+    revalidator.revalidate();
+  }, [revalidator]);
+
   const handleSearch = React.useCallback(
     (query: string) => {
       fetcher.submit(
@@ -338,7 +393,17 @@ export default function App(): React.ReactElement {
           health={data?.serverHealth}
           overrides={{ footer: isFooterHidden }}
         >
-          <GlobalServerHealthBanner health={data?.serverHealth} />
+          <GlobalRootLoaderFailureBanner
+            diagnostics={data?.rootLoaderDiagnostics}
+            failure={data?.rootLoaderFailure ?? null}
+            onRetry={handleRootLoaderRetry}
+            userLoadOk={data?.userLoadOk !== false}
+          />
+
+          <GlobalServerHealthBanner
+            health={data?.serverHealth}
+            suppress={data?.rootLoaderFailure?.step === 'health'}
+          />
 
           {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
           <Outlet />

@@ -6,6 +6,8 @@ import type { ServerHealthObject } from '~/__generated__/graphql';
 
 export interface GlobalServerHealthBannerProps {
   readonly health?: ServerHealthObject;
+  /** When true, hide this banner (e.g. root loader already shows a detailed API failure). */
+  readonly suppress?: boolean;
 }
 
 /**
@@ -15,7 +17,7 @@ export interface GlobalServerHealthBannerProps {
 export const GlobalServerHealthBanner = (
   props: GlobalServerHealthBannerProps,
 ) => {
-  const { health } = props;
+  const { health, suppress } = props;
 
   // Hooks
   const [dismissed, setDismissed] = React.useState(false);
@@ -35,7 +37,7 @@ export const GlobalServerHealthBanner = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!isUnhealthy || dismissed) return null;
+  if (suppress || !isUnhealthy || dismissed) return null;
 
   return (
     <div
