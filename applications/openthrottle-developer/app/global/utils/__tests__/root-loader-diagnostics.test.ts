@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   classifyRootLoaderError,
   rootLoaderErrorMessage,
+  rootLoaderStepLabel,
   truncateForBanner,
 } from '../root-loader-diagnostics';
 
@@ -44,5 +45,15 @@ describe('truncateForBanner', () => {
 
   it('truncates long strings', () => {
     expect(truncateForBanner('1234567890', 5)).toBe('12345…');
+  });
+});
+
+describe('rootLoaderStepLabel', () => {
+  it('labels health step', () => {
+    expect(rootLoaderStepLabel('health')).toBe('Server health check');
+  });
+
+  it('labels user step', () => {
+    expect(rootLoaderStepLabel('user')).toBe('Current user session');
   });
 });

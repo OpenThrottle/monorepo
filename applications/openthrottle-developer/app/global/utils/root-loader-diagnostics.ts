@@ -83,3 +83,17 @@ export const rootLoaderFailureKindLabel = (
       return 'Request failed';
   }
 };
+
+/**
+ * @description Which root-loader request failed (health vs session), for support and debugging.
+ */
+export const rootLoaderStepLabel = (
+  step: RootLoaderFailure['step'],
+): string => {
+  switch (step) {
+    case 'health':
+      return 'Server health check';
+    case 'user':
+      return 'Current user session';
+  }
+};

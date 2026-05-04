@@ -8,6 +8,7 @@ import type {
 } from '~/global/utils/root-loader-diagnostics';
 import {
   rootLoaderFailureKindLabel,
+  rootLoaderStepLabel,
   truncateForBanner,
 } from '~/global/utils/root-loader-diagnostics';
 
@@ -16,6 +17,7 @@ const SNIPPET_MAX = 360;
 export interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;
   readonly failure: RootLoaderFailure | null;
+  readonly isRevalidating?: boolean;
   readonly onRetry: () => void;
   readonly userLoadOk: boolean;
 }
@@ -27,10 +29,26 @@ export interface GlobalRootLoaderFailureBannerProps {
 export const GlobalRootLoaderFailureBanner = (
   props: GlobalRootLoaderFailureBannerProps,
 ) => {
-  const { diagnostics, failure, onRetry, userLoadOk } = props;
+  const { diagnostics, failure, isRevalidating, onRetry, userLoadOk } = props;
 
   // Hooks
   const [dismissed, setDismissed] = React.useState(false);
+  const failureKey = failure
+    ? `${failure.step}:${failure.kind}:${failure.message}`
+    : null;
+  const wasRevalidating = React.useRef(false);
+
+  // Reset dismiss when the failure payload changes (new diagnosis) or after a retry completes.
+  React.useEffect(() => {
+    setDismissed(false);
+  }, [failureKey]);
+
+  React.useEffect(() => {
+    if (wasRevalidating.current && !isRevalidating) {
+      setDismissed(false);
+    }
+    wasRevalidating.current = isRevalidating === true;
+  }, [isRevalidating]);
 
   // Setup
   const userSessionAmbiguous = !userLoadOk;
@@ -49,9 +67,15 @@ export const GlobalRootLoaderFailureBanner = (
   const title = failure
     ? rootLoaderFailureKindLabel(failure.kind)
     : 'Session could not be verified';
+  const rawMessage = failure?.message ?? '';
+  const isTruncated = rawMessage.trim().length > SNIPPET_MAX;
   const detail = failure
     ? truncateForBanner(failure.message, SNIPPET_MAX)
     : 'The request to load your account failed. You may be offline or the API may be unreachable. Retry after checking the network and server.';
+
+  const stepLine = failure
+    ? `Failed while loading: ${rootLoaderStepLabel(failure.step)}.`
+    : null;
 
   const timingParts: string[] = [];
   if (diagnostics?.healthLatencyMs != null) {
@@ -75,7 +99,20 @@ export const GlobalRootLoaderFailureBanner = (
       />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span className="font-semibold">{title}</span>
+        {stepLine ? (
+          <span className="text-xs text-muted-foreground">{stepLine}</span>
+        ) : null}
         <span className="break-words text-muted-foreground">{detail}</span>
+        {failure && isTruncated ? (
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer select-none underline decoration-dotted">
+              Full error message
+            </summary>
+            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded border border-border/60 bg-muted/40 p-2 font-mono text-[11px] leading-snug">
+              {failure.message}
+            </pre>
+          </details>
+        ) : null}
         {timingParts.length > 0 ? (
           <span className="text-xs text-muted-foreground">
             {timingParts.join(' · ')}
@@ -84,12 +121,17 @@ export const GlobalRootLoaderFailureBanner = (
       </span>
       <Button
         className="shrink-0 gap-1"
+        disabled={isRevalidating === true}
         onClick={onRetry}
         type="button"
         variant="secondary"
       >
-        <RefreshCw className="size-4" />
-        Retry
+        <RefreshCw
+          className={classnames('size-4', {
+            'animate-spin': isRevalidating === true,
+          })}
+        />
+        {isRevalidating === true ? 'Retrying…' : 'Retry'}
       </Button>
       <Button
         aria-label="Dismiss banner"

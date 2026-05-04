@@ -203,13 +203,12 @@ export const loader = async (args: Route.LoaderArgs) => {
       console.error('root loader: GetMyUser failed', error);
       user = null;
       userLoadOk = false;
-      if (rootLoaderFailure == null) {
-        rootLoaderFailure = {
-          kind: classifyRootLoaderError(error),
-          message: rootLoaderErrorMessage(error),
-          step: 'user',
-        };
-      }
+      // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
+      rootLoaderFailure = {
+        kind: classifyRootLoaderError(error),
+        message: rootLoaderErrorMessage(error),
+        step: 'user',
+      };
     }
   }
 
@@ -440,6 +439,7 @@ export default function App(): React.ReactElement {
           <GlobalRootLoaderFailureBanner
             diagnostics={data?.rootLoaderDiagnostics}
             failure={data?.rootLoaderFailure ?? null}
+            isRevalidating={revalidator.state === 'loading'}
             onRetry={handleRootLoaderRetry}
             userLoadOk={data?.userLoadOk !== false}
           />
