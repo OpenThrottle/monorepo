@@ -27,11 +27,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/dashboard',
     },
     {
-      children: 'Search',
-      icon: Search,
-      to: '/search',
-    },
-    {
       children: 'Plans',
       icon: ListChevronsUpDownIcon,
       to: '/plans',
@@ -50,6 +45,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Queues',
       icon: ListOrderedIcon,
       to: '/queues',
+    },
+    {
+      children: 'Search',
+      icon: Search,
+      to: '/search',
     },
   ],
   Agents: [

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { redirect } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GetPermissionsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -54,7 +55,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+    <GlobalScreen>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl text-highlight">Permissions</h1>
       </div>
@@ -63,7 +64,7 @@ export default function Component(
         assignments on each role&apos;s detail page.
       </p>
       <PermissionsTable permissions={permissions} />
-    </main>
+    </GlobalScreen>
   );
 }
 

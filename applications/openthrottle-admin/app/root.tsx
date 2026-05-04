@@ -15,7 +15,6 @@ import {
   redirect,
   Scripts,
   ScrollRestoration,
-  useFetcher,
   useLocation,
   useRouteLoaderData,
 } from 'react-router';
@@ -25,13 +24,15 @@ import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
 } from '@openthrottle/react-router-auth';
-import {
-  CommanderGroup,
-  OpenThrottleCommander,
-} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Toaster } from '@openthrottle/react-router-shadcn';
-import { AdminLayout } from '~/global/components/AdminLayout';
+import {
+  GlobalProviders,
+  GlobalLayout,
+  GlobalMetrics,
+  GlobalLayoutHeader,
+} from '@openthrottle/react-router-ui-global';
+import { GaugeIcon } from 'lucide-react';
 import {
   GetMeDocument,
   LoginDocument,
@@ -41,12 +42,6 @@ import {
 import { SITE_TITLE } from '#/app/global/config/settings';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
-
-function useIsAdminRoute(): boolean {
-  const location = useLocation();
-
-  return location.pathname !== '/';
-}
 
 export const links: LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -165,8 +160,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />
-
         <ScrollRestoration />
+
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
@@ -181,35 +176,48 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App(): React.ReactElement {
-  const isAdminRoute = useIsAdminRoute();
-  const commanderSearchFetcher = useFetcher();
+  // Hooks
+  const { pathname } = useLocation();
 
-  const groups: CommanderGroup[] = [];
+  // Setup
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isPromptsRoute = pathname.startsWith('/prompts/');
 
-  const handleCommanderEmptyStateSearch = React.useCallback(
-    (query: string) => {
-      commanderSearchFetcher.submit(
-        { intent: 'commander-search', q: query.trim() },
-        { method: 'post' },
-      );
-    },
-    [commanderSearchFetcher],
-  );
+  const isProfileRoute = pathname.startsWith('/profile');
+  const isSettingsRoute = pathname.startsWith('/settings');
+  const isCreateRoute = pathname.endsWith('/create');
+
+  const isFooterHidden = isAuthRoute || isPromptsRoute;
+  const isHeaderHidden = isAuthRoute || isPromptsRoute;
+  const isMetricsHidden =
+    isAuthRoute ||
+    isProfileRoute ||
+    isPromptsRoute ||
+    isSettingsRoute ||
+    isCreateRoute;
+
+  // Handlers
 
   return (
     <>
-      {isAdminRoute ? (
-        <AdminLayout>
+      <GlobalProviders>
+        <GlobalLayout
+          data={{
+            items: [
+              {
+                children: 'Dashboard',
+                icon: GaugeIcon,
+                to: '/dashboard',
+              },
+            ],
+          }}
+          overrides={{ footer: isFooterHidden }}
+        >
+          {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
           <Outlet />
-        </AdminLayout>
-      ) : (
-        <Outlet />
-      )}
-
-      <OpenThrottleCommander
-        groups={groups}
-        onEmptyStateSearch={handleCommanderEmptyStateSearch}
-      />
+          {!isMetricsHidden ? <GlobalMetrics /> : null}
+        </GlobalLayout>
+      </GlobalProviders>
     </>
   );
 }

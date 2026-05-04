@@ -36,17 +36,18 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
         'bg-card/50 backdrop-blur-sm',
         'border-b border-border',
         'flex items-center justify-between',
-        'py-2 px-4 md:px-8 gap-4',
+        'py-2 px-4 md:px-8 lg:px-12 gap-4',
         'sticky w-full top-0 z-10',
         className,
       )}
     >
-      <SidebarTrigger
-        aria-label="Toggle sidebar"
-        className="text-muted-foreground"
-      />
-
-      <GlobalLayoutBreadcrumbs className="flex-1" />
+      <div className="flex flex-1 items-center gap-2">
+        <SidebarTrigger
+          aria-label="Toggle sidebar"
+          className="text-muted-foreground"
+        />
+        <GlobalLayoutBreadcrumbs />
+      </div>
       <Input className="max-w-52" placeholder="Search" type="search" />
 
       <Link className="text-foreground" to="/profile">

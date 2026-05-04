@@ -31,15 +31,25 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
       <div className="max-w-7xl mx-auto">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6">
-            <span className="text-foreground">Get </span>{' '}
-            <span className="text-highlight">Started!</span>
+            {/* <span className="text-foreground">Get </span>{' '} */}
+            {/* <span className="text-highlight">Started!</span> */}
+            <span className="text-highlight-red font-black">Stop</span> losing
+            the <span className="text-highlight font-black">Plan</span> between
+            tools.
           </h1>
+          <p className="text-xl font-extralight text-muted-foreground mb-8 leading-loose">
+            <b className="font-medium">OpenThrottle</b> is a plans knowledge
+            base — Postgres, MCP, plans, tasks, and semantic search. It powers
+            ask OT, Ralph, and a dashboard for in progress and shipped work.
+          </p>
+          {/*
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             OpenThrottle is a plans knowledge base: a Postgres-backed app and
             MCP server that stores plans, tasks, and semantic search over them.
             It powers “ask OT,” agentic execution (Ralph), and a dashboard so
             you can see what's in progress and what shipped.
           </p>
+            */}
 
           {/* <div className="flex flex-col justify-center sm:flex-row gap-4">
             <Button

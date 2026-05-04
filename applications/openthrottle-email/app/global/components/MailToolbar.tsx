@@ -45,21 +45,32 @@ export interface MailToolbarProps {
  */
 export const MailToolbar = (props: MailToolbarProps) => {
   const { className } = props;
-  const location = useLocation();
+
+  // Hooks
+  const [inputValue, setInputValue] = React.useState('');
   const [searchParams] = useSearchParams();
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const location = useLocation();
   const navigate = useNavigate();
+
+  // Setup
   const isSearchPage = location.pathname === MAIL_PATHS.search;
   const queryFromUrl = searchParams.get('q') ?? '';
 
-  const [inputValue, setInputValue] = React.useState('');
-  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Handlers
 
-  // Sync input from URL when navigating to search page or when URL query changes (e.g. after debounced navigate).
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   React.useEffect(() => {
     if (isSearchPage) setInputValue(queryFromUrl);
+
+    // Sync input from URL when navigating to search page or when URL query changes (e.g. after debounced navigate).
   }, [isSearchPage, queryFromUrl]);
 
-  // Debounced navigate to search when user types on the search page. Future: consider navigating from any page for live search.
   const scheduleSearchNavigate = React.useCallback(
     (value: string) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -77,6 +88,8 @@ export const MailToolbar = (props: MailToolbarProps) => {
         );
       }, SEARCH_DEBOUNCE_MS);
     },
+
+    // Debounced navigate to search when user types on the search page. Future: consider navigating from any page for live search.
     [navigate],
   );
 

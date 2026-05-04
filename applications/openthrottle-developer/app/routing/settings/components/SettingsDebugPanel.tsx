@@ -110,19 +110,23 @@ export function SettingsDebugPanel({
 
   return (
     <div className="space-y-6">
-      <GlobalHeading
-        className="mb-2"
-        heading="h3"
-        icon={BugIcon}
-        title="Debug"
-      />
-      <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
-        Client-side diagnostics for this shell: public{' '}
-        <code className="rounded bg-muted px-1 py-0.5 text-xs">window.env</code>{' '}
-        shape, GraphQL health, and browser storage previews. Values here are
-        masked where possible—never paste raw{' '}
-        <code className="text-xs">.env</code> into support tickets.
-      </p>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h3"
+          icon={BugIcon}
+          title="Debug"
+        />
+        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+          Client-side diagnostics for this shell: public{' '}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">
+            window.env
+          </code>{' '}
+          shape, GraphQL health, and browser storage previews. Values here are
+          masked where possible—never paste raw{' '}
+          <code className="text-xs">.env</code> into support tickets.
+        </p>
+      </div>
 
       <Card>
         <CardHeader>

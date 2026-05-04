@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { ADMIN_PATHS } from '~/global/data/data.navigation';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -38,7 +39,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+    <GlobalScreen>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl text-highlight">Dashboard</h1>
       </div>
@@ -104,7 +105,7 @@ export default function Component(
           </Card>
         </section>
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

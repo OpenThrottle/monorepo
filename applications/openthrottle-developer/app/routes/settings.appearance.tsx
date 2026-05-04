@@ -1,10 +1,12 @@
 import * as React from 'react';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { useAtom } from 'jotai';
 import { Input, Label } from '@openthrottle/react-router-shadcn';
+import { SwatchBookIcon } from 'lucide-react';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
@@ -62,9 +64,12 @@ export default function Component(
     <GlobalScreen>
       <div className="space-y-8">
         <div>
-          <h2 className="mb-1 text-lg font-semibold tracking-tight">
-            Appearance
-          </h2>
+          <GlobalHeading
+            className="mb-4"
+            heading="h2"
+            icon={SwatchBookIcon}
+            title="Appearance"
+          />
           <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
             Theme controls for this portal. Diagnostics below mirror General
             settings and help verify URLs and build metadata.

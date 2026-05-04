@@ -3,7 +3,10 @@ import type {
   HttpRouteErrorBucket,
   JavascriptErrorSubtype,
 } from './client-error-diagnostics';
-import { isUsableRollbarClientToken } from './client-error-diagnostics';
+import {
+  isUsableRollbarClientToken,
+  readSafeClientEnvironmentTags,
+} from './client-error-diagnostics';
 
 /** Rollbar instance reused for the lifetime of the browser tab. */
 let rollbarSingleton: InstanceType<
@@ -18,7 +21,8 @@ export const reportJavaScriptErrorToRollbar = async (
   error: Error,
   incidentReferenceId: string,
   kind: ClientErrorKind,
-  javascriptSubtype?: JavascriptErrorSubtype,
+  javascriptSubtype: JavascriptErrorSubtype | undefined,
+  classificationSummary: string,
 ): Promise<void> => {
   if (typeof window === 'undefined') {
     return;
@@ -31,6 +35,7 @@ export const reportJavaScriptErrorToRollbar = async (
 
   try {
     const Rollbar = (await import('rollbar')).default;
+    const envTags = readSafeClientEnvironmentTags();
 
     if (rollbarSingleton == null) {
       rollbarSingleton = new Rollbar({
@@ -49,6 +54,8 @@ export const reportJavaScriptErrorToRollbar = async (
 
     rollbarSingleton.error(error.message, error, {
       custom: {
+        ...envTags,
+        classificationSummary,
         incidentReferenceId,
         kind,
         ...(javascriptSubtype != null ? { javascriptSubtype } : {}),
@@ -76,6 +83,7 @@ const summarizeRouteErrorData = (data: unknown): string => {
  * Omits 4xx to limit noise from expected client failures.
  */
 export const reportRouteHttpErrorToRollbar = async (params: {
+  readonly classificationSummary: string;
   readonly data: unknown;
   readonly httpBucket: HttpRouteErrorBucket;
   readonly incidentReferenceId: string;
@@ -96,6 +104,7 @@ export const reportRouteHttpErrorToRollbar = async (params: {
 
   try {
     const Rollbar = (await import('rollbar')).default;
+    const envTags = readSafeClientEnvironmentTags();
 
     if (rollbarSingleton == null) {
       rollbarSingleton = new Rollbar({
@@ -118,6 +127,8 @@ export const reportRouteHttpErrorToRollbar = async (params: {
 
     rollbarSingleton.error(routeErr.message, routeErr, {
       custom: {
+        ...envTags,
+        classificationSummary: params.classificationSummary,
         dataPreview: summarizeRouteErrorData(params.data),
         httpBucket: params.httpBucket,
         incidentReferenceId: params.incidentReferenceId,

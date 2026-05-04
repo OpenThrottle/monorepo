@@ -3,9 +3,12 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { FoldersIcon, Link, PlusIcon } from 'lucide-react';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { GetProjectsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
@@ -210,23 +213,33 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <WorkspaceEntityCrossLinks
-        className="mb-4"
-        label="Workspace shortcuts from projects"
-      />
       <ProjectsStatsCards
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />
-
-      <ProjectsToolbar
-        limit={limit}
-        page={page}
-        search={search}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        view={view}
+      <WorkspaceEntityCrossLinks
+        className="mb-4"
+        label="Workspace shortcuts from projects"
       />
+
+      <div className="flex flex-col gap-4">
+        <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects">
+          <Button asChild={true} className="shrink-0" variant="outline">
+            <Link to="/projects/create">
+              <PlusIcon className="w-4 h-4" /> Create project
+            </Link>
+          </Button>
+        </GlobalHeading>
+
+        <ProjectsToolbar
+          limit={limit}
+          page={page}
+          search={search}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          view={view}
+        />
+      </div>
 
       {isEmpty ? (
         <ProjectEmpty search={search} />

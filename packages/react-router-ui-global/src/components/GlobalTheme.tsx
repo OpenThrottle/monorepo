@@ -23,6 +23,8 @@ export const GlobalTheme = (props: GlobalThemeProps): React.ReactElement => {
   return (
     <div className={classnames('p-4', className)} data-testid="GlobalTheme">
       <h2>GlobalTheme</h2>
+
+      {/* Add a button to override system vs. light/dark */}
     </div>
   );
 };

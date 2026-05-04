@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardFooter,
+  Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { NoteCardFragment } from '~/__generated__/graphql';
@@ -36,10 +37,11 @@ export const NoteCard = (props: NoteCardProps) => {
       key={note.id}
     >
       <CardContent className="overflow-hidden flex-1 p-4">
-        <p
+        {/* <p
           className="line-clamp-3 text-sm text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: note.content }}
-        />
+        /> */}
+        <Markdown content={note.content} />
       </CardContent>
 
       <CardFooter className="flex justify-end p-2 pt-0">

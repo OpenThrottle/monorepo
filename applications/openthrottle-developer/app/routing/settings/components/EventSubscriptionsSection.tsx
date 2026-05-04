@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Card,
   CardContent,
@@ -64,7 +63,7 @@ export const EventSubscriptionsSection = (
   // 🔌 Short Circuit
 
   return (
-    <Card className={classnames('max-w-2xl', className)}>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="text-xl">Event subscriptions</CardTitle>
         <CardDescription>

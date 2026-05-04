@@ -19,6 +19,8 @@ export const GlobalLayoutBreadcrumbs = (
 
   // Hooks
 
+  ///// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const matches = useMatches() as UIMatch<
     string,
     GlobalLayoutBreadcrumbsHandle
@@ -34,9 +36,19 @@ export const GlobalLayoutBreadcrumbs = (
     .map((match) => match.handle?.links?.(match) ?? []);
 
   if (links[0]) {
-    links[0].unshift({ children: 'OpenThrottle', to: '/' });
+    links[0].unshift({
+      children: 'OpenThrottle',
+      className: 'font-semibold!',
+      to: '/',
+    });
   } else {
-    links.unshift([{ children: 'OpenThrottle', to: '/' }]);
+    links.unshift([
+      {
+        children: 'OpenThrottle',
+        className: 'font-semibold!',
+        to: '/',
+      },
+    ]);
   }
 
   // Handlers

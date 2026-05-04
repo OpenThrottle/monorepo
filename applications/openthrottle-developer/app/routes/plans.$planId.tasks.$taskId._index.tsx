@@ -34,7 +34,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
     />
   ),
   links: (match) => [
-    { children: 'All Plans', to: '/plans' },
+    { children: 'Plans', to: '/plans' },
     { children: match.data.plan.title, to: `/plans/${match.data.plan.id}` },
   ],
 };

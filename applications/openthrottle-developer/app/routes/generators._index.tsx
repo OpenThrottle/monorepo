@@ -2,9 +2,11 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { BotIcon } from 'lucide-react';
 import { GetGeneratorsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -57,7 +59,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <h1 className="text-xl my-4 text-highlight">Generators</h1>
+      <GlobalHeading heading="h1" icon={BotIcon} title="Generators" />
       <p className="mb-6 max-w-prose text-sm text-muted-foreground">
         Nx commands run in your monorepo clone (see{' '}
         <a

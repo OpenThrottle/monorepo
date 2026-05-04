@@ -4,7 +4,7 @@ exports[`PlanWorkflowConfigCollapsed Component > should render 1`] = `
 <body>
   <div>
     <div
-      class="bg-card border rounded-lg transition-colors ui-border hover:border-color-border-dark mb-6"
+      class="bg-card border hover:border-accent/60 rounded-lg transition-colors"
       data-testid="workflow-run-options-collapsed"
     >
       <div

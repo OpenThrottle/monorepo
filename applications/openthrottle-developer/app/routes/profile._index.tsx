@@ -47,7 +47,7 @@ export default function Component(
   return (
     <main className="flex h-full items-center justify-center">
       <div className="p-12 relative flex flex-col gap-8">
-        <Avatar className="size-32 md:size-44 mx-auto mb-4 md:mb-8">
+        <Avatar className="size-24 md:size-32 mx-auto mb-4 md:mb-4">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
           <AvatarFallback className="text-3xl">MS</AvatarFallback>
         </Avatar>

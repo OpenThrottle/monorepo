@@ -4,6 +4,8 @@ import {
   classifyClientError,
   clientErrorKindLabel,
   createIncidentReferenceId,
+  getLooseErrorStack,
+  incidentClassificationSummary,
   inferJavascriptErrorSubtype,
   isClientStackToggleEligible,
   isUsableRollbarClientToken,
@@ -97,5 +99,44 @@ describe('client-error-diagnostics', () => {
     expect(javascriptErrorBoundaryHint('generic')).toContain(
       'Something went wrong',
     );
+  });
+
+  test('incidentClassificationSummary covers HTTP, JavaScript, and unknown', () => {
+    expect(
+      incidentClassificationSummary({
+        error: {
+          data: 'x',
+          internal: false,
+          status: 503,
+          statusText: 'Bad Gateway',
+        },
+        kind: 'http',
+      }),
+    ).toContain('503');
+
+    const jsErr = new Error('fail');
+    expect(
+      incidentClassificationSummary({
+        error: jsErr,
+        kind: 'javascript',
+      }),
+    ).toMatch(/JavaScript ·/);
+
+    expect(
+      incidentClassificationSummary({
+        error: 'oops',
+        kind: 'unknown',
+      }),
+    ).toContain('Unexpected');
+  });
+
+  test('getLooseErrorStack reads stack from Error and duck-typed objects', () => {
+    const err = new Error('e');
+    expect(getLooseErrorStack(err)).toBe(err.stack);
+
+    expect(getLooseErrorStack({ stack: 'at foo (bar.ts:1:1)' })).toBe(
+      'at foo (bar.ts:1:1)',
+    );
+    expect(getLooseErrorStack(null)).toBeUndefined();
   });
 });

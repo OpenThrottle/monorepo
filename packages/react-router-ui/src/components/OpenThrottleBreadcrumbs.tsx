@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -40,7 +41,10 @@ export const OpenThrottleBreadcrumbs = (
             <BreadcrumbItem>
               <BreadcrumbLink asChild={true}>
                 <Link
-                  className="hover:text-accent transition-colors"
+                  className={classnames(
+                    'hover:text-accent transition-colors',
+                    link.className,
+                  )}
                   to={link.to}
                   viewTransition={true}
                 >

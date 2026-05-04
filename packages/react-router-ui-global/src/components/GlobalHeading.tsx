@@ -37,7 +37,7 @@ export const GlobalHeading = (props: GlobalHeadingProps) => {
         )}
         data-testid="GlobalHeading"
       >
-        {Icon ? <Icon className="size-6 text-muted-foreground" /> : null}
+        {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
         {title}
       </Heading>
       {children && children}

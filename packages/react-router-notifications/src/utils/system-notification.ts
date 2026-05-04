@@ -131,6 +131,12 @@ export function showSystemNotification(
       notification.close();
     };
   } catch {
+    console.error('🔴 Error showing system notification', {
+      event,
+      navigate,
+      payload,
+    });
+
     // Ignore constructor or onclick errors (e.g. some browsers restrict behavior).
   }
 }

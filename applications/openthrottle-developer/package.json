@@ -1,6 +1,6 @@
 {
   "name": "openthrottle-developer",
-  "description": "OpenThrottle developer portal: dashboard for plans, projects, notes, generators, and pull requests.",
+  "description": "OpenThrottle | Developer: dashboard for plans, projects, notes, generators, and pull requests.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

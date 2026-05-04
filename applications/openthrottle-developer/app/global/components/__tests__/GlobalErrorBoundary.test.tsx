@@ -28,5 +28,7 @@ describe('GlobalErrorBoundary Component', () => {
     expect(
       screen.getByRole('heading', { name: 'Stale build or missing chunk' }),
     ).toBeInTheDocument();
+    expect(screen.getByText(/Classification:/)).toBeInTheDocument();
+    expect(screen.getByText(/JavaScript ·/)).toBeInTheDocument();
   });
 });

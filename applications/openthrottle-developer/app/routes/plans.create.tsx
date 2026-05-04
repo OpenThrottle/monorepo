@@ -15,8 +15,8 @@ import type { Route } from '@/app/routes/+types/plans.create';
 //   breadcrumb: () => <Link to="/parent/child">Child Route</Link>,
 // };
 export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => 'Create Plan',
-  links: (_match) => [{ children: 'All Plans', to: '/plans' }],
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [{ children: 'Plans', to: '/plans' }],
 };
 
 // export const loader = async (_args: Route.LoaderArgs) => {

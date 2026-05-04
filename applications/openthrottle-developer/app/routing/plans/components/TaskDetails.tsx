@@ -9,6 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Markdown,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
@@ -135,14 +136,21 @@ export const TaskDetails = (props: TaskDetailsProps) => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                <p
+                <Markdown
+                  className={classnames(
+                    'text-sm text-muted-foreground whitespace-normal',
+                    showDescriptionPreview && 'line-clamp-4',
+                  )}
+                  content={task.description ?? ''}
+                />
+                {/* <p
                   className={classnames(
                     'text-sm text-muted-foreground',
                     showDescriptionPreview && 'line-clamp-4',
                   )}
                 >
                   {task.description}
-                </p>
+                </p> */}
                 {isLongDescription && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"

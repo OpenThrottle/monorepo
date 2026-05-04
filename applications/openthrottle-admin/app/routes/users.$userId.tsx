@@ -32,6 +32,7 @@ import {
 import { Link, useFetcher } from 'react-router';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import {
   AssignRoleToUserDocument,
   DisableUserDocument,
@@ -177,7 +178,7 @@ export default function Component(
   }
 
   return (
-    <main className="w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+    <GlobalScreen>
       <p className="text-sm text-muted-foreground">
         <Link
           className="underline underline-offset-2 hover:text-primary"
@@ -373,7 +374,7 @@ export default function Component(
           )}
         </CardContent>
       </Card>
-    </main>
+    </GlobalScreen>
   );
 }
 

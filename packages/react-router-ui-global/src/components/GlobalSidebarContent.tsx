@@ -54,7 +54,12 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
           isActive={isActive}
           tooltip={String(children)}
         >
-          <NavLink color="#00ff00" to={item.to} viewTransition={true}>
+          <NavLink
+            className="text-xs!"
+            color="#00ff00"
+            to={item.to}
+            viewTransition={true}
+          >
             <IconComponent
               className={classnames('size-4 shrink-0', {
                 'text-accent': isActive,
@@ -80,16 +85,12 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
         const items = data?.[section] ?? [];
 
         return (
-          <>
-            <SidebarGroup key={section} title={section}>
-              <SidebarGroupLabel>{section}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu title={section}>
-                  {items.map(renderLink)}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
+          <SidebarGroup key={section} title={section}>
+            <SidebarGroupLabel>{section}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu title={section}>{items.map(renderLink)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         );
       })}
     </SidebarContent>

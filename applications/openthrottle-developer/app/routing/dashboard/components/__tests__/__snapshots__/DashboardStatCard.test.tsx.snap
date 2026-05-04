@@ -4,7 +4,7 @@ exports[`DashboardStatCard Component > should render 1`] = `
 <body>
   <div>
     <div
-      class="bg-card border transition-colors ui-border hover:border-color-border-dark p-8 rounded-xl"
+      class="bg-card border hover:border-accent/60 transition-colors p-8 rounded-xl"
       data-testid="DashboardStatCard"
     >
       <div

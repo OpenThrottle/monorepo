@@ -40,19 +40,14 @@ export const GlobalSidebarFooter = (props: GlobalSidebarFooterProps) => {
     <SidebarFooter className="border-t border-border bg-card px-6 py-4 overflow-hidden text-center">
       <SidebarMenu>
         <SidebarMenuItem>
-          {/* <SidebarMenuButton> */}
-          {/* <User2 /> Usernames */}
           <Link
             className="flex items-center text-xs text-muted-foreground"
             target="_blank"
             to={`${ENV_SOURCE.API_URL_EXTERNAL}/health`}
           >
             <div
-              className={classnames(
-                'inline-block h-2 w-2 shrink-0 rounded-full',
-                color,
-              )}
-            />{' '}
+              className={classnames('h-2 w-2 shrink-0 rounded-full', color)}
+            />
             <SidebarGroupLabel>&nbsp; System Status</SidebarGroupLabel>
           </Link>
           {/* </SidebarMenuButton> */}

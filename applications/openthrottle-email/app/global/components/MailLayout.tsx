@@ -23,6 +23,18 @@ export interface MailLayoutProps {
 export const MailLayout = (props: MailLayoutProps) => {
   const { children, className, defaultSidebarOpen = true } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <TooltipProvider delayDuration={300} skipDelayDuration={100}>
       <SidebarProvider

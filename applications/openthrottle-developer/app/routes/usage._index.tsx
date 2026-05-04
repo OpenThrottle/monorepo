@@ -10,9 +10,11 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { ChartAreaIcon } from 'lucide-react';
 import { GetUsageDailyStatsDocument } from '~/__generated__/graphql';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
@@ -62,7 +64,19 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <Card className="mb-6 bg-transparent">
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h3"
+          icon={ChartAreaIcon}
+          title="Usage"
+        />
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Usage metrics for this portal over the last {rangeDays} days.
+        </p>
+      </div>
+
+      <Card className="bg-transparent">
         <CardHeader>
           <CardTitle className="text-base">Agents &amp; Cortex usage</CardTitle>
           <CardDescription>

@@ -6,11 +6,14 @@ import {
   classifyClientError,
   clientErrorKindLabel,
   createIncidentReferenceId,
+  getLooseErrorStack,
+  incidentClassificationSummary,
   inferJavascriptErrorSubtype,
   isClientStackToggleEligible,
   isUsableRollbarClientToken,
   javascriptErrorBoundaryHint,
   javascriptErrorBoundaryTitle,
+  readSafeClientEnvironmentTags,
   routeHttpErrorSummary,
 } from '~/global/utils/client-error-diagnostics';
 import {
@@ -34,6 +37,7 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
   const isRouteErr = isRouteErrorResponse(error);
   const isJsError = error instanceof Error;
   const jsSubtype = isJsError ? inferJavascriptErrorSubtype(error) : null;
+  const classificationSummary = incidentClassificationSummary({ error, kind });
 
   const [incidentReferenceId] = React.useState(createIncidentReferenceId);
   const stackToggleEligible = isClientStackToggleEligible();
@@ -56,8 +60,16 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
       incidentReferenceId,
       kind,
       jsSubtype ?? undefined,
+      classificationSummary,
     );
-  }, [error, incidentReferenceId, isJsError, jsSubtype, kind]);
+  }, [
+    classificationSummary,
+    error,
+    incidentReferenceId,
+    isJsError,
+    jsSubtype,
+    kind,
+  ]);
 
   React.useEffect(() => {
     if (!isRouteErr || error.status < 500) {
@@ -69,13 +81,14 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
     }
     reportedHttpRollbarKeyRef.current = key;
     void reportRouteHttpErrorToRollbar({
+      classificationSummary,
       data: error.data,
       httpBucket: bucketRouteHttpStatus(error.status),
       incidentReferenceId,
       status: error.status,
       statusText: error.statusText,
     });
-  }, [error, incidentReferenceId, isRouteErr]);
+  }, [classificationSummary, error, incidentReferenceId, isRouteErr]);
 
   const onClickRefresh = () => {
     window.location.reload();
@@ -93,9 +106,11 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
     const crashReportingConfigured =
       typeof window !== 'undefined' &&
       isUsableRollbarClientToken(window.env?.ROLLBAR_TOKEN);
+    const envTags =
+      typeof window !== 'undefined' ? readSafeClientEnvironmentTags() : null;
     const payload: Record<string, unknown> = {
-      appVersion:
-        typeof window !== 'undefined' ? window.env?.APP_VERSION : undefined,
+      ...(envTags ?? {}),
+      classificationSummary,
       crashReportingConfigured,
       errorKind: kind,
       incidentReferenceId,
@@ -127,6 +142,10 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
         <p className="font-medium text-foreground">Support reference</p>
         <p className="mt-1 font-mono text-xs break-all text-muted-foreground">
           {incidentReferenceId}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Classification: </span>
+          {classificationSummary}
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
           Include this id when contacting support.{' '}
@@ -225,6 +244,8 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
     );
   }
 
+  const looseStack = getLooseErrorStack(error);
+
   return (
     <div className={className}>
       <h1 className="text-xl">{clientErrorKindLabel(kind)}</h1>
@@ -239,6 +260,23 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
         </p>
       ) : null}
       {renderReferencePanel()}
+      {stackToggleEligible && looseStack ? (
+        <div className="mt-6 space-y-2">
+          <Button
+            onClick={() => setShowStack((v) => !v)}
+            type="button"
+            variant="secondary"
+          >
+            {showStack ? 'Hide stack trace' : 'Show stack trace'}
+          </Button>
+          {showStack ? (
+            <>
+              <h2 className="text-subtitle my-4">Stack trace</h2>
+              <Markdown content={looseStack} />
+            </>
+          ) : null}
+        </div>
+      ) : null}
       {renderActions()}
     </div>
   );

@@ -21,6 +21,13 @@ const JAVASCRIPT_SUBTYPE = {
   user_abort: 'user_abort',
 } as const satisfies Record<string, JavascriptErrorSubtype>;
 
+const JAVASCRIPT_SUBTYPE_SUMMARY: Record<JavascriptErrorSubtype, string> = {
+  chunk_load: 'stale chunk / asset load',
+  generic: 'generic application error',
+  network: 'network or fetch failure',
+  user_abort: 'aborted request',
+};
+
 /**
  * @description Maps thrown values to {@link ClientErrorKind} for titles and support payloads.
  */
@@ -206,6 +213,38 @@ export const createIncidentReferenceId = (): string => {
 };
 
 /**
+ * @description One-line technical classification for support tickets and Rollbar custom data.
+ */
+export const incidentClassificationSummary = (params: {
+  readonly error: unknown;
+  readonly kind: ClientErrorKind;
+}): string => {
+  if (isRouteErrorResponse(params.error)) {
+    const bucket = bucketRouteHttpStatus(params.error.status);
+    return `HTTP ${params.error.status} ${params.error.statusText} (${bucket})`;
+  }
+  if (params.error instanceof Error) {
+    const sub = inferJavascriptErrorSubtype(params.error);
+    return `JavaScript · ${JAVASCRIPT_SUBTYPE_SUMMARY[sub]}`;
+  }
+  return clientErrorKindLabel(params.kind);
+};
+
+/**
+ * @description Best-effort stack string when the thrown value is not an {@link Error} but carries `stack` (e.g. some libraries).
+ */
+export const getLooseErrorStack = (error: unknown): string | undefined => {
+  if (error instanceof Error && typeof error.stack === 'string') {
+    return error.stack;
+  }
+  if (typeof error !== 'object' || error === null) {
+    return undefined;
+  }
+  const stack = (error as { readonly stack?: unknown }).stack;
+  return typeof stack === 'string' ? stack : undefined;
+};
+
+/**
  * @description Whether stack traces may be toggled in the UI (local/dev-like builds).
  * Uses {@link window.env} from the root loader only so production builds cannot be overridden by bundler mode in tests.
  */
@@ -218,4 +257,22 @@ export const isClientStackToggleEligible = (): boolean => {
     return false;
   }
   return env.APP_ENV === 'development' || env.NODE_ENV === 'development';
+};
+
+/**
+ * @description Non-secret environment tags for incident payloads and crash reporters (Rollbar custom).
+ */
+export const readSafeClientEnvironmentTags = (): {
+  readonly appEnv: string | undefined;
+  readonly appVersion: string | undefined;
+  readonly nodeEnv: string | undefined;
+} => {
+  if (typeof window === 'undefined') {
+    return { appEnv: undefined, appVersion: undefined, nodeEnv: undefined };
+  }
+  return {
+    appEnv: window.env?.APP_ENV,
+    appVersion: window.env?.APP_VERSION,
+    nodeEnv: window.env?.NODE_ENV,
+  };
 };
