@@ -38,6 +38,21 @@ describe('buildCommanderEmptyStateExtras', () => {
     expect(navigate).toHaveBeenNthCalledWith(2, `/plans/${a}/tasks/${b}`);
   });
 
+  test('non-UUID text returns browse shortcuts for plans, queues, and generators', () => {
+    const navigate = vi.fn();
+    const items = buildCommanderEmptyStateExtras(
+      'no-match-filter-text',
+      navigate,
+    );
+    expect(items).toHaveLength(3);
+    items[0]?.onSelect?.();
+    items[1]?.onSelect?.();
+    items[2]?.onSelect?.();
+    expect(navigate).toHaveBeenNthCalledWith(1, '/plans');
+    expect(navigate).toHaveBeenNthCalledWith(2, '/queues');
+    expect(navigate).toHaveBeenNthCalledWith(3, '/generators');
+  });
+
   test('single UUID returns plan, queue, generator, and search rows', () => {
     const navigate = vi.fn();
     const id = 'c65fb0f7-56ae-43bb-b516-dfd41fda7985';

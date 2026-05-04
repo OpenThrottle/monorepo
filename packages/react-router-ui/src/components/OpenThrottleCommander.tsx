@@ -160,7 +160,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
       translate="no"
     >
       <CommandInput
-        className="p-4 flex-1 leading-none text-sm! pb-4 border-b!"
+        className="p-4 flex-1 leading-none text-sm! pb-4 border-b! border-border!"
         onValueChange={setSearch}
         placeholder={placeholder}
         value={search}
@@ -201,7 +201,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
             forceMount={true}
             heading={
               extraItems.length > 0
-                ? 'No matching commands — debug jumps or search'
+                ? 'No matching commands — shortcuts or search'
                 : 'No matching commands — try search'
             }
           >
@@ -243,7 +243,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
         )}
       </CommandList>
 
-      <div className="text-[10px] px-2 py-2 text-muted-foreground gap-4 flex justify-between items-center">
+      <div className="text-[10px] px-2 py-2 border-t border-border text-muted-foreground gap-4 flex justify-between items-center">
         {footerHint ? (
           <span className="text-left max-w-[min(100%,18rem)] leading-snug line-clamp-2">
             {footerHint}

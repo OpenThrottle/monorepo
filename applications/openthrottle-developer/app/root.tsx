@@ -68,7 +68,12 @@ import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import { configAtom } from '~/global/data/atom.config';
-import { buildCommanderEmptyStateExtras } from '~/global/utils/commander-empty-extras';
+import {
+  CORTEX_UUID_PATTERN,
+  buildCommanderEmptyStateExtras,
+  parseQueueAndJobIdsFromCommanderQuery,
+} from '~/global/utils/commander-empty-extras';
+import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 
 /** Path prefixes that require authentication when FEATURE_BETA_PREVIEW is on. */
 const PROTECTED_PATH_PREFIXES = [
@@ -382,6 +387,10 @@ export default function App(): React.ReactElement {
     revalidator.revalidate();
   }, [revalidator]);
 
+  /**
+   * @description Root action `commander-search`: default redirects to `/search?q=…`.
+   * Optional `jump` + `id` / `id2` supports POST-driven debug navigation (see action handler).
+   */
   const handleSearch = React.useCallback(
     (query: string) => {
       fetcher.submit(
@@ -443,7 +452,8 @@ export default function App(): React.ReactElement {
             emptyStateMessage={
               <span className="block px-2 text-center leading-relaxed">
                 <span className="block">
-                  No matching commands. Type to filter, or paste a UUID. Two
+                  No matching commands. Type to filter, paste a Cortex UUID, or
+                  use the browse shortcuts when your text is not a UUID. Two
                   UUIDs (with <code className="text-[10px]">/</code> or space)
                   open a queue job and a plan task.
                 </span>
@@ -455,7 +465,7 @@ export default function App(): React.ReactElement {
                 </span>
               </span>
             }
-            footerHint="Paste one Cortex UUID for plan/queue/generator jumps, two UUIDs (queue/job or plan/task) with / or space, or run Search from the list."
+            footerHint="Paste UUID(s) for quick jumps, or use browse shortcuts and Search when nothing matches your filter."
             groups={groups}
             onEmptyStateSearch={handleSearch}
             placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
@@ -481,6 +491,63 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'commander-search') {
+    const jump = formData.get('jump');
+    if (jump === 'plans-index') {
+      return redirect('/plans');
+    }
+    if (jump === 'queues-index') {
+      return redirect('/queues');
+    }
+    if (jump === 'generators-index') {
+      return redirect('/generators');
+    }
+
+    const idRaw = formData.get('id');
+    const id2Raw = formData.get('id2');
+    const id =
+      typeof idRaw === 'string' && idRaw.trim().length > 0 ? idRaw.trim() : '';
+    const id2 =
+      typeof id2Raw === 'string' && id2Raw.trim().length > 0
+        ? id2Raw.trim()
+        : '';
+
+    if (jump === 'plan-detail' && CORTEX_UUID_PATTERN.test(id)) {
+      return redirect(`/plans/${id}`);
+    }
+    if (jump === 'queue-detail' && CORTEX_UUID_PATTERN.test(id)) {
+      return redirect(`/queues/${id}`);
+    }
+    if (jump === 'generator-detail' && CORTEX_UUID_PATTERN.test(id)) {
+      return redirect(`/generators/${id}`);
+    }
+    if (
+      jump === 'queue-job' &&
+      CORTEX_UUID_PATTERN.test(id) &&
+      CORTEX_UUID_PATTERN.test(id2)
+    ) {
+      return redirect(queueJobDetailPath(id, id2));
+    }
+    if (
+      jump === 'plan-task' &&
+      CORTEX_UUID_PATTERN.test(id) &&
+      CORTEX_UUID_PATTERN.test(id2)
+    ) {
+      return redirect(`/plans/${id}/tasks/${id2}`);
+    }
+
+    if (jump === 'queue-job' || jump === 'plan-task') {
+      const qTextRaw = formData.get('q');
+      const qText = typeof qTextRaw === 'string' ? qTextRaw.trim() : '';
+      const pairFromQuery = parseQueueAndJobIdsFromCommanderQuery(qText);
+      if (pairFromQuery) {
+        const [a, b] = pairFromQuery;
+        if (jump === 'queue-job') {
+          return redirect(queueJobDetailPath(a, b));
+        }
+        return redirect(`/plans/${a}/tasks/${b}`);
+      }
+    }
+
     const q = formData.get('q');
     const query = typeof q === 'string' ? q.trim() : '';
     const search = query ? `?q=${encodeURIComponent(query)}` : '';

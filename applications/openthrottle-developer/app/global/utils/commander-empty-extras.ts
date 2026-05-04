@@ -14,7 +14,7 @@ const UUID_GROUP =
  * @description Parses `queueId/jobId` or two UUIDs separated by whitespace (common when pasting from logs).
  * @returns Tuple `[queueId, jobId]` or `null` if the string is not a valid pair.
  */
-const parseQueueAndJobId = (
+export const parseQueueAndJobIdsFromCommanderQuery = (
   query: string,
 ): readonly [string, string] | null => {
   const trimmed = query.trim();
@@ -35,6 +35,42 @@ const parseQueueAndJobId = (
 };
 
 /**
+ * @description Browse shortcuts when the typed text is not a UUID (palette still shows “no match” for static commands).
+ */
+const buildNonUuidDebugIndexItems = (
+  query: string,
+  navigate: (to: string) => void,
+): readonly CommanderItem[] => {
+  const q = query.trim();
+  return [
+    {
+      id: 'debug-open-plans-index',
+      label: 'Open Plans (browse all)',
+      onSelect: () => {
+        navigate('/plans');
+      },
+      value: `${q} debug plans index`,
+    },
+    {
+      id: 'debug-open-queues-index',
+      label: 'Open Queues (browse all)',
+      onSelect: () => {
+        navigate('/queues');
+      },
+      value: `${q} debug queues index`,
+    },
+    {
+      id: 'debug-open-generators-index',
+      label: 'Open Generators (browse all)',
+      onSelect: () => {
+        navigate('/generators');
+      },
+      value: `${q} debug generators index`,
+    },
+  ];
+};
+
+/**
  * @description Extra commander rows when the palette filter matches no static commands: debug jumps and search escape.
  * @param navigate - React Router navigate from {@link useNavigate}
  */
@@ -47,7 +83,7 @@ export const buildCommanderEmptyStateExtras = (
     return [];
   }
 
-  const queueJob = parseQueueAndJobId(q);
+  const queueJob = parseQueueAndJobIdsFromCommanderQuery(q);
   if (queueJob) {
     const [firstId, secondId] = queueJob;
     /** Same `uuid/uuid` shape is used for queue/job and plan/task — offer both jumps. */
@@ -109,5 +145,5 @@ export const buildCommanderEmptyStateExtras = (
     ];
   }
 
-  return [];
+  return buildNonUuidDebugIndexItems(q, navigate);
 };
