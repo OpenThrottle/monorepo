@@ -8,7 +8,14 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { useRevalidator } from 'react-router';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GLOBAL_METRICS_CHART_CONFIG,
+  GLOBAL_METRICS_CHART_LINE_KEYS,
+  GLOBAL_METRICS_LINE_DEFINITIONS,
+  GLOBAL_METRICS_STAT_CARD_DOCS,
+} from '@openthrottle/react-router-ui-global';
+import type { GlobalMetricsChartLineKey } from '@openthrottle/react-router-ui-global';
 import { BugIcon } from 'lucide-react';
 import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-env';
 import {
@@ -316,6 +323,64 @@ export function SettingsDebugPanel({
                 </table>
               </div>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="server-metrics-definitions">
+        <CardHeader>
+          <CardTitle className="text-base">Server metrics strip</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <p>
+            When the footer{' '}
+            <strong className="text-foreground">Server metrics</strong> strip is
+            visible, each poll calls the GraphQL{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              serverMetrics
+            </code>{' '}
+            field on{' '}
+            <strong className="text-foreground">openthrottle-server</strong>.
+            Values describe that API process on the machine hosting the server —
+            not RAM or CPU for this browser tab. The strip is hidden on auth,
+            profile, settings, prompts, and create routes.
+          </p>
+          <div>
+            <p className="mb-2 font-medium text-foreground">Stat cards</p>
+            <ul className="list-inside list-disc space-y-2">
+              {GLOBAL_METRICS_STAT_CARD_DOCS.map((doc) => (
+                <li key={doc.title}>
+                  <span className="font-medium text-foreground">
+                    {doc.title}
+                  </span>
+                  {' — '}
+                  {doc.body}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="mb-2 font-medium text-foreground">
+              Chart legend (metrics over time)
+            </p>
+            <ul className="list-inside list-disc space-y-2">
+              {GLOBAL_METRICS_CHART_LINE_KEYS.map(
+                (key: GlobalMetricsChartLineKey) => {
+                  const chartEntry = GLOBAL_METRICS_CHART_CONFIG[key];
+                  const hint = GLOBAL_METRICS_LINE_DEFINITIONS[key];
+
+                  return (
+                    <li key={key}>
+                      <span className="font-medium text-foreground">
+                        {chartEntry.label}
+                      </span>
+                      {' — '}
+                      {hint}
+                    </li>
+                  );
+                },
+              )}
+            </ul>
           </div>
         </CardContent>
       </Card>

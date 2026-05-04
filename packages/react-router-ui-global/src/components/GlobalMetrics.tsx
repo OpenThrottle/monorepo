@@ -33,6 +33,7 @@ import {
 import {
   GLOBAL_METRICS_CHART_CONFIG,
   GLOBAL_METRICS_CHART_LINE_KEYS,
+  GLOBAL_METRICS_LINE_DEFINITIONS,
   GLOBAL_METRICS_POLL_INTERVAL_DEFAULT,
   GLOBAL_METRICS_POLL_INTERVAL_PRESETS,
   GLOBAL_METRICS_STORAGE_KEY,
@@ -48,6 +49,10 @@ export interface GlobalMetricsProps {
    * In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer).
    */
   readonly diagnosticsHref?: string;
+  /**
+   * Deep link to a persistent metric-definitions panel (e.g. Settings → Debug → Server metrics definitions).
+   */
+  readonly definitionsHref?: string;
   readonly pollIntervalMs?: number;
   /**
    * When true, show a collapsed “Sampling & endpoint” block with poll interval, sample count, and GraphQL URL (for support / debugging).
@@ -58,6 +63,7 @@ export interface GlobalMetricsProps {
 export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const {
     className,
+    definitionsHref,
     diagnosticsHref = '/settings/debug',
     pollIntervalMs: propPollIntervalMs,
     showSamplingDetails = true,
@@ -192,7 +198,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
         <div className="flex flex-wrap items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-muted-foreground">Server metrics</h2>
-            <GlobalMetricsTooltip />
+            <GlobalMetricsTooltip definitionsHref={definitionsHref} />
           </div>
           <Label className="flex items-center gap-2">
             <span>Poll</span>
@@ -239,6 +245,18 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           >
             Settings: GraphQL health & env
           </a>
+          {definitionsHref ? (
+            <>
+              {' · '}
+              <a
+                className="font-medium text-foreground underline underline-offset-2"
+                data-testid="GlobalMetrics-definitions-link"
+                href={definitionsHref}
+              >
+                Full metric definitions
+              </a>
+            </>
+          ) : null}
           .
         </p>
 
@@ -267,7 +285,9 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
             </dl>
             <p className="mt-3 border-t border-border/50 pt-3 text-[11px] leading-relaxed">
               Chart lines: RSS and heap are megabytes; CPU user is milliseconds
-              (same units as the cards). System CPU is shown on the card only.
+              (same units as the cards). CPU <strong>system</strong> time is not
+              plotted (only on the stat card) so the Y axis stays comparable
+              across samples.
             </p>
           </details>
         ) : null}
@@ -315,9 +335,21 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           data-testid="GlobalMetrics-chart-card"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Metrics over time
-            </h3>
+            <div className="mb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Metrics over time
+              </h3>
+              {definitionsHref ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  <a
+                    className="font-medium text-foreground underline underline-offset-2"
+                    href={definitionsHref}
+                  >
+                    What each line measures
+                  </a>
+                </p>
+              ) : null}
+            </div>
             {loading && metricsHistory.length > 0 ? (
               <p
                 className="text-xs text-muted-foreground"
@@ -338,14 +370,26 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 const entry = GLOBAL_METRICS_CHART_CONFIG[key];
                 if (!entry?.label || !entry.color) return null;
 
+                const lineHint = GLOBAL_METRICS_LINE_DEFINITIONS[key];
+
                 return (
-                  <span className="inline-flex items-center gap-1.5" key={key}>
-                    <span
-                      aria-hidden={true}
-                      className="inline-block h-2 w-4 shrink-0 rounded-sm"
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span>{entry.label}</span>
+                  <span
+                    className="inline-flex max-w-[16rem] flex-col gap-0.5"
+                    key={key}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        aria-hidden={true}
+                        className="inline-block h-2 w-4 shrink-0 rounded-sm"
+                        style={{ backgroundColor: entry.color }}
+                      />
+                      <span className="text-foreground/90">{entry.label}</span>
+                    </span>
+                    {lineHint ? (
+                      <span className="pl-[calc(0.5rem+1rem)] text-[10px] leading-snug text-muted-foreground">
+                        {lineHint}
+                      </span>
+                    ) : null}
                   </span>
                 );
               },

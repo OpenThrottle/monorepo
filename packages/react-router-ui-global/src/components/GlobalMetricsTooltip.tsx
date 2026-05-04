@@ -5,15 +5,20 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Info } from 'lucide-react';
+import { GLOBAL_METRICS_STAT_CARD_DOCS } from '../config';
 
 export interface GlobalMetricsTooltipProps {
   readonly className?: string;
+  /**
+   * @description Optional deep link to a persistent definitions panel (e.g. Settings → Debug).
+   */
+  readonly definitionsHref?: string;
 }
 
 export const GlobalMetricsTooltip = (
-  _props: GlobalMetricsTooltipProps,
+  props: GlobalMetricsTooltipProps,
 ): React.ReactElement => {
-  // const { className } = props;
+  const { definitionsHref } = props;
 
   // Hooks
 
@@ -61,32 +66,12 @@ export const GlobalMetricsTooltip = (
           Stat cards
         </p>
         <ul className="list-disc font-normal pl-4 space-y-2 mb-3">
-          <li>
-            <strong className="text-card-foreground">
-              RSS / External (MB)
-            </strong>{' '}
-            — Large number: RSS (resident set size), total process memory the OS
-            tracks for the Node process. Sub-value: “external” bytes outside the
-            V8 heap (buffers, native addons). Useful for overall footprint; ~low
-            hundreds of MB is common in local dev.
-          </li>
-          <li>
-            <strong className="text-card-foreground">Heap (MB)</strong> — Large
-            number: V8 heap currently used. Sub-value: heap limit / total
-            allocated for JS objects. When used persistently nears total, expect
-            GC pressure or risk of allocation failures.
-          </li>
-          <li>
-            <strong className="text-card-foreground">
-              CPU user / system (ms)
-            </strong>{' '}
-            — Cumulative CPU milliseconds since the server process started (not
-            per request). User time is JS/work in process context; system time
-            is kernel work on behalf of the process. Both increase over time;
-            abrupt spikes while idle may mean heavy background work. The trend
-            chart plots <em>user</em> ms only so the Y axis stays comparable to
-            memory lines.
-          </li>
+          {GLOBAL_METRICS_STAT_CARD_DOCS.map((doc) => (
+            <li key={doc.title}>
+              <strong className="text-card-foreground">{doc.title}</strong> —{' '}
+              {doc.body}
+            </li>
+          ))}
         </ul>
         <p className="font-semibold text-sm mb-2 text-card-foreground">
           Poll & chart
@@ -105,6 +90,17 @@ export const GlobalMetricsTooltip = (
             legend under the chart.
           </li>
         </ul>
+        {definitionsHref ? (
+          <p className="mt-3 border-t border-border pt-3 text-xs font-normal leading-snug">
+            <a
+              className="font-medium text-primary underline underline-offset-2"
+              href={definitionsHref}
+            >
+              Open full definitions in Settings
+            </a>{' '}
+            (stable reference for support tickets).
+          </p>
+        ) : null}
       </TooltipContent>
     </Tooltip>
   );
