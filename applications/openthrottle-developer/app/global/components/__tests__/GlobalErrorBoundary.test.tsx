@@ -12,10 +12,10 @@ describe('GlobalErrorBoundary Component', () => {
     render(<RoutesStub />);
 
     expect(
-      screen.getByRole('heading', { name: 'Unknown Error' }),
+      screen.getByRole('heading', { name: 'Unexpected error' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Sorry we've encountered an unknown error/i),
+      screen.getByText(/Sorry we've encountered an unexpected problem/i),
     ).toBeInTheDocument();
   });
 });
