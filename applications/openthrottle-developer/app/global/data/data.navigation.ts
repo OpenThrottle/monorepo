@@ -1,5 +1,6 @@
 import { GlobalSidebarLinkProps } from '@openthrottle/react-router-ui-global';
 import {
+  BellIcon,
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
@@ -10,6 +11,7 @@ import {
   ListChevronsUpDownIcon,
   ListOrderedIcon,
   NotebookTextIcon,
+  Search,
   SettingsIcon,
   SwatchBookIcon,
   TerminalSquareIcon,
@@ -25,6 +27,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/dashboard',
     },
     {
+      children: 'Search',
+      icon: Search,
+      to: '/search',
+    },
+    {
       children: 'Plans',
       icon: ListChevronsUpDownIcon,
       to: '/plans',
@@ -35,19 +42,14 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/projects',
     },
     {
-      children: 'Queues',
-      icon: ListOrderedIcon,
-      to: '/queues',
-    },
-    {
-      children: 'Notes',
-      icon: NotebookTextIcon,
-      to: '/notes',
-    },
-    {
       children: 'Pull requests',
       icon: GitPullRequest,
       to: '/pull-requests',
+    },
+    {
+      children: 'Queues',
+      icon: ListOrderedIcon,
+      to: '/queues',
     },
   ],
   Agents: [
@@ -69,12 +71,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   ],
   Settings: [
     {
-      children: 'General',
-      icon: SettingsIcon,
-      end: true,
-      to: '/settings',
-    },
-    {
       children: 'Appearance',
       icon: SwatchBookIcon,
       to: '/settings/appearance',
@@ -85,12 +81,28 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/settings/debug',
     },
     {
+      children: 'General',
+      icon: SettingsIcon,
+      end: true,
+      to: '/settings',
+    },
+    {
       children: 'Logs',
       icon: TerminalSquareIcon,
       to: '/settings/logs',
     },
   ],
   User: [
+    {
+      children: 'Notes',
+      icon: NotebookTextIcon,
+      to: '/notes',
+    },
+    {
+      children: 'Notifications',
+      icon: BellIcon,
+      to: '/notifications',
+    },
     {
       children: 'Profile',
       icon: UserCircle,

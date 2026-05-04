@@ -10,6 +10,7 @@ import {
 import { GetNotesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
+import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes._index';
 
@@ -55,13 +56,18 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl my-4 text-highlight">Notes</h1>
-        <Button asChild={true} size="sm">
-          <Link to="/notes/create" viewTransition={true}>
-            Create Note
-          </Link>
-        </Button>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <WorkspaceEntityCrossLinks
+          className="min-w-0"
+          label="Workspace shortcuts from notes"
+        />
+        <div className="flex shrink-0 items-center justify-end">
+          <Button asChild={true} size="sm" variant="outline">
+            <Link to="/notes/create" viewTransition={true}>
+              Create Note
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">

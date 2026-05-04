@@ -92,6 +92,13 @@ export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
                 .join(' · ')}
             </p>
           )}
+        <p className="border-t border-border pt-2 text-[11px] text-muted-foreground">
+          <strong className="font-medium text-foreground/90">Tuning:</strong>{' '}
+          the API returns the strongest matches first. Use a tighter query for
+          fewer off-topic hits; lower{' '}
+          <strong className="font-medium">Results per page</strong> in filters
+          when you only need the top slice.
+        </p>
       </div>
     </details>
   );

@@ -61,7 +61,7 @@ describe('routes/search._index.tsx', () => {
     );
   });
 
-  test('should show enter-query message when query is empty', () => {
+  test('should show enter-query guidance and workspace shortcuts when query is empty', () => {
     const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
@@ -71,6 +71,7 @@ describe('routes/search._index.tsx', () => {
       />,
     );
 
-    expect(view.getByText(/Enter a query to search/i)).toBeInTheDocument();
+    expect(view.getByText(/Enter a query below/i)).toBeInTheDocument();
+    expect(view.getByTestId('WorkspaceEntityCrossLinks')).toBeInTheDocument();
   });
 });

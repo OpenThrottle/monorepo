@@ -14,6 +14,7 @@ import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defau
 import { ProjectsStatsCards } from '~/routing/projects/components/ProjectsStatsCards';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
+import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { GetProjectsQuery } from '~/__generated__/graphql';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
@@ -209,6 +210,10 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <WorkspaceEntityCrossLinks
+        className="mb-4"
+        label="Workspace shortcuts from projects"
+      />
       <ProjectsStatsCards
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}

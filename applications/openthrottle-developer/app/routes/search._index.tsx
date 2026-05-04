@@ -14,6 +14,7 @@ import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
+import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/search._index';
 
@@ -109,9 +110,21 @@ export default function Component(
     <GlobalScreen>
       <h1 className="text-xl my-4 text-highlight">Search</h1>
 
-      {!currentQ && (
-        <p className="text-muted-foreground">Enter a query to search.</p>
-      )}
+      {!currentQ ? (
+        <div className="mb-6 space-y-3">
+          <WorkspaceEntityCrossLinks label="Jump to a workspace area" />
+          <p className="max-w-2xl text-muted-foreground">
+            Enter a query below for semantic search across embedded plans,
+            tasks, and documentation. Results are ranked by embedding
+            similarity—open{' '}
+            <strong className="font-medium text-foreground">
+              Why this result?
+            </strong>{' '}
+            on any hit for scores and ids, or use power-user mode after you run
+            a search to expand ranking details on every card.
+          </p>
+        </div>
+      ) : null}
 
       {currentQ ? (
         <div className="text-muted-foreground text-sm max-w-2xl mb-2 space-y-2">

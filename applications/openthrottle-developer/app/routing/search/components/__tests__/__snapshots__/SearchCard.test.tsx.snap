@@ -96,6 +96,24 @@ exports[`SearchCard Component > when result has planId and taskId (task source) 
             >
               Plan id: plan-456 · Task id: task-789
             </p>
+            <p
+              class="border-t border-border pt-2 text-[11px] text-muted-foreground"
+            >
+              <strong
+                class="font-medium text-foreground/90"
+              >
+                Tuning:
+              </strong>
+               
+              the API returns the strongest matches first. Use a tighter query for fewer off-topic hits; lower 
+              <strong
+                class="font-medium"
+              >
+                Results per page
+              </strong>
+               
+              in filters when you only need the top slice.
+            </p>
           </div>
         </details>
       </div>
