@@ -91,7 +91,6 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   });
 
   const query = print(GetRootMetricsDocument);
-  const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hdHRAZG9tYWluLmNvbSIsInN1YiI6IjI5ZTNmOWY0LTNhMzEtNDM2OC05MTE1LTc1YjA3NjQ4YjA2YSIsImlhdCI6MTc3MTU3NTgyNiwiZXhwIjoxNzcxNjYyMjI2fQ.BA3W_-b-GUZGvGJm0n0SJGEdedqrqlIoMzp74H1YR48`;
   const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
 
   // Handlers
@@ -114,7 +113,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   // Life Cycle
   const { error, loading, serverMetrics } = usePollServerMetrics<
     GetRootMetricsQuery['serverMetrics']
-  >({ intervalMs, query, token, url });
+  >({ intervalMs, query, url });
 
   React.useEffect(() => {
     if (serverMetrics == null) return;

@@ -170,6 +170,56 @@ describe('OpenThrottleCommander Component', () => {
       expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
+    test('should render UUID debug jumps when emptyStateExtras returns items', async () => {
+      const user = userEvent.setup();
+      const planId = 'c65fb0f7-56ae-43bb-b516-dfd41fda7985';
+      const onJumpPlan = vi.fn();
+      const onJumpQueue = vi.fn();
+      const groups: readonly CommanderGroup[] = [
+        {
+          heading: 'Nav',
+          items: [{ id: 'n1', label: 'Plans', onSelect: () => {} }],
+        },
+      ];
+      component = renderCommander({
+        ...props,
+        emptyStateExtras: () => [
+          {
+            id: `jump-plan-${planId}`,
+            label: `Open plan (${planId.slice(0, 8)}…)`,
+            onSelect: onJumpPlan,
+            value: `${planId} open plan`,
+          },
+          {
+            id: `jump-queue-${planId}`,
+            label: `Open queue (${planId.slice(0, 8)}…)`,
+            onSelect: onJumpQueue,
+            value: `${planId} open queue`,
+          },
+        ],
+        groups,
+      });
+      await user.click(
+        component.getByRole('button', { name: 'Open command palette' }),
+      );
+      await user.type(
+        component.getByPlaceholderText('Type a command or search...'),
+        planId,
+      );
+      expect(
+        component.getByRole('option', {
+          name: `Open plan (${planId.slice(0, 8)}…)`,
+        }),
+      ).toBeInTheDocument();
+      await user.click(
+        component.getByRole('option', {
+          name: `Open plan (${planId.slice(0, 8)}…)`,
+        }),
+      );
+      expect(onJumpPlan).toHaveBeenCalledTimes(1);
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
     test('should not show Search option when onEmptyStateSearch is not provided', async () => {
       const user = userEvent.setup();
       const groups: readonly CommanderGroup[] = [

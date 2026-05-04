@@ -16,10 +16,12 @@ import {
   ScrollRestoration,
   useFetcher,
   useLocation,
+  useNavigate,
   useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
 import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
+import type { CommanderItem } from '@openthrottle/react-router-ui';
 import { OpenThrottleCommander } from '@openthrottle/react-router-ui';
 import { Toaster } from '@openthrottle/react-router-shadcn';
 import {
@@ -65,6 +67,10 @@ import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import { configAtom } from '~/global/data/atom.config';
+
+/** Matches typical Cortex / RFC UUID strings pasted into the command palette. */
+const CORTEX_UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Path prefixes that require authentication when FEATURE_BETA_PREVIEW is on. */
 const PROTECTED_PATH_PREFIXES = [
@@ -343,6 +349,7 @@ export default function App(): React.ReactElement {
   const data = useRouteLoaderData<typeof loader>('root');
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
   const [config, _setConfig] = useAtom(configAtom);
@@ -379,6 +386,43 @@ export default function App(): React.ReactElement {
     [fetcher],
   );
 
+  /**
+   * @description When the palette query is a UUID, offer quick navigation for ambiguous IDs (plan vs queue vs generator).
+   */
+  const commanderEmptyExtras = React.useCallback(
+    (query: string): CommanderItem[] => {
+      const q = query.trim();
+
+      if (!CORTEX_UUID_PATTERN.test(q)) {
+        return [];
+      }
+
+      const preview = q.slice(0, 8);
+
+      return [
+        {
+          id: `jump-plan-${q}`,
+          label: `Open plan (${preview}…)`,
+          onSelect: () => navigate(`/plans/${q}`),
+          value: `${q} open plan`,
+        },
+        {
+          id: `jump-queue-${q}`,
+          label: `Open queue (${preview}…)`,
+          onSelect: () => navigate(`/queues/${q}`),
+          value: `${q} open queue`,
+        },
+        {
+          id: `jump-generator-${q}`,
+          label: `Open generator (${preview}…)`,
+          onSelect: () => navigate(`/generators/${q}`),
+          value: `${q} open generator`,
+        },
+      ];
+    },
+    [navigate],
+  );
+
   // Markup
 
   // Life Cycle
@@ -407,10 +451,13 @@ export default function App(): React.ReactElement {
 
           {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
           <Outlet />
-          {!isMetricsHidden ? <GlobalMetrics /> : null}
+          {!isMetricsHidden ? (
+            <GlobalMetrics diagnosticsHref="/settings/debug" />
+          ) : null}
 
           <OpenThrottleCommander
             className="m-0! p-0!"
+            emptyStateExtras={commanderEmptyExtras}
             groups={groups}
             onEmptyStateSearch={handleSearch}
           />

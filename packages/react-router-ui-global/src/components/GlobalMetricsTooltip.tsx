@@ -49,17 +49,26 @@ export const GlobalMetricsTooltip = (
         </p>
         <ul className="list-disc font-normal pl-4 space-y-1">
           <li>
-            <strong className="text-card-foreground">RSS</strong> – Total
-            process memory including shared libraries. Under 500MB is typical.
+            <strong className="text-card-foreground">
+              RSS / External (MB)
+            </strong>{' '}
+            – Main value is RSS (resident process memory). Sub-value is
+            “external” memory outside the V8 heap (buffers, native addons).
+            Under ~500MB RSS is typical in dev.
           </li>
           <li>
-            <strong className="text-card-foreground">Heap</strong> – JS heap
-            memory (used / total). Used near total may indicate memory pressure.
+            <strong className="text-card-foreground">Heap (MB)</strong> – JS
+            heap used vs total. Used near total may indicate memory pressure.
           </li>
           <li>
-            <strong className="text-card-foreground">CPU</strong> – Cumulative
-            user/system CPU time since process start. Rising steadily is normal;
-            sudden jumps may indicate heavy computation.
+            <strong className="text-card-foreground">CPU (ms)</strong> –
+            Cumulative user/system CPU time since process start. Rising steadily
+            is normal; sudden jumps may indicate heavy work.
+          </li>
+          <li>
+            <strong className="text-card-foreground">Chart</strong> – X axis is
+            sample index (poll ticks); lines are RSS, heap used, and CPU user
+            (see stroke colors).
           </li>
         </ul>
       </TooltipContent>

@@ -42,11 +42,19 @@ import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
 
 export interface GlobalMetricsProps {
   readonly className?: string;
+  /**
+   * In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer).
+   */
+  readonly diagnosticsHref?: string;
   readonly pollIntervalMs?: number;
 }
 
 export const GlobalMetrics = (props: GlobalMetricsProps) => {
-  const { className, pollIntervalMs: propPollIntervalMs } = props;
+  const {
+    className,
+    diagnosticsHref = '/settings/debug',
+    pollIntervalMs: propPollIntervalMs,
+  } = props;
 
   // Hooks
   const [metricsHistory, setMetricsHistory] = React.useState<
@@ -72,7 +80,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
 
   // Setup
   const query = print(GetRootMetricsDocument);
-  const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hdHRAZG9tYWluLmNvbSIsInN1YiI6IjI5ZTNmOWY0LTNhMzEtNDM2OC05MTE1LTc1YjA3NjQ4YjA2YSIsImlhdCI6MTc3MTU3NTgyNiwiZXhwIjoxNzcxNjYyMjI2fQ.BA3W_-b-GUZGvGJm0n0SJGEdedqrqlIoMzp74H1YR48`;
+  /** HttpOnly auth cookies are not readable in JS; metrics calls run without Bearer unless wired server-side. */
   const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
 
   // Handlers
@@ -99,7 +107,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   // Life Cycle
   const { error, loading, serverMetrics } = usePollServerMetrics<
     GetRootMetricsQuery['serverMetrics']
-  >({ intervalMs, query, token, url });
+  >({ intervalMs, query, url });
 
   React.useEffect(() => {
     if (serverMetrics == null) return;
@@ -185,6 +193,25 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
             </Select>
           </Label>
         </div>
+
+        <p
+          className="text-xs text-muted-foreground max-w-3xl leading-relaxed"
+          data-testid="GlobalMetrics-visibility-hint"
+        >
+          Samples poll the{' '}
+          <strong className="text-foreground/90">openthrottle-server</strong>{' '}
+          GraphQL endpoint (<code className="text-[10px]">serverMetrics</code>)
+          from your browser; they reflect server process memory and CPU, not
+          this tab. The strip is hidden on auth, profile, settings, prompts, and
+          create routes.{' '}
+          <a
+            className="font-medium text-foreground underline underline-offset-2"
+            href={diagnosticsHref}
+          >
+            GraphQL and connectivity checks
+          </a>
+          .
+        </p>
 
         {showGlobalLoadingBanner && (
           <p data-testid="GlobalMetrics-loading">Loading…</p>

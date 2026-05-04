@@ -21,6 +21,10 @@ export interface CommanderItem {
   readonly label: string;
   readonly onSelect?: () => void;
   readonly shortcut?: string;
+  /**
+   * Optional cmdk filter value; defaults to {@link CommanderItem.id}. Include user-typed text (e.g. a pasted UUID) so items stay visible while filtering.
+   */
+  readonly value?: string;
 }
 
 /**
@@ -40,6 +44,11 @@ export interface OpenThrottleCommanderProps {
   readonly defaultOpen?: boolean;
   readonly groups: readonly CommanderGroup[];
   /**
+   * When the query matches nothing in `groups`, extra items (e.g. UUID debug jumps) rendered with "Search for …".
+   * Set `value` on each item to include the typed query so cmdk filtering keeps rows visible.
+   */
+  readonly emptyStateExtras?: (query: string) => readonly CommanderItem[];
+  /**
    * When provided and the user has typed a query with no matching items, a "Search for [query]" option is shown in the empty state. Called when the user selects that option.
    */
   readonly onEmptyStateSearch?: (query: string) => void;
@@ -54,6 +63,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
   const {
     className,
     defaultOpen = false,
+    emptyStateExtras,
     groups,
     onEmptyStateSearch,
     onOpenChange: onOpenChangeProp,
@@ -117,29 +127,23 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, setOpen]);
 
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey === true || e.ctrlKey === true)) {
-        e.preventDefault();
-        setInternalOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // console.log('open', open, groups);
-
   // 🔌 Short Circuit
 
-  const showEmptyStateSearch =
-    Boolean(onEmptyStateSearch) && search.trim().length > 0;
+  const trimmedSearch = search.trim();
+  const extraItems =
+    trimmedSearch.length > 0 && emptyStateExtras != null
+      ? emptyStateExtras(trimmedSearch)
+      : [];
+
+  const showSearchEscape =
+    Boolean(onEmptyStateSearch) && trimmedSearch.length > 0;
+  const showUuidExtras = trimmedSearch.length > 0 && extraItems.length > 0;
+  const showEmptyEscapeHatch = showSearchEscape || showUuidExtras;
 
   return (
     <CommandDialog
       className={className}
+      data-testid="OpenThrottleCommander"
       modal={true}
       onOpenChange={setOpen}
       open={open}
@@ -167,7 +171,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
                   className="rounded-none! p-2! px-4! m-0! h-auto!"
                   key={item.id}
                   onSelect={() => handleSelect(item)}
-                  value={item.id}
+                  value={item.value ?? item.id}
                 >
                   {item.icon ?? null}
                   <span>{item.label}</span>
@@ -182,15 +186,40 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
           </React.Fragment>
         ))}
 
-        {showEmptyStateSearch ? (
-          <CommandGroup forceMount={true} heading="No results found.">
-            <CommandItem
-              forceMount={true}
-              onSelect={handleEmptyStateSearch}
-              value="__empty_state_search__"
-            >
-              Search for &quot;{search.trim()}&quot;
-            </CommandItem>
+        {showEmptyEscapeHatch ? (
+          <CommandGroup
+            forceMount={true}
+            heading={
+              extraItems.length > 0
+                ? 'No matching commands — debug jumps or search'
+                : 'No matching commands'
+            }
+          >
+            {extraItems.map((item) => (
+              <CommandItem
+                forceMount={true}
+                key={item.id}
+                onSelect={() => handleSelect(item)}
+                value={item.value ?? item.id}
+              >
+                {item.icon ?? null}
+                <span>{item.label}</span>
+                {item.shortcut ? (
+                  <CommandShortcut className="w-auto whitespace-nowrap">
+                    {item.shortcut}
+                  </CommandShortcut>
+                ) : null}
+              </CommandItem>
+            ))}
+            {onEmptyStateSearch ? (
+              <CommandItem
+                forceMount={true}
+                onSelect={handleEmptyStateSearch}
+                value={`__empty_state_search__ ${trimmedSearch}`}
+              >
+                Search for &quot;{trimmedSearch}&quot;
+              </CommandItem>
+            ) : null}
           </CommandGroup>
         ) : (
           <CommandEmpty>No results found.</CommandEmpty>
