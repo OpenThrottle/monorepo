@@ -58,6 +58,14 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <p
+        className="mb-6 max-w-3xl text-sm text-muted-foreground"
+        data-testid="queues-operational-hint"
+      >
+        Worker queues (BullMQ). Open a queue to browse jobs; open a job for full
+        payload JSON, correlation id, retry when failed, cancel plan run when
+        the payload includes a plan id, and a copyable support bundle.
+      </p>
       <QueuesToolbar queues={queues} />
       <QueuesTable queues={queues} />
     </GlobalScreen>

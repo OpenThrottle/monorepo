@@ -62,4 +62,24 @@ describe('QueueJobCard Component', () => {
       'Connection timeout',
     );
   });
+
+  test('should link plan and task from JSON payload when queueName is set', () => {
+    const planId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    const taskId = '11111111-2222-3333-4444-555555555555';
+    const { getByTestId } = renderCard({
+      job: {
+        ...minimalJob,
+        data: JSON.stringify({ planId, taskId }),
+        id: 'job-with-plan',
+      },
+      queueName: 'Plans',
+    });
+    const planLink = getByTestId('queue-job-card-plan-job-with-plan');
+    expect(planLink).toHaveAttribute('href', `/plans/${planId}`);
+    const taskLink = getByTestId('queue-job-card-task-job-with-plan');
+    expect(taskLink).toHaveAttribute(
+      'href',
+      `/plans/${planId}/tasks/${taskId}`,
+    );
+  });
 });

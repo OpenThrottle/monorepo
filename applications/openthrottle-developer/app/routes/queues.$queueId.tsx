@@ -66,6 +66,17 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <p
+        className="mb-6 max-w-3xl text-sm text-muted-foreground"
+        data-testid="queue-detail-operational-hint"
+      >
+        Jobs listed below are a single page of recent items. Open a job for the
+        full payload, timestamps, failure or return value, retry (
+        <code className="rounded bg-muted px-1 text-xs">retryJob</code>), cancel
+        plan run when applicable (
+        <code className="rounded bg-muted px-1 text-xs">cancelPlanRun</code>),
+        and plan/task deep links from the parsed payload.
+      </p>
       <div className="grid md:grid-cols-5 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
         <OpenThrottleStatCard title="Active" value={queue.activeCount} />
