@@ -34,6 +34,12 @@ export const buildGeneratorNxPresets = (
       id: 'describe-pnpm',
     },
     {
+      command: `NX_ISOLATE_PLUGINS=false nx g @tools/generators:${q} --dry-run`,
+      description:
+        'Preview files that would be created or updated (add flags from --describe as needed)',
+      id: 'dry-run',
+    },
+    {
       command: `NX_ISOLATE_PLUGINS=false nx g @tools/generators:${q} --list=destinations`,
       description:
         'Example: list one dynamic option key (replace destinations with a key from --describe if this fails)',

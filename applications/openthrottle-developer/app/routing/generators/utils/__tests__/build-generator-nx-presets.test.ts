@@ -9,6 +9,7 @@ describe('buildGeneratorNxPresets', () => {
       'list-generators',
       'describe',
       'describe-pnpm',
+      'dry-run',
       'list-destinations-example',
     ]);
 
@@ -17,6 +18,8 @@ describe('buildGeneratorNxPresets', () => {
     expect(presets[2]?.command).toContain('pnpm nx g @tools/generators:remix');
     expect(presets[2]?.command).toContain('--describe');
     expect(presets[3]?.command).toContain('@tools/generators:remix');
-    expect(presets[3]?.command).toContain('--list=destinations');
+    expect(presets[3]?.command).toContain('--dry-run');
+    expect(presets[4]?.command).toContain('@tools/generators:remix');
+    expect(presets[4]?.command).toContain('--list=destinations');
   });
 });

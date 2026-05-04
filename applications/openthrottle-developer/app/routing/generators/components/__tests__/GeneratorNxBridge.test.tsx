@@ -47,6 +47,12 @@ describe('GeneratorNxBridge', () => {
       ),
     ).toBeInTheDocument();
 
+    expect(
+      component.getByText(
+        /NX_ISOLATE_PLUGINS=false nx g @tools\/generators:remix --dry-run/,
+      ),
+    ).toBeInTheDocument();
+
     const toolsReadme = component.getByRole('link', {
       name: /@tools\/generators package/,
     });
