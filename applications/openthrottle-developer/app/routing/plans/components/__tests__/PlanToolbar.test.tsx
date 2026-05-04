@@ -1,21 +1,17 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanToolbar } from '../PlanToolbar';
 import type { PlanToolbarProps } from '../PlanToolbar';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
-const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult => {
-  const Component = () => (
+const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
+  renderRoutesStub(
     <TooltipProvider>
       <PlanToolbar {...toolbarProps} />
-    </TooltipProvider>
+    </TooltipProvider>,
   );
-  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  return render(<RoutesStub />);
-};
 
 describe('PlanToolbar Component', () => {
   let component: RenderResult;

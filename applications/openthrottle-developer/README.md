@@ -44,6 +44,10 @@ Run via Nx from the monorepo root:
 | `pnpm nx run openthrottle-developer:codegen-graphql`      | Generate GraphQL types and operations |
 | `pnpm nx run openthrottle-developer:codegen-react-router` | Generate React Router route types     |
 
+## Unit tests and route fixtures
+
+Vitest + [`app/testing/route-fixtures.tsx`](./app/testing/route-fixtures.tsx) replace Storybook for isolated routing UI. Prioritized modules for snapshots and interaction coverage are listed in **[docs/routing-modules-debug-harness.md](./docs/routing-modules-debug-harness.md)**.
+
 ## Prompts UI
 
 - Primary routes: `/prompts`, `/prompts/create`, `/prompts/:promptId`.

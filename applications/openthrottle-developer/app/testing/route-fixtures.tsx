@@ -1,5 +1,6 @@
 /**
  * @description Route-level test harness for openthrottle-developer: mount components under {@link createRoutesStub} or a {@link createMemoryRouter} tree without running the full app. Use this for isolated debugging of Link hrefs, navigators, and route-aware UI. This app does not ship Storybook; Vitest + these helpers are the lightweight visual/snapshot harness for routing modules.
+ * @see `applications/openthrottle-developer/docs/routing-modules-debug-harness.md` for prioritized routing modules and adoption notes.
  */
 
 import * as React from 'react';
