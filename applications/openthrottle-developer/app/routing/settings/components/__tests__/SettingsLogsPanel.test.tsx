@@ -1,24 +1,19 @@
 import { describe, expect, test } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
+import { screen } from '@testing-library/react';
 import {
   buildSupportBundlePayload,
   SettingsLogsPanel,
 } from '~/routing/settings/components/SettingsLogsPanel';
+import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
 describe('SettingsLogsPanel', () => {
   test('renders client sink and support bundle sections', () => {
-    const router = createMemoryRouter(
-      [
-        {
-          element: <SettingsLogsPanel />,
-          path: '/',
-        },
-      ],
-      { initialEntries: ['/'] },
-    );
-
-    render(<RouterProvider router={router} />);
+    renderWithMemoryRouter([
+      {
+        element: <SettingsLogsPanel />,
+        path: '/',
+      },
+    ]);
 
     expect(screen.getByText(/Client console sink/i)).toBeInTheDocument();
     expect(screen.getByText(/Support bundle/i)).toBeInTheDocument();

@@ -1,64 +1,23 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import SearchIndex from '../search._index';
-import type { SearchChunk } from '~/__generated__/graphql';
-
-const mockChunk: SearchChunk = {
-  __typename: 'SearchChunk',
-  content: 'A plan or task snippet',
-  id: 'chunk-1',
-  planId: 'plan-1',
-  planTitle: 'Test Plan',
-  similarity: 0.95,
-  source: 'plan',
-  sourcePath: null,
-  sourceRepo: null,
-  sourceSha: null,
-  taskId: null,
-  taskTitle: null,
-};
-
-function makeChunks(count: number): SearchChunk[] {
-  return Array.from({ length: count }, (_, i) => ({
-    ...mockChunk,
-    id: `chunk-${i + 1}`,
-  }));
-}
-
-const mockLoaderData = {
-  limit: 10,
-  page: 1,
-  query: 'test',
-  results: {
-    chunks: [mockChunk],
-  },
-  total: 1,
-};
-
-const mockLoaderDataWithPagination = {
-  limit: 10,
-  page: 1,
-  query: 'test',
-  results: {
-    chunks: makeChunks(15),
-  },
-  total: 15,
-};
+import { renderRoutesStub } from '~/testing/route-fixtures';
+import {
+  searchIndexLoaderFixture,
+  searchIndexLoaderFixtureEmptyQuery,
+  searchIndexLoaderFixturePaginated,
+} from '~/testing/search-route-fixtures';
 
 describe('routes/search._index.tsx', () => {
   test('should render main, SearchForm, SearchFilters, and pagination', () => {
-    const Component = () => (
+    const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={mockLoaderData}
+        loaderData={searchIndexLoaderFixture}
         matches={[] as any}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     expect(view.getByRole('main')).toBeInTheDocument();
     expect(view.getByTestId('SearchForm')).toBeInTheDocument();
@@ -67,16 +26,14 @@ describe('routes/search._index.tsx', () => {
   });
 
   test('should render OpenThrottlePagination with basePath /search when multiple pages', () => {
-    const Component = () => (
+    const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={mockLoaderDataWithPagination}
+        loaderData={searchIndexLoaderFixturePaginated}
         matches={[] as any}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
     const nextLink = view.getByRole('link', { name: /next/i });
@@ -87,16 +44,14 @@ describe('routes/search._index.tsx', () => {
   });
 
   test('should render a result card for each chunk (SearchCard delegates by source)', () => {
-    const Component = () => (
+    const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={mockLoaderData}
+        loaderData={searchIndexLoaderFixture}
         matches={[] as any}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     const cards = view.getAllByTestId('SearchPlanCard');
     expect(cards).toHaveLength(1);
@@ -107,23 +62,14 @@ describe('routes/search._index.tsx', () => {
   });
 
   test('should show enter-query message when query is empty', () => {
-    const loaderDataEmptyQuery = {
-      limit: 10,
-      page: 1,
-      query: '',
-      results: { chunks: [] },
-      total: 0,
-    };
-    const Component = () => (
+    const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
-        loaderData={loaderDataEmptyQuery}
+        loaderData={searchIndexLoaderFixtureEmptyQuery}
         matches={[] as any}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     expect(view.getByText(/Enter a query to search/i)).toBeInTheDocument();
   });
