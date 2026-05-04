@@ -27,4 +27,12 @@ describe('SettingsPortsTroubleshootingCard', () => {
       'local-services-and-ports.md#services-to-expose',
     );
   });
+
+  it('summarizes template env defaults from .env.default', () => {
+    render(<SettingsPortsTroubleshootingCard />);
+    expect(
+      screen.getByText(/applications\/openthrottle-developer\/\.env\.default/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/PORT="6020"/i)).toBeInTheDocument();
+  });
 });

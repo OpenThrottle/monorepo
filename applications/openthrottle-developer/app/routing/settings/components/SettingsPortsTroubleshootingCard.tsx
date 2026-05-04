@@ -45,6 +45,28 @@ export function SettingsPortsTroubleshootingCard(): React.ReactElement {
             failures (e.g. hydration works but a loader 500s).
           </p>
 
+          <p>
+            <span className="font-medium text-foreground">
+              Monorepo template (
+              <code className="text-xs">
+                applications/openthrottle-developer/.env.default
+              </code>
+              ):
+            </span>{' '}
+            <code className="text-xs">PORT=&quot;6020&quot;</code>,{' '}
+            <code className="text-xs">API_URL_INTERNAL</code> /{' '}
+            <code className="text-xs">API_URL_EXTERNAL</code> →{' '}
+            <code className="text-xs">http://localhost:6021</code>,{' '}
+            <code className="text-xs">APP_URL</code> /{' '}
+            <code className="text-xs">APP_URL_DEVELOPER</code> →{' '}
+            <code className="text-xs">http://localhost:6020</code>. Copy this
+            file to <code className="text-xs">.env</code> in the app folder;
+            without <code className="text-xs">PORT</code>, Vite falls back to{' '}
+            <code className="text-xs">3000</code> (
+            <code className="text-xs">vite.config.ts</code>
+            ).
+          </p>
+
           <div>
             <p className="mb-2 font-medium text-foreground">
               If something breaks, check in this order
