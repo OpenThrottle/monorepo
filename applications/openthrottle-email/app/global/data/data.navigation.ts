@@ -1,7 +1,7 @@
 import type { LinkProps } from 'react-router';
 
 /** Base path for all mail routes. Use for links and active-state checks. */
-export const MAIL_BASE_PATH = '/mail';
+const MAIL_BASE_PATH = '/mail';
 
 /** Canonical paths for mail areas. Use these for Link `to` and comparisons. */
 export const MAIL_PATHS = {
@@ -22,7 +22,7 @@ export function mailInboxMessagePath(id: string): string {
  * @description Navigation links for the mail-area sidebar (Inbox, Sent, Drafts, Trash, Compose, Settings).
  * Used by {@link MailSidebar} and optionally by global header.
  */
-export const mailNavigation: LinkProps[] = [
+const mailNavigation: LinkProps[] = [
   { children: 'Inbox', to: MAIL_PATHS.inbox },
   { children: 'Sent', to: MAIL_PATHS.sent },
   { children: 'Drafts', to: MAIL_PATHS.drafts },
