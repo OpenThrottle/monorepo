@@ -31,6 +31,9 @@ describe('GeneratorCard Component', () => {
     ).toBeInTheDocument();
     expect(component.getByText('Test Description')).toBeInTheDocument();
     const viewLink = component.getByRole('link', { name: 'View' });
-    expect(viewLink).toHaveAttribute('href', '/generators/Test Generator');
+    expect(viewLink).toHaveAttribute(
+      'href',
+      `/generators/${encodeURIComponent('Test Generator')}`,
+    );
   });
 });

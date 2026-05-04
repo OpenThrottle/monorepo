@@ -1,0 +1,19 @@
+import { describe, expect, test } from 'vitest';
+import { buildGeneratorNxPresets } from '../build-generator-nx-presets';
+
+describe('buildGeneratorNxPresets', () => {
+  test('includes list, describe, and example --list command with generator name', () => {
+    const presets = buildGeneratorNxPresets('remix');
+
+    expect(presets.map((p) => p.id)).toEqual([
+      'list-generators',
+      'describe',
+      'list-destinations-example',
+    ]);
+
+    expect(presets[1]?.command).toContain('@tools/generators:remix');
+    expect(presets[1]?.command).toContain('--describe');
+    expect(presets[2]?.command).toContain('@tools/generators:remix');
+    expect(presets[2]?.command).toContain('--list=destinations');
+  });
+});

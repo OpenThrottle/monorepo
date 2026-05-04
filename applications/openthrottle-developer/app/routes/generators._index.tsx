@@ -5,10 +5,11 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
 import { GetGeneratorsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
+import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
+import { GENERATOR_DOCS_AGENT_USAGE } from '~/routing/generators/constants/generator-nx-docs';
 import type { Route } from '@/app/routes/+types/generators._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -54,6 +55,19 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="text-xl my-4 text-highlight">Generators</h1>
+      <p className="mb-6 max-w-prose text-sm text-muted-foreground">
+        Nx commands run in your monorepo clone (see{' '}
+        <a
+          className="text-primary underline-offset-4 hover:underline"
+          href={GENERATOR_DOCS_AGENT_USAGE}
+          rel="noreferrer"
+          target="_blank"
+        >
+          AGENT_USAGE
+        </a>
+        ). Open a card for doc links, command presets, and support-bundle CLI
+        capture.
+      </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
         {generators.map((generator) => (
