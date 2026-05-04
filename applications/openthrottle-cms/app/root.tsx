@@ -1,3 +1,4 @@
+import * as React from 'react';
 // import { Analytics } from '@vercel/analytics/react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import {
@@ -108,10 +109,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
-      <body className="min-h-screen flex flex-col">
-        <GlobalHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
-        <GlobalFooter />
+      <body className="relative flex min-h-screen flex-col">
+        <div className="flex flex-1 flex-col">{children}</div>
 
         <ScrollRestoration />
         {/* FIXME: Uncomment this when we have a production environment */}
@@ -128,7 +127,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App(): React.ReactElement {
-  return <Outlet />;
+  return (
+    <>
+      <GlobalHeader />
+      <main className="flex flex-1 flex-col">
+        <Outlet />
+      </main>
+      <GlobalFooter />
+    </>
+  );
 }
 
 /**
