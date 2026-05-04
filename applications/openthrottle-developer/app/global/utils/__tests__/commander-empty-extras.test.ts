@@ -12,16 +12,18 @@ describe('buildCommanderEmptyStateExtras', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  test('parses queue id / job id and navigates to job route', () => {
+  test('parses queue id / job id and offers queue job and plan task routes', () => {
     const navigate = vi.fn();
     const q =
       'a1b2c3d4-e5f6-4789-a012-3456789abcde/b2c3d4e5-f6a7-4890-b123-456789abcdef';
     const items = buildCommanderEmptyStateExtras(q, navigate);
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(2);
     const a = 'a1b2c3d4-e5f6-4789-a012-3456789abcde';
     const b = 'b2c3d4e5-f6a7-4890-b123-456789abcdef';
     items[0]?.onSelect?.();
-    expect(navigate).toHaveBeenCalledWith(queueJobDetailPath(a, b));
+    expect(navigate).toHaveBeenNthCalledWith(1, queueJobDetailPath(a, b));
+    items[1]?.onSelect?.();
+    expect(navigate).toHaveBeenNthCalledWith(2, `/plans/${a}/tasks/${b}`);
   });
 
   test('parses queue id and job id separated by whitespace', () => {
@@ -29,9 +31,11 @@ describe('buildCommanderEmptyStateExtras', () => {
     const a = 'a1b2c3d4-e5f6-4789-a012-3456789abcde';
     const b = 'b2c3d4e5-f6a7-4890-b123-456789abcdef';
     const items = buildCommanderEmptyStateExtras(`  ${a}  ${b}  `, navigate);
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(2);
     items[0]?.onSelect?.();
-    expect(navigate).toHaveBeenCalledWith(queueJobDetailPath(a, b));
+    expect(navigate).toHaveBeenNthCalledWith(1, queueJobDetailPath(a, b));
+    items[1]?.onSelect?.();
+    expect(navigate).toHaveBeenNthCalledWith(2, `/plans/${a}/tasks/${b}`);
   });
 
   test('single UUID returns plan, queue, generator, and search rows', () => {

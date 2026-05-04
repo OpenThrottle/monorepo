@@ -61,6 +61,10 @@ export interface OpenThrottleCommanderProps {
    * Optional left-aligned hint in the dialog footer (e.g. UUID / queue-job paste behavior).
    */
   readonly footerHint?: string;
+  /**
+   * Replaces the default empty state when no commands match and there are no UUID/search extras.
+   */
+  readonly emptyStateMessage?: React.ReactNode;
 }
 
 export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
@@ -74,6 +78,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
     open: openProp,
     placeholder = 'Type a command or search...',
     footerHint,
+    emptyStateMessage,
   } = props;
 
   // Hooks
@@ -155,7 +160,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
       translate="no"
     >
       <CommandInput
-        className="p-4 flex-1 leading-none text-sm! pb-4 border-b! border-border!"
+        className="p-4 flex-1 leading-none text-sm! pb-4 border-b!"
         onValueChange={setSearch}
         placeholder={placeholder}
         value={search}
@@ -227,14 +232,18 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
             ) : null}
           </CommandGroup>
         ) : (
-          <CommandEmpty>
-            No matching commands. Type to filter, or paste a UUID /
-            queueId/jobId when nothing matches.
+          <CommandEmpty data-testid="OpenThrottleCommander-empty">
+            {emptyStateMessage ?? (
+              <>
+                No matching commands. Type to filter, or paste a UUID /
+                queueId/jobId when nothing matches.
+              </>
+            )}
           </CommandEmpty>
         )}
       </CommandList>
 
-      <div className="text-[10px] px-2 py-2 border-t border-border text-muted-foreground gap-4 flex justify-between items-center">
+      <div className="text-[10px] px-2 py-2 text-muted-foreground gap-4 flex justify-between items-center">
         {footerHint ? (
           <span className="text-left max-w-[min(100%,18rem)] leading-snug line-clamp-2">
             {footerHint}

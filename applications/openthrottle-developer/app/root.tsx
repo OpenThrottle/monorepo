@@ -163,7 +163,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   /** When false, the `me` query failed; do not treat as logged out for redirects. */
   let userLoadOk: boolean = isTokenNull;
 
-  if (FEATURE_BETA_PREVIEW && isRestrictedAccess) {
+  /** In development, always poll server health so API misconfiguration surfaces even when auth is off. */
+  if (FEATURE_BETA_PREVIEW) {
     const t0 = Date.now();
     try {
       const response = await executeGraphqlWithAuth(
@@ -428,7 +429,22 @@ export default function App(): React.ReactElement {
           <OpenThrottleCommander
             className="m-0! p-0!"
             emptyStateExtras={commanderEmptyExtras}
-            footerHint="Paste one Cortex UUID for plan/queue/generator jumps, two UUIDs (queue/job) with / or space, or run Search from the list."
+            emptyStateMessage={
+              <span className="block px-2 text-center leading-relaxed">
+                <span className="block">
+                  No matching commands. Type to filter, or paste a UUID. Two
+                  UUIDs (with <code className="text-[10px]">/</code> or space)
+                  open a queue job and a plan task.
+                </span>
+                <span className="mt-2 block text-xs text-muted-foreground">
+                  Server metrics (when visible) sample{' '}
+                  <code className="text-[10px]">serverMetrics</code> on
+                  openthrottle-server; full definitions and GraphQL health live
+                  under Settings → Debug.
+                </span>
+              </span>
+            }
+            footerHint="Paste one Cortex UUID for plan/queue/generator jumps, two UUIDs (queue/job or plan/task) with / or space, or run Search from the list."
             groups={groups}
             onEmptyStateSearch={handleSearch}
             placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"

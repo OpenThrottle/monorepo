@@ -49,15 +49,24 @@ export const buildCommanderEmptyStateExtras = (
 
   const queueJob = parseQueueAndJobId(q);
   if (queueJob) {
-    const [queueId, jobId] = queueJob;
+    const [firstId, secondId] = queueJob;
+    /** Same `uuid/uuid` shape is used for queue/job and plan/task — offer both jumps. */
     return [
       {
-        id: `jump-queue-job-${queueId}-${jobId}`,
-        label: `Open queue job (${queueId.slice(0, 8)}… / ${jobId.slice(0, 8)}…)`,
+        id: `jump-queue-job-${firstId}-${secondId}`,
+        label: `Open queue job (${firstId.slice(0, 8)}… / ${secondId.slice(0, 8)}…)`,
         onSelect: () => {
-          navigate(queueJobDetailPath(queueId, jobId));
+          navigate(queueJobDetailPath(firstId, secondId));
         },
         value: `${q} open queue job`,
+      },
+      {
+        id: `jump-plan-task-${firstId}-${secondId}`,
+        label: `Open plan task (${firstId.slice(0, 8)}… / ${secondId.slice(0, 8)}…)`,
+        onSelect: () => {
+          navigate(`/plans/${firstId}/tasks/${secondId}`);
+        },
+        value: `${q} open plan task`,
       },
     ];
   }
