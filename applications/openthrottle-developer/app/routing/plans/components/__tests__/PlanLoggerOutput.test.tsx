@@ -11,7 +11,7 @@ describe('PlanLoggerOutput Component', () => {
   let props: PlanLoggerOutputProps;
 
   beforeEach(() => {
-    props = {};
+    props = { chunks: [] };
 
     const Component = () => <PlanLoggerOutput {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,9 @@ describe('PlanLoggerOutput Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render empty-state copy when there are no chunks', () => {
+    expect(
+      component.getByText(/No plan output chunks yet/i),
+    ).toBeInTheDocument();
   });
 });

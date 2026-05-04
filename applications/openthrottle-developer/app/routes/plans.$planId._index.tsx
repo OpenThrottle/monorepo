@@ -17,7 +17,6 @@ import type {
 } from '@openthrottle/openthrottle-notifications';
 import {
   CogIcon,
-  ListChecksIcon,
   ListOrderedIcon,
   LucideIcon,
   NotebookTextIcon,
@@ -31,14 +30,15 @@ import {
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
 import {
+  buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   getDefaultWorkflowRalphRunOptionsInput,
-  WorkflowRalphRunOptionsInput,
+  parseWorkflowRunIterationTimeoutSeconds,
+  type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
-  GetPlanByIdDocument,
-  GetTasksByPlanIdDocument,
   PlanDetailCancelPlanRunDocument,
   PlanDetailEnqueuePlanRunDocument,
+  PlanDetailIndexLoaderDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
@@ -90,26 +90,27 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId } = args.params;
 
-  const [planResult, tasksResult] = await Promise.all([
-    executeGraphqlWithAuth(args.request, GetPlanByIdDocument, { id: planId }),
-    executeGraphqlWithAuth(args.request, GetTasksByPlanIdDocument, {
-      input: { planId },
-    }),
-  ]);
+  if (!planId) {
+    return {
+      plan: null,
+      planOutputChunks: [],
+      recentPlanRuns: [],
+      tasks: [],
+    };
+  }
 
-  const plan = planResult.plan ?? null;
-  const tasks = tasksResult.tasksByPlanId ?? [];
+  const page = await executeGraphqlWithAuth(
+    args.request,
+    PlanDetailIndexLoaderDocument,
+    { planId },
+  );
 
-  const jsonLogs = await fetch('http://localhost:6020/logs/11.jsonl');
-  const jsonData = await jsonLogs.text();
-  const logs = jsonData
-    .split('\n')
-    .filter((line) => line.trim() !== '')
-    .map((line) => JSON.parse(line));
-
-  console.log('---> logs', logs);
-
-  return { logs, plan, tasks };
+  return {
+    plan: page.plan ?? null,
+    planOutputChunks: page.planOutputStreamChunks ?? [],
+    recentPlanRuns: page.metrics.recentPlanRunsMetrics ?? [],
+    tasks: page.tasksByPlanId ?? [],
+  };
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
@@ -125,7 +126,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { logs, plan, tasks } = loaderData;
+  const { plan, planOutputChunks, recentPlanRuns, tasks } = loaderData;
 
   // Hooks
   const revalidator = useRevalidator();
@@ -136,6 +137,18 @@ export default function Component(
     React.useState<WorkflowRalphRunOptionsInput>(() =>
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
+
+  const ralphTuningJson = React.useMemo((): string => {
+    const merged: WorkflowRalphRunOptionsInput = {
+      ...workflowInput,
+      iterationTimeoutSeconds:
+        parseWorkflowRunIterationTimeoutSeconds(workflowTimeout),
+    };
+
+    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
+
+    return tuning === undefined ? '' : JSON.stringify(tuning);
+  }, [workflowInput, workflowTimeout]);
 
   // Setup
   const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
@@ -206,6 +219,13 @@ export default function Component(
     }
   }, [searchParams]);
 
+  React.useEffect(() => {
+    setWorkflowInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
+    );
+    setWorkflowTimeout('');
+  }, [plan?.id]);
+
   // Subscribe to plan/task status-change events so we revalidate when status
   // is updated via openthrottle-mcp or API, keeping plan and tasks in sync.
   // Manual QA: see `PlanTasksBoard.test.tsx` file comment (socket + board/table).
@@ -243,15 +263,23 @@ export default function Component(
 
   const items: Item[] = [
     {
-      content: <PlanDetails plan={plan} />,
+      content: (
+        <PlanDetails
+          plan={plan}
+          ralphTuningJson={ralphTuningJson}
+          recentPlanRuns={recentPlanRuns}
+          workflowInput={workflowInput}
+          workflowTimeout={workflowTimeout}
+        />
+      ),
       icon: NotebookTextIcon,
       title: 'Details',
     },
-    {
-      content: <PlanTasksTable tasks={tasks} />,
-      icon: ListChecksIcon,
-      title: 'Requirements',
-    },
+    // {
+    //   content: <PlanTasksTable tasks={tasks} />,
+    //   icon: ListChecksIcon,
+    //   title: 'Requirements',
+    // },
     {
       content: <PlanTasksTable tasks={tasks} />,
       icon: ListOrderedIcon,
@@ -273,7 +301,7 @@ export default function Component(
       title: 'Configuration',
     },
     {
-      content: <PlanLoggerOutput logs={logs} />,
+      content: <PlanLoggerOutput chunks={planOutputChunks} />,
       icon: TerminalSquareIcon,
       title: 'Output',
     },
@@ -283,13 +311,11 @@ export default function Component(
     <>
       <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8">
         {items.map((item) => {
-          const isOutput = item.title !== 'Output';
-
           return (
             <GlobalCollapsible
               icon={item.icon}
               key={item.title}
-              open={isOutput}
+              open={false}
               title={item.title}
             >
               {item.content}

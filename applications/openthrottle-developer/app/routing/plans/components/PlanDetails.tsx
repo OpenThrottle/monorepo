@@ -1,7 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {
-  Badge,
   Blockquote,
   Button,
   Card,
@@ -9,24 +8,28 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Markdown,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
-import { PlanDetailsFragment } from '~/__generated__/graphql';
+import type {
+  PlanDetailIndexLoaderQuery,
+  PlanDetailsFragment,
+} from '~/__generated__/graphql';
 import {
   PlanStatusBadge,
   isPlanStatusKey,
 } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
+import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
   DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES,
   DEFAULT_PLAN_SUMMARY_PREVIEW_LINES,
 } from '~/routing/plans/config/defaults';
 import {
-  buildRalphPlanRunTuningInputFromWorkflowRunOptions,
-  getDefaultWorkflowRalphRunOptionsInput,
+  buildWorkflowRalphOptionArgs,
+  formatWorkflowRalphCommandLine,
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -34,32 +37,35 @@ import {
 export interface PlanDetailsProps {
   readonly className?: string;
   readonly plan: PlanDetailsFragment;
+  readonly ralphTuningJson: string;
+  readonly recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
+  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowTimeout: string;
 }
 
 export const PlanDetails = (props: PlanDetailsProps) => {
-  const { className, plan } = props;
+  const {
+    className,
+    plan,
+    ralphTuningJson,
+    recentPlanRuns,
+    workflowInput,
+    workflowTimeout,
+  } = props;
   const { projectRelation: project } = plan;
 
   // Hooks
   const [expanded, setExpanded] = React.useState(false);
   const [summary, setSummary] = React.useState(false);
-  const [workflowTimeout, setWorkflowTimeout] = React.useState('');
 
-  const [workflowInput, setWorkflowInput] =
-    React.useState<WorkflowRalphRunOptionsInput>(() =>
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
-    );
-
-  const ralphTuningJson = React.useMemo((): string => {
+  const canonicalWorkflowCommand = React.useMemo(() => {
     const merged: WorkflowRalphRunOptionsInput = {
       ...workflowInput,
       iterationTimeoutSeconds:
         parseWorkflowRunIterationTimeoutSeconds(workflowTimeout),
     };
 
-    const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
-
-    return tuning === undefined ? '' : JSON.stringify(tuning);
+    return formatWorkflowRalphCommandLine(buildWorkflowRalphOptionArgs(merged));
   }, [workflowInput, workflowTimeout]);
 
   // Setup
@@ -77,20 +83,12 @@ export const PlanDetails = (props: PlanDetailsProps) => {
   const isLongSummary = summaryLines > DEFAULT_PLAN_SUMMARY_PREVIEW_LINES;
 
   const showSummaryPreview = hasSummary && isLongSummary && !summary;
-  const showDescriptionPreview =
-    hasDescription && isLongDescription && !expanded;
 
   // Handlers
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    setWorkflowInput(
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
-    );
-    setWorkflowTimeout('');
-  }, [plan.id]);
 
   // 🔌 Short Circuit
 
@@ -102,19 +100,17 @@ export const PlanDetails = (props: PlanDetailsProps) => {
             <CardTitle className="flex items-center gap-4">
               <PlanStatusBadge status={status} />
               <h1 className="text-lg flex-1 text-highlight">{plan.title}</h1>
-              <div className="flex gap-2">
-                <Badge>
-                  <OpenThrottleClipboard
-                    label="Copy workflow command"
-                    text={`pnpm exec workflow-ralph --plan ${plan.id}`}
-                  />
-                </Badge>
-              </div>
             </CardTitle>
 
-            <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
+            <PlanWorkflowRunTransparency
+              canonicalWorkflowCommand={canonicalWorkflowCommand}
+              planId={plan.id}
+              recentPlanRuns={recentPlanRuns}
+              workflowInput={workflowInput}
+              workflowTimeout={workflowTimeout}
+            />
 
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+            <dl className="mt-4 grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
               <div className="flex flex-wrap gap-x-2">
                 <dt className="text-muted-foreground">Author</dt>
                 <dd>{plan.author}</dd>
@@ -158,7 +154,14 @@ export const PlanDetails = (props: PlanDetailsProps) => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                <p
+                <Markdown
+                  className={classnames(
+                    'text-sm text-muted-foreground whitespace-normal',
+                    expanded && 'line-clamp-4',
+                  )}
+                  content={plan.description ?? ''}
+                />
+                {/* <p
                   className={classnames(
                     'text-md leading-relaxed transition-colors',
                     'text-muted-foreground hover:text-foreground',
@@ -167,7 +170,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                   )}
                 >
                   {plan.description}
-                </p>
+                </p> */}
                 {isLongDescription && (
                   <Button onClick={() => setExpanded((e) => !e)}>
                     {expanded ? 'Show less' : 'Show more'}

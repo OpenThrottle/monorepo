@@ -22,6 +22,10 @@ import {
 import { Link, useFetcher } from 'react-router';
 import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import {
+  PLAN_RUN_BULLMQ_QUEUE_NAME,
+  planRunJobDetailPath,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanToolbarProps {
@@ -107,8 +111,24 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
       if (data != null && typeof data === 'object') {
         if ('runPlan' in data && data.runPlan != null) {
-          const message = `Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).`;
-          toast.success(message);
+          const run = data.runPlan;
+          const jobId =
+            run != null &&
+            typeof run === 'object' &&
+            'jobId' in run &&
+            typeof run.jobId === 'string'
+              ? run.jobId
+              : null;
+
+          if (jobId != null && jobId !== '') {
+            toast.success('Plan run queued', {
+              description: `Job ${jobId}. Queue ${PLAN_RUN_BULLMQ_QUEUE_NAME}: ${planRunJobDetailPath(jobId)}`,
+            });
+          } else {
+            toast.success(
+              'Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).',
+            );
+          }
         }
       }
     }

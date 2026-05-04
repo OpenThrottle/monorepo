@@ -82,3 +82,30 @@ mutation PlanDetailUpdateTask($input: UpdateTaskInput!) {
     ...PlanTaskRow
   }
 }
+
+query PlanDetailIndexLoader($planId: ID!) {
+  plan(id: $planId) {
+    ...PlanDetails
+  }
+  tasksByPlanId(input: { planId: $planId }) {
+    ...PlanTaskRow
+  }
+  planOutputStreamChunks(input: { planId: $planId }) {
+    id
+    content
+    createdAt
+    iteration
+    planId
+  }
+  metrics {
+    recentPlanRunsMetrics(planId: $planId, limit: 25) {
+      finishedOn
+      jobId
+      taskRunMetrics {
+        atEnd {
+          rssMb
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { render, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { createRoutesStub, type UIMatch } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import PlanDetail from '../plans.$planId._index';
 
@@ -39,21 +41,32 @@ const mockTask = {
 };
 
 describe('routes/plans.$planId.tsx', () => {
-  test('should render plan detail with tasks', () => {
+  test('should render plan detail with tasks', async () => {
+    const user = userEvent.setup();
     const Component = () => (
-      <PlanDetail
-        actionData={undefined}
-        loaderData={{ plan: mockPlan, tasks: [mockTask] }}
-        matches={[] as any}
-        params={{ planId: mockPlan.id }}
-      />
+      <TooltipProvider>
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: mockPlan,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [mockTask],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByRole('main')).toBeInTheDocument();
-    expect(component.getAllByText('Test Plan').length).toBeGreaterThanOrEqual(
-      1,
-    );
+
+    const sections = component.getAllByTestId('GlobalCollapsible');
+    await user.click(within(sections[0]).getByRole('button'));
+    await user.click(within(sections[1]).getByRole('button'));
+
+    expect(component.getByText('Test Plan')).toBeInTheDocument();
     expect(component.getByText('In Progress')).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: 'Test Project' }),
@@ -61,24 +74,32 @@ describe('routes/plans.$planId.tsx', () => {
     expect(component.getByText('Plan description')).toBeInTheDocument();
     expect(component.getByText('Plan summary')).toBeInTheDocument();
     expect(component.getByText('Test Task')).toBeInTheDocument();
-    expect(component.getByRole('link', { name: 'Plans' })).toHaveAttribute(
-      'href',
-      '/plans',
-    );
   });
 
-  test('should render plan detail with no tasks', () => {
+  test('should render plan detail with no tasks', async () => {
+    const user = userEvent.setup();
     const Component = () => (
-      <PlanDetail
-        actionData={undefined}
-        loaderData={{ plan: mockPlan, tasks: [] }}
-        matches={[] as any}
-        params={{ planId: mockPlan.id }}
-      />
+      <TooltipProvider>
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: mockPlan,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByRole('main')).toBeInTheDocument();
+
+    const sections = component.getAllByTestId('GlobalCollapsible');
+    await user.click(within(sections[1]).getByRole('button'));
+
     expect(component.getByText('No tasks')).toBeInTheDocument();
     expect(
       component.getByText('This plan has no tasks yet.'),
@@ -87,12 +108,19 @@ describe('routes/plans.$planId.tsx', () => {
 
   test('should render empty state when plan not found', () => {
     const Component = () => (
-      <PlanDetail
-        actionData={undefined}
-        loaderData={{ plan: null, tasks: [] }}
-        matches={[] as any}
-        params={{ planId: mockPlan.id }}
-      />
+      <TooltipProvider>
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: null,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);

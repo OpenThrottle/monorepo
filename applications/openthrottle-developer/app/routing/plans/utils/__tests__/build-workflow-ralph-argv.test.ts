@@ -4,11 +4,13 @@ import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
+  buildWorkflowRalphDebugBundleText,
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
   isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
+  planRunJobDetailPath,
   type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
 import { RalphNestedDebugCli } from '~/__generated__/graphql';
@@ -358,6 +360,33 @@ describe('formatWorkflowRalphCommandLine', () => {
     ]);
     expect(line).toBe(
       "pnpm exec workflow-ralph --prompt '/path with spaces/ralph'",
+    );
+  });
+});
+
+describe('buildWorkflowRalphDebugBundleText', () => {
+  test('includes plan id, canonical command, and queue path metadata', () => {
+    const text = buildWorkflowRalphDebugBundleText({
+      iterationTimeoutText: '',
+      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+      workflowInput: basePlanInput(),
+    });
+    const parsed = JSON.parse(text) as {
+      canonicalCommand: string;
+      planId: string;
+      queue: { jobListPath: string };
+    };
+
+    expect(parsed.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
+    expect(parsed.canonicalCommand).toContain('pnpm exec workflow-ralph');
+    expect(parsed.queue.jobListPath).toBe('/queues/Plans');
+  });
+});
+
+describe('planRunJobDetailPath', () => {
+  test('encodes queue name and job id for the developer portal route', () => {
+    expect(planRunJobDetailPath('ralph-orch:abc')).toBe(
+      '/queues/Plans/ralph-orch%3Aabc',
     );
   });
 });
