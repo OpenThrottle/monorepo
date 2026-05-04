@@ -13,6 +13,9 @@ const mockChunk: SearchChunk = {
   planTitle: 'Test Plan',
   similarity: 0.95,
   source: 'plan',
+  sourcePath: null,
+  sourceRepo: null,
+  sourceSha: null,
   taskId: null,
   taskTitle: null,
 };
@@ -25,19 +28,23 @@ function makeChunks(count: number): SearchChunk[] {
 }
 
 const mockLoaderData = {
+  limit: 10,
   page: 1,
   query: 'test',
   results: {
     chunks: [mockChunk],
   },
+  total: 1,
 };
 
 const mockLoaderDataWithPagination = {
+  limit: 10,
   page: 1,
   query: 'test',
   results: {
     chunks: makeChunks(15),
   },
+  total: 15,
 };
 
 describe('routes/search._index.tsx', () => {
@@ -56,7 +63,7 @@ describe('routes/search._index.tsx', () => {
     expect(view.getByRole('main')).toBeInTheDocument();
     expect(view.getByTestId('SearchForm')).toBeInTheDocument();
     expect(view.getByTestId('SearchFilters')).toBeInTheDocument();
-    expect(view.getByText(/Showing 1-1 of 1/i)).toBeInTheDocument();
+    expect(view.getByText(/Showing 1-1 of 1 results/i)).toBeInTheDocument();
   });
 
   test('should render OpenThrottlePagination with basePath /search when multiple pages', () => {
@@ -101,9 +108,11 @@ describe('routes/search._index.tsx', () => {
 
   test('should show enter-query message when query is empty', () => {
     const loaderDataEmptyQuery = {
+      limit: 10,
       page: 1,
       query: '',
       results: { chunks: [] },
+      total: 0,
     };
     const Component = () => (
       <SearchIndex

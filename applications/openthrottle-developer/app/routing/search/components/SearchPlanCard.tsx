@@ -9,6 +9,7 @@ import {
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
+import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 
 export interface SearchPlanCardProps {
   className?: string;
@@ -74,6 +75,7 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
           {result.content}
         </p>
         {similarityBlock}
+        <SearchWhyThisResult result={result} />
       </CardContent>
     </Card>
   );

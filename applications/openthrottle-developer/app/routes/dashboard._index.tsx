@@ -23,6 +23,7 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
+import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => 'Dashboard',
@@ -112,6 +113,8 @@ export default function Component(
           className="gap-4 md:gap-8 lg:gap-12 col-span-1 flex min-w-0 flex-col"
           data-testid="dashboard-charts-column"
         >
+          <DashboardQuickNavigation />
+
           <div>
             <h2 className="text-lg font-bold mb-4">Daily Stats</h2>
             <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />

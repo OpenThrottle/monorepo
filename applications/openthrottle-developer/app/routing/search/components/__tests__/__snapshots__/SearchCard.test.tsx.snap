@@ -4,7 +4,7 @@ exports[`SearchCard Component > when result has planId and taskId (task source) 
 <body>
   <div>
     <div
-      class="bg-card border rounded-lg transition-colors ui-border hover:border-color-border-dark"
+      class="bg-card border hover:border-accent/60 rounded-lg transition-colors"
       data-testid="SearchTaskCard"
     >
       <div
@@ -72,6 +72,27 @@ exports[`SearchCard Component > when result has planId and taskId (task source) 
           90
           %
         </p>
+        <details
+          data-testid="SearchWhyThisResult"
+        >
+          <summary
+            class="cursor-pointer text-xs font-medium text-muted-foreground"
+          >
+            Why this result?
+          </summary>
+          <div
+            class="mt-2 space-y-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground"
+          >
+            <p>
+              OpenThrottle search embeds your query and compares it to plan, task, and documentation chunks (vector similarity). This hit matches text from a task linked to a plan. Cosine similarity to your query embedding is about 90% (higher means closer in vector space).
+            </p>
+            <p
+              class="font-mono text-[11px] text-muted-foreground/90"
+            >
+              Chunk id: chunk-1
+            </p>
+          </div>
+        </details>
       </div>
     </div>
   </div>

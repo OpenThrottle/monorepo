@@ -15,6 +15,8 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
+  /** Label for the counted items in the summary line (default &quot;projects&quot;). */
+  readonly resultLabel?: string;
   readonly total: number;
 }
 
@@ -27,6 +29,7 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
     className,
     limit,
     page,
+    resultLabel = 'projects',
     search,
     sortBy,
     sortOrder,
@@ -77,7 +80,7 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
   return (
     <div className={className}>
       <p className="text-sm text-muted-foreground text-center my-4">
-        Showing {startItem}-{endItem} of {total} projects
+        Showing {startItem}-{endItem} of {total} {resultLabel}
       </p>
 
       {totalPages > 1 && (
