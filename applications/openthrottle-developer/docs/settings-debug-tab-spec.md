@@ -11,7 +11,7 @@ Developers and support need a **safe, in-app** place to confirm that the client 
 
 **Primary users:** Local developers, on-call triage, internal support.
 
-**Out of scope for this tab alone:** Server-side secret inventory, full log streaming (see Settings → Logs spec), or editing feature flags at runtime (display-only unless product adds toggles later).
+**Out of scope for this tab alone:** Server-side secret inventory, full log streaming (see `docs/settings-logs-tab-spec.md`), or editing feature flags at runtime (display-only unless product adds toggles later).
 
 ## 2. Goals
 
