@@ -37,5 +37,13 @@ describe('GeneratorNxBridge', () => {
         /NX_ISOLATE_PLUGINS=false nx g @tools\/generators:remix --describe/,
       ),
     ).toBeInTheDocument();
+
+    const toolsReadme = component.getByRole('link', {
+      name: /@tools\/generators package/,
+    });
+    expect(toolsReadme).toHaveAttribute(
+      'href',
+      expect.stringContaining('tools/generators/README.md'),
+    );
   });
 });

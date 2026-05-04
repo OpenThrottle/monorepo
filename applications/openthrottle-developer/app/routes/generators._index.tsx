@@ -9,7 +9,10 @@ import { GetGeneratorsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
-import { GENERATOR_DOCS_AGENT_USAGE } from '~/routing/generators/constants/generator-nx-docs';
+import {
+  GENERATOR_DOCS_AGENT_USAGE,
+  GENERATOR_DOCS_TOOLS_PACKAGE_README,
+} from '~/routing/generators/constants/generator-nx-docs';
 import type { Route } from '@/app/routes/+types/generators._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -64,6 +67,15 @@ export default function Component(
           target="_blank"
         >
           AGENT_USAGE
+        </a>{' '}
+        and the{' '}
+        <a
+          className="text-primary underline-offset-4 hover:underline"
+          href={GENERATOR_DOCS_TOOLS_PACKAGE_README}
+          rel="noreferrer"
+          target="_blank"
+        >
+          @tools/generators README
         </a>
         ). Open a card for doc links, command presets, and support-bundle CLI
         capture.

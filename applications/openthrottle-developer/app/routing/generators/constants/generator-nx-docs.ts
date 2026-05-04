@@ -1,5 +1,5 @@
 /**
- * @description Stable GitHub links into this monorepo for generator workflows from the developer portal.
+ * @description Stable GitHub links into this monorepo for generator workflows from the OpenThrottle Developer Application.
  */
 export const GENERATOR_DOCS_AGENTS = `https://github.com/OpenThrottle/OpenThrottle/blob/main/AGENTS.md`;
 
@@ -12,3 +12,8 @@ export const GENERATOR_DOCS_AGENT_USAGE = `https://github.com/OpenThrottle/OpenT
  * @description Workspace generator rule (nx list / describe workflow).
  */
 export const GENERATOR_DOCS_PERSONAL_GENERATORS = `https://github.com/OpenThrottle/OpenThrottle/blob/main/.cursor/rules/personal-generators.mdc`;
+
+/**
+ * @description @tools/generators package README (interactive vs non-interactive, listing commands).
+ */
+export const GENERATOR_DOCS_TOOLS_PACKAGE_README = `https://github.com/OpenThrottle/OpenThrottle/blob/main/tools/generators/README.md`;

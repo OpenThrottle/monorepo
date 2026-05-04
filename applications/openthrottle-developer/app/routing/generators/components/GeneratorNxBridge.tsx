@@ -19,6 +19,7 @@ import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,
   GENERATOR_DOCS_PERSONAL_GENERATORS,
+  GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
 import { buildGeneratorNxPresets } from '~/routing/generators/utils/build-generator-nx-presets';
 import {
@@ -114,6 +115,16 @@ export const GeneratorNxBridge = (props: GeneratorNxBridgeProps) => {
                 target="_blank"
               >
                 Generator-first rule (.cursor/rules/personal-generators.mdc)
+              </a>
+            </li>
+            <li>
+              <a
+                className="text-primary underline-offset-4 hover:underline"
+                href={GENERATOR_DOCS_TOOLS_PACKAGE_README}
+                rel="noreferrer"
+                target="_blank"
+              >
+                @tools/generators package (tools/generators/README.md)
               </a>
             </li>
           </ul>
