@@ -149,7 +149,9 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   return (
     <div
       className={classnames(
-        'p-4 md:p-8 gap-4 md:gap-8 flex flex-col w-full',
+        'flex flex-col w-full',
+        'gap-4 md:gap-8 lg:gap-12',
+        'p-4 md:p-8 lg:p-12',
         className,
       )}
       data-testid="GlobalMetrics"
@@ -237,7 +239,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
 
         {showStatCards && serverMetrics != null && (
           <div
-            className="flex flex-wrap gap-4 md:gap-8"
+            className="flex flex-wrap gap-4 md:gap-8 lg:gap-12"
             data-testid="GlobalMetrics-data"
           >
             <OpenThrottleStatCard

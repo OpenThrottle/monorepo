@@ -1,18 +1,30 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { Dialog, DialogContent } from '@openthrottle/react-router-shadcn';
+import { useSearchParams } from 'react-router';
 
-export interface GlobalModalProps {
-  readonly className?: string;
+export interface GlobalModalProps extends React.PropsWithChildren {
+  readonly param: string;
+  readonly value: string;
 }
 
-export const GlobalModal = (props: GlobalModalProps): React.ReactElement => {
-  const { className } = props;
+export const GlobalModal = (props: GlobalModalProps) => {
+  const { children, param: paramProp = 'modal', value } = props;
 
   // Hooks
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Setup
+  const param = searchParams.get(paramProp);
+  const isOpen = param === value;
 
   // Handlers
+  const onToggle = () => {
+    const newParams = new URLSearchParams(searchParams);
+
+    if (isOpen) newParams.delete(paramProp);
+    if (!isOpen) newParams.set(paramProp, value);
+
+    setSearchParams(newParams, { preventScrollReset: true });
+  };
 
   // Markup
 
@@ -21,8 +33,12 @@ export const GlobalModal = (props: GlobalModalProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="GlobalModal">
-      <h2>GlobalModal</h2>
-    </div>
+    <Dialog onOpenChange={onToggle} open={isOpen}>
+      <DialogContent className="sm:max-w-sm data-[state=closed]:slide-out-to-top-[0%] ">
+        {children}
+      </DialogContent>
+    </Dialog>
   );
 };
+
+GlobalModal.key = 'daily-stats';

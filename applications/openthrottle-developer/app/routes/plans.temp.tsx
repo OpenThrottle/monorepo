@@ -4,11 +4,11 @@ import { Form } from 'react-router';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.temp';
 import {
-  // PlanDetailEnqueuePlanRunDocument,
   RalphNestedDebugCli,
   TestWorkflowDocument,
 } from '~/__generated__/graphql';
@@ -51,7 +51,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <OpenThrottleBreadcrumbs
         children="Edit Plan"
         className="mb-4"
@@ -77,7 +77,7 @@ export default function Component(
           </div>
         </Form>
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

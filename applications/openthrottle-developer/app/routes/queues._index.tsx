@@ -1,12 +1,21 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GetQueuesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { QueuesToolbar } from '~/routing/queues/components/QueuesToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues._index';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Queues',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { queues } = await executeGraphqlWithAuth(
@@ -48,13 +57,12 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex flex-col p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto flex-1">
-      <h1 className="text-xl my-4 text-highlight">Queues</h1>
+    <GlobalScreen>
       <QueuesToolbar queues={queues} />
       <div className="flex-1 mt-4">
         <QueuesTable queues={queues} />
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

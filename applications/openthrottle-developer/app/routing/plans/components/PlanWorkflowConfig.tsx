@@ -8,7 +8,6 @@ import {
   CardDescription,
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronUp, TerminalSquareIcon } from 'lucide-react';
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
@@ -159,15 +158,6 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
       <CardHeader className="pb-2 mb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1.5">
-            <div className="flex items-center gap-4">
-              <TerminalSquareIcon className="size-6" />
-              <h2
-                className="text-lg font-semibold leading-none tracking-tight"
-                id="workflow-run-options-title"
-              >
-                Workflow Configuration
-              </h2>
-            </div>
             <CardDescription>
               Compose flags aligned with{' '}
               <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
@@ -195,19 +185,6 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
                   Reset to defaults
                 </Button>
               ) : null}
-
-              {onCollapse != null ? (
-                <Button
-                  aria-controls="workflow-run-options"
-                  aria-expanded={true}
-                  aria-label="Hide workflow run options"
-                  className="shrink-0 size-8"
-                  onClick={onCollapse}
-                  variant="ghost"
-                >
-                  <ChevronUp aria-hidden={true} className="size-4" />
-                </Button>
-              ) : null}
             </div>
           ) : null}
         </div>
@@ -215,23 +192,19 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
 
       <CardContent className="flex flex-col flex-1 gap-4">
         <PlanWorkflowConfigTarget input={input} setInput={setInput} />
-
         <PlanWorkflowConfigPrompt
           onPromptChange={(next) =>
             setInput((prev) => ({ ...prev, prompt: next }))
           }
           prompt={input.prompt}
         />
-
         <PlanWorkflowConfigExecution />
-
         <PlanWorkflowConfigTuning
           input={input}
           iterationTimeoutText={iterationTimeoutText}
           setInput={setInput}
           setIterationTimeoutText={setIterationTimeoutText}
         />
-
         <PlanWorkflowCommand
           canonicalCommandLineOverride={canonicalCommandLineOverride}
         />

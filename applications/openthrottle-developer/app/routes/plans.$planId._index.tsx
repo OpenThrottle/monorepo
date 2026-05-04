@@ -1,21 +1,27 @@
 import * as React from 'react';
 import { Card } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalCollapsible,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import {
-  Outlet,
-  redirect,
-  useRevalidator,
-  useSearchParams,
-} from 'react-router';
+import { redirect, useRevalidator, useSearchParams } from 'react-router';
 import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
 import type {
   PlanStatusChangedPayload,
   TaskStatusChangedPayload,
 } from '@openthrottle/openthrottle-notifications';
+import {
+  CogIcon,
+  LucideIcon,
+  NotebookTabsIcon,
+  NotebookTextIcon,
+  TerminalSquareIcon,
+} from 'lucide-react';
 import {
   CancelPlanRunInputSchema,
   EnqueuePlanRunInputSchema,
@@ -37,22 +43,19 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import {
-  isWorkflowRunOptionsExpandedFromSearchParams,
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
+import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
 import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
 import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
-import { PlanToggleLayout } from '~/routing/plans/components/PlanToggleLayout';
 import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
-import { PlanWorkflowConfigCollapsed } from '~/routing/plans/components/PlanWorkflowConfigCollapsed';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
 
 /**
  * @description Parses `view` query/localStorage values for the plan tasks table vs board switcher.
@@ -139,30 +142,8 @@ export default function Component(
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
   const planId = params.planId ?? '';
-  const isExpanded = isWorkflowRunOptionsExpandedFromSearchParams(searchParams);
 
   // Handlers
-  const onChangeView = (value: string): void => {
-    if (value !== 'table' && value !== 'board') return;
-    try {
-      localStorage.setItem(DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY, value);
-    } catch {
-      // ignore quota / private mode
-    }
-
-    const next = new URLSearchParams(searchParams);
-    if (value === 'table') {
-      next.delete('view');
-    } else {
-      next.set('view', value);
-    }
-
-    setSearchParams(next, {
-      preventScrollReset: true,
-      replace: true,
-    });
-  };
-
   const onResetToDefaults = (): void => {
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
@@ -253,30 +234,62 @@ export default function Component(
     return <PlanNotFound />;
   }
 
+  interface Item {
+    content: React.ReactNode;
+    icon: LucideIcon;
+    title: string;
+  }
+
+  const items: Item[] = [
+    {
+      content: <PlanDetails plan={plan} />,
+      icon: NotebookTextIcon,
+      title: 'Details',
+    },
+    {
+      content: <PlanTasksTable tasks={tasks} />,
+      icon: NotebookTabsIcon,
+      title: 'Tasks',
+    },
+    {
+      content: (
+        <PlanWorkflowConfig
+          iterationTimeoutText={workflowTimeout}
+          onCollapse={() => onToggleExpanded(false)}
+          onIterationTimeoutTextChange={setWorkflowTimeout}
+          onResetToDefaults={onResetToDefaults}
+          onValueChange={setWorkflowInput}
+          planId={plan.id}
+          value={workflowInput}
+        />
+      ),
+      icon: CogIcon,
+      title: 'Configuration',
+    },
+    {
+      content: <PlanLoggerOutput logs={logs} />,
+      icon: TerminalSquareIcon,
+      title: 'Output',
+    },
+  ];
+
   return (
     <>
-      <main className="p-4 md:p-8 flex flex-col gap-4 md:gap-8">
-        <PlanDetails plan={plan} />
-        <PlanToggleLayout onValueChange={onChangeView} value={planTasksView} />
-        <PlanTasksTable tasks={tasks} />
-
-        {isExpanded ? (
-          <PlanWorkflowConfig
-            iterationTimeoutText={workflowTimeout}
-            onCollapse={() => onToggleExpanded(false)}
-            onIterationTimeoutTextChange={setWorkflowTimeout}
-            onResetToDefaults={onResetToDefaults}
-            onValueChange={setWorkflowInput}
-            planId={plan.id}
-            value={workflowInput}
-          />
-        ) : (
-          <PlanWorkflowConfigCollapsed onClick={() => onToggleExpanded(true)} />
-        )}
-
-        <PlanLoggerOutput logs={logs} />
-        <Outlet />
-      </main>
+      <GlobalScreen>
+        {items.map((item) => {
+          const isOutput = item.title !== 'Output';
+          return (
+            <GlobalCollapsible
+              icon={item.icon}
+              key={item.title}
+              open={isOutput}
+              title={item.title}
+            >
+              {item.content}
+            </GlobalCollapsible>
+          );
+        })}
+      </GlobalScreen>
 
       {isBoardView ? (
         <Card className="overflow-hidden mx-4">

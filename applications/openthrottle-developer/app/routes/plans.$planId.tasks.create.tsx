@@ -2,6 +2,7 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.create';
@@ -62,12 +63,12 @@ export default function Component(
   }
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <div className="max-w-xl mx-auto">
         <h1 className="text-xl my-4 text-highlight">New task</h1>
         <TaskForm actionData={actionData} planId={planId} />
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

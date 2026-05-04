@@ -2,9 +2,18 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => _match?.data?.queueName ?? 'Details',
+  links: (_match) => [{ children: 'Queues', to: '/queues' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const queueName = args.params.queueId;
@@ -41,7 +50,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <nav className="mb-4 text-sm text-muted-foreground">
         <Link className="hover:text-foreground" to="/queues">
           Queues
@@ -59,7 +68,7 @@ export default function Component(
       <h1 className="text-xl my-4 text-highlight">Queue: {queueName}</h1>
 
       <h2 className="text-xl font-semibold mb-4">Job Details</h2>
-    </main>
+    </GlobalScreen>
   );
 }
 

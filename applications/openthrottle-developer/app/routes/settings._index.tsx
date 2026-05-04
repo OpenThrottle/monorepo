@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
@@ -42,12 +45,12 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8">
+    <GlobalScreen>
       <div className="flex gap-8">
         <NotificationPreferencesSection className="flex-1" />
         <EventSubscriptionsSection className="flex-1" />
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

@@ -8,7 +8,10 @@ import {
   OpenThrottleStatCard,
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
@@ -17,7 +20,7 @@ import type { Route } from '@/app/routes/+types/queues.$queueId';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => _match?.data?.queue?.name ?? 'Queue Details',
-  links: (_match) => [{ children: 'All Queues', to: '/queues' }],
+  links: (_match) => [{ children: 'Queues', to: '/queues' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -62,7 +65,7 @@ export default function Component(
   const hasNext = queue.jobs?.hasNext ?? false;
 
   return (
-    <main className="p-4 md:p-8">
+    <GlobalScreen>
       <div className="grid md:grid-cols-5 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
         <OpenThrottleStatCard title="Active" value={queue.activeCount} />
@@ -99,7 +102,7 @@ export default function Component(
           />
         </>
       )}
-    </main>
+    </GlobalScreen>
   );
 }
 

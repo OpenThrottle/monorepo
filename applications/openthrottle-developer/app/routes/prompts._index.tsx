@@ -10,7 +10,10 @@ import {
   OpenThrottleStatCard,
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   GetPromptsDocument,
   type CustomPromptType,
@@ -116,8 +119,8 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col">
-      <div className="mt-4 grid md:grid-cols-3 gap-4 lg:gap-8">
+    <GlobalScreen>
+      <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Custom prompts" value={v1} />
         <OpenThrottleStatCard title="System prompts" value={v2} />
         <OpenThrottleStatCard title="Total prompts" value={v3} />
@@ -157,7 +160,7 @@ export default function Component(
           </div>
         </div>
       )}
-    </main>
+    </GlobalScreen>
   );
 }
 

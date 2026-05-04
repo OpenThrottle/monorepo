@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { useSearchParams } from 'react-router';
@@ -54,7 +57,7 @@ export default function Component(
   const total = results.chunks.length;
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <h1 className="text-xl my-4 text-highlight">Search</h1>
 
       {!currentQ && (
@@ -78,7 +81,7 @@ export default function Component(
         search={currentQ || undefined}
         total={total}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 

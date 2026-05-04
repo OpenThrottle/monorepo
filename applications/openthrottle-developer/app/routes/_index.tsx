@@ -1,5 +1,8 @@
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { HomeComingSoon } from '~/routing/home/components/HomeComingSoon';
 import { HomeFeatures } from '~/routing/home/components/HomeFeatures';
@@ -38,7 +41,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <>
+    <GlobalScreen>
       {FEATURE_BETA_PREVIEW ? (
         <>
           <HomeHeroV1 className="flex-1 flex min-h-svh items-center" />
@@ -46,11 +49,9 @@ export default function Component(
           <HomeFeatures />
         </>
       ) : (
-        <>
-          <HomeComingSoon className="flex-1 flex items-center" />
-        </>
+        <HomeComingSoon className="flex-1 flex items-center" />
       )}
-    </>
+    </GlobalScreen>
   );
 }
 

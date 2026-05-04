@@ -1,8 +1,15 @@
 import * as React from 'react';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { useAtom } from 'jotai';
+import { Input, Label } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import type { Route } from '@/app/routes/+types/settings.appearance';
+import { configAtom } from '~/global/data/atom.config';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => 'Appearance',
@@ -27,10 +34,14 @@ export default function Component(
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
+  const [config, setConfig] = useAtom(configAtom);
 
   // Setup
 
   // Handlers
+  const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfig({ ...config, accentColor: event.target.value });
+  };
 
   // Markup
 
@@ -39,13 +50,24 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-12 relative h-full">
-      <h1 className="text-xl my-4">Appearance</h1>
-      <p>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-        architecto ea?
-      </p>
-    </main>
+    <GlobalScreen>
+      <OpenThrottleEmptyState
+        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis, architecto ea?"
+        title="Appearance - Coming Soon"
+      />
+      <hr className="my-8" />
+
+      <div className="flex gap-2 items-center">
+        <Label className="whitespace-nowrap">Accent Color</Label>
+        <div className="aspect-square w-10">
+          <Input
+            onInput={handleColorChange}
+            type="color"
+            value={config.accentColor}
+          />
+        </div>
+      </div>
+    </GlobalScreen>
   );
 }
 

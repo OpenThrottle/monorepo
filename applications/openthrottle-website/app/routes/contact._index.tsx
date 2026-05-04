@@ -38,7 +38,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-12 relative h-full">
+    <main className="p-4 md:p-8 relative h-full">
       <h1 className="text-xl my-4">ContactIndex</h1>
       <p>
         Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,

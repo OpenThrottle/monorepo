@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import { Link } from 'react-router';
 import {
   Empty,
@@ -7,13 +6,12 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 
-export interface ProjectNotFoundProps {
-  readonly className?: string;
-}
+export interface ProjectNotFoundProps {}
 
-export const ProjectNotFound = (props: ProjectNotFoundProps) => {
-  const { className } = props;
+export const ProjectNotFound = (_props: ProjectNotFoundProps) => {
+  // const { className } = props;
 
   // Hooks
 
@@ -28,13 +26,7 @@ export const ProjectNotFound = (props: ProjectNotFoundProps) => {
   // 🔌 Short Circuit
 
   return (
-    <main
-      className={classnames(
-        'p-12 relative h-full max-w-7xl mx-auto w-full',
-        className,
-      )}
-      data-testid="ProjectNotFound"
-    >
+    <GlobalScreen>
       <nav className="mb-4 text-sm text-muted-foreground">
         <Link
           className="hover:text-foreground"
@@ -52,6 +44,6 @@ export const ProjectNotFound = (props: ProjectNotFoundProps) => {
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
-    </main>
+    </GlobalScreen>
   );
 };

@@ -19,7 +19,10 @@ import {
   OpenThrottleClipboard,
   OpenThrottlePagination,
 } from '@openthrottle/react-router-ui';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
@@ -103,10 +106,12 @@ export default function Component(
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!project) return <ProjectNotFound />;
+  if (!project) {
+    return <ProjectNotFound />;
+  }
 
   return (
-    <main aria-label="Project details" className="p-4 md:p-8">
+    <GlobalScreen>
       <Tabs className="w-full">
         <TabsList aria-label="Project sections" className="mb-4">
           <TabsTrigger
@@ -216,7 +221,7 @@ export default function Component(
           </section>
         </TabsContent>
       </Tabs>
-    </main>
+    </GlobalScreen>
   );
 }
 

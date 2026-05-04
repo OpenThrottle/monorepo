@@ -2,7 +2,10 @@ import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { CreateProjectDocument } from '~/__generated__/graphql';
@@ -44,17 +47,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      {/* <OpenThrottleBreadcrumbs
-        children="Create Project"
-        className="mb-4"
-        links={[{ children: 'Projects', to: '/projects' }]}
-      /> */}
-
-      <div className="max-w-7xl mx-auto">
-        <ProjectForm actionData={actionData} />
-      </div>
-    </main>
+    <GlobalScreen>
+      <ProjectForm actionData={actionData} />
+    </GlobalScreen>
   );
 }
 

@@ -33,7 +33,11 @@ export const GlobalLayoutBreadcrumbs = (
     .filter((match) => match.handle && match.handle.links)
     .map((match) => match.handle?.links?.(match) ?? []);
 
-  links[0].unshift({ children: 'OpenThrottle', to: '/' });
+  if (links[0]) {
+    links[0].unshift({ children: 'OpenThrottle', to: '/' });
+  } else {
+    links.unshift([{ children: 'OpenThrottle', to: '/' }]);
+  }
 
   // Handlers
 

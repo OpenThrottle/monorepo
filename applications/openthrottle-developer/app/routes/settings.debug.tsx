@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import type { Route } from '@/app/routes/+types/settings.debug';
@@ -39,13 +43,13 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-12 relative h-full">
-      <h1 className="text-xl my-4">Debug</h1>
-      <p>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-        architecto ea?
-      </p>
-    </main>
+    <GlobalScreen>
+      <OpenThrottleEmptyState
+        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis, architecto ea?"
+        title="Debug - Coming Soon"
+      />
+      <hr className="my-8" />
+    </GlobalScreen>
   );
 }
 

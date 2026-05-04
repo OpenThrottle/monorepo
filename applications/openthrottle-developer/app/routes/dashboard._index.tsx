@@ -4,7 +4,10 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import { useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   GetDashboardDocument,
   GetDashboardGithubStatsDocument,
@@ -94,8 +97,8 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col">
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
+    <GlobalScreen>
+      <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
         <OpenThrottleStatCard title="Total plans" value={12} />
         <OpenThrottleStatCard title="Active tasks" value={3} />
         <OpenThrottleStatCard title="Scheduled tasks" value={23} />
@@ -172,7 +175,7 @@ export default function Component(
       </div>
 
       <DashboardDailyStatsModal />
-    </main>
+    </GlobalScreen>
   );
 }
 

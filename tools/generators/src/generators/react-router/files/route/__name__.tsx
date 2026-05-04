@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalLayoutBreadcrumbsHandle, GlobalScreen } from '@openthrottle/react-router-ui-global';
 import type { Route } from '@/app/routes/+types/<%= name %>';
+// import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => '<%= namePascal %>',
@@ -40,13 +40,13 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-12 relative h-full">
+    <GlobalScreen>
       <h1 className="text-xl my-4"><%= namePascal %></h1>
       <p>
       Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
       architecto ea?
       </p>
-    </main>
+    </GlobalScreen>
   );
 }
 

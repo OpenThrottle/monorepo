@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
@@ -34,13 +36,13 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <h1 className="text-xl my-4 text-highlight">Pull Request Details</h1>
-      <p>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-        architecto ea?
-      </p>
-    </main>
+    <GlobalScreen>
+      <OpenThrottleEmptyState
+        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis, architecto ea?"
+        title="Pull Request Details - Coming Soon"
+      />
+      <hr className="my-8" />
+    </GlobalScreen>
   );
 }
 

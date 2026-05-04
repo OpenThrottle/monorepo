@@ -24,13 +24,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
     {
       children: 'Plans',
       icon: NotebookTextIcon,
-      end: true,
       to: '/plans',
     },
     {
       children: 'Projects',
       icon: ListIcon,
-      end: true,
       to: '/projects',
     },
   ],
@@ -53,14 +51,10 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   ],
   Settings: [
     {
-      children: 'Settings',
+      children: 'General',
       icon: SettingsIcon,
+      end: true,
       to: '/settings',
-    },
-    {
-      children: 'Customization',
-      icon: SettingsIcon,
-      to: '/settings/customization',
     },
     {
       children: 'Appearance',

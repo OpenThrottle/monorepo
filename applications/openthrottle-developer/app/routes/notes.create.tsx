@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
@@ -48,9 +51,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <NoteForm action="create" />
-    </main>
+    </GlobalScreen>
   );
 }
 

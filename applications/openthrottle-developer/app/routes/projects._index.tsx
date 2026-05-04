@@ -2,7 +2,10 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GetProjectsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
@@ -205,9 +208,8 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col">
+    <GlobalScreen>
       <ProjectsStatsCards
-        className="mt-4"
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />
@@ -238,7 +240,7 @@ export default function Component(
           />
         </>
       )}
-    </main>
+    </GlobalScreen>
   );
 }
 

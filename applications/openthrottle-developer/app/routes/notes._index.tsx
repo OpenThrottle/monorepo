@@ -3,7 +3,10 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GetNotesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
@@ -11,7 +14,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => 'All Notes',
+  breadcrumb: (_match) => 'Notes',
   links: (_match) => [],
 };
 
@@ -51,7 +54,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <div className="flex items-center justify-between">
         <h1 className="text-xl my-4 text-highlight">Notes</h1>
         <Button asChild={true} size="sm">
@@ -66,7 +69,7 @@ export default function Component(
           <NoteCard key={note.id} note={note} />
         ))}
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

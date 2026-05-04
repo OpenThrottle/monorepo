@@ -53,6 +53,7 @@ import { userAtom } from '~/global/data/atom.user';
 import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
+import { configAtom } from '~/global/data/atom.config';
 
 /** Path prefixes that require authentication when FEATURE_BETA_PREVIEW is on. */
 const PROTECTED_PATH_PREFIXES = [
@@ -263,7 +264,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <NotificationsSocketBridge
             webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
           >
-            <main className="flex flex-1 flex-col">{children}</main>
+            <div className="flex flex-1 flex-col">{children}</div>
           </NotificationsSocketBridge>
         </NotificationsStoreProvider>
 
@@ -289,13 +290,13 @@ export default function App(): React.ReactElement {
   const fetcher = useFetcher();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
+  const [config, _setConfig] = useAtom(configAtom);
 
   // Setup
   const isAuthRoute = pathname.startsWith('/auth');
   const isPromptsRoute = pathname.startsWith('/prompts/');
   const isProfileRoute = pathname.startsWith('/profile');
   const isSettingsRoute = pathname.startsWith('/settings');
-  // const isSettingsIndexRoute = pathname === '/settings';
   const isCreateRoute = pathname.endsWith('/create');
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
@@ -341,8 +342,8 @@ export default function App(): React.ReactElement {
 
         <style type="text/css">{`
           :root {
-            // --accent: yellow;
-            // --color-ring: yellow;
+            ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
+            ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
           }
         `}</style>
       </GlobalLayout>

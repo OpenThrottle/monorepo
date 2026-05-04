@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   GetNoteByIdDocument,
   UpdateNoteDocument,
@@ -14,7 +17,7 @@ import type { Route } from '@/app/routes/+types/notes.$noteId';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => 'Details',
-  links: (_match) => [{ children: 'All Notes', to: '/notes' }],
+  links: (_match) => [{ children: 'Notes', to: '/notes' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -55,10 +58,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <h1 className="text-xl my-4 text-highlight">Note Details</h1>
+    <GlobalScreen>
       <NoteForm action="update" note={note ?? undefined} />
-    </main>
+    </GlobalScreen>
   );
 }
 

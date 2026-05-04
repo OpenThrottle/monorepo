@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Empty,
   EmptyDescription,
@@ -11,6 +10,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { redirect } from 'react-router';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import {
   GetTaskByIdDocument,
@@ -74,12 +74,7 @@ export default function Component(
   // 🔌 Short Circuit
   if (task == null) {
     return (
-      <main
-        className={classnames(
-          'h-full max-w-7xl w-full mx-auto',
-          'flex flex-1 items-center justify-center',
-        )}
-      >
+      <GlobalScreen>
         <Empty>
           <EmptyMedia variant="icon">
             <PuzzlePieceIcon size={48} />
@@ -89,13 +84,13 @@ export default function Component(
             The task you are looking for does not exist.
           </EmptyDescription>
         </Empty>
-      </main>
+      </GlobalScreen>
     );
   }
 
   return (
     <>
-      <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+      <GlobalScreen>
         <OpenThrottleBreadcrumbs
           children="Edit Task"
           className="mb-4"
@@ -105,7 +100,7 @@ export default function Component(
           ]}
         />
         <TaskForm actionData={actionData} planId={planId} task={task} />
-      </main>
+      </GlobalScreen>
     </>
   );
 }

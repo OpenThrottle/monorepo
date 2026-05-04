@@ -4,7 +4,10 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Editor, getLanguageFromExt } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   DeletePromptDocument,
   GetPromptDocument,
@@ -138,7 +141,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex flex-col flex-1" data-testid="prompts-editor">
+    <GlobalScreen className="flex flex-col flex-1">
       {/* Header with prompt info and actions */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
@@ -211,7 +214,7 @@ export default function Component(
         value={content}
         wrapperProps={{ className: 'flex-1' }}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 

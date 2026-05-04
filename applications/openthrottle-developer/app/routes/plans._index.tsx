@@ -10,6 +10,7 @@ import {
   OpenThrottleStatCard,
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanAssigneeOptionsDocument,
   GetPlanCountsByStatusDocument,
@@ -175,8 +176,8 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col">
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
+    <GlobalScreen>
+      <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
         <OpenThrottleStatCard
           color="bg-yellow-300"
           subValue={totalCountQueued}
@@ -216,7 +217,7 @@ export default function Component(
         statuses={statuses}
         total={totalCount}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 

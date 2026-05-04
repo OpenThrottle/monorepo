@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import {
   CreatePromptDocument,
   type CreateCustomPromptInput,
@@ -115,7 +116,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex flex-col flex-1" data-testid="prompts-create">
+    <GlobalScreen>
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
           <a
@@ -225,7 +226,7 @@ export default function Component(
         value={content}
         wrapperProps={{ className: 'flex-1' }}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 

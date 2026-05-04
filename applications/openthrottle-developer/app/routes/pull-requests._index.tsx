@@ -3,6 +3,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Card } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GetPullRequestsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -44,7 +45,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
+    <GlobalScreen>
       <h1 className="text-xl my-4 text-highlight">Pull Requests</h1>
       <div className="grid grid-cols-1 gap-4 lg:gap-8">
         {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8"> */}
@@ -60,7 +61,7 @@ export default function Component(
           </Card>
         ))}
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 

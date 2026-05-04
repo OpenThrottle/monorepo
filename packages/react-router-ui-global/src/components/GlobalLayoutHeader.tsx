@@ -49,9 +49,9 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
       <GlobalLayoutBreadcrumbs className="flex-1" />
       <Input className="max-w-52" placeholder="Search" type="search" />
 
-      <Link className="text-foreground" to="/auth/logout">
+      <Link className="text-foreground" to="/profile">
         <Avatar className="size-6">
-          <AvatarImage src="https://github.com/shadcn.png" />
+          <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </Link>
