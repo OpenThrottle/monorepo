@@ -16,7 +16,6 @@ import {
   ScrollRestoration,
   useFetcher,
   useLocation,
-  useNavigate,
   useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
@@ -68,6 +67,7 @@ import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import { configAtom } from '~/global/data/atom.config';
+import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   CORTEX_UUID_PATTERN,
   buildCommanderEmptyStateExtras,
@@ -361,7 +361,6 @@ export default function App(): React.ReactElement {
   const data = useRouteLoaderData<typeof loader>('root');
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
-  const navigate = useNavigate();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
   const [config, _setConfig] = useAtom(configAtom);
@@ -391,23 +390,42 @@ export default function App(): React.ReactElement {
    * @description Root action `commander-search`: default redirects to `/search?q=…`.
    * Optional `jump` + `id` / `id2` supports POST-driven debug navigation (see action handler).
    */
-  const handleSearch = React.useCallback(
-    (query: string) => {
-      fetcher.submit(
-        { intent: 'commander-search', q: query.trim() },
-        { method: 'post' },
-      );
+  const submitCommanderSearch = React.useCallback(
+    (fields: CommanderSearchFields) => {
+      const body: Record<string, string> = { intent: 'commander-search' };
+      if (fields.jump) {
+        body.jump = fields.jump;
+      }
+      if (fields.id) {
+        body.id = fields.id;
+      }
+      if (fields.id2) {
+        body.id2 = fields.id2;
+      }
+      if (fields.q !== undefined && fields.q !== '') {
+        body.q = fields.q;
+      }
+      fetcher.submit(body, { method: 'post' });
     },
-
     [fetcher],
   );
 
+  const handleSearch = React.useCallback(
+    (query: string) => {
+      submitCommanderSearch({ q: query.trim() });
+    },
+    [submitCommanderSearch],
+  );
+
   /**
-   * @description When the palette query looks like UUIDs, offer quick navigation (plan, queue, generator, queue/job pair, or workspace search).
+   * @description When the palette query matches no static commands, offer POST-backed jumps (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
    */
   const commanderEmptyExtras = React.useCallback(
-    (query: string) => buildCommanderEmptyStateExtras(query, navigate),
-    [navigate],
+    (query: string) =>
+      buildCommanderEmptyStateExtras(query, {
+        submitCommanderSearch,
+      }),
+    [submitCommanderSearch],
   );
 
   // Markup
@@ -450,22 +468,31 @@ export default function App(): React.ReactElement {
             className="m-0! p-0!"
             emptyStateExtras={commanderEmptyExtras}
             emptyStateMessage={
-              <span className="block px-2 text-center leading-relaxed">
-                <span className="block">
-                  No matching commands. Type to filter, paste a Cortex UUID, or
-                  use the browse shortcuts when your text is not a UUID. Two
-                  UUIDs (with <code className="text-[10px]">/</code> or space)
-                  open a queue job and a plan task.
+              <span className="block px-2 text-center leading-relaxed text-sm">
+                <span className="block font-medium">
+                  Nothing matched that filter
                 </span>
                 <span className="mt-2 block text-xs text-muted-foreground">
-                  Server metrics (when visible) sample{' '}
-                  <code className="text-[10px]">serverMetrics</code> on
-                  openthrottle-server; full definitions and GraphQL health live
-                  under Settings → Debug.
+                  <span className="block">
+                    1) Keep typing to narrow the list, or 2) paste one Cortex
+                    UUID for plan/queue/generator/search rows, or 3) paste two
+                    UUIDs with <code className="text-[10px]">/</code> or a space
+                    to jump to a queue job or a plan task.
+                  </span>
+                </span>
+                <span className="mt-2 block text-xs text-muted-foreground">
+                  When you have typed text (even if it is not a UUID), the list
+                  below offers browse shortcuts and a full-text search action.
+                </span>
+                <span className="mt-2 block text-[10px] text-muted-foreground">
+                  Server metrics (when visible) use{' '}
+                  <code className="text-[10px]">serverMetrics</code> from
+                  openthrottle-server; definitions and GraphQL health: Settings
+                  → Debug.
                 </span>
               </span>
             }
-            footerHint="Paste UUID(s) for quick jumps, or use browse shortcuts and Search when nothing matches your filter."
+            footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
             groups={groups}
             onEmptyStateSearch={handleSearch}
             placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"

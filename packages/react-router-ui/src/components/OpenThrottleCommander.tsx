@@ -201,7 +201,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
             forceMount={true}
             heading={
               extraItems.length > 0
-                ? 'No matching commands — shortcuts or search'
+                ? 'No match in palette — open a route or search'
                 : 'No matching commands — try search'
             }
           >
