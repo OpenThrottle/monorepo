@@ -6,8 +6,6 @@ import {
   SidebarInset,
   SidebarRail,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalLayoutHeader } from './GlobalLayoutHeader';
-import { GlobalMetrics } from './GlobalMetrics';
 import { GlobalSidebarContent } from './GlobalSidebarContent';
 import { GlobalSidebarFooter } from './GlobalSidebarFooter';
 import { GlobalSidebarHeader } from './GlobalSidebarHeader';
@@ -21,8 +19,6 @@ export interface GlobalLayoutProps {
 
   readonly overrides?: {
     readonly footer?: boolean;
-    readonly header?: boolean;
-    readonly metrics?: boolean;
     readonly rail?: boolean;
   };
 }
@@ -39,8 +35,6 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
 
   // Setup
   const hideFooter = overrides?.footer ?? false;
-  const hideHeader = overrides?.header ?? false;
-  const hideMetrics = overrides?.metrics ?? false;
   const hideRail = overrides?.rail ?? false;
 
   // Handlers
@@ -64,12 +58,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
 
-      <SidebarInset>
-        {!hideHeader ? <GlobalLayoutHeader /> : null}
-        {/* <div className="flex relative flex-1 flex-col">{children}</div> */}
-        {children}
-        {!hideMetrics ? <GlobalMetrics /> : null}
-      </SidebarInset>
+      <SidebarInset>{children}</SidebarInset>
     </>
   );
 };

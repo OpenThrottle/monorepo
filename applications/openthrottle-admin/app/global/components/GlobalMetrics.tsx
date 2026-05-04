@@ -13,7 +13,6 @@ import {
   SelectValue,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
   type ChartConfig,
 } from '@openthrottle/react-router-shadcn';
@@ -157,44 +156,40 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">Server metrics</h2>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild={true}>
-                <button
-                  aria-label="Metrics interpretation help"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                  data-testid="GlobalMetrics-info-trigger"
-                  type="button"
-                >
-                  <Info className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent
-                className="max-w-xs text-sm"
-                data-testid="GlobalMetrics-info-tooltip"
-                side="right"
+          <Tooltip>
+            <TooltipTrigger asChild={true}>
+              <button
+                aria-label="Metrics interpretation help"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="GlobalMetrics-info-trigger"
+                type="button"
               >
-                <p className="font-semibold mb-1">
-                  Understanding these metrics:
-                </p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>
-                    <strong>RSS</strong> - Total process memory including shared
-                    libraries. Under 500MB is typical.
-                  </li>
-                  <li>
-                    <strong>Heap</strong> - JS heap memory (used / total). Used
-                    near total may indicate memory pressure.
-                  </li>
-                  <li>
-                    <strong>CPU ms</strong> - Cumulative user/system CPU time
-                    since process start. Rising steadily is normal; sudden jumps
-                    may indicate heavy computation.
-                  </li>
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                <Info className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent
+              className="max-w-xs text-sm"
+              data-testid="GlobalMetrics-info-tooltip"
+              side="right"
+            >
+              <p className="font-semibold mb-1">Understanding these metrics:</p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>
+                  <strong>RSS</strong> - Total process memory including shared
+                  libraries. Under 500MB is typical.
+                </li>
+                <li>
+                  <strong>Heap</strong> - JS heap memory (used / total). Used
+                  near total may indicate memory pressure.
+                </li>
+                <li>
+                  <strong>CPU ms</strong> - Cumulative user/system CPU time
+                  since process start. Rising steadily is normal; sudden jumps
+                  may indicate heavy computation.
+                </li>
+              </ul>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <Label className="flex items-center gap-2">
           <span>Poll</span>

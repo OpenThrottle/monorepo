@@ -16,7 +16,7 @@ export interface OpenThrottleStatCardProps {
 }
 
 export const OpenThrottleStatCard = (props: OpenThrottleStatCardProps) => {
-  const { className, color, subValue, title, value } = props;
+  const { className = 'p-4 md:p-8', color, subValue, title, value } = props;
 
   // Hooks
 

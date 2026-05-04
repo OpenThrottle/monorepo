@@ -1,11 +1,17 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
 import { GetGeneratorsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/generators._index';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Generators',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { generators } = await executeGraphqlWithAuth(

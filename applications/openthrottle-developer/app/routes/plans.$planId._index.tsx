@@ -1,35 +1,21 @@
 import * as React from 'react';
-import {
-  Card,
-  Empty,
-  EmptyDescription,
-  EmptyTitle,
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@openthrottle/react-router-shadcn';
-import { ColumnsIcon } from '@phosphor-icons/react/dist/ssr/Columns';
-import { TableIcon } from '@phosphor-icons/react/dist/ssr/Table';
+import { Card } from '@openthrottle/react-router-shadcn';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import {
   Outlet,
   redirect,
   useRevalidator,
   useSearchParams,
 } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottleBreadcrumbs,
-  OpenThrottleClipboard,
-} from '@openthrottle/react-router-ui';
+import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
 import type {
   PlanStatusChangedPayload,
   TaskStatusChangedPayload,
 } from '@openthrottle/openthrottle-notifications';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import {
   CancelPlanRunInputSchema,
   EnqueuePlanRunInputSchema,
@@ -38,6 +24,10 @@ import {
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
 import {
+  getDefaultWorkflowRalphRunOptionsInput,
+  WorkflowRalphRunOptionsInput,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import {
   GetPlanByIdDocument,
   GetTasksByPlanIdDocument,
   PlanDetailCancelPlanRunDocument,
@@ -45,13 +35,24 @@ import {
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import {
+  isWorkflowRunOptionsExpandedFromSearchParams,
+  WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
+  WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
+} from '~/routing/plans/utils/workflow-run-options-search-param';
 import { PlanDetails } from '~/routing/plans/components/PlanDetails';
+import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
+import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
+import { PlanToggleLayout } from '~/routing/plans/components/PlanToggleLayout';
+import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
+import { PlanWorkflowConfigCollapsed } from '~/routing/plans/components/PlanWorkflowConfigCollapsed';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
-
-const PLAN_TASKS_VIEW_STORAGE_KEY = 'openthrottle-developer.planTasksView';
+import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
 
 /**
  * @description Parses `view` query/localStorage values for the plan tasks table vs board switcher.
@@ -71,6 +72,17 @@ const parsePlanTasksView = (raw: string | null): 'board' | 'table' | null => {
 //   return false;
 // };
 
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (match) => (
+    <OpenThrottleClipboard
+      className="cursor-pointer whitespace-nowrap"
+      label={match?.data?.plan?.id}
+      text={match?.data?.plan?.id}
+    />
+  ),
+  links: (_match) => [{ children: 'Plans', to: '/plans' }],
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId } = args.params;
 
@@ -84,9 +96,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   const plan = planResult.plan ?? null;
   const tasks = tasksResult.tasksByPlanId ?? [];
 
-  // const jsonLogs = (await import('../../.openthrottle/11.jsonl')).default;
-  // const jsonLogs = await fetch('/logs/small.jsonl');
-  // const jsonLogs = await fetch('/logs/line.json');
   const jsonLogs = await fetch('http://localhost:6020/logs/11.jsonl');
   const jsonData = await jsonLogs.text();
   const logs = jsonData
@@ -95,9 +104,6 @@ export const loader = async (args: Route.LoaderArgs) => {
     .map((line) => JSON.parse(line));
 
   console.log('---> logs', logs);
-
-  // // // const jsonLogs = (await import('../../.openthrottle/line.json')).default;
-  // console.log('---> logs', logs);
 
   return { logs, plan, tasks };
 };
@@ -121,6 +127,11 @@ export default function Component(
   const revalidator = useRevalidator();
   const [searchParams, setSearchParams] = useSearchParams();
   const socketContext = useNotificationsSocket();
+  const [workflowTimeout, setWorkflowTimeout] = React.useState('');
+  const [workflowInput, setWorkflowInput] =
+    React.useState<WorkflowRalphRunOptionsInput>(() =>
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
+    );
 
   // Setup
   const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
@@ -128,12 +139,13 @@ export default function Component(
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
   const planId = params.planId ?? '';
+  const isExpanded = isWorkflowRunOptionsExpandedFromSearchParams(searchParams);
 
   // Handlers
   const onChangeView = (value: string): void => {
     if (value !== 'table' && value !== 'board') return;
     try {
-      localStorage.setItem(PLAN_TASKS_VIEW_STORAGE_KEY, value);
+      localStorage.setItem(DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY, value);
     } catch {
       // ignore quota / private mode
     }
@@ -143,6 +155,31 @@ export default function Component(
       next.delete('view');
     } else {
       next.set('view', value);
+    }
+
+    setSearchParams(next, {
+      preventScrollReset: true,
+      replace: true,
+    });
+  };
+
+  const onResetToDefaults = (): void => {
+    setWorkflowInput(
+      getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
+    );
+
+    setWorkflowTimeout('');
+  };
+
+  const onToggleExpanded = (expanded: boolean): void => {
+    const next = new URLSearchParams(searchParams);
+    if (expanded) {
+      next.set(
+        WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
+        WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
+      );
+    } else {
+      next.delete(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM);
     }
 
     setSearchParams(next, {
@@ -163,7 +200,7 @@ export default function Component(
 
     try {
       const stored = parsePlanTasksView(
-        localStorage.getItem(PLAN_TASKS_VIEW_STORAGE_KEY),
+        localStorage.getItem(DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY),
       );
       if (stored === 'board') {
         const next = new URLSearchParams(searchParams);
@@ -181,7 +218,7 @@ export default function Component(
     if (!fromUrl) return;
 
     try {
-      localStorage.setItem(PLAN_TASKS_VIEW_STORAGE_KEY, fromUrl);
+      localStorage.setItem(DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY, fromUrl);
     } catch {
       // ignore
     }
@@ -218,74 +255,31 @@ export default function Component(
 
   return (
     <>
-      <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-        <OpenThrottleBreadcrumbs
-          children={
-            <OpenThrottleClipboard
-              className="cursor-pointer whitespace-nowrap"
-              label={plan.id}
-              text={plan.id}
-            />
-          }
-          className="mb-4"
-          links={[{ children: 'Plans', to: '/plans' }]}
-        />
+      <main className="p-4 md:p-8 flex flex-col gap-4 md:gap-8">
+        <PlanDetails plan={plan} />
+        <PlanToggleLayout onValueChange={onChangeView} value={planTasksView} />
+        <PlanTasksTable tasks={tasks} />
 
-        <PlanDetails logs={logs} plan={plan} />
-
-        {tasks.length === 0 ? (
-          <>
-            <h2 className="text-lg font-semibold mb-3">Tasks</h2>
-            <Empty>
-              <EmptyTitle>No tasks</EmptyTitle>
-              <EmptyDescription>This plan has no tasks yet.</EmptyDescription>
-            </Empty>
-          </>
+        {isExpanded ? (
+          <PlanWorkflowConfig
+            iterationTimeoutText={workflowTimeout}
+            onCollapse={() => onToggleExpanded(false)}
+            onIterationTimeoutTextChange={setWorkflowTimeout}
+            onResetToDefaults={onResetToDefaults}
+            onValueChange={setWorkflowInput}
+            planId={plan.id}
+            value={workflowInput}
+          />
         ) : (
-          <>
-            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-semibold">Tasks</h2>
-              <ToggleGroup
-                aria-label="Choose how to display plan tasks"
-                className="shrink-0"
-                onValueChange={onChangeView}
-                size="sm"
-                type="single"
-                value={planTasksView}
-                variant="outline"
-              >
-                <ToggleGroupItem
-                  aria-label="Table view"
-                  className="gap-1.5 px-2.5"
-                  value="table"
-                >
-                  <TableIcon aria-hidden={true} className="size-4" />
-                  Table
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  aria-label="Board view"
-                  className="gap-1.5 px-2.5"
-                  value="board"
-                >
-                  <ColumnsIcon aria-hidden={true} className="size-4" />
-                  Board
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            {!isBoardView ? (
-              <Card>
-                <PlanTasksTable tasks={tasks} />
-              </Card>
-            ) : null}
-          </>
+          <PlanWorkflowConfigCollapsed onClick={() => onToggleExpanded(true)} />
         )}
 
+        <PlanLoggerOutput logs={logs} />
         <Outlet />
       </main>
 
       {isBoardView ? (
-        <Card className="overflow-hidden p-4 mx-4">
+        <Card className="overflow-hidden mx-4">
           <PlanTasksBoard planId={plan.id} tasks={tasks} />
         </Card>
       ) : null}

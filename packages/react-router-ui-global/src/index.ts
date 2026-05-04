@@ -3,6 +3,7 @@ export * from './components/GlobalFooter';
 export * from './components/GlobalHeader';
 export * from './components/GlobalHeading';
 export * from './components/GlobalLayout';
+export * from './components/GlobalLayoutBreadcrumbs';
 // export * from './components/GlobalLogo';
 export * from './components/GlobalMetrics';
 export * from './components/GlobalModal';

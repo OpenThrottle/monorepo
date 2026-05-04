@@ -1,12 +1,18 @@
 import * as React from 'react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
-import { SITE_TITLE } from '~/global/config/settings';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Create Note',
+  links: (_match) => [{ children: 'All Notes', to: '/notes' }],
+};
 
 // export const loader = async (args: Route.LoaderArgs) => {
 //   return {}
@@ -43,10 +49,7 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">Create Note</h1>
-        <NoteForm action="create" />
-      </div>
+      <NoteForm action="create" />
     </main>
   );
 }

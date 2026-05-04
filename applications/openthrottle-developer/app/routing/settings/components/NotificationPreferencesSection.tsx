@@ -8,6 +8,7 @@ import {
   Label,
   Separator,
   Switch,
+  toast,
 } from '@openthrottle/react-router-shadcn';
 import {
   NOTIFICATION_PREFERENCE_ROWS,
@@ -15,16 +16,18 @@ import {
 } from '~/routing/settings/config/notification-preferences';
 import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
 
-export interface NotificationPreferencesSectionProps {}
+export interface NotificationPreferencesSectionProps {
+  readonly className?: string;
+}
 
 /**
  * @description Placeholder notification preferences panel. Local state only until
  * user settings API and action handlers exist — see {@link NOTIFICATION_PREFERENCE_ROWS}.
  */
 export const NotificationPreferencesSection = (
-  _props: NotificationPreferencesSectionProps,
+  props: NotificationPreferencesSectionProps,
 ) => {
-  // const { } = props;
+  const { className } = props;
 
   // Setup (for hooks)
   const initialToggles = getDefaultNotificationSettings();
@@ -38,6 +41,17 @@ export const NotificationPreferencesSection = (
   const handleCheckedChange =
     (id: NotificationPreferenceId) => (checked: boolean) => {
       setToggles((prev) => ({ ...prev, [id]: checked }));
+
+      // toast.success('Success');
+      // toast.error('Error');
+      // toast.warning('Warning');
+
+      const value = toast.loading('Start a loader...');
+
+      setTimeout(() => {
+        // Dismiss the loader by ID
+        toast.dismiss(value);
+      }, 1_500);
     };
 
   // Markup
@@ -48,9 +62,9 @@ export const NotificationPreferencesSection = (
 
   return (
     <>
-      <Card className="max-w-2xl">
+      <Card className={className}>
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
+          <CardTitle className="text-xl">Notifications</CardTitle>
           <CardDescription>
             Choose how we reach you about plans, tasks, and system activity.
             These choices are not saved yet.

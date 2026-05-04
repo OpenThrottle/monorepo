@@ -4,6 +4,7 @@ import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import { executeGraphql } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayout,
+  GlobalMetrics,
   GlobalProviders,
 } from '@openthrottle/react-router-ui-global';
 import {
@@ -36,6 +37,7 @@ import {
   NotificationsStoreProvider,
 } from '@openthrottle/react-router-notifications';
 import { useAtom } from 'jotai';
+import { GlobalLayoutHeader } from '@openthrottle/react-router-ui-global/src/components/GlobalLayoutHeader';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
@@ -221,20 +223,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const _health = data?.serverHealth ?? {};
 
-  const groups = useCommanderOptions();
-  const commanderSearchFetcher = useFetcher();
-
   // Handlers
-  const handleCommanderEmptyStateSearch = React.useCallback(
-    (query: string) => {
-      commanderSearchFetcher.submit(
-        { intent: 'commander-search', q: query.trim() },
-        { method: 'post' },
-      );
-    },
-
-    [commanderSearchFetcher],
-  );
 
   // Markup
 
@@ -274,22 +263,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <NotificationsSocketBridge
             webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
           >
-            {data?.serverHealth?.database !== 'ok' && (
-              <GlobalServerHealthBanner health={data?.serverHealth} />
-            )}
-            {/* {!isAuthRoute && <GlobalHeader />} */}
             <main className="flex flex-1 flex-col">{children}</main>
-            {/* {!isAuthRoute && !isPromptsRoute && (
-                <>
-                  <GlobalMetrics />
-                  <GlobalFooter health={data?.serverHealth} />
-                </>
-              )} */}
-            <OpenThrottleCommander
-              className="m-0! p-0!"
-              groups={groups}
-              onEmptyStateSearch={handleCommanderEmptyStateSearch}
-            />
           </NotificationsSocketBridge>
         </NotificationsStoreProvider>
 
@@ -312,13 +286,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App(): React.ReactElement {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
+  const fetcher = useFetcher();
+  const groups = useCommanderOptions();
+  const { pathname } = useLocation();
 
   // Setup
-  const { pathname } = useLocation();
   const isAuthRoute = pathname.startsWith('/auth');
-  const isPromptsRoute = pathname.startsWith('/prompts');
+  const isPromptsRoute = pathname.startsWith('/prompts/');
+  const isSettingsRoute = pathname.startsWith('/settings');
+  const isCreateRoute = pathname.endsWith('/create');
+
+  const isFooterHidden = isAuthRoute || isPromptsRoute;
+  const isHeaderHidden = isAuthRoute || isPromptsRoute;
+  const isMetricsHidden = isAuthRoute || isPromptsRoute || isSettingsRoute || isCreateRoute; // prettier-ignore
 
   // Handlers
+  const handleSearch = React.useCallback(
+    (query: string) => {
+      fetcher.submit(
+        { intent: 'commander-search', q: query.trim() },
+        { method: 'post' },
+      );
+    },
+
+    [fetcher],
+  );
 
   // Markup
 
@@ -331,13 +323,26 @@ export default function App(): React.ReactElement {
       <GlobalLayout
         data={dataNavigationV2}
         health={data?.serverHealth}
-        overrides={{
-          footer: isAuthRoute || isPromptsRoute,
-          header: isAuthRoute || isPromptsRoute,
-          metrics: isAuthRoute || isPromptsRoute,
-        }}
+        overrides={{ footer: isFooterHidden }}
       >
+        <GlobalServerHealthBanner health={data?.serverHealth} />
+
+        {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
         <Outlet />
+        {!isMetricsHidden ? <GlobalMetrics /> : null}
+
+        <OpenThrottleCommander
+          className="m-0! p-0!"
+          groups={groups}
+          onEmptyStateSearch={handleSearch}
+        />
+
+        <style type="text/css">{`
+          :root {
+            // --accent: yellow;
+            // --color-ring: yellow;
+          }
+        `}</style>
       </GlobalLayout>
     </GlobalProviders>
   );

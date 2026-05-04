@@ -4,7 +4,6 @@ import {
   DataTable,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
@@ -18,6 +17,7 @@ import {
 } from '~/routing/plans/utils/formatters';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
+import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
 export interface PlanTasksTableProps {
   readonly className?: string;
@@ -34,13 +34,17 @@ function buildPlanTaskTableColumns(): ColumnDef<
       cell: ({ row }) => {
         const status = row.original.status;
         return (
-          <PlanStatusBadge
-            status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
-          />
+          <div className="px-4 py-2">
+            <PlanStatusBadge
+              status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
+            />
+          </div>
         );
       },
       header: () => (
-        <span className="inline-block w-full text-center">Status</span>
+        <span className="px-4 py-2 inline-block w-full text-center">
+          Status
+        </span>
       ),
     },
     {
@@ -174,17 +178,21 @@ export const PlanTasksTable = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (tasks.length === 0) {
+    return <PlanTasksEmpty />;
+  }
 
   return (
-    <div className={classnames(className)} data-testid="PlanTasksTable">
-      <TooltipProvider>
-        <DataTable<PlanTaskRowFragment, string | null | undefined>
-          columns={columns}
-          data={data}
-          getRowId={getRowId}
-          getRowProps={getRowProps}
-        />
-      </TooltipProvider>
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PlanTasksTable"
+    >
+      <DataTable<PlanTaskRowFragment, string | null | undefined>
+        columns={columns}
+        data={data}
+        getRowId={getRowId}
+        getRowProps={getRowProps}
+      />
     </div>
   );
 };

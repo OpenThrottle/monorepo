@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useSearchParams } from 'react-router';
+import { RouteMatch, useSearchParams } from 'react-router';
 import {
   DEFAULT_PAGINATION_LIMIT,
   DEFAULT_PAGINATION_PAGE,
@@ -33,6 +33,11 @@ function parseAssigneesFromSearchParams(
   const raw = searchParams.getAll('assignee').flatMap((a) => a.split(','));
   return raw.map((a) => a.trim()).filter(Boolean);
 }
+
+export const handle = {
+  breadcrumb: () => 'Plans',
+  links: (_match: RouteMatch) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;

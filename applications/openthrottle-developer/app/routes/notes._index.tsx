@@ -3,11 +3,17 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GetNotesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes._index';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'All Notes',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { notes } = await executeGraphqlWithAuth(

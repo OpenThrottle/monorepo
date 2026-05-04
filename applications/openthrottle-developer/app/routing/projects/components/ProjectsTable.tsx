@@ -1,13 +1,9 @@
 import * as React from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  DataTable,
-} from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
+import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { format } from 'date-fns';
+import { Link } from 'react-router';
+import classnames from 'classnames';
+import type { ColumnDef } from '@tanstack/react-table';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 
 function formatPlansTasksSummary(project: ProjectCardFragment): string {
@@ -34,36 +30,6 @@ function formatUpdatedAt(project: ProjectCardFragment): string {
   }
 }
 
-export interface ProjectsTableProps {
-  className?: string;
-  projects: ProjectCardFragment[];
-}
-
-export const ProjectsTable = (props: ProjectsTableProps) => {
-  const { className, projects } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <Card className={className} data-testid="ProjectsTable">
-      <DataTable<ProjectCardFragment, string | null | undefined>
-        columns={projectTableColumns}
-        data={projects}
-      />
-    </Card>
-  );
-};
-
 const projectTableColumns: ColumnDef<
   ProjectCardFragment,
   string | null | undefined
@@ -74,8 +40,9 @@ const projectTableColumns: ColumnDef<
       const project = row.original;
       const projectHref = `/projects/${project.id}`;
       const name = project.name ?? 'Untitled';
+
       return (
-        <div className="w-full flex-1 overflow-hidden">
+        <div className="p-4 py-2 w-full flex-1 overflow-hidden">
           <h2 className="text-xs line-clamp-1 text-ellipsis font-medium mb-1">
             <Link
               aria-label={`View project: ${name}`}
@@ -92,7 +59,7 @@ const projectTableColumns: ColumnDef<
         </div>
       );
     },
-    header: () => 'Context',
+    header: () => <div className="p-4 py-2">Context</div>,
   },
   {
     accessorKey: 'nxProjectName',
@@ -141,3 +108,36 @@ const projectTableColumns: ColumnDef<
     id: 'view',
   },
 ];
+
+export interface ProjectsTableProps {
+  className?: string;
+  projects: ProjectCardFragment[];
+}
+
+export const ProjectsTable = (props: ProjectsTableProps) => {
+  const { className, projects } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="ProjectsTable"
+    >
+      <DataTable<ProjectCardFragment, string | null | undefined>
+        columns={projectTableColumns}
+        data={projects}
+      />
+    </div>
+  );
+};

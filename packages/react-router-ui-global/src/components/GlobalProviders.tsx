@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { SidebarProvider } from '@openthrottle/react-router-shadcn';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import {
+  SidebarProvider,
+  TooltipProvider,
+} from '@openthrottle/react-router-shadcn';
 
 export interface GlobalProvidersProps extends React.PropsWithChildren {}
 
@@ -20,5 +25,11 @@ export const GlobalProviders = (
 
   // 🔌 Short Circuit
 
-  return <SidebarProvider>{children}</SidebarProvider>;
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <SidebarProvider>
+        <TooltipProvider>{children}</TooltipProvider>
+      </SidebarProvider>
+    </DndProvider>
+  );
 };

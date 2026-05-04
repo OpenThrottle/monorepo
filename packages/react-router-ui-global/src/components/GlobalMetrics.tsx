@@ -13,7 +13,6 @@ import {
   SelectValue,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { print } from 'graphql';
@@ -78,8 +77,6 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const query = print(GetRootMetricsDocument);
   const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hdHRAZG9tYWluLmNvbSIsInN1YiI6IjI5ZTNmOWY0LTNhMzEtNDM2OC05MTE1LTc1YjA3NjQ4YjA2YSIsImlhdCI6MTc3MTU3NTgyNiwiZXhwIjoxNzcxNjYyMjI2fQ.BA3W_-b-GUZGvGJm0n0SJGEdedqrqlIoMzp74H1YR48`;
   const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
-
-  console.log('⏲︎ 🟢 ENV_SOURCE.API_URL_EXTERNAL', ENV_SOURCE.API_URL_EXTERNAL);
 
   // Handlers
   const handleIntervalChange = React.useCallback((value: string) => {
@@ -151,13 +148,16 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
 
   return (
     <div
-      className={classnames('p-4 md:p-8 w-full', className)}
+      className={classnames(
+        'p-4 md:p-8 gap-4 md:gap-8 flex flex-col w-full',
+        className,
+      )}
       data-testid="GlobalMetrics"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-muted">Server metrics</h2>
-          <TooltipProvider>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-muted">Server metrics</h2>
             <Tooltip>
               <TooltipTrigger asChild={true}>
                 <button
@@ -170,11 +170,11 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 </button>
               </TooltipTrigger>
               <TooltipContent
-                className="max-w-xs text-sm text-muted-foreground"
+                className="max-w-xs text-sm p-4 text-muted-foreground"
                 data-testid="GlobalMetrics-info-tooltip"
                 side="right"
               >
-                <p className="font-semibold mb-1">
+                <p className="font-semibold text-base mb-4">
                   Understanding these metrics:
                 </p>
                 <ul className="list-disc font-normal pl-4 space-y-1">
@@ -189,7 +189,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                     memory pressure.
                   </li>
                   <li>
-                    <strong className="text-card-foreground">CPU ms</strong> –
+                    <strong className="text-card-foreground">CPU</strong> –
                     Cumulative user/system CPU time since process start. Rising
                     steadily is normal; sudden jumps may indicate heavy
                     computation.
@@ -197,70 +197,77 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 </ul>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        </div>
-        <Label className="flex items-center gap-2">
-          <span>Poll</span>
-          <Select
-            aria-label="Metrics poll interval"
-            onValueChange={handleIntervalChange}
-            value={intervalMs.toString()}
-          >
-            <SelectTrigger
-              className="w-[80px]"
-              data-testid="GlobalMetrics-poll-interval"
+          </div>
+          <Label className="flex items-center gap-2">
+            <span>Poll</span>
+            <Select
+              aria-label="Metrics poll interval"
+              onValueChange={handleIntervalChange}
+              value={intervalMs.toString()}
             >
-              <SelectValue placeholder="Poll interval…" />
-            </SelectTrigger>
-            <SelectContent>
-              {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
-                <SelectItem
-                  key={preset.valueMs}
-                  value={preset.valueMs.toString()}
-                >
-                  {preset.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Label>
-      </div>
-      {showGlobalLoadingBanner && (
-        <p data-testid="GlobalMetrics-loading">Loading…</p>
-      )}
-      {error != null && (
-        <p data-testid="GlobalMetrics-error" role="alert">
-          {error.message}
-        </p>
-      )}
-      {showStatCards && serverMetrics != null && (
-        <div
-          className="grid grid-cols-2 md:grid-cols-3 gap-4"
-          data-testid="GlobalMetrics-data"
-        >
-          <OpenThrottleStatCard
-            subValue={formatMb(serverMetrics.externalMb)}
-            title="RSS / External (MB)"
-            value={formatMb(serverMetrics.rssMb)}
-          />
-          <OpenThrottleStatCard
-            subValue={formatMb(serverMetrics.heapTotalMb)}
-            title="Heap (MB)"
-            value={formatMb(serverMetrics.heapUsedMb)}
-          />
-          <OpenThrottleStatCard
-            subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
-            title="CPU (ms) user / system"
-            value={formatCpuMs(serverMetrics.cpuUserMs)}
-          />
+              <SelectTrigger
+                className="w-[80px]"
+                data-testid="GlobalMetrics-poll-interval"
+              >
+                <SelectValue placeholder="Poll interval…" />
+              </SelectTrigger>
+              <SelectContent>
+                {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
+                  <SelectItem
+                    key={preset.valueMs}
+                    value={preset.valueMs.toString()}
+                  >
+                    {preset.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Label>
         </div>
-      )}
+
+        {showGlobalLoadingBanner && (
+          <p data-testid="GlobalMetrics-loading">Loading…</p>
+        )}
+
+        {error != null && (
+          <p data-testid="GlobalMetrics-error" role="alert">
+            {error.message}
+          </p>
+        )}
+
+        {showStatCards && serverMetrics != null && (
+          <div
+            className="flex flex-wrap gap-4 md:gap-8"
+            data-testid="GlobalMetrics-data"
+          >
+            <OpenThrottleStatCard
+              className="p-4 md:p-8 flex-1"
+              subValue={formatMb(serverMetrics.externalMb)}
+              title="RSS / External (MB)"
+              value={formatMb(serverMetrics.rssMb)}
+            />
+            <OpenThrottleStatCard
+              className="p-4 md:p-8 flex-1"
+              subValue={formatMb(serverMetrics.heapTotalMb)}
+              title="Heap (MB)"
+              value={formatMb(serverMetrics.heapUsedMb)}
+            />
+            <OpenThrottleStatCard
+              className="p-4 md:p-8 flex-1"
+              subValue={formatCpuMs(serverMetrics.cpuSystemMs)}
+              title="CPU (ms) user / system"
+              value={formatCpuMs(serverMetrics.cpuUserMs)}
+            />
+          </div>
+        )}
+      </div>
+
       {showMetricsChart && (
         <Card
-          className={classnames('p-4', showStatCards ? 'mt-4' : 'mt-0')}
+          className={classnames('p-4 md:p-8')}
           data-testid="GlobalMetrics-chart-card"
         >
-          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
             <h3 className="text-sm font-medium text-muted-foreground">
               Metrics over time
             </h3>
@@ -273,6 +280,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
               </p>
             ) : null}
           </div>
+
           <ChartContainer
             className="min-h-[160px] w-full -ml-1 text-sm"
             config={GLOBAL_METRICS_CHART_CONFIG}

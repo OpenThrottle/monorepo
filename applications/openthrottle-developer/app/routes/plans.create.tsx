@@ -1,13 +1,20 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
-import { redirect } from 'react-router';
-import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { CreatePlanDocument } from '~/__generated__/graphql';
+import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.create';
+
+// export const handle = {
+//   breadcrumb: () => <Link to="/parent/child">Child Route</Link>,
+// };
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Create Plan',
+  links: (_match) => [{ children: 'All Plans', to: '/plans' }],
+};
 
 // export const loader = async (_args: Route.LoaderArgs) => {
 //   return {};
@@ -44,11 +51,11 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
+      {/* <OpenThrottleBreadcrumbs
         children="Create Plan"
         className="mb-4"
         links={[{ children: 'Plans', to: '/plans' }]}
-      />
+      /> */}
       <PlanForm actionData={actionData} />
     </main>
   );

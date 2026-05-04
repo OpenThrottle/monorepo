@@ -2,11 +2,25 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { CreateQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { QueueForm } from '~/routing/queues/components/QueueForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.create';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Create Queue',
+  links: (_match) => [{ children: 'All Queues', to: '/queues' }],
+};
+
+// export const loader = async (args: Route.LoaderArgs) => {
+//   return {};
+// };
+
+// export const links: LinksFunction = () => {
+//   return [{ href: stylesheet, rel: 'stylesheet' }];
+// };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create queue | ${SITE_TITLE}` }];

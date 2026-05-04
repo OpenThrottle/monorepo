@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Button,
   Card,
@@ -27,12 +26,11 @@ const PLAN_CATEGORIES = [
 
 export interface PlanFormProps {
   readonly actionData?: { error?: string } | null;
-  readonly className?: string;
   readonly plan?: PlanDetailsFragment | null;
 }
 
 export const PlanForm = (props: PlanFormProps) => {
-  const { actionData, className, plan } = props;
+  const { actionData, plan } = props;
 
   // Hooks
 
@@ -49,9 +47,9 @@ export const PlanForm = (props: PlanFormProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={classnames('w-full', className)} data-testid="PlanForm">
+    <Card className="w-full p-12 gap-12" data-testid="PlanForm">
       <CardContent className="pt-8">
-        <Form className="gap-4 md:gap-8 w-full flex" method="post">
+        <Form className="gap-4 md:gap-12 w-full flex" method="post">
           <div className="flex-1 space-y-4">
             {isEdit ? <Input name="id" type="hidden" value={plan.id} /> : null}
             <div>

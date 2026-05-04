@@ -1,58 +1,54 @@
 import { GlobalSidebarLinkProps } from '@openthrottle/react-router-ui-global';
 import {
-  ChevronUp,
+  BrainCircuitIcon,
+  BrainIcon,
+  BugIcon,
+  FileChartColumn,
   GaugeIcon,
   ListIcon,
   NotebookTextIcon,
-  Plane,
-  PlusIcon,
-  Projector,
-  Settings,
   SettingsIcon,
-  Speech,
-  SquareTerminalIcon,
+  SwatchBookIcon,
+  TerminalSquareIcon,
+  UserCircle,
 } from 'lucide-react';
 
 /* eslint-disable sort-keys-fix/sort-keys-fix */
 export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
-  Dashboard: [
+  Workspace: [
     {
       children: 'Dashboard',
       icon: GaugeIcon,
       to: '/dashboard',
     },
-  ],
-  Plans: [
     {
-      children: 'All Plans',
+      children: 'Plans',
       icon: NotebookTextIcon,
       end: true,
       to: '/plans',
     },
     {
-      children: 'Create Plan',
-      icon: PlusIcon,
-      to: '/plans/create',
-    },
-  ],
-  Projects: [
-    {
-      children: 'All Projects',
+      children: 'Projects',
       icon: ListIcon,
       end: true,
       to: '/projects',
     },
-    {
-      children: 'Create Project',
-      icon: PlusIcon,
-      to: '/projects/create',
-    },
   ],
-  Prompts: [
+  Agents: [
     {
       children: 'Prompts',
-      icon: SquareTerminalIcon,
+      icon: BrainIcon,
       to: '/prompts',
+    },
+    {
+      children: 'Skills',
+      icon: BrainCircuitIcon,
+      to: '/skills',
+    },
+    {
+      children: 'Usage',
+      icon: FileChartColumn,
+      to: '/usage',
     },
   ],
   Settings: [
@@ -61,50 +57,33 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       icon: SettingsIcon,
       to: '/settings',
     },
+    {
+      children: 'Customization',
+      icon: SettingsIcon,
+      to: '/settings/customization',
+    },
+    {
+      children: 'Appearance',
+      icon: SwatchBookIcon,
+      to: '/settings/appearance',
+    },
+    {
+      children: 'Debug',
+      icon: BugIcon,
+      to: '/settings/debug',
+    },
+    {
+      children: 'Logs',
+      icon: TerminalSquareIcon,
+      to: '/settings/logs',
+    },
+  ],
+  User: [
+    {
+      children: 'Profile',
+      icon: UserCircle,
+      to: '/settings/',
+    },
   ],
 };
 /* eslint-enable sort-keys-fix/sort-keys-fix */
-
-export const dataNavigation: GlobalSidebarLinkProps[] = [
-  {
-    children: 'Dashboard',
-    icon: ChevronUp,
-    to: '/dashboard',
-  },
-  {
-    children: 'Plans',
-    icon: Plane,
-    to: '/plans',
-  },
-  {
-    children: 'Projects',
-    icon: Projector,
-    to: '/projects',
-  },
-  {
-    children: 'Prompts',
-    icon: Speech,
-    to: '/prompts',
-  },
-  {
-    children: 'Settings',
-    icon: Settings,
-    to: '/settings',
-  },
-  // {
-  //   children: 'Notes',
-  //   to: '/notes',
-  // },
-  // {
-  //   children: 'PRs',
-  //   to: '/pull-requests',
-  // },
-  // {
-  //   children: 'Queues',
-  //   to: '/queues',
-  // },
-  // {
-  //   children: 'Generators',
-  //   to: '/generators',
-  // },
-];

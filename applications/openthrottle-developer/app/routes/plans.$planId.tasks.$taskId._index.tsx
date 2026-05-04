@@ -6,22 +6,34 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { redirect } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottleBreadcrumbs,
-  OpenThrottleClipboard,
-} from '@openthrottle/react-router-ui';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (match) => (
+    <OpenThrottleClipboard
+      className="cursor-pointer whitespace-nowrap"
+      label={match.data.task.id}
+      text={match.data.task.id}
+    />
+  ),
+  links: (match) => [
+    { children: 'All Plans', to: '/plans' },
+    { children: match.data.plan.title, to: `/plans/${match.data.plan.id}` },
+  ],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
@@ -67,7 +79,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, task } = loaderData;
+  const { task } = loaderData;
 
   // Hooks
 
@@ -106,21 +118,6 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
-        children={
-          <OpenThrottleClipboard
-            className="cursor-pointer whitespace-nowrap"
-            label={task.id}
-            text={task.id}
-          />
-        }
-        className="mb-4"
-        links={[
-          { children: 'Plans', to: '/plans' },
-          { children: plan?.title, to: `/plans/${effectivePlanId}` },
-        ]}
-      />
-
       <TaskDetails planId={effectivePlanId} task={task} />
     </main>
   );

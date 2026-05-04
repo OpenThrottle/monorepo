@@ -10,7 +10,6 @@ import {
   toast,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import {
@@ -122,129 +121,121 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <TooltipProvider>
-      <div
-        className={classnames(
-          'flex flex-1 flex-wrap items-center gap-2',
-          className,
-        )}
-        data-testid="PlanToolbar"
-      >
-        {/* Status / run group */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <fetcherSetPlanStatus.Form method="post">
-                <Input name="intent" type="hidden" value="setPlanStatus" />
-                <Input name="planId" type="hidden" value={planId} />
-                <Input name="status" type="hidden" value="COMPLETED" />
-                <Button
-                  disabled={
-                    fetcherSetPlanStatus.state !== 'idle' || isCompleted
-                  }
-                  size="sm"
-                  type="submit"
-                  variant="ghost"
-                >
-                  <CheckCircle />
-                  {fetcherSetPlanStatus.state !== 'idle'
-                    ? 'Marking…'
-                    : 'Mark Complete'}
-                </Button>
-              </fetcherSetPlanStatus.Form>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {isCompleted
-                ? 'Plan is already completed'
-                : 'Mark this plan as completed'}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <fetcherRunPlan.Form method="post">
-                <Input name="intent" type="hidden" value="runPlan" />
-                <Input
-                  name="ralphTuning"
-                  type="hidden"
-                  value={ralphTuningJson}
-                />
-                <Button
-                  disabled={fetcherRunPlan.state !== 'idle'}
-                  size="sm"
-                  type="submit"
-                  variant="outline"
-                >
-                  <PlayCircle />
-                  {getRunButtonLabel()}
-                </Button>
-              </fetcherRunPlan.Form>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs" side="top">
-              {fetcherRunPlan.state !== 'idle'
-                ? 'Submitting…'
-                : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
-            </TooltipContent>
-          </Tooltip>
-
-          <KillPlanRunButton
-            planId={planId}
-            planTitle={planTitle}
-            show={getPlanIsCancelable(planStatus)}
-            // show={true}
-            size="sm"
-          />
-        </div>
-
-        {setPlanStatusError != null && (
-          <span className="text-destructive text-xs" role="alert">
-            {setPlanStatusError}
-          </span>
-        )}
-
-        {runPlanError != null && (
-          <span className="text-destructive text-xs" role="alert">
-            {runPlanError}
-          </span>
-        )}
-
-        <div className="flex-1" />
-
-        {/* Add / edit group: DropdownMenu for secondary actions */}
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <DropdownMenuTrigger asChild={true}>
-                <Button size="sm" variant="outline">
-                  Actions
-                  <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">Add task or edit plan</TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/tasks/create`}
+    <div
+      className={classnames(
+        'flex flex-1 flex-wrap items-center gap-2',
+        className,
+      )}
+      data-testid="PlanToolbar"
+    >
+      {/* Status / run group */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild={true}>
+            <fetcherSetPlanStatus.Form method="post">
+              <Input name="intent" type="hidden" value="setPlanStatus" />
+              <Input name="planId" type="hidden" value={planId} />
+              <Input name="status" type="hidden" value="COMPLETED" />
+              <Button
+                disabled={fetcherSetPlanStatus.state !== 'idle' || isCompleted}
+                size="sm"
+                type="submit"
+                variant="ghost"
               >
-                <PlusCircle size={14} />
-                Add Task
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/edit`}
+                <CheckCircle />
+                {fetcherSetPlanStatus.state !== 'idle'
+                  ? 'Marking…'
+                  : 'Mark Complete'}
+              </Button>
+            </fetcherSetPlanStatus.Form>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {isCompleted
+              ? 'Plan is already completed'
+              : 'Mark this plan as completed'}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild={true}>
+            <fetcherRunPlan.Form method="post">
+              <Input name="intent" type="hidden" value="runPlan" />
+              <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
+              <Button
+                disabled={fetcherRunPlan.state !== 'idle'}
+                size="sm"
+                type="submit"
+                variant="outline"
               >
-                <PencilIcon size={14} />
-                Edit Plan
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <PlayCircle />
+                {getRunButtonLabel()}
+              </Button>
+            </fetcherRunPlan.Form>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs" side="top">
+            {fetcherRunPlan.state !== 'idle'
+              ? 'Submitting…'
+              : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+          </TooltipContent>
+        </Tooltip>
+
+        <KillPlanRunButton
+          planId={planId}
+          planTitle={planTitle}
+          show={getPlanIsCancelable(planStatus)}
+          // show={true}
+          size="sm"
+        />
       </div>
-    </TooltipProvider>
+
+      {setPlanStatusError != null && (
+        <span className="text-destructive text-xs" role="alert">
+          {setPlanStatusError}
+        </span>
+      )}
+
+      {runPlanError != null && (
+        <span className="text-destructive text-xs" role="alert">
+          {runPlanError}
+        </span>
+      )}
+
+      <div className="flex-1" />
+
+      {/* Add / edit group: DropdownMenu for secondary actions */}
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild={true}>
+            <DropdownMenuTrigger asChild={true}>
+              <Button size="sm" variant="outline">
+                Actions
+                <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top">Add task or edit plan</TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild={true}>
+            <Link
+              className="flex items-center gap-2"
+              to={`/plans/${planId}/tasks/create`}
+            >
+              <PlusCircle size={14} />
+              Add Task
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild={true}>
+            <Link
+              className="flex items-center gap-2"
+              to={`/plans/${planId}/edit`}
+            >
+              <PencilIcon size={14} />
+              Edit Plan
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+// import { DndProvider } from 'react-dnd';
+// import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDrag, useDrop } from 'react-dnd';
 import { useFetcher, useRevalidator } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -32,8 +32,6 @@ export interface PlanTasksBoardProps {
   readonly tasks: readonly PlanTaskRowFragment[];
 }
 
-interface PlanTasksBoardInnerProps extends PlanTasksBoardProps {}
-
 type PlanDetailActionData =
   | { ok: true }
   | { updateTaskError: string }
@@ -62,7 +60,7 @@ const DraggablePlanTaskCard = (props: {
   });
 
   // react-dnd ConnectDragSource is not assignable to React.Ref (upstream typing gap).
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- react-dnd ref bridge
+
   const dragRef = drag as unknown as React.Ref<HTMLDivElement>;
 
   return (
@@ -126,7 +124,6 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
 
   let dropRef: React.Ref<HTMLElement> | undefined;
   if (acceptsDrop) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- react-dnd ref bridge
     dropRef = drop as unknown as React.Ref<HTMLElement>;
   }
 
@@ -146,8 +143,8 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
 /**
  * @description Inner board: grouping, optimistic status updates, and react-dnd (must sit under {@link DndProvider}).
  */
-const PlanTasksBoardInner = (
-  props: PlanTasksBoardInnerProps,
+export const PlanTasksBoard = (
+  props: PlanTasksBoardProps,
 ): React.ReactElement => {
   const { className, planId, tasks } = props;
 
@@ -269,18 +266,5 @@ const PlanTasksBoardInner = (
         })}
       </div>
     </>
-  );
-};
-
-/**
- * @description Horizontal scroll container grouping {@link PlanTaskRowFragment} tasks into status columns (GitHub/Jira-style board). Drag tasks between columns to update status (react-dnd + route action).
- */
-export const PlanTasksBoard = (
-  props: PlanTasksBoardProps,
-): React.ReactElement => {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <PlanTasksBoardInner {...props} />
-    </DndProvider>
   );
 };

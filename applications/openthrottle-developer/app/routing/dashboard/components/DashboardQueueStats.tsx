@@ -8,7 +8,6 @@ import {
   Card,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
@@ -82,35 +81,31 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
           className="mt-2 space-y-0.5 overflow-auto text-xs"
           role="region"
         >
-          <TooltipProvider>
-            <ul className="list-none">
-              {data.map((queue) => (
-                <li key={queue.name}>
-                  <Tooltip>
-                    <TooltipTrigger asChild={true}>
-                      <div
-                        className="flex cursor-default items-center justify-between gap-2 rounded py-0.5 px-1 hover:bg-muted/50"
-                        tabIndex={0}
+          <ul className="list-none">
+            {data.map((queue) => (
+              <li key={queue.name}>
+                <Tooltip>
+                  <TooltipTrigger asChild={true}>
+                    <div
+                      className="flex cursor-default items-center justify-between gap-2 rounded py-0.5 px-1 hover:bg-muted/50"
+                      tabIndex={0}
+                    >
+                      <span className="truncate font-medium">{queue.name}</span>
+                      <span
+                        aria-hidden={true}
+                        className="shrink-0 tabular-nums text-muted-foreground"
                       >
-                        <span className="truncate font-medium">
-                          {queue.name}
-                        </span>
-                        <span
-                          aria-hidden={true}
-                          className="shrink-0 tabular-nums text-muted-foreground"
-                        >
-                          {formatCompactSummary(queue)}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      {formatQueueStatsTooltip(queue)}
-                    </TooltipContent>
-                  </Tooltip>
-                </li>
-              ))}
-            </ul>
-          </TooltipProvider>
+                        {formatCompactSummary(queue)}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {formatQueueStatsTooltip(queue)}
+                  </TooltipContent>
+                </Tooltip>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </Card>

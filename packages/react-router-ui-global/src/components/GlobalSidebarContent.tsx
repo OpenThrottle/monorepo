@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 import type { NavLinkProps } from 'react-router';
 import { getPathFromTo } from '../utils/utils.global';
 
@@ -24,6 +24,7 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
   const { data } = props;
 
   // Hooks
+  const location = useLocation();
 
   // Setup
   const sections = Object.keys(data ?? {});
@@ -31,28 +32,27 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
   // Handlers
 
   // Markup
-  const renderLink = (item: GlobalSidebarContentLinkProps) => {
-    const toPath = getPathFromTo(item.to);
+  const renderLink = (item: GlobalSidebarContentLinkProps, index: number) => {
+    const { children, icon: IconComponent, to } = item;
+    const toPath = getPathFromTo(to);
+    const key = `${toPath}-${index}`;
+    const isActive = location.pathname.startsWith(toPath);
 
-    // const isActive =
-    //   pathname === toPath || (toPath !== '/' && pathname.startsWith(toPath));
-
-    const Icon = item.icon;
+    console.log({ isActive, pathname: location.pathname, toPath });
 
     return (
-      <SidebarMenuItem className="m-0" key={toPath} style={{ margin: 0 }}>
+      <SidebarMenuItem className="m-0" key={key} style={{ margin: 0 }}>
         <SidebarMenuButton
           asChild={true}
-          isActive={false}
-          tooltip={String(item.children)}
+          isActive={isActive}
+          tooltip={String(children)}
         >
           <NavLink
             className="text-muted-foreground"
-            // end={true}
             to={item.to}
             viewTransition={true}
           >
-            {Icon != null ? <Icon className="size-4 shrink-0" /> : null}
+            <IconComponent className="size-4 shrink-0" />
             <span>{item.children?.toString()}</span>
           </NavLink>
         </SidebarMenuButton>

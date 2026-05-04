@@ -6,7 +6,7 @@ import {
   CardHeader,
   Markdown,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, TerminalSquareIcon } from 'lucide-react';
 
 // const stripAnsi = (str: string): string => str.replace(/\x1b\[[0-9;]*m/g, '');
 
@@ -44,8 +44,9 @@ export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
     >
       <CardHeader className="flex flex-row w-full gap-4">
         <div className="min-w-0 space-y-1.5 flex-1">
-          <div className="flex items-center gap-2 justify-between">
-            <h2 className="text-lg font-semibold leading-none tracking-tight">
+          <div className="flex items-center gap-4">
+            <TerminalSquareIcon className="size-6" />
+            <h2 className="text-lg flex-1 font-semibold leading-none tracking-tight">
               Workflow Output
             </h2>
             <Button
@@ -62,7 +63,7 @@ export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
 
           {isExpanded ? (
             <Markdown
-              className="overflow-x-auto max-h-screen sticky top-0 text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground"
               content={logs
                 .map((log) => {
                   return `${log.timestamp}: \n\n${log.data}`;

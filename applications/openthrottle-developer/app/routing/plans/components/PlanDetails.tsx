@@ -11,15 +11,15 @@ import {
   CardTitle,
   Separator,
 } from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { Link, useSearchParams } from 'react-router';
+import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import { PlanDetailsFragment } from '~/__generated__/graphql';
 import {
   PlanStatusBadge,
   isPlanStatusKey,
 } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
-import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import {
   DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES,
   DEFAULT_PLAN_SUMMARY_PREVIEW_LINES,
@@ -30,28 +30,18 @@ import {
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import {
-  WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
-  WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-  isWorkflowRunOptionsExpandedFromSearchParams as isWorkflowOptionsExpanded,
-} from '~/routing/plans/utils/workflow-run-options-search-param';
-import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
-import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
-import { PlanWorkflowConfigCollapsed } from '~/routing/plans/components/PlanWorkflowConfigCollapsed';
 
 export interface PlanDetailsProps {
   readonly className?: string;
-  readonly logs: any[];
   readonly plan: PlanDetailsFragment;
 }
 
 export const PlanDetails = (props: PlanDetailsProps) => {
-  const { className, logs, plan } = props;
+  const { className, plan } = props;
   const { projectRelation: project } = plan;
 
   // Hooks
   const [expanded, setExpanded] = React.useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
   const [summary, setSummary] = React.useState(false);
   const [workflowTimeout, setWorkflowTimeout] = React.useState('');
 
@@ -73,9 +63,10 @@ export const PlanDetails = (props: PlanDetailsProps) => {
   }, [workflowInput, workflowTimeout]);
 
   // Setup
-  const isExpanded = isWorkflowOptionsExpanded(searchParams);
+  // const isExpanded = isWorkflowOptionsExpanded(searchParams);
   const hasDescription = plan.description != null && plan.description !== '';
   const hasSummary = plan.summary != null && plan.summary !== '';
+  const status = isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
 
   const summaryLines = hasSummary ? (plan.summary!.split('\n').length ?? 0) : 0;
   const descriptionLines = hasDescription
@@ -90,30 +81,6 @@ export const PlanDetails = (props: PlanDetailsProps) => {
     hasDescription && isLongDescription && !expanded;
 
   // Handlers
-  const onResetToDefaults = (): void => {
-    setWorkflowInput(
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan.id }),
-    );
-
-    setWorkflowTimeout('');
-  };
-
-  const onToggleExpanded = (expanded: boolean): void => {
-    const next = new URLSearchParams(searchParams);
-    if (expanded) {
-      next.set(
-        WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-        WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
-      );
-    } else {
-      next.delete(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM);
-    }
-
-    setSearchParams(next, {
-      preventScrollReset: true,
-      replace: true,
-    });
-  };
 
   // Markup
 
@@ -129,25 +96,23 @@ export const PlanDetails = (props: PlanDetailsProps) => {
 
   return (
     <div className={className} data-testid="PlanDetails">
-      <Card className="mb-6">
+      <Card>
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
-            <CardTitle className="flex items-center gap-2 justify-between">
-              <h1 className="text-2xl text-highlight">{plan.title}</h1>
-              <Badge>
-                <OpenThrottleClipboard
-                  className="cursor-pointer whitespace-nowrap"
-                  label="Copy workflow command"
-                  text={`pnpm exec workflow-ralph --plan ${plan.id}`}
-                />
-              </Badge>
+            <CardTitle className="flex items-center gap-4">
+              <PlanStatusBadge status={status} />
+              <h1 className="text-lg flex-1 text-highlight">{plan.title}</h1>
+              <div className="flex gap-2">
+                <Badge>
+                  <OpenThrottleClipboard
+                    label="Copy workflow command"
+                    text={`pnpm exec workflow-ralph --plan ${plan.id}`}
+                  />
+                </Badge>
+              </div>
             </CardTitle>
 
-            <div className="flex flex-wrap items-center gap-2 text-sm mb-6">
-              <PlanStatusBadge
-                status={isPlanStatusKey(plan.status) ? plan.status : 'PENDING'}
-              />
-            </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
 
             <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
               <div className="flex flex-wrap gap-x-2">
@@ -240,23 +205,6 @@ export const PlanDetails = (props: PlanDetailsProps) => {
           />
         </CardFooter>
       </Card>
-
-      {isExpanded ? (
-        <PlanWorkflowConfig
-          className="mb-6"
-          iterationTimeoutText={workflowTimeout}
-          onCollapse={() => onToggleExpanded(false)}
-          onIterationTimeoutTextChange={setWorkflowTimeout}
-          onResetToDefaults={onResetToDefaults}
-          onValueChange={setWorkflowInput}
-          planId={plan.id}
-          value={workflowInput}
-        />
-      ) : (
-        <PlanWorkflowConfigCollapsed onClick={() => onToggleExpanded(true)} />
-      )}
-
-      <PlanLoggerOutput logs={logs} />
     </div>
   );
 };

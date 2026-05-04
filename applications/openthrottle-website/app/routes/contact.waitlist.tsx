@@ -40,7 +40,7 @@ export default function Component(
 
   return (
     <main className="p-12 relative h-full">
-      <h1 className="text-3xl my-4">ContactWaitlist</h1>
+      <h1 className="text-xl my-4">ContactWaitlist</h1>
       <p>
         Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
         architecto ea?

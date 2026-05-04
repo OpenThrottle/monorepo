@@ -1,13 +1,12 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
   Badge,
   Button,
-  Card,
   DataTable,
   Input,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Link, useFetcher } from 'react-router';
@@ -57,13 +56,15 @@ function buildPlanTableColumns(
         }
 
         return (
-          <Link
-            aria-label={`Filter by ${getPlanStatusLabel(status)}`}
-            to={url}
-            viewTransition={true}
-          >
-            {badge}
-          </Link>
+          <div className="text-center">
+            <Link
+              aria-label={`Filter by ${getPlanStatusLabel(status)}`}
+              to={url}
+              viewTransition={true}
+            >
+              {badge}
+            </Link>
+          </div>
         );
       },
       header: () => (
@@ -226,13 +227,14 @@ export const PlansTable = (props: PlansTableProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={className} data-testid="PlansTable">
-      <TooltipProvider>
-        <DataTable<PlanCardFragment, string | number | null | undefined>
-          columns={columns}
-          data={plans}
-        />
-      </TooltipProvider>
-    </Card>
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PlansTable"
+    >
+      <DataTable<PlanCardFragment, string | number | null | undefined>
+        columns={columns}
+        data={plans}
+      />
+    </div>
   );
 };

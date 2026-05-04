@@ -6,7 +6,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from '@openthrottle/react-router-shadcn';
 import { NavLink } from 'react-router';
 import type { NavLinkProps } from 'react-router';
@@ -18,7 +17,6 @@ export interface GlobalSidebarLinkProps extends NavLinkProps {
 
 export interface GlobalSidebarProps {
   data?: Record<string, GlobalSidebarLinkProps[]>;
-  links: GlobalSidebarLinkProps[];
 }
 
 export const GlobalSidebar = (props: GlobalSidebarProps) => {
@@ -33,28 +31,19 @@ export const GlobalSidebar = (props: GlobalSidebarProps) => {
 
   // Markup
   const renderLink = (item: GlobalSidebarLinkProps) => {
+    const Icon = item.icon;
     const toPath = getPathFromTo(item.to);
 
-    // const isActive =
-    //   pathname === toPath || (toPath !== '/' && pathname.startsWith(toPath));
-
-    const Icon = item.icon;
-
     return (
-      <SidebarMenuItem className="m-0" key={toPath} style={{ margin: 0 }}>
-        <SidebarMenuButton
-          asChild={true}
-          isActive={false}
-          tooltip={String(item.children)}
-        >
+      <SidebarMenuItem key={toPath}>
+        <SidebarMenuButton tooltip={String(item.children)}>
           <NavLink
             className="text-muted-foreground"
             end={true}
             to={item.to}
             viewTransition={true}
           >
-            {Icon != null ? <Icon className="size-4 shrink-0" /> : null}
-            <span>{item.children?.toString()}</span>
+            <Icon className="size-4 shrink-0" />
           </NavLink>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -66,48 +55,20 @@ export const GlobalSidebar = (props: GlobalSidebarProps) => {
   // 🔌 Short Circuit
 
   return (
-    <>
-      <SidebarContent className="h-full">
-        {sections.map((section) => {
-          const items = data?.[section] ?? [];
+    <SidebarContent className="h-full">
+      {sections.map((section) => {
+        const items = data?.[section] ?? [];
 
-          return (
-            <SidebarGroup key={section}>
-              <SidebarGroupContent>
-                <SidebarMenu className="h-full flex flex-col gap-4">
-                  {/* <div key={section}>
-                    <h3 className="mb-3 text-sm font-bold text-muted-foreground/80 uppercase">
-                      {section}
-                    </h3>
-                    </div> */}
-                  <div className="bg-muted">{items.map(renderLink)}</div>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          );
-        })}
-        {/* <SidebarGroup className="h-full">
-          <SidebarGroupContent className="h-full">
-            <SidebarMenu className="h-full flex flex-col gap-4">
-              {sections.map((section) => {
-                const items = data?.[section] ?? [];
-
-                return (
-                  <div key={section}>
-                    <h3 className="mb-3 text-sm font-bold text-muted-foreground/80 uppercase">
-                      {section}
-                    </h3>
-                    <div className="bg-muted">{items.map(renderLink)}</div>
-                  </div>
-                );
-              })}
-              <div className="flex-1" />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup> */}
-      </SidebarContent>
-
-      <SidebarRail />
-    </>
+        return (
+          <SidebarGroup key={section}>
+            <SidebarGroupContent>
+              <SidebarMenu className="h-full flex flex-col gap-4">
+                <div className="bg-muted">{items.map(renderLink)}</div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        );
+      })}
+    </SidebarContent>
   );
 };

@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, TerminalSquareIcon } from 'lucide-react';
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
@@ -159,12 +159,15 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
       <CardHeader className="pb-2 mb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1.5">
-            <h2
-              className="text-lg font-semibold leading-none tracking-tight"
-              id="workflow-run-options-title"
-            >
-              Workflow Configuration
-            </h2>
+            <div className="flex items-center gap-4">
+              <TerminalSquareIcon className="size-6" />
+              <h2
+                className="text-lg font-semibold leading-none tracking-tight"
+                id="workflow-run-options-title"
+              >
+                Workflow Configuration
+              </h2>
+            </div>
             <CardDescription>
               Compose flags aligned with{' '}
               <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}

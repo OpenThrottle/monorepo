@@ -1,8 +1,14 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import type { Route } from '@/app/routes/+types/<%= name %>';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => '<%= namePascal %>',
+  links: (_match) => [],
+};
 
 // export const loader = async (args: Route.LoaderArgs) => {
 //   return {};
@@ -35,7 +41,7 @@ export default function Component(
 
   return (
     <main className="p-12 relative h-full">
-      <h1 className="text-3xl my-4"><%= namePascal %></h1>
+      <h1 className="text-xl my-4"><%= namePascal %></h1>
       <p>
       Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
       architecto ea?

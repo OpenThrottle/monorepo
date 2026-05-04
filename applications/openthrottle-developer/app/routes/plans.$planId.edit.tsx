@@ -1,16 +1,27 @@
 import * as React from 'react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
 import {
   GetPlanByIdDocument,
   UpdatePlanDocument,
 } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.edit';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Edit',
+  links: (match) => [
+    { children: 'Plans', to: '/plans' },
+    {
+      children: match?.data?.plan?.title,
+      to: `/plans/${match?.data?.plan?.id}`,
+    },
+  ],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId } = args.params;
@@ -67,15 +78,6 @@ export default function Component(
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
-        children="Edit Plan"
-        className="mb-4"
-        links={[
-          { children: 'Plans', to: '/plans' },
-          { children: plan.title, to: `/plans/${plan.id}` },
-        ]}
-      />
-
       <PlanForm actionData={actionData} plan={plan} />
     </main>
   );

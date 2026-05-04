@@ -16,10 +16,10 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
-  OpenThrottleBreadcrumbs,
   OpenThrottleClipboard,
   OpenThrottlePagination,
 } from '@openthrottle/react-router-ui';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
@@ -30,6 +30,11 @@ import type { Route } from '@/app/routes/+types/projects.$projectId';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => _match?.data?.project?.name ?? 'Details',
+  links: (_match) => [{ children: 'Projects', to: '/projects' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const projectId = args.params.projectId;
@@ -101,19 +106,7 @@ export default function Component(
   if (!project) return <ProjectNotFound />;
 
   return (
-    <main
-      aria-label="Project details"
-      className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full"
-    >
-      <OpenThrottleBreadcrumbs
-        children={project.name}
-        className="mb-4"
-        links={[
-          { children: 'Projects', to: `/projects` },
-          // { children: planId, to: `/plans/${planId}` },
-        ]}
-      />
-
+    <main aria-label="Project details" className="p-4 md:p-8">
       <Tabs className="w-full">
         <TabsList aria-label="Project sections" className="mb-4">
           <TabsTrigger
@@ -143,19 +136,19 @@ export default function Component(
           hidden={activeTab !== 'overview'}
           id="project-overview-panel"
         >
-          <Card aria-labelledby="project-overview-heading" className="mb-6">
+          <Card aria-labelledby="project-overview-heading">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 <h1
-                  className="text-2xl font-semibold leading-none tracking-tight"
+                  className="text-lg font-semibold leading-none tracking-tight"
                   id="project-overview-heading"
                 >
                   {project.name}
                 </h1>
-                {project.nxProjectName != null &&
+                {/* {project.nxProjectName != null &&
                   project.nxProjectName !== '' && (
                     <Badge variant="secondary">{project.nxProjectName}</Badge>
-                  )}
+                  )} */}
               </div>
               <Badge className="shrink-0" variant="secondary">
                 <OpenThrottleClipboard label={project.id} text={project.id} />

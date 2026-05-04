@@ -1,11 +1,16 @@
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { HomeBuiltWith } from '~/routing/home/components/HomeBuiltWith';
 import { HomeComingSoon } from '~/routing/home/components/HomeComingSoon';
 import { HomeFeatures } from '~/routing/home/components/HomeFeatures';
 import { HomeHeroV1 } from '~/routing/home/components/HomeHeroV1';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Get Started',
+  links: (_match) => [],
+};
 
 export const loader = async (_args: Route.LoaderArgs) => {
   return {};
@@ -36,8 +41,8 @@ export default function Component(
     <>
       {FEATURE_BETA_PREVIEW ? (
         <>
-          <HomeHeroV1 className="flex-1 flex items-center min-h-svh" />
-          <HomeBuiltWith />
+          <HomeHeroV1 className="flex-1 flex min-h-svh items-center" />
+          {/* <HomeBuiltWith /> */}
           <HomeFeatures />
         </>
       ) : (

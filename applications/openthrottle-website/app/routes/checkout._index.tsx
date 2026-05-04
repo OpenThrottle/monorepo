@@ -62,7 +62,7 @@ export default function Component(
       className="p-12 relative h-full max-w-5xl flex-1 w-full mx-auto"
       data-testid="CheckoutIndex"
     >
-      <h1 className="text-3xl my-4">Checkout</h1>
+      <h1 className="text-xl my-4">Checkout</h1>
       <p className="text-muted-foreground mb-8">Complete your purchase.</p>
       <div className="grid md:grid-cols-2 gap-8">
         <CheckoutForm actionData={actionData} />

@@ -10,6 +10,7 @@ import {
   OpenThrottleStatCard,
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GetPromptsDocument,
   type CustomPromptType,
@@ -23,6 +24,11 @@ import {
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
 import type { Route } from '@/app/routes/+types/prompts._index';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Prompts',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;

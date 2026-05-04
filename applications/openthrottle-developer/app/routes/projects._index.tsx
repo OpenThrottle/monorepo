@@ -2,12 +2,12 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GetProjectsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
 import { ProjectEmpty } from '~/routing/projects/components/ProjectEmpty';
 import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { ProjectsCardGrid } from '~/routing/projects/components/ProjectsCardGrid';
 import { ProjectsStatsCards } from '~/routing/projects/components/ProjectsStatsCards';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
@@ -103,6 +103,11 @@ function sortProjects(
   return copy;
 }
 
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => 'Projects',
+  links: (_match) => [],
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const { projects } = await executeGraphqlWithAuth(
     args.request,
@@ -189,7 +194,7 @@ export default function Component(
 
   // Setup
   const isEmpty = totalCount === 0;
-  const ProjectLayout = view === 'table' ? ProjectsTable : ProjectsCardGrid;
+  // const ProjectLayout = view === 'table' ? ProjectsTable : ProjectsCardGrid;
 
   // Handlers
 
@@ -220,7 +225,7 @@ export default function Component(
         <ProjectEmpty search={search} />
       ) : (
         <>
-          <ProjectLayout projects={projects} />
+          <ProjectsTable projects={projects} />
           <OpenThrottlePagination
             className="mt-8"
             limit={limit}

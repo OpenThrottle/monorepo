@@ -1,35 +1,39 @@
 import * as React from 'react';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { useSearchParams } from 'react-router';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { useSearchParams } from 'react-router';
 import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
-import { GetSearchResultsDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/search._index';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => _match?.loaderData?.query ?? 'Search',
+  links: (_match) => [{ children: 'Search', to: '/search' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
   const searchParams = url?.searchParams ?? new URLSearchParams();
-  const { limit, page, q } = parseSearchParams(searchParams);
+  const { limit: _limit, page, q } = parseSearchParams(searchParams);
 
-  const { search: results } = await executeGraphqlWithAuth(
-    args.request,
-    GetSearchResultsDocument,
-    {
-      input: {
-        limit,
-        query: q,
-      },
-    },
-  );
+  // const { search: results } = await executeGraphqlWithAuth(
+  //   args.request,
+  //   GetSearchResultsDocument,
+  //   {
+  //     input: {
+  //       limit,
+  //       query: q,
+  //     },
+  //   },
+  // );
 
-  return { page, query: q, results };
+  return { page, query: q, results: { chunks: [] } };
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {

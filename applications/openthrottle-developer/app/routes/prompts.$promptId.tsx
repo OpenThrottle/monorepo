@@ -4,6 +4,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Editor, getLanguageFromExt } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   DeletePromptDocument,
   GetPromptDocument,
@@ -15,6 +16,11 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (match) => match?.data?.prompt?.title ?? 'Prompt Details',
+  links: (_match) => [{ children: 'Prompts', to: '/prompts' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const promptId = args.params.promptId;

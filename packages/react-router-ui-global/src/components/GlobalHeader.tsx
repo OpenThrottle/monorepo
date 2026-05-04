@@ -23,6 +23,10 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
+  const getRidOf = true;
+  if (getRidOf) {
+    return null;
+  }
 
   return (
     <nav

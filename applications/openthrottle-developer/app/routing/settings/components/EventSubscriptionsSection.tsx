@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
   Card,
   CardContent,
@@ -19,16 +20,18 @@ import {
   subscribeToEventSubscriptionsStorageEvents,
 } from '~/routing/settings/config/event-subscriptions-storage';
 
-export interface EventSubscriptionsSectionProps {}
+export interface EventSubscriptionsSectionProps {
+  readonly className?: string;
+}
 
 /**
  * @description Event subscription toggles persisted in localStorage; see
  * {@link EVENT_SUBSCRIPTION_ROWS}. Server-side filters are not wired yet.
  */
 export const EventSubscriptionsSection = (
-  _props: EventSubscriptionsSectionProps,
+  props: EventSubscriptionsSectionProps,
 ) => {
-  // const {} = props;
+  const { className } = props;
 
   // Hooks
   const [subscribed, setSubscribed] = React.useState(() =>
@@ -61,9 +64,9 @@ export const EventSubscriptionsSection = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="max-w-2xl">
+    <Card className={classnames('max-w-2xl', className)}>
       <CardHeader>
-        <CardTitle>Event subscriptions</CardTitle>
+        <CardTitle className="text-xl">Event subscriptions</CardTitle>
         <CardDescription>
           Choose which real-time notification events you want to receive in the
           app. Preferences are saved in this browser and stay in sync if you

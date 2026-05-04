@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import {
   DEFAULT_PAGINATION_LIMIT,
   mergeRouteModuleMeta,
@@ -9,11 +8,17 @@ import {
   OpenThrottleStatCard,
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId';
+
+export const handle: GlobalLayoutBreadcrumbsHandle = {
+  breadcrumb: (_match) => _match?.data?.queue?.name ?? 'Queue Details',
+  links: (_match) => [{ children: 'All Queues', to: '/queues' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const queueName = args.params.queueId;
@@ -57,15 +62,7 @@ export default function Component(
   const hasNext = queue.jobs?.hasNext ?? false;
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <nav className="mb-4 text-sm text-muted-foreground">
-        <Link className="hover:text-foreground" to="/queues">
-          Queues
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{queue.name}</span>
-      </nav>
-
+    <main className="p-4 md:p-8">
       <div className="grid md:grid-cols-5 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
         <OpenThrottleStatCard title="Active" value={queue.activeCount} />
