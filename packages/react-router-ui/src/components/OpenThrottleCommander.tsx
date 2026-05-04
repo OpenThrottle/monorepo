@@ -57,6 +57,10 @@ export interface OpenThrottleCommanderProps {
   /** Controlled: called when dialog open state changes. */
   readonly onOpenChange?: (open: boolean) => void;
   readonly placeholder?: string;
+  /**
+   * Optional left-aligned hint in the dialog footer (e.g. UUID / queue-job paste behavior).
+   */
+  readonly footerHint?: string;
 }
 
 export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
@@ -69,6 +73,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
     onOpenChange: onOpenChangeProp,
     open: openProp,
     placeholder = 'Type a command or search...',
+    footerHint,
   } = props;
 
   // Hooks
@@ -192,7 +197,7 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
             heading={
               extraItems.length > 0
                 ? 'No matching commands — debug jumps or search'
-                : 'No matching commands'
+                : 'No matching commands — try search'
             }
           >
             {extraItems.map((item) => (
@@ -222,28 +227,40 @@ export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
             ) : null}
           </CommandGroup>
         ) : (
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>
+            No matching commands. Type to filter, or paste a UUID /
+            queueId/jobId when nothing matches.
+          </CommandEmpty>
         )}
       </CommandList>
 
-      <div className="text-[10px] px-2 py-2 border-t border-border text-muted-foreground gap-4 flex justify-end items-center">
-        <div className="gap-1.5 flex items-center">
-          <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
-            ↑↓
-          </CommandShortcut>
-          <span className="font-regular">navigate</span>
-        </div>
-        <div className="gap-1.5 flex items-center">
-          <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
-            ↵
-          </CommandShortcut>
-          <span className="font-regular">select</span>
-        </div>
-        <div className="gap-1.5 flex items-center">
-          <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
-            esc
-          </CommandShortcut>
-          <span className="font-regular">close</span>
+      <div className="text-[10px] px-2 py-2 border-t border-border text-muted-foreground gap-4 flex justify-between items-center">
+        {footerHint ? (
+          <span className="text-left max-w-[min(100%,18rem)] leading-snug line-clamp-2">
+            {footerHint}
+          </span>
+        ) : (
+          <span />
+        )}
+        <div className="gap-4 flex justify-end items-center shrink-0">
+          <div className="gap-1.5 flex items-center">
+            <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+              ↑↓
+            </CommandShortcut>
+            <span className="font-regular">navigate</span>
+          </div>
+          <div className="gap-1.5 flex items-center">
+            <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+              ↵
+            </CommandShortcut>
+            <span className="font-regular">select</span>
+          </div>
+          <div className="gap-1.5 flex items-center">
+            <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+              esc
+            </CommandShortcut>
+            <span className="font-regular">close</span>
+          </div>
         </div>
       </div>
     </CommandDialog>

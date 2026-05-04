@@ -21,7 +21,6 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
-import type { CommanderItem } from '@openthrottle/react-router-ui';
 import { OpenThrottleCommander } from '@openthrottle/react-router-ui';
 import { Toaster } from '@openthrottle/react-router-shadcn';
 import {
@@ -67,10 +66,7 @@ import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import { configAtom } from '~/global/data/atom.config';
-
-/** Matches typical Cortex / RFC UUID strings pasted into the command palette. */
-const CORTEX_UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { buildCommanderEmptyStateExtras } from '~/global/utils/commander-empty-extras';
 
 /** Path prefixes that require authentication when FEATURE_BETA_PREVIEW is on. */
 const PROTECTED_PATH_PREFIXES = [
@@ -386,39 +382,10 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * @description When the palette query is a UUID, offer quick navigation for ambiguous IDs (plan vs queue vs generator).
+   * @description When the palette query looks like UUIDs, offer quick navigation (plan, queue, generator, queue/job pair, or workspace search).
    */
   const commanderEmptyExtras = React.useCallback(
-    (query: string): CommanderItem[] => {
-      const q = query.trim();
-
-      if (!CORTEX_UUID_PATTERN.test(q)) {
-        return [];
-      }
-
-      const preview = q.slice(0, 8);
-
-      return [
-        {
-          id: `jump-plan-${q}`,
-          label: `Open plan (${preview}…)`,
-          onSelect: () => navigate(`/plans/${q}`),
-          value: `${q} open plan`,
-        },
-        {
-          id: `jump-queue-${q}`,
-          label: `Open queue (${preview}…)`,
-          onSelect: () => navigate(`/queues/${q}`),
-          value: `${q} open queue`,
-        },
-        {
-          id: `jump-generator-${q}`,
-          label: `Open generator (${preview}…)`,
-          onSelect: () => navigate(`/generators/${q}`),
-          value: `${q} open generator`,
-        },
-      ];
-    },
+    (query: string) => buildCommanderEmptyStateExtras(query, navigate),
     [navigate],
   );
 
@@ -458,8 +425,10 @@ export default function App(): React.ReactElement {
           <OpenThrottleCommander
             className="m-0! p-0!"
             emptyStateExtras={commanderEmptyExtras}
+            footerHint="Paste one Cortex UUID for plan/queue/generator jumps, two UUIDs (queue/job) with / or space, or run Search from the list."
             groups={groups}
             onEmptyStateSearch={handleSearch}
+            placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
           />
         </GlobalLayout>
       </GlobalProviders>

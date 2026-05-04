@@ -236,7 +236,9 @@ describe('OpenThrottleCommander Component', () => {
         component.getByPlaceholderText('Type a command or search...'),
         'xyznomatch',
       );
-      expect(component.getByText('No results found.')).toBeInTheDocument();
+      expect(
+        component.getByText(/No matching commands\. Type to filter/),
+      ).toBeInTheDocument();
       expect(
         component.queryByRole('option', { name: /Search for/ }),
       ).not.toBeInTheDocument();
