@@ -5,9 +5,10 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { useAtom } from 'jotai';
 import { Input, Label } from '@openthrottle/react-router-shadcn';
-import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import type { Route } from '@/app/routes/+types/settings.appearance';
 import { configAtom } from '~/global/data/atom.config';
 
@@ -16,9 +17,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = (_args: Route.LoaderArgs) => {
+  return getSettingsDiagnosticsLoaderData();
+};
 
 // export const links: LinksFunction = () => {
 //   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -31,7 +32,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
   const [config, setConfig] = useAtom(configAtom);
@@ -49,22 +50,44 @@ export default function Component(
 
   // 🔌 Short Circuit
 
+  if (!loaderData) {
+    return (
+      <GlobalScreen>
+        <p className="text-sm text-muted-foreground">Loading settings…</p>
+      </GlobalScreen>
+    );
+  }
+
   return (
     <GlobalScreen>
-      <OpenThrottleEmptyState
-        description="Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis, architecto ea?"
-        title="Appearance - Coming Soon"
-      />
-      <hr className="my-8" />
-
-      <div className="flex gap-2 items-center">
-        <Label className="whitespace-nowrap">Accent Color</Label>
-        <div className="aspect-square w-10">
-          <Input
-            onInput={handleColorChange}
-            type="color"
-            value={config.accentColor}
+      <div className="space-y-8">
+        <div>
+          <h2 className="mb-1 text-lg font-semibold tracking-tight">
+            Appearance
+          </h2>
+          <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
+            Theme controls for this portal. Diagnostics below mirror General
+            settings and help verify URLs and build metadata.
+          </p>
+          <SettingsEnvironmentDiagnostics
+            className="max-w-4xl"
+            env={loaderData.env}
+            idPrefix="settings-appearance"
+            supportBundle={loaderData.supportBundle}
           />
+        </div>
+
+        <hr />
+
+        <div className="flex items-center gap-2">
+          <Label className="whitespace-nowrap">Accent color</Label>
+          <div className="aspect-square w-10">
+            <Input
+              onInput={handleColorChange}
+              type="color"
+              value={config.accentColor}
+            />
+          </div>
         </div>
       </div>
     </GlobalScreen>

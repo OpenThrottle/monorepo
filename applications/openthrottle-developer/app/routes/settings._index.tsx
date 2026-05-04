@@ -7,7 +7,9 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
+import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
 import { SITE_TITLE } from '~/global/config/settings';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import type { Route } from '@/app/routes/+types/settings._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -15,9 +17,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
   links: (_match) => [],
 };
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = (_args: Route.LoaderArgs) => {
+  return getSettingsDiagnosticsLoaderData();
+};
 
 // export const links: LinksFunction = () => {
 //   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -30,7 +32,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
 
@@ -44,11 +46,27 @@ export default function Component(
 
   // 🔌 Short Circuit
 
+  if (!loaderData) {
+    return (
+      <GlobalScreen>
+        <p className="text-sm text-muted-foreground">Loading settings…</p>
+      </GlobalScreen>
+    );
+  }
+
   return (
     <GlobalScreen>
-      <div className="flex gap-8">
-        <NotificationPreferencesSection className="flex-1" />
-        <EventSubscriptionsSection className="flex-1" />
+      <div className="space-y-8">
+        <SettingsEnvironmentDiagnostics
+          className="max-w-4xl"
+          env={loaderData.env}
+          idPrefix="settings-general"
+          supportBundle={loaderData.supportBundle}
+        />
+        <div className="flex gap-8">
+          <NotificationPreferencesSection className="flex-1" />
+          <EventSubscriptionsSection className="flex-1" />
+        </div>
       </div>
     </GlobalScreen>
   );
