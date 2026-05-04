@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   classifyRootLoaderError,
+  parseHttpStatusFromRootLoaderMessage,
   rootLoaderErrorMessage,
   rootLoaderStepLabel,
   truncateForBanner,
@@ -35,6 +36,22 @@ describe('classifyRootLoaderError', () => {
 describe('rootLoaderErrorMessage', () => {
   it('returns Error message', () => {
     expect(rootLoaderErrorMessage(new Error('x'))).toBe('x');
+  });
+});
+
+describe('parseHttpStatusFromRootLoaderMessage', () => {
+  it('returns status from openthrottle-server GraphQL error lines', () => {
+    expect(
+      parseHttpStatusFromRootLoaderMessage(
+        'openthrottle-server GraphQL error 502: bad gateway',
+      ),
+    ).toBe(502);
+  });
+
+  it('returns undefined when no status match', () => {
+    expect(
+      parseHttpStatusFromRootLoaderMessage('fetch failed'),
+    ).toBeUndefined();
   });
 });
 

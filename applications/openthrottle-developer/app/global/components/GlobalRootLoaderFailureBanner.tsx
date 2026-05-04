@@ -85,6 +85,8 @@ export const GlobalRootLoaderFailureBanner = (
     timingParts.push(`User: ${diagnostics.userLatencyMs.toString()} ms`);
   }
 
+  const graphqlBase = diagnostics?.graphQlRequestBaseUrl?.trim();
+
   return (
     <div
       className={classnames(
@@ -98,9 +100,24 @@ export const GlobalRootLoaderFailureBanner = (
         className="size-4 shrink-0 text-destructive"
       />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
-        <span className="font-semibold">{title}</span>
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold">{title}</span>
+          {failure?.httpStatus != null ? (
+            <span className="rounded border border-border/80 bg-muted/50 px-1.5 py-0 font-mono text-[11px] font-normal text-muted-foreground">
+              HTTP {failure.httpStatus.toString()}
+            </span>
+          ) : null}
+        </span>
         {stepLine ? (
           <span className="text-xs text-muted-foreground">{stepLine}</span>
+        ) : null}
+        {graphqlBase ? (
+          <span className="text-xs text-muted-foreground">
+            GraphQL base (server):{' '}
+            <code className="rounded bg-muted/50 px-1 py-0 text-[11px]">
+              {graphqlBase}
+            </code>
+          </span>
         ) : null}
         <span className="break-words text-muted-foreground">{detail}</span>
         {failure && isTruncated ? (

@@ -51,4 +51,25 @@ describe('GlobalRootLoaderFailureBanner', () => {
 
     expect(screen.getByRole('button', { name: /Retrying/i })).toBeDisabled();
   });
+
+  it('shows HTTP status badge and GraphQL base when provided', () => {
+    render(
+      <GlobalRootLoaderFailureBanner
+        diagnostics={{
+          graphQlRequestBaseUrl: 'http://localhost:6021',
+        }}
+        failure={{
+          httpStatus: 503,
+          kind: 'transport',
+          message: 'openthrottle-server GraphQL error 503: …',
+          step: 'health',
+        }}
+        onRetry={vi.fn()}
+        userLoadOk={true}
+      />,
+    );
+
+    expect(screen.getByText('HTTP 503')).toBeInTheDocument();
+    expect(screen.getByText('http://localhost:6021')).toBeInTheDocument();
+  });
 });

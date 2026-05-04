@@ -58,6 +58,7 @@ import type {
 import {
   ROOT_LOADER_UNREACHABLE_HEALTH,
   classifyRootLoaderError,
+  parseHttpStatusFromRootLoaderMessage,
   rootLoaderErrorMessage,
 } from '~/global/utils/root-loader-diagnostics';
 import { SITE_TITLE } from '#/app/global/config/settings';
@@ -155,7 +156,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     websocket: 'ok',
   };
 
-  const diagnostics: RootLoaderDiagnostics = {};
+  const diagnostics: RootLoaderDiagnostics = {
+    graphQlRequestBaseUrl: env.API_URL_INTERNAL.replace(/\/$/, ''),
+  };
   let rootLoaderFailure: RootLoaderFailure | null = null;
 
   const authToken = getAuthTokenFromCookie(cookieHeader);
@@ -178,10 +181,14 @@ export const loader = async (args: Route.LoaderArgs) => {
       diagnostics.healthLatencyMs = Date.now() - t0;
       console.error('root loader: GetRootHealth failed', error);
       serverHealth = ROOT_LOADER_UNREACHABLE_HEALTH;
+      const healthMessage = rootLoaderErrorMessage(error);
+      const healthHttpStatus =
+        parseHttpStatusFromRootLoaderMessage(healthMessage);
       rootLoaderFailure = {
         kind: classifyRootLoaderError(error),
-        message: rootLoaderErrorMessage(error),
+        message: healthMessage,
         step: 'health',
+        ...(healthHttpStatus != null ? { httpStatus: healthHttpStatus } : {}),
       };
     }
   }
@@ -202,10 +209,13 @@ export const loader = async (args: Route.LoaderArgs) => {
       user = null;
       userLoadOk = false;
       // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
+      const userMessage = rootLoaderErrorMessage(error);
+      const userHttpStatus = parseHttpStatusFromRootLoaderMessage(userMessage);
       rootLoaderFailure = {
         kind: classifyRootLoaderError(error),
-        message: rootLoaderErrorMessage(error),
+        message: userMessage,
         step: 'user',
+        ...(userHttpStatus != null ? { httpStatus: userHttpStatus } : {}),
       };
     }
   }

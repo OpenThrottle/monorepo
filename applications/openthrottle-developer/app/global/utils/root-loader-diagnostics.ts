@@ -11,12 +11,15 @@ export const ROOT_LOADER_UNREACHABLE_HEALTH: ServerHealthObject = {
 export type RootLoaderFailureKind = 'graphql' | 'transport' | 'unknown';
 
 export interface RootLoaderFailure {
+  readonly httpStatus?: number;
   readonly kind: RootLoaderFailureKind;
   readonly message: string;
   readonly step: 'health' | 'user';
 }
 
 export interface RootLoaderDiagnostics {
+  /** Base URL used server-side for GraphQL (`API_URL_INTERNAL`), for misconfiguration triage. */
+  readonly graphQlRequestBaseUrl?: string;
   readonly healthLatencyMs?: number;
   readonly userLatencyMs?: number;
 }
@@ -55,6 +58,21 @@ export const rootLoaderErrorMessage = (error: unknown): string => {
     return error.message;
   }
   return String(error ?? 'Unknown error');
+};
+
+/**
+ * @description Parses HTTP status from {@link executeGraphql} transport errors, e.g.
+ * `openthrottle-server GraphQL error 502: …`.
+ */
+export const parseHttpStatusFromRootLoaderMessage = (
+  message: string,
+): number | undefined => {
+  const m = /openthrottle-server GraphQL error (\d{3})\s*:/.exec(message);
+  if (m?.[1] == null) {
+    return undefined;
+  }
+  const n = Number.parseInt(m[1], 10);
+  return Number.isFinite(n) ? n : undefined;
 };
 
 /**
