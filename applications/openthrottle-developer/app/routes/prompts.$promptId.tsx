@@ -17,6 +17,7 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
+import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDetailMetadataPanel';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
 
@@ -196,12 +197,11 @@ export default function Component(
         </div>
       </div>
 
-      {/* Prompt metadata */}
-      {/* {prompt.description && (
-        <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700 text-sm text-gray-400">
-          {prompt.description}
-        </div>
-      )} */}
+      <PromptDetailMetadataPanel
+        contentLength={content.length}
+        debugContent={content}
+        prompt={prompt}
+      />
 
       {/* Editor */}
       <Editor
