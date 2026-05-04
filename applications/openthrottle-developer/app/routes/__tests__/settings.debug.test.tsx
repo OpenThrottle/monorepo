@@ -34,6 +34,9 @@ describe('routes/settings.debug.tsx', () => {
 
     expect(screen.getByText(/Feature flags/i)).toBeInTheDocument();
     expect(screen.getByText(/Sanitized env snapshot/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Local dev: ports, hosts & API URLs/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/GraphQL endpoint health/i)).toBeInTheDocument();
   });
 });

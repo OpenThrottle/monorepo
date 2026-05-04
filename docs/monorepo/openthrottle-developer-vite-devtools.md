@@ -28,6 +28,34 @@ This document describes levers wired in `applications/openthrottle-developer/vit
 - **Port:** `PORT` from env, else Vite falls back to **3000** in this config (`vite.config.ts`). The template in `.env.default` may use another port (e.g. **6020**); align with [local services and ports](./local-services-and-ports.md).
 - **`allowedHosts`:** Includes `developer.local` for local HTTPS / hostname setups.
 
+## Troubleshooting: ports, hosts, and API base URLs
+
+Use this when the dev server runs but navigation, loaders, or GraphQL calls fail inconsistently.
+
+### Port mismatch
+
+- **Symptom:** You open `http://localhost:3000` but `.env.default` expects **6020**, or the reverse—blank page, wrong app, or WS/API pointing at the wrong process.
+- **Fix:** Set `PORT` in `applications/openthrottle-developer/.env` to match how you browse the app, or browse the port Vite prints on startup. See `vite.config.ts` (`server.port`).
+
+### Internal vs external GraphQL URLs
+
+- **`API_URL_EXTERNAL`:** Used for browser-side requests; must be reachable from **your machine’s browser** (or the user’s).
+- **`API_URL_INTERNAL`:** Used for server-side / SSR fetches in this app; must be reachable from **the Node process** running the React Router dev server.
+- **Symptom:** Data loads on first paint but breaks after client navigation—or the opposite—often indicates one URL works in one context and not the other.
+- **Fix:** In typical local monorepo dev, both point at the same `openthrottle-server` origin (e.g. `http://localhost:6021` per `.env.default`). In Docker, split hostnames: the browser may use `http://localhost:6021` while the dev server container might need `http://host.docker.internal:6021` (Docker Desktop) or the host LAN IP for the API.
+
+### `localhost` inside containers
+
+- From **inside a container**, `localhost` refers to that container, not your host. Use **`host.docker.internal`** (macOS/Windows Docker Desktop) or documented host-gateway patterns so server-side loaders hit the API on the host.
+
+### Hostnames (`developer.local`, Caddy)
+
+- For Option B (separate hosts) in [local services and ports](./local-services-and-ports.md), add entries to `/etc/hosts` and ensure `APP_URL_*` values match the URLs you actually use. Vite already allows `developer.local` in `allowedHosts`.
+
+### Related docs
+
+- [Local services and ports](./local-services-and-ports.md) — full port table, Caddy options, WebSocket notes.
+
 ## Related docs
 
 - [Local services and ports](./local-services-and-ports.md) — ports, `developer.local`, API URLs.
