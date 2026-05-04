@@ -4,6 +4,7 @@ query getPullRequestDetail($input: GetPullInput!) {
     baseRef
     createdAt
     headRef
+    headSha
     htmlUrl
     mergedAt
     number

@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
+  githubCommitChecksUrl,
+  githubCommitUrl,
   githubPullChecksUrl,
   githubPullCommitsUrl,
   githubPullCompareUrl,
@@ -12,6 +14,24 @@ import {
 
 describe('github-pr-links', () => {
   test('builds stable PR and repo URLs for CI debugging', () => {
+    expect(
+      githubCommitUrl(
+        'acme',
+        'web',
+        'abc123def456abc123def456abc123def456abcd',
+      ),
+    ).toBe(
+      'https://github.com/acme/web/commit/abc123def456abc123def456abc123def456abcd',
+    );
+    expect(
+      githubCommitChecksUrl(
+        'acme',
+        'web',
+        'abc123def456abc123def456abc123def456abcd',
+      ),
+    ).toBe(
+      'https://github.com/acme/web/commit/abc123def456abc123def456abc123def456abcd/checks',
+    );
     expect(githubPullChecksUrl('acme', 'web', 42)).toBe(
       'https://github.com/acme/web/pull/42/checks',
     );

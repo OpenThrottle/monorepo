@@ -14,6 +14,8 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
+  githubCommitChecksUrl,
+  githubCommitUrl,
   githubPullChecksUrl,
   githubPullCommitsUrl,
   githubPullCompareUrl,
@@ -150,8 +152,9 @@ export default function Component(
             </h2>
             <p className="text-muted-foreground mb-4 text-sm">
               CI conclusions are not mirrored here; use the links below to drill
-              into GitHub Checks (rollup + required rules), per-commit status,
-              Actions runs scoped to this PR or branch, and workflow sources.
+              into GitHub Checks (rollup + required rules), per-commit status at
+              the head SHA when available, Actions runs scoped to this PR or
+              branch, and workflow sources.
             </p>
 
             <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
@@ -176,6 +179,31 @@ export default function Component(
                   Commits (per-SHA checks)
                 </a>
               </Button>
+              {pull.headSha !== null ? (
+                <>
+                  <Button asChild={true} size="sm" variant="secondary">
+                    <a
+                      href={githubCommitChecksUrl(owner, repo, pull.headSha)}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Checks at head SHA
+                    </a>
+                  </Button>
+                  <Button asChild={true} size="sm" variant="outline">
+                    <a
+                      href={githubCommitUrl(owner, repo, pull.headSha)}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Head commit{' '}
+                      <span className="font-mono">
+                        {pull.headSha.slice(0, 7)}
+                      </span>
+                    </a>
+                  </Button>
+                </>
+              ) : null}
             </div>
 
             <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
@@ -308,6 +336,10 @@ export default function Component(
               </li>
               <li>
                 Use <span className="text-foreground font-medium">Commits</span>{' '}
+                or{' '}
+                <span className="text-foreground font-medium">
+                  Checks at head SHA
+                </span>{' '}
                 when one SHA failed and you need that job log.
               </li>
               <li>

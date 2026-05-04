@@ -12,6 +12,10 @@ export interface PullListItemDto {
    * @description Head branch ref (PR branch), when GitHub returns `head.ref`.
    */
   readonly headRef: string | null;
+  /**
+   * @description Head commit SHA when GitHub returns `head.sha` (links to commit-level checks).
+   */
+  readonly headSha: string | null;
   readonly htmlUrl: string;
   readonly mergedAt: string | null;
   readonly number: number;

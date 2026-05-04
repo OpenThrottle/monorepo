@@ -120,6 +120,8 @@ type PullListItemObject {
   createdAt: String!
   """PR branch ref when GitHub returns head.ref."""
   headRef: String
+  """Head commit SHA when GitHub returns head.sha (for commit/checks drill-down)."""
+  headSha: String
   htmlUrl: String!
   mergedAt: String
   number: Int!

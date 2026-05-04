@@ -15,7 +15,10 @@ describe('GitHubService', () => {
       {
         base: { ref: 'main' },
         created_at: '2025-01-01T00:00:00Z',
-        head: { ref: 'feat/add-thing' },
+        head: {
+          ref: 'feat/add-thing',
+          sha: 'abc123def456abc123def456abc123def456abcd',
+        },
         html_url: 'https://github.com/owner/repo/pull/1',
         merged_at: null,
         number: 1,
@@ -42,6 +45,7 @@ describe('GitHubService', () => {
       baseRef: 'main',
       createdAt: '2025-01-01T00:00:00Z',
       headRef: 'feat/add-thing',
+      headSha: 'abc123def456abc123def456abc123def456abcd',
       htmlUrl: 'https://github.com/owner/repo/pull/1',
       mergedAt: null,
       number: 1,
@@ -73,7 +77,10 @@ describe('GitHubService', () => {
     const mockPull = {
       base: { ref: 'develop' },
       created_at: '2025-01-01T00:00:00Z',
-      head: { ref: 'fix/thing' },
+      head: {
+        ref: 'fix/thing',
+        sha: '1111111111111111111111111111111111111111',
+      },
       html_url: 'https://github.com/owner/repo/pull/2',
       merged_at: null,
       number: 2,
@@ -99,6 +106,7 @@ describe('GitHubService', () => {
       baseRef: 'develop',
       createdAt: '2025-01-01T00:00:00Z',
       headRef: 'fix/thing',
+      headSha: '1111111111111111111111111111111111111111',
       htmlUrl: 'https://github.com/owner/repo/pull/2',
       mergedAt: null,
       number: 2,

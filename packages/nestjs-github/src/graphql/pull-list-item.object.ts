@@ -18,6 +18,13 @@ export class PullListItemObject {
   @Field(() => String, { nullable: true })
   headRef!: string | null;
 
+  @Field(() => String, {
+    description:
+      'Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).',
+    nullable: true,
+  })
+  headSha!: string | null;
+
   @Field(() => String)
   htmlUrl!: string;
 

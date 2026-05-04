@@ -22,6 +22,8 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
+  githubCommitChecksUrl,
+  githubCommitUrl,
   githubPullChecksUrl,
   githubPullCommitsUrl,
   githubPullCompareUrl,
@@ -148,7 +150,11 @@ export default function Component(
         debugging CI or the merge queue. Each card links to GitHub{' '}
         <span className="font-medium text-foreground">Checks</span> (aggregated
         status), <span className="font-medium text-foreground">Commits</span>{' '}
-        (per-SHA checks), and{' '}
+        (per-SHA checks),{' '}
+        <span className="font-medium text-foreground">
+          checks at the head SHA
+        </span>{' '}
+        when the API returns it, and{' '}
         <span className="font-medium text-foreground">Actions</span> (workflow
         runs) using the PR number and branch refs when available.
       </p>
@@ -328,6 +334,39 @@ export default function Component(
                   Checks (CI)
                 </a>
               </Button>
+              {pull.headSha !== null ? (
+                <>
+                  <Button asChild={true} size="sm" variant="secondary">
+                    <a
+                      href={githubCommitChecksUrl(
+                        filters.owner,
+                        filters.repo,
+                        pull.headSha,
+                      )}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Checks at SHA
+                    </a>
+                  </Button>
+                  <Button asChild={true} size="sm" variant="outline">
+                    <a
+                      href={githubCommitUrl(
+                        filters.owner,
+                        filters.repo,
+                        pull.headSha,
+                      )}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Head{' '}
+                      <span className="font-mono">
+                        {pull.headSha.slice(0, 7)}
+                      </span>
+                    </a>
+                  </Button>
+                </>
+              ) : null}
               <Button asChild={true} size="sm" variant="outline">
                 <a
                   href={githubPullCommitsUrl(

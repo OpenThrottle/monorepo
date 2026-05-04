@@ -16,6 +16,7 @@ describe('GithubResolver', () => {
     baseRef: 'main',
     createdAt: '2026-02-01T12:00:00Z',
     headRef: 'topic/test-pr',
+    headSha: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
     htmlUrl: 'https://github.com/owner/repo/pull/1',
     mergedAt: null,
     number: 1,
@@ -76,6 +77,7 @@ describe('GithubResolver', () => {
       expect(result[0]?.baseRef).toBe(mockPullDto.baseRef);
       expect(result[0]?.createdAt).toBe(mockPullDto.createdAt);
       expect(result[0]?.headRef).toBe(mockPullDto.headRef);
+      expect(result[0]?.headSha).toBe(mockPullDto.headSha);
       expect(result[0]?.htmlUrl).toBe(mockPullDto.htmlUrl);
       expect(result[0]?.mergedAt).toBe(mockPullDto.mergedAt);
       expect(result[0]?.number).toBe(mockPullDto.number);

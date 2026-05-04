@@ -1168,6 +1168,8 @@ export type PullListItemObject = {
   createdAt: Scalars['String']['output'];
   /** PR branch ref when GitHub returns head.ref. */
   headRef?: Maybe<Scalars['String']['output']>;
+  /** Head commit SHA when GitHub returns head.sha (for commit/checks drill-down). */
+  headSha?: Maybe<Scalars['String']['output']>;
   htmlUrl: Scalars['String']['output'];
   mergedAt?: Maybe<Scalars['String']['output']>;
   number: Scalars['Int']['output'];
@@ -2998,6 +3000,7 @@ export type GetPullRequestDetailQuery = {
     baseRef?: string | null;
     createdAt: string;
     headRef?: string | null;
+    headSha?: string | null;
     htmlUrl: string;
     mergedAt?: string | null;
     number: number;
@@ -3013,6 +3016,7 @@ export type PullRequestCardFragment = {
   baseRef?: string | null;
   createdAt: string;
   headRef?: string | null;
+  headSha?: string | null;
   htmlUrl: string;
   mergedAt?: string | null;
   number: number;
@@ -3033,6 +3037,7 @@ export type GetPullRequestsQuery = {
     baseRef?: string | null;
     createdAt: string;
     headRef?: string | null;
+    headSha?: string | null;
     htmlUrl: string;
     mergedAt?: string | null;
     number: number;
@@ -3762,6 +3767,7 @@ export const PullRequestCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
           { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
           { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
@@ -6890,6 +6896,7 @@ export const GetPullRequestDetailDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'number' } },
@@ -6973,6 +6980,7 @@ export const GetPullRequestsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
           { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
           { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },

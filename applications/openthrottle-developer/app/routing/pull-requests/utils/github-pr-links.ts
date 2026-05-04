@@ -2,6 +2,25 @@
  * @description GitHub URLs for merge and CI debugging from owner, repo, and PR number.
  */
 
+/**
+ * @description Commit page for a full SHA (per-SHA checks and status).
+ */
+export const githubCommitUrl = (
+  owner: string,
+  repo: string,
+  commitSha: string,
+): string =>
+  `https://github.com/${owner}/${repo}/commit/${encodeURIComponent(commitSha)}`;
+
+/**
+ * @description GitHub “Checks” tab for a specific commit (drill past PR-level rollup).
+ */
+export const githubCommitChecksUrl = (
+  owner: string,
+  repo: string,
+  commitSha: string,
+): string => `${githubCommitUrl(owner, repo, commitSha)}/checks`;
+
 export const githubPullChecksUrl = (
   owner: string,
   repo: string,

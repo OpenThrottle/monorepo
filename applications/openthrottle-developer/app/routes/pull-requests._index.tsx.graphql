@@ -3,6 +3,7 @@ fragment PullRequestCard on PullListItemObject {
   baseRef
   createdAt
   headRef
+  headSha
   htmlUrl
   mergedAt
   number
