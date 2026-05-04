@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { GeneratorNxBridge } from '../GeneratorNxBridge';
 import type { GeneratorNxBridgeProps } from '../GeneratorNxBridge';
@@ -10,6 +11,8 @@ describe('GeneratorNxBridge', () => {
   let props: GeneratorNxBridgeProps;
 
   beforeEach(() => {
+    localStorage.clear();
+
     props = {
       generator: {
         description: 'Desc',
@@ -38,6 +41,12 @@ describe('GeneratorNxBridge', () => {
       ),
     ).toBeInTheDocument();
 
+    expect(
+      component.getByText(
+        /NX_ISOLATE_PLUGINS=false pnpm nx g @tools\/generators:remix --describe/,
+      ),
+    ).toBeInTheDocument();
+
     const toolsReadme = component.getByRole('link', {
       name: /@tools\/generators package/,
     });
@@ -45,5 +54,25 @@ describe('GeneratorNxBridge', () => {
       'href',
       expect.stringContaining('tools/generators/README.md'),
     );
+
+    const nxDev = component.getByRole('link', {
+      name: /Nx — local generators/,
+    });
+    expect(nxDev).toHaveAttribute(
+      'href',
+      expect.stringContaining('nx.dev/extending-nx/local-generators'),
+    );
+  });
+
+  test('persists last CLI output to localStorage for support bundles', async () => {
+    const user = userEvent.setup();
+    const key = 'openthrottle-developer:generator-cli-last-run:remix';
+    const box = component.getByPlaceholderText(
+      /Paste terminal output after running a generator command/,
+    );
+
+    await user.type(box, 'error: missing flag');
+
+    expect(localStorage.getItem(key)).toBe('error: missing flag');
   });
 });

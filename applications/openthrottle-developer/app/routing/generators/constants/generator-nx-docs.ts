@@ -17,3 +17,8 @@ export const GENERATOR_DOCS_PERSONAL_GENERATORS = `https://github.com/OpenThrott
  * @description @tools/generators package README (interactive vs non-interactive, listing commands).
  */
 export const GENERATOR_DOCS_TOOLS_PACKAGE_README = `https://github.com/OpenThrottle/OpenThrottle/blob/main/tools/generators/README.md`;
+
+/**
+ * @description Official Nx guide for local plugin generators (context for @tools/generators).
+ */
+export const GENERATOR_DOCS_NX_LOCAL_GENERATORS = `https://nx.dev/extending-nx/local-generators`;
