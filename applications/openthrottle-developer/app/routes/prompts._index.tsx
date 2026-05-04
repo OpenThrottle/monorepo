@@ -14,12 +14,10 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  GetPromptsDocument,
-  type CustomPromptType,
-} from '~/__generated__/graphql';
+import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
+import { AgentsSectionQuickLinks } from '~/routing/agents/components/AgentsSectionQuickLinks';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
 import { PromptCard } from '~/routing/prompts/components/PromptCard';
 import {
@@ -75,12 +73,20 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const total = prompts.length;
+  const countAgents = prompts.filter(
+    (p) => p.promptType === CustomPromptType.Agents,
+  ).length;
+  const countSkills = prompts.filter(
+    (p) => p.promptType === CustomPromptType.Skills,
+  ).length;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedPrompts = prompts.slice(startIndex, endIndex);
   const totalPages = Math.ceil(total / limit);
 
   return {
+    countAgents,
+    countSkills,
     limit,
     page,
     prompts: paginatedPrompts,
@@ -98,17 +104,22 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { limit, page, prompts, total, totalPages, types } = loaderData;
+  const {
+    countAgents,
+    countSkills,
+    limit,
+    page,
+    prompts,
+    total,
+    totalPages,
+    types,
+  } = loaderData;
 
   // Hooks
   const [searchParams] = useSearchParams();
 
   // Setup
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
-
-  const v1 = 11;
-  const v2 = 21;
-  const v3 = v1 + v2;
 
   // Handlers
 
@@ -120,10 +131,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <AgentsSectionQuickLinks />
+
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
-        <OpenThrottleStatCard title="Custom prompts" value={v1} />
-        <OpenThrottleStatCard title="System prompts" value={v2} />
-        <OpenThrottleStatCard title="Total prompts" value={v3} />
+        <OpenThrottleStatCard title="Agents-type prompts" value={countAgents} />
+        <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
+        <OpenThrottleStatCard title="Total (this list)" value={total} />
       </div>
 
       <PromptToolbar
@@ -156,7 +169,10 @@ export default function Component(
             data-testid="prompts-empty"
           >
             <p className="text-lg">No prompts found.</p>
-            <p className="mt-2">Create your first prompt to get started.</p>
+            <p className="mt-2">
+              Create your first prompt to get started. For in-repo skill paths
+              see Skills; for coarse portal workload see Usage.
+            </p>
           </div>
         </div>
       )}

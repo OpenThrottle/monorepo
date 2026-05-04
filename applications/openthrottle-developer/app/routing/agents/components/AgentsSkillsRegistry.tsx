@@ -96,6 +96,9 @@ export function AgentsSkillsRegistry(
               <CardDescription className="text-sm">
                 {entry.summary}
               </CardDescription>
+              <p className="font-mono text-xs text-muted-foreground break-all pt-1">
+                {entry.repoRelativePath}
+              </p>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2 pt-0">
               <Button
