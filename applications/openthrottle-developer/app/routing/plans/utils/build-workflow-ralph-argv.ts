@@ -28,11 +28,33 @@ export const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
   'CLI flags → WORKFLOW_RALPH_* / RALPH_* env → .workflow-ralph.json → built-in defaults';
 
 /**
+ * @description Env vars for run tuning and layer-1 prompt (matches {@link WORKFLOW_RALPH_DEFAULT_PRECEDENCE}
+ * and `tools/workflows/src/utils/ralph-runtime-config.ts` {@link WORKFLOW_RALPH_ENV}).
+ */
+export const WORKFLOW_RALPH_ENV_VARS = {
+  backend: 'WORKFLOW_RALPH_BACKEND',
+  debug: 'WORKFLOW_RALPH_DEBUG',
+  debugAlias: 'RALPH_DEBUG',
+  iterationTimeout: 'WORKFLOW_RALPH_ITERATION_TIMEOUT',
+  iterations: 'WORKFLOW_RALPH_ITERATIONS',
+  model: 'WORKFLOW_RALPH_MODEL',
+  project: 'WORKFLOW_RALPH_PROJECT',
+  prompt: 'WORKFLOW_RALPH_PROMPT',
+  promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
+  verbose: 'WORKFLOW_RALPH_VERBOSE',
+} as const;
+
+/**
  * @description BullMQ queue name for plan Ralph jobs (`run-plan`, orchestrator). Same as the server `PLANS_QUEUE_NAME` constant.
  */
 export const PLAN_RUN_BULLMQ_QUEUE_NAME = 'Plans' as const;
 
 export type WorkflowRalphTargetMode = 'plan' | 'task';
+
+/**
+ * @description Layer 1 prompt delivery: `--prompt` vs `--prompt-file` (mutually exclusive in `parseRalphArgs`).
+ */
+export type WorkflowRalphPromptLayer = 'named' | 'file';
 
 /**
  * @description Maps to `--debug` / `--verbose` / omit (env-only). Matches CLI precedence in parsers.
@@ -53,6 +75,10 @@ export interface WorkflowRalphRunOptionsInput {
   readonly planId: string;
   readonly project: string;
   readonly prompt: string;
+  /** @description Repo-relative or absolute path for `--prompt-file` when {@link promptLayer} is `file`. */
+  readonly promptFile: string;
+  /** @description `--prompt` (named profile) vs `--prompt-file` — matches CLI mutual exclusion. */
+  readonly promptLayer: WorkflowRalphPromptLayer;
   readonly targetMode: WorkflowRalphTargetMode;
   readonly taskId: string;
 }
@@ -85,6 +111,8 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
     planId,
     project: '',
     prompt: DEFAULT_RALPH_PROMPT,
+    promptFile: '',
+    promptLayer: 'named',
     targetMode,
     taskId,
   };
@@ -108,9 +136,16 @@ export const buildWorkflowRalphOptionArgs = (
     args.push('--backend', input.executionBackend);
   }
 
-  const prompt = input.prompt.trim();
-  if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
-    args.push('--prompt', prompt);
+  if (input.promptLayer === 'file') {
+    const promptFile = input.promptFile.trim();
+    if (promptFile !== '') {
+      args.push('--prompt-file', promptFile);
+    }
+  } else {
+    const prompt = input.prompt.trim();
+    if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
+      args.push('--prompt', prompt);
+    }
   }
 
   if (input.iterations !== DEFAULT_RALPH_ITERATIONS) {
@@ -212,8 +247,7 @@ export const validateWorkflowRalphRunOptionsState = (
     if (Number.isNaN(n) || n < 1) {
       issues.push({
         code: 'iteration_timeout',
-        message:
-          '--iteration-timeout must be a positive integer (seconds) (matches workflow-ralph argv)',
+        message: '--iteration-timeout must be a positive integer (seconds)',
       });
     }
   }
@@ -221,8 +255,7 @@ export const validateWorkflowRalphRunOptionsState = (
   if (!Number.isFinite(input.iterations) || input.iterations < 1) {
     issues.push({
       code: 'iterations',
-      message:
-        '--iterations must be a positive integer greater than 0 (matches workflow-ralph argv)',
+      message: '--iterations must be a positive integer greater than 0',
     });
   }
 
@@ -234,14 +267,32 @@ export const validateWorkflowRalphRunOptionsState = (
     });
   }
 
+  /**
+   * @description Same mutual-exclusion rules as `tools/workflows/src/utils/parsers.ts` after argv (`--prompt` vs `--prompt-file`).
+   */
+  if (input.promptLayer === 'named' && input.promptFile.trim() !== '') {
+    issues.push({
+      code: 'prompt_conflict',
+      message: '--prompt-file cannot be combined with --prompt',
+    });
+  }
+  if (input.promptLayer === 'file') {
+    const named = input.prompt.trim();
+    if (named !== '' && named !== DEFAULT_RALPH_PROMPT) {
+      issues.push({
+        code: 'prompt_conflict',
+        message: '--prompt-file cannot be combined with --prompt',
+      });
+    }
+  }
+
   if (requireCliTargetIds) {
     if (input.targetMode === 'plan') {
       const plan = input.planId.trim();
       if (plan === '') {
         issues.push({
           code: 'plan_required',
-          message:
-            '--plan requires a Cortex plan UUID (matches workflow-ralph argv)',
+          message: '--plan requires a Cortex plan UUID',
         });
       } else if (!isUuid(plan)) {
         issues.push({
@@ -255,8 +306,7 @@ export const validateWorkflowRalphRunOptionsState = (
       if (task === '') {
         issues.push({
           code: 'task_required',
-          message:
-            '--task requires a Cortex task UUID (matches workflow-ralph argv)',
+          message: '--task requires a Cortex task UUID',
         });
       } else if (!isUuid(task)) {
         issues.push({
@@ -384,9 +434,16 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
     ralph.project = project;
   }
 
-  const prompt = input.prompt.trim();
-  if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
-    ralph.prompt = prompt;
+  if (input.promptLayer === 'file') {
+    const path = input.promptFile.trim();
+    if (path !== '') {
+      ralph.promptFile = path;
+    }
+  } else {
+    const prompt = input.prompt.trim();
+    if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
+      ralph.prompt = prompt;
+    }
   }
 
   switch (input.debugCli) {

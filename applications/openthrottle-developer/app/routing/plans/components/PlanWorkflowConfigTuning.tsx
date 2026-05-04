@@ -12,6 +12,7 @@ import {
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
+  WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphDebugCli,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -199,7 +200,11 @@ export const PlanWorkflowConfigTuning = (
           className="text-muted-foreground text-xs"
           id="workflow-run-debug-hint"
         >
-          CLI flags override WORKFLOW_RALPH_DEBUG / RALPH_DEBUG for this run.
+          CLI overrides {WORKFLOW_RALPH_ENV_VARS.debug},{' '}
+          {WORKFLOW_RALPH_ENV_VARS.debugAlias}, and{' '}
+          {WORKFLOW_RALPH_ENV_VARS.verbose}.{' '}
+          <code className="text-xs">--debug=verbose</code> matches{' '}
+          <code className="text-xs">--verbose</code>.
         </p>
       </div>
     </fieldset>

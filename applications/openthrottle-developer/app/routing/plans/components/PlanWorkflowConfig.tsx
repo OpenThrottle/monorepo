@@ -10,11 +10,13 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import {
   buildWorkflowRalphOptionArgs,
+  DEFAULT_RALPH_PROMPT,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
   validateWorkflowRalphRunOptionsState,
   WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
+  WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
@@ -176,18 +178,59 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
             >
               Workflow configuration
             </h2>
-            <CardDescription>
-              Compose flags aligned with{' '}
-              <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
-              and{' '}
-              <span className="text-xs">
-                docs/workflows/ralph-workflow-runtime-config.md
-              </span>
-              . Default resolution order (when you do not set a field here):
-              {WORKFLOW_RALPH_DEFAULT_PRECEDENCE}. The toolbar action that
-              enqueues a run sends the same tuning (iterations, model, prompt
-              profile, project, debug CLI, iteration timeout) to the worker;
-              unchanged fields use server/worktree defaults.
+            <CardDescription className="space-y-2">
+              <p>
+                Compose flags aligned with{' '}
+                <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
+                and{' '}
+                <span className="text-xs">
+                  tools/workflows (parseRalphArgs)
+                </span>
+                . Resolution when fields are left blank here:{' '}
+                {WORKFLOW_RALPH_DEFAULT_PRECEDENCE}. Enqueue uses the same
+                tuning; unchanged values fall back to worktree / server
+                defaults.
+              </p>
+              <p className="text-xs">
+                Env mirror (see CLI help): backend →{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.backend}
+                </code>
+                ; iterations →{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.iterations}
+                </code>
+                ; iteration timeout (seconds) →{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.iterationTimeout}
+                </code>
+                ; model →{' '}
+                <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.model}</code>
+                ; project →{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.project}
+                </code>
+                ; prompt / prompt file →{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.prompt}
+                </code>{' '}
+                /{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.promptFile}
+                </code>
+                ; debug →{' '}
+                <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.debug}</code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.debugAlias}
+                </code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.verbose}
+                </code>
+                . <code className="text-xs">--debug=verbose</code> matches{' '}
+                <code className="text-xs">--verbose</code> in the CLI.
+              </p>
             </CardDescription>
           </div>
 
@@ -230,7 +273,25 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
           onPromptChange={(next) =>
             setInput((prev) => ({ ...prev, prompt: next }))
           }
+          onPromptFileChange={(next) =>
+            setInput((prev) => ({ ...prev, promptFile: next }))
+          }
+          onPromptLayerChange={(next) => {
+            setInput((prev) => {
+              if (next === 'named') {
+                return { ...prev, promptFile: '', promptLayer: 'named' };
+              }
+
+              return {
+                ...prev,
+                prompt: DEFAULT_RALPH_PROMPT,
+                promptLayer: 'file',
+              };
+            });
+          }}
           prompt={input.prompt}
+          promptFile={input.promptFile}
+          promptLayer={input.promptLayer}
         />
         <PlanWorkflowConfigExecution />
         <PlanWorkflowConfigTuning
