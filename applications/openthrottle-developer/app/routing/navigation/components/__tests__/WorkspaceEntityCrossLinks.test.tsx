@@ -3,7 +3,10 @@ import { cleanup } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { WorkspaceEntityCrossLinks } from '../WorkspaceEntityCrossLinks';
-import { WORKSPACE_CORE_ENTITY_LINKS } from '~/routing/navigation/data/workspace-jump-links';
+import {
+  WORKSPACE_CORE_ENTITY_LINKS,
+  WORKSPACE_FULL_JUMP_LINKS,
+} from '~/routing/navigation/data/workspace-jump-links';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('WorkspaceEntityCrossLinks', () => {
@@ -32,5 +35,17 @@ describe('WorkspaceEntityCrossLinks', () => {
     expect(
       getByRole('region', { name: 'Custom region label' }),
     ).toBeInTheDocument();
+  });
+
+  test('should render full jump list when variant is full', () => {
+    cleanup();
+    const { getByRole } = renderRoutesStub(
+      <WorkspaceEntityCrossLinks variant="full" />,
+    );
+
+    for (const item of WORKSPACE_FULL_JUMP_LINKS) {
+      const link = getByRole('link', { name: item.label });
+      expect(link).toHaveAttribute('href', item.to);
+    }
   });
 });

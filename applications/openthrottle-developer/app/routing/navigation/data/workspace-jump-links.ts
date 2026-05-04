@@ -26,5 +26,6 @@ export const WORKSPACE_FULL_JUMP_LINKS: readonly WorkspaceJumpLink[] = [
   { label: 'Queues', to: '/queues' },
   { label: 'Skills', to: '/skills' },
   { label: 'Generators', to: '/generators' },
+  { label: 'Usage', to: '/usage' },
   { label: 'Settings', to: '/settings' },
 ];

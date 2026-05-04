@@ -19,8 +19,20 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/search._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => _match?.loaderData?.query ?? 'Search',
-  links: (_match) => [{ children: 'Search', to: '/search' }],
+  breadcrumb: (_match) => {
+    const query = _match?.loaderData?.query;
+    const isEmpty = query === '';
+
+    return isEmpty ? 'Search' : query;
+  },
+  links: (_match) => {
+    const query = _match?.loaderData?.query;
+    const isEmpty = query === '';
+
+    if (isEmpty) return [];
+
+    return [{ children: 'Search', to: '/search' }];
+  },
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -112,7 +124,10 @@ export default function Component(
 
       {!currentQ ? (
         <div className="mb-6 space-y-3">
-          <WorkspaceEntityCrossLinks label="Jump to a workspace area" />
+          <WorkspaceEntityCrossLinks
+            label="Jump to a workspace area"
+            variant="full"
+          />
           <p className="max-w-2xl text-muted-foreground">
             Enter a query below for semantic search across embedded plans,
             tasks, and documentation. Results are ranked by embedding

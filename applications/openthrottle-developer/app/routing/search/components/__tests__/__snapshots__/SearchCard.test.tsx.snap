@@ -96,6 +96,36 @@ exports[`SearchCard Component > when result has planId and taskId (task source) 
             >
               Plan id: plan-456 · Task id: task-789
             </p>
+            <div
+              class="space-y-1"
+            >
+              <p
+                class="text-[11px] font-medium text-foreground/90"
+              >
+                Quick open
+              </p>
+              <p
+                class="flex flex-wrap gap-x-3 gap-y-1 text-[11px]"
+                data-testid="SearchWhyThisResult-quickOpen"
+              >
+                <a
+                  class="font-medium text-primary underline-offset-4 hover:underline"
+                  data-discover="true"
+                  data-testid="SearchWhyThisResult-planJumpLink"
+                  href="/plans/plan-456"
+                >
+                  Open plan
+                </a>
+                <a
+                  class="font-medium text-primary underline-offset-4 hover:underline"
+                  data-discover="true"
+                  data-testid="SearchWhyThisResult-taskJumpLink"
+                  href="/plans/plan-456#task-task-789"
+                >
+                  Open task on plan
+                </a>
+              </p>
+            </div>
             <p
               class="border-t border-border pt-2 text-[11px] text-muted-foreground"
             >
@@ -105,14 +135,14 @@ exports[`SearchCard Component > when result has planId and taskId (task source) 
                 Tuning:
               </strong>
                
-              the API returns the strongest matches first. Use a tighter query for fewer off-topic hits; lower 
+              the API returns the strongest matches first. Use a tighter query for fewer off-topic hits; lower
+               
               <strong
                 class="font-medium"
               >
                 Results per page
               </strong>
-               
-              in filters when you only need the top slice.
+               in filters when you only need the top slice.
             </p>
           </div>
         </details>

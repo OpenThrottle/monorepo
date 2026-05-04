@@ -94,4 +94,43 @@ describe('SearchWhyThisResult', () => {
     expect(screen.getByText(/Path: docs\/foo.md/)).toBeInTheDocument();
     expect(screen.getByText(/SHA: abc1234/)).toBeInTheDocument();
   });
+
+  test('should surface quick open links for plan and task when ids exist', () => {
+    const chunk = mockChunk({
+      planId: 'plan-z',
+      taskId: 'task-z',
+      taskTitle: 'T',
+    });
+    const Component = () => (
+      <SearchWhyThisResult defaultOpen={true} result={chunk} />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    const planLink = screen.getByTestId('SearchWhyThisResult-planJumpLink');
+    expect(planLink).toHaveAttribute('href', '/plans/plan-z');
+
+    const taskLink = screen.getByTestId('SearchWhyThisResult-taskJumpLink');
+    expect(taskLink).toHaveAttribute('href', '/plans/plan-z#task-task-z');
+  });
+
+  test('should surface View on GitHub in quick open for documentation with repo and path', () => {
+    const chunk = mockChunk({
+      source: 'documentation',
+      sourcePath: 'docs/foo.md',
+      sourceRepo: 'org/repo',
+      sourceSha: 'deadbeef',
+    });
+    const Component = () => (
+      <SearchWhyThisResult defaultOpen={true} result={chunk} />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    const ext = screen.getByTestId('SearchWhyThisResult-docGithubLink');
+    expect(ext).toHaveAttribute(
+      'href',
+      'https://github.com/org/repo/blob/deadbeef/docs/foo.md',
+    );
+  });
 });
