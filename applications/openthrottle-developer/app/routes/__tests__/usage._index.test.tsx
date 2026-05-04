@@ -1,25 +1,52 @@
-import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../usage._index';
+import { describe, expect, test, vi } from 'vitest';
+import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import { loader } from '../usage._index';
+
+vi.mock('@openthrottle/react-router-graphql');
+
+const mockExecuteGraphqlWithAuth = vi.mocked(
+  graphqlWithAuth.executeGraphqlWithAuth,
+);
 
 describe('routes/usage._index.tsx', () => {
-  // let component: RenderResult;
+  describe('loader', () => {
+    test('returns daily stats for a 30-day window', async () => {
+      const items = [
+        {
+          date: '2026-01-01',
+          plansCompleted: 1,
+          plansCreated: 0,
+          plansUpdated: 0,
+          tasksCompleted: 2,
+          tasksCreated: 0,
+          tasksUpdated: 0,
+        },
+      ];
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        dailyStatsRange: { items },
+      });
 
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
+      const request = new Request('http://localhost/usage');
+      const result = await loader({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/usage',
+      });
 
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+      expect(result.dailyStats).toEqual(items);
+      expect(result.rangeDays).toBe(30);
+      expect(typeof result.rangeStartIso).toBe('string');
+      expect(typeof result.rangeEndIso).toBe('string');
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        request,
+        expect.anything(),
+        expect.objectContaining({
+          end: expect.any(String),
+          start: expect.any(String),
+        }),
+      );
+    });
   });
 });

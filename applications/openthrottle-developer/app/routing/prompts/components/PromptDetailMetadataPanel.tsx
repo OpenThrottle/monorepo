@@ -29,6 +29,32 @@ function formatIso(iso: string): string {
 }
 
 /**
+ * @description Compact relative time for version-drift triage (same clock as the absolute timestamps).
+ */
+function formatRelativeFromIso(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) {
+    return '';
+  }
+  const diffSec = Math.round((then - Date.now()) / 1000);
+  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+  const diffMin = Math.round(diffSec / 60);
+  if (Math.abs(diffMin) < 60) {
+    return rtf.format(diffMin, 'minute');
+  }
+  const diffHour = Math.round(diffMin / 60);
+  if (Math.abs(diffHour) < 48) {
+    return rtf.format(diffHour, 'hour');
+  }
+  const diffDay = Math.round(diffHour / 24);
+  if (Math.abs(diffDay) < 365) {
+    return rtf.format(diffDay, 'day');
+  }
+  const diffMonth = Math.round(diffDay / 30);
+  return rtf.format(diffMonth, 'month');
+}
+
+/**
  * @description Deterministic 32-bit fingerprint for comparing editor buffer vs saved API content (debug only).
  */
 function fnv1a32Hex(text: string): string {
@@ -101,7 +127,15 @@ export function PromptDetailMetadataPanel(
       ? [{ label: 'Description', value: prompt.description }]
       : []),
     { label: 'Created', value: formatIso(prompt.createdAt) },
+    {
+      label: 'Created (relative)',
+      value: formatRelativeFromIso(prompt.createdAt) || '—',
+    },
     { label: 'Updated', value: formatIso(prompt.updatedAt) },
+    {
+      label: 'Updated (relative)',
+      value: formatRelativeFromIso(prompt.updatedAt) || '—',
+    },
     {
       label: 'Content length',
       value: `${contentLength.toLocaleString()} characters`,

@@ -68,12 +68,20 @@ export function UsageAgentsAnalyticsGuide(
               For prompt identity and version drift, open a prompt and expand{' '}
               <span className="text-foreground">
                 Prompt versioning &amp; debug
-              </span>
-              , or jump from{' '}
+              </span>{' '}
+              (relative timestamps and content fingerprints), or jump from{' '}
               <Link className="text-primary underline" to="/prompts">
                 Prompts
               </Link>
               .
+            </li>
+            <li>
+              Use{' '}
+              <span className="text-foreground">
+                Copy usage snapshot (JSON)
+              </span>{' '}
+              above to attach the same daily rows and totals to a ticket—still
+              no per-prompt metrics, but easier than screenshots.
             </li>
             <li>
               For in-repo skill paths, see{' '}

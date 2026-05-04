@@ -19,6 +19,7 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { UsageAgentsAnalyticsGuide } from '~/routing/usage/components/UsageAgentsAnalyticsGuide';
+import { UsageSupportSnapshotPanel } from '~/routing/usage/components/UsageSupportSnapshotPanel';
 import type { Route } from '@/app/routes/+types/usage._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -44,6 +45,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     dailyStats: dailyStats as DashboardDailyStatsCardFragment[],
     rangeDays: 30,
+    rangeEndIso: endIso,
+    rangeStartIso: startIso,
   };
 };
 
@@ -55,7 +58,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const { dailyStats, rangeDays } = loaderData;
+  const { dailyStats, rangeDays, rangeEndIso, rangeStartIso } = loaderData;
 
   return (
     <GlobalScreen>
@@ -100,6 +103,13 @@ export default function Component(
         <h2 className="text-lg font-semibold">Daily activity</h2>
         <DashboardDailyStatsCard dailyStats={dailyStats} />
       </div>
+
+      <UsageSupportSnapshotPanel
+        dailyStats={dailyStats}
+        rangeDays={rangeDays}
+        rangeEndIso={rangeEndIso}
+        rangeStartIso={rangeStartIso}
+      />
 
       <UsageAgentsAnalyticsGuide rangeDays={rangeDays} />
     </GlobalScreen>

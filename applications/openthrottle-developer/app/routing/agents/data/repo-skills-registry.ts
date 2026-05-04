@@ -1,6 +1,10 @@
 /**
  * @description Canonical repo-relative paths for agent skills. `.agents/skills` is the OT/Ralph
  * convention; `.cursor/skills` mirrors a subset for Cursor IDE routing—both live in-repo.
+ *
+ * When you add a skill on disk, append it here and keep counts aligned (e.g.
+ * `find .agents/skills -name SKILL.md | wc -l` and
+ * `find .cursor/skills -name SKILL.md | wc -l`).
  */
 export type SkillRegistryLayout = 'agents' | 'cursor';
 
@@ -10,6 +14,24 @@ export interface RepoSkillEntry {
   readonly slug: string;
   readonly summary: string;
 }
+
+/**
+ * @description Returns layout counts for display next to the static registry list.
+ */
+export const getRepoSkillsRegistryCounts = (
+  entries: ReadonlyArray<RepoSkillEntry>,
+): { readonly agents: number; readonly cursor: number } => {
+  let agents = 0;
+  let cursor = 0;
+  for (const e of entries) {
+    if (e.layout === 'cursor') {
+      cursor += 1;
+    } else {
+      agents += 1;
+    }
+  }
+  return { agents, cursor };
+};
 
 export const REPO_SKILLS_REGISTRY: readonly RepoSkillEntry[] = [
   {

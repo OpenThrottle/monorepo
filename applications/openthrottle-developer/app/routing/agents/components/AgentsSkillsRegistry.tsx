@@ -11,7 +11,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { ExternalLink } from 'lucide-react';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import {
+  getRepoSkillsRegistryCounts,
+  type RepoSkillEntry,
+} from '~/routing/agents/data/repo-skills-registry';
 
 export interface AgentsSkillsRegistryProps {
   readonly className?: string;
@@ -68,6 +71,11 @@ export function AgentsSkillsRegistry(
 
   const { agents, cursor } = groupByLayout(filtered);
 
+  const layoutCounts = React.useMemo(
+    () => getRepoSkillsRegistryCounts(entries),
+    [entries],
+  );
+
   const handleCopyPath = async (path: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(path);
@@ -122,6 +130,17 @@ export function AgentsSkillsRegistry(
         <CardHeader>
           <CardTitle className="text-base">Skill paths vs repo</CardTitle>
           <CardDescription>
+            This table lists{' '}
+            <span className="font-medium text-foreground">
+              {layoutCounts.agents} skills under{' '}
+              <code className="text-xs">.agents/skills</code>
+            </span>{' '}
+            and{' '}
+            <span className="font-medium text-foreground">
+              {layoutCounts.cursor} under{' '}
+              <code className="text-xs">.cursor/skills</code>
+            </span>{' '}
+            —match those counts to files on disk when debugging missing entries.
             Cursor resolves skills from repo-relative paths. OpenThrottle
             registers skills under{' '}
             <code className="text-xs">
