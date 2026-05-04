@@ -421,10 +421,12 @@ describe('buildWorkflowRalphDebugBundleText', () => {
       argvSegments: readonly string[];
       canonicalCommand: string;
       planId: string;
+      precedence: string;
       queue: { jobListPath: string };
     };
 
     expect(parsed.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
+    expect(parsed.precedence).toContain('CLI flags');
     expect(parsed.canonicalCommand).toContain('pnpm exec workflow-ralph');
     expect(parsed.argvSegments).toEqual([
       '--plan',

@@ -622,6 +622,7 @@ export const buildWorkflowRalphDebugBundleText = (
     },
     enqueueRalphTuning: enqueueTuning ?? null,
     planId: input.planId,
+    precedence: WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
     queue: {
       jobListPath: `/queues/${PLAN_RUN_BULLMQ_QUEUE_NAME}`,
       name: PLAN_RUN_BULLMQ_QUEUE_NAME,

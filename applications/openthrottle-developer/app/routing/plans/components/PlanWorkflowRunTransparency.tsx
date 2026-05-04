@@ -74,17 +74,21 @@ export const PlanWorkflowRunTransparency = (
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <CardDescription className="text-xs sm:max-w-xl">
-          Same flags as{' '}
+          Flags match{' '}
           <code className="text-xs">pnpm exec workflow-ralph --help</code> and{' '}
           <span className="font-mono text-[0.7rem]">
             tools/workflows/README.md
           </span>
-          . Toolbar “Add to Queue” sends{' '}
-          <span className="font-medium text-foreground">
-            enqueueRalphTuning
-          </span>{' '}
-          only; the CLI preview can include{' '}
-          <code className="text-[0.65rem]">--task</code> for local runs.
+          . <strong className="font-medium text-foreground">Required</strong>{' '}
+          CLI target (one of):{' '}
+          <code className="text-[0.65rem]">--plan &lt;uuid&gt;</code> or{' '}
+          <code className="text-[0.65rem]">--task &lt;uuid&gt;</code>. Toolbar
+          “Add to Queue” enqueues a{' '}
+          <span className="font-medium text-foreground">plan-scoped</span>{' '}
+          worker job (GraphQL tuning only); use{' '}
+          <code className="text-[0.65rem]">--task</code> in the preview when you
+          run <code className="text-[0.65rem]">workflow-ralph</code> locally in
+          task-centric mode.
         </CardDescription>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">
@@ -108,6 +112,18 @@ export const PlanWorkflowRunTransparency = (
             </Link>
           </Badge>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-muted-foreground text-[0.65rem] font-medium uppercase tracking-wide">
+          Canonical argv (local CLI)
+        </p>
+        <pre
+          className="bg-background text-foreground border-border max-h-36 overflow-x-auto overflow-y-auto rounded border p-2 font-mono text-[0.65rem] leading-relaxed whitespace-pre-wrap break-all"
+          data-testid="PlanWorkflowRunTransparency-canonical-cli"
+        >
+          {canonicalWorkflowCommand}
+        </pre>
       </div>
 
       <div className="space-y-1.5">
@@ -134,8 +150,9 @@ export const PlanWorkflowRunTransparency = (
       <div className="overflow-x-auto">
         <table className="text-muted-foreground w-full min-w-[28rem] border-collapse text-xs">
           <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
-            Recent plan runs (metrics). Follow a job id to inspect payload and
-            state in the queue UI.
+            Recent enqueue history (completed jobs for this plan). After “Add to
+            Queue” or “Run plan”, finished workers appear here — open a job id
+            for payload and state in the queue UI.
           </caption>
           <thead>
             <tr className="border-border border-b text-left">

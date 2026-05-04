@@ -80,6 +80,14 @@ describe('PlanDetails Component', () => {
     expect(component.getByRole('table')).toBeInTheDocument();
   });
 
+  test('should show canonical workflow-ralph CLI preview with plan id', () => {
+    const pre = component.getByTestId(
+      'PlanWorkflowRunTransparency-canonical-cli',
+    );
+    expect(pre).toHaveTextContent('pnpm exec workflow-ralph');
+    expect(pre).toHaveTextContent(mockPlan.id);
+  });
+
   test('should show formatted metadata with labels', () => {
     expect(component.getByText('Author')).toBeInTheDocument();
     expect(component.getByText('Assignee')).toBeInTheDocument();

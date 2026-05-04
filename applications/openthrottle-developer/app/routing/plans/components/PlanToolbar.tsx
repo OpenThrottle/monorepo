@@ -239,7 +239,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
         className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
         to="#plan-workflow-run-transparency"
       >
-        CLI & runs
+        CLI preview and history
       </Link>
 
       {/* Add / edit group: DropdownMenu for secondary actions */}
