@@ -6,8 +6,10 @@ import {
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   buildWorkflowRalphDebugBundleText,
   buildWorkflowRalphOptionArgs,
+  buildWorkflowRalphTuningDiffLabels,
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
+  getWorkflowRalphUiBaselineForDiff,
   isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
   planRunJobDetailPath,
@@ -409,13 +411,14 @@ describe('formatWorkflowRalphCommandLine', () => {
 });
 
 describe('buildWorkflowRalphDebugBundleText', () => {
-  test('includes plan id, canonical command, and queue path metadata', () => {
+  test('includes plan id, canonical command, argv segments, and queue path metadata', () => {
     const text = buildWorkflowRalphDebugBundleText({
       iterationTimeoutText: '',
       planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
       workflowInput: basePlanInput(),
     });
     const parsed = JSON.parse(text) as {
+      argvSegments: readonly string[];
       canonicalCommand: string;
       planId: string;
       queue: { jobListPath: string };
@@ -423,7 +426,48 @@ describe('buildWorkflowRalphDebugBundleText', () => {
 
     expect(parsed.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
     expect(parsed.canonicalCommand).toContain('pnpm exec workflow-ralph');
+    expect(parsed.argvSegments).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+    ]);
     expect(parsed.queue.jobListPath).toBe('/queues/Plans');
+  });
+});
+
+describe('getWorkflowRalphUiBaselineForDiff', () => {
+  test('preserves target ids while resetting tuning to seeded defaults', () => {
+    const input = basePlanInput({
+      iterations: 3,
+      model: 'fast',
+      prompt: '/custom',
+    });
+    const baseline = getWorkflowRalphUiBaselineForDiff(input);
+
+    expect(baseline.planId).toBe(input.planId);
+    expect(baseline.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
+    expect(baseline.model).toBe(DEFAULT_RALPH_MODEL);
+    expect(baseline.prompt).toBe(DEFAULT_RALPH_PROMPT);
+  });
+});
+
+describe('buildWorkflowRalphTuningDiffLabels', () => {
+  test('returns empty when options match baseline', () => {
+    expect(buildWorkflowRalphTuningDiffLabels(basePlanInput(), '')).toEqual([]);
+  });
+
+  test('lists iterations when they diverge from defaults', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(
+      basePlanInput({ iterations: 3 }),
+      '',
+    );
+    expect(labels.some((l) => l.includes('Iterations'))).toBe(true);
+    expect(labels.some((l) => l.includes('3'))).toBe(true);
+  });
+
+  test('lists iteration timeout when set', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(basePlanInput(), '120');
+    expect(labels.some((l) => l.includes('Iteration timeout'))).toBe(true);
+    expect(labels.some((l) => l.includes('120'))).toBe(true);
   });
 });
 

@@ -93,6 +93,111 @@ export const isUuid = (value: string): boolean => {
 /**
  * @description Initial form state; `planId` / `taskId` seed the run target when embedded on plan/task routes.
  */
+/**
+ * @description Baseline tuning for “diff vs defaults” on the plan/task route: same
+ * `--plan` / `--task` target as {@link input}, with every other field reset like
+ * {@link getDefaultWorkflowRalphRunOptionsInput}.
+ */
+export const getWorkflowRalphUiBaselineForDiff = (
+  input: WorkflowRalphRunOptionsInput,
+): WorkflowRalphRunOptionsInput => {
+  const seeded = getDefaultWorkflowRalphRunOptionsInput({
+    planId: input.planId,
+    taskId: input.taskId,
+  });
+
+  return {
+    ...seeded,
+    planId: input.planId,
+    targetMode: input.targetMode,
+    taskId: input.taskId,
+  };
+};
+
+/**
+ * @description Human-readable lines describing how the current workflow options differ
+ * from the UI baseline (Configuration → Reset to defaults). Empty when argv matches
+ * minimal flags for the same target.
+ */
+export const buildWorkflowRalphTuningDiffLabels = (
+  input: WorkflowRalphRunOptionsInput,
+  iterationTimeoutText: string,
+): readonly string[] => {
+  const ref = getWorkflowRalphUiBaselineForDiff(input);
+  const cur: WorkflowRalphRunOptionsInput = {
+    ...input,
+    iterationTimeoutSeconds:
+      parseWorkflowRunIterationTimeoutSeconds(iterationTimeoutText),
+  };
+  const refMerged: WorkflowRalphRunOptionsInput = {
+    ...ref,
+    iterationTimeoutSeconds: undefined,
+  };
+
+  const lines: string[] = [];
+
+  if (cur.executionBackend !== refMerged.executionBackend) {
+    lines.push(
+      `Backend: ${refMerged.executionBackend} → ${cur.executionBackend} (--backend)`,
+    );
+  }
+
+  if (cur.iterations !== refMerged.iterations) {
+    lines.push(
+      `Iterations: ${refMerged.iterations} → ${cur.iterations} (--iterations)`,
+    );
+  }
+
+  const curTimeout = cur.iterationTimeoutSeconds;
+  const refTimeout = refMerged.iterationTimeoutSeconds;
+  if (curTimeout !== refTimeout) {
+    lines.push(
+      `Iteration timeout (seconds): ${
+        refTimeout == null ? 'omit' : String(refTimeout)
+      } → ${curTimeout == null ? 'omit' : String(curTimeout)} (--iteration-timeout)`,
+    );
+  }
+
+  const curModel = cur.model.trim();
+  const refModel = refMerged.model.trim();
+  if (curModel !== refModel) {
+    lines.push(
+      `Model: ${refModel === '' ? DEFAULT_RALPH_MODEL : refModel} → ${
+        curModel === '' ? DEFAULT_RALPH_MODEL : curModel
+      } (--model)`,
+    );
+  }
+
+  if (cur.project.trim() !== refMerged.project.trim()) {
+    lines.push(
+      `Nx project: ${
+        refMerged.project.trim() === '' ? 'omit' : refMerged.project.trim()
+      } → ${
+        cur.project.trim() === '' ? 'omit' : cur.project.trim()
+      } (--project)`,
+    );
+  }
+
+  const promptChanged =
+    cur.promptLayer !== refMerged.promptLayer ||
+    cur.prompt.trim() !== refMerged.prompt.trim() ||
+    cur.promptFile.trim() !== refMerged.promptFile.trim();
+
+  if (promptChanged) {
+    lines.push(
+      'Prompt delivery differs from baseline (--prompt vs --prompt-file; see Configuration).',
+    );
+  }
+
+  if (cur.debugCli !== refMerged.debugCli) {
+    lines.push(
+      `Debug CLI: ${refMerged.debugCli} → ${cur.debugCli} (--debug / --verbose)`,
+    );
+  }
+
+  return lines;
+};
+
 export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
   readonly planId?: string;
   readonly taskId?: string;
@@ -505,6 +610,7 @@ export const buildWorkflowRalphDebugBundleText = (
     buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
 
   const payload = {
+    argvSegments: optionArgs,
     canonicalCommand,
     cliPreview: {
       note: 'Matches Configuration → Canonical CLI. Toolbar enqueue uses enqueueRalphTuning only (plan-scoped); --task in preview is for local CLI.',

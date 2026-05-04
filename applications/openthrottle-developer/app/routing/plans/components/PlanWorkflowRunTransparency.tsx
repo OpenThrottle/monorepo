@@ -7,6 +7,7 @@ import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   buildWorkflowRalphDebugBundleText,
+  buildWorkflowRalphTuningDiffLabels,
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -32,7 +33,8 @@ const formatFinishedOn = (finishedOn: number | null | undefined): string => {
 };
 
 /**
- * @description Plan detail: workflow-ralph argv preview, copyable debug bundle, and recent completed plan runs (job id → queue).
+ * @description Plan detail: canonical CLI copy, debug bundle (includes argv segments), diff vs
+ * Configuration reset-to-defaults, recent completed plan runs (job id → queue), and queue link.
  */
 export const PlanWorkflowRunTransparency = (
   props: PlanWorkflowRunTransparencyProps,
@@ -56,6 +58,11 @@ export const PlanWorkflowRunTransparency = (
     [planId, workflowInput, workflowTimeout],
   );
 
+  const tuningDiffLabels = React.useMemo(
+    () => buildWorkflowRalphTuningDiffLabels(workflowInput, workflowTimeout),
+    [workflowInput, workflowTimeout],
+  );
+
   return (
     <div
       className={classnames(
@@ -63,6 +70,7 @@ export const PlanWorkflowRunTransparency = (
         className,
       )}
       data-testid="PlanWorkflowRunTransparency"
+      id="plan-workflow-run-transparency"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <CardDescription className="text-xs sm:max-w-xl">
@@ -100,6 +108,27 @@ export const PlanWorkflowRunTransparency = (
             </Link>
           </Badge>
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="text-muted-foreground text-[0.65rem] font-medium uppercase tracking-wide">
+          vs Configuration reset (CLI argv)
+        </p>
+        {tuningDiffLabels.length === 0 ? (
+          <p className="text-muted-foreground text-xs">
+            Tuning matches reset-to-defaults for this target — minimal flags
+            after{' '}
+            <code className="text-[0.65rem]">pnpm exec workflow-ralph</code>{' '}
+            (only <code className="text-[0.65rem]">--plan</code> or{' '}
+            <code className="text-[0.65rem]">--task</code> plus ids).
+          </p>
+        ) : (
+          <ul className="text-muted-foreground list-inside list-disc text-xs">
+            {tuningDiffLabels.map((line, index) => (
+              <li key={`${index}-${line}`}>{line}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="overflow-x-auto">
