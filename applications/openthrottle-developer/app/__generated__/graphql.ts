@@ -1163,10 +1163,8 @@ export type PsiCpuMetrics = {
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
   author: Scalars['String']['output'];
-  /** Merge target branch ref when GitHub returns base.ref. */
   baseRef?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
-  /** PR branch ref when GitHub returns head.ref. */
   headRef?: Maybe<Scalars['String']['output']>;
   /** Head commit SHA when GitHub returns head.sha (for commit/checks drill-down). */
   headSha?: Maybe<Scalars['String']['output']>;

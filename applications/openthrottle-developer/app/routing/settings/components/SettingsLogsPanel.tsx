@@ -239,15 +239,19 @@ export function SettingsLogsPanel(): React.ReactElement {
         </div>
       );
     }
+
     if (viewerEmptyReason === 'empty-buffer') {
       return 'No entries yet. Use the app or open the browser console to produce logs.';
     }
+
     if (viewerEmptyReason === 'levels-none') {
       return 'Select at least one level above to view captured lines.';
     }
+
     if (viewerEmptyReason === 'no-match') {
       return 'No entries match your level selection or search.';
     }
+
     return logText;
   };
 

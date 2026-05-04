@@ -7,7 +7,7 @@ export const getDefaultGithubRepo = (): {
   readonly repo: string;
 } => {
   return {
-    owner: process.env.OPENTHROTTLE_GITHUB_OWNER ?? 'visormatt',
+    owner: process.env.OPENTHROTTLE_GITHUB_OWNER ?? 'openthrottle',
     repo: process.env.OPENTHROTTLE_GITHUB_REPO ?? 'monorepo',
   };
 };

@@ -21,11 +21,11 @@ describe('HomeHeroV1 Component', () => {
     expect(screen.getByTestId('HomeHeroV1')).toBeInTheDocument();
 
     const heading = screen.getByRole('heading', { level: 1 });
-    expect(heading).toHaveTextContent(/Get/);
-    expect(heading).toHaveTextContent(/Started/);
+    expect(heading).toHaveTextContent(/Stop/);
+    expect(heading).toHaveTextContent(/Plan/);
 
     expect(
-      screen.getByText(/OpenThrottle is a plans knowledge base/),
+      screen.getByText(/Postgres-backed plans knowledge base/),
     ).toBeInTheDocument();
   });
 });
