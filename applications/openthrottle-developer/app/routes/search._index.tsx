@@ -25,11 +25,19 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
   const searchParams = url?.searchParams ?? new URLSearchParams();
-  const { limit, page, q } = parseSearchParams(searchParams);
+  const { expandRankingDetails, limit, page, q } =
+    parseSearchParams(searchParams);
   const trimmed = q.trim();
 
   if (trimmed === '') {
-    return { limit, page, query: q, results: { chunks: [] }, total: 0 };
+    return {
+      expandRankingDetails,
+      limit,
+      page,
+      query: q,
+      results: { chunks: [] },
+      total: 0,
+    };
   }
 
   const apiLimit = Math.min(100, page * limit);
@@ -50,6 +58,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const pageChunks = chunks.slice(start, start + limit);
 
   return {
+    expandRankingDetails,
     limit,
     page,
     query: q,
@@ -66,13 +75,35 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { limit: pageLimit, page, query: q, results, total } = loaderData;
+  const {
+    expandRankingDetails: expandRankingFromLoader,
+    limit: pageLimit,
+    page,
+    query: q,
+    results,
+    total,
+  } = loaderData;
 
   // Hooks
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Setup — utils: parseSearchParams for pre-fill; config: DEFAULT_SEARCH_LIMIT for pagination
   const currentQ = q ?? searchParams.get('q') ?? '';
+  const expandRankingDetails =
+    expandRankingFromLoader ||
+    (searchParams.get('details') ?? '') === 'ranking';
+
+  const handleExpandRankingChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    const next = new URLSearchParams(searchParams);
+    if (e.target.checked) {
+      next.set('details', 'ranking');
+    } else {
+      next.delete('details');
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <GlobalScreen>
@@ -83,25 +114,60 @@ export default function Component(
       )}
 
       {currentQ ? (
-        <p className="text-muted-foreground text-sm max-w-2xl mb-2">
-          Semantic search over embedded plan, task, and documentation chunks.
-          Open “Why this result?” on a card to see ranking notes and chunk
-          metadata.
-        </p>
+        <div className="text-muted-foreground text-sm max-w-2xl mb-2 space-y-2">
+          <p>
+            Semantic search over embedded plan, task, and documentation chunks.
+            Open “Why this result?” on a card to see ranking notes, similarity,
+            and entity ids. Enable power-user mode below to expand every card’s
+            ranking section and add result position labels.
+          </p>
+          <label className="flex cursor-pointer items-center gap-2 text-foreground">
+            <input
+              aria-label="Expand ranking details on all results"
+              checked={expandRankingDetails}
+              className="rounded border-input"
+              onChange={handleExpandRankingChange}
+              type="checkbox"
+            />
+            <span>
+              Power user: expand ranking details (sets{' '}
+              <code className="rounded bg-muted px-1 text-[11px]">
+                details=ranking
+              </code>{' '}
+              in the URL; preserved when paging)
+            </span>
+          </label>
+        </div>
       ) : null}
 
       {/* SearchFilters: limit (results per page) wired to URL; future: source filter when API supports it */}
       <SearchFilters />
       {/* SearchForm: query input and GET submit to /search?q=...; pre-fill from current searchParams */}
-      <SearchForm defaultQuery={currentQ} />
+      <SearchForm
+        defaultQuery={currentQ}
+        preserveRankingDetails={expandRankingDetails}
+      />
       <div className="flex flex-col gap-4">
-        {results.chunks.map((result) => {
-          return <SearchCard key={result.id} result={result} />;
+        {results.chunks.map((result, index) => {
+          return (
+            <SearchCard
+              defaultOpenWhy={expandRankingDetails}
+              key={result.id}
+              rankMeta={{
+                indexOnPage: index,
+                page,
+                pageSize: pageLimit ?? DEFAULT_SEARCH_LIMIT,
+                total,
+              }}
+              result={result}
+            />
+          );
         })}
       </div>
       <OpenThrottlePagination
         basePath="/search"
         className="mt-8"
+        details={expandRankingDetails ? 'ranking' : undefined}
         limit={pageLimit ?? DEFAULT_SEARCH_LIMIT}
         page={page}
         resultLabel="results"

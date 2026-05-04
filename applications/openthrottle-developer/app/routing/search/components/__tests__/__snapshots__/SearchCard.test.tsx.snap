@@ -91,6 +91,11 @@ exports[`SearchCard Component > when result has planId and taskId (task source) 
             >
               Chunk id: chunk-1
             </p>
+            <p
+              class="font-mono text-[11px] text-muted-foreground/90"
+            >
+              Plan id: plan-456 · Task id: task-789
+            </p>
           </div>
         </details>
       </div>

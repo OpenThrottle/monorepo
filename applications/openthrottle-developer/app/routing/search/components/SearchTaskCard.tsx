@@ -10,26 +10,18 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
 
 export interface SearchTaskCardProps {
   className?: string;
+  readonly defaultOpenWhy?: boolean;
+  readonly rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
-/**
- * @description Builds plan detail URL; when taskId is present, appends hash for in-page task anchor.
- */
-function planOrTaskHref(planId: string, taskId?: string | null): string {
-  const base = `/plans/${planId}`;
-  if (taskId != null && taskId !== '') {
-    return `${base}#task-${taskId}`;
-  }
-
-  return base;
-}
-
 export const SearchTaskCard = (props: SearchTaskCardProps) => {
-  const { className, result } = props;
+  const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks
 
@@ -85,7 +77,7 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
                   <Link
                     className="underline-offset-4 hover:underline"
                     data-testid="SearchTaskCard-taskLink"
-                    to={planOrTaskHref(result.planId!, result.taskId)}
+                    to={planOrTaskDetailHref(result.planId!, result.taskId)}
                   >
                     View task
                   </Link>
@@ -109,7 +101,11 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
           {result.content}
         </p>
         {similarityBlock}
-        <SearchWhyThisResult result={result} />
+        <SearchWhyThisResult
+          defaultOpen={defaultOpenWhy}
+          rankMeta={rankMeta}
+          result={result}
+        />
       </CardContent>
     </Card>
   );

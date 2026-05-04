@@ -9,9 +9,12 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 
 export interface SearchDocumentationCardProps {
   className?: string;
+  readonly defaultOpenWhy?: boolean;
+  readonly rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
@@ -30,7 +33,7 @@ function githubBlobHref(
 export const SearchDocumentationCard = (
   props: SearchDocumentationCardProps,
 ) => {
-  const { className, result } = props;
+  const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks
 
@@ -106,7 +109,11 @@ export const SearchDocumentationCard = (
           </p>
         </pre>
         {similarityBlock}
-        <SearchWhyThisResult result={result} />
+        <SearchWhyThisResult
+          defaultOpen={defaultOpenWhy}
+          rankMeta={rankMeta}
+          result={result}
+        />
       </CardContent>
     </Card>
   );

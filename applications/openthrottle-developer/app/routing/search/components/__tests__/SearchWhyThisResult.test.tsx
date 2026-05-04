@@ -5,6 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import { SearchWhyThisResult } from '../SearchWhyThisResult';
 import type { SearchChunk } from '~/__generated__/graphql';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 
 function mockChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   return {
@@ -39,6 +40,41 @@ describe('SearchWhyThisResult', () => {
     await user.click(screen.getByText(/Why this result\?/i));
     expect(screen.getByText(/Chunk id: chunk-id-1/)).toBeInTheDocument();
     expect(screen.getByText(/88%/, { exact: false })).toBeInTheDocument();
+  });
+
+  test('should start open when defaultOpen is true', () => {
+    const chunk = mockChunk();
+    const Component = () => (
+      <SearchWhyThisResult defaultOpen={true} result={chunk} />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    const details = screen.getByTestId('SearchWhyThisResult');
+    expect(details).toHaveAttribute('open');
+  });
+
+  test('should show rank summary and plan or task ids when provided', () => {
+    const chunk = mockChunk({ planId: 'p-1', taskId: 't-1' });
+    const rankMeta: SearchRankMeta = {
+      indexOnPage: 0,
+      page: 1,
+      pageSize: 10,
+      total: 3,
+    };
+    const Component = () => (
+      <SearchWhyThisResult
+        defaultOpen={true}
+        rankMeta={rankMeta}
+        result={chunk}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    expect(screen.getByText(/Result 1 of 3/)).toBeInTheDocument();
+    expect(screen.getByText(/Plan id: p-1/)).toBeInTheDocument();
+    expect(screen.getByText(/Task id: t-1/)).toBeInTheDocument();
   });
 
   test('should list documentation metadata when source is documentation', async () => {

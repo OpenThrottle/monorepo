@@ -10,6 +10,7 @@ const LINKS: readonly { readonly label: string; readonly to: string }[] = [
   { label: 'Pull requests', to: '/pull-requests' },
   { label: 'Notes', to: '/notes' },
   { label: 'Queues', to: '/queues' },
+  { label: 'Skills', to: '/skills' },
   { label: 'Generators', to: '/generators' },
   { label: 'Settings', to: '/settings' },
 ];

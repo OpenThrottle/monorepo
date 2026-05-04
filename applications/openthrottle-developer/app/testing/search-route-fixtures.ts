@@ -22,6 +22,7 @@ export const searchChunkFixture: SearchChunk = {
  * @description Mirrors the `search._index` route loader return shape for stubbed route tests.
  */
 export interface SearchIndexLoaderFixture {
+  readonly expandRankingDetails: boolean;
   readonly limit: number;
   readonly page: number;
   readonly query: string;
@@ -30,6 +31,7 @@ export interface SearchIndexLoaderFixture {
 }
 
 export const searchIndexLoaderFixture: SearchIndexLoaderFixture = {
+  expandRankingDetails: false,
   limit: 10,
   page: 1,
   query: 'test',
@@ -53,6 +55,7 @@ export const createSearchTestChunks = (
 };
 
 export const searchIndexLoaderFixturePaginated: SearchIndexLoaderFixture = {
+  expandRankingDetails: false,
   limit: 10,
   page: 1,
   query: 'test',
@@ -63,6 +66,7 @@ export const searchIndexLoaderFixturePaginated: SearchIndexLoaderFixture = {
 };
 
 export const searchIndexLoaderFixtureEmptyQuery: SearchIndexLoaderFixture = {
+  expandRankingDetails: false,
   limit: 10,
   page: 1,
   query: '',

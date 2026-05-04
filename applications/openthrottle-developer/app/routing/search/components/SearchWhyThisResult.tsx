@@ -1,16 +1,28 @@
 import * as React from 'react';
 import type { SearchChunk } from '~/__generated__/graphql';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 
 export interface SearchWhyThisResultProps {
   readonly className?: string;
+  /** When set (e.g. `details=ranking`), sections start expanded. */
+  readonly defaultOpen?: boolean;
+  readonly rankMeta?: SearchRankMeta;
   readonly result: SearchChunk;
+}
+
+/**
+ * @description One-line position label: global index, page, and within-page index.
+ */
+function formatRankSummary(meta: SearchRankMeta): string {
+  const globalIndex = (meta.page - 1) * meta.pageSize + meta.indexOnPage + 1;
+  return `Result ${globalIndex} of ${meta.total} (page ${meta.page}, position ${meta.indexOnPage + 1} of ${meta.pageSize} on this page). Ordering is by embedding similarity, not keyword match.`;
 }
 
 /**
  * @description Power-user affordance: explains semantic ranking and surfaces chunk metadata for support and debugging.
  */
 export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
-  const { className, result } = props;
+  const { className, defaultOpen, rankMeta, result } = props;
 
   const similarityHint =
     result.similarity != null
@@ -26,14 +38,42 @@ export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
 
   const explanationBody = `OpenThrottle search embeds your query and compares it to plan, task, and documentation chunks (vector similarity). ${sourceHint} ${similarityHint}`;
 
+  const entityIds =
+    result.source !== 'documentation' &&
+    (result.planId != null ||
+      (result.taskId != null && result.taskId !== '')) ? (
+      <p className="font-mono text-[11px] text-muted-foreground/90">
+        {[
+          result.planId != null && result.planId !== ''
+            ? `Plan id: ${result.planId}`
+            : null,
+          result.taskId != null && result.taskId !== ''
+            ? `Task id: ${result.taskId}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </p>
+    ) : null;
+
   return (
-    <details className={className} data-testid="SearchWhyThisResult">
+    <details
+      className={className}
+      data-testid="SearchWhyThisResult"
+      open={defaultOpen === true}
+    >
       <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
         Why this result?
       </summary>
       <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+        {rankMeta != null ? (
+          <p className="text-[11px] text-foreground/90">
+            {formatRankSummary(rankMeta)}
+          </p>
+        ) : null}
         <p>{explanationBody}</p>
         <p className="font-mono text-[11px] text-muted-foreground/90">{`Chunk id: ${result.id}`}</p>
+        {entityIds}
         {result.source === 'documentation' &&
           (result.sourceRepo != null || result.sourcePath != null) && (
             <p className="font-mono text-[11px] text-muted-foreground/90">

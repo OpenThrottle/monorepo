@@ -27,6 +27,7 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
     assignees,
     basePath = DEFAULT_BASE_PATH,
     className,
+    details,
     limit,
     page,
     resultLabel = 'projects',
@@ -40,13 +41,23 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
   } = props;
   const extras =
     (assignees !== undefined && assignees.length > 0) ||
+    details !== undefined ||
     search !== undefined ||
     sortBy !== undefined ||
     sortOrder !== undefined ||
     status !== undefined ||
     (statuses !== undefined && statuses.length > 0) ||
     view !== undefined
-      ? { assignees, search, sortBy, sortOrder, status, statuses, view }
+      ? {
+          assignees,
+          details,
+          search,
+          sortBy,
+          sortOrder,
+          status,
+          statuses,
+          view,
+        }
       : undefined;
 
   // Hooks
