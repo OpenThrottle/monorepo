@@ -281,9 +281,10 @@ export default function Component(
 
   return (
     <>
-      <GlobalScreen>
+      <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8">
         {items.map((item) => {
           const isOutput = item.title !== 'Output';
+
           return (
             <GlobalCollapsible
               icon={item.icon}

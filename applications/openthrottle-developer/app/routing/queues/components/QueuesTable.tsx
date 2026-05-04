@@ -29,8 +29,9 @@ const queuesTableColumns: ColumnDef<
       const queue = row.original;
       const href = queueDetailHref(queue.name);
       const displayName = queue.name || 'Unnamed';
+
       return (
-        <div className="overflow-hidden">
+        <div className="overflow-hidden p-4 py-2">
           <h2 className="text-sm line-clamp-1 text-ellipsis font-medium">
             <Link
               aria-label={`View queue: ${displayName}`}
@@ -44,7 +45,7 @@ const queuesTableColumns: ColumnDef<
         </div>
       );
     },
-    header: () => 'Name',
+    header: () => <div className="p-4 py-2">Name</div>,
   },
   {
     accessorKey: 'waitingCount',
@@ -152,11 +153,14 @@ export const QueuesTable = (props: QueuesTableProps) => {
   }
 
   return (
-    <Card className={classnames(className)} data-testid="QueuesTable">
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="QueuesTable"
+    >
       <DataTable<QueueCardFragment, string | number | undefined>
         columns={queuesTableColumns}
         data={queues}
       />
-    </Card>
+    </div>
   );
 };

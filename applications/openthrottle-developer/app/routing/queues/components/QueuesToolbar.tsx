@@ -37,7 +37,7 @@ export const QueuesToolbar = (props: QueuesToolbarProps) => {
       data-testid="QueuesToolbar"
     >
       <div className="flex-1 min-w-0" />
-      <Button asChild={true} className="shrink-0" variant="default">
+      <Button asChild={true} className="shrink-0" variant="outline">
         <Link to="/queues/create">Create queue</Link>
       </Button>
     </div>

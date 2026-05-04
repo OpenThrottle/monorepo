@@ -322,32 +322,34 @@ export default function App(): React.ReactElement {
   // 🔌 Short Circuit
 
   return (
-    <GlobalProviders>
-      <GlobalLayout
-        data={dataNavigationV2}
-        health={data?.serverHealth}
-        overrides={{ footer: isFooterHidden }}
-      >
-        <GlobalServerHealthBanner health={data?.serverHealth} />
+    <>
+      <GlobalProviders>
+        <GlobalLayout
+          data={dataNavigationV2}
+          health={data?.serverHealth}
+          overrides={{ footer: isFooterHidden }}
+        >
+          <GlobalServerHealthBanner health={data?.serverHealth} />
 
-        {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
-        <Outlet />
-        {!isMetricsHidden ? <GlobalMetrics /> : null}
+          {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
+          <Outlet />
+          {!isMetricsHidden ? <GlobalMetrics /> : null}
 
-        <OpenThrottleCommander
-          className="m-0! p-0!"
-          groups={groups}
-          onEmptyStateSearch={handleSearch}
-        />
+          <OpenThrottleCommander
+            className="m-0! p-0!"
+            groups={groups}
+            onEmptyStateSearch={handleSearch}
+          />
+        </GlobalLayout>
+      </GlobalProviders>
 
-        <style type="text/css">{`
-          :root {
-            ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
-            ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
-          }
-        `}</style>
-      </GlobalLayout>
-    </GlobalProviders>
+      <style type="text/css">{`
+        :root {
+          ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
+          ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
+        }
+      `}</style>
+    </>
   );
 }
 

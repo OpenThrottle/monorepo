@@ -4,8 +4,10 @@ import {
   BrainIcon,
   BugIcon,
   FileChartColumn,
+  FoldersIcon,
   GaugeIcon,
-  ListIcon,
+  ListChevronsUpDownIcon,
+  ListOrderedIcon,
   NotebookTextIcon,
   SettingsIcon,
   SwatchBookIcon,
@@ -23,13 +25,23 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
     },
     {
       children: 'Plans',
-      icon: NotebookTextIcon,
+      icon: ListChevronsUpDownIcon,
       to: '/plans',
     },
     {
       children: 'Projects',
-      icon: ListIcon,
+      icon: FoldersIcon,
       to: '/projects',
+    },
+    {
+      children: 'Queues',
+      icon: ListOrderedIcon,
+      to: '/queues',
+    },
+    {
+      children: 'Notes',
+      icon: NotebookTextIcon,
+      to: '/notes',
     },
   ],
   Agents: [

@@ -13,8 +13,8 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.create';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => 'Create Queue',
-  links: (_match) => [{ children: 'All Queues', to: '/queues' }],
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [{ children: 'Queues', to: '/queues' }],
 };
 
 // export const loader = async (args: Route.LoaderArgs) => {
@@ -36,10 +36,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">Create queue</h1>
-        <QueueForm actionData={actionData} />
-      </div>
+      <QueueForm actionData={actionData} />
     </GlobalScreen>
   );
 }

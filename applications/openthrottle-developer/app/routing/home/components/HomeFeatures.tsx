@@ -29,23 +29,22 @@ export const HomeFeatures = (props: HomeFeaturesProps) => {
 
   return (
     <section
-      className={classnames('p-4 md:p-8 space-y-8', className)}
+      className={classnames(
+        'gap-4 md:gap-8 lg:gap-12',
+        'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+        // 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
+        className,
+      )}
       data-testid="HomeFeatures"
     >
-      <h2 className="text-center text-xl font-bold tracking-tight">
-        OpenThrottle Features
-      </h2>
-
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {HOME_FEATURES.map((feature) => (
-          <Card className="h-full" key={feature.title}>
-            <CardHeader>
-              <CardTitle className="text-lg mb-2">{feature.title}</CardTitle>
-              <CardDescription>{feature.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+      {HOME_FEATURES.map((feature) => (
+        <Card className="h-full" key={feature.title}>
+          <CardHeader>
+            <CardTitle className="text-lg mb-2">{feature.title}</CardTitle>
+            <CardDescription>{feature.description}</CardDescription>
+          </CardHeader>
+        </Card>
+      ))}
     </section>
   );
 };

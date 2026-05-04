@@ -49,8 +49,9 @@ export const GlobalServerHealthBanner = (
       role="alert"
     >
       <span className="flex-1">
-        The OpenThrottle Server is unreachable or misconfigured. Plans and tasks
-        may be unavailable.
+        The <b>OpenThrottle Server</b> is unreachable or misconfigured. Plans
+        and tasks are{' '}
+        <b className="underline underline-offset-2">unavailable</b>.
       </span>
       <Button
         aria-label="Dismiss banner"

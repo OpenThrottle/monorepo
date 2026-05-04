@@ -59,9 +59,7 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesToolbar queues={queues} />
-      <div className="flex-1 mt-4">
-        <QueuesTable queues={queues} />
-      </div>
+      <QueuesTable queues={queues} />
     </GlobalScreen>
   );
 }
