@@ -6,8 +6,10 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import { GLOBAL_METRICS_STORAGE_KEY } from '../../config/index';
+import * as globalMetricsStorage from '../../utils/storage';
 import { GlobalMetrics } from '../GlobalMetrics';
 import type { GlobalMetricsProps } from '../GlobalMetrics';
+import { GlobalProviders } from '../GlobalProviders';
 
 vi.mock('@openthrottle/react-router-ui', async (importOriginal) => {
   const actual =
@@ -56,7 +58,11 @@ describe('GlobalMetrics Component', () => {
       },
     });
 
-    const Component = () => <GlobalMetrics {...props} />;
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalMetrics {...props} />
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -73,15 +79,30 @@ describe('GlobalMetrics Component', () => {
 
   test('should show loading when usePollServerMetrics returns loading with no history', () => {
     cleanup();
-    mockUsePollServerMetrics.mockReturnValue({
-      error: null,
-      loading: true,
-      serverMetrics: null,
-    });
-    const Component = () => <GlobalMetrics {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByTestId } = render(<RoutesStub />);
-    expect(getByTestId('GlobalMetrics-loading')).toBeInTheDocument();
+    /**
+     * @description Strict Mode double-mount can persist chart samples to session between layout passes; force empty restore so `showGlobalLoadingBanner` matches the "no history" path.
+     */
+    const readHistorySpy = vi
+      .spyOn(globalMetricsStorage, 'readStoredMetricsChartHistory')
+      .mockReturnValue([]);
+
+    try {
+      mockUsePollServerMetrics.mockReturnValue({
+        error: null,
+        loading: true,
+        serverMetrics: null,
+      });
+      const Component = () => (
+        <GlobalProviders>
+          <GlobalMetrics {...props} />
+        </GlobalProviders>
+      );
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      const { getByTestId } = render(<RoutesStub />);
+      expect(getByTestId('GlobalMetrics-loading')).toBeInTheDocument();
+    } finally {
+      readHistorySpy.mockRestore();
+    }
   });
 
   test('should show error when usePollServerMetrics returns error', () => {
@@ -91,7 +112,11 @@ describe('GlobalMetrics Component', () => {
       loading: false,
       serverMetrics: null,
     });
-    const Component = () => <GlobalMetrics {...props} />;
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalMetrics {...props} />
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
     expect(getByTestId('GlobalMetrics-error')).toHaveTextContent(
@@ -103,7 +128,9 @@ describe('GlobalMetrics Component', () => {
     cleanup();
     mockUsePollServerMetrics.mockClear();
     const Component = () => (
-      <GlobalMetrics {...props} pollIntervalMs={15_000} />
+      <GlobalProviders>
+        <GlobalMetrics {...props} pollIntervalMs={15_000} />
+      </GlobalProviders>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);

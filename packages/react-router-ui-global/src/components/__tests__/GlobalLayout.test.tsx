@@ -4,15 +4,22 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { GlobalLayout } from '../GlobalLayout';
 import type { GlobalLayoutProps } from '../GlobalLayout';
+import { GlobalProviders } from '../GlobalProviders';
 
 describe('GlobalLayout Component', () => {
   let component: RenderResult;
   let props: GlobalLayoutProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      children: <span>layout-child</span>,
+    };
 
-    const Component = () => <GlobalLayout {...props} />;
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalLayout {...props} />
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

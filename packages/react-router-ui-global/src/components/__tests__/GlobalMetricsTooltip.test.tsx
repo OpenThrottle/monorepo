@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { GlobalProviders } from '../GlobalProviders';
 import { GlobalMetricsTooltip } from '../GlobalMetricsTooltip';
 import type { GlobalMetricsTooltipProps } from '../GlobalMetricsTooltip';
 
@@ -12,7 +13,11 @@ describe('GlobalMetricsTooltip Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <GlobalMetricsTooltip {...props} />;
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalMetricsTooltip {...props} />
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

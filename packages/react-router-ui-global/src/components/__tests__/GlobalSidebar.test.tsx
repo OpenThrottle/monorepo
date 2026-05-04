@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { GlobalProviders } from '../GlobalProviders';
 import { GlobalSidebar } from '../GlobalSidebar';
 import type { GlobalSidebarProps } from '../GlobalSidebar';
 
@@ -26,7 +27,11 @@ describe('GlobalSidebar Component', () => {
       },
     };
 
-    const Component = () => <GlobalSidebar {...props} />;
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalSidebar {...props} />
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       { Component: () => <div>Dashboard page</div>, path: '/dashboard' },
