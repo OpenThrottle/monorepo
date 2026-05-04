@@ -74,10 +74,21 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
     ];
     if (parsed.planId) lines.push(`planId: ${parsed.planId}`);
     if (parsed.taskId) lines.push(`taskId: ${parsed.taskId}`);
+    if (parsed.correlationId) {
+      lines.push(`correlationId: ${parsed.correlationId}`);
+    }
     if (job.name) lines.push(`name: ${job.name}`);
     lines.push(`urlPath: ${queueJobDetailPath(queueName, job.id)}`);
     return `${lines.join('\n')}\n`;
-  }, [job.id, job.name, job.state, parsed.planId, parsed.taskId, queueName]);
+  }, [
+    job.id,
+    job.name,
+    job.state,
+    parsed.correlationId,
+    parsed.planId,
+    parsed.taskId,
+    queueName,
+  ]);
 
   React.useEffect(() => {
     if (fetcher.state === 'submitting' || fetcher.state === 'loading') {
@@ -216,6 +227,14 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
               {job.id}
             </code>
           </p>
+          {parsed.correlationId != null && parsed.correlationId !== '' && (
+            <p>
+              <span className="text-muted-foreground">Payload correlation</span>{' '}
+              <code className="break-all rounded bg-muted px-1.5 py-0.5 text-xs">
+                {parsed.correlationId}
+              </code>
+            </p>
+          )}
           {parsed.planId != null && parsed.planId !== '' && (
             <p>
               <span className="text-muted-foreground">Plan</span>{' '}

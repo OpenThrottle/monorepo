@@ -3,6 +3,8 @@
  */
 
 export interface ParsedQueueJobData {
+  /** Optional idempotency or trace id if the worker or client put it in the JSON payload. */
+  readonly correlationId: string | undefined;
   readonly mode: string | undefined;
   readonly parseError: string | null;
   readonly planId: string | undefined;
@@ -19,6 +21,7 @@ export const parseQueueJobDataString = (
 ): ParsedQueueJobData => {
   if (data == null || data === '') {
     return {
+      correlationId: undefined,
       mode: undefined,
       parseError: null,
       planId: undefined,
@@ -37,8 +40,13 @@ export const parseQueueJobDataString = (
     const runKind =
       typeof parsed.runKind === 'string' ? parsed.runKind : undefined;
     const mode = typeof parsed.mode === 'string' ? parsed.mode : undefined;
+    const correlationId =
+      typeof parsed.correlationId === 'string'
+        ? parsed.correlationId
+        : undefined;
 
     return {
+      correlationId,
       mode,
       parseError: null,
       planId,
@@ -48,6 +56,7 @@ export const parseQueueJobDataString = (
     };
   } catch {
     return {
+      correlationId: undefined,
       mode: undefined,
       parseError: 'Invalid JSON',
       planId: undefined,

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import {
   Badge,
   Card,
@@ -69,15 +70,28 @@ export const QueueJobCard = (props: QueueJobCardProps) => {
             </CardTitle>
           )}
         </div>
-        <CardDescription
-          className="font-mono text-xs break-all"
-          data-testid={`job-id-${job.id}`}
-        >
-          {job.id}
-        </CardDescription>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <CardDescription
+            className="min-w-0 flex-1 font-mono text-xs break-all"
+            data-testid={`job-id-${job.id}`}
+          >
+            {job.id}
+          </CardDescription>
+          <OpenThrottleClipboard
+            className="h-7 shrink-0 text-xs"
+            label="Copy id"
+            text={job.id}
+          />
+        </div>
       </CardHeader>
       <Separator className="my-2" />
       <CardContent className="p-0 space-y-2">
+        {parsed.correlationId != null && parsed.correlationId !== '' && (
+          <p className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground">Correlation</span>{' '}
+            <span className="font-mono">{parsed.correlationId}</span>
+          </p>
+        )}
         {parsed.planId != null && parsed.planId !== '' && (
           <p className="text-sm">
             <span className="text-muted-foreground">Plan</span>{' '}

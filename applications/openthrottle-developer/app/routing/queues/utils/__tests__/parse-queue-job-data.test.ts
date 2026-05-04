@@ -4,6 +4,7 @@ import { parseQueueJobDataString } from '../parse-queue-job-data';
 describe('parseQueueJobDataString', () => {
   test('returns empty fields for null/empty data', () => {
     expect(parseQueueJobDataString(null)).toEqual({
+      correlationId: undefined,
       mode: undefined,
       parseError: null,
       planId: undefined,
@@ -12,6 +13,7 @@ describe('parseQueueJobDataString', () => {
       taskId: undefined,
     });
     expect(parseQueueJobDataString('')).toEqual({
+      correlationId: undefined,
       mode: undefined,
       parseError: null,
       planId: undefined,
@@ -35,6 +37,12 @@ describe('parseQueueJobDataString', () => {
     expect(r.mode).toBe('task');
     expect(r.parseError).toBeNull();
     expect(r.prettyJson).toContain('"planId"');
+  });
+
+  test('extracts optional correlationId from JSON', () => {
+    const raw = JSON.stringify({ correlationId: 'req-99', planId: 'p-1' });
+    const r = parseQueueJobDataString(raw);
+    expect(r.correlationId).toBe('req-99');
   });
 
   test('sets parseError for invalid JSON and keeps raw string in prettyJson', () => {

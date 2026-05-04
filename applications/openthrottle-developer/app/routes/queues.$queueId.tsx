@@ -1,12 +1,11 @@
 import * as React from 'react';
+import { Link } from 'react-router';
 import {
   DEFAULT_PAGINATION_LIMIT,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottlePagination,
-  OpenThrottleStatCard,
-} from '@openthrottle/react-router-ui';
+import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -17,6 +16,35 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId';
+
+const QUEUE_JOBS_LIMIT_MIN = 10;
+const QUEUE_JOBS_LIMIT_MAX = 100;
+
+/**
+ * @description Parses `page` and `limit` search params for BullMQ job pagination (GraphQL offset/limit).
+ */
+const parseQueueJobsPagination = (
+  requestUrl: string,
+): { limit: number; offset: number; page: number } => {
+  const url = new URL(requestUrl);
+  const page = Math.max(
+    1,
+    parseInt(url.searchParams.get('page') ?? '1', 10) || 1,
+  );
+  const limitRaw = url.searchParams.get('limit');
+  const limitParsed =
+    limitRaw != null && limitRaw !== '' ? parseInt(limitRaw, 10) : Number.NaN;
+  const limit =
+    Number.isFinite(limitParsed) && limitParsed > 0
+      ? Math.min(
+          QUEUE_JOBS_LIMIT_MAX,
+          Math.max(QUEUE_JOBS_LIMIT_MIN, Math.floor(limitParsed)),
+        )
+      : DEFAULT_PAGINATION_LIMIT;
+  const offset = (page - 1) * limit;
+
+  return { limit, offset, page };
+};
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => _match?.data?.queue?.name ?? 'Queue Details',
@@ -29,14 +57,16 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('Queue name required', { status: 400 });
   }
 
+  const { limit, offset, page } = parseQueueJobsPagination(args.request.url);
+
   const { queue } = await executeGraphqlWithAuth(
     args.request,
     GetQueueDocument,
     {
       input: {
-        limit: DEFAULT_PAGINATION_LIMIT,
+        limit,
         name: queueName,
-        offset: 0,
+        offset,
         states: ['waiting', 'active', 'completed', 'failed', 'delayed'],
       },
     },
@@ -46,7 +76,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response(`Queue "${queueName}" not found`, { status: 404 });
   }
 
-  return { queue };
+  return { limit, page, queue };
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
@@ -59,10 +89,18 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { queue } = loaderData;
+  const { limit, page, queue } = loaderData;
 
   const jobs = queue.jobs?.jobs ?? [];
   const hasNext = queue.jobs?.hasNext ?? false;
+  const queueBasePath = `/queues/${encodeURIComponent(queue.name)}`;
+  const buildJobsPageHref = (nextPage: number): string => {
+    const params = new URLSearchParams();
+    params.set('page', String(nextPage));
+    params.set('limit', String(limit));
+
+    return `${queueBasePath}?${params.toString()}`;
+  };
 
   return (
     <GlobalScreen>
@@ -70,8 +108,11 @@ export default function Component(
         className="mb-6 max-w-3xl text-sm text-muted-foreground"
         data-testid="queue-detail-operational-hint"
       >
-        Jobs listed below are a single page of recent items. Open a job for the
-        full payload, timestamps, failure or return value, retry (
+        Jobs use URL pagination (
+        <code className="rounded bg-muted px-1 text-xs">?page=</code>,{' '}
+        <code className="rounded bg-muted px-1 text-xs">?limit=</code>,{' '}
+        {QUEUE_JOBS_LIMIT_MIN}–{QUEUE_JOBS_LIMIT_MAX}). Open a job for the full
+        payload, timestamps, failure or return value, retry (
         <code className="rounded bg-muted px-1 text-xs">retryJob</code>), cancel
         plan run when applicable (
         <code className="rounded bg-muted px-1 text-xs">cancelPlanRun</code>),
@@ -98,19 +139,52 @@ export default function Component(
             ))}
           </ul>
 
-          {hasNext && (
-            <p className="text-sm text-muted-foreground">
-              More jobs available (next page not yet implemented).
-            </p>
+          {(jobs.length > 0 || page > 1 || hasNext) && (
+            <div
+              className="mt-8 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between"
+              data-testid="queue-jobs-pagination"
+            >
+              <p className="text-sm text-muted-foreground">
+                Page {page} · {jobs.length} job{jobs.length === 1 ? '' : 's'} ·{' '}
+                {limit} per page
+                {hasNext ? ' · more on next page' : ''}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {page > 1 ? (
+                  <Button asChild={true} size="sm" variant="outline">
+                    <Link rel="prev" to={buildJobsPageHref(page - 1)}>
+                      Previous
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    className="pointer-events-none opacity-50"
+                    disabled={true}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Previous
+                  </Button>
+                )}
+                {hasNext ? (
+                  <Button asChild={true} size="sm" variant="outline">
+                    <Link rel="next" to={buildJobsPageHref(page + 1)}>
+                      Next
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    className="pointer-events-none opacity-50"
+                    disabled={true}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Next
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
-
-          <OpenThrottlePagination
-            basePath="/queues"
-            className="mt-8"
-            limit={100}
-            page={1}
-            total={jobs.length}
-          />
         </>
       )}
     </GlobalScreen>
