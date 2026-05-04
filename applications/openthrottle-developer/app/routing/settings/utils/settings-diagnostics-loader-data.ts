@@ -1,3 +1,4 @@
+import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import { getEnvironment } from '@openthrottle/react-router-utils';
 import { sanitizeEnvForDiagnostics } from './sanitize-client-env';
 
@@ -14,6 +15,9 @@ export const getSettingsDiagnosticsLoaderData =
     const env = getEnvironment();
     return {
       env,
-      supportBundle: sanitizeEnvForDiagnostics(env),
+      supportBundle: {
+        ...sanitizeEnvForDiagnostics(env),
+        generatedAt: new Date().toISOString(),
+      },
     };
   };

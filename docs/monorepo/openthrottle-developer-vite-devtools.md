@@ -78,5 +78,5 @@ Use this when the dev server runs but navigation, loaders, or GraphQL calls fail
 
 ## In-app entry points
 
-- **Settings → Debug** (`/settings/debug`) — bundle analyzer / React Router DevTools reminders and links to this doc.
-- **Settings → General** and **Settings → Appearance** — **Build & environment** plus **Local Vite profiling** card with the same doc links (including [Vite CLI build profiling](#vite-cli-build-profiling)) so contributors discover profiling without hunting the README.
+- **Settings → Debug** (`/settings/debug`) — bundle analyzer / React Router DevTools reminders and links to this doc. The same page includes **Local dev: ports, hosts & API URLs** (fragment `/settings/debug#ports-hosts-api-troubleshooting`) with internal vs external API bases, `PORT` / Vite, Docker, and Caddy notes.
+- **Settings → General** and **Settings → Appearance** — **Build & environment** plus **Local Vite profiling** card with the same doc links (including [Vite CLI build profiling](#vite-cli-build-profiling)) so contributors discover profiling without hunting the README. The **App & API URL matrix** on those routes links back to the ports troubleshooting section on Debug.
