@@ -12,6 +12,7 @@ import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostic
 import {
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
+  VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '../utils/settings-docs-links';
 import { SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID } from './SettingsPortsTroubleshootingCard';
 
@@ -127,11 +128,11 @@ export function SettingsEnvironmentDiagnostics({
           <p>
             <a
               className="text-primary underline-offset-4 hover:underline"
-              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
+              href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
               rel="noreferrer"
               target="_blank"
             >
-              Vite CLI build profiling (doc)
+              Quick reference (when to enable what)
             </a>
             {' · '}
             <a
@@ -141,6 +142,15 @@ export function SettingsEnvironmentDiagnostics({
               target="_blank"
             >
               Full Vite &amp; devtools guide
+            </a>
+            {' · '}
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Vite CLI build profiling
             </a>
             {' · '}
             <Link

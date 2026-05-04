@@ -2,6 +2,17 @@
 
 This document describes levers wired in `applications/openthrottle-developer/vite.config.ts` for local development and debugging. Use it when tuning the developer portal build or enabling React Router / Vite diagnostics.
 
+## Quick reference
+
+Use this table to pick a lever before reading the sections below.
+
+| Goal                                                      | Lever                                                                                                                                     |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Bundle composition, duplicate dependencies, chunk splits  | Dev-only `vite-bundle-analyzer` when `NODE_ENV=development` — see [Development-only: bundle analyzer](#development-only-bundle-analyzer). |
+| Slow **production** builds (where Rollup/Vite spends CPU) | `pnpm nx run openthrottle-developer:build -- --profile` — see [Vite CLI build profiling](#vite-cli-build-profiling).                      |
+| Routes, loaders, actions, navigation                      | `REACT_ROUTER_DEV_TOOLS=true` — see [Opt-in: React Router DevTools](#opt-in-react-router-devtools).                                       |
+| Noisy plugin / transform tracing (debug sessions only)    | Prefix the command with `DEBUG=vite:*` — see the note under [Vite CLI build profiling](#vite-cli-build-profiling).                        |
+
 ## Plugin order (important)
 
 `reactRouterDevTools()` **must** run before `reactRouter()` from `@react-router/dev/vite`. The config already follows that order.
@@ -79,4 +90,4 @@ Use this when the dev server runs but navigation, loaders, or GraphQL calls fail
 ## In-app entry points
 
 - **Settings → Debug** (`/settings/debug`) — bundle analyzer / React Router DevTools reminders and links to this doc. The same page includes **Local dev: ports, hosts & API URLs** (fragment `/settings/debug#ports-hosts-api-troubleshooting`) with internal vs external API bases, `PORT` / Vite, Docker, and Caddy notes.
-- **Settings → General** and **Settings → Appearance** — **Build & environment** plus **Local Vite profiling** card with the same doc links (including [Vite CLI build profiling](#vite-cli-build-profiling)) so contributors discover profiling without hunting the README. The **App & API URL matrix** on those routes links back to the ports troubleshooting section on Debug.
+- **Settings → General** and **Settings → Appearance** — **Build & environment** plus **Local Vite profiling** card with doc links (including [Quick reference](#quick-reference) and [Vite CLI build profiling](#vite-cli-build-profiling)) so contributors discover profiling without hunting the README. The **App & API URL matrix** on those routes links back to the ports troubleshooting section on Debug.

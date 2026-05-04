@@ -21,6 +21,7 @@ import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-
 import {
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
+  VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '~/routing/settings/utils/settings-docs-links';
 import { SettingsPortsTroubleshootingCard } from '~/routing/settings/components/SettingsPortsTroubleshootingCard';
 import type { ServerHealthObject } from '~/__generated__/graphql';
@@ -222,6 +223,15 @@ export function SettingsDebugPanel({
             React Router DevTools hook order are documented here:
           </p>
           <p>
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Quick reference (when to enable what)
+            </a>
+            {' · '}
             <a
               className="text-primary underline-offset-4 hover:underline"
               href={VITE_DEVTOOLS_DOC_HREF}

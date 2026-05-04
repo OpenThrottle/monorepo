@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { screen } from '@testing-library/react';
 import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugPanel';
+import { VITE_DEVTOOLS_DOC_QUICK_REF_HREF } from '~/routing/settings/utils/settings-docs-links';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
 describe('routes/settings.debug.tsx', () => {
@@ -42,5 +43,28 @@ describe('routes/settings.debug.tsx', () => {
       screen.getByText(/localStorage & sessionStorage/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/GraphQL endpoint health/i)).toBeInTheDocument();
+  });
+
+  test('Vite devtools card links to quick reference doc anchor', () => {
+    renderWithMemoryRouter([
+      {
+        element: (
+          <SettingsDebugPanel
+            envSnapshot={{}}
+            graphQL={{
+              error: 'x',
+              latencyMs: 0,
+              status: 'error',
+            }}
+          />
+        ),
+        path: '/',
+      },
+    ]);
+
+    const link = screen.getByRole('link', {
+      name: /quick reference \(when to enable what\)/i,
+    });
+    expect(link).toHaveAttribute('href', VITE_DEVTOOLS_DOC_QUICK_REF_HREF);
   });
 });

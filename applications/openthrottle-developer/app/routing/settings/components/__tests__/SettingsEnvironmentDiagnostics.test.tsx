@@ -5,6 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import type { SettingsDiagnosticsLoaderData } from '../../utils/settings-diagnostics-loader-data';
+import { VITE_DEVTOOLS_DOC_QUICK_REF_HREF } from '../../utils/settings-docs-links';
 import { SettingsEnvironmentDiagnostics } from '../SettingsEnvironmentDiagnostics';
 
 const baseEnv: OpenThrottleEnv = {
@@ -87,6 +88,15 @@ describe('SettingsEnvironmentDiagnostics', () => {
     renderDiagnostics({ env: baseEnv, supportBundle: {} });
     const link = screen.getByRole('link', { name: /^settings → debug$/i });
     expect(link).toHaveAttribute('href', '/settings/debug');
+  });
+
+  it('links quick reference to monorepo doc anchor', () => {
+    renderDiagnostics({ env: baseEnv, supportBundle: {} });
+    const link = screen.getByRole('link', {
+      name: /quick reference \(when to enable what\)/i,
+    });
+    expect(link).toHaveAttribute('href', VITE_DEVTOOLS_DOC_QUICK_REF_HREF);
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('links to ports & API troubleshooting on Settings → Debug', () => {
