@@ -1,25 +1,21 @@
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../settings.appearance';
+import { loader } from '../settings.appearance';
+import type { Route } from '@/app/routes/+types/settings.appearance';
 
 describe('routes/settings.appearance.tsx', () => {
-  // let component: RenderResult;
+  test('loader returns diagnostics env and support bundle', async () => {
+    const args = {
+      context: undefined,
+      params: {},
+      request: new Request('http://localhost/settings/appearance'),
+    } as Route.LoaderArgs;
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+    const data = await loader(args);
 
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(data.env.APP_NAME).toBeDefined();
+    expect(data.env.APP_VERSION).toBeDefined();
+    expect(data.supportBundle.generatedAt).toMatch(
+      /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/,
+    );
   });
 });
