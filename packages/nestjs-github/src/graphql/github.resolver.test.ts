@@ -13,7 +13,9 @@ describe('GithubResolver', () => {
 
   const mockPullDto: PullListItemDto = {
     author: 'visormatt',
+    baseRef: 'main',
     createdAt: '2026-02-01T12:00:00Z',
+    headRef: 'topic/test-pr',
     htmlUrl: 'https://github.com/owner/repo/pull/1',
     mergedAt: null,
     number: 1,
@@ -71,7 +73,9 @@ describe('GithubResolver', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]?.author).toBe(mockPullDto.author);
+      expect(result[0]?.baseRef).toBe(mockPullDto.baseRef);
       expect(result[0]?.createdAt).toBe(mockPullDto.createdAt);
+      expect(result[0]?.headRef).toBe(mockPullDto.headRef);
       expect(result[0]?.htmlUrl).toBe(mockPullDto.htmlUrl);
       expect(result[0]?.mergedAt).toBe(mockPullDto.mergedAt);
       expect(result[0]?.number).toBe(mockPullDto.number);

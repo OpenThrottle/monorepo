@@ -35,13 +35,14 @@ type Documents = {
   'query getPrompt($id: ID!) {\n  customPrompt(id: $id) {\n    content\n    createdAt\n    description\n    filePath\n    id\n    labels\n    projectId\n    promptType\n    title\n    updatedAt\n    userId\n  }\n}\n\nmutation updatePrompt($input: UpdateCustomPromptInput!) {\n  updateCustomPrompt(input: $input) {\n    content\n    createdAt\n    description\n    filePath\n    id\n    labels\n    promptType\n    title\n    updatedAt\n  }\n}\n\nmutation deletePrompt($id: ID!) {\n  deleteCustomPrompt(id: $id)\n}\n\nmutation writePromptToFileSystem($id: ID!) {\n  writeCustomPromptToFileSystem(id: $id)\n}': typeof types.GetPromptDocument;
   'fragment PromptCard on CustomPromptObject {\n  content\n  createdAt\n  description\n  filePath\n  id\n  labels\n  promptType\n  title\n  updatedAt\n}\n\nquery getPrompts($input: ListCustomPromptsInput) {\n  customPrompts(input: $input) {\n    ...PromptCard\n  }\n}': typeof types.PromptCardFragmentDoc;
   'mutation createPrompt($input: CreateCustomPromptInput!) {\n  createCustomPrompt(input: $input) {\n    content\n    createdAt\n    description\n    filePath\n    id\n    labels\n    promptType\n    title\n    updatedAt\n  }\n}': typeof types.CreatePromptDocument;
-  'query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    createdAt\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}': typeof types.GetPullRequestDetailDocument;
-  'fragment PullRequestCard on PullListItemObject {\n  author\n  createdAt\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}': typeof types.PullRequestCardFragmentDoc;
+  'query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    baseRef\n    createdAt\n    headRef\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}': typeof types.GetPullRequestDetailDocument;
+  'fragment PullRequestCard on PullListItemObject {\n  author\n  baseRef\n  createdAt\n  headRef\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}': typeof types.PullRequestCardFragmentDoc;
   'fragment JobDetailsCard on JobObject {\n  data\n  failedReason\n  finishedOn\n  id\n  name\n  processedOn\n  progress\n  returnvalue\n  state\n  taskRunMetrics {\n    atEnd {\n      heapUsedMb\n      rssMb\n    }\n    atStart {\n      heapUsedMb\n      rssMb\n    }\n  }\n  timestamp\n}\n\nquery getQueueJobDetails($jobId: ID!, $queueName: String!) {\n  job(jobId: $jobId, queueName: $queueName) {\n    ...JobDetailsCard\n  }\n}\n\nmutation QueueJobDetailRetry($input: RetryJobInput!) {\n  retryJob(input: $input) {\n    error\n    jobId\n    success\n  }\n}\n\nmutation QueueJobDetailCancelPlanRun($input: CancelPlanRunInput!) {\n  cancelPlanRun(input: $input) {\n    activeJobIdsCouldNotCancel\n    noMatchingJob\n    planId\n    planStatusAfter\n    removedJobIds\n    signaledActiveRunToStop\n  }\n}': typeof types.JobDetailsCardFragmentDoc;
   'query getQueue($input: QueueDetailsInput!) {\n  queue(input: $input) {\n    activeCount\n    completedCount\n    delayedCount\n    failedCount\n    jobs {\n      hasNext\n      jobs {\n        data\n        failedReason\n        finishedOn\n        id\n        name\n        processedOn\n        progress\n        returnvalue\n        state\n        timestamp\n      }\n    }\n    name\n    waitingCount\n  }\n}': typeof types.GetQueueDocument;
   'fragment QueueCard on QueueStatsObject {\n  activeCount\n  completedCount\n  delayedCount\n  failedCount\n  name\n  waitingCount\n}\n\nquery getQueues {\n  queues {\n    ...QueueCard\n  }\n}': typeof types.QueueCardFragmentDoc;
   'mutation createQueue($input: CreateQueueInput!) {\n  createQueue(input: $input) {\n    success\n    queueName\n    error\n  }\n}': typeof types.CreateQueueDocument;
   'query getSearchResults($input: SearchInput!) {\n  search(input: $input) {\n    chunks {\n      content\n      id\n      planId\n      planTitle\n      similarity\n      source\n      sourcePath\n      sourceRepo\n      sourceSha\n      taskId\n      taskTitle\n    }\n  }\n}': typeof types.GetSearchResultsDocument;
+  'fragment UsageDailyStatsRow on DailyStatsObject {\n  date\n  plansCompleted\n  plansCreated\n  plansUpdated\n  tasksCompleted\n  tasksCreated\n  tasksUpdated\n}\n\nquery getUsageDailyStats($start: String!, $end: String!) {\n  dailyStatsRange(start: $start, end: $end) {\n    items {\n      ...UsageDailyStatsRow\n    }\n  }\n}': typeof types.UsageDailyStatsRowFragmentDoc;
 };
 const documents: Documents = {
   'fragment HealthCard on ServerHealthObject {\n  api\n  database\n  redis\n  websocket\n}\n\nmutation register($input: RegisterInput!) {\n  register(input: $input) {\n    accessToken\n    email\n    id\n  }\n}\n\nmutation login($input: LoginInput!) {\n  login(input: $input) {\n    accessToken\n  }\n}\n\nquery getRootHealth {\n  serverHealth {\n    ...HealthCard\n  }\n}\n\nfragment RootMetrics on ServerMetricsObject {\n  cpuSystemMs\n  cpuUserMs\n  externalMb\n  heapTotalMb\n  heapUsedMb\n  rssMb\n}\n\nquery getRootMetrics {\n  serverMetrics {\n    ...RootMetrics\n  }\n}\n\nquery getMyUser {\n  me {\n    createdAt\n    disabledAt\n    email\n    githubUsername\n    id\n    updatedAt\n  }\n}':
@@ -86,9 +87,9 @@ const documents: Documents = {
     types.PromptCardFragmentDoc,
   'mutation createPrompt($input: CreateCustomPromptInput!) {\n  createCustomPrompt(input: $input) {\n    content\n    createdAt\n    description\n    filePath\n    id\n    labels\n    promptType\n    title\n    updatedAt\n  }\n}':
     types.CreatePromptDocument,
-  'query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    createdAt\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}':
+  'query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    baseRef\n    createdAt\n    headRef\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}':
     types.GetPullRequestDetailDocument,
-  'fragment PullRequestCard on PullListItemObject {\n  author\n  createdAt\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}':
+  'fragment PullRequestCard on PullListItemObject {\n  author\n  baseRef\n  createdAt\n  headRef\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}':
     types.PullRequestCardFragmentDoc,
   'fragment JobDetailsCard on JobObject {\n  data\n  failedReason\n  finishedOn\n  id\n  name\n  processedOn\n  progress\n  returnvalue\n  state\n  taskRunMetrics {\n    atEnd {\n      heapUsedMb\n      rssMb\n    }\n    atStart {\n      heapUsedMb\n      rssMb\n    }\n  }\n  timestamp\n}\n\nquery getQueueJobDetails($jobId: ID!, $queueName: String!) {\n  job(jobId: $jobId, queueName: $queueName) {\n    ...JobDetailsCard\n  }\n}\n\nmutation QueueJobDetailRetry($input: RetryJobInput!) {\n  retryJob(input: $input) {\n    error\n    jobId\n    success\n  }\n}\n\nmutation QueueJobDetailCancelPlanRun($input: CancelPlanRunInput!) {\n  cancelPlanRun(input: $input) {\n    activeJobIdsCouldNotCancel\n    noMatchingJob\n    planId\n    planStatusAfter\n    removedJobIds\n    signaledActiveRunToStop\n  }\n}':
     types.JobDetailsCardFragmentDoc,
@@ -100,6 +101,8 @@ const documents: Documents = {
     types.CreateQueueDocument,
   'query getSearchResults($input: SearchInput!) {\n  search(input: $input) {\n    chunks {\n      content\n      id\n      planId\n      planTitle\n      similarity\n      source\n      sourcePath\n      sourceRepo\n      sourceSha\n      taskId\n      taskTitle\n    }\n  }\n}':
     types.GetSearchResultsDocument,
+  'fragment UsageDailyStatsRow on DailyStatsObject {\n  date\n  plansCompleted\n  plansCreated\n  plansUpdated\n  tasksCompleted\n  tasksCreated\n  tasksUpdated\n}\n\nquery getUsageDailyStats($start: String!, $end: String!) {\n  dailyStatsRange(start: $start, end: $end) {\n    items {\n      ...UsageDailyStatsRow\n    }\n  }\n}':
+    types.UsageDailyStatsRowFragmentDoc,
 };
 
 /**
@@ -246,14 +249,14 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: 'query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    createdAt\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}',
-): (typeof documents)['query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    createdAt\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}'];
+  source: 'query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    baseRef\n    createdAt\n    headRef\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}',
+): (typeof documents)['query getPullRequestDetail($input: GetPullInput!) {\n  pull(input: $input) {\n    author\n    baseRef\n    createdAt\n    headRef\n    htmlUrl\n    mergedAt\n    number\n    state\n    title\n    updatedAt\n  }\n}'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: 'fragment PullRequestCard on PullListItemObject {\n  author\n  createdAt\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}',
-): (typeof documents)['fragment PullRequestCard on PullListItemObject {\n  author\n  createdAt\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}'];
+  source: 'fragment PullRequestCard on PullListItemObject {\n  author\n  baseRef\n  createdAt\n  headRef\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}',
+): (typeof documents)['fragment PullRequestCard on PullListItemObject {\n  author\n  baseRef\n  createdAt\n  headRef\n  htmlUrl\n  mergedAt\n  number\n  state\n  title\n  updatedAt\n}\n\nquery getPullRequests($input: ListPullsInput!) {\n  pulls(input: $input) {\n    ...PullRequestCard\n  }\n}'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -284,6 +287,12 @@ export function graphql(
 export function graphql(
   source: 'query getSearchResults($input: SearchInput!) {\n  search(input: $input) {\n    chunks {\n      content\n      id\n      planId\n      planTitle\n      similarity\n      source\n      sourcePath\n      sourceRepo\n      sourceSha\n      taskId\n      taskTitle\n    }\n  }\n}',
 ): (typeof documents)['query getSearchResults($input: SearchInput!) {\n  search(input: $input) {\n    chunks {\n      content\n      id\n      planId\n      planTitle\n      similarity\n      source\n      sourcePath\n      sourceRepo\n      sourceSha\n      taskId\n      taskTitle\n    }\n  }\n}'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: 'fragment UsageDailyStatsRow on DailyStatsObject {\n  date\n  plansCompleted\n  plansCreated\n  plansUpdated\n  tasksCompleted\n  tasksCreated\n  tasksUpdated\n}\n\nquery getUsageDailyStats($start: String!, $end: String!) {\n  dailyStatsRange(start: $start, end: $end) {\n    items {\n      ...UsageDailyStatsRow\n    }\n  }\n}',
+): (typeof documents)['fragment UsageDailyStatsRow on DailyStatsObject {\n  date\n  plansCompleted\n  plansCreated\n  plansUpdated\n  tasksCompleted\n  tasksCreated\n  tasksUpdated\n}\n\nquery getUsageDailyStats($start: String!, $end: String!) {\n  dailyStatsRange(start: $start, end: $end) {\n    items {\n      ...UsageDailyStatsRow\n    }\n  }\n}'];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

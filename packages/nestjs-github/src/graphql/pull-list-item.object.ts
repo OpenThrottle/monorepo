@@ -9,8 +9,14 @@ export class PullListItemObject {
   @Field(() => String)
   author!: string;
 
+  @Field(() => String, { nullable: true })
+  baseRef!: string | null;
+
   @Field(() => String)
   createdAt!: string;
+
+  @Field(() => String, { nullable: true })
+  headRef!: string | null;
 
   @Field(() => String)
   htmlUrl!: string;

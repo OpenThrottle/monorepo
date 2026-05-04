@@ -1,7 +1,9 @@
 query getPullRequestDetail($input: GetPullInput!) {
   pull(input: $input) {
     author
+    baseRef
     createdAt
+    headRef
     htmlUrl
     mergedAt
     number

@@ -1163,7 +1163,11 @@ export type PsiCpuMetrics = {
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
   author: Scalars['String']['output'];
+  /** Merge target branch ref when GitHub returns base.ref. */
+  baseRef?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  /** PR branch ref when GitHub returns head.ref. */
+  headRef?: Maybe<Scalars['String']['output']>;
   htmlUrl: Scalars['String']['output'];
   mergedAt?: Maybe<Scalars['String']['output']>;
   number: Scalars['Int']['output'];
@@ -2991,7 +2995,9 @@ export type GetPullRequestDetailQuery = {
   pull?: {
     __typename?: 'PullListItemObject';
     author: string;
+    baseRef?: string | null;
     createdAt: string;
+    headRef?: string | null;
     htmlUrl: string;
     mergedAt?: string | null;
     number: number;
@@ -3004,7 +3010,9 @@ export type GetPullRequestDetailQuery = {
 export type PullRequestCardFragment = {
   __typename?: 'PullListItemObject';
   author: string;
+  baseRef?: string | null;
   createdAt: string;
+  headRef?: string | null;
   htmlUrl: string;
   mergedAt?: string | null;
   number: number;
@@ -3022,7 +3030,9 @@ export type GetPullRequestsQuery = {
   pulls: Array<{
     __typename?: 'PullListItemObject';
     author: string;
+    baseRef?: string | null;
     createdAt: string;
+    headRef?: string | null;
     htmlUrl: string;
     mergedAt?: string | null;
     number: number;
@@ -3219,6 +3229,39 @@ export type GetSearchResultsQuery = {
       sourceSha?: string | null;
       taskId?: string | null;
       taskTitle?: string | null;
+    }>;
+  };
+};
+
+export type UsageDailyStatsRowFragment = {
+  __typename?: 'DailyStatsObject';
+  date: string;
+  plansCompleted: number;
+  plansCreated: number;
+  plansUpdated: number;
+  tasksCompleted: number;
+  tasksCreated: number;
+  tasksUpdated: number;
+};
+
+export type GetUsageDailyStatsQueryVariables = Exact<{
+  start: Scalars['String']['input'];
+  end: Scalars['String']['input'];
+}>;
+
+export type GetUsageDailyStatsQuery = {
+  __typename?: 'Query';
+  dailyStatsRange: {
+    __typename?: 'DailyStatsRangeResultObject';
+    items: Array<{
+      __typename?: 'DailyStatsObject';
+      date: string;
+      plansCompleted: number;
+      plansCreated: number;
+      plansUpdated: number;
+      tasksCompleted: number;
+      tasksCreated: number;
+      tasksUpdated: number;
     }>;
   };
 };
@@ -3716,7 +3759,9 @@ export const PullRequestCardFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
           { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
@@ -3817,6 +3862,31 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const UsageDailyStatsRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageDailyStatsRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DailyStatsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansUpdated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksUpdated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageDailyStatsRowFragment, unknown>;
 export const RegisterDocument = {
   kind: 'Document',
   definitions: [
@@ -6817,7 +6887,9 @@ export const GetPullRequestDetailDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'number' } },
@@ -6898,7 +6970,9 @@ export const GetPullRequestsDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
           { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
@@ -7508,4 +7582,109 @@ export const GetSearchResultsDocument = {
 } as unknown as DocumentNode<
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
+>;
+export const GetUsageDailyStatsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageDailyStats' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'start' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'end' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'dailyStatsRange' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'start' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'start' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'end' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'end' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'items' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageDailyStatsRow' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageDailyStatsRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DailyStatsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansUpdated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksUpdated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageDailyStatsQuery,
+  GetUsageDailyStatsQueryVariables
 >;

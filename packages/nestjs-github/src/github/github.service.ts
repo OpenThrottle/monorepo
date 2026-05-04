@@ -7,7 +7,9 @@ import type { PullReviewDto, PullReviewState } from './dto/pull-review.dto';
 
 /** GitHub REST API pull request list item (subset we use). */
 interface GitHubPullItem {
+  readonly base?: { readonly ref: string } | null;
   readonly created_at: string;
+  readonly head?: { readonly ref: string } | null;
   readonly html_url: string;
   readonly merged_at: string | null;
   readonly number: number;
@@ -319,7 +321,9 @@ export class GitHubService {
 function toPullListItemDto(p: GitHubPullItem): PullListItemDto {
   return {
     author: p.user?.login ?? '',
+    baseRef: p.base?.ref ?? null,
     createdAt: p.created_at,
+    headRef: p.head?.ref ?? null,
     htmlUrl: p.html_url,
     mergedAt: p.merged_at,
     number: p.number,

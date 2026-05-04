@@ -23,7 +23,11 @@ import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   githubPullChecksUrl,
+  githubPullCommitsUrl,
+  githubPullCompareUrl,
   githubPullConversationUrl,
+  githubRepoActionsForBranchUrl,
+  githubRepoActionsPullRequestRunsUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 import type { Route } from '@/app/routes/+types/pull-requests._index';
 
@@ -120,11 +124,14 @@ export default function Component(
   return (
     <GlobalScreen>
       <p className="text-muted-foreground text-sm mb-6 max-w-2xl">
-        Filter by repository, author, and merge status when debugging CI or the
-        merge queue. Open{' '}
-        <span className="font-medium text-foreground">Checks</span> on GitHub
-        for required status and failing jobs — each card links there with the
-        correct owner, repo, and PR number.
+        Filter by <span className="font-medium text-foreground">owner</span>,{' '}
+        <span className="font-medium text-foreground">repo</span>, and{' '}
+        <span className="font-medium text-foreground">author</span> when
+        debugging CI or the merge queue. Each card deep-links to{' '}
+        <span className="font-medium text-foreground">Checks</span>,{' '}
+        <span className="font-medium text-foreground">Commits</span>, and{' '}
+        <span className="font-medium text-foreground">Actions</span> on GitHub
+        using the resolved PR number and branch refs when available.
       </p>
 
       <Form
@@ -244,6 +251,12 @@ export default function Component(
                   Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — updated{' '}
                   {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
                 </p>
+                {pull.baseRef !== null || pull.headRef !== null ? (
+                  <p className="text-muted-foreground mt-1 font-mono text-xs">
+                    {pull.baseRef !== null ? pull.baseRef : '—'} ←{' '}
+                    {pull.headRef !== null ? pull.headRef : '—'}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
                 <Badge
@@ -283,6 +296,62 @@ export default function Component(
                   target="_blank"
                 >
                   Checks (CI)
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubPullCommitsUrl(
+                    filters.owner,
+                    filters.repo,
+                    pull.number,
+                  )}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Commits
+                </a>
+              </Button>
+              {pull.baseRef !== null && pull.headRef !== null ? (
+                <Button asChild={true} size="sm" variant="outline">
+                  <a
+                    href={githubPullCompareUrl(
+                      filters.owner,
+                      filters.repo,
+                      pull.baseRef,
+                      pull.headRef,
+                    )}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Compare base…head
+                  </a>
+                </Button>
+              ) : null}
+              {pull.headRef !== null ? (
+                <Button asChild={true} size="sm" variant="outline">
+                  <a
+                    href={githubRepoActionsForBranchUrl(
+                      filters.owner,
+                      filters.repo,
+                      pull.headRef,
+                    )}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Actions (branch)
+                  </a>
+                </Button>
+              ) : null}
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubRepoActionsPullRequestRunsUrl(
+                    filters.owner,
+                    filters.repo,
+                  )}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Actions (PR runs)
                 </a>
               </Button>
               <Button asChild={true} size="sm" variant="ghost">

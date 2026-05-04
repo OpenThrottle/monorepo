@@ -155,7 +155,11 @@ type ReviewCycleTimeObject {
 
 type PullListItemObject {
   author: String!
+  """Merge target branch ref when GitHub returns base.ref."""
+  baseRef: String
   createdAt: String!
+  """PR branch ref when GitHub returns head.ref."""
+  headRef: String
   htmlUrl: String!
   mergedAt: String
   number: Int!

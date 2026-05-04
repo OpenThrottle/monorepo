@@ -13,7 +13,9 @@ describe('GitHubService', () => {
   test('listPulls returns mapped DTOs from GitHub API response', async () => {
     const mockPulls = [
       {
+        base: { ref: 'main' },
         created_at: '2025-01-01T00:00:00Z',
+        head: { ref: 'feat/add-thing' },
         html_url: 'https://github.com/owner/repo/pull/1',
         merged_at: null,
         number: 1,
@@ -37,7 +39,9 @@ describe('GitHubService', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       author: 'octocat',
+      baseRef: 'main',
       createdAt: '2025-01-01T00:00:00Z',
+      headRef: 'feat/add-thing',
       htmlUrl: 'https://github.com/owner/repo/pull/1',
       mergedAt: null,
       number: 1,
@@ -67,7 +71,9 @@ describe('GitHubService', () => {
 
   test('getPullListItem returns mapped DTO from single PR endpoint', async () => {
     const mockPull = {
+      base: { ref: 'develop' },
       created_at: '2025-01-01T00:00:00Z',
+      head: { ref: 'fix/thing' },
       html_url: 'https://github.com/owner/repo/pull/2',
       merged_at: null,
       number: 2,
@@ -90,7 +96,9 @@ describe('GitHubService', () => {
 
     expect(result).toEqual({
       author: 'dev',
+      baseRef: 'develop',
       createdAt: '2025-01-01T00:00:00Z',
+      headRef: 'fix/thing',
       htmlUrl: 'https://github.com/owner/repo/pull/2',
       mergedAt: null,
       number: 2,

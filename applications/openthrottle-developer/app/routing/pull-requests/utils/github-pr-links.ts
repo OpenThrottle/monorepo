@@ -9,6 +9,17 @@ export const githubPullChecksUrl = (
 ): string => `https://github.com/${owner}/${repo}/pull/${number}/checks`;
 
 /**
+ * @description Compare two refs (base...head) for merge-preview and diff debugging.
+ */
+export const githubPullCompareUrl = (
+  owner: string,
+  repo: string,
+  baseRef: string,
+  headRef: string,
+): string =>
+  `https://github.com/${owner}/${repo}/compare/${encodeURIComponent(baseRef)}...${encodeURIComponent(headRef)}`;
+
+/**
  * @description Commits on the PR; each row links to per-commit check status in the GitHub UI.
  */
 export const githubPullCommitsUrl = (
@@ -31,6 +42,18 @@ export const githubPullFilesUrl = (
 
 export const githubRepoActionsUrl = (owner: string, repo: string): string =>
   `https://github.com/${owner}/${repo}/actions`;
+
+/**
+ * @description Actions runs filtered to a branch ref (same query syntax as the GitHub UI).
+ */
+export const githubRepoActionsForBranchUrl = (
+  owner: string,
+  repo: string,
+  branchRef: string,
+): string =>
+  `https://github.com/${owner}/${repo}/actions?query=${encodeURIComponent(
+    `branch:${branchRef}`,
+  )}`;
 
 /**
  * @description Workflow runs filtered to pull_request events (matches Actions UI search).

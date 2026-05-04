@@ -115,7 +115,11 @@ type ReviewCycleTimeObject {
 
 type PullListItemObject {
   author: String!
+  """Merge target branch ref when GitHub returns base.ref."""
+  baseRef: String
   createdAt: String!
+  """PR branch ref when GitHub returns head.ref."""
+  headRef: String
   htmlUrl: String!
   mergedAt: String
   number: Int!
@@ -1356,17 +1360,6 @@ input GetGeneratorInput {
   name: String!
 }
 
-input GetPullInput {
-  """Pull request number"""
-  number: Int!
-
-  """Repository owner (e.g. GitHub username or org)"""
-  owner: String!
-
-  """Repository name"""
-  repo: String!
-}
-
 input ListPullsInput {
   """Filter by base branch"""
   base: String
@@ -1382,6 +1375,17 @@ input ListPullsInput {
 
   """Filter by state: open, closed, or all"""
   state: String
+}
+
+input GetPullInput {
+  """Pull request number"""
+  number: Int!
+
+  """Repository owner (e.g. GitHub username or org)"""
+  owner: String!
+
+  """Repository name"""
+  repo: String!
 }
 
 input GitHubRepoInput {

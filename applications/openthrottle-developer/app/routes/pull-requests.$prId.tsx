@@ -16,8 +16,10 @@ import { SITE_TITLE } from '~/global/config/settings';
 import {
   githubPullChecksUrl,
   githubPullCommitsUrl,
+  githubPullCompareUrl,
   githubPullConversationUrl,
   githubPullFilesUrl,
+  githubRepoActionsForBranchUrl,
   githubRepoActionsPullRequestRunsUrl,
   githubRepoActionsUrl,
   githubRepoWorkflowsDirUrl,
@@ -25,7 +27,7 @@ import {
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => 'Details',
+  breadcrumb: (_match) => `#${_match.params.prId}`,
   links: (_match) => [{ children: 'Pull requests', to: '/pull-requests' }],
 };
 
@@ -77,16 +79,6 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <nav className="text-muted-foreground mb-4 text-sm">
-        <Link className="hover:text-foreground" to="/pull-requests">
-          Pull requests
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">
-          {pull ? `#${pull.number}` : '…'}
-        </span>
-      </nav>
-
       {!pull ? (
         <>
           <OpenThrottleEmptyState
@@ -136,6 +128,18 @@ export default function Component(
                 <> · Merged {formatDate(pull.mergedAt, 'MM/dd/yyyy')}</>
               ) : null}
             </p>
+            {pull.baseRef !== null || pull.headRef !== null ? (
+              <p className="text-muted-foreground mt-2 font-mono text-sm">
+                Branches:{' '}
+                <span className="text-foreground">
+                  {pull.baseRef !== null ? pull.baseRef : '—'}
+                </span>{' '}
+                ←{' '}
+                <span className="text-foreground">
+                  {pull.headRef !== null ? pull.headRef : '—'}
+                </span>
+              </p>
+            ) : null}
           </div>
 
           <Card className="p-4 lg:p-6">
@@ -144,7 +148,8 @@ export default function Component(
             </h2>
             <p className="text-muted-foreground mb-4 text-sm">
               Check runs are not mirrored in this portal; deep-link into GitHub
-              for failing jobs, required checks, and workflow definitions.
+              for failing jobs, required checks, per-branch Actions runs, and
+              workflow definitions.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild={true} size="sm" variant="default">
@@ -165,6 +170,37 @@ export default function Component(
                   Commits (per-commit status)
                 </a>
               </Button>
+              {pull.baseRef !== null && pull.headRef !== null ? (
+                <Button asChild={true} size="sm" variant="outline">
+                  <a
+                    href={githubPullCompareUrl(
+                      owner,
+                      repo,
+                      pull.baseRef,
+                      pull.headRef,
+                    )}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Compare base…head
+                  </a>
+                </Button>
+              ) : null}
+              {pull.headRef !== null ? (
+                <Button asChild={true} size="sm" variant="outline">
+                  <a
+                    href={githubRepoActionsForBranchUrl(
+                      owner,
+                      repo,
+                      pull.headRef,
+                    )}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Actions (this branch)
+                  </a>
+                </Button>
+              ) : null}
               <Button asChild={true} size="sm" variant="outline">
                 <a
                   href={githubPullConversationUrl(owner, repo, pull.number)}
@@ -234,10 +270,13 @@ export default function Component(
               <li>
                 Use{' '}
                 <span className="text-foreground font-medium">
+                  Actions (this branch)
+                </span>{' '}
+                for runs scoped to the PR head ref, or{' '}
+                <span className="text-foreground font-medium">
                   Actions (PR runs)
                 </span>{' '}
-                when you need logs from workflow jobs triggered by pull
-                requests.
+                for all pull_request-triggered workflows.
               </li>
               <li>
                 Inspect YAML under{' '}
