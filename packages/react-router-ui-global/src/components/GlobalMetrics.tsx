@@ -32,11 +32,13 @@ import {
 } from '../utils/storage';
 import {
   GLOBAL_METRICS_CHART_CONFIG,
+  GLOBAL_METRICS_CHART_LINE_KEYS,
   GLOBAL_METRICS_POLL_INTERVAL_DEFAULT,
   GLOBAL_METRICS_POLL_INTERVAL_PRESETS,
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
+import type { GlobalMetricsChartLineKey } from '../config';
 import { formatCpuMs, formatMb } from '../utils/utils.global';
 import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
 
@@ -47,6 +49,10 @@ export interface GlobalMetricsProps {
    */
   readonly diagnosticsHref?: string;
   readonly pollIntervalMs?: number;
+  /**
+   * When true, show a collapsed “Sampling & endpoint” block with poll interval, sample count, and GraphQL URL (for support / debugging).
+   */
+  readonly showSamplingDetails?: boolean;
 }
 
 export const GlobalMetrics = (props: GlobalMetricsProps) => {
@@ -54,6 +60,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     className,
     diagnosticsHref = '/settings/debug',
     pollIntervalMs: propPollIntervalMs,
+    showSamplingDetails = true,
   } = props;
 
   // Hooks
@@ -142,6 +149,26 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     return [];
   }, [loading, metricsHistory, serverMetrics]);
 
+  const metricsEndpointSummary = React.useMemo((): string => {
+    try {
+      const parsed = new URL(url);
+
+      return `${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return url;
+    }
+  }, [url]);
+
+  const pollIntervalLabel = React.useMemo((): string => {
+    const preset = GLOBAL_METRICS_POLL_INTERVAL_PRESETS.find(
+      (p) => p.valueMs === intervalMs,
+    );
+
+    if (preset) return preset.label;
+
+    return `${intervalMs} ms`;
+  }, [intervalMs]);
+
   const showStatCards = !loading && error == null && serverMetrics != null;
   const showMetricsChart = error == null && chartLineData.length > 0;
   const showGlobalLoadingBanner = loading && metricsHistory.length === 0;
@@ -203,15 +230,47 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           GraphQL endpoint (<code className="text-[10px]">serverMetrics</code>)
           from your browser; they reflect server process memory and CPU, not
           this tab. The strip is hidden on auth, profile, settings, prompts, and
-          create routes.{' '}
+          create routes. Hover or focus the (i) control next to{' '}
+          <strong className="text-foreground/90">Server metrics</strong> for
+          full definitions.{' '}
           <a
             className="font-medium text-foreground underline underline-offset-2"
             href={diagnosticsHref}
           >
-            GraphQL and connectivity checks
+            Settings: GraphQL health & env
           </a>
           .
         </p>
+
+        {showSamplingDetails ? (
+          <details
+            className="group rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground max-w-3xl"
+            data-testid="GlobalMetrics-debug-details"
+          >
+            <summary className="cursor-pointer select-none font-medium text-foreground/90 outline-none marker:text-muted-foreground">
+              Sampling & endpoint details
+            </summary>
+            <dl className="mt-3 grid gap-2 border-t border-border/50 pt-3 font-mono text-[11px] leading-relaxed sm:grid-cols-[auto_1fr] sm:gap-x-4">
+              <dt className="text-muted-foreground">Poll</dt>
+              <dd className="text-foreground/90">
+                {pollIntervalLabel}
+                {intervalMs <= 0
+                  ? ' — only the initial fetch runs; use a timed interval to fill the chart.'
+                  : null}
+              </dd>
+              <dt className="text-muted-foreground">Chart samples</dt>
+              <dd className="text-foreground/90">{chartLineData.length}</dd>
+              <dt className="text-muted-foreground">GraphQL URL</dt>
+              <dd className="break-all text-foreground/90">
+                {metricsEndpointSummary}
+              </dd>
+            </dl>
+            <p className="mt-3 border-t border-border/50 pt-3 text-[11px] leading-relaxed">
+              Chart lines: RSS and heap are megabytes; CPU user is milliseconds
+              (same units as the cards). System CPU is shown on the card only.
+            </p>
+          </details>
+        ) : null}
 
         {showGlobalLoadingBanner && (
           <p data-testid="GlobalMetrics-loading">Loading…</p>
@@ -256,7 +315,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           data-testid="GlobalMetrics-chart-card"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-4">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Metrics over time
             </h3>
             {loading && metricsHistory.length > 0 ? (
@@ -267,6 +326,30 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 Loading latest metrics…
               </p>
             ) : null}
+          </div>
+
+          <div
+            aria-label="Chart series"
+            className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground"
+            data-testid="GlobalMetrics-chart-legend"
+          >
+            {GLOBAL_METRICS_CHART_LINE_KEYS.map(
+              (key: GlobalMetricsChartLineKey) => {
+                const entry = GLOBAL_METRICS_CHART_CONFIG[key];
+                if (!entry?.label || !entry.color) return null;
+
+                return (
+                  <span className="inline-flex items-center gap-1.5" key={key}>
+                    <span
+                      aria-hidden={true}
+                      className="inline-block h-2 w-4 shrink-0 rounded-sm"
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span>{entry.label}</span>
+                  </span>
+                );
+              },
+            )}
           </div>
 
           <ChartContainer

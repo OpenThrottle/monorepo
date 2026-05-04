@@ -33,3 +33,13 @@ export const GLOBAL_METRICS_CHART_CONFIG: ChartConfig = {
     label: 'RSS (MB)',
   },
 };
+
+/** Series drawn in the chart and listed in the legend (order matters). */
+export const GLOBAL_METRICS_CHART_LINE_KEYS = [
+  'rssMb',
+  'heapUsedMb',
+  'cpuUserMs',
+] as const;
+
+export type GlobalMetricsChartLineKey =
+  (typeof GLOBAL_METRICS_CHART_LINE_KEYS)[number];

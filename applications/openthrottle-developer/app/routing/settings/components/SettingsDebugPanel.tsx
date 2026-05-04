@@ -343,7 +343,7 @@ function SettingsGraphQLHealthCard({
   revalidateState,
 }: SettingsGraphQLHealthCardProps): React.ReactElement {
   return (
-    <Card>
+    <Card id="graphql-endpoint-health">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
         <CardTitle className="text-base">GraphQL endpoint health</CardTitle>
         <Button
@@ -362,7 +362,10 @@ function SettingsGraphQLHealthCard({
             <p className="text-muted-foreground">
               <span className="font-medium text-foreground">getRootHealth</span>{' '}
               succeeded in{' '}
-              <code className="text-xs">{graphQL.latencyMs} ms</code>.
+              <code className="bg-accent-foreground px-1.5 py-0.5 rounded-lg text-xs">
+                {graphQL.latencyMs} ms
+              </code>
+              .
             </p>
             <ul className="list-inside list-disc space-y-1 font-mono text-xs text-muted-foreground">
               <li>api: {graphQL.serverHealth.api}</li>

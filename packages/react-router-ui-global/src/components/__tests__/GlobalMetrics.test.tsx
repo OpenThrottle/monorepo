@@ -160,6 +160,38 @@ describe('GlobalMetrics Component', () => {
     ).toBeInTheDocument();
   });
 
+  test('should show sampling details, chart legend, and diagnostics link', () => {
+    cleanup();
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalMetrics diagnosticsHref="/settings/debug#graphql-endpoint-health" />
+      </GlobalProviders>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    expect(
+      screen.getByTestId('GlobalMetrics-debug-details'),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
+      'RSS (MB)',
+    );
+    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
+      'Heap used (MB)',
+    );
+    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
+      'CPU user (ms)',
+    );
+
+    const settingsLink = screen.getByRole('link', {
+      name: /settings: graphql health & env/i,
+    });
+    expect(settingsLink).toHaveAttribute(
+      'href',
+      '/settings/debug#graphql-endpoint-health',
+    );
+  });
+
   test('should expose metrics help trigger with accessible name', () => {
     const trigger = component.getByTestId('GlobalMetrics-info-trigger');
     expect(trigger).toHaveAttribute(

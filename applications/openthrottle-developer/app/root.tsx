@@ -419,7 +419,7 @@ export default function App(): React.ReactElement {
           {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
           <Outlet />
           {!isMetricsHidden ? (
-            <GlobalMetrics diagnosticsHref="/settings/debug" />
+            <GlobalMetrics diagnosticsHref="/settings/debug#graphql-endpoint-health" />
           ) : null}
 
           <OpenThrottleCommander
