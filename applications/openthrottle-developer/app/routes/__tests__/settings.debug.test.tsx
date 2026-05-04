@@ -27,10 +27,19 @@ describe('routes/settings.debug.tsx', () => {
       },
     ]);
 
+    expect(
+      screen.getByText(/Client-side diagnostics for this shell/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Feature flags/i)).toBeInTheDocument();
     expect(screen.getByText(/Sanitized env snapshot/i)).toBeInTheDocument();
     expect(
+      screen.getByText(/React Router \/ Vite devtools/i),
+    ).toBeInTheDocument();
+    expect(
       screen.getByText(/Local dev: ports, hosts & API URLs/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/localStorage & sessionStorage/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/GraphQL endpoint health/i)).toBeInTheDocument();
   });

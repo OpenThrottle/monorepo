@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import {
   Button,
   Card,
@@ -9,6 +8,8 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { useRevalidator } from 'react-router';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { BugIcon } from 'lucide-react';
 import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-env';
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
@@ -102,10 +103,19 @@ export function SettingsDebugPanel({
 
   return (
     <div className="space-y-6">
-      <OpenThrottleEmptyState
-        description="Diagnostics for this app: public env shape, API health, and browser storage. Secrets in env are masked; do not paste raw .env in tickets."
+      <GlobalHeading
+        className="mb-2"
+        heading="h3"
+        icon={BugIcon}
         title="Debug"
       />
+      <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+        Client-side diagnostics for this shell: public{' '}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">window.env</code>{' '}
+        shape, GraphQL health, and browser storage previews. Values here are
+        masked where possible—never paste raw{' '}
+        <code className="text-xs">.env</code> into support tickets.
+      </p>
 
       <Card>
         <CardHeader>
