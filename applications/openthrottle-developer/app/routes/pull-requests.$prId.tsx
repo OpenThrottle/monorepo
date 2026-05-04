@@ -15,9 +15,12 @@ import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   githubPullChecksUrl,
+  githubPullCommitsUrl,
   githubPullConversationUrl,
   githubPullFilesUrl,
+  githubRepoActionsPullRequestRunsUrl,
   githubRepoActionsUrl,
+  githubRepoWorkflowsDirUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 
@@ -44,7 +47,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     { input: { number, owner, repo } },
   );
 
-  const listSearchParams = new URLSearchParams();
+  const listSearchParams = new URLSearchParams(url.searchParams);
   listSearchParams.set('owner', owner);
   listSearchParams.set('repo', repo);
   const listQuery = listSearchParams.toString();
@@ -140,9 +143,8 @@ export default function Component(
               Merge &amp; CI on GitHub
             </h2>
             <p className="text-muted-foreground mb-4 text-sm">
-              Status checks and workflows live on GitHub. Use Checks for
-              required CI and failing jobs; Actions lists workflow runs for this
-              repo.
+              Check runs are not mirrored in this portal; deep-link into GitHub
+              for failing jobs, required checks, and workflow definitions.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild={true} size="sm" variant="default">
@@ -151,7 +153,16 @@ export default function Component(
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Open checks (CI)
+                  Checks (required CI)
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubPullCommitsUrl(owner, repo, pull.number)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Commits (per-commit status)
                 </a>
               </Button>
               <Button asChild={true} size="sm" variant="outline">
@@ -174,11 +185,29 @@ export default function Component(
               </Button>
               <Button asChild={true} size="sm" variant="outline">
                 <a
+                  href={githubRepoActionsPullRequestRunsUrl(owner, repo)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Actions (PR runs)
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
                   href={githubRepoActionsUrl(owner, repo)}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Repo actions
+                  All repo actions
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubRepoWorkflowsDirUrl(owner, repo)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  .github/workflows
                 </a>
               </Button>
               <Button asChild={true} size="sm" variant="ghost">
@@ -191,6 +220,33 @@ export default function Component(
                 </a>
               </Button>
             </div>
+            <ol className="text-muted-foreground mt-6 list-decimal space-y-2 pl-5 text-sm">
+              <li>
+                Start on{' '}
+                <span className="text-foreground font-medium">Checks</span> for
+                the aggregated status and required rules.
+              </li>
+              <li>
+                If a single commit failed, use{' '}
+                <span className="text-foreground font-medium">Commits</span> to
+                open the check detail for that SHA.
+              </li>
+              <li>
+                Use{' '}
+                <span className="text-foreground font-medium">
+                  Actions (PR runs)
+                </span>{' '}
+                when you need logs from workflow jobs triggered by pull
+                requests.
+              </li>
+              <li>
+                Inspect YAML under{' '}
+                <span className="text-foreground font-medium">
+                  .github/workflows
+                </span>{' '}
+                when behavior does not match expectations.
+              </li>
+            </ol>
           </Card>
 
           <div className="mt-6 flex flex-wrap gap-2">

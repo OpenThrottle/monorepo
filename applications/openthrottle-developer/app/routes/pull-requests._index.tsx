@@ -49,12 +49,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   const baseTrimmed = url.searchParams.get('base')?.trim() ?? '';
   const authorParam = url.searchParams.get('author')?.trim() ?? '';
   const authorFilterLower = authorParam.toLowerCase();
+  const mergedParam = url.searchParams.get('merged');
+  const mergedFilter: boolean | undefined =
+    mergedParam === 'true' ? true : mergedParam === 'false' ? false : undefined;
 
   const input: ListPullsInput = {
     owner: ownerParam,
     repo: repoParam,
     state,
     ...(baseTrimmed !== '' ? { base: baseTrimmed } : {}),
+    ...(mergedFilter !== undefined ? { merged: mergedFilter } : {}),
   };
 
   const { pulls } = await executeGraphqlWithAuth(
@@ -82,11 +86,18 @@ export const loader = async (args: Route.LoaderArgs) => {
   if (authorParam !== '') {
     listSearchParams.set('author', authorParam);
   }
+  if (mergedFilter === true) {
+    listSearchParams.set('merged', 'true');
+  }
+  if (mergedFilter === false) {
+    listSearchParams.set('merged', 'false');
+  }
 
   return {
     filters: {
       author: authorParam,
       base: baseTrimmed,
+      merged: mergedFilter,
       owner: ownerParam,
       repo: repoParam,
       state,
@@ -108,12 +119,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <h1 className="text-xl my-4 text-highlight">Pull requests</h1>
       <p className="text-muted-foreground text-sm mb-6 max-w-2xl">
-        Filter by repository and author. Open{' '}
+        Filter by repository, author, and merge status when debugging CI or the
+        merge queue. Open{' '}
         <span className="font-medium text-foreground">Checks</span> on GitHub
-        for CI and required status — the portal links you there with the correct
-        owner, repo, and PR number.
+        for required status and failing jobs — each card links there with the
+        correct owner, repo, and PR number.
       </p>
 
       <Form
@@ -174,6 +185,25 @@ export default function Component(
               type="text"
             />
           </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="pr-filter-merged">Merged (optional)</Label>
+            <select
+              className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              defaultValue={
+                filters.merged === true
+                  ? 'true'
+                  : filters.merged === false
+                    ? 'false'
+                    : ''
+              }
+              id="pr-filter-merged"
+              name="merged"
+            >
+              <option value="">Any</option>
+              <option value="true">Merged only</option>
+              <option value="false">Not merged</option>
+            </select>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button size="sm" type="submit" variant="default">
@@ -190,7 +220,7 @@ export default function Component(
           <Card className="p-4 lg:p-8" key={pull.number}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold leading-snug">
+                <h2 className="text-md font-semibold leading-snug">
                   <Link
                     className="hover:underline"
                     to={
@@ -206,7 +236,7 @@ export default function Component(
                     #{pull.number}
                   </span>
                 </h2>
-                <p className="text-muted-foreground mt-2 text-sm">
+                <p className="text-muted-foreground mt-2 text-xs">
                   <span className="font-medium text-foreground">
                     {pull.author}
                   </span>
