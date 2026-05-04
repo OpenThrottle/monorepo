@@ -1,4 +1,7 @@
-import type { ClientErrorKind } from './client-error-diagnostics';
+import type {
+  ClientErrorKind,
+  JavascriptErrorSubtype,
+} from './client-error-diagnostics';
 import { isUsableRollbarClientToken } from './client-error-diagnostics';
 
 /** Rollbar instance reused for the lifetime of the browser tab. */
@@ -14,6 +17,7 @@ export const reportJavaScriptErrorToRollbar = async (
   error: Error,
   incidentReferenceId: string,
   kind: ClientErrorKind,
+  javascriptSubtype?: JavascriptErrorSubtype,
 ): Promise<void> => {
   if (typeof window === 'undefined') {
     return;
@@ -46,6 +50,7 @@ export const reportJavaScriptErrorToRollbar = async (
       custom: {
         incidentReferenceId,
         kind,
+        ...(javascriptSubtype != null ? { javascriptSubtype } : {}),
       },
     });
   } catch (reportError) {

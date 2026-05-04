@@ -1,10 +1,15 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
+  bucketRouteHttpStatus,
   classifyClientError,
   clientErrorKindLabel,
   createIncidentReferenceId,
+  inferJavascriptErrorSubtype,
   isClientStackToggleEligible,
   isUsableRollbarClientToken,
+  javascriptErrorBoundaryHint,
+  javascriptErrorBoundaryTitle,
+  routeHttpErrorSummary,
 } from '../client-error-diagnostics';
 
 describe('client-error-diagnostics', () => {
@@ -56,5 +61,36 @@ describe('client-error-diagnostics', () => {
   test('createIncidentReferenceId returns a non-empty id', () => {
     const id = createIncidentReferenceId();
     expect(id.length).toBeGreaterThan(4);
+  });
+
+  test('inferJavascriptErrorSubtype detects chunk load errors', () => {
+    const chunkErr = new Error('Loading chunk 7 failed');
+    chunkErr.name = 'ChunkLoadError';
+    expect(inferJavascriptErrorSubtype(chunkErr)).toBe('chunk_load');
+  });
+
+  test('inferJavascriptErrorSubtype detects abort errors', () => {
+    const abortErr = new Error('The operation was aborted');
+    abortErr.name = 'AbortError';
+    expect(inferJavascriptErrorSubtype(abortErr)).toBe('user_abort');
+  });
+
+  test('bucketRouteHttpStatus classifies status ranges', () => {
+    expect(bucketRouteHttpStatus(302)).toBe('redirect');
+    expect(bucketRouteHttpStatus(404)).toBe('client');
+    expect(bucketRouteHttpStatus(502)).toBe('server');
+  });
+
+  test('routeHttpErrorSummary maps common statuses', () => {
+    expect(routeHttpErrorSummary(500)).toMatch(/Server/);
+    expect(routeHttpErrorSummary(404)).toMatch(/Not found/);
+    expect(routeHttpErrorSummary(401)).toMatch(/Unauthorized/);
+  });
+
+  test('javascriptErrorBoundaryTitle and Hint stay aligned per subtype', () => {
+    expect(javascriptErrorBoundaryTitle('chunk_load')).toBeTruthy();
+    expect(javascriptErrorBoundaryHint('generic')).toContain(
+      'Something went wrong',
+    );
   });
 });

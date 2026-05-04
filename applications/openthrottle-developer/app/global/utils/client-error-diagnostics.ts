@@ -6,6 +6,22 @@ import { isRouteErrorResponse } from 'react-router';
 export type ClientErrorKind = 'http' | 'javascript' | 'unknown';
 
 /**
+ * @description Finer JavaScript error buckets for support triage and Rollbar custom tags.
+ */
+export type JavascriptErrorSubtype =
+  | 'chunk_load'
+  | 'user_abort'
+  | 'network'
+  | 'generic';
+
+const JAVASCRIPT_SUBTYPE = {
+  chunk_load: 'chunk_load',
+  generic: 'generic',
+  network: 'network',
+  user_abort: 'user_abort',
+} as const satisfies Record<string, JavascriptErrorSubtype>;
+
+/**
  * @description Maps thrown values to {@link ClientErrorKind} for titles and support payloads.
  */
 export const classifyClientError = (error: unknown): ClientErrorKind => {
@@ -16,6 +32,111 @@ export const classifyClientError = (error: unknown): ClientErrorKind => {
     return 'javascript';
   }
   return 'unknown';
+};
+
+/**
+ * @description Best-effort subtype for {@link Error} instances (chunk loads, aborts, fetch failures).
+ */
+export const inferJavascriptErrorSubtype = (
+  error: Error,
+): JavascriptErrorSubtype => {
+  const name = error.name;
+  const message = error.message;
+  if (
+    name === 'ChunkLoadError' ||
+    /chunk load failed|dynamically imported module|importing a module script failed|loading chunk/i.test(
+      message,
+    )
+  ) {
+    return JAVASCRIPT_SUBTYPE.chunk_load;
+  }
+  if (name === 'AbortError' || /\baborted\b/i.test(message)) {
+    return JAVASCRIPT_SUBTYPE.user_abort;
+  }
+  if (
+    (name === 'TypeError' || name === 'ReferenceError') &&
+    /failed to fetch|network error|load failed|fetch/i.test(message)
+  ) {
+    return JAVASCRIPT_SUBTYPE.network;
+  }
+  return JAVASCRIPT_SUBTYPE.generic;
+};
+
+/**
+ * @description Short heading for JavaScript errors in the boundary (subtype-aware).
+ */
+export const javascriptErrorBoundaryTitle = (
+  subtype: JavascriptErrorSubtype,
+): string => {
+  switch (subtype) {
+    case 'chunk_load':
+      return 'Stale build or missing chunk';
+    case 'user_abort':
+      return 'Request aborted';
+    case 'network':
+      return 'Network error';
+    case 'generic':
+      return 'Application error';
+  }
+};
+
+/**
+ * @description One-line explanation for support / users (subtype-aware).
+ */
+export const javascriptErrorBoundaryHint = (
+  subtype: JavascriptErrorSubtype,
+): string => {
+  switch (subtype) {
+    case 'chunk_load':
+      return 'Assets may be out of date after a deployment—try a hard refresh or clear cache.';
+    case 'user_abort':
+      return 'A navigation or request was cancelled before it finished.';
+    case 'network':
+      return 'The browser could not complete a network request; check connectivity and VPN.';
+    case 'generic':
+      return 'Something went wrong while rendering this screen.';
+  }
+};
+
+/**
+ * @description Groups HTTP route errors for copy payloads and Rollbar (when reported).
+ */
+export type HttpRouteErrorBucket = 'redirect' | 'client' | 'server';
+
+/**
+ * @description Classifies a route error response for labeling and telemetry.
+ */
+export const bucketRouteHttpStatus = (status: number): HttpRouteErrorBucket => {
+  if (status >= 300 && status < 400) {
+    return 'redirect';
+  }
+  if (status >= 500) {
+    return 'server';
+  }
+  return 'client';
+};
+
+/**
+ * @description User-visible summary for HTTP route errors (uses status when helpful).
+ */
+export const routeHttpErrorSummary = (status: number): string => {
+  const bucket = bucketRouteHttpStatus(status);
+  if (bucket === 'server') {
+    return 'Server error';
+  }
+  if (status === 404) {
+    return 'Not found';
+  }
+  if (status === 401 || status === 403) {
+    return 'Unauthorized or forbidden';
+  }
+  if (bucket === 'redirect') {
+    return 'HTTP redirect';
+  }
+  if (status >= 400) {
+    return 'Client or routing error';
+  }
+  return 'HTTP / route error';
 };
 
 /**
@@ -62,6 +183,7 @@ export const createIncidentReferenceId = (): string => {
 
 /**
  * @description Whether stack traces may be toggled in the UI (local/dev-like builds).
+ * Uses {@link window.env} from the root loader only so production builds cannot be overridden by bundler mode in tests.
  */
 export const isClientStackToggleEligible = (): boolean => {
   if (typeof window === 'undefined') {

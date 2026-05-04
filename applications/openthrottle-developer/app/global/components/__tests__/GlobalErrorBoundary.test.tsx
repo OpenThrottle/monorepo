@@ -18,4 +18,19 @@ describe('GlobalErrorBoundary Component', () => {
       screen.getByText(/Sorry we've encountered an unexpected problem/i),
     ).toBeInTheDocument();
   });
+
+  test('shows chunk-load title when a ChunkLoadError is thrown', () => {
+    const Boom = (): React.ReactElement => {
+      const err = new Error('Loading chunk 3 failed.');
+      err.name = 'ChunkLoadError';
+      throw err;
+    };
+    const RoutesStub = createRoutesStub([
+      { Component: Boom, ErrorBoundary: GlobalErrorBoundary, path: '/' },
+    ]);
+    render(<RoutesStub />);
+    expect(
+      screen.getByRole('heading', { name: 'Stale build or missing chunk' }),
+    ).toBeInTheDocument();
+  });
 });
