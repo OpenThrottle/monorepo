@@ -4,6 +4,8 @@ import {
   githubPullCommitsUrl,
   githubPullCompareUrl,
   githubRepoActionsForBranchUrl,
+  githubRepoActionsForPullRequestHeadRefUrl,
+  githubRepoActionsForPullRequestMergeRefUrl,
   githubRepoActionsPullRequestRunsUrl,
   githubRepoWorkflowsDirUrl,
 } from '../github-pr-links';
@@ -24,6 +26,12 @@ describe('github-pr-links', () => {
     );
     expect(githubRepoActionsPullRequestRunsUrl('acme', 'web')).toBe(
       'https://github.com/acme/web/actions?query=event%3Apull_request',
+    );
+    expect(githubRepoActionsForPullRequestHeadRefUrl('acme', 'web', 42)).toBe(
+      'https://github.com/acme/web/actions?query=branch%3Arefs%2Fpull%2F42%2Fhead',
+    );
+    expect(githubRepoActionsForPullRequestMergeRefUrl('acme', 'web', 42)).toBe(
+      'https://github.com/acme/web/actions?query=branch%3Arefs%2Fpull%2F42%2Fmerge',
     );
     expect(githubRepoWorkflowsDirUrl('acme', 'web')).toBe(
       'https://github.com/acme/web/tree/HEAD/.github/workflows',

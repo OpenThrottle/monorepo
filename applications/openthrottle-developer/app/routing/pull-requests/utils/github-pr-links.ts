@@ -65,6 +65,31 @@ export const githubRepoActionsPullRequestRunsUrl = (
   `https://github.com/${owner}/${repo}/actions?query=${encodeURIComponent('event:pull_request')}`;
 
 /**
+ * @description Actions runs filtered to the PR head ref (`refs/pull/N/head`). Use for workflows tied to the contributor branch.
+ */
+export const githubRepoActionsForPullRequestHeadRefUrl = (
+  owner: string,
+  repo: string,
+  pullNumber: number,
+): string =>
+  `https://github.com/${owner}/${repo}/actions?query=${encodeURIComponent(
+    `branch:refs/pull/${pullNumber}/head`,
+  )}`;
+
+/**
+ * @description Actions runs for the merge-test ref GitHub uses for PR checks (merge of base into head).
+ * Pairs with Checks tab when isolating merge-queue style failures.
+ */
+export const githubRepoActionsForPullRequestMergeRefUrl = (
+  owner: string,
+  repo: string,
+  pullNumber: number,
+): string =>
+  `https://github.com/${owner}/${repo}/actions?query=${encodeURIComponent(
+    `branch:refs/pull/${pullNumber}/merge`,
+  )}`;
+
+/**
  * @description Default branch .github/workflows (HEAD resolves like the GitHub tree UI).
  */
 export const githubRepoWorkflowsDirUrl = (

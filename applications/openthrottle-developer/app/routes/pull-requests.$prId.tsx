@@ -20,6 +20,8 @@ import {
   githubPullConversationUrl,
   githubPullFilesUrl,
   githubRepoActionsForBranchUrl,
+  githubRepoActionsForPullRequestHeadRefUrl,
+  githubRepoActionsForPullRequestMergeRefUrl,
   githubRepoActionsPullRequestRunsUrl,
   githubRepoActionsUrl,
   githubRepoWorkflowsDirUrl,
@@ -147,18 +149,22 @@ export default function Component(
               Merge &amp; CI on GitHub
             </h2>
             <p className="text-muted-foreground mb-4 text-sm">
-              Check runs are not mirrored in this portal; deep-link into GitHub
-              for failing jobs, required checks, per-branch Actions runs, and
-              workflow definitions.
+              CI conclusions are not mirrored here; use the links below to drill
+              into GitHub Checks (rollup + required rules), per-commit status,
+              Actions runs scoped to this PR or branch, and workflow sources.
             </p>
-            <div className="flex flex-wrap gap-2">
+
+            <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+              Checks and commit status
+            </h3>
+            <div className="mb-6 flex flex-wrap gap-2">
               <Button asChild={true} size="sm" variant="default">
                 <a
                   href={githubPullChecksUrl(owner, repo, pull.number)}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Checks (required CI)
+                  Checks tab (CI rollup)
                 </a>
               </Button>
               <Button asChild={true} size="sm" variant="outline">
@@ -167,9 +173,80 @@ export default function Component(
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Commits (per-commit status)
+                  Commits (per-SHA checks)
                 </a>
               </Button>
+            </div>
+
+            <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+              Workflow runs (Actions)
+            </h3>
+            <div className="mb-6 flex flex-wrap gap-2">
+              {pull.headRef !== null ? (
+                <Button asChild={true} size="sm" variant="outline">
+                  <a
+                    href={githubRepoActionsForBranchUrl(
+                      owner,
+                      repo,
+                      pull.headRef,
+                    )}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Actions (branch name)
+                  </a>
+                </Button>
+              ) : null}
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubRepoActionsForPullRequestHeadRefUrl(
+                    owner,
+                    repo,
+                    pull.number,
+                  )}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Actions (refs/pull/{pull.number}/head)
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubRepoActionsForPullRequestMergeRefUrl(
+                    owner,
+                    repo,
+                    pull.number,
+                  )}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Actions (refs/pull/{pull.number}/merge)
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubRepoActionsPullRequestRunsUrl(owner, repo)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Actions (event:pull_request)
+                </a>
+              </Button>
+              <Button asChild={true} size="sm" variant="outline">
+                <a
+                  href={githubRepoActionsUrl(owner, repo)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  All repo actions
+                </a>
+              </Button>
+            </div>
+
+            <h3 className="text-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+              Diff, conversation, and repo
+            </h3>
+            <div className="mb-6 flex flex-wrap gap-2">
               {pull.baseRef !== null && pull.headRef !== null ? (
                 <Button asChild={true} size="sm" variant="outline">
                   <a
@@ -183,21 +260,6 @@ export default function Component(
                     target="_blank"
                   >
                     Compare base…head
-                  </a>
-                </Button>
-              ) : null}
-              {pull.headRef !== null ? (
-                <Button asChild={true} size="sm" variant="outline">
-                  <a
-                    href={githubRepoActionsForBranchUrl(
-                      owner,
-                      repo,
-                      pull.headRef,
-                    )}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Actions (this branch)
                   </a>
                 </Button>
               ) : null}
@@ -221,24 +283,6 @@ export default function Component(
               </Button>
               <Button asChild={true} size="sm" variant="outline">
                 <a
-                  href={githubRepoActionsPullRequestRunsUrl(owner, repo)}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Actions (PR runs)
-                </a>
-              </Button>
-              <Button asChild={true} size="sm" variant="outline">
-                <a
-                  href={githubRepoActionsUrl(owner, repo)}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  All repo actions
-                </a>
-              </Button>
-              <Button asChild={true} size="sm" variant="outline">
-                <a
                   href={githubRepoWorkflowsDirUrl(owner, repo)}
                   rel="noopener noreferrer"
                   target="_blank"
@@ -256,34 +300,35 @@ export default function Component(
                 </a>
               </Button>
             </div>
-            <ol className="text-muted-foreground mt-6 list-decimal space-y-2 pl-5 text-sm">
+
+            <ol className="text-muted-foreground list-decimal space-y-2 pl-5 text-sm">
               <li>
-                Start on{' '}
-                <span className="text-foreground font-medium">Checks</span> for
-                the aggregated status and required rules.
+                Open <span className="text-foreground font-medium">Checks</span>{' '}
+                for required rules and the aggregated conclusion.
               </li>
               <li>
-                If a single commit failed, use{' '}
-                <span className="text-foreground font-medium">Commits</span> to
-                open the check detail for that SHA.
+                Use <span className="text-foreground font-medium">Commits</span>{' '}
+                when one SHA failed and you need that job log.
               </li>
               <li>
-                Use{' '}
+                Prefer{' '}
                 <span className="text-foreground font-medium">
-                  Actions (this branch)
+                  refs/pull/{pull.number}/merge
                 </span>{' '}
-                for runs scoped to the PR head ref, or{' '}
+                Actions when debugging merge-result CI; use{' '}
                 <span className="text-foreground font-medium">
-                  Actions (PR runs)
+                  refs/pull/{pull.number}/head
                 </span>{' '}
-                for all pull_request-triggered workflows.
+                or{' '}
+                <span className="text-foreground font-medium">branch name</span>{' '}
+                for contributor-branch workflows.
               </li>
               <li>
-                Inspect YAML under{' '}
+                Confirm YAML under{' '}
                 <span className="text-foreground font-medium">
                   .github/workflows
                 </span>{' '}
-                when behavior does not match expectations.
+                if triggers or paths look wrong.
               </li>
             </ol>
           </Card>

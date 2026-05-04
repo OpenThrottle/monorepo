@@ -53,6 +53,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   const baseTrimmed = url.searchParams.get('base')?.trim() ?? '';
   const authorParam = url.searchParams.get('author')?.trim() ?? '';
   const authorFilterLower = authorParam.toLowerCase();
+  const authorExact =
+    authorParam !== '' && url.searchParams.get('authorExact') === '1';
   const mergedParam = url.searchParams.get('merged');
   const mergedFilter: boolean | undefined =
     mergedParam === 'true' ? true : mergedParam === 'false' ? false : undefined;
@@ -74,9 +76,13 @@ export const loader = async (args: Route.LoaderArgs) => {
   const filteredPulls =
     authorFilterLower === ''
       ? pulls
-      : pulls.filter((item) =>
-          item.author.toLowerCase().includes(authorFilterLower),
-        );
+      : pulls.filter((item) => {
+          const login = item.author.toLowerCase();
+
+          return authorExact
+            ? login === authorFilterLower
+            : login.includes(authorFilterLower);
+        });
 
   const listSearchParams = new URLSearchParams();
   listSearchParams.set('owner', ownerParam);
@@ -90,6 +96,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   if (authorParam !== '') {
     listSearchParams.set('author', authorParam);
   }
+
+  if (authorExact && authorParam !== '') {
+    listSearchParams.set('authorExact', '1');
+  }
   if (mergedFilter === true) {
     listSearchParams.set('merged', 'true');
   }
@@ -100,6 +110,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     filters: {
       author: authorParam,
+      authorExact,
       base: baseTrimmed,
       merged: mergedFilter,
       owner: ownerParam,
@@ -123,15 +134,23 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <p className="text-muted-foreground text-sm mb-2 max-w-2xl">
+        <span className="text-foreground font-medium font-mono">
+          {filters.owner}/{filters.repo}
+        </span>
+        <span className="mx-2 text-border">·</span>
+        {pulls.length} PR{pulls.length === 1 ? '' : 's'} with current filters
+      </p>
       <p className="text-muted-foreground text-sm mb-6 max-w-2xl">
         Filter by <span className="font-medium text-foreground">owner</span>,{' '}
         <span className="font-medium text-foreground">repo</span>, and{' '}
         <span className="font-medium text-foreground">author</span> when
-        debugging CI or the merge queue. Each card deep-links to{' '}
-        <span className="font-medium text-foreground">Checks</span>,{' '}
-        <span className="font-medium text-foreground">Commits</span>, and{' '}
-        <span className="font-medium text-foreground">Actions</span> on GitHub
-        using the resolved PR number and branch refs when available.
+        debugging CI or the merge queue. Each card links to GitHub{' '}
+        <span className="font-medium text-foreground">Checks</span> (aggregated
+        status), <span className="font-medium text-foreground">Commits</span>{' '}
+        (per-SHA checks), and{' '}
+        <span className="font-medium text-foreground">Actions</span> (workflow
+        runs) using the PR number and branch refs when available.
       </p>
 
       <Form
@@ -182,15 +201,26 @@ export default function Component(
               type="text"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pr-filter-author">Author contains (optional)</Label>
+          <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
+            <Label htmlFor="pr-filter-author">Author (optional)</Label>
             <Input
               defaultValue={filters.author}
               id="pr-filter-author"
               name="author"
-              placeholder="login substring"
+              placeholder="GitHub login"
               type="text"
             />
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+              <input
+                className="border-input accent-primary h-4 w-4 rounded"
+                defaultChecked={filters.authorExact}
+                disabled={filters.author === ''}
+                name="authorExact"
+                type="checkbox"
+                value="1"
+              />
+              Exact login match (when author is set)
+            </label>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="pr-filter-merged">Merged (optional)</Label>
