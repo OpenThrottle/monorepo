@@ -1,19 +1,16 @@
 import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { WorkspaceEntityCrossLinks } from '../WorkspaceEntityCrossLinks';
 import { WORKSPACE_CORE_ENTITY_LINKS } from '~/routing/navigation/data/workspace-jump-links';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('WorkspaceEntityCrossLinks', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = () => <WorkspaceEntityCrossLinks />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderRoutesStub(<WorkspaceEntityCrossLinks />);
   });
 
   test('should render a link for each core entity', () => {
@@ -28,11 +25,9 @@ describe('WorkspaceEntityCrossLinks', () => {
 
   test('should apply custom aria-label when label prop is set', () => {
     cleanup();
-    const Component = () => (
-      <WorkspaceEntityCrossLinks label="Custom region label" />
+    const { getByRole } = renderRoutesStub(
+      <WorkspaceEntityCrossLinks label="Custom region label" />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByRole } = render(<RoutesStub />);
 
     expect(
       getByRole('region', { name: 'Custom region label' }),

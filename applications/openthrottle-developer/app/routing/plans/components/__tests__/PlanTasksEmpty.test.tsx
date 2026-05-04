@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanTasksEmpty } from '../PlanTasksEmpty';
 import type { PlanTasksEmptyProps } from '../PlanTasksEmpty';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('PlanTasksEmpty Component', () => {
   let component: RenderResult;
@@ -13,10 +12,7 @@ describe('PlanTasksEmpty Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanTasksEmpty {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderRoutesStub(<PlanTasksEmpty {...props} />);
   });
 
   test('should render', () => {

@@ -1,15 +1,12 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { GlobalErrorBoundary } from '../GlobalErrorBoundary';
+import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('GlobalErrorBoundary Component', () => {
   test('should render generic unknown-error message when no route error is present', () => {
-    const Component = () => <GlobalErrorBoundary />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    render(<RoutesStub />);
+    renderRoutesStub(<GlobalErrorBoundary />);
 
     expect(
       screen.getByRole('heading', { name: 'Unexpected error' }),
@@ -25,10 +22,9 @@ describe('GlobalErrorBoundary Component', () => {
       err.name = 'ChunkLoadError';
       throw err;
     };
-    const RoutesStub = createRoutesStub([
+    renderRouteHarness([
       { Component: Boom, ErrorBoundary: GlobalErrorBoundary, path: '/' },
     ]);
-    render(<RoutesStub />);
     expect(
       screen.getByRole('heading', { name: 'Stale build or missing chunk' }),
     ).toBeInTheDocument();

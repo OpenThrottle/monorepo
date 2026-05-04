@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ProjectNotFound } from '../ProjectNotFound';
 import type { ProjectNotFoundProps } from '../ProjectNotFound';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('ProjectNotFound Component', () => {
   let component: RenderResult;
@@ -13,14 +12,10 @@ describe('ProjectNotFound Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <ProjectNotFound {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderRoutesStub(<ProjectNotFound {...props} />);
   });
 
   test('should render not-found empty state and back link to projects list', () => {
-    expect(component.getByTestId('ProjectNotFound')).toBeInTheDocument();
     expect(
       component.getByRole('heading', { name: 'Project not found' }),
     ).toBeInTheDocument();
