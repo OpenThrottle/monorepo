@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import {
   Button,
@@ -8,19 +9,23 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
+import {
+  VITE_DEVTOOLS_DOC_HREF,
+  VITE_DEVTOOLS_DOC_PROFILING_HREF,
+} from '../utils/settings-docs-links';
 
 const URL_MATRIX_ROWS: readonly {
   readonly key: keyof OpenThrottleEnv;
   readonly label: string;
 }[] = [
-  { key: 'API_URL_INTERNAL', label: 'API (internal)' },
   { key: 'API_URL_EXTERNAL', label: 'API (external)' },
+  { key: 'API_URL_INTERNAL', label: 'API (internal)' },
   { key: 'APP_URL', label: 'APP_URL' },
-  { key: 'APP_URL_DEVELOPER', label: 'Developer portal' },
-  { key: 'APP_URL_SERVER', label: 'Server app' },
   { key: 'APP_URL_ADMIN', label: 'Admin' },
-  { key: 'APP_URL_EMAIL', label: 'Email' },
   { key: 'APP_URL_CMS', label: 'CMS' },
+  { key: 'APP_URL_DEVELOPER', label: 'Developer' },
+  { key: 'APP_URL_EMAIL', label: 'Email' },
+  { key: 'APP_URL_SERVER', label: 'Server' },
   { key: 'APP_URL_WEBSITE', label: 'Website' },
 ];
 
@@ -65,7 +70,7 @@ export function SettingsEnvironmentDiagnostics({
 
   return (
     <div className={className ? `space-y-4 ${className}` : 'space-y-4'}>
-      <Card>
+      <Card className="bg-transparent">
         <CardHeader>
           <CardTitle className="text-base" id={`${idPrefix}-build`}>
             Build & environment
@@ -74,11 +79,11 @@ export function SettingsEnvironmentDiagnostics({
         <CardContent>
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-muted-foreground">App</dt>
+              <dt className="text-muted-foreground">APP_NAME</dt>
               <dd className="font-mono text-xs break-all">{env.APP_NAME}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Version</dt>
+              <dt className="text-muted-foreground">APP_VERSION</dt>
               <dd className="font-mono text-xs break-all">{env.APP_VERSION}</dd>
             </div>
             <div>
@@ -89,11 +94,65 @@ export function SettingsEnvironmentDiagnostics({
               <dt className="text-muted-foreground">NODE_ENV</dt>
               <dd className="font-mono text-xs">{env.NODE_ENV}</dd>
             </div>
+            <div>
+              <dt className="text-muted-foreground">Vite mode</dt>
+              <dd className="font-mono text-xs">{import.meta.env.MODE}</dd>
+            </div>
           </dl>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-transparent">
+        <CardHeader>
+          <CardTitle className="text-base" id={`${idPrefix}-vite-profiling`}>
+            Local Vite profiling
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            For bundle overlap and duplicate deps in dev, the repo enables{' '}
+            <code className="text-xs">vite-bundle-analyzer</code> when{' '}
+            <code className="text-xs">NODE_ENV=development</code>. For slow{' '}
+            <span className="font-medium text-foreground">
+              production builds
+            </span>
+            , run{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              pnpm nx run openthrottle-developer:build -- --profile
+            </code>{' '}
+            and open the generated <code className="text-xs">.cpuprofile</code>{' '}
+            in Chrome Performance.
+          </p>
+          <p>
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Vite CLI build profiling (doc)
+            </a>
+            {' · '}
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={VITE_DEVTOOLS_DOC_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Full Vite &amp; devtools guide
+            </a>
+            {' · '}
+            <Link
+              className="text-primary underline-offset-4 hover:underline"
+              to="/settings/debug"
+            >
+              Settings → Debug
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-transparent">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base" id={`${idPrefix}-urls`}>
             App & API URL matrix

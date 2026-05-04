@@ -1,7 +1,10 @@
+import * as React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import type { SettingsDiagnosticsLoaderData } from '../../utils/settings-diagnostics-loader-data';
 import { SettingsEnvironmentDiagnostics } from '../SettingsEnvironmentDiagnostics';
 
 const baseEnv: OpenThrottleEnv = {
@@ -21,19 +24,29 @@ const baseEnv: OpenThrottleEnv = {
   ROLLBAR_TOKEN: 'rollbar-test-token',
 };
 
+function renderDiagnostics(
+  props: SettingsDiagnosticsLoaderData,
+): ReturnType<typeof render> {
+  const Component = (): React.ReactElement => (
+    <SettingsEnvironmentDiagnostics {...props} />
+  );
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+}
+
 describe('SettingsEnvironmentDiagnostics', () => {
-  it('renders build metadata and URL matrix', () => {
-    render(
-      <SettingsEnvironmentDiagnostics
-        env={baseEnv}
-        supportBundle={{ ROLLBAR_TOKEN: 'xxxx…xxxx (masked)' }}
-      />,
-    );
+  it('renders build metadata, Vite profiling card, and URL matrix', () => {
+    renderDiagnostics({
+      env: baseEnv,
+      supportBundle: { ROLLBAR_TOKEN: 'xxxx…xxxx (masked)' },
+    });
 
     expect(screen.getByText('openthrottle-developer')).toBeInTheDocument();
     expect(screen.getByText('test-version')).toBeInTheDocument();
+    expect(screen.getByText('Local Vite profiling')).toBeInTheDocument();
     expect(screen.getByText('http://api-int.test')).toBeInTheDocument();
     expect(screen.getByText('http://localhost:6022')).toBeInTheDocument();
+    expect(screen.getByText(import.meta.env.MODE)).toBeInTheDocument();
   });
 
   it('copies support bundle JSON to clipboard', async () => {
@@ -43,12 +56,10 @@ describe('SettingsEnvironmentDiagnostics', () => {
 
     const supportBundle = { APP_NAME: 'openthrottle-developer' };
 
-    render(
-      <SettingsEnvironmentDiagnostics
-        env={baseEnv}
-        supportBundle={supportBundle}
-      />,
-    );
+    renderDiagnostics({
+      env: baseEnv,
+      supportBundle,
+    });
 
     await user.click(
       screen.getByRole('button', { name: /copy support bundle/i }),
@@ -60,14 +71,21 @@ describe('SettingsEnvironmentDiagnostics', () => {
   });
 
   it('includes API and app URL keys in the matrix table', () => {
-    const { container } = render(
-      <SettingsEnvironmentDiagnostics env={baseEnv} supportBundle={{}} />,
-    );
+    const { container } = renderDiagnostics({
+      env: baseEnv,
+      supportBundle: {},
+    });
 
     const table = container.querySelector('table');
     expect(table).toBeTruthy();
     if (!table) return;
     expect(within(table).getByText('API_URL_INTERNAL')).toBeInTheDocument();
     expect(within(table).getByText('APP_URL_DEVELOPER')).toBeInTheDocument();
+  });
+
+  it('links to Settings → Debug for devtools context', () => {
+    renderDiagnostics({ env: baseEnv, supportBundle: {} });
+    const link = screen.getByRole('link', { name: /settings → debug/i });
+    expect(link).toHaveAttribute('href', '/settings/debug');
   });
 });

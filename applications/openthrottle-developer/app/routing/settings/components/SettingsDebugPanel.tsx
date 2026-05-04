@@ -11,13 +11,12 @@ import { useRevalidator } from 'react-router';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BugIcon } from 'lucide-react';
 import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-env';
+import {
+  LOCAL_SERVICES_PORTS_DOC_HREF,
+  VITE_DEVTOOLS_DOC_HREF,
+  VITE_DEVTOOLS_DOC_PROFILING_HREF,
+} from '~/routing/settings/utils/settings-docs-links';
 import type { ServerHealthObject } from '~/__generated__/graphql';
-
-const VITE_DEVTOOLS_DOC_HREF =
-  'https://github.com/OpenThrottle/OpenThrottle/blob/main/docs/monorepo/openthrottle-developer-vite-devtools.md';
-
-const LOCAL_SERVICES_PORTS_DOC_HREF =
-  'https://github.com/OpenThrottle/OpenThrottle/blob/main/docs/monorepo/local-services-and-ports.md';
 
 const STORAGE_PREVIEW_MAX = 140;
 
@@ -204,7 +203,9 @@ export function SettingsDebugPanel({
             <span className="font-medium text-foreground">When to open:</span>{' '}
             Use the bundle analyzer for chunk overlap, duplicate packages, or
             split issues. Use React Router DevTools when debugging routes,
-            loaders, and actions. Enable{' '}
+            loaders, and actions. For slow production builds, use Vite{' '}
+            <code className="text-xs">build --profile</code> (see profiling doc
+            below). Enable{' '}
             <code className="text-xs">REACT_ROUTER_DEV_TOOLS</code> only for
             those sessions; leave it off for a quieter console day to day.
           </p>
@@ -221,6 +222,15 @@ export function SettingsDebugPanel({
               target="_blank"
             >
               docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
+            </a>
+            {' · '}
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Vite CLI build profiling
             </a>
           </p>
           <p>

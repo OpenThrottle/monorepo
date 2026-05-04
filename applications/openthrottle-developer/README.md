@@ -28,7 +28,7 @@ pnpm nx run openthrottle-developer:dev
 
 ## Local Vite and devtools
 
-Opt-in and dev-only tooling (React Router DevTools, bundle analyzer, plugin order) and **troubleshooting** (ports, hosts, `API_URL_*` / internal vs external) are in **[docs/monorepo/openthrottle-developer-vite-devtools.md](../../docs/monorepo/openthrottle-developer-vite-devtools.md)**. **Settings → Debug** links there and to [local services and ports](./../../docs/monorepo/local-services-and-ports.md).
+Opt-in and dev-only tooling (React Router DevTools, bundle analyzer, plugin order), **production build profiling** (`pnpm nx run openthrottle-developer:build -- --profile`), and **troubleshooting** (ports, hosts, `API_URL_*` / internal vs external) are in **[docs/monorepo/openthrottle-developer-vite-devtools.md](../../docs/monorepo/openthrottle-developer-vite-devtools.md)**. **Settings → Debug**, **Settings → General**, and **Settings → Appearance** link there (including the profiling section); ports are covered in [local services and ports](./../../docs/monorepo/local-services-and-ports.md).
 
 ## Scripts
 

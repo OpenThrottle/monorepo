@@ -23,6 +23,21 @@ This document describes levers wired in `applications/openthrottle-developer/vit
 - **When to use:** Investigating bundle composition, duplicate dependencies, or chunk splits. Expect analyzer UI or output when running `pnpm nx run openthrottle-developer:dev` (behavior depends on the analyzer plugin defaults).
 - **When to skip:** If the overlay or extra work gets in the way, run a normal dev session without focusing on bundle stats; the plugin is dev-gated, not production.
 
+## Vite CLI build profiling
+
+Use this when **production builds are slow** or you need to see **where Rollup/Vite spends time** (transforms, plugins). This is separate from the dev-only bundle analyzer above.
+
+- **Command (from monorepo root):**  
+  `pnpm nx run openthrottle-developer:build -- --profile`  
+  Vite writes a Chrome-compatible CPU profile (typically `vite-profile-*.cpuprofile` under the app directory). Open it in Chrome DevTools → **Performance** → load profile.
+- **Alternative:** From `applications/openthrottle-developer`, run  
+  `pnpm exec vite build --profile`  
+  (same output; use whichever matches how you usually invoke builds).
+
+**When to enable:** Narrowing down slow plugins or expensive transforms during CI or local production builds. **When to skip:** Day-to-day iteration—prefer the dev bundle analyzer for dependency overlap unless the bottleneck is clearly build-time CPU.
+
+**Related:** Verbose Vite logging can help trace plugin order issues: prefix the command with `DEBUG=vite:*` (noisy; use only while debugging).
+
 ## Server / host notes
 
 - **Port:** `PORT` from env, else Vite falls back to **3000** in this config (`vite.config.ts`). The template in `.env.default` may use another port (e.g. **6020**); align with [local services and ports](./local-services-and-ports.md).
@@ -61,6 +76,7 @@ Use this when the dev server runs but navigation, loaders, or GraphQL calls fail
 - [Local services and ports](./local-services-and-ports.md) — ports, `developer.local`, API URLs.
 - [Run OpenThrottle locally (OSS)](../openthrottle/run-locally-oss.md) — full stack overview.
 
-## In-app entry point
+## In-app entry points
 
-**Settings → Debug** (`/settings/debug` in the developer app) links here for a short reminder and a path to this file in the monorepo clone.
+- **Settings → Debug** (`/settings/debug`) — bundle analyzer / React Router DevTools reminders and links to this doc.
+- **Settings → General** and **Settings → Appearance** — **Build & environment** plus **Local Vite profiling** card with the same doc links (including [Vite CLI build profiling](#vite-cli-build-profiling)) so contributors discover profiling without hunting the README.
