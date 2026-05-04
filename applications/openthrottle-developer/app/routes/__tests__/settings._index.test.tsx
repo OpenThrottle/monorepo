@@ -1,21 +1,23 @@
-import { describe, test } from 'vitest';
-// import { default as Route } from '../settings._index';
+import { describe, expect, test } from 'vitest';
+import { loader } from '../settings._index';
+import type { Route } from '@/app/routes/+types/settings._index';
 
 describe('routes/settings._index.tsx', () => {
-  // let component: RenderResult;
+  test('loader returns diagnostics env, support bundle, and URL matrix keys', async () => {
+    const args = {
+      context: undefined,
+      params: {},
+      request: new Request('http://localhost/settings'),
+    } as Route.LoaderArgs;
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+    const data = await loader(args);
 
-  test.skip('should render', () => {
-    // Deferred: route integration render test (openthrottle-developer test hardening plan).
+    expect(data.env.APP_NAME).toBeDefined();
+    expect(data.env.APP_VERSION).toBeDefined();
+    expect(data.env.APP_URL_DEVELOPER).toBeDefined();
+    expect(data.env.API_URL_INTERNAL).toBeDefined();
+    expect(data.supportBundle.generatedAt).toMatch(
+      /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/,
+    );
   });
 });
