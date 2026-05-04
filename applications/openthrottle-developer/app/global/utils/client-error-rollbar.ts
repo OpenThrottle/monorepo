@@ -1,5 +1,6 @@
 import type {
   ClientErrorKind,
+  HttpRouteErrorBucket,
   JavascriptErrorSubtype,
 } from './client-error-diagnostics';
 import { isUsableRollbarClientToken } from './client-error-diagnostics';
@@ -55,5 +56,77 @@ export const reportJavaScriptErrorToRollbar = async (
     });
   } catch (reportError) {
     console.warn('Rollbar report failed', reportError);
+  }
+};
+
+const summarizeRouteErrorData = (data: unknown): string => {
+  if (typeof data === 'string') {
+    return data.length > 2000 ? `${data.slice(0, 2000)}…` : data;
+  }
+  try {
+    const s = JSON.stringify(data);
+    return s.length > 2000 ? `${s.slice(0, 2000)}…` : s;
+  } catch {
+    return '[unserializable route error data]';
+  }
+};
+
+/**
+ * @description Reports loader/action HTTP 5xx route responses to Rollbar when a usable client token exists.
+ * Omits 4xx to limit noise from expected client failures.
+ */
+export const reportRouteHttpErrorToRollbar = async (params: {
+  readonly data: unknown;
+  readonly httpBucket: HttpRouteErrorBucket;
+  readonly incidentReferenceId: string;
+  readonly status: number;
+  readonly statusText: string;
+}): Promise<void> => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (params.status < 500) {
+    return;
+  }
+
+  const token = window.env?.ROLLBAR_TOKEN;
+  if (!isUsableRollbarClientToken(token)) {
+    return;
+  }
+
+  try {
+    const Rollbar = (await import('rollbar')).default;
+
+    if (rollbarSingleton == null) {
+      rollbarSingleton = new Rollbar({
+        accessToken: token,
+        captureUncaught: false,
+        captureUnhandledRejections: false,
+        payload: {
+          client: {
+            javascript: {
+              code_version: window.env?.APP_VERSION ?? undefined,
+            },
+          },
+        },
+      });
+    }
+
+    const routeErr = new Error(
+      `HTTP ${params.status} ${params.statusText}`.trim(),
+    );
+
+    rollbarSingleton.error(routeErr.message, routeErr, {
+      custom: {
+        dataPreview: summarizeRouteErrorData(params.data),
+        httpBucket: params.httpBucket,
+        incidentReferenceId: params.incidentReferenceId,
+        kind: 'http',
+        status: params.status,
+        statusText: params.statusText,
+      },
+    });
+  } catch (reportError) {
+    console.warn('Rollbar route report failed', reportError);
   }
 };

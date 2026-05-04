@@ -48,6 +48,7 @@ import {
   ServerHealthObject,
   UserObject,
 } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import type {
@@ -539,4 +540,4 @@ export const action = async (args: Route.ActionArgs) => {
 /**
  * @link https://reactrouter.com/how-to/error-boundary
  */
-// export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = GlobalErrorBoundary;

@@ -13,7 +13,10 @@ import {
   javascriptErrorBoundaryTitle,
   routeHttpErrorSummary,
 } from '~/global/utils/client-error-diagnostics';
-import { reportJavaScriptErrorToRollbar } from '~/global/utils/client-error-rollbar';
+import {
+  reportJavaScriptErrorToRollbar,
+  reportRouteHttpErrorToRollbar,
+} from '~/global/utils/client-error-rollbar';
 
 export interface GlobalErrorBoundaryProps {
   className?: string;
@@ -34,9 +37,10 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
 
   const [incidentReferenceId] = React.useState(createIncidentReferenceId);
   const stackToggleEligible = isClientStackToggleEligible();
-  const [showStack, setShowStack] = React.useState(stackToggleEligible);
+  const [showStack, setShowStack] = React.useState(false);
 
   const reportedRollbarKeyRef = React.useRef<string | null>(null);
+  const reportedHttpRollbarKeyRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     if (!isJsError) {
@@ -54,6 +58,24 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
       jsSubtype ?? undefined,
     );
   }, [error, incidentReferenceId, isJsError, jsSubtype, kind]);
+
+  React.useEffect(() => {
+    if (!isRouteErr || error.status < 500) {
+      return;
+    }
+    const key = `${incidentReferenceId}:${error.status}:${error.statusText}`;
+    if (reportedHttpRollbarKeyRef.current === key) {
+      return;
+    }
+    reportedHttpRollbarKeyRef.current = key;
+    void reportRouteHttpErrorToRollbar({
+      data: error.data,
+      httpBucket: bucketRouteHttpStatus(error.status),
+      incidentReferenceId,
+      status: error.status,
+      statusText: error.statusText,
+    });
+  }, [error, incidentReferenceId, isRouteErr]);
 
   const onClickRefresh = () => {
     window.location.reload();

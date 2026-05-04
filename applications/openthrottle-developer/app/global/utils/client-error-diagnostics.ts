@@ -156,14 +156,38 @@ export const clientErrorKindLabel = (kind: ClientErrorKind): string => {
 /**
  * @description Non-empty Rollbar post_client_item tokens should be reported; placeholders stay local-only.
  */
+const ROLLBAR_TOKEN_PLACEHOLDER_FRAGMENTS = [
+  'changeme',
+  'placeholder',
+  'replace_me',
+  'rollbar-test-token',
+  'test-token',
+  'your-token',
+  'your_rollbar',
+] as const;
+
+/**
+ * @description True when the token looks like a real Rollbar post_client_item token, not a dummy env value.
+ */
 export const isUsableRollbarClientToken = (
   token: string | undefined,
 ): token is string => {
   if (token == null || token.length < 8) {
     return false;
   }
-  if (/^x+$/i.test(token.trim())) {
+  const trimmed = token.trim();
+  if (trimmed.length < 8) {
     return false;
+  }
+  // Single repeated character (common .env placeholders: xxxxx…)
+  if (/^(.)\1+$/.test(trimmed)) {
+    return false;
+  }
+  const lower = trimmed.toLowerCase();
+  for (const fragment of ROLLBAR_TOKEN_PLACEHOLDER_FRAGMENTS) {
+    if (lower.includes(fragment)) {
+      return false;
+    }
   }
   return true;
 };

@@ -43,6 +43,11 @@ describe('client-error-diagnostics', () => {
     expect(isUsableRollbarClientToken('')).toBe(false);
     expect(isUsableRollbarClientToken('short')).toBe(false);
     expect(isUsableRollbarClientToken('xxxxxxxxxxxxxxxx')).toBe(false);
+    expect(isUsableRollbarClientToken('aaaaaaaaaaaaaaaa')).toBe(false);
+    expect(isUsableRollbarClientToken('rollbar-test-token-12345678')).toBe(
+      false,
+    );
+    expect(isUsableRollbarClientToken('my-placeholder-token-here')).toBe(false);
     expect(isUsableRollbarClientToken('abcd1234efgh5678')).toBe(true);
   });
 
