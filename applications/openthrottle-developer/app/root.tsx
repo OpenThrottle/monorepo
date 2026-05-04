@@ -92,9 +92,6 @@ async function callLoginMutation(
     input: { email, password },
   });
 
-  const accessToken = data?.login?.accessToken ?? null;
-  console.log('💰 💰 accessToken 💰 💰', accessToken);
-
   return data?.login?.accessToken ?? null;
 }
 
@@ -202,6 +199,9 @@ export const meta = (_args: Route.MetaArgs) => {
 
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
+ * @description Document shell only: {@link Meta}, {@link Links}, {@link Scripts}, env bootstrap,
+ * body wrapper for providers that must wrap the full document, {@link Toaster}, and {@link ScrollRestoration}.
+ * App-level chrome lives in the default {@link App} export (canonical split for openthrottle-cms / openthrottle-admin).
  */
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
@@ -284,6 +284,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * @description App-level composition: providers, route chrome ({@link GlobalLayout}, header/footer toggles),
+ * {@link Outlet}, and overlays ({@link OpenThrottleCommander}). Nested routes render through {@link Outlet}, not duplicated shell markup.
+ */
 export default function App(): React.ReactElement {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
@@ -301,7 +305,12 @@ export default function App(): React.ReactElement {
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
   const isHeaderHidden = isAuthRoute || isPromptsRoute;
-  const isMetricsHidden = isAuthRoute || isProfileRoute ||isPromptsRoute || isSettingsRoute || isCreateRoute; // prettier-ignore
+  const isMetricsHidden =
+    isAuthRoute ||
+    isProfileRoute ||
+    isPromptsRoute ||
+    isSettingsRoute ||
+    isCreateRoute;
 
   // Handlers
   const handleSearch = React.useCallback(
