@@ -112,6 +112,8 @@ export const meta = (_args: Route.MetaArgs) => {
 
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
+ * @description Document shell only: html/head/body, Links/Meta/Scripts, env bootstrap,
+ * and a thin flex region for {@link App} (matches openthrottle-developer root Layout).
  */
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
@@ -130,21 +132,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const _valueCSP = isProduction
     ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
     : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
-
-  // Handlers
-  const groups: CommanderGroup[] = [];
-  const commanderSearchFetcher = useFetcher();
-
-  // Handlers
-  const handleCommanderEmptyStateSearch = React.useCallback(
-    (query: string) => {
-      commanderSearchFetcher.submit(
-        { intent: 'commander-search', q: query.trim() },
-        { method: 'post' },
-      );
-    },
-    [commanderSearchFetcher],
-  );
 
   // Markup
 
@@ -175,14 +162,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="min-h-screen flex flex-col relative">
-        {/* <GlobalHeader /> */}
-        <main className="flex flex-1 flex-col h-full">{children}</main>
-        {/* <GlobalFooter /> */}
+        <div className="flex flex-1 flex-col">{children}</div>
 
-        <OpenThrottleCommander
-          groups={groups}
-          onEmptyStateSearch={handleCommanderEmptyStateSearch}
-        />
         <Toaster />
 
         <ScrollRestoration />
@@ -201,13 +182,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App(): React.ReactElement {
   const isAdminRoute = useIsAdminRoute();
+  const commanderSearchFetcher = useFetcher();
 
-  return isAdminRoute ? (
-    <AdminLayout>
-      <Outlet />
-    </AdminLayout>
-  ) : (
-    <Outlet />
+  const groups: CommanderGroup[] = [];
+
+  const handleCommanderEmptyStateSearch = React.useCallback(
+    (query: string) => {
+      commanderSearchFetcher.submit(
+        { intent: 'commander-search', q: query.trim() },
+        { method: 'post' },
+      );
+    },
+    [commanderSearchFetcher],
+  );
+
+  return (
+    <>
+      {isAdminRoute ? (
+        <AdminLayout>
+          <Outlet />
+        </AdminLayout>
+      ) : (
+        <Outlet />
+      )}
+
+      <OpenThrottleCommander
+        groups={groups}
+        onEmptyStateSearch={handleCommanderEmptyStateSearch}
+      />
+    </>
   );
 }
 
