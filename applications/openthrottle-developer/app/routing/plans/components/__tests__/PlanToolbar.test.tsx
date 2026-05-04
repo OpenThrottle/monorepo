@@ -1,13 +1,18 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanToolbar } from '../PlanToolbar';
 import type { PlanToolbarProps } from '../PlanToolbar';
 
 const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult => {
-  const Component = () => <PlanToolbar {...toolbarProps} />;
+  const Component = () => (
+    <TooltipProvider>
+      <PlanToolbar {...toolbarProps} />
+    </TooltipProvider>
+  );
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };
@@ -82,5 +87,16 @@ describe('PlanToolbar Component', () => {
     expect(
       r.queryByRole('button', { name: /Kill plan run/i }),
     ).not.toBeInTheDocument();
+  });
+
+  test('disables enqueue when workflowRunBlocked is true', () => {
+    const r = renderToolbar({
+      planId: 'p1',
+      planStatus: 'PENDING',
+      planTitle: 'My Plan',
+      workflowRunBlocked: true,
+      workflowRunBlockedReason: 'Fix CLI options',
+    });
+    expect(r.getByRole('button', { name: /^Add to Queue$/i })).toBeDisabled();
   });
 });

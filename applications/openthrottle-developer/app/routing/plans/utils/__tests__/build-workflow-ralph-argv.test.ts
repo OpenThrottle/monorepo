@@ -11,6 +11,7 @@ import {
   isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
   planRunJobDetailPath,
+  validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
 import { RalphNestedDebugCli } from '~/__generated__/graphql';
@@ -380,6 +381,76 @@ describe('buildWorkflowRalphDebugBundleText', () => {
     expect(parsed.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
     expect(parsed.canonicalCommand).toContain('pnpm exec workflow-ralph');
     expect(parsed.queue.jobListPath).toBe('/queues/Plans');
+  });
+});
+
+describe('validateWorkflowRalphRunOptionsState', () => {
+  test('passes for valid plan-centric defaults', () => {
+    expect(
+      validateWorkflowRalphRunOptionsState(basePlanInput(), '', {
+        requireCliTargetIds: true,
+      }),
+    ).toEqual({ ok: true });
+  });
+
+  test('fails when plan id is not a v4 uuid', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ planId: 'plan-1' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'plan_uuid')).toBe(true);
+  });
+
+  test('without strict target ids, allows empty plan field (sandbox)', () => {
+    expect(
+      validateWorkflowRalphRunOptionsState(basePlanInput({ planId: '' }), '', {
+        requireCliTargetIds: false,
+      }),
+    ).toEqual({ ok: true });
+  });
+
+  test('fails when iteration-timeout text is non-empty but invalid', () => {
+    const result = validateWorkflowRalphRunOptionsState(basePlanInput(), '0', {
+      requireCliTargetIds: true,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'iteration_timeout')).toBe(
+      true,
+    );
+  });
+
+  test('fails when iterations are below CLI minimum', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ iterations: 0 }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'iterations')).toBe(true);
+  });
+
+  test('fails in task mode when task id is empty', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      baseTaskInput({ taskId: '' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'task_required')).toBe(true);
   });
 });
 

@@ -27,7 +27,7 @@ describe('PlanWorkflowConfigExecution Component', () => {
       name: 'Layer 2 — Execution backend',
     });
     expect(group).toBeDisabled();
-    expect(group).toHaveTextContent('Which runner executes each iteration');
+    expect(group).toHaveTextContent('workflow-ralph --backend');
     expect(
       component.getByRole('combobox', { name: 'Execution backend (stub)' }),
     ).toBeDisabled();

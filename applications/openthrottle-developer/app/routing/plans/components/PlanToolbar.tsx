@@ -40,6 +40,14 @@ export interface PlanToolbarProps {
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
    */
   readonly ralphTuningJson?: string;
+  /**
+   * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
+   */
+  readonly workflowRunBlocked?: boolean;
+  /**
+   * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
+   */
+  readonly workflowRunBlockedReason?: string;
 }
 
 /**
@@ -53,6 +61,8 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     planTitle = 'Untitled',
     planStatus,
     ralphTuningJson = '',
+    workflowRunBlocked = false,
+    workflowRunBlockedReason,
   } = props;
 
   // Hooks
@@ -182,7 +192,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
               <Input name="intent" type="hidden" value="runPlan" />
               <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
               <Button
-                disabled={fetcherRunPlan.state !== 'idle'}
+                disabled={fetcherRunPlan.state !== 'idle' || workflowRunBlocked}
                 size="sm"
                 type="submit"
                 variant="outline"
@@ -195,7 +205,10 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           <TooltipContent className="max-w-xs" side="top">
             {fetcherRunPlan.state !== 'idle'
               ? 'Submitting…'
-              : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
+              : workflowRunBlocked
+                ? (workflowRunBlockedReason ??
+                  'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
+                : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
           </TooltipContent>
         </Tooltip>
 

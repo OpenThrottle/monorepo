@@ -438,7 +438,10 @@ export const action = async (args: Route.ActionArgs) => {
         const parsed: unknown = JSON.parse(ralphTuningRaw);
         const tuningResult = RalphPlanRunTuningInputSchema().safeParse(parsed);
         if (!tuningResult.success) {
-          return { runPlanError: 'Invalid workflow run options payload.' };
+          const issues = tuningResult.error.issues.map((i) => i.message);
+          return {
+            runPlanError: `Invalid workflow run options: ${issues.join('; ')}`,
+          };
         }
 
         ralph = tuningResult.data;

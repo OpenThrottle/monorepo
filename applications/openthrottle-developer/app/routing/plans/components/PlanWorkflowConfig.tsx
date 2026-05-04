@@ -13,6 +13,8 @@ import {
   formatWorkflowRalphCommandLine,
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
+  validateWorkflowRalphRunOptionsState,
+  WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
@@ -103,6 +105,16 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
     ? onIterationTimeoutTextChange
     : setAtomIterationTimeoutText;
 
+  const strictCliTargetIds =
+    (planId != null && planId.trim() !== '') ||
+    (taskId != null && taskId.trim() !== '');
+
+  const validation = validateWorkflowRalphRunOptionsState(
+    input,
+    iterationTimeoutText,
+    { requireCliTargetIds: strictCliTargetIds },
+  );
+
   /**
    * @description True after first layout sync in this mounted instance; reset only on
    * unmount so plan/task prop changes do not clear iteration-timeout text (matches
@@ -158,6 +170,12 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
       <CardHeader className="pb-2 mb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1.5">
+            <h2
+              className="text-base font-semibold leading-none tracking-tight"
+              id="workflow-run-options-title"
+            >
+              Workflow configuration
+            </h2>
             <CardDescription>
               Compose flags aligned with{' '}
               <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
@@ -165,9 +183,11 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
               <span className="text-xs">
                 docs/workflows/ralph-workflow-runtime-config.md
               </span>
-              . The toolbar action that enqueues a run sends the same tuning
-              (iterations, model, prompt profile, project, debug CLI, iteration
-              timeout) to the worker; unchanged fields use CLI defaults.
+              . Default resolution order (when you do not set a field here):
+              {WORKFLOW_RALPH_DEFAULT_PRECEDENCE}. The toolbar action that
+              enqueues a run sends the same tuning (iterations, model, prompt
+              profile, project, debug CLI, iteration timeout) to the worker;
+              unchanged fields use server/worktree defaults.
             </CardDescription>
           </div>
 
@@ -191,6 +211,20 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
       </CardHeader>
 
       <CardContent className="flex flex-col flex-1 gap-4">
+        {!validation.ok ? (
+          <div
+            className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            data-testid="workflow-run-validation"
+            role="alert"
+          >
+            <p className="font-medium">Workflow options blocked until fixed</p>
+            <ul className="mt-1 list-inside list-disc text-xs">
+              {validation.issues.map((issue, index) => (
+                <li key={`${issue.code}-${index}`}>{issue.message}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <PlanWorkflowConfigTarget input={input} setInput={setInput} />
         <PlanWorkflowConfigPrompt
           onPromptChange={(next) =>

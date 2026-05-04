@@ -31,6 +31,7 @@ import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   parseWorkflowRunIterationTimeoutSeconds,
+  validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
@@ -67,6 +68,16 @@ export const PlanDetails = (props: PlanDetailsProps) => {
 
     return formatWorkflowRalphCommandLine(buildWorkflowRalphOptionArgs(merged));
   }, [workflowInput, workflowTimeout]);
+
+  const workflowValidation = validateWorkflowRalphRunOptionsState(
+    workflowInput,
+    workflowTimeout,
+    { requireCliTargetIds: true },
+  );
+  const workflowRunBlocked = !workflowValidation.ok;
+  const workflowRunBlockedReason = workflowValidation.ok
+    ? undefined
+    : workflowValidation.issues[0]?.message;
 
   // Setup
   // const isExpanded = isWorkflowOptionsExpanded(searchParams);
@@ -205,6 +216,8 @@ export const PlanDetails = (props: PlanDetailsProps) => {
             planStatus={plan.status}
             planTitle={plan.title ?? 'Untitled'}
             ralphTuningJson={ralphTuningJson}
+            workflowRunBlocked={workflowRunBlocked}
+            workflowRunBlockedReason={workflowRunBlockedReason}
           />
         </CardFooter>
       </Card>

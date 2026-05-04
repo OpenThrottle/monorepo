@@ -47,8 +47,11 @@ export const PlanWorkflowConfigExecution = (
         Layer 2 — Execution backend
       </legend>
       <p className="text-muted-foreground text-xs">
-        Which runner executes each iteration (UI-only stub; no CLI flag yet).
-        Phase 2 will add runner selection when the workflow exposes it.
+        Maps to <code className="text-xs">workflow-ralph --backend</code> (
+        <code className="text-xs">WORKFLOW_RALPH_BACKEND</code> /{' '}
+        <code className="text-xs">.workflow-ralph.json</code>
+        ). Today only <code className="text-xs">cursor</code> is implemented;
+        this panel stays fixed until additional backends ship.
       </p>
       <div className="space-y-2">
         <Label htmlFor="workflow-run-backend">Runner</Label>

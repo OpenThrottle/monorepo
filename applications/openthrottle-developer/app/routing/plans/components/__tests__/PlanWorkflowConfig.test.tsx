@@ -116,15 +116,18 @@ describe('PlanWorkflowConfig Component', () => {
     const props: PlanWorkflowConfigProps = {};
     const Component = () => <PlanWorkflowConfig {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByLabelText, getByRole } = render(<RoutesStub />);
+    const { getByLabelText, getByText } = render(<RoutesStub />);
 
     const planInput = getByLabelText('Plan UUID for --plan');
     await user.clear(planInput);
     await user.type(planInput, 'not-a-valid-uuid');
 
-    expect(getByRole('alert')).toHaveTextContent(
-      'Value does not match a UUID (v4) pattern',
-    );
+    expect(
+      getByText(/Value does not match a UUID \(v4\) pattern/),
+    ).toBeInTheDocument();
+    expect(
+      getByText(/Plan must be a Cortex plan UUID \(v4\)/),
+    ).toBeInTheDocument();
   });
 
   test('should switch run target to task mode and show --task input', async () => {

@@ -4,6 +4,7 @@
 
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import { RalphNestedDebugCli } from '~/__generated__/graphql';
+import { RalphPlanRunTuningInputSchema } from '~/__generated__/schemas';
 
 /** RFC 4122 UUID v4 — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */
 const UUID_REGEX =
@@ -13,6 +14,18 @@ export const DEFAULT_RALPH_RUNNER = 'cursor';
 export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
 export const DEFAULT_RALPH_ITERATIONS = 10;
 export const DEFAULT_RALPH_MODEL = 'auto';
+
+/**
+ * @description Same ids as `tools/workflows/src/utils/ralph-execution-backend.ts`
+ * (`RALPH_EXECUTION_BACKEND_IDS`). UI layer-2 must stay aligned with `workflow-ralph --backend`.
+ */
+export const WORKFLOW_RALPH_KNOWN_BACKENDS = ['cursor'] as const;
+
+/**
+ * @description Default precedence for resolving Ralph prompt + run tuning (matches CLI help).
+ */
+export const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
+  'CLI flags → WORKFLOW_RALPH_* / RALPH_* env → .workflow-ralph.json → built-in defaults';
 
 /**
  * @description BullMQ queue name for plan Ralph jobs (`run-plan`, orchestrator). Same as the server `PLANS_QUEUE_NAME` constant.
@@ -157,6 +170,183 @@ export const parseWorkflowRunIterationTimeoutSeconds = (
   }
 
   return n;
+};
+
+/**
+ * @description One validation issue; messages mirror `tools/workflows/src/utils/parsers.ts` where applicable.
+ */
+export interface WorkflowRalphValidationIssue {
+  readonly code: string;
+  readonly message: string;
+}
+
+/**
+ * @description Options for {@link validateWorkflowRalphRunOptionsState}. When `requireCliTargetIds` is
+ * false, `--plan` / `--task` id rules are skipped (e.g. Configuration panel without a route-seeded id).
+ */
+export interface ValidateWorkflowRalphRunOptionsStateOptions {
+  readonly requireCliTargetIds?: boolean;
+}
+
+/**
+ * @description Merges UI state the same way as the plan route and CLI preview, then validates targets,
+ * `--iterations`, optional `--iteration-timeout` text, backend id, and optional enqueue tuning shape
+ * (`RalphPlanRunTuningInputSchema` + CLI-aligned refinements).
+ */
+export const validateWorkflowRalphRunOptionsState = (
+  input: WorkflowRalphRunOptionsInput,
+  iterationTimeoutText: string,
+  options?: ValidateWorkflowRalphRunOptionsStateOptions,
+):
+  | { readonly ok: true }
+  | {
+      readonly ok: false;
+      readonly issues: readonly WorkflowRalphValidationIssue[];
+    } => {
+  const requireCliTargetIds = options?.requireCliTargetIds === true;
+  const issues: WorkflowRalphValidationIssue[] = [];
+
+  const timeoutRaw = iterationTimeoutText.trim();
+  if (timeoutRaw !== '') {
+    const n = Number.parseInt(timeoutRaw, 10);
+    if (Number.isNaN(n) || n < 1) {
+      issues.push({
+        code: 'iteration_timeout',
+        message:
+          '--iteration-timeout must be a positive integer (seconds) (matches workflow-ralph argv)',
+      });
+    }
+  }
+
+  if (!Number.isFinite(input.iterations) || input.iterations < 1) {
+    issues.push({
+      code: 'iterations',
+      message:
+        '--iterations must be a positive integer greater than 0 (matches workflow-ralph argv)',
+    });
+  }
+
+  const backend = input.executionBackend.trim().toLowerCase();
+  if (!(WORKFLOW_RALPH_KNOWN_BACKENDS as readonly string[]).includes(backend)) {
+    issues.push({
+      code: 'backend',
+      message: `Unknown execution backend "${input.executionBackend.trim()}". Supported: ${WORKFLOW_RALPH_KNOWN_BACKENDS.join(', ')}`,
+    });
+  }
+
+  if (requireCliTargetIds) {
+    if (input.targetMode === 'plan') {
+      const plan = input.planId.trim();
+      if (plan === '') {
+        issues.push({
+          code: 'plan_required',
+          message:
+            '--plan requires a Cortex plan UUID (matches workflow-ralph argv)',
+        });
+      } else if (!isUuid(plan)) {
+        issues.push({
+          code: 'plan_uuid',
+          message:
+            'Plan must be a Cortex plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
+        });
+      }
+    } else {
+      const task = input.taskId.trim();
+      if (task === '') {
+        issues.push({
+          code: 'task_required',
+          message:
+            '--task requires a Cortex task UUID (matches workflow-ralph argv)',
+        });
+      } else if (!isUuid(task)) {
+        issues.push({
+          code: 'task_uuid',
+          message:
+            'Task must be a Cortex task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
+        });
+      }
+    }
+  } else {
+    if (input.targetMode === 'plan') {
+      const plan = input.planId.trim();
+      if (plan !== '' && !isUuid(plan)) {
+        issues.push({
+          code: 'plan_uuid',
+          message:
+            'Plan must be a Cortex plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
+        });
+      }
+    } else {
+      const task = input.taskId.trim();
+      if (task !== '' && !isUuid(task)) {
+        issues.push({
+          code: 'task_uuid',
+          message:
+            'Task must be a Cortex task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
+        });
+      }
+    }
+  }
+
+  const merged: WorkflowRalphRunOptionsInput = {
+    ...input,
+    iterationTimeoutSeconds:
+      parseWorkflowRunIterationTimeoutSeconds(iterationTimeoutText),
+  };
+
+  const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
+  if (tuning !== undefined) {
+    const parsed = RalphPlanRunTuningInputSchema().safeParse(tuning);
+    if (!parsed.success) {
+      const flat = parsed.error.flatten();
+      const formErrors = flat.formErrors;
+      for (const msg of formErrors) {
+        issues.push({ code: 'enqueue_tuning_schema', message: msg });
+      }
+
+      const fieldErrors = flat.fieldErrors;
+      for (const [key, msgs] of Object.entries(fieldErrors)) {
+        if (msgs != null) {
+          for (const m of msgs) {
+            issues.push({
+              code: `enqueue_tuning_${key}`,
+              message: m,
+            });
+          }
+        }
+      }
+    } else {
+      const data = parsed.data;
+      if (
+        data.iterations != null &&
+        (!Number.isFinite(data.iterations) || data.iterations < 1)
+      ) {
+        issues.push({
+          code: 'enqueue_iterations',
+          message:
+            'Nested Ralph tuning: iterations must be a positive integer (parity with CLI)',
+        });
+      }
+
+      if (
+        data.iterationTimeoutSeconds != null &&
+        (!Number.isFinite(data.iterationTimeoutSeconds) ||
+          data.iterationTimeoutSeconds < 1)
+      ) {
+        issues.push({
+          code: 'enqueue_iteration_timeout',
+          message:
+            'Nested Ralph tuning: iterationTimeoutSeconds must be a positive integer (parity with CLI)',
+        });
+      }
+    }
+  }
+
+  if (issues.length === 0) {
+    return { ok: true };
+  }
+
+  return { issues, ok: false };
 };
 
 /**
