@@ -112,13 +112,19 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   Legal: [
     {
       children: 'About',
+      end: true,
       icon: NotebookTextIcon,
-      to: '/About',
+      to: '/legal',
     },
     {
       children: 'License',
       icon: NotebookTextIcon,
       to: '/legal/license',
+    },
+    {
+      children: 'Privacy Policy',
+      icon: NotebookTextIcon,
+      to: '/legal/privacy-policy',
     },
     {
       children: 'Terms of Use',
