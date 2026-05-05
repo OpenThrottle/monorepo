@@ -315,7 +315,7 @@ export default function Component(
             <GlobalCollapsible
               icon={item.icon}
               key={item.title}
-              open={false}
+              open={true}
               title={item.title}
             >
               {item.content}

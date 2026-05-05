@@ -9,15 +9,15 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { USAGE_DAILY_STATS_SERIES } from '~/routing/usage/data/daily-stats-series-glossary';
 
-export interface UsageAgentsAnalyticsGuideProps {
+export interface UsageDailyActivityOverviewProps {
   readonly rangeDays: number;
 }
 
 /**
  * @description Explains what the Usage chart includes, defines each stacked series, and lists deliberate analytics gaps (prompt runs, tokens, local IDE skills).
  */
-export function UsageAgentsAnalyticsGuide(
-  props: UsageAgentsAnalyticsGuideProps,
+export function UsageDailyActivityOverview(
+  props: UsageDailyActivityOverviewProps,
 ): React.ReactElement {
   const { rangeDays } = props;
 

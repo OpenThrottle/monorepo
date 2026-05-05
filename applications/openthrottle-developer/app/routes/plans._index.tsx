@@ -14,7 +14,7 @@ import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { PuzzleIcon } from 'lucide-react';
+import { ListChevronsUpDownIcon } from 'lucide-react';
 import {
   GetPlanAssigneeOptionsDocument,
   GetPlanCountsByStatusDocument,
@@ -201,7 +201,7 @@ export default function Component(
         />
       </div>
 
-      <GlobalHeading heading="h1" icon={PuzzleIcon} title="Plans" />
+      <GlobalHeading heading="h1" icon={ListChevronsUpDownIcon} title="Plans" />
 
       <PlansToolbar
         assigneeOptions={assigneeOptions}

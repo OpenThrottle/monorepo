@@ -339,6 +339,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
               <h3 className="text-sm font-medium text-muted-foreground">
                 Metrics over time
               </h3>
+
               {definitionsHref ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   <a
@@ -350,6 +351,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 </p>
               ) : null}
             </div>
+
             {loading && metricsHistory.length > 0 ? (
               <p
                 className="text-xs text-muted-foreground"
@@ -358,42 +360,44 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 Loading latest metrics…
               </p>
             ) : null}
-          </div>
 
-          <div
-            aria-label="Chart series"
-            className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground"
-            data-testid="GlobalMetrics-chart-legend"
-          >
-            {GLOBAL_METRICS_CHART_LINE_KEYS.map(
-              (key: GlobalMetricsChartLineKey) => {
-                const entry = GLOBAL_METRICS_CHART_CONFIG[key];
-                if (!entry?.label || !entry.color) return null;
+            <div
+              aria-label="Chart series"
+              className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground"
+              data-testid="GlobalMetrics-chart-legend"
+            >
+              {GLOBAL_METRICS_CHART_LINE_KEYS.map(
+                (key: GlobalMetricsChartLineKey) => {
+                  const entry = GLOBAL_METRICS_CHART_CONFIG[key];
+                  if (!entry?.label || !entry.color) return null;
 
-                const lineHint = GLOBAL_METRICS_LINE_DEFINITIONS[key];
+                  const lineHint = GLOBAL_METRICS_LINE_DEFINITIONS[key];
 
-                return (
-                  <span
-                    className="inline-flex max-w-[16rem] flex-col gap-0.5"
-                    key={key}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      <span
-                        aria-hidden={true}
-                        className="inline-block h-2 w-4 shrink-0 rounded-sm"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-foreground/90">{entry.label}</span>
-                    </span>
-                    {lineHint ? (
-                      <span className="pl-[calc(0.5rem+1rem)] text-[10px] leading-snug text-muted-foreground">
-                        {lineHint}
+                  return (
+                    <span
+                      className="inline-flex max-w-[16rem] flex-col gap-0.5"
+                      key={key}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          aria-hidden={true}
+                          className="inline-block h-2 w-4 shrink-0 rounded-sm"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-foreground/90">
+                          {entry.label}
+                        </span>
                       </span>
-                    ) : null}
-                  </span>
-                );
-              },
-            )}
+                      {lineHint ? (
+                        <span className="pl-[calc(0.5rem+1rem)] text-[10px] leading-snug text-muted-foreground">
+                          {lineHint}
+                        </span>
+                      ) : null}
+                    </span>
+                  );
+                },
+              )}
+            </div>
           </div>
 
           <ChartContainer

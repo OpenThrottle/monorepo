@@ -21,23 +21,24 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
   // 🔌 Short Circuit
 
   return (
-    <section
-      className={classnames(
-        'relative pt-20 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden',
-        className,
-      )}
-      data-testid="HomeHeroV1"
-    >
-      <div className="max-w-7xl mx-auto">
+    <section className={classnames(className)} data-testid="HomeHeroV1">
+      <div className="max-w-7xl mx-auto max-h-svh">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight pb-52">
             {/* <span className="text-foreground">Get </span>{' '} */}
             {/* <span className="text-highlight">Started!</span> */}
-            <span className="text-highlight-red font-black">Stop</span> losing
-            the <span className="text-highlight font-black">Plan</span> between
+            Stop <span className="text-highlight-red font-black">
+              losing
+            </span>{' '}
+            the <span className="text-highlight font-black">Plan</span>
+            <br />
+            in <span className="tracking-tighter text-current/60">
+              between
+            </span>{' '}
             tools.
           </h1>
-          <p className="text-xl font-extralight text-muted-foreground mb-8 leading-loose max-w-2xl mx-auto">
+          {/*
+          <p className="text-lg font-extralight mb-8 leading-relaxed max-w-2xl mx-auto">
             Know what you&apos;re building, what&apos;s in flight, and what
             already shipped—without digging through chat history.{' '}
             <b className="font-medium">OpenThrottle</b> is a Postgres-backed
@@ -46,6 +47,7 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
             agentic work with <b className="font-medium">Ralph</b>, and watch
             progress on a dashboard built for shipping.
           </p>
+          */}
 
           {/* <div className="flex flex-col justify-center sm:flex-row gap-4">
             <Button

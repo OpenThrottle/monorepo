@@ -44,7 +44,7 @@ export default function Component(
     <GlobalScreen>
       {FEATURE_BETA_PREVIEW ? (
         <>
-          <HomeHeroV1 className="flex-1 flex min-h-svh items-center" />
+          <HomeHeroV1 className="flex-1 flex h-full min-h-svh items-center" />
           {/* <HomeBuiltWith /> */}
           <HomeFeatures />
         </>

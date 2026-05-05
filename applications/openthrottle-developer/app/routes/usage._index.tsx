@@ -1,27 +1,18 @@
 import * as React from 'react';
-import { Link } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
-import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { ChartAreaIcon } from 'lucide-react';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GetUsageDailyStatsDocument } from '~/__generated__/graphql';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
-import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
-import { UsageAgentsAnalyticsGuide } from '~/routing/usage/components/UsageAgentsAnalyticsGuide';
-import { UsageSupportSnapshotPanel } from '~/routing/usage/components/UsageSupportSnapshotPanel';
+import { UsageDailyActivity } from '~/routing/usage/components/UsageDailyActivity';
+import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction';
+import { UsageOverview } from '~/routing/usage/components/UsageOverview';
+import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -62,70 +53,29 @@ export default function Component(
   const { loaderData } = props;
   const { dailyStats, rangeDays, rangeEndIso, rangeStartIso } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h3"
-          icon={ChartAreaIcon}
-          title="Usage"
-        />
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Usage metrics for this portal over the last {rangeDays} days.
-        </p>
-      </div>
-
-      <Card className="bg-transparent">
-        <CardHeader>
-          <CardTitle className="text-base">Agents &amp; Cortex usage</CardTitle>
-          <CardDescription>
-            Plan and task counts come from OpenThrottle daily stats (last{' '}
-            {rangeDays} days). They approximate automation load from Ralph,
-            workflows, and manual work in the portal—they do not include model
-            token usage or per-prompt billing. For prompt-level debugging, use{' '}
-            <Link className="underline" to="/prompts">
-              Prompts
-            </Link>{' '}
-            and the versioning panel on a prompt detail page.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>
-            <span className="font-medium text-foreground">
-              Not in this chart:{' '}
-            </span>
-            per-skill or per-prompt invocations, IDE-only runs, token or cost
-            usage, and skill picks from user-local{' '}
-            <code className="text-xs">~/.cursor/skills-cursor</code>.
-          </p>
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
-            <Link className="text-primary underline" to="/prompts?type=AGENTS">
-              Agents-type prompts
-            </Link>
-            <Link className="text-primary underline" to="/prompts?type=SKILLS">
-              Skills-type prompts
-            </Link>
-            <Link className="text-primary underline" to="/skills">
-              Repo skill paths
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Daily activity</h2>
-        <DashboardDailyStatsCard dailyStats={dailyStats} />
-      </div>
-
-      <UsageSupportSnapshotPanel
+      <UsageIntroduction rangeDays={rangeDays} />
+      <UsageOverview rangeDays={rangeDays} />
+      <UsageDailyActivity dailyStats={dailyStats} rangeDays={rangeDays} />
+      <UsageSnapshot
         dailyStats={dailyStats}
         rangeDays={rangeDays}
         rangeEndIso={rangeEndIso}
         rangeStartIso={rangeStartIso}
       />
-
-      <UsageAgentsAnalyticsGuide rangeDays={rangeDays} />
     </GlobalScreen>
   );
 }

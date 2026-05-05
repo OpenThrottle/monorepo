@@ -75,7 +75,7 @@ export function SettingsEnvironmentDiagnostics({
       <Card className="bg-transparent">
         <CardHeader>
           <CardTitle className="text-base" id={`${idPrefix}-build`}>
-            Build & environment
+            Environment Diagnostics
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -96,10 +96,10 @@ export function SettingsEnvironmentDiagnostics({
               <dt className="text-muted-foreground">NODE_ENV</dt>
               <dd className="font-mono text-xs">{env.NODE_ENV}</dd>
             </div>
-            <div>
+            {/* <div>
               <dt className="text-muted-foreground">Vite mode</dt>
               <dd className="font-mono text-xs">{import.meta.env.MODE}</dd>
-            </div>
+            </div> */}
           </dl>
         </CardContent>
       </Card>

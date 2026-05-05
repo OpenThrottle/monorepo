@@ -11,9 +11,11 @@ import {
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GitPullRequestIcon } from 'lucide-react';
 import {
   GetPullRequestsDocument,
   type ListPullsInput,
@@ -134,30 +136,51 @@ export default function Component(
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { filters, listQuery, pulls } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalScreen>
-      <p className="text-muted-foreground text-sm mb-2 max-w-2xl">
-        <span className="text-foreground font-medium font-mono">
-          {filters.owner}/{filters.repo}
-        </span>
-        <span className="mx-2 text-border">·</span>
-        {pulls.length} PR{pulls.length === 1 ? '' : 's'} with current filters
-      </p>
-      <p className="text-muted-foreground text-sm mb-6 max-w-2xl">
-        Filter by <span className="font-medium text-foreground">owner</span>,{' '}
-        <span className="font-medium text-foreground">repo</span>, and{' '}
-        <span className="font-medium text-foreground">author</span> when
-        debugging CI or the merge queue. Each card links to GitHub{' '}
-        <span className="font-medium text-foreground">Checks</span> (aggregated
-        status), <span className="font-medium text-foreground">Commits</span>{' '}
-        (per-SHA checks),{' '}
-        <span className="font-medium text-foreground">
-          checks at the head SHA
-        </span>{' '}
-        when the API returns it, and{' '}
-        <span className="font-medium text-foreground">Actions</span> (workflow
-        runs) using the PR number and branch refs when available.
-      </p>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          icon={GitPullRequestIcon}
+          title="Pull requests"
+        />
+        <p className="text-muted-foreground text-sm mb-6 max-w-2xl">
+          Filter by <span className="font-medium text-foreground">owner</span>,{' '}
+          <span className="font-medium text-foreground">repo</span>, and{' '}
+          <span className="font-medium text-foreground">author</span> when
+          debugging CI or the merge queue. Each card links to GitHub{' '}
+          <span className="font-medium text-foreground">Checks</span>{' '}
+          (aggregated status),{' '}
+          <span className="font-medium text-foreground">Commits</span> (per-SHA
+          checks),{' '}
+          <span className="font-medium text-foreground">
+            checks at the head SHA
+          </span>{' '}
+          when the API returns it, and{' '}
+          <span className="font-medium text-foreground">Actions</span> (workflow
+          runs) using the PR number and branch refs when available.
+        </p>
+
+        <p className="text-muted-foreground text-sm mb-2 max-w-2xl">
+          <span className="text-foreground font-medium font-mono">
+            {filters.owner}/{filters.repo}
+          </span>
+          <span className="mx-2 text-border">·</span>
+          {pulls.length} PR{pulls.length === 1 ? '' : 's'} with current filters
+        </p>
+      </div>
 
       <Form
         className="mb-8 flex flex-col gap-4 rounded-lg border border-border p-4"
