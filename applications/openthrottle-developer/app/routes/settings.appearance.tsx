@@ -70,17 +70,18 @@ export default function Component(
             icon={SwatchBookIcon}
             title="Appearance"
           />
-          <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Theme controls for this portal. Diagnostics below mirror General
             settings and help verify URLs and build metadata.
           </p>
-          <SettingsEnvironmentDiagnostics
-            className="max-w-4xl"
-            env={loaderData.env}
-            idPrefix="settings-appearance"
-            supportBundle={loaderData.supportBundle}
-          />
         </div>
+
+        <SettingsEnvironmentDiagnostics
+          className="max-w-4xl"
+          env={loaderData.env}
+          idPrefix="settings-appearance"
+          supportBundle={loaderData.supportBundle}
+        />
 
         <hr />
 

@@ -19,13 +19,7 @@ describe('QueuesToolbar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should have Create queue link to /queues/create', () => {
-    const link = component.getByRole('link', { name: /create queue/i });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/queues/create');
-  });
-
-  test('should have data-testid QueuesToolbar', () => {
-    expect(component.getByTestId('QueuesToolbar')).toBeInTheDocument();
+  test('should render', () => {
+    expect(component.baseElement).toMatchSnapshot();
   });
 });

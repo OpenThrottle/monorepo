@@ -200,15 +200,13 @@ export default function Component(
             {tasks.length > 0 ? (
               <>
                 <ProjectTasksTable tasks={tasks} />
-                {totalTaskCount > limit && (
-                  <OpenThrottlePagination
-                    basePath={`/projects/${project.id}`}
-                    className="mt-6"
-                    limit={limit}
-                    page={page}
-                    total={totalTaskCount}
-                  />
-                )}
+                <OpenThrottlePagination
+                  basePath={`/projects/${project.id}`}
+                  className="mt-6"
+                  limit={limit}
+                  page={page}
+                  total={totalTaskCount}
+                />
               </>
             ) : (
               <Empty className="py-8">

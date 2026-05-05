@@ -227,7 +227,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           </Label>
         </div>
 
-        <p
+        {/* <p
           className="text-xs text-muted-foreground max-w-3xl leading-relaxed"
           data-testid="GlobalMetrics-visibility-hint"
         >
@@ -258,9 +258,9 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
             </>
           ) : null}
           .
-        </p>
+        </p> */}
 
-        {showSamplingDetails ? (
+        {/* {showSamplingDetails ? (
           <details
             className="group rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground max-w-3xl"
             data-testid="GlobalMetrics-debug-details"
@@ -290,7 +290,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
               across samples.
             </p>
           </details>
-        ) : null}
+        ) : null} */}
 
         {showGlobalLoadingBanner && (
           <p data-testid="GlobalMetrics-loading">Loading…</p>
@@ -334,7 +334,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           className={classnames('p-4 md:p-8')}
           data-testid="GlobalMetrics-chart-card"
         >
-          <div className="flex flex-wrap items-baseline justify-between gap-4">
+          {/* <div className="flex flex-wrap items-baseline justify-between gap-4">
             <div className="mb-2">
               <h3 className="text-sm font-medium text-muted-foreground">
                 Metrics over time
@@ -398,7 +398,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
                 },
               )}
             </div>
-          </div>
+          </div> */}
 
           <ChartContainer
             className="min-h-[160px] w-full -ml-1 text-sm"

@@ -22,12 +22,24 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
 // };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `SettingsLogs | ${SITE_TITLE}` }];
+  return [{ title: `Settings | Logs | ${SITE_TITLE}` }];
 };
 
 export default function Component(
   _props: Route.ComponentProps,
 ): React.ReactElement {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalScreen>
       <SettingsLogsPanel />

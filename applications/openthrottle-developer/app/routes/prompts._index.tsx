@@ -25,6 +25,8 @@ import {
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
 import type { Route } from '@/app/routes/+types/prompts._index';
+import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
+import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => 'Prompts',
@@ -111,7 +113,7 @@ export default function Component(
     page,
     prompts,
     total,
-    totalPages,
+    // totalPages,
     types,
   } = loaderData;
 
@@ -131,8 +133,9 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <AgentsSectionQuickLinks />
+      <PromptsIntroduction />
 
+      <AgentsSectionQuickLinks />
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Agents-type prompts" value={countAgents} />
         <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
@@ -157,24 +160,10 @@ export default function Component(
               <PromptCard key={prompt.id} prompt={prompt} />
             ))}
           </div>
-
-          {totalPages > 1 ? (
-            <OpenThrottlePagination limit={limit} page={page} total={total} />
-          ) : null}
+          <OpenThrottlePagination limit={limit} page={page} total={total} />
         </>
       ) : (
-        <div className="flex flex-col flex-1 justify-center">
-          <div
-            className="text-center py-12 text-muted-foreground"
-            data-testid="prompts-empty"
-          >
-            <p className="text-lg">No prompts found.</p>
-            <p className="mt-2">
-              Create your first prompt to get started. For in-repo skill paths
-              see Skills; for coarse portal workload see Usage.
-            </p>
-          </div>
-        </div>
+        <PromptsEmpty />
       )}
     </GlobalScreen>
   );

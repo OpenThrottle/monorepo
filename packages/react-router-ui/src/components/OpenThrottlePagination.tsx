@@ -87,6 +87,7 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (totalPages <= 1) return null;
 
   return (
     <div className={className}>

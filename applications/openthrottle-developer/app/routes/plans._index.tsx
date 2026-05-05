@@ -201,18 +201,24 @@ export default function Component(
         />
       </div>
 
-      <GlobalHeading heading="h1" icon={ListChevronsUpDownIcon} title="Plans" />
-
-      <PlansToolbar
-        assigneeOptions={assigneeOptions}
-        assignees={assignees}
-        limit={limit}
-        page={page}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        statuses={statuses}
-        view={view}
-      />
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ListChevronsUpDownIcon}
+          title="Plans"
+        />
+        <PlansToolbar
+          assigneeOptions={assigneeOptions}
+          assignees={assignees}
+          limit={limit}
+          page={page}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+          view={view}
+        />
+      </div>
       <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
       <OpenThrottlePagination
         assignees={assignees}

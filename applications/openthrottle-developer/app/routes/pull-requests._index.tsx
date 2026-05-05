@@ -1,21 +1,13 @@
 import * as React from 'react';
-import { Form, Link } from 'react-router';
+import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import {
-  Badge,
-  Button,
-  Card,
-  Input,
-  Label,
-} from '@openthrottle/react-router-shadcn';
+import { Badge, Button, Card } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GitPullRequestIcon } from 'lucide-react';
 import {
   GetPullRequestsDocument,
   type ListPullsInput,
@@ -34,14 +26,11 @@ import {
   githubRepoActionsPullRequestRunsUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 import type { Route } from '@/app/routes/+types/pull-requests._index';
-
-const parsePullListState = (raw: string | null): 'all' | 'closed' | 'open' => {
-  if (raw === 'all' || raw === 'closed') {
-    return raw;
-  }
-
-  return 'open';
-};
+import { PullRequestsIntroduction } from '~/routing/pull-requests/components/PullRequestsIntroduction';
+import { PullRequestsEmpty } from '~/routing/pull-requests/components/PullRequestsEmpty';
+import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
+import { PullRequestStats } from '~/routing/pull-requests/components/PullRequestStats';
+import { PullRequestsToolbar } from '~/routing/pull-requests/components/PullRequestsToolbar';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: (_match) => 'Pull requests',
@@ -51,11 +40,13 @@ export const handle: GlobalLayoutBreadcrumbsHandle = {
 export const loader = async (args: Route.LoaderArgs) => {
   const defaults = getDefaultGithubRepo();
   const url = new URL(args.request.url);
+
   const ownerParam = url.searchParams.get('owner') ?? defaults.owner;
   const repoParam = url.searchParams.get('repo') ?? defaults.repo;
-  const state = parsePullListState(url.searchParams.get('state'));
   const baseTrimmed = url.searchParams.get('base')?.trim() ?? '';
   const authorParam = url.searchParams.get('author')?.trim() ?? '';
+
+  const state = parsePullListState(url.searchParams.get('state'));
   const authorFilterLower = authorParam.toLowerCase();
   const authorExact =
     authorParam !== '' && url.searchParams.get('authorExact') === '1';
@@ -150,136 +141,9 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          icon={GitPullRequestIcon}
-          title="Pull requests"
-        />
-        <p className="text-muted-foreground text-sm mb-6 max-w-2xl">
-          Filter by <span className="font-medium text-foreground">owner</span>,{' '}
-          <span className="font-medium text-foreground">repo</span>, and{' '}
-          <span className="font-medium text-foreground">author</span> when
-          debugging CI or the merge queue. Each card links to GitHub{' '}
-          <span className="font-medium text-foreground">Checks</span>{' '}
-          (aggregated status),{' '}
-          <span className="font-medium text-foreground">Commits</span> (per-SHA
-          checks),{' '}
-          <span className="font-medium text-foreground">
-            checks at the head SHA
-          </span>{' '}
-          when the API returns it, and{' '}
-          <span className="font-medium text-foreground">Actions</span> (workflow
-          runs) using the PR number and branch refs when available.
-        </p>
-
-        <p className="text-muted-foreground text-sm mb-2 max-w-2xl">
-          <span className="text-foreground font-medium font-mono">
-            {filters.owner}/{filters.repo}
-          </span>
-          <span className="mx-2 text-border">·</span>
-          {pulls.length} PR{pulls.length === 1 ? '' : 's'} with current filters
-        </p>
-      </div>
-
-      <Form
-        className="mb-8 flex flex-col gap-4 rounded-lg border border-border p-4"
-        method="get"
-      >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pr-filter-owner">Owner</Label>
-            <Input
-              defaultValue={filters.owner}
-              id="pr-filter-owner"
-              name="owner"
-              placeholder="org or user"
-              type="text"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pr-filter-repo">Repo</Label>
-            <Input
-              defaultValue={filters.repo}
-              id="pr-filter-repo"
-              name="repo"
-              placeholder="repository name"
-              type="text"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pr-filter-state">State</Label>
-            <select
-              className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              defaultValue={filters.state}
-              id="pr-filter-state"
-              name="state"
-            >
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-              <option value="all">All</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pr-filter-base">Base branch (optional)</Label>
-            <Input
-              defaultValue={filters.base}
-              id="pr-filter-base"
-              name="base"
-              placeholder="e.g. main"
-              type="text"
-            />
-          </div>
-          <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
-            <Label htmlFor="pr-filter-author">Author (optional)</Label>
-            <Input
-              defaultValue={filters.author}
-              id="pr-filter-author"
-              name="author"
-              placeholder="GitHub login"
-              type="text"
-            />
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-              <input
-                className="border-input accent-primary h-4 w-4 rounded"
-                defaultChecked={filters.authorExact}
-                disabled={filters.author === ''}
-                name="authorExact"
-                type="checkbox"
-                value="1"
-              />
-              Exact login match (when author is set)
-            </label>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pr-filter-merged">Merged (optional)</Label>
-            <select
-              className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              defaultValue={
-                filters.merged === true
-                  ? 'true'
-                  : filters.merged === false
-                    ? 'false'
-                    : ''
-              }
-              id="pr-filter-merged"
-              name="merged"
-            >
-              <option value="">Any</option>
-              <option value="true">Merged only</option>
-              <option value="false">Not merged</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" type="submit" variant="default">
-            Apply filters
-          </Button>
-          <Button asChild={true} size="sm" variant="outline">
-            <Link to="/pull-requests">Reset</Link>
-          </Button>
-        </div>
-      </Form>
+      <PullRequestStats />
+      <PullRequestsIntroduction />
+      <PullRequestsToolbar filters={filters} />
 
       <div className="grid grid-cols-1 gap-4 lg:gap-8">
         {pulls.map((pull) => (
@@ -460,12 +324,7 @@ export default function Component(
         ))}
       </div>
 
-      {pulls.length === 0 ? (
-        <p className="text-muted-foreground mt-8 text-sm">
-          No pull requests match these filters. Try another repo or clear the
-          author filter.
-        </p>
-      ) : null}
+      {pulls.length === 0 ? <PullRequestsEmpty /> : null}
     </GlobalScreen>
   );
 }

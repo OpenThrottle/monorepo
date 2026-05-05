@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { getEnvironment } from '@openthrottle/react-router-utils';
 import {
   Button,
   Card,
@@ -19,132 +18,34 @@ import {
   CLIENT_LOG_BUFFER_MAX_ENTRIES,
   CLIENT_LOG_LEVELS,
   getClientLogEntries,
-  type ClientLogEntry,
-  type ClientLogLevel,
   subscribeClientLogSink,
 } from '~/routing/settings/client-log-sink';
-import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
+import { SettingsSupportBundle } from '~/routing/settings/components/SettingsSupportBundle';
+import type { ClientLogLevel } from '~/routing/settings/client-log-sink';
+import {
+  copyText,
+  entryToJsonRecord,
+  formatEntryLine,
+  getEmptyServerSnapshot,
+} from '~/routing/settings/utils/settings.support';
+import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
 
-const WORKFLOW_LOGS_DOC_HREF =
-  'https://github.com/OpenThrottle/OpenThrottle/blob/main/tools/workflows/README.md';
+export interface SettingsLogsPanelProps {}
 
-interface SupportBundlePayload {
-  readonly clientLog: readonly {
-    readonly isoTime: string;
-    readonly level: ClientLogEntry['level'];
-    readonly message: string;
-    readonly t: number;
-  }[];
-  readonly env: Record<string, string>;
-  readonly generatedAt: string;
-  readonly kind: 'openthrottle-developer-support-bundle';
-  readonly note: string;
-  readonly page: {
-    readonly href: string;
-    readonly referrer: string | null;
-  };
-  readonly runtime: {
-    readonly language: string;
-    readonly userAgent: string;
-  };
-  readonly version: 1;
-  readonly workflowLogs: {
-    readonly apiStatus: 'not_available';
-    readonly hint: string;
-  };
-}
+export function SettingsLogsPanel(
+  _props: SettingsLogsPanelProps,
+): React.ReactElement {
+  // const { className } = props;
 
-const getEmptyServerSnapshot = (): readonly ClientLogEntry[] => [];
-
-/**
- * @description Builds a JSON payload safe to paste in support tickets (sanitized env).
- */
-export const buildSupportBundlePayload = (): SupportBundlePayload => {
-  const env = sanitizeEnvForDiagnostics(getEnvironment());
-  const raw = getClientLogEntries();
-  const clientLog = raw.map((entry) => ({
-    isoTime: new Date(entry.t).toISOString(),
-    level: entry.level,
-    message: entry.message,
-    t: entry.t,
-  }));
-
-  return {
-    clientLog,
-    env,
-    generatedAt: new Date().toISOString(),
-    kind: 'openthrottle-developer-support-bundle',
-    note: 'Environment values are redacted for secrets. Do not paste raw .env or tokens.',
-    page: {
-      href: typeof window !== 'undefined' ? window.location.href : '',
-      referrer:
-        typeof window !== 'undefined' ? document.referrer || null : null,
-    },
-    runtime: {
-      language: typeof navigator !== 'undefined' ? navigator.language : '',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-    },
-    version: 1,
-    workflowLogs: {
-      apiStatus: 'not_available',
-      hint: 'Server-side workflow-ralph stderr and plan output streaming are not exposed here yet. Use Plan detail for output, or capture stderr from `pnpm exec workflow-ralph --plan <uuid> --debug`. When an operator API exists, this section can tail or link those logs.',
-    },
-  };
-};
-
-const copyText = async (text: string): Promise<boolean> => {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const downloadJson = (payload: SupportBundlePayload): void => {
-  const stamp = payload.generatedAt.replace(/[:.]/g, '-').slice(0, 19);
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = `openthrottle-developer-support-${stamp}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-};
-
-const formatEntryLine = (entry: ClientLogEntry): string => {
-  const iso = new Date(entry.t).toISOString();
-  return `${iso} [${entry.level}] ${entry.message}`;
-};
-
-const entryToJsonRecord = (
-  entry: ClientLogEntry,
-): {
-  readonly isoTime: string;
-  readonly level: ClientLogEntry['level'];
-  readonly message: string;
-  readonly t: number;
-} => ({
-  isoTime: new Date(entry.t).toISOString(),
-  level: entry.level,
-  message: entry.message,
-  t: entry.t,
-});
-
-export function SettingsLogsPanel(): React.ReactElement {
+  // Hooks
   const logPreRef = React.useRef<HTMLPreElement>(null);
   const searchFieldId = React.useId();
   const [isClient, setIsClient] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+
   const [levelSelection, setLevelSelection] = React.useState<
     readonly ClientLogLevel[]
   >([...CLIENT_LOG_LEVELS]);
-  const [searchQuery, setSearchQuery] = React.useState('');
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const entries = React.useSyncExternalStore(
     subscribeClientLogSink,
@@ -152,6 +53,8 @@ export function SettingsLogsPanel(): React.ReactElement {
     getEmptyServerSnapshot,
   );
 
+  // Setup
+  const levelsDisabled = levelSelection.length === 0;
   const selectedLevelSet = React.useMemo(
     () => new Set(levelSelection),
     [levelSelection],
@@ -173,6 +76,17 @@ export function SettingsLogsPanel(): React.ReactElement {
     });
   }, [entries, searchQuery, selectedLevelSet]);
 
+  const viewerEmptyReason =
+    entries.length === 0
+      ? 'empty-buffer'
+      : levelsDisabled
+        ? 'levels-none'
+        : filteredEntries.length === 0
+          ? 'no-match'
+          : 'none';
+
+  // Handlers
+
   const logText = React.useMemo(
     () => filteredEntries.map(formatEntryLine).join('\n'),
     [filteredEntries],
@@ -186,6 +100,7 @@ export function SettingsLogsPanel(): React.ReactElement {
     el.scrollTop = el.scrollHeight;
   }, [filteredEntries]);
 
+  // Handlers
   const handleCopyLines = async (): Promise<void> => {
     await copyText(logText || '(empty)');
   };
@@ -202,29 +117,11 @@ export function SettingsLogsPanel(): React.ReactElement {
     await copyText(lines.join('\n') || '');
   };
 
-  const handleCopyBundle = async (): Promise<void> => {
-    const payload = buildSupportBundlePayload();
-    await copyText(JSON.stringify(payload, null, 2));
-  };
-
-  const handleDownloadBundle = (): void => {
-    downloadJson(buildSupportBundlePayload());
-  };
-
   const handleClear = (): void => {
     clearClientLogSink();
   };
 
-  const levelsDisabled = levelSelection.length === 0;
-  const viewerEmptyReason =
-    entries.length === 0
-      ? 'empty-buffer'
-      : levelsDisabled
-        ? 'levels-none'
-        : filteredEntries.length === 0
-          ? 'no-match'
-          : 'none';
-
+  // Markup
   const renderViewerBody = (): React.ReactNode => {
     if (!isClient) {
       return (
@@ -255,6 +152,10 @@ export function SettingsLogsPanel(): React.ReactElement {
     return logText;
   };
 
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <div className="space-y-6">
       <GlobalHeading
@@ -263,14 +164,14 @@ export function SettingsLogsPanel(): React.ReactElement {
         icon={ScrollText}
         title="Logs"
       />
-      <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Capture browser console output in this tab, copy lines, and export a
         sanitized support bundle (JSON) with env metadata and log lines. Server
         workflow and agent streams are described below—when an operator API
         exists, optional tailing can plug into the same bundle shape.
       </p>
 
-      <p className="max-w-3xl rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
+      <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
         Logs may include URLs or user-visible strings. Only copy or export what
         you intend to share; the support bundle redacts env secrets but not
         every substring inside log lines.
@@ -381,39 +282,7 @@ export function SettingsLogsPanel(): React.ReactElement {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-          <CardTitle className="text-base">Support bundle</CardTitle>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={handleCopyBundle}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Copy bundle JSON
-            </Button>
-            <Button
-              onClick={handleDownloadBundle}
-              size="sm"
-              type="button"
-              variant="secondary"
-            >
-              Download bundle JSON
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            Includes sanitized <code className="text-xs">window.env</code>, page
-            URL, user agent, language, and the{' '}
-            <strong className="font-medium text-foreground">full</strong> client
-            log buffer (not the filtered view). Attach the file or pasted JSON
-            to bug reports; omit sensitive context outside this bundle if
-            needed.
-          </p>
-        </CardContent>
-      </Card>
+      <SettingsSupportBundle />
 
       <Card>
         <CardHeader>
@@ -429,7 +298,7 @@ export function SettingsLogsPanel(): React.ReactElement {
             for Cortex output and capture CLI stderr per{' '}
             <a
               className="text-primary underline-offset-4 hover:underline"
-              href={WORKFLOW_LOGS_DOC_HREF}
+              href={DEFAULT_SETTINGS_LOGS_DOC}
               rel="noreferrer"
               target="_blank"
             >

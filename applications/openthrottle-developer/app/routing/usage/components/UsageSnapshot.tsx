@@ -6,9 +6,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  toast,
 } from '@openthrottle/react-router-shadcn';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 export interface UsageSnapshotProps {
   readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
@@ -23,6 +24,11 @@ export interface UsageSnapshotProps {
 export function UsageSnapshot(props: UsageSnapshotProps): React.ReactElement {
   const { dailyStats, rangeDays, rangeEndIso, rangeStartIso } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
   const handleCopy = async (): Promise<void> => {
     const text = buildUsageSupportSnapshotJson({
       dailyStats,
@@ -32,10 +38,18 @@ export function UsageSnapshot(props: UsageSnapshotProps): React.ReactElement {
     });
     try {
       await navigator.clipboard.writeText(text);
+
+      toast.success('Usage snapshot copied to clipboard');
     } catch {
       // ignore
     }
   };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className="border-dashed bg-muted/15">
@@ -48,11 +62,7 @@ export function UsageSnapshot(props: UsageSnapshotProps): React.ReactElement {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button
-          onClick={() => void handleCopy()}
-          type="button"
-          variant="outline"
-        >
+        <Button onClick={handleCopy} type="button" variant="outline">
           Copy usage snapshot (JSON)
         </Button>
       </CardContent>

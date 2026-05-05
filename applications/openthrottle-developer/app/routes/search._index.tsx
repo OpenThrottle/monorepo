@@ -1,21 +1,23 @@
 import * as React from 'react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { useSearchParams } from 'react-router';
-import { GetSearchResultsDocument } from '~/__generated__/graphql';
+import { SearchIcon } from 'lucide-react';
 import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
+import { GetSearchResultsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
-import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import { SITE_TITLE } from '~/global/config/settings';
+import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/search._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
@@ -100,12 +102,13 @@ export default function Component(
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Setup — utils: parseSearchParams for pre-fill; config: DEFAULT_SEARCH_LIMIT for pagination
+  // Setup
   const currentQ = q ?? searchParams.get('q') ?? '';
   const expandRankingDetails =
     expandRankingFromLoader ||
     (searchParams.get('details') ?? '') === 'ranking';
 
+  // Handlers
   const handleExpandRankingChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
@@ -118,16 +121,29 @@ export default function Component(
     setSearchParams(next, { replace: true });
   };
 
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalScreen>
-      <h1 className="text-xl my-4 text-highlight">Search</h1>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={SearchIcon}
+          title="Search"
+        />
+        <WorkspaceEntityCrossLinks
+          label="Jump to a workspace area"
+          variant="full"
+        />
+      </div>
 
       {!currentQ ? (
         <div className="mb-6 space-y-3">
-          <WorkspaceEntityCrossLinks
-            label="Jump to a workspace area"
-            variant="full"
-          />
           <p className="max-w-2xl text-muted-foreground">
             Enter a query below for semantic search across embedded plans,
             tasks, and documentation. Results are ranked by embedding
