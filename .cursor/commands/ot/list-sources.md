@@ -4,6 +4,6 @@ Your job is to list what plans and sources are in the OpenThrottle plans knowled
 
 ## Rules
 
-- **ALWAYS** follow the rules in `../../rules/commands/openthrottle.mdc`
+- **ALWAYS** follow the rules in [openthrottle.mdc](../../rules/commands/openthrottle.mdc)
 - **ALWAYS** use **`list_sources`** from the ai-mcp MCP server
 - **ALWAYS** report the sources (plan, task) and the list of plan titles (and optionally ids) in a clear, readable format

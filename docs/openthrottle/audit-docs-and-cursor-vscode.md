@@ -32,29 +32,29 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 
 ### 2.1 Workflows and Ralph
 
-| Doc                                                   | Cortex references                                                                                                                                |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tools/workflows/README.md`                           | Cortex plan/task UUID, `POSTGRES_*`, `databases/cortex/README.md`, commit links, Ralph flow, `cortex-ralph`, streamToCortex, plan_output_stream. |
-| `tools/workflows/docs/process-model.md`               | Cortex checks, Cortex `plan_output_stream`, streaming to API or Cortex.                                                                          |
-| `tools/workflows/docs/server-and-task-metrics.md`     | Cortex DB, Cortex `plan_output_stream`.                                                                                                          |
-| `tools/workflows/docs/verification-and-reporting.md`  | Reporting to Cortex (append_plan_output, run summary).                                                                                           |
-| `tools/workflows/docs/process-management-proposal.md` | API or Cortex progress.                                                                                                                          |
+| Doc                                                   | Cortex references                                                                                                                         |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `tools/workflows/README.md`                           | Cortex plan/task UUID, `POSTGRES_*`, `databases/README.md`, commit links, Ralph flow, `cortex-ralph`, streamToCortex, plan_output_stream. |
+| `tools/workflows/docs/process-model.md`               | Cortex checks, Cortex `plan_output_stream`, streaming to API or Cortex.                                                                   |
+| `tools/workflows/docs/server-and-task-metrics.md`     | Cortex DB, Cortex `plan_output_stream`.                                                                                                   |
+| `tools/workflows/docs/verification-and-reporting.md`  | Reporting to Cortex (append_plan_output, run summary).                                                                                    |
+| `tools/workflows/docs/process-management-proposal.md` | API or Cortex progress.                                                                                                                   |
 
 ### 2.2 Monorepo (local services, naming, migration)
 
-| Doc                                                                     | Cortex references                                                                                                                                                          |
-| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/monorepo/local-services-and-ports.md`                             | openthrottle-server "Cortex tooling", Ollama + `cortex:import`, Postgres (Cortex), cortex-api URL, `cortex.apiBaseUrl`, Caddy plan (Cortex), `databases/cortex/README.md`. |
-| `docs/monorepo/Ollama.md`                                               | `databases/cortex/README.md`, `cortex:import`, AGENTS.md.                                                                                                                  |
-| `docs/monorepo/naming-round-3-candidates.md`                            | "ex-Cortex" (plans/knowledge base), naming plan.                                                                                                                           |
-| `docs/monorepo/naming-round-2-candidates.md`                            | "ex-Cortex", VectorKit (ex-Cortex).                                                                                                                                        |
-| `docs/monorepo/naming-plans-candidates.md`                              | "ex-Cortex", Cortex plan.                                                                                                                                                  |
-| `docs/monorepo/naming-final-convention-and-choices.md`                  | ex-Cortex, VectorKit, rename "Cortex" to VectorKit.                                                                                                                        |
-| `docs/monorepo/naming-criteria-and-availability.md`                     | ex-Cortex, plans/knowledge base naming.                                                                                                                                    |
-| `docs/monorepo/naming-cms-candidates.md`                                | Cortex plan.                                                                                                                                                               |
-| `docs/monorepo/naming-availability-results.md`                          | ex-Cortex, VectorKit.                                                                                                                                                      |
-| `docs/__archive/monorepo/multi-repo-and-parent-workspace.md` (archived) | "cortex", "cortex-api" as private app names.                                                                                                                               |
-| `docs/monorepo/migration-strategy-sql-vs-typeorm.md`                    | Cortex setup, `cortex:migrate`, `run-cortex-migrations.ts`, `databases/cortex/README.md`.                                                                                  |
+| Doc                                                                     | Cortex references                                                                                                                                                   |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/monorepo/local-services-and-ports.md`                             | openthrottle-server "Cortex tooling", Ollama + `cortex:import`, Postgres (Cortex), cortex-api URL, `cortex.apiBaseUrl`, Caddy plan (Cortex), `databases/README.md`. |
+| `docs/monorepo/Ollama.md`                                               | `databases/README.md`, `cortex:import`, AGENTS.md.                                                                                                                  |
+| `docs/monorepo/naming-round-3-candidates.md`                            | "ex-Cortex" (plans/knowledge base), naming plan.                                                                                                                    |
+| `docs/monorepo/naming-round-2-candidates.md`                            | "ex-Cortex", VectorKit (ex-Cortex).                                                                                                                                 |
+| `docs/monorepo/naming-plans-candidates.md`                              | "ex-Cortex", Cortex plan.                                                                                                                                           |
+| `docs/monorepo/naming-final-convention-and-choices.md`                  | ex-Cortex, VectorKit, rename "Cortex" to VectorKit.                                                                                                                 |
+| `docs/monorepo/naming-criteria-and-availability.md`                     | ex-Cortex, plans/knowledge base naming.                                                                                                                             |
+| `docs/monorepo/naming-cms-candidates.md`                                | Cortex plan.                                                                                                                                                        |
+| `docs/monorepo/naming-availability-results.md`                          | ex-Cortex, VectorKit.                                                                                                                                               |
+| `docs/__archive/monorepo/multi-repo-and-parent-workspace.md` (archived) | "cortex", "cortex-api" as private app names.                                                                                                                        |
+| `docs/monorepo/migration-strategy-sql-vs-typeorm.md`                    | Cortex setup, `cortex:migrate`, `run-cortex-migrations.ts`, `databases/README.md`.                                                                                  |
 
 ### 2.3 OpenThrottle
 
@@ -82,26 +82,26 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 
 ### 3.1 Rules
 
-| File                                | Cortex references                                                                                                                                    |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.cursor/rules/commands/cortex.mdc` | **Full rule for Cortex:** product name "Cortex", ai-mcp, "ask cortex", `/cortex/*`, `databases/cortex/README.md`, GITHUB_USER, commit/task workflow. |
-| `.cursor/rules/commands/agents.mdc` | "Plans in Cortex only", cortex.mdc, Cortex/ai-mcp.                                                                                                   |
-| `.cursor/rules/README.md`           | "When to use Cortex", "Plans in Cortex only", cortex.mdc, agents.mdc.                                                                                |
+| File                                | Cortex references                                                                                                                             |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.cursor/rules/commands/cortex.mdc` | **Full rule for Cortex:** product name "Cortex", ai-mcp, "ask cortex", `/cortex/*`, `databases/README.md`, GITHUB_USER, commit/task workflow. |
+| `.cursor/rules/commands/agents.mdc` | "Plans in Cortex only", cortex.mdc, Cortex/ai-mcp.                                                                                            |
+| `.cursor/rules/README.md`           | "When to use Cortex", "Plans in Cortex only", cortex.mdc, agents.mdc.                                                                         |
 
 ### 3.2 Commands (directory and files)
 
-| Path                                        | Cortex references                                                                                                                                                           |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.cursor/commands/cortex/`                  | **Directory name** — would change for rename (e.g. `/vectorkit/*` or keep path and only change prose).                                                                      |
-| `.cursor/commands/cortex/README.md`         | Title "Cortex Cursor commands", cortex.mdc, "Cortex (semantic search...)", `databases/cortex/README.md`.                                                                    |
-| `.cursor/commands/cortex/ask.md`            | "Cortex (ai-mcp)", cortex.mdc.                                                                                                                                              |
-| `.cursor/commands/cortex/create-plan.md`    | "Cortex", cortex.mdc.                                                                                                                                                       |
-| `.cursor/commands/cortex/edit-task.md`      | "Cortex", cortex.mdc.                                                                                                                                                       |
-| `.cursor/commands/cortex/list-by-status.md` | "Cortex", cortex.mdc.                                                                                                                                                       |
-| `.cursor/commands/cortex/list-sources.md`   | "Cortex plans knowledge base", cortex.mdc.                                                                                                                                  |
-| `.cursor/commands/cortex/pending.md`        | "Cortex", cortex.mdc.                                                                                                                                                       |
-| `.cursor/commands/cortex/planning-mode.md`  | "Cortex (ai-mcp)", cortex.mdc.                                                                                                                                              |
-| `.cursor/commands/agents/ralph.md`          | Cortex plan/tasks, `/cortex/planning-mode`, plan_output_stream, Cortex MCP, `databases/cortex/README.md`, update-cortex-task-status, update-cortex-plan-status, cortex.mdc. |
+| Path                                        | Cortex references                                                                                                                                                    |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.cursor/commands/cortex/`                  | **Directory name** — would change for rename (e.g. `/vectorkit/*` or keep path and only change prose).                                                               |
+| `.cursor/commands/cortex/README.md`         | Title "Cortex Cursor commands", cortex.mdc, "Cortex (semantic search...)", `databases/README.md`.                                                                    |
+| `.cursor/commands/cortex/ask.md`            | "Cortex (ai-mcp)", cortex.mdc.                                                                                                                                       |
+| `.cursor/commands/cortex/create-plan.md`    | "Cortex", cortex.mdc.                                                                                                                                                |
+| `.cursor/commands/cortex/edit-task.md`      | "Cortex", cortex.mdc.                                                                                                                                                |
+| `.cursor/commands/cortex/list-by-status.md` | "Cortex", cortex.mdc.                                                                                                                                                |
+| `.cursor/commands/cortex/list-sources.md`   | "Cortex plans knowledge base", cortex.mdc.                                                                                                                           |
+| `.cursor/commands/cortex/pending.md`        | "Cortex", cortex.mdc.                                                                                                                                                |
+| `.cursor/commands/cortex/planning-mode.md`  | "Cortex (ai-mcp)", cortex.mdc.                                                                                                                                       |
+| `.cursor/commands/agents/ralph.md`          | Cortex plan/tasks, `/cortex/planning-mode`, plan_output_stream, Cortex MCP, `databases/README.md`, update-cortex-task-status, update-cortex-plan-status, cortex.mdc. |
 
 For rename: rule file could stay `cortex.mdc` or be renamed; command **paths** (`/cortex/ask` etc.) are part of Cursor UX—changing them would require updating all references and user muscle memory. Prose in each file would change from "Cortex" to the new product name.
 
@@ -130,17 +130,17 @@ No `.vscode/settings.json` in repo (user-local); template is `settings.json.defa
 
 ## 6. Root-level docs: AGENTS.md, README.md
 
-| File        | Cortex references                                                                                                                                                                                                                                        |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AGENTS.md` | workflow-ralph cortex-plan-uuid, Cortex, Plan-Id/Task-Id, commit links, `databases/cortex/README.md`, "plans in Cortex only", cortex.mdc, `.cursor/commands/cortex/`, docs-mcp "Cortex documentation", `pnpm run cortex:import`, OLLAMA + cortex:import. |
-| `README.md` | "Cortex Postgres (plans ingestion, pgvector)", `databases/cortex/README.md`, `.env.default` CORTEX*POSTGRES*\*, `docker compose ... up -d cortex`.                                                                                                       |
+| File        | Cortex references                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTS.md` | workflow-ralph cortex-plan-uuid, Cortex, Plan-Id/Task-Id, commit links, `databases/README.md`, "plans in Cortex only", cortex.mdc, `.cursor/commands/cortex/`, docs-mcp "Cortex documentation", `pnpm run cortex:import`, OLLAMA + cortex:import. |
+| `README.md` | "Cortex Postgres (plans ingestion, pgvector)", `databases/README.md`, `.env.default` CORTEX*POSTGRES*\*, `docker compose ... up -d cortex`.                                                                                                       |
 
 ---
 
 ## 7. Summary for strategy doc
 
 - **docs/openthrottle/** — 12+ files; directory name and in-file "Cortex" prose.
-- **Other docs** — ~20+ files across `docs/monorepo`, `docs/openthrottle`, `tools/workflows/docs`, `docs/tools` with "cortex" in script names, env names, plan IDs, product name "Cortex", or path references like `databases/cortex/README.md`.
+- **Other docs** — ~20+ files across `docs/monorepo`, `docs/openthrottle`, `tools/workflows/docs`, `docs/tools` with "cortex" in script names, env names, plan IDs, product name "Cortex", or path references like `databases/README.md`.
 - **.cursor/rules** — `cortex.mdc`, `agents.mdc`, `README.md`; "Cortex" and "Plans in Cortex only" throughout.
 - **.cursor/commands** — Directory `.cursor/commands/cortex/` and 8 command files + README; all reference Cortex and cortex.mdc.
 - **.cursor/settings.json** — Single key `cortex.apiBaseUrl`.

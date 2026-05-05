@@ -10,8 +10,8 @@ You are a highly skilled Software Engineer who favors clean abstractions and bul
 
 - **Plans in OT only; fail loudly:** When creating or managing plans, use OpenThrottle (mcp-developer) only. If mcp-developer is unavailable or create_plan/create_task fails, report the error clearly to the user; do not silently fall back to writing plans to Markdown files or skipping.
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server that talks to it. **@openthrottle/mcp-developer** is the OT MCP: it talks to the backend via GraphQL only (openthrottle-server). It stores plans, tasks, embeddings for semantic search, and the plan output stream. The MCP is registered in Cursor as `mcp-developer`.
-- **When to use:** When the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**, or runs any **`/cortex/*`** Cursor command, use the **mcp-developer** MCP server and follow the tool-selection and command rules below.
-- **Schema and setup:** See `databases/cortex/README.md` for schema, migrations, and usage.
+- **When to use:** When the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**, or runs any **`/ot/*`** Cursor command, use the **mcp-developer** MCP server and follow the tool-selection and command rules below.
+- **Schema and setup:** See [Databases README.md](../../../databases/README.md) for schema, migrations, and usage.
 
 ## MCP tools (mcp-developer)
 
@@ -26,17 +26,17 @@ You are a highly skilled Software Engineer who favors clean abstractions and bul
 - **Commit links:** `link_commit(planId, repo, sha, taskId?, message?)` — associate a git commit with a plan (and optionally a task). **Option A:** link only the **squash commit after PR merge** (so `commit_links` stores the one SHA on main). Do not link pre-merge commits during Ralph; `get_activity_by_date` and `get_last_activity` reflect only landed commits. After merging a PR, call `link_commit` with the squash SHA and PR message, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`.
 - **Commit after completing a task:** When working with OT plans/tasks (e.g. after completing or editing a task), add and commit changes with a conventional commit message and include `Plan-Id` and `Task-Id` in the commit body or footer. Do not call `link_commit` for these commits; link only the squash commit after PR merge.
 
-## Cursor commands (/cortex/\*)
+## Cursor commands (/ot/\*)
 
-- **`/cortex/ask`** — Answer the user's question using OT (semantic search, list by status, list sources, get_document). Answer only from retrieved chunks.
-- **`/cortex/pending`** — List plans with status `pending` via `list_plans_by_status(status: "pending")`.
-- **`/cortex/list-by-status`** — List plans by status (user or command specifies status: pending, in_progress, completed, etc.).
-- **`/cortex/list-sources`** — List plans/sources in the knowledge base via `list_sources`.
-- **`/cortex/create-plan`** — Create a new plan (and optional initial tasks) via `create_plan` and `create_task`. Report created plan id and any task ids/titles.
-- **`/cortex/planning-mode`** — Turn the user's idea or rough notes into a structured plan + tasks: `create_plan` then `create_task` for each step. Report plan and task ids/titles.
-- **`/cortex/edit-task`** — Edit an existing task via `get_task` and `update_task`. Report updated task id and fields.
+- **`/ot/ask`** — Answer the user's question using OT (semantic search, list by status, list sources, get_document). Answer only from retrieved chunks.
+- **`/ot/pending`** — List plans with status `PENDING` via `list_plans_by_status(status: "pending")`.
+- **`/ot/list-by-status`** — List plans by status (user or command specifies status: pending, in_progress, completed, etc.).
+- **`/ot/list-sources`** — List plans/sources in the knowledge base via `list_sources`.
+- **`/ot/create-plan`** — Create a new plan (and optional initial tasks) via `create_plan` and `create_task`. Report created plan id and any task ids/titles.
+- **`/ot/planning-mode`** — Turn the user's idea or rough notes into a structured plan + tasks: `create_plan` then `create_task` for each step. Report plan and task ids/titles.
+- **`/ot/edit-task`** — Edit an existing task via `get_task` and `update_task`. Report updated task id and fields.
 
-Commands live in `.cursor/commands/cortex/`. Each command instructs the agent to follow this rule and use the appropriate tools.
+Commands live in `.cursor/commands/ot/`. Each command instructs the agent to follow this rule and use the appropriate tools.
 
 ## Answering from OpenThrottle (OT)
 

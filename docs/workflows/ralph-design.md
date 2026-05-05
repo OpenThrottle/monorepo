@@ -5,7 +5,7 @@
 ## Goal
 
 - **Ralph** runs a single workflow: idea or PRD → **plan and tasks in Cortex** → execute one task at a time until done. Progress lives in Cortex (plan, tasks, `plan_output_stream`); no file-based modes or OUTPUT files.
-- Input can be a rough idea (use `/cortex/planning-mode` or OT MCP `create_plan` / `create_task` to turn it into a plan + tasks) or a **strict, hyper-detailed PRD** (ensure plan/tasks in OT match the PRD; required vs optional vs inferred attributes are in `databases/cortex/README.md`).
+- Input can be a rough idea (use `/cortex/planning-mode` or OT MCP `create_plan` / `create_task` to turn it into a plan + tasks) or a **strict, hyper-detailed PRD** (ensure plan/tasks in OT match the PRD; required vs optional vs inferred attributes are in `databases/README.md`).
 
 ## Modes
 
@@ -23,7 +23,7 @@
 
 ## PRD and Cortex attribute mapping
 
-- For a **strict, hyper-detailed PRD**: create or update plan/tasks in Cortex so they match the PRD. Required, inferred, and optional fields are in **`databases/cortex/README.md`** under "Plan and task attributes (PRD mapping)".
+- For a **strict, hyper-detailed PRD**: create or update plan/tasks in Cortex so they match the PRD. Required, inferred, and optional fields are in **`databases/README.md`** under "Plan and task attributes (PRD mapping)".
 - Required for plans: `title`. The agent infers `author` (GitHub handle) when missing; for `category`, infer when missing or confirm/adjust when provided so it fits the plan. Required for tasks: `title`, `plan_id`. Timestamps are always handled by the DB.
 
 ## Signals
@@ -64,6 +64,6 @@ Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mo
 
 - **Agentic prompt (v4):** `.cursor/commands/agents/ralph.md`
 - **Runtime configuration (agents, limits, future prompt overrides):** [ralph-workflow-runtime-config.md](./ralph-workflow-runtime-config.md)
-- **Cortex:** `.cursor/rules/commands/cortex.mdc`, `databases/cortex/README.md`
+- **Cortex:** `.cursor/rules/commands/cortex.mdc`, `databases/README.md`
 - **Cross-repo usage:** `tools/workflows/README.md` § Cross-repo usage and [tools/workflows/docs/cross-repo-usage.md](../../tools/workflows/docs/cross-repo-usage.md)
 - **Ralph technique:** [ghuntley.com/ralph](https://ghuntley.com/ralph)

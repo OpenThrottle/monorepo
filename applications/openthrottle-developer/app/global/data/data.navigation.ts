@@ -109,5 +109,22 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/profile',
     },
   ],
+  Legal: [
+    {
+      children: 'About',
+      icon: NotebookTextIcon,
+      to: '/About',
+    },
+    {
+      children: 'License',
+      icon: NotebookTextIcon,
+      to: '/legal/license',
+    },
+    {
+      children: 'Terms of Use',
+      icon: UserCircle,
+      to: '/legal/terms-of-use',
+    },
+  ],
 };
 /* eslint-enable sort-keys-fix/sort-keys-fix */

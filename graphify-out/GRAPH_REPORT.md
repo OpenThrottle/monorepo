@@ -147,7 +147,7 @@ Nodes (4): GraphQL codegen drift guard for openthrottle-agentic-ralph, OpenThrot
 ### Community 11 - "Database Migrations Strategy"
 
 Cohesion: 0.5
-Nodes (4): databases/cortex/README.md cortex:migrate, Rationale: Postgres-first pgvector and portability, SQL files as source of truth with custom runner, TypeORM migration:generate and migration:run
+Nodes (4): databases/README.md cortex:migrate, Rationale: Postgres-first pgvector and portability, SQL files as source of truth with custom runner, TypeORM migration:generate and migration:run
 
 ### Community 12 - "Git Worktree Nx Cache"
 

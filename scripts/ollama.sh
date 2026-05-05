@@ -36,7 +36,7 @@ ollama pull llama4
 ollama pull qwen3-coder-next
 
 # Embedding models (used when OLLAMA_EMBEDDING_MODEL / OLLAMA_BASE_URL are set for ai-mcp and cortex:import).
-# For Cortex schema (vector 1536), use a model that outputs 1536 dimensions; these models use other dimensions (all-minilm 384, mxbai-embed-large 1024, nomic-embed-text 768). For 1536-dim Cortex embeddings use OpenAI or an Ollama model that outputs 1536 when available. See databases/cortex/README.md § Embedding dimension strategy.
+# For Cortex schema (vector 1536), use a model that outputs 1536 dimensions; these models use other dimensions (all-minilm 384, mxbai-embed-large 1024, nomic-embed-text 768). For 1536-dim Cortex embeddings use OpenAI or an Ollama model that outputs 1536 when available. See databases/README.md § Embedding dimension strategy.
 ollama pull all-minilm
 ollama pull mxbai-embed-large
 ollama pull nomic-embed-text

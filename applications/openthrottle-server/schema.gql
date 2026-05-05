@@ -155,12 +155,18 @@ type ReviewCycleTimeObject {
 
 type PullListItemObject {
   author: String!
-  """Merge target branch ref when GitHub returns base.ref."""
+  """
+  Merge target branch ref when GitHub returns base.ref.
+  """
   baseRef: String
   createdAt: String!
-  """PR branch ref when GitHub returns head.ref."""
+  """
+  PR branch ref when GitHub returns head.ref.
+  """
   headRef: String
-  """Head commit SHA when GitHub returns head.sha (for commit/checks drill-down)."""
+  """
+  Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).
+  """
   headSha: String
   htmlUrl: String!
   mergedAt: String
@@ -275,7 +281,9 @@ type CancelPlanRunResultObject {
   """
   planStatusAfter: String
 
-  """Plan id from the request."""
+  """
+  Plan id from the request.
+  """
   planId: String!
 
   """
@@ -2913,14 +2921,18 @@ input CancelPlanRunInput {
   planId: ID!
 }
 
-"""Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose."""
+"""
+Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.
+"""
 enum RalphNestedDebugCli {
   debug
   omit
   verbose
 }
 
-"""Plan vs task-centric scope for in-process Ralph orchestrator runs."""
+"""
+Plan vs task-centric scope for in-process Ralph orchestrator runs.
+"""
 enum PlanRalphWorkflowMode {
   plan
   task
@@ -2931,28 +2943,44 @@ Optional Ralph / workflow-ralph runtime tuning for queued plan runs (iterations,
 When set, workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
 """
 input RalphPlanRunTuningInput {
-  """Execution backend (e.g. cursor). Omit to use worktree defaults."""
+  """
+  Execution backend (e.g. cursor). Omit to use worktree defaults.
+  """
   backend: String
 
-  """Per-iteration timeout in seconds (positive integer)."""
+  """
+  Per-iteration timeout in seconds (positive integer).
+  """
   iterationTimeoutSeconds: Int
 
-  """Max Ralph iterations for this run (positive integer)."""
+  """
+  Max Ralph iterations for this run (positive integer).
+  """
   iterations: Int
 
-  """Model id passed to workflow-ralph --model."""
+  """
+  Model id passed to workflow-ralph --model.
+  """
   model: String
 
-  """Nx project name for workflow-ralph --project."""
+  """
+  Nx project name for workflow-ralph --project.
+  """
   project: String
 
-  """Prompt profile path (e.g. /agents/ralph) for --prompt."""
+  """
+  Prompt profile path (e.g. /agents/ralph) for --prompt.
+  """
   prompt: String
 
-  """Repo-relative or absolute path for --prompt-file (layer-1 prompt file)."""
+  """
+  Repo-relative or absolute path for --prompt-file (layer-1 prompt file).
+  """
   promptFile: String
 
-  """Whether to pass --debug / --verbose to nested workflow-ralph."""
+  """
+  Whether to pass --debug / --verbose to nested workflow-ralph.
+  """
   ralphDebugCli: RalphNestedDebugCli
 }
 
@@ -2987,7 +3015,9 @@ input EnqueuePlanRalphOrchestratorInput {
   """
   mode: PlanRalphWorkflowMode
 
-  """Plan id to run the orchestrator for."""
+  """
+  Plan id to run the orchestrator for.
+  """
   planId: ID!
 
   """
@@ -2995,10 +3025,14 @@ input EnqueuePlanRalphOrchestratorInput {
   """
   priority: Int
 
-  """Optional Ralph tuning for the in-process orchestrator."""
+  """
+  Optional Ralph tuning for the in-process orchestrator.
+  """
   ralph: RalphPlanRunTuningInput
 
-  """Required when mode is task; must belong to the plan."""
+  """
+  Required when mode is task; must belong to the plan.
+  """
   taskId: ID
 }
 

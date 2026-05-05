@@ -9,7 +9,7 @@
 ## Running Ollama
 
 - Install from https://ollama.com/download; start the app or run `ollama serve`.
-- Pull models: `scripts/ollama.sh` (chat and embedding models). See `databases/cortex/README.md` for embedding dimension strategy.
+- Pull models: `scripts/ollama.sh` (chat and embedding models). See `databases/README.md` for embedding dimension strategy.
 
 ## Proxying Ollama through Caddy
 
@@ -20,7 +20,7 @@ The monorepo uses [Caddy](https://caddyserver.com/) to expose local services wit
 | **Option B** (local domains) | `https://ollama.local`     | You use `api.local`, `developer.local`, `ollama.local` (add to `/etc/hosts`). |
 | **Option A** (path-based)    | `https://localhost/ollama` | You use a single origin with no `/etc/hosts` changes.                         |
 
-- **Set `OLLAMA_BASE_URL`** to the proxied URL when using Caddy so `cortex:import`, LangChain, openthrottle-server, and other consumers use the same endpoint. See root `.env.default`, `AGENTS.md`, and `databases/cortex/README.md`.
+- **Set `OLLAMA_BASE_URL`** to the proxied URL when using Caddy so `cortex:import`, LangChain, openthrottle-server, and other consumers use the same endpoint. See root `.env.default`, `AGENTS.md`, and `databases/README.md`.
 - Caddy config: `tools/caddy/Caddyfile` (Option B) and `tools/caddy/Caddyfile.path-based` (Option A). Run Caddy from repo root per `tools/caddy/README.md`.
 - **Trusting Caddy's certificate:** For HTTPS without certificate errors in browsers and Node/fetch, install Caddy's local CA: run **`caddy trust`** once (see [tools/caddy/README.md](../../tools/caddy/README.md) § Local HTTPS and trust store).
 
@@ -33,7 +33,7 @@ When Ollama is behind Caddy, the browser or agent sends requests to the Caddy UR
 
 **Recommended for local dev:** set `OLLAMA_ORIGINS=*` (e.g. in `.zshrc` or `.env`) so Caddy and all agent origins are allowed. Restart `ollama serve` after changing.
 
-**Optional (stricter):** comma-separated list, e.g.  
+**Optional (stricter):** comma-separated list, e.g.
 `OLLAMA_ORIGINS=https://ollama.local,https://localhost,http://localhost:11434`
 
 Documented in root `.env.default`; see also `scripts/ollama.sh` and `tools/caddy/README.md`.

@@ -14,7 +14,7 @@ NestJS backend for the OpenThrottle platform. Exposes a GraphQL API for plans, t
 
 - Node.js ≥ 22
 - pnpm (monorepo root)
-- **Postgres** – OpenThrottle DB; see [databases/README.md](../../databases/cortex/README.md) for setup (e.g. `docker compose up -d openthrottle-postgres`, then `pnpm run database:migrate`)
+- **Postgres** – OpenThrottle DB; see [databases/README.md](../../databases/README.md) for setup (e.g. `docker compose up -d openthrottle-postgres`, then `pnpm run database:migrate`)
 - **Redis** – For BullMQ and GraphQL cache (e.g. from same compose: `docker compose up -d openthrottle-redis` if present, or local Redis on default port)
 
 ## Environment

@@ -1,6 +1,6 @@
 # OpenThrottle (OT) Cursor commands
 
-**Central reference:** `../../rules/commands/openthrottle.mdc` — what OT is, when to use it, all available MCP tools, and this command list.
+**Central reference:** [openthrottle.mdc](../../rules/commands/openthrottle.mdc) — what OT is, when to use it, all available MCP tools, and this command list.
 
 | Command              | Purpose                                                                     |
 | -------------------- | --------------------------------------------------------------------------- |
@@ -12,4 +12,4 @@
 | `/ot/planning-mode`  | Turn an idea or rough notes into a plan + tasks.                            |
 | `/ot/edit-task`      | Edit an existing task.                                                      |
 
-Schema and DB setup: `../../../databases/README.md`.
+Schema and DB setup: [Databases README.md](../../../databases/README.md).

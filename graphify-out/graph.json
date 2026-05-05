@@ -464,7 +464,7 @@
       "norm_label": "typeorm migration:generate and migration:run"
     },
     {
-      "label": "databases/cortex/README.md cortex:migrate",
+      "label": "databases/README.md cortex:migrate",
       "file_type": "document",
       "source_file": "docs/monorepo/migration-strategy-sql-vs-typeorm.md",
       "source_location": null,
