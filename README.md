@@ -23,11 +23,12 @@ After years of development, I've refined my tech stack to focus on a core set of
 ## 🤖 Ralph Loops
 
 ```bash
+# From this repository root (adjust POSTGRES_URL if your local DB differs).
 export POSTGRES_URL="postgresql://openthrottle_user:openthrottle_password@localhost:6010/openthrottle"
 
-/Users/matt/Development/openthrottle/node_modules/.bin/workflow-ralph \
+pnpm exec workflow-ralph \
   --plan b0e4bb13-0df3-4d7c-b165-7daf2fdf910e \
-  --prompt-file /Users/matt/Development/openthrottle/.cursor/commands/agents/ralph.md
+  --prompt-file .cursor/commands/agents/ralph.md
 ```
 
 ## 🏠 Architecture

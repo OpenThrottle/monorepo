@@ -4,7 +4,7 @@ MCP server for plans knowledge base (semantic search over Cortex Postgres).
 
 ## Deprecation (direct Postgres)
 
-**Direct Cortex Postgres access from this package is deprecated.** Prefer **@openthrottle/mcp-developer** for all Cortex MCP tools (see `packages/openthrottle/mcp-developer/README.md`). mcp-developer talks to Cortex **via GraphQL only** (openthrottle-server); it does not connect to Postgres. It has feature parity with ai-mcp (notes, plans, tasks, commit links, activity, output stream, search, health). See [DEPRECATION.md](./DEPRECATION.md) for migration. This package remains available for legacy or transition; new usage should use mcp-developer.
+**Direct Cortex Postgres access from this package is deprecated.** Prefer **@openthrottle/mcp-developer** for all Cortex MCP tools (see `packages/mcp-developer/README.md`). mcp-developer talks to Cortex **via GraphQL only** (openthrottle-server); it does not connect to Postgres. It has feature parity with ai-mcp (notes, plans, tasks, commit links, activity, output stream, search, health). See [DEPRECATION.md](./DEPRECATION.md) for migration. This package remains available for legacy or transition; new usage should use mcp-developer.
 
 ## Environment
 

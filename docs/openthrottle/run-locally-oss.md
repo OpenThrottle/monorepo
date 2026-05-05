@@ -44,7 +44,7 @@ All of the above are Open Source and can run on your machine or your own infrast
 ## References in this repo
 
 - **Cortex (plans, embeddings):** `databases/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
-- **mcp-developer (MCP server):** `packages/openthrottle/mcp-developer/README.md` — Cortex via GraphQL; auth token and API URL.
+- **mcp-developer (MCP server):** `packages/mcp-developer/README.md` — Cortex via GraphQL; auth token and API URL.
 - **Ollama setup:** `docs/monorepo/Ollama.md`, `scripts/ollama.sh`, root `.env.default`.
 - **Local services and ports:** `docs/monorepo/local-services-and-ports.md`.
 - **OpenThrottle app env:** `applications/openthrottle/.env.default` (Postgres, Redis).

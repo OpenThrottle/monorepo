@@ -6,7 +6,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
 1. **Start the cortex Postgres container**
 
-   From the repo root, using env from `.env.default` (or copy to `.env`). To verify OpenThrottle and the MCP are reachable, use the **mcp-developer `health` tool** — see `packages/openthrottle/mcp-developer/README.md` § **Is OpenThrottle running?**
+   From the repo root, using env from `.env.default` (or copy to `.env`). To verify OpenThrottle and the MCP are reachable, use the **mcp-developer `health` tool** — see `packages/mcp-developer/docs/verification-environment.md` (smoke baseline).
 
    ```bash
    docker compose -f docker-compose-databases.yml up -d cortex
@@ -243,7 +243,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/mcp-developer** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle/mcp-developer/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
+**@openthrottle/mcp-developer** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/mcp-developer/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
 
 ## Example queries
 

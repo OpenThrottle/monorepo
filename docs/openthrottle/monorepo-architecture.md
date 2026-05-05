@@ -120,4 +120,4 @@ Shared infra used by the server: **Postgres** (Cortex schema in `databases/corte
 - **Run locally (OSS/Ollama):** `docs/openthrottle/run-locally-oss.md`
 - **Docker image strategy:** `docs/openthrottle/docker-image-build-strategy.md`
 - **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`
-- **MCP developer setup:** `packages/openthrottle/mcp-developer/README.md`
+- **MCP developer setup:** `packages/mcp-developer/README.md`

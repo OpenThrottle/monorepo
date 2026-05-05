@@ -85,7 +85,7 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
   - **Developer app:** `pnpm nx run openthrottle-developer:dev` (connects to the server via `API_URL`; default dev port often 5173 or as in `.env`).
   - Ensure `CORS_ORIGINS` on the server includes the developer app origin (e.g. `http://localhost:5173`).
 - **Ports and env:** See `applications/openthrottle/.env.default` for `OPENTHROTTLE_SERVER_PORT`, `OPENTHROTTLE_DEVELOPER_PORT`, and Postgres/Redis. For a single entry point (e.g. Caddy), see `docs/monorepo/local-services-and-ports.md`.
-- **MCP / Cortex:** The plans knowledge base and MCP (mcp-developer) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/openthrottle/mcp-developer/README.md` and `databases/README.md`.
+- **MCP / Cortex:** The plans knowledge base and MCP (mcp-developer) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/mcp-developer/README.md` and `databases/README.md`.
 - **Tests and lint:** From repo root use Nx: `pnpm nx run openthrottle:test`, `pnpm nx run openthrottle:lint`, etc. Individual apps: `pnpm nx run openthrottle-server:test`, `pnpm nx run openthrottle-developer:test`, and so on.
 
 ## Suggestions
