@@ -195,12 +195,6 @@ pnpm add @openthrottle/nestjs-logging
 npm install @openthrottle/nestjs-logging
 ```
 
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-logging
-```
-
 ## Tests
 
 From the repo root:

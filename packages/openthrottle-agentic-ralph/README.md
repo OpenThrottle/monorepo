@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-agentic-ralph
 ```bash
 npm install @openthrottle/openthrottle-agentic-ralph
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-agentic-ralph
-```

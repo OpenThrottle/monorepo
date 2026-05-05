@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-notifications
 ```bash
 npm install @openthrottle/openthrottle-notifications
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-notifications
-```

@@ -108,9 +108,3 @@ pnpm add @openthrottle/nestjs-rbac
 ```bash
 npm install @openthrottle/nestjs-rbac
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-rbac
-```

@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-developer-codegen
 ```bash
 npm install @openthrottle/openthrottle-developer-codegen
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-developer-codegen
-```

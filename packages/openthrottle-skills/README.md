@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-skills
 ```bash
 npm install @openthrottle/openthrottle-skills
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-skills
-```

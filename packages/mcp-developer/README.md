@@ -2,7 +2,7 @@
 
 Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access). Tools call openthrottle-server over GraphQL only.
 
-For schema, embeddings, and local Postgres setup, see [databases/README.md](../../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../../AGENTS.md).
+For schema, embeddings, and local Postgres setup, see [databases/README.md](../../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
 
 ## Authentication
 
@@ -10,7 +10,7 @@ Authenticated GraphQL calls use a token from the environment. Set **`MCP_DEVELOP
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/mcp-developer": "workspace:*"` where needed, or run the MCP from this package after a build. See [AGENTS.md](../../../AGENTS.md) for OpenThrottle MCP usage.
+**In this monorepo:** add `"@openthrottle/mcp-developer": "workspace:*"` where needed, or run the MCP from this package after a build. See [AGENTS.md](../../AGENTS.md) for OpenThrottle MCP usage.
 
 **Build and run (monorepo):**
 

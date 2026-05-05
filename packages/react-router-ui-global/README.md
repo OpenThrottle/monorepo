@@ -17,9 +17,3 @@ pnpm add @openthrottle/react-router-ui-global
 ```bash
 npm install @openthrottle/react-router-ui-global
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/react-router-ui-global
-```

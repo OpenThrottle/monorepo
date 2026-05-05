@@ -26,8 +26,8 @@ Populate `documentation` and `documentation_embeddings` with:
 pnpm run cortex:import-docs
 ```
 
-See `databases/cortex/README.md` for schema and optional env (`DOCS_REPO`, `DOCS_SHA`, etc.).
+See `databases/README.md` for schema and optional env (`DOCS_REPO`, `DOCS_SHA`, etc.).
 
 ## See also
 
-- [AGENTS.md](../../../AGENTS.md) — pnpm and Nx usage in this monorepo.
+- [AGENTS.md](../../AGENTS.md) — pnpm and Nx usage in this monorepo.

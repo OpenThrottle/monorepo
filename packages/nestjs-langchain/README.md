@@ -17,9 +17,3 @@ pnpm add @openthrottle/nestjs-langchain
 ```bash
 npm install @openthrottle/nestjs-langchain
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-langchain
-```
