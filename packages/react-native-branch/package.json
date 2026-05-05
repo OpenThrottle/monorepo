@@ -3,12 +3,21 @@
   "description": "Shared Branch.io integration for Expo React Native apps.",
   "version": "0.0.1",
   "files": [
-    "app.plugin.js"
+    "app.plugin.js",
+    "dist",
+    "src"
   ],
   "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
     "./app.plugin.js": "./app.plugin.js",
     "./package.json": "./package.json"
   },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -24,10 +33,40 @@
     "react-native": ">=0.60",
     "react-native-branch": "^6.9.0"
   },
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@shiftsmartinc/react-native-branch",
+      "production:true",
+      "publish:false",
+      "technology:react-native",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "__dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
-  "type": "commonjs"
+  "type": "commonjs",
+  "types": "./src/index.ts"
 }
