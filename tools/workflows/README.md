@@ -120,7 +120,19 @@ Ralph can be invoked from another repo by pointing at this monorepo's workflow b
 
 ## Worktree + BullMQ workflow (fan-out/fan-in)
 
-**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). The legacy in-process cwd path uses the same argv builder for `job.data.ralph`.
+Ralph-related execution splits into **three surfaces** (same Cortex plan/task semantics; different host process):
+
+| Surface                        | What runs                                                                                                                                                                                                          | Typical trigger                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| **Local CLI**                  | `pnpm exec workflow-ralph` — Cursor subprocess per iteration; Cortex via **this process** `POSTGRES_*`                                                                                                             | Developer terminal, scripts, cross-repo invoke                                            |
+| **Plans queue — spawn**        | Nested `pnpm exec workflow-ralph --plan <planId>` inside the worker (`runChildJob`), optionally inside an acquired worktree when `WORKTREE_TARGETS` is set                                                         | GraphQL **`enqueuePlanRun`** → job payload `runKind: 'spawn'` or omit `runKind` (default) |
+| **Plans queue — orchestrator** | **No** nested `workflow-ralph` child: in-process **`createWorkflowRalphOrchestrator`** (server uses `@openthrottle/openthrottle-agentic-ralph`; same logical loop as CLI with injected GraphQL + iteration runner) | GraphQL **`enqueuePlanRalphOrchestrator`** → job payload `runKind: 'orchestrator'`        |
+
+Implementation notes: discriminant and argv/context mapping are documented in `applications/openthrottle-server/src/queues/plans/plans.types.ts` (`RunPlanJobData`, `runKind`). The typed orchestrator package (`@openthrottle/openthrottle-workflows`) remains the portable contract; the API worker wires deps via `@openthrottle/openthrottle-agentic-ralph` (`AgenticRalphOrchestratorService`, `plans.processor.ts`).
+
+**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` (spawn path) resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). Spawn jobs map `job.data.ralph` with `buildWorkflowRalphRunTuningArgv`; orchestrator jobs map it with `buildRalphFlowContextFromPlanRunTuning` (see `plans.types.ts`).
+
+**Deferred (Docker / compose / paths):** Open items such as **`WORKSPACE_ROOT`** when the API is not started from the repo root, compose-side worker layout, and host-specific path assumptions are tracked for investigation under OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** — not finalized in this document.
 
 A reusable workflow composes worktree allocation, a pluggable loop, and commit guarantees so you can run any loop (e.g. Ralph) with:
 

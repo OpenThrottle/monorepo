@@ -30,7 +30,7 @@ export interface GlobalSidebarContentProps {
    */
   readonly defaultSectionsExpanded?: boolean;
   /**
-   * @description Initial expanded state per section key (navigation group name). Overrides
+   * @description Initial expanded state per section key (navigation group name). <Over></Over>rides
    * {@link defaultSectionsExpanded} for that section only.
    */
   readonly sectionDefaultExpanded?: Readonly<Partial<Record<string, boolean>>>;
@@ -65,7 +65,7 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
     const isActive = isLinkActive(item);
 
     return (
-      <SidebarMenuItem className="m-0" key={key} style={{ margin: 0 }}>
+      <SidebarMenuItem className="m-0 px-px" key={key} style={{ margin: 0 }}>
         <SidebarMenuButton
           asChild={true}
           isActive={isActive}
@@ -92,7 +92,7 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
   // 🔌 Short Circuit
 
   return (
-    <SidebarContent className="h-full" title="Global Sidebar Content">
+    <SidebarContent className="h-full gap-0" title="Global Sidebar Content">
       {sections.map((section) => {
         const items = data?.[section] ?? [];
         const hasActiveLinkInSection = items.some(isLinkActive);
@@ -106,25 +106,27 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
 
         return (
           <Collapsible
-            className="group"
+            className="group px-1"
             defaultOpen={defaultOpen}
             key={section}
           >
-            <SidebarGroup title={section}>
+            <SidebarGroup className="m-0" title={section}>
               <SidebarGroupLabel asChild={true}>
                 <CollapsibleTrigger
                   className="justify-between gap-2"
                   type="button"
                 >
-                  <span className="min-w-0 flex-1 truncate">{section}</span>
+                  <span className="min-w-0 flex-1 text-left truncate">
+                    {section}
+                  </span>
                   <ChevronDown
                     aria-hidden={true}
-                    className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"
+                    className="size-4 text-muted-foreground/50 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"
                   />
                 </CollapsibleTrigger>
               </SidebarGroupLabel>
               <CollapsibleContent>
-                <SidebarGroupContent>
+                <SidebarGroupContent className="py-px">
                   <SidebarMenu title={section}>
                     {items.map(renderLink)}
                   </SidebarMenu>

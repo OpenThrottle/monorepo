@@ -103,19 +103,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       icon: BellIcon,
       to: '/notifications',
     },
-    {
-      children: 'Profile',
-      icon: UserCircle,
-      to: '/profile',
-    },
+    // {
+    //   children: 'Profile',
+    //   icon: UserCircle,
+    //   to: '/profile',
+    // },
   ],
   Legal: [
-    {
-      children: 'About',
-      end: true,
-      icon: NotebookTextIcon,
-      to: '/legal',
-    },
     {
       children: 'License',
       icon: NotebookTextIcon,
@@ -130,6 +124,12 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Terms of Use',
       icon: UserCircle,
       to: '/legal/terms-of-use',
+    },
+    {
+      children: 'About',
+      end: true,
+      icon: NotebookTextIcon,
+      to: '/legal',
     },
   ],
 };

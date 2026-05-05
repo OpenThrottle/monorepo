@@ -26,6 +26,7 @@
 
 - **Discoverability:** Run `pnpm exec workflow-ralph --help` (and other bins) for usage. See `tools/workflows/README.md` for bin list.
 - **Run:** `pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>` (or `--task <openthrottle-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`.
+- **API queue (spawn vs orchestrator):** `enqueuePlanRun` runs nested `workflow-ralph` in the worker; `enqueuePlanRalphOrchestrator` runs the in-process GraphQL Ralph orchestrator (no child CLI). See `tools/workflows/README.md` § Worktree + BullMQ workflow. Docker, worker cwd, and compose follow-ups: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
 - **Commit as you go:** When running Ralph (or working with OT plans/tasks), commit and push after each task or logical chunk. Use conventional commits and include `Plan-Id` and `Task-Id` in the commit body or footer. Link commits in OT only after the PR is merged (via `workflow-link-merge`); see `databases/README.md` § Commit links.
 
 ## Code style and preferences
@@ -38,6 +39,7 @@
 ## OpenThrottle (OT) — plans knowledge base
 
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/mcp-developer** (GraphQL only; see `.cursor/mcp.json`). Use the **mcp-developer** MCP server for all OT tools.
+- **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/mcp-developer/docs/verification-environment.md](packages/mcp-developer/docs/verification-environment.md).
 - **Rules:** [.cursor/rules/commands/openthrottle.mdc](.cursor/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
 - **Commands:** [.cursor/commands/ot/](.cursor/commands/ot/) — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **mcp-developer** MCP server; answer only from retrieved chunks.

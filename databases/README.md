@@ -4,12 +4,18 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
 ## Setup
 
-1. **Start the cortex Postgres container**
+1. **Start Postgres and Redis (OpenThrottle)**
 
-   From the repo root, using env from `.env.default` (or copy to `.env`). To verify OpenThrottle and the MCP are reachable, use the **mcp-developer `health` tool** — see `packages/mcp-developer/docs/verification-environment.md` (smoke baseline).
+   From the repo root, using env from `.env.default` (or copy to `.env`). This brings up **`openthrottle-postgres`** and **`openthrottle-redis`** from the root `docker-compose.yml` (same as `pnpm run database:start`). For the full minimal API + UI path (install, migrate, `openthrottle-server:dev`, optional `openthrottle-developer:dev`), see [docs/openthrottle/run-openthrottle-server-developer.md](../docs/openthrottle/run-openthrottle-server-developer.md). To verify OpenThrottle and the MCP are reachable after the API is up, use the **mcp-developer `health` tool** — see [packages/mcp-developer/docs/verification-environment.md](../packages/mcp-developer/docs/verification-environment.md) (smoke baseline).
 
    ```bash
-   docker compose -f docker-compose-databases.yml up -d cortex
+   pnpm run database:start
+   ```
+
+   Equivalent explicit Compose invocation:
+
+   ```bash
+   docker compose up -d openthrottle-postgres openthrottle-redis
    ```
 
 2. **Environment variables**

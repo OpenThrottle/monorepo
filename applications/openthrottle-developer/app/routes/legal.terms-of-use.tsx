@@ -1,8 +1,10 @@
 import * as React from 'react';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { BookOpenIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal.terms-of-use';
@@ -23,10 +25,17 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <h1 className="my-4 text-xl">Terms of use</h1>
-      <p className="max-w-2xl text-sm text-muted-foreground">
-        Terms of use content will be published here.
-      </p>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={BookOpenIcon}
+          title="Terms of use"
+        />
+        <p className="text-sm text-muted-foreground">
+          Terms of use content will be published here.
+        </p>
+      </div>
     </GlobalScreen>
   );
 }

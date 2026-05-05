@@ -1,23 +1,23 @@
 import * as React from 'react';
-import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import classnames from 'classnames';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 
-function formatPlansTasksSummary(project: ProjectCardFragment): string {
-  const planCount = project.plans?.length ?? 0;
-  const taskCount = project.tasks?.length ?? 0;
-  const parts: string[] = [];
-  if (planCount !== 0) {
-    parts.push(`${planCount} plan${planCount === 1 ? '' : 's'}`);
-  }
-  if (taskCount !== 0) {
-    parts.push(`${taskCount} task${taskCount === 1 ? '' : 's'}`);
-  }
-  return parts.length > 0 ? parts.join(' · ') : '—';
-}
+// function formatPlansTasksSummary(project: ProjectCardFragment): string {
+//   const planCount = project.plans?.length ?? 0;
+//   const taskCount = project.tasks?.length ?? 0;
+//   const parts: string[] = [];
+//   if (planCount !== 0) {
+//     parts.push(`${planCount} plan${planCount === 1 ? '' : 's'}`);
+//   }
+//   if (taskCount !== 0) {
+//     parts.push(`${taskCount} task${taskCount === 1 ? '' : 's'}`);
+//   }
+//   return parts.length > 0 ? parts.join(' · ') : '—';
+// }
 
 function formatUpdatedAt(project: ProjectCardFragment): string {
   const raw = project.updatedAt ?? project.createdAt;
@@ -61,28 +61,29 @@ const projectTableColumns: ColumnDef<
     },
     header: () => <div className="p-4 py-2">Context</div>,
   },
-  {
-    accessorKey: 'nxProjectName',
-    cell: ({ row }) => {
-      const nx = row.original.nxProjectName;
-      return nx ? (
-        <Badge size="xs" variant="secondary">
-          {nx}
-        </Badge>
-      ) : (
-        <span className="text-muted-foreground text-xs">—</span>
-      );
-    },
-    header: () => 'Project',
-  },
+  // {
+  //   accessorKey: 'nxProjectName',
+  //   cell: ({ row }) => {
+  //     const nx = row.original.nxProjectName;
+  //     return nx ? (
+  //       <Badge size="xs" variant="secondary">
+  //         {nx}
+  //       </Badge>
+  //     ) : (
+  //       <span className="text-muted-foreground text-xs">—</span>
+  //     );
+  //   },
+  //   header: () => 'Project',
+  // },
   {
     accessorKey: 'plans',
-    cell: ({ row }) => (
-      <span className="tabular-nums text-xs">
-        {formatPlansTasksSummary(row.original)}
-      </span>
-    ),
-    header: () => 'Plans · Tasks',
+    cell: ({ row }) => row.original.plans?.length ?? 0,
+    header: () => 'Plans',
+  },
+  {
+    accessorKey: 'tasks',
+    cell: ({ row }) => row.original.tasks?.length ?? 0,
+    header: () => 'Tasks',
   },
   {
     accessorKey: 'updatedAt',

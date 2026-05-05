@@ -6,6 +6,12 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@openthrottle/react-router-shadcn';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal._index';
@@ -31,14 +37,15 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="Legal"
+          title="About"
         />
         <p className="text-sm text-muted-foreground">
-          Policies and terms that apply to your use of OpenThrottle Developer.
+          OpenThrottle Developer is a platform for developers to create and
+          manage their projects.
         </p>
       </div>
 
-      <ul className="mt-6 list-disc space-y-2 pl-5 text-sm">
+      {/* <ul className="mt-6 list-disc space-y-2 pl-5 text-sm">
         <li>
           <Link
             className="text-primary underline-offset-4 hover:underline"
@@ -63,7 +70,32 @@ export default function Component(
             Terms of use
           </Link>
         </li>
-      </ul>
+      </ul> */}
+
+      <div className="py-12 relative flex flex-col gap-8">
+        <Avatar className="size-24 md:size-32 mx-auto m-4">
+          <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
+          <AvatarFallback className="text-3xl">MS</AvatarFallback>
+        </Avatar>
+
+        <div className="flex flex-col items-center-">
+          <h2 className="text-xl font-bold mb-4">Matthew Scholta</h2>
+          <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+            <OpenThrottleClipboard
+              label="matthew@openthrottle.com"
+              text="matthew@openthrottle.com"
+            />
+          </h3>
+          <div className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+            <Link
+              target="_blank"
+              to="https://mattscholta.com?ref=openthrottle-developer"
+            >
+              mattscholta.com
+            </Link>
+          </div>
+        </div>
+      </div>
     </GlobalScreen>
   );
 }

@@ -62,6 +62,7 @@ Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mo
 
 ## References
 
+- **Server-side Ralph (BullMQ):** Local CLI vs nested `workflow-ralph` spawn vs in-process orchestrator (`enqueuePlanRun` vs `enqueuePlanRalphOrchestrator`) — `tools/workflows/README.md` § Worktree + BullMQ workflow. Compose/Docker/path deferrals: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
 - **Agentic prompt (v4):** `.cursor/commands/agents/ralph.md`
 - **Runtime configuration (agents, limits, future prompt overrides):** [ralph-workflow-runtime-config.md](./ralph-workflow-runtime-config.md)
 - **OpenThrottle MCP rules:** `.cursor/rules/commands/openthrottle.mdc`, `databases/README.md`
