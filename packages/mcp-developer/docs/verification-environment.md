@@ -26,6 +26,28 @@ API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
 
 This probes **`GET /health`** on the API base and reports missing `.env` keys / unset auth token.
 
+## Secondary workspace (another repo open in Cursor)
+
+Use OpenThrottle MCP while your **active Cursor workspace** is a different checkout (for example another monorepo under `/Users/.../native-apps`).
+
+| Requirement                                                                     | Why                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **User-level MCP config** (`~/.cursor/mcp.json`) or equivalent global MCP entry | Project-level `.cursor/mcp.json` inside OpenThrottle is not loaded when that folder is not the workspace root.                                                                                                                                                                                                           |
+| **Absolute path to the launcher**                                               | Configuring `bash` with `./scripts/run-mcp-developer.sh` resolves relative to the **open workspace**. Outside the OpenThrottle repo that path does not exist and the MCP fails to start. Prefer `bash` + absolute path, e.g. `/Users/<you>/Development/openthrottle/scripts/run-mcp-developer.sh` (match your checkout). |
+| **Same env as local OT**                                                        | Set `API_URL` / **`API_URL_INTERNAL`** to the running openthrottle-server (e.g. `http://localhost:6021`) and **`MCP_DEVELOPER_AUTH_TOKEN`** for authenticated tools. These are independent of which folder is open in Cursor.                                                                                            |
+| **OpenThrottle repo still on disk**                                             | The launcher `cd`s to the monorepo root and reads **that** tree’s `.env` for `OPENAI_API_KEY` before starting Node.                                                                                                                                                                                                      |
+
+**Validated behavior:** `create_plan`, `create_task`, and other GraphQL-backed tools do **not** use the Cursor workspace path; they call openthrottle-server over HTTP. Storing **absolute workspace or repository roots in OpenThrottle** (future app/user config) would mainly improve linking work across repos and semantic context—not a prerequisite for MCP CRUD from a secondary workspace.
+
+### Failure modes (secondary workspace or any host)
+
+| Symptom                                                           | Likely cause                                                                                     |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| MCP process exits immediately with `OPENAI_API_KEY is not set`    | Monorepo root `.env` missing `OPENAI_API_KEY` (launcher requirement).                            |
+| MCP fails to start / “no such file” for the shell script          | Relative launcher path while workspace is not the OpenThrottle repo; switch to an absolute path. |
+| `health` fails or connection errors                               | Server down, wrong port, or **`API_URL_INTERNAL`** does not match openthrottle-server `PORT`.    |
+| Authenticated tools error (“set MCP_DEVELOPER_AUTH_TOKEN” or 401) | Token unset, expired, or wrong server; see [AUTH.md](./AUTH.md).                                 |
+
 ## Build and run the MCP locally
 
 ```bash
