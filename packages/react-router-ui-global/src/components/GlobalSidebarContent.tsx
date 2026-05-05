@@ -2,6 +2,9 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { NavLink, useLocation } from 'react-router';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -10,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
+import { ChevronDown } from 'lucide-react';
 import type { NavLinkProps } from 'react-router';
 import { getPathFromTo } from '../utils/utils.global';
 
@@ -18,17 +22,36 @@ export interface GlobalSidebarContentLinkProps extends NavLinkProps {
 }
 
 export interface GlobalSidebarContentProps {
-  data?: Record<string, GlobalSidebarContentLinkProps[]>;
+  readonly data?: Record<string, GlobalSidebarContentLinkProps[]>;
+  /**
+   * @description When false, sections start collapsed except {@link sectionDefaultExpanded}
+   * entries and sections that contain the active route. When true or omitted, all sections
+   * start expanded.
+   */
+  readonly defaultSectionsExpanded?: boolean;
+  /**
+   * @description Initial expanded state per section key (navigation group name). Overrides
+   * {@link defaultSectionsExpanded} for that section only.
+   */
+  readonly sectionDefaultExpanded?: Readonly<Partial<Record<string, boolean>>>;
 }
 
 export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
-  const { data } = props;
+  const { data, defaultSectionsExpanded, sectionDefaultExpanded } = props;
 
   // Hooks
   const location = useLocation();
 
   // Setup
   const sections = Object.keys(data ?? {});
+
+  const isLinkActive = (item: GlobalSidebarContentLinkProps): boolean => {
+    const toPath = getPathFromTo(item.to);
+    const isExact = item.end === true;
+    return isExact
+      ? location.pathname === toPath
+      : location.pathname.startsWith(toPath);
+  };
 
   // Handlers
 
@@ -39,27 +62,16 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
     const toPath = getPathFromTo(to);
     const key = `${toPath}-${index}`;
 
-    // console.log('asdfasdfasdf', item.end === true);
-
-    const isExact = item.end === true;
-    const isActive = isExact
-      ? location.pathname === toPath
-      : location.pathname.startsWith(toPath);
+    const isActive = isLinkActive(item);
 
     return (
       <SidebarMenuItem className="m-0" key={key} style={{ margin: 0 }}>
         <SidebarMenuButton
           asChild={true}
-          color="#00ff00"
           isActive={isActive}
           tooltip={String(children)}
         >
-          <NavLink
-            className="text-xs!"
-            color="#00ff00"
-            to={item.to}
-            viewTransition={true}
-          >
+          <NavLink className="text-xs!" to={item.to} viewTransition={true}>
             <IconComponent
               className={classnames('size-4 shrink-0', {
                 'text-accent': isActive,
@@ -83,14 +95,43 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
     <SidebarContent className="h-full" title="Global Sidebar Content">
       {sections.map((section) => {
         const items = data?.[section] ?? [];
+        const hasActiveLinkInSection = items.some(isLinkActive);
+
+        const defaultOpen =
+          sectionDefaultExpanded?.[section] !== undefined
+            ? sectionDefaultExpanded[section]!
+            : defaultSectionsExpanded !== false
+              ? true
+              : hasActiveLinkInSection;
 
         return (
-          <SidebarGroup key={section} title={section}>
-            <SidebarGroupLabel>{section}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu title={section}>{items.map(renderLink)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <Collapsible
+            className="group"
+            defaultOpen={defaultOpen}
+            key={section}
+          >
+            <SidebarGroup title={section}>
+              <SidebarGroupLabel asChild={true}>
+                <CollapsibleTrigger
+                  className="justify-between gap-2"
+                  type="button"
+                >
+                  <span className="min-w-0 flex-1 truncate">{section}</span>
+                  <ChevronDown
+                    aria-hidden={true}
+                    className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"
+                  />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu title={section}>
+                    {items.map(renderLink)}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
         );
       })}
     </SidebarContent>
