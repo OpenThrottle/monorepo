@@ -75,7 +75,7 @@ export const TaskDetails = (props: TaskDetailsProps) => {
               <PlanStatusBadge
                 status={task.status as keyof typeof PlanStatusBadge}
               />
-              <h1 className="text-xl text-highlight">{task.title}</h1>
+              <h1 className="text-xl text-accent">{task.title}</h1>
 
               <div className="flex-1" />
               <Badge variant="secondary">Task</Badge>

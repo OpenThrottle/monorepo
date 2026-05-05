@@ -500,10 +500,13 @@ export default function App(): React.ReactElement {
         </GlobalLayout>
       </GlobalProviders>
 
+      {/* We can allow for more customization here as well... */}
       <style type="text/css">{`
         :root {
           ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
           ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
+          ${config.accentColor ? `--color-sidebar-ring: ${config.accentColor}` : ``};
+          ${config.accentColor ? `--tw-ring-color: ${config.accentColor}` : ``};
         }
       `}</style>
     </>

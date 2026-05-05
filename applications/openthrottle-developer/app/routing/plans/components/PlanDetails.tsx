@@ -108,9 +108,9 @@ export const PlanDetails = (props: PlanDetailsProps) => {
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
-            <CardTitle className="flex items-center gap-4">
+            <CardTitle className="flex items-center gap-4 mb-4">
               <PlanStatusBadge status={status} />
-              <h1 className="text-lg flex-1 text-highlight">{plan.title}</h1>
+              <h1 className="text-lg flex-1 text-accent">{plan.title}</h1>
             </CardTitle>
 
             <PlanWorkflowRunTransparency

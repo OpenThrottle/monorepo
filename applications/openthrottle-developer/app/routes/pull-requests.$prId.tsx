@@ -116,7 +116,7 @@ export default function Component(
       ) : (
         <>
           <div className="mb-6">
-            <h1 className="text-xl text-highlight font-semibold leading-snug">
+            <h1 className="text-xl text-accent font-semibold leading-snug">
               {pull.title}{' '}
               <span className="text-muted-foreground font-normal">
                 #{pull.number}

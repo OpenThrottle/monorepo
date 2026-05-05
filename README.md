@@ -8,6 +8,7 @@ After years of development, I've refined my tech stack to focus on a core set of
 **See also:** [docs/](./docs/) for detailed guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
 - [🐙 Monorepo](#-monorepo)
+  - [🤖 Ralph Loops](#-ralph-loops)
   - [🏠 Architecture](#-architecture)
   - [⚙️ Installation](#️-installation)
   - [🧑‍💻 Development](#-development)
@@ -18,6 +19,16 @@ After years of development, I've refined my tech stack to focus on a core set of
     - [Using Reserved Worktrees](#using-reserved-worktrees)
   - [☁️ GCP Auth | gcloud CLI](#️-gcp-auth--gcloud-cli)
   - [🛟 Troubleshooting](#-troubleshooting)
+
+## 🤖 Ralph Loops
+
+```bash
+export POSTGRES_URL="postgresql://openthrottle_user:openthrottle_password@localhost:6010/openthrottle"
+
+/Users/matt/Development/openthrottle/node_modules/.bin/workflow-ralph \
+  --plan b0e4bb13-0df3-4d7c-b165-7daf2fdf910e \
+  --prompt-file /Users/matt/Development/openthrottle/.cursor/commands/agents/ralph.md
+```
 
 ## 🏠 Architecture
 

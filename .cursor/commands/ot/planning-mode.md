@@ -4,7 +4,7 @@ Your job is to support the **"random idea → documented plan"** workflow using 
 
 ## Rules
 
-- **ALWAYS** follow the rules in `.cursor/rules/commands/cortex.mdc`
+- **ALWAYS** follow the rules in `../../rules/commands/openthrottle.mdc`
 - **ALWAYS** use **`create_plan`** to create a plan from the user's idea: extract or infer `title` (required), `author` (GitHub handle; infer when missing, e.g. from context), `category` (infer when missing from plan content, or when provided confirm it fits or pick a better one), and optional `description` from their message
 - If the idea implies concrete steps or work items, use **`create_task`** for each (with the new plan's id), with clear `title` and optional `description`/`requirements`
 - Keep the plan and tasks concise; match the user's tone (brief vs detailed)

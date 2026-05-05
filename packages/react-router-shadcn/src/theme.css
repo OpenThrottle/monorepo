@@ -11,9 +11,10 @@
 
 :root {
   --brand: hsl(0, 100%, 50%);
+  --tw-ring-color: var(--brand);
 
-  --accent-foreground: hsl(0 0% 9%);
   --accent: var(--brand);
+  --accent-foreground: hsl(0 0% 9%);
   --background: hsl(0 0% 95%);
   --border: hsl(0 0% 89.8%);
   --card-foreground: hsl(0 0% 3.9%);
@@ -148,7 +149,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-mono;
   }
 }
 

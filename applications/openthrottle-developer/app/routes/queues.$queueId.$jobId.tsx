@@ -102,7 +102,7 @@ export default function Component(
         </span>
       </nav>
 
-      <h1 className="text-xl font-semibold mb-6 text-highlight">
+      <h1 className="text-xl font-semibold mb-6 text-accent">
         Queue job <span className="font-mono text-base">{job.id}</span>
       </h1>
 

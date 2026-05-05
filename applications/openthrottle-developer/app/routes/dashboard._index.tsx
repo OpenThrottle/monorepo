@@ -98,7 +98,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12">
+    <GlobalScreen
+    // className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12"
+    >
       <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
         <OpenThrottleStatCard title="Total plans" value={12} />
         <OpenThrottleStatCard title="Active tasks" value={3} />

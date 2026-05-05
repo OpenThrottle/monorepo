@@ -22,7 +22,7 @@ import {
 } from '~/routing/projects/utils/parsers';
 import { ProjectEmpty } from '~/routing/projects/components/ProjectEmpty';
 import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { ProjectsStatsCards } from '~/routing/projects/components/ProjectsStatsCards';
+import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -136,7 +136,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <ProjectsStatsCards
+      <ProjectsStats
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />

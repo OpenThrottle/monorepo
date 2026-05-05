@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router';
-import { Button, Markdown } from '@openthrottle/react-router-shadcn';
+import { Button, Markdown, toast } from '@openthrottle/react-router-shadcn';
 import {
   bucketRouteHttpStatus,
   classifyClientError,
@@ -97,6 +97,7 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
   const onCopyReferenceId = async () => {
     try {
       await navigator.clipboard.writeText(incidentReferenceId);
+      console.warn('Clipboard unavailable');
     } catch {
       console.warn('Clipboard unavailable');
     }
@@ -128,6 +129,8 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
     }
     try {
       await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+
+      toast.success('Incident details copied to clipboard');
     } catch {
       console.warn('Clipboard unavailable');
     }

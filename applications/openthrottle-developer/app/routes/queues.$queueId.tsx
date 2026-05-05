@@ -126,7 +126,7 @@ export default function Component(
         <OpenThrottleStatCard title="Failed" value={queue.failedCount} />
       </div>
 
-      <h1 className="text-xl my-4 text-highlight">Jobs</h1>
+      <h1 className="text-xl my-4 text-accent">Jobs</h1>
       {jobs.length === 0 ? (
         <p className="text-muted-foreground">No jobs in this queue.</p>
       ) : (
