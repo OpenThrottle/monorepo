@@ -21,7 +21,10 @@ export const QueuesStats = (props: QueuesStatsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="QueuesStats">
+    <div
+      className={classnames('gap-4 md:gap-8 lg:gap-12', className)}
+      data-testid="QueuesStats"
+    >
       <h2>QueuesStats</h2>
     </div>
   );

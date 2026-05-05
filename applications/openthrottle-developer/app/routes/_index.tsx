@@ -41,7 +41,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12">
       {FEATURE_BETA_PREVIEW ? (
         <>
           <HomeHeroV1 className="flex-1 flex h-full min-h-svh items-center" />

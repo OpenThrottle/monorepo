@@ -23,7 +23,10 @@ export const PullRequestStats = (props: PullRequestStatsProps) => {
 
   return (
     <div
-      className={classnames('grid md:grid-cols-3 gap-4 lg:gap-8', className)}
+      className={classnames(
+        'grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12',
+        className,
+      )}
       data-testid="PullRequestStats"
     >
       <OpenThrottleStatCard subValue={21} title="Open / Yours" value={23} />
