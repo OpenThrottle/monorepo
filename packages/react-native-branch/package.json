@@ -2,6 +2,13 @@
   "name": "@shiftsmartinc/react-native-branch",
   "description": "Shared Branch.io integration for Expo React Native apps.",
   "version": "0.0.1",
+  "files": [
+    "app.plugin.js"
+  ],
+  "exports": {
+    "./app.plugin.js": "./app.plugin.js",
+    "./package.json": "./package.json"
+  },
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
