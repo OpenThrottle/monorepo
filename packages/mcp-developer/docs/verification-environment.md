@@ -2,6 +2,20 @@
 
 Use this when exercising **@openthrottle/mcp-developer** against a local **openthrottle-server** (GraphQL only; no direct Postgres from the MCP).
 
+## Minimal stack (aligned with native checkout)
+
+Verified daily path for **Postgres, Redis, migrations, API, and optional developer UI** is documented in **[run-openthrottle-server-developer.md](../../../docs/openthrottle/run-openthrottle-server-developer.md)**. Summary:
+
+1. **`pnpm install`** at the monorepo root.
+2. **Env files:** root `.env`, `applications/openthrottle-server/.env`, and (for the UI) `applications/openthrottle-developer/.env` — copy from each `.env.default`.
+3. **`pnpm run database:start`** — Postgres (**6010**) and Redis (**6011**) via root `docker-compose.yml`.
+4. **`pnpm run database:migrate`** — required before the API can use OT tables.
+5. **GraphQL codegen (developer app)** — run **`pnpm nx run openthrottle-developer:codegen-graphql`** if generated artifacts are missing after clone or schema changes.
+6. **API:** **`pnpm nx run openthrottle-server:dev`** — GraphQL at **`http://localhost:6021/graphql`**, health at **`http://localhost:6021/health`** (default **PORT** **6021**).
+7. **Developer UI (optional for MCP):** **`pnpm nx run openthrottle-developer:dev`** — typically **`http://localhost:6020`** for manual smoke checks alongside the API.
+
+**MCP verification needs:** steps **1–4** and **6** at minimum. The developer app (**7**) is not required for MCP tools (`health`, `create_plan`, …) but matches the full stack exercised when validating locally.
+
 ## Runtime dependencies
 
 | Dependency                     | Role                                                             | Typical local value                                                                    |
@@ -47,6 +61,20 @@ Use OpenThrottle MCP while your **active Cursor workspace** is a different check
 | MCP fails to start / “no such file” for the shell script          | Relative launcher path while workspace is not the OpenThrottle repo; switch to an absolute path. |
 | `health` fails or connection errors                               | Server down, wrong port, or **`API_URL_INTERNAL`** does not match openthrottle-server `PORT`.    |
 | Authenticated tools error (“set MCP_DEVELOPER_AUTH_TOKEN” or 401) | Token unset, expired, or wrong server; see [AUTH.md](./AUTH.md).                                 |
+
+### Smoke checklist (re-validate after doc or config changes)
+
+These checks do **not** depend on which folder is the Cursor workspace root; they only need the API running and correct URLs/tokens.
+
+1. **Env script from any cwd:** the launcher’s monorepo is fixed inside `verify-openthrottle-mcp-env.sh`, so you can run it from `/tmp` or another repo by invoking it with an absolute path, for example  
+   `API_URL_INTERNAL=http://localhost:6021 /path/to/openthrottle/scripts/verify-openthrottle-mcp-env.sh`  
+   A zero exit and `OK: GET …/health` confirms **`GET /health`** matches **`API_URL_INTERNAL`**. Shell sessions without **`MCP_DEVELOPER_AUTH_TOKEN`** still show the script’s WARN for auth; **Cursor** normally supplies the token via **`env`** in **`~/.cursor/mcp.json`** for **`mcp-developer`**.
+2. **GraphQL parity with MCP `health` tool** (no Bearer token):  
+   `curl -sf -X POST http://localhost:6021/graphql -H 'Content-Type: application/json' -d '{"query":"query { serverHealth { api database redis websocket } }"}'`  
+   Adjust the host/port if **`API_URL_INTERNAL`** is not the default. Expect JSON with **`data.serverHealth`**.
+3. **In Cursor (secondary workspace):** after **`health`** succeeds in the MCP panel, call an authenticated tool (**`list_sources`**, **`list_plans_by_status`**, or **`create_plan`** / **`create_task`**) with **`MCP_DEVELOPER_AUTH_TOKEN`** set in the global MCP **`env`** block. **Required:** GraphQL base aligned with the server (**`/graphql`** on the same origin as **`API_URL_INTERNAL`**); token format and acquisition: [AUTH.md](./AUTH.md).
+
+**Backlog (not blocking MCP):** storing **per-workspace or absolute repo roots** inside OpenThrottle for linking or semantic context remains a product/backlog item—the MCP uses HTTP to the server only. **Compose, bind mounts, worker paths, and Ollama reachability from containers** are tracked under investigation plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`**.
 
 ## Build and run the MCP locally
 
