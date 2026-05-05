@@ -1,0 +1,26 @@
+{
+  "name": "@shiftsmartinc/react-native-branch",
+  "description": "Shared Branch.io integration for Expo React Native apps.",
+  "version": "0.0.1",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "devDependencies": {
+    "@config-plugins/react-native-branch": "^12.0.0",
+    "react-native-branch": "^6.9.0"
+  },
+  "peerDependencies": {
+    "@config-plugins/react-native-branch": "^12.0.0",
+    "expo": "^55",
+    "react-native": ">=0.60",
+    "react-native-branch": "^6.9.0"
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "type": "commonjs"
+}
