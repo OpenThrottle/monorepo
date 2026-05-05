@@ -25,23 +25,23 @@
 ## Workflow CLI (@tools/workflows)
 
 - **Discoverability:** Run `pnpm exec workflow-ralph --help` (and other bins) for usage. See `tools/workflows/README.md` for bin list.
-- **Run:** `pnpm exec workflow-ralph --plan <cortex-plan-uuid>` (or `--task <cortex-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`.
-- **Commit as you go:** When running Ralph (or working with OT plans/tasks), commit and push after each task or logical chunk. Use conventional commits and include `Plan-Id` and `Task-Id` in the commit body or footer. Link commits in OT only after the PR is merged (via `workflow-link-merge`); see `databases/cortex/README.md` § Commit links.
+- **Run:** `pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>` (or `--task <openthrottle-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`.
+- **Commit as you go:** When running Ralph (or working with OT plans/tasks), commit and push after each task or logical chunk. Use conventional commits and include `Plan-Id` and `Task-Id` in the commit body or footer. Link commits in OT only after the PR is merged (via `workflow-link-merge`); see `databases/README.md` § Commit links.
 
 ## Code style and preferences
 
 - **Location:** [.cursor/rules/](.cursor/rules/) — code-writing preferences and style guide. See [.cursor/rules/README.md](.cursor/rules/README.md). Use `coding/` for TypeScript/JS and structure; use `commands/` for OpenThrottle (OT), GitHub, and agent behavior.
-- **Agent behavior (plans in OT only; fail loudly):** See [.cursor/rules/README.md](.cursor/rules/README.md) § Agent behavior. That section is the single place for “plans in Cortex only; fail loudly when unavailable”; Cursor and other tooling should follow it.
+- **Agent behavior (plans in OT only; fail loudly):** See [.cursor/rules/README.md](.cursor/rules/README.md) § Agent behavior. That section is the single place for “plans in OpenThrottle only; fail loudly when unavailable”; Cursor and other tooling should follow it.
 
-- **Package READMEs:** For `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Full checklist: [docs/README-audit-stale-definition-and-checklist.md](docs/README-audit-stale-definition-and-checklist.md); outcome: [docs/README-audit-outcome.md](docs/README-audit-outcome.md).
+- **Package READMEs:** For `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Templates live under `tools/generators/src/generators/package/files/`; conventions are summarized in [CONTRIBUTING.md](./CONTRIBUTING.md) and [.cursor/rules/personal-generators.mdc](.cursor/rules/personal-generators.mdc).
 
 ## OpenThrottle (OT) — plans knowledge base
 
-- **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over Cortex Postgres). The MCP that talks to it is **@openthrottle/mcp-developer** (GraphQL only; see `.cursor/mcp.json`). Use the **mcp-developer** MCP server for all OT tools.
-- **Rules:** `.cursor/rules/commands/cortex.mdc` — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
-- **Commands:** `.cursor/commands/cortex/` — `/cortex/ask`, `/cortex/create-plan`, `/cortex/edit-task`, `/cortex/list-by-status`, `/cortex/list-sources`, `/cortex/pending`, `/cortex/planning-mode`.
+- **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/mcp-developer** (GraphQL only; see `.cursor/mcp.json`). Use the **mcp-developer** MCP server for all OT tools.
+- **Rules:** [.cursor/rules/commands/openthrottle.mdc](.cursor/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
+- **Commands:** [.cursor/commands/ot/](.cursor/commands/ot/) — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **mcp-developer** MCP server; answer only from retrieved chunks.
-- **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/cortex/README.md` § PRD summarization.
+- **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
 
 ### Plans in OT only; fail loudly
 
@@ -54,9 +54,9 @@
 
 ## Local embeddings (Ollama)
 
-- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run cortex:import` and openthrottle-server then use Ollama. See `databases/cortex/README.md` § Embedding dimension strategy and `scripts/ollama.sh`.
+- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import` / `pnpm run database:import-docs` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
 - **Cursor with a custom Ollama model:** start the proxy with **`pnpm ollama-proxy`** (requires Ollama and optionally Caddy at `https://ollama.local`). See [docs/monorepo/Ollama.md](docs/monorepo/Ollama.md) § Using Cursor with Ollama via the proxy and [tools/ollama-proxy/README.md](tools/ollama-proxy/README.md).
-- **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so cortex:import and other consumers use one stable endpoint:
+- **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so `database:import`, `database:import-docs`, and other consumers use one stable endpoint:
   - **Option B** (local domains): `https://ollama.local`
   - **Option A** (path-based): `https://localhost/ollama`
     See root `.env.default` and `docs/monorepo/Ollama.md`. For HTTPS with Caddy's local certs, trust Caddy's CA (or see tools/caddy/README.md) so Node/fetch and browsers do not hit certificate errors.

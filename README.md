@@ -70,10 +70,10 @@ Monorepos streamline our development process by centralizing code management, en
 docker compose up openthrottle-redis openthrottle-postgres --detach
 
 # 🚀 A React Router application
-nx run openthrottle-developer:dev
+pnpm nx run openthrottle-developer:dev
 
 # 📱 If we need to access it over our local network
-nx run openthrottle-developer:dev -- --host
+pnpm nx run openthrottle-developer:dev -- --host
 ```
 
 ### Common Commands
@@ -86,7 +86,7 @@ pnpm add <PROJECT_NAME> -w -S
 pnpm add <PROJECT_NAME> --filter openthrottle-developer -S
 
 # 🧪 Run only the changed tests and watch for changes
-nx run @tools/generators:test --changed --watch
+pnpm nx run @tools/generators:test --changed --watch
 ```
 
 ### TypeScript Execution (SWC)

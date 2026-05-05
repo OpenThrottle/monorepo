@@ -22,27 +22,26 @@ Our UI Applications use Remix and React.
 
 ### Creating New Files
 
-**Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md). Use Nx `@tools/generators` (e.g. `remix`, `react`) with `NX_ISOLATE_PLUGINS=false`; do not use the legacy `yarn generate:*` commands for new code.
+**Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md). Use Nx `@tools/generators` with `NX_ISOLATE_PLUGINS=false` and **`pnpm nx`**; do not use the legacy `yarn generate:*` commands for new code.
 
-Create new Remix routes, React components, Formik forms, and more with our custom generator:
+Scaffold React Router app files with the **react-router** generator (`component`, `route`, `form`, `modal`, `table`, etc.). Discover valid values, then generate:
 
 ```bash
-yarn generate:remix --generator=<GENERATOR_NAME> --name=<COMPONENT_NAME> --project=<APPLICATION_NAME> --folder=<FOLDER_NAME>
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
+  --subGenerator=component \
+  --application=<APPLICATION_NAME> \
+  --folder=<FOLDER_NAME> \
+  --name=<COMPONENT_NAME>
 ```
 
-- `<GENERATOR_NAME>` is the name of the generator, which is one of the following:
-  - `component` for a new component.
-  - `route` for a new route. When using this generator the `folder` parameter is not required.
-  - `form` for a new form.
-  - `modal` for a new modal.
-  - `table` for a new table.
-- `<COMPONENT_NAME>` is the name of the new component. It should be PascalCase.
-- `<APPLICATION_NAME>` is the name of one of our Remix UI applications, e.g. `oneteam`, `accounts-central`, `platform`, etc.
-- `<FOLDER_NAME>` name is the name of the folder within the application where the component will be created. It is generally prefixed with `routing/`, e.g. `routing/forecasting`, `routing/platformShift`, etc. This parameter is not required for generating a new `route`.
+- `<APPLICATION_NAME>` is an Nx application in this monorepo (e.g. `openthrottle-developer`). Use `--list=applications` to enumerate.
+- `<FOLDER_NAME>` is the folder under `applications/<application>/app` (use `--list=componentFolders --application=<APPLICATION_NAME>` when applicable).
+- `<COMPONENT_NAME>` should be PascalCase for components. `--subGenerator=route` and other sub-generators use the same entrypoint; see `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe`.
 
 ### Updating Existing Files
 
-- Use components from `@openthrottle/react-router-shadcn` when possible. These components are located in the `packages/shared-ui/src/components` folder of the monorepo if they ever need to be updated.
+- Use components from `@openthrottle/react-router-shadcn` when possible. Source for those primitives lives under `packages/react-router-shadcn/src/components` if they ever need to be updated.
 
 ### Testing
 
@@ -60,20 +59,20 @@ Our API applications powered by React Router will typically use Supabase, Postgr
 
 ### Creating New Files
 
-**Agents:** Use the generator-first workflow (see [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md)). Use Nx `@tools/generators:nestjs` with `NX_ISOLATE_PLUGINS=false` for new services/modules.
+**Agents:** Use the generator-first workflow (see [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md)). Use `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs` for new services/modules.
 
-Create new GraphQL/NestJS services, NestJS repositories, and more with our custom generator:
+Example (GraphQL service in an application):
 
 ```bash
-yarn generate:nestjs --generator=<GENERATOR_NAME> --name=<SERVICE_NAME> --project=<APPLICATION_NAME>
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
+  --subGenerator=graphql-service \
+  --application=<APPLICATION_NAME> \
+  --name=<SERVICE_NAME>
 ```
 
-- `<GENERATOR_NAME>` is the name of the generator, which one of the following:
-  - `graphql-service` for a new GraphQL service to route requests and handle business logic.
-  - `simple-service` for a new simple service to hold business logic.
-  - `core-repository` for a new core repository to handle data access to a specific collection. When using this generator the `project` parameter is not required.
-- `<SERVICE_NAME>` is the name of the new component. It should be kebab-case and plural.
-- `<APPLICATION_NAME>` is the name of one of our NestJS API applications, e.g. `oneteam-api`, `accounts-central-api`,`platform-api`, etc. This parameter is not required for generating a new `core-repository`.
+- **subGenerator** values include `graphql-service`, `simple-service`, `module`, `queue`, `ai-agent`, and `application`. Run `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --describe` for required flags per sub-generator.
+- `<APPLICATION_NAME>` is the target NestJS app when required (e.g. `openthrottle-server`).
+- `<SERVICE_NAME>` is kebab-case (often plural for services).
 
 ### Updating Existing Files
 
