@@ -19,6 +19,11 @@ export interface InitializeBranchOptions {
 
 let initialized = false;
 
+/**
+ * @description Whether {@link initializeBranch} has completed successfully at least once in this JS runtime.
+ */
+export const isBranchInitialized = (): boolean => initialized;
+
 const shouldWarnDuplicate = (): boolean => {
   if (typeof __DEV__ !== 'undefined') {
     return __DEV__;

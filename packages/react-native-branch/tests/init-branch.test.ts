@@ -52,4 +52,13 @@ describe('initializeBranch', () => {
     initializeBranch();
     expect(getBranch()).toBe(mockBranch);
   });
+
+  it('isBranchInitialized is false until initializeBranch runs', async () => {
+    const { getBranch, initializeBranch, isBranchInitialized } =
+      await import('../src/lib/init-branch');
+    expect(isBranchInitialized()).toBe(false);
+    initializeBranch();
+    expect(isBranchInitialized()).toBe(true);
+    expect(getBranch()).toBe(mockBranch);
+  });
 });
