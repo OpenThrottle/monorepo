@@ -4,6 +4,8 @@
 **Task:** Audit docs and Cursor/VSCode config for cortex
 **Scope:** List every doc, rule, command, and config that uses or references "cortex". Audit only—no renames.
 
+**Canonical paths today:** Use `.cursor/rules/commands/openthrottle.mdc` and `.cursor/commands/ot/` (see `/ot/*` command docs). The inventory below is a **historical snapshot** of Cortex-era paths and names.
+
 ---
 
 ## 1. `docs/openthrottle/*` (directory and files)

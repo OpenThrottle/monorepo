@@ -64,6 +64,6 @@ Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mo
 
 - **Agentic prompt (v4):** `.cursor/commands/agents/ralph.md`
 - **Runtime configuration (agents, limits, future prompt overrides):** [ralph-workflow-runtime-config.md](./ralph-workflow-runtime-config.md)
-- **Cortex:** `.cursor/rules/commands/cortex.mdc`, `databases/README.md`
+- **OpenThrottle MCP rules:** `.cursor/rules/commands/openthrottle.mdc`, `databases/README.md`
 - **Cross-repo usage:** `tools/workflows/README.md` § Cross-repo usage and [tools/workflows/docs/cross-repo-usage.md](../../tools/workflows/docs/cross-repo-usage.md)
 - **Ralph technique:** [ghuntley.com/ralph](https://ghuntley.com/ralph)

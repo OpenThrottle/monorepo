@@ -15,7 +15,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 - Create and manage **plans** with **tasks**; track status: **backlog**, blocked, **canceled**, completed, in_progress, pending, **queued** (plans only; Run plan enqueues in BullMQ), skipped.
 - Optional **assignee** (GitHub username) and **summary** (PRD wrap-up, next actions) on plans and tasks.
 - List plans by status (and optional project filter); list tasks by plan or category; see remaining tasks per plan (`get_remaining_tasks_for_plan`).
-- **Detailed docs:** [databases/README.md](../../databases/README.md) (schema, plans/tasks tables, Plan and task attributes), [.cursor/rules/commands/cortex.mdc](../../.cursor/rules/commands/cortex.mdc) (MCP tools: `get_plan`, `create_plan`, `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `list_tasks_by_category`, `create_task`, `update_task`; optional `project`/`projectId` on `list_plans_by_status`).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (schema, plans/tasks tables, Plan and task attributes), [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc) (MCP tools: `get_plan`, `create_plan`, `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `list_tasks_by_category`, `create_task`, `update_task`; optional `project`/`projectId` on `list_plans_by_status`).
 
 ### Projects
 
@@ -46,7 +46,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 ### Cursor integration (MCP)
 
 - **mcp-developer** (OT) MCP server in Cursor: ask OpenThrottle / ask OT, list plans by status, create/edit plans and tasks, semantic search, activity by date, output stream, commit links.
-- **Detailed docs:** [.cursor/rules/commands/cortex.mdc](../../.cursor/rules/commands/cortex.mdc), [.cursor/commands/cortex/](../../.cursor/commands/cortex/).
+- **Detailed docs:** [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), [.cursor/commands/ot/](../../.cursor/commands/ot/).
 
 ### Dashboard (OpenThrottle app)
 
