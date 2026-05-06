@@ -1,9 +1,9 @@
 // const { prettierConfig } = require('dotfiles');
 
 export default {
-  arrowParens: "always",
+  arrowParens: 'always',
   printWidth: 80,
   singleQuote: true,
   tabWidth: 2,
-  trailingComma: "all",
+  trailingComma: 'all',
 };

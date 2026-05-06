@@ -28,7 +28,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <div className="max-w-2xl text-center text-white/20 text-2xl font-semibold">
+    <div className="text-center text-white/20 text-2xl font-semibold">
       <i>Coming soon...</i>
     </div>
   );

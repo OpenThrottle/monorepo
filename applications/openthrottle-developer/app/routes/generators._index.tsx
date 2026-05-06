@@ -62,7 +62,7 @@ export default function Component(
   return (
     <GlobalScreen>
       <GlobalHeading heading="h1" icon={BotIcon} title="Generators" />
-      <p className="mb-6 max-w-prose text-sm text-muted-foreground">
+      <p className="mb-6 text-sm max-w-prose mx-auto- text-muted-foreground">
         Nx commands run in your monorepo clone (see{' '}
         <a
           className="text-primary underline-offset-4 hover:underline"

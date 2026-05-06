@@ -150,7 +150,7 @@ export default function Component(
 
       {!currentQ ? (
         <div className="mb-6 space-y-3">
-          <p className="max-w-2xl text-muted-foreground">
+          <p className="text-muted-foreground">
             Enter a query below for semantic search across embedded plans,
             tasks, and documentation. Results are ranked by embedding
             similarity—open{' '}

@@ -73,7 +73,7 @@ export default function Component(
     <GlobalScreen>
       <h1 className="text-xl my-4 text-accent">{generator.name}</h1>
       {generator.description !== '' ? (
-        <p className="mb-6 max-w-prose text-sm text-muted-foreground">
+        <p className="mb-6 text-sm text-muted-foreground">
           {generator.description}
         </p>
       ) : null}

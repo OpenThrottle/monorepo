@@ -79,7 +79,6 @@ export default function Component(
         </div>
 
         <SettingsEnvironmentDiagnostics
-          className="max-w-4xl"
           env={loaderData.env}
           idPrefix="settings-appearance"
           supportBundle={loaderData.supportBundle}

@@ -6,6 +6,9 @@ import {
   AvatarImage,
   Input,
   SidebarTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
@@ -21,6 +24,7 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
   // Hooks
 
   // Setup
+  const showProfile = false;
 
   // Handlers
 
@@ -42,24 +46,35 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
       )}
     >
       <div className="flex flex-1 items-center gap-2">
-        <SidebarTrigger
-          aria-label="Toggle sidebar"
-          className="text-muted-foreground"
-        />
+        <Tooltip delayDuration={1_000}>
+          <TooltipTrigger asChild={true}>
+            <SidebarTrigger
+              aria-label="Toggle sidebar"
+              className="text-muted-foreground"
+              title=""
+            />
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Toggle sidebar (Cmd/Ctrl+B)</p>
+          </TooltipContent>
+        </Tooltip>
         <GlobalLayoutBreadcrumbs />
       </div>
       <Input className="max-w-52" placeholder="Search" type="search" />
 
-      <Link className="text-foreground" to="/profile">
-        <Avatar className="size-6">
-          <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-      </Link>
-
-      <Link className="text-foreground" to="/auth/logout">
-        <SignOutIcon height={22} width={22} />
-      </Link>
+      {showProfile ? (
+        <>
+          <Link className="text-foreground" to="/profile">
+            <Avatar className="size-6">
+              <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+          </Link>
+          <Link className="text-foreground" to="/auth/logout">
+            <SignOutIcon height={22} width={22} />
+          </Link>
+        </>
+      ) : null}
     </nav>
   );
 };

@@ -268,6 +268,7 @@ export const DashboardRecentActivity = (
               const planCell = isCommitWithLink ? (
                 <Link
                   aria-label={commitLinkAriaLabel(row)}
+                  className="line-clamp-2"
                   to={href}
                   viewTransition={true}
                 >
@@ -276,6 +277,7 @@ export const DashboardRecentActivity = (
               ) : isTaskWithLink ? (
                 <Link
                   aria-label={taskLinkAriaLabel(row)}
+                  className="line-clamp-2"
                   to={href}
                   viewTransition={true}
                 >
@@ -284,6 +286,7 @@ export const DashboardRecentActivity = (
               ) : isOutputWithLink ? (
                 <Link
                   aria-label={outputLinkAriaLabel(row)}
+                  className="line-clamp-2"
                   to={href}
                   viewTransition={true}
                 >
@@ -318,7 +321,7 @@ export const DashboardRecentActivity = (
                   <TableCell className="text-muted-foreground align-top text-sm">
                     {formatActivityDate(row.date)}
                   </TableCell>
-                  <TableCell className="line-clamp-2 overflow-hidden text-sm">
+                  <TableCell className="overflow-hidden text-sm">
                     {planCell}
                   </TableCell>
                 </TableRow>

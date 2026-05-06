@@ -118,6 +118,11 @@ function spawnAndWait(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
+    console.log('____ 3 👀 👀 👀 👀 ', {
+      POSTGRES_URL: options.env?.POSTGRES_URL,
+      cwd: options.cwd,
+    });
+
     child.stdout?.on('data', (data: Buffer) => onStdout(data.toString()));
     child.stderr?.on('data', (data: Buffer) => onStderr(data.toString()));
 
@@ -446,6 +451,9 @@ export class PlansProcessor
 
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
+
+      this.logger.info('🟡 ♦️ 🟡 ♦️ 🟡 ♦️ 🟡 ♦️ ', plan);
+
       const planTitle = plan?.title ?? undefined;
 
       await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
@@ -461,9 +469,16 @@ export class PlansProcessor
         status: 'IN_PROGRESS',
       });
 
-      const useWorktree = this.worktreeTracker.listTargets().length > 0;
+      const worktrees = this.worktreeTracker.listTargets();
+      const useWorktree = worktrees.length > 0;
 
-      const result = isRunPlanOrchestratorJobData(job.data)
+      const isPlanOrchestrator = isRunPlanOrchestratorJobData(job.data);
+      this.logger.info('🟡 ♦️ 🟡 ♦️ 🟡 ♦️ 🟡 ♦️ ', {
+        isPlanOrchestrator,
+        worktrees,
+      });
+
+      const result = isPlanOrchestrator
         ? await this.processOrchestrator(
             job,
             jobId,
@@ -985,12 +1000,19 @@ export class PlansProcessor
       ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
     ];
 
+    console.error('____ 1 👀 👀 👀 👀 ', { args });
+
     const { onStderr, onStdout } = createSpawnRunOutputHandlers({
       jobId,
       logContext,
       logger: this.logger,
       queueName: PLANS_QUEUE_NAME,
       writer: this.bullMqRunOutputWriter,
+    });
+
+    console.error('____ 2 👀 👀 👀 👀 ', {
+      POSTGRES_URL: process.env.POSTGRES_URL,
+      workspaceRoot,
     });
 
     const spawnOtDiag = formatPlansProcessorSpawnOtDiagnosticsMessage({
@@ -1001,9 +1023,20 @@ export class PlansProcessor
       workerEnv: process.env,
     });
 
+    console.error('____ 2a 👀 👀 👀 👀 ', {
+      POSTGRES_URL: process.env.POSTGRES_URL,
+      spawnOtDiag,
+      workspaceRoot,
+    });
+
     if (spawnOtDiag) {
       this.logger.log(spawnOtDiag, PlansProcessor.name);
     }
+
+    console.error('____ 4 👀 👀 👀 👀 ', {
+      args,
+      workspaceRoot,
+    });
 
     try {
       const { cancelled, exitCode } = await spawnAndWait(
@@ -1019,6 +1052,11 @@ export class PlansProcessor
         onStderr,
         cancelSignal,
       );
+
+      console.error('____ 5 👀 👀 👀 👀 ', {
+        cancelled,
+        exitCode,
+      });
 
       if (cancelled) {
         this.logger.info(

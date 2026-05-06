@@ -30,7 +30,7 @@ export const UsageIntroduction = (props: UsageIntroductionProps) => {
         icon={ChartAreaIcon}
         title="Usage"
       />
-      <p className="max-w-2xl text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Usage metrics for this portal over the last {rangeDays} days.
       </p>
     </div>

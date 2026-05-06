@@ -44,6 +44,7 @@ export default function Component(
         <p className="text-sm text-muted-foreground">
           <Link
             className="underline underline-offset-4 hover:text-foreground transition-colors"
+            target="_blank"
             to="https://github.com/OpenThrottle?ref=openthrottle"
           >
             OpenThrottle

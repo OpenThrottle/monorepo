@@ -53,7 +53,17 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         variant="sidebar"
       >
         <GlobalSidebarHeader name="AI" to="/" />
-        <GlobalSidebarContent data={data} />
+        <GlobalSidebarContent
+          data={data}
+          defaultSectionsExpanded={false}
+          sectionDefaultExpanded={{
+            Agents: true,
+            Legal: false,
+            Settings: false,
+            User: false,
+            Workspace: true,
+          }}
+        />
         {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>

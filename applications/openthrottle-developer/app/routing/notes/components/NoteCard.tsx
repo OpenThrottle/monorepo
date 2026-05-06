@@ -36,7 +36,7 @@ export const NoteCard = (props: NoteCardProps) => {
       data-testid="NoteCard"
       key={note.id}
     >
-      <CardContent className="overflow-hidden flex-1 p-4">
+      <CardContent className="overflow-hidden text-sm text-muted-foreground hover:text-foreground/80 transition-colors flex-1 p-4">
         {/* <p
           className="line-clamp-3 text-sm text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: note.content }}

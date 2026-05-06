@@ -176,7 +176,7 @@ export function AgentsSkillsRegistry(
         </CardContent>
       </Card>
 
-      <section className="space-y-4">
+      <section className="space-y-8">
         <div>
           <h2 className="mb-1 text-sm font-semibold tracking-tight">
             .agents/skills (OpenThrottle / Ralph)
