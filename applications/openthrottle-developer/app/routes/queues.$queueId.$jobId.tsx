@@ -85,6 +85,18 @@ export default function Component(
   const { loaderData } = props;
   const { job, queueName } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalScreen>
       <nav className="mb-4 text-sm text-muted-foreground">
