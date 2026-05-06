@@ -239,6 +239,12 @@ export class EnqueuePlanRunInput {
     nullable: true,
   })
   ralph?: RalphPlanRunTuningInput | null;
+
+  @Field(() => String, {
+    description: `Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
+    nullable: true,
+  })
+  workingDirectory!: string | null;
 }
 
 @InputType()
@@ -277,6 +283,12 @@ export class EnqueuePlanRalphOrchestratorInput {
     nullable: true,
   })
   taskId!: string | null;
+
+  @Field(() => String, {
+    description: `Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
+    nullable: true,
+  })
+  workingDirectory!: string | null;
 }
 
 @InputType()

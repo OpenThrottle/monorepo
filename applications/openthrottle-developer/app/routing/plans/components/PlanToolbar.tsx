@@ -41,6 +41,11 @@ export interface PlanToolbarProps {
    */
   readonly ralphTuningJson?: string;
   /**
+   * @description Optional absolute path to a local project directory for multi-workspace runs.
+   * Passed through to the enqueuePlanRun mutation as workingDirectory.
+   */
+  readonly workingDirectory?: string;
+  /**
    * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
    */
   readonly workflowRunBlocked?: boolean;
@@ -61,6 +66,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     planTitle = 'Untitled',
     planStatus,
     ralphTuningJson = '',
+    workingDirectory,
     workflowRunBlocked = false,
     workflowRunBlockedReason,
   } = props;
@@ -191,6 +197,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             <fetcherRunPlan.Form method="post">
               <Input name="intent" type="hidden" value="runPlan" />
               <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
+              {workingDirectory != null && workingDirectory !== '' && (
+                <Input
+                  name="workingDirectory"
+                  type="hidden"
+                  value={workingDirectory}
+                />
+              )}
               <Button
                 disabled={fetcherRunPlan.state !== 'idle' || workflowRunBlocked}
                 size="sm"

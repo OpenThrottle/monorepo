@@ -450,11 +450,19 @@ export const action = async (args: Route.ActionArgs) => {
       }
     }
 
+    const workingDirectoryRaw = formData.get('workingDirectory');
+    const workingDirectory =
+      typeof workingDirectoryRaw === 'string' &&
+      workingDirectoryRaw.trim() !== ''
+        ? workingDirectoryRaw.trim()
+        : undefined;
+
     try {
       const input = EnqueuePlanRunInputSchema().parse({
         planId,
         priority,
         ...(ralph !== undefined ? { ralph } : {}),
+        ...(workingDirectory !== undefined ? { workingDirectory } : {}),
       });
 
       const result = await executeGraphqlWithAuth(

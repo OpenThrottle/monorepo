@@ -22,6 +22,11 @@ export interface RunPlanOrchestratorJobData {
    */
   readonly mode?: RunPlanJobWorkflowMode;
   readonly taskId?: string;
+  /**
+   * Optional absolute path to a local project directory. When set, the orchestrator uses this as the
+   * working directory instead of the monorepo root.
+   */
+  readonly workingDirectory?: string;
 }
 
 /**

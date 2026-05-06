@@ -578,7 +578,7 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority, ralph } = input;
+    const { planId, priority, ralph, workingDirectory } = input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -589,7 +589,7 @@ export class PlansResolver {
 
     let jobData: RunPlanJobData;
     try {
-      jobData = buildRunPlanJobData({ planId, ralph });
+      jobData = buildRunPlanJobData({ planId, ralph, workingDirectory });
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -673,7 +673,7 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority, ralph } = input;
+    const { planId, priority, ralph, workingDirectory } = input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -684,7 +684,7 @@ export class PlansResolver {
 
     let jobData: RunPlanJobData;
     try {
-      jobData = buildRunPlanJobData({ planId, ralph });
+      jobData = buildRunPlanJobData({ planId, ralph, workingDirectory });
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -767,7 +767,14 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
     input: EnqueuePlanRalphOrchestratorInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { idempotencyKey, planId, priority, ralph, taskId } = input;
+    const {
+      idempotencyKey,
+      planId,
+      priority,
+      ralph,
+      taskId,
+      workingDirectory,
+    } = input;
     const modeGraphql = input.mode;
 
     const repo = this.plansService.getRepository();
@@ -808,6 +815,7 @@ export class PlansResolver {
         planId,
         ralph,
         taskId,
+        workingDirectory,
       });
     } catch (error) {
       const isError = error instanceof Error;

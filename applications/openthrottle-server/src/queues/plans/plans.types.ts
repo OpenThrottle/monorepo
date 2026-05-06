@@ -52,6 +52,12 @@ export interface RunPlanSpawnJobData {
    * Explicit spawn path; omit for backward compatibility (treated as spawn).
    */
   readonly runKind?: 'spawn';
+  /**
+   * Optional absolute path to a local project directory. When set, the worker uses this as the
+   * cwd for spawning workflow-ralph instead of the monorepo root (WORKSPACE_ROOT / process.cwd()).
+   * Validated at enqueue time: must be an existing directory.
+   */
+  readonly workingDirectory?: string;
 }
 
 export type RunPlanJobData = RunPlanSpawnJobData | RunPlanOrchestratorJobData;

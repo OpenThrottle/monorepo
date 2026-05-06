@@ -908,7 +908,7 @@ export class WorkflowProcessor
     metricsAtStart: ProcessMetricsSnapshot,
     cancelSignal: AbortSignal,
   ): Promise<WorkflowJobResult> {
-    const workspaceRoot = getWorkspaceRoot();
+    const workspaceRoot = job.data.workingDirectory ?? getWorkspaceRoot();
     const args = [
       'exec',
       RALPH_CMD,

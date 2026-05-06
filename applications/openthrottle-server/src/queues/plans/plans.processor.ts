@@ -969,7 +969,7 @@ export class PlansProcessor
     metricsAtStart: ProcessMetricsSnapshot,
     cancelSignal: AbortSignal,
   ): Promise<PlanRunJobResult> {
-    const workspaceRoot = getWorkspaceRoot();
+    const workspaceRoot = job.data.workingDirectory ?? getWorkspaceRoot();
     const args = [
       'exec',
       RALPH_CMD,
