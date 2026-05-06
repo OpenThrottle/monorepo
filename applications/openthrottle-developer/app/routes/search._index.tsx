@@ -20,18 +20,18 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/search._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => {
-    const query = _match?.loaderData?.query;
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+  breadcrumb: (match) => {
+    const query = match.loaderData?.query ?? '';
     const isEmpty = query === '';
 
     return isEmpty ? 'Search' : query;
   },
-  links: (_match) => {
-    const query = _match?.loaderData?.query;
-    const isEmpty = query === '';
-
-    if (isEmpty) return [];
+  links: (match) => {
+    const query = match.loaderData?.query ?? '';
+    if (query === '') return [];
 
     return [{ children: 'Search', to: '/search' }];
   },

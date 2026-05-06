@@ -11,8 +11,11 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { GeneratorNxBridge } from '~/routing/generators/components/GeneratorNxBridge';
 import type { Route } from '@/app/routes/+types/generators.$generatorId';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (match) => match?.data?.generator?.name ?? 'Generator Details',
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+  breadcrumb: (match) =>
+    match.loaderData?.generator?.name ?? 'Generator Details',
   links: (_match) => [{ children: 'Generators', to: '/generators' }],
 };
 

@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`QueuesStats Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="gap-4 md:gap-8 lg:gap-12"
+      data-testid="QueuesStats"
+    >
+      <h2>
+        QueuesStats
+      </h2>
+    </div>
+  </div>
+</body>
+`;

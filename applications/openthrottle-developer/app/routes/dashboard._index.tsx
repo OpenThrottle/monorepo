@@ -25,7 +25,9 @@ import type { Route } from '@/app/routes/+types/dashboard._index';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Dashboard',
   links: (_match) => [],
 };

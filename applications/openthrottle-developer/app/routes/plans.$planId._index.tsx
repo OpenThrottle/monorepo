@@ -76,12 +76,14 @@ const parsePlanTasksView = (raw: string | null): 'board' | 'table' | null => {
 //   return false;
 // };
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
       className="cursor-pointer whitespace-nowrap"
-      label={match?.data?.plan?.id}
-      text={match?.data?.plan?.id}
+      label={match?.loaderData?.plan?.id ?? ''}
+      text={match?.loaderData?.plan?.id ?? ''}
     />
   ),
   links: (_match) => [{ children: 'Plans', to: '/plans' }],

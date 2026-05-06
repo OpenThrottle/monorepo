@@ -9,7 +9,9 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal.license';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'License',
   links: (_match) => [{ children: 'Legal', to: '/legal' }],
 };

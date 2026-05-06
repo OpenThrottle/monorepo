@@ -12,7 +12,9 @@ import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugP
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
 import type { Route } from '@/app/routes/+types/settings.debug';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Debug',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };

@@ -3,9 +3,9 @@ import classnames from 'classnames';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { LinkProps, UIMatch, useMatches } from 'react-router';
 
-export interface GlobalLayoutBreadcrumbsHandle {
-  breadcrumb?: (match: UIMatch<string, any>) => React.ReactNode;
-  links?: (match: UIMatch<string, any>) => LinkProps[];
+export interface GlobalLayoutBreadcrumbsHandle<TLoaderData = {}, THandle = {}> {
+  breadcrumb?: (match: UIMatch<TLoaderData, THandle>) => React.ReactNode;
+  links?: (match: UIMatch<TLoaderData, THandle>) => LinkProps[];
 }
 
 export interface GlobalLayoutBreadcrumbsProps {

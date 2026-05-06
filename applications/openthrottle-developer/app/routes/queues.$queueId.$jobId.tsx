@@ -20,7 +20,9 @@ import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (match) => {
     const id = match?.params?.jobId;
     if (id == null || id === '') {

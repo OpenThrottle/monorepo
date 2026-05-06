@@ -12,7 +12,9 @@ import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Create Note',
   links: (_match) => [{ children: 'All Notes', to: '/notes' }],
 };

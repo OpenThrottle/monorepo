@@ -28,7 +28,9 @@ import type { Route } from '@/app/routes/+types/prompts._index';
 import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
 import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Prompts',
   links: (_match) => [],
 };

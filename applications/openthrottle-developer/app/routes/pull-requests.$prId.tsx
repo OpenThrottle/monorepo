@@ -30,8 +30,10 @@ import {
 } from '~/routing/pull-requests/utils/github-pr-links';
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => `#${_match.params.prId}`,
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+  breadcrumb: (match) => match.params.prId,
   links: (_match) => [{ children: 'Pull requests', to: '/pull-requests' }],
 };
 

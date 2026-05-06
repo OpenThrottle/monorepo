@@ -12,7 +12,9 @@ import { QueueForm } from '~/routing/queues/components/QueueForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.create';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Create',
   links: (_match) => [{ children: 'Queues', to: '/queues' }],
 };

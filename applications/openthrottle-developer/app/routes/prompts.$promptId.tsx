@@ -21,8 +21,10 @@ import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDe
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (match) => match?.data?.prompt?.title ?? 'Prompt Details',
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+  breadcrumb: (match) => match.loaderData?.prompt?.title ?? 'Prompt Details',
   links: (_match) => [{ children: 'Prompts', to: '/prompts' }],
 };
 

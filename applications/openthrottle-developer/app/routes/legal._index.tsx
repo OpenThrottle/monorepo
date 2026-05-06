@@ -16,7 +16,9 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Legal',
   links: (_match) => [],
 };
@@ -40,9 +42,24 @@ export default function Component(
           title="About"
         />
         <p className="text-sm text-muted-foreground">
-          OpenThrottle Developer is a platform for developers to create and
-          manage their projects.
+          <Link
+            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            to="https://github.com/OpenThrottle?ref=openthrottle"
+          >
+            OpenThrottle
+          </Link>{' '}
+          is a suite of AI backed tools for developers to create and manage
+          their projects.
         </p>
+
+        <div className="mt-6 mb-2">
+          <p className="text-sm text-muted-foreground">
+            <strong>Matthew Scholta</strong> is a software developer and creator
+            of OpenThrottle. With a passion for crafting robust platforms and
+            empowering developers, Matthew is dedicated to building
+            high-quality, user-focused solutions.
+          </p>
+        </div>
       </div>
 
       {/* <ul className="mt-6 list-disc space-y-2 pl-5 text-sm">
@@ -72,7 +89,7 @@ export default function Component(
         </li>
       </ul> */}
 
-      <div className="py-12 relative flex flex-col gap-8">
+      <div className="py-8 relative flex flex-col gap-8">
         <Avatar className="size-24 md:size-32 mx-auto m-4">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
           <AvatarFallback className="text-3xl">MS</AvatarFallback>

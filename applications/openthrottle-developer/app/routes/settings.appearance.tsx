@@ -14,7 +14,9 @@ import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/setti
 import type { Route } from '@/app/routes/+types/settings.appearance';
 import { configAtom } from '~/global/data/atom.config';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Appearance',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };

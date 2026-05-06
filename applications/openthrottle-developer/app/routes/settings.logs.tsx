@@ -8,7 +8,9 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SettingsLogsPanel } from '~/routing/settings/components/SettingsLogsPanel';
 import type { Route } from '@/app/routes/+types/settings.logs';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Logs',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };

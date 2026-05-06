@@ -31,7 +31,9 @@ import { sortProjects } from '~/routing/projects/utils/sorting';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import type { Route } from '@/app/routes/+types/projects._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Projects',
   links: (_match) => [],
 };

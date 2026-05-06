@@ -15,7 +15,9 @@ import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Usage',
   links: (_match) => [],
 };

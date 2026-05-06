@@ -15,13 +15,15 @@ import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.edit';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Edit',
   links: (match) => [
     { children: 'Plans', to: '/plans' },
     {
-      children: match?.data?.plan?.title,
-      to: `/plans/${match?.data?.plan?.id}`,
+      children: match.loaderData?.plan?.title,
+      to: `/plans/${match.loaderData?.plan?.id}`,
     },
   ],
 };

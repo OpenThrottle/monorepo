@@ -17,7 +17,9 @@ import {
 } from '~/routing/generators/constants/generator-nx-docs';
 import type { Route } from '@/app/routes/+types/generators._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Generators',
   links: (_match) => [],
 };

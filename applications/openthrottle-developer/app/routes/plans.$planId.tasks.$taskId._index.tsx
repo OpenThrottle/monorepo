@@ -25,17 +25,22 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
       className="cursor-pointer whitespace-nowrap"
-      label={match.data.task.id}
-      text={match.data.task.id}
+      label={match.loaderData?.task?.id ?? ''}
+      text={match.loaderData?.task?.id ?? ''}
     />
   ),
   links: (match) => [
     { children: 'Plans', to: '/plans' },
-    { children: match.data.plan.title, to: `/plans/${match.data.plan.id}` },
+    {
+      children: match.loaderData?.plan?.title ?? '',
+      to: `/plans/${match.loaderData?.plan?.id ?? ''}`,
+    },
   ],
 };
 

@@ -30,7 +30,7 @@ export interface GlobalSidebarContentProps {
    */
   readonly defaultSectionsExpanded?: boolean;
   /**
-   * @description Initial expanded state per section key (navigation group name). <Over></Over>rides
+   * @description Initial expanded state per section key (navigation group name). Overrides
    * {@link defaultSectionsExpanded} for that section only.
    */
   readonly sectionDefaultExpanded?: Readonly<Partial<Record<string, boolean>>>;
@@ -65,7 +65,7 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
     const isActive = isLinkActive(item);
 
     return (
-      <SidebarMenuItem className="m-0 px-px" key={key} style={{ margin: 0 }}>
+      <SidebarMenuItem className="m-0" key={key} style={{ margin: 0 }}>
         <SidebarMenuButton
           asChild={true}
           isActive={isActive}
@@ -92,7 +92,7 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
   // 🔌 Short Circuit
 
   return (
-    <SidebarContent className="h-full gap-0" title="Global Sidebar Content">
+    <SidebarContent className="h-full" title="Global Sidebar Content">
       {sections.map((section) => {
         const items = data?.[section] ?? [];
         const hasActiveLinkInSection = items.some(isLinkActive);
@@ -106,11 +106,11 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
 
         return (
           <Collapsible
-            className="group px-1"
+            className="group"
             defaultOpen={defaultOpen}
             key={section}
           >
-            <SidebarGroup className="m-0" title={section}>
+            <SidebarGroup title={section}>
               <SidebarGroupLabel asChild={true}>
                 <CollapsibleTrigger
                   className="justify-between gap-2"
@@ -126,7 +126,7 @@ export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
                 </CollapsibleTrigger>
               </SidebarGroupLabel>
               <CollapsibleContent>
-                <SidebarGroupContent className="py-px">
+                <SidebarGroupContent>
                   <SidebarMenu title={section}>
                     {items.map(renderLink)}
                   </SidebarMenu>

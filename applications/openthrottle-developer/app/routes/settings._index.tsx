@@ -14,7 +14,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import type { Route } from '@/app/routes/+types/settings._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'General',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
   // breadcrumb: (_match) => 'Settings',

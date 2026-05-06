@@ -5,7 +5,9 @@ import { GlobalLayoutBreadcrumbsHandle, GlobalScreen } from '@openthrottle/react
 import type { Route } from '@/app/routes/+types/<%= name %>';
 // import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => '<%= namePascal %>',
   links: (_match) => [],
 };

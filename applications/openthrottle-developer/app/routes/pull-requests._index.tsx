@@ -32,7 +32,9 @@ import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
 import { PullRequestStats } from '~/routing/pull-requests/components/PullRequestStats';
 import { PullRequestsToolbar } from '~/routing/pull-requests/components/PullRequestsToolbar';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Pull requests',
   links: (_match) => [],
 };

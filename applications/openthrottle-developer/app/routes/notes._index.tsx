@@ -14,7 +14,9 @@ import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/Works
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Notes',
   links: (_match) => [],
 };

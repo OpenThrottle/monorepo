@@ -15,7 +15,9 @@ import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.$noteId';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Details',
   links: (_match) => [{ children: 'Notes', to: '/notes' }],
 };

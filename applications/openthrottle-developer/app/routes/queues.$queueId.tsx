@@ -46,8 +46,10 @@ const parseQueueJobsPagination = (
   return { limit, offset, page };
 };
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => _match?.data?.queue?.name ?? 'Queue Details',
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+  breadcrumb: (match) => match.loaderData?.queue?.name ?? 'Queue Details',
   links: (_match) => [{ children: 'Queues', to: '/queues' }],
 };
 

@@ -12,7 +12,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import type { Route } from '@/app/routes/+types/skills._index';
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
   breadcrumb: (_match) => 'Skills',
   links: (_match) => [],
 };

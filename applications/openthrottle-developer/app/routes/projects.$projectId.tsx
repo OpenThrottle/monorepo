@@ -34,8 +34,10 @@ import type { Route } from '@/app/routes/+types/projects.$projectId';
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 
-export const handle: GlobalLayoutBreadcrumbsHandle = {
-  breadcrumb: (_match) => _match?.data?.project?.name ?? 'Details',
+type LoaderData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+  breadcrumb: (match) => match.loaderData?.project?.name ?? 'Details',
   links: (_match) => [{ children: 'Projects', to: '/projects' }],
 };
 
