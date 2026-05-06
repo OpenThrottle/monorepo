@@ -27,6 +27,7 @@ import {
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
+import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanToolbarProps {
   readonly className?: string;
@@ -135,6 +136,10 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             typeof run.jobId === 'string'
               ? run.jobId
               : null;
+
+          if (workingDirectory != null && workingDirectory.trim() !== '') {
+            addRecentWorkspacePath(workingDirectory.trim());
+          }
 
           if (jobId != null && jobId !== '') {
             toast.success('Plan run queued', {

@@ -25,6 +25,7 @@ import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWork
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
+import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
 import {
   workflowRalphRunOptionsAtom,
   workflowRunIterationTimeoutTextAtom,
@@ -45,6 +46,7 @@ export interface PlanWorkflowConfigProps {
   readonly onCollapse?: () => void;
   readonly onIterationTimeoutTextChange?: (next: string) => void;
   readonly onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
+  readonly onWorkingDirectoryChange?: (next: string) => void;
 
   /**
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
@@ -59,6 +61,12 @@ export interface PlanWorkflowConfigProps {
 
   /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
   readonly value?: WorkflowRalphRunOptionsInput;
+
+  /**
+   * @description Optional absolute path for multi-workspace runs. Passed to
+   * the enqueue mutation as `workingDirectory`. Empty string = monorepo root.
+   */
+  readonly workingDirectory?: string;
 }
 
 export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
@@ -69,9 +77,11 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
     onIterationTimeoutTextChange,
     onResetToDefaults,
     onValueChange,
+    onWorkingDirectoryChange,
     planId,
     taskId,
     value: valueProp,
+    workingDirectory = '',
   } = props;
 
   // Hooks
@@ -291,6 +301,12 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
           </div>
         ) : null}
         <PlanWorkflowConfigTarget input={input} setInput={setInput} />
+        {onWorkingDirectoryChange != null && (
+          <PlanWorkflowConfigWorkspace
+            onChange={onWorkingDirectoryChange}
+            value={workingDirectory}
+          />
+        )}
         <PlanWorkflowConfigPrompt
           onPromptChange={(next) =>
             setInput((prev) => ({ ...prev, prompt: next }))

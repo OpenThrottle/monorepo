@@ -8,7 +8,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Markdown,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
@@ -34,12 +33,14 @@ import {
   validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanDetailsProps {
   readonly className?: string;
   readonly plan: PlanDetailsFragment;
   readonly ralphTuningJson: string;
   readonly recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
+  readonly workingDirectory?: string;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workflowTimeout: string;
 }
@@ -50,6 +51,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
     plan,
     ralphTuningJson,
     recentPlanRuns,
+    workingDirectory,
     workflowInput,
     workflowTimeout,
   } = props;
@@ -74,10 +76,14 @@ export const PlanDetails = (props: PlanDetailsProps) => {
     workflowTimeout,
     { requireCliTargetIds: true },
   );
-  const workflowRunBlocked = !workflowValidation.ok;
-  const workflowRunBlockedReason = workflowValidation.ok
-    ? undefined
-    : workflowValidation.issues[0]?.message;
+  const workspacePathError = validateWorkspacePathClient(
+    workingDirectory ?? '',
+  );
+  const workflowRunBlocked =
+    !workflowValidation.ok || workspacePathError != null;
+  const workflowRunBlockedReason = !workflowValidation.ok
+    ? workflowValidation.issues[0]?.message
+    : workspacePathError;
 
   // Setup
   // const isExpanded = isWorkflowOptionsExpanded(searchParams);
@@ -165,13 +171,13 @@ export const PlanDetails = (props: PlanDetailsProps) => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                <Markdown
+                {/* <Markdown
                   className={classnames(
                     'text-sm text-muted-foreground whitespace-normal',
                     expanded && 'line-clamp-4',
                   )}
                   content={plan.description ?? ''}
-                />
+                /> */}
                 {/* <p
                   className={classnames(
                     'text-md leading-relaxed transition-colors',
@@ -218,6 +224,7 @@ export const PlanDetails = (props: PlanDetailsProps) => {
             ralphTuningJson={ralphTuningJson}
             workflowRunBlocked={workflowRunBlocked}
             workflowRunBlockedReason={workflowRunBlockedReason}
+            workingDirectory={workingDirectory}
           />
         </CardFooter>
       </Card>

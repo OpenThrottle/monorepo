@@ -133,6 +133,7 @@ export default function Component(
   const [searchParams, setSearchParams] = useSearchParams();
   const socketContext = useNotificationsSocket();
   const [workflowTimeout, setWorkflowTimeout] = React.useState('');
+  const [workingDirectory, setWorkingDirectory] = React.useState('');
   const [workflowInput, setWorkflowInput] =
     React.useState<WorkflowRalphRunOptionsInput>(() =>
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
@@ -163,6 +164,7 @@ export default function Component(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
 
+    setWorkingDirectory('');
     setWorkflowTimeout('');
   };
 
@@ -223,6 +225,7 @@ export default function Component(
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
+    setWorkingDirectory('');
     setWorkflowTimeout('');
   }, [plan?.id]);
 
@@ -270,6 +273,7 @@ export default function Component(
           recentPlanRuns={recentPlanRuns}
           workflowInput={workflowInput}
           workflowTimeout={workflowTimeout}
+          workingDirectory={workingDirectory}
         />
       ),
       icon: NotebookTextIcon,
@@ -293,8 +297,10 @@ export default function Component(
           onIterationTimeoutTextChange={setWorkflowTimeout}
           onResetToDefaults={onResetToDefaults}
           onValueChange={setWorkflowInput}
+          onWorkingDirectoryChange={setWorkingDirectory}
           planId={plan.id}
           value={workflowInput}
+          workingDirectory={workingDirectory}
         />
       ),
       icon: CogIcon,

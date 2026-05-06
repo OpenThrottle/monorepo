@@ -401,6 +401,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Required when mode is task; must belong to the plan. */
   taskId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunInput = {
@@ -410,6 +412,8 @@ export type EnqueuePlanRunInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunResultObject = {

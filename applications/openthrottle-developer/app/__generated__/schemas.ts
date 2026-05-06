@@ -299,6 +299,7 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     taskId: z.string().nullish(),
+    workingDirectory: z.string().nullish(),
   });
 }
 
@@ -309,6 +310,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
     planId: z.string(),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    workingDirectory: z.string().nullish(),
   });
 }
 
