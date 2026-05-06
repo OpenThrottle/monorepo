@@ -282,6 +282,9 @@ describe('PlansProcessor', () => {
     try {
       await processor.process(mockJob);
 
+      expect(mockRepoFindOne.mock.calls[0]?.[0]).toEqual({
+        where: { id: mockJob.data.planId },
+      });
       expect(mockSpawn).toHaveBeenCalledTimes(1);
       expect(mockSpawn).toHaveBeenCalledWith(
         'pnpm',

@@ -1,3 +1,6 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import {
   PlansService,
@@ -557,6 +560,36 @@ describe('PlansResolver', () => {
         }),
         { priority: 10 },
       );
+    });
+
+    /**
+     * @description Enqueue with a real directory outside the OT tree so `buildRunPlanJobData` validation
+     * passes; BullMQ payload must carry `workingDirectory` for the processor spawn cwd (regression:
+     * nested CLI must still use worker POSTGRES / canonical Cortex URL).
+     */
+    test('includes external workingDirectory in queue job data (enqueue → processor contract)', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+
+      const externalDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'ot-external-wd-'),
+      );
+      try {
+        await resolver.enqueuePlanRun({
+          planId: mockPlan.id,
+          priority: null,
+          workingDirectory: externalDir,
+        });
+
+        expect(mockAdd).toHaveBeenCalledWith(
+          'run-plan',
+          { planId: mockPlan.id, workingDirectory: externalDir },
+          { priority: 10 },
+        );
+      } finally {
+        fs.rmSync(externalDir, { force: true, recursive: true });
+      }
     });
 
     test('throws BadRequestException when ralph tuning is invalid', async () => {

@@ -583,8 +583,6 @@ export class PlansResolver {
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
 
-    console.error('1 -> 🟢 🟡 ♦️ 🟢 🟡 ♦️', { input, plan });
-
     if (!plan) {
       throw new Error(`Plan not found: ${planId}`);
     }
@@ -676,8 +674,6 @@ export class PlansResolver {
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
     const { planId, priority, ralph, workingDirectory } = input;
-
-    console.error('3 -> 🟢 🟡 ♦️ 🟢 🟡 ♦️', { input });
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -780,8 +776,6 @@ export class PlansResolver {
       workingDirectory,
     } = input;
     const modeGraphql = input.mode;
-
-    console.error('2 -> 🟢 🟡 ♦️ 🟢 🟡 ♦️', { input });
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -932,7 +926,6 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: input.planId } });
 
     if (!plan) {
-      console.error('CANCEL PLAN RUN -> 🟢 🟡 ♦️ 🟢 🟡 ♦️', { input });
       throw new NotFoundException(`Plan not found: ${input.planId}`);
     }
 
