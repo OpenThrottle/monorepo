@@ -67,6 +67,16 @@ export const main = async (): Promise<void> => {
     process.exit(1);
   }
 
+  const { iterations, plan, prompt, task } = parsedArgs;
+
+  /**
+   * Resolve Cortex from env before any NX project-graph work: `createProjectGraphAsync()` runs with
+   * `cwd` (e.g. foreign `workingDirectory`) and may load that repo's `.env`, overwriting `POSTGRES_URL`
+   * and causing false "Plan not found" against the wrong database.
+   */
+  const cortexConfig = getCortexConfigOrExit();
+  await ensureDatabaseReachableOrExit(cortexConfig);
+
   if (parsedArgs.project) {
     const allowed = await getNxProjectNames();
     if (!allowed.includes(parsedArgs.project)) {
@@ -76,11 +86,6 @@ export const main = async (): Promise<void> => {
       process.exit(1);
     }
   }
-
-  const { iterations, plan, prompt, task } = parsedArgs;
-
-  const cortexConfig = getCortexConfigOrExit();
-  await ensureDatabaseReachableOrExit(cortexConfig);
 
   let effectivePlanId: string = plan ?? '';
   if (task && !plan) {

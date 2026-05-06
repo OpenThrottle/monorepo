@@ -9,7 +9,10 @@ export {
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   resolveCortexPostgresConnectionStringFromEnv,
 } from './config.js';
-export type { CortexPostgresConfig } from './config.js';
+export type {
+  BuildWorkflowRalphSpawnEnvOptions,
+  CortexPostgresConfig,
+} from './config.js';
 export { embedQuery } from './embedding.js';
 export {
   createNote,

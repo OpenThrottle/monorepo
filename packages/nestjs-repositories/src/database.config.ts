@@ -23,8 +23,9 @@ import { User } from './modules/users/user.entity';
 
 /**
  * @description Returns Cortex Postgres URL from POSTGRES_URL or POSTGRES_* env vars.
+ * Same resolution as TypeORM registration; use for nested `workflow-ralph` env so spawns match the server DataSource.
  */
-function getPostgresUrl(): string {
+export function getCortexPostgresUrl(): string {
   const url = process.env.POSTGRES_URL?.trim();
 
   if (url) return url;
@@ -71,6 +72,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
     ],
     logging: process.env.NODE_ENV === 'development',
     type: 'postgres',
-    url: getPostgresUrl(),
+    url: getCortexPostgresUrl(),
   };
 }

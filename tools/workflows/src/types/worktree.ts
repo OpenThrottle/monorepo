@@ -172,6 +172,11 @@ export interface ChildJobInput {
    * and returns ChildProcessMetrics in the result. Defaults to enabled with 5s interval.
    */
   readonly childProcessMetrics?: ChildProcessMetricsOptions | false;
+  /**
+   * When set, nested `workflow-ralph` and parent-side Cortex checks use this URL (e.g. TypeORM `url`
+   * from openthrottle-server) so foreign `cwd` cannot desync Postgres identity from the API worker.
+   */
+  readonly canonicalCortexPostgresUrl?: string;
 }
 
 /** Successful result of the child job: branch and commit SHA for parent to validate before release. */

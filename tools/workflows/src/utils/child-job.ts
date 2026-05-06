@@ -53,6 +53,7 @@ function runRalphAsync(
   worktreePath: string,
   ralphArgs: string[],
   options: {
+    readonly canonicalCortexPostgresUrl?: string;
     readonly timeoutMs?: number;
     readonly signal?: AbortSignal;
     readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
@@ -67,7 +68,9 @@ function runRalphAsync(
 
     const child: ChildProcess = spawn('pnpm', ralphArgs, {
       cwd: worktreePath,
-      env: buildWorkflowRalphSpawnEnv(process.env),
+      env: buildWorkflowRalphSpawnEnv(process.env, {
+        canonicalCortexPostgresUrl: options.canonicalCortexPostgresUrl,
+      }),
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
     });
@@ -235,6 +238,7 @@ export async function runChildJob(
 ): Promise<ChildJobResult> {
   const {
     backend,
+    canonicalCortexPostgresUrl,
     handoff,
     iterationTimeoutSeconds,
     iterations,
@@ -256,8 +260,27 @@ export async function runChildJob(
   const startTimestamp = Date.now();
   const cpuAtStart = process.cpuUsage();
 
-  const rawConfig = getPostgresConfig();
-  if (!rawConfig) {
+  const trimmedCanonical = canonicalCortexPostgresUrl?.trim();
+  let config: WorkflowRalphConfig;
+  try {
+    if (trimmedCanonical) {
+      config = { connectionString: trimmedCanonical };
+    } else {
+      const raw: unknown = getPostgresConfig();
+      const cs =
+        raw &&
+        typeof raw === 'object' &&
+        'connectionString' in raw &&
+        typeof (raw as { connectionString: unknown }).connectionString ===
+          'string'
+          ? (raw as { connectionString: string }).connectionString.trim()
+          : '';
+      if (cs === '') {
+        throw new Error('missing postgres config');
+      }
+      config = { connectionString: cs };
+    }
+  } catch {
     const endTimestamp = Date.now();
     const cpuAtEnd = process.cpuUsage();
     return {
@@ -271,10 +294,6 @@ export async function runChildJob(
       ),
     };
   }
-
-  const config: WorkflowRalphConfig = {
-    connectionString: rawConfig.connectionString,
-  };
   try {
     await ensureCortexReachable(config);
   } catch (error) {
@@ -340,6 +359,7 @@ export async function runChildJob(
         );
 
   const ralph = await runRalphAsync(worktreePath, ralphArgs, {
+    canonicalCortexPostgresUrl: trimmedCanonical,
     metricsCollector,
     onChunk: effectiveOnChunk,
     signal,

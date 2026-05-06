@@ -40,7 +40,18 @@ export function resolveCortexPostgresConnectionStringFromEnv(
   }
 
   const encodedPassword = encodeURIComponent(password);
-  return `postgresql://${user}:${encodedPassword}@${host}:${port}/${db}`;
+  const connectionString = `postgresql://${user}:${encodedPassword}@${host}:${port}/${db}`;
+
+  return connectionString;
+}
+
+/** Optional overrides for {@link buildWorkflowRalphSpawnEnv}. */
+export interface BuildWorkflowRalphSpawnEnvOptions {
+  /**
+   * When set (non-empty), forces nested Ralph to use this URL (e.g. same string as TypeORM `url`),
+   * regardless of `workerEnv`, so foreign `cwd` tooling cannot desync plan lookup from the API DB.
+   */
+  readonly canonicalCortexPostgresUrl?: string;
 }
 
 /**
@@ -48,8 +59,13 @@ export function resolveCortexPostgresConnectionStringFromEnv(
  */
 export function buildWorkflowRalphSpawnEnv(
   workerEnv: NodeJS.ProcessEnv,
+  options?: BuildWorkflowRalphSpawnEnvOptions,
 ): NodeJS.ProcessEnv {
-  const conn = resolveCortexPostgresConnectionStringFromEnv(workerEnv);
+  const trimmed = options?.canonicalCortexPostgresUrl?.trim();
+  const conn =
+    trimmed !== undefined && trimmed !== ''
+      ? trimmed
+      : resolveCortexPostgresConnectionStringFromEnv(workerEnv);
   if (conn === undefined) {
     return workerEnv;
   }

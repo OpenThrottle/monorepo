@@ -26,6 +26,7 @@ import {
 } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
 import {
+  getCortexPostgresUrl,
   PlanOutputStreamService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
@@ -714,6 +715,7 @@ export class WorkflowProcessor
       ensureCommit: { runChecks: true },
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
+          canonicalCortexPostgresUrl: getCortexPostgresUrl(),
           handoff,
           onChunk: (chunk) => {
             appendChildJobChunkToRunOutput(
@@ -948,7 +950,9 @@ export class WorkflowProcessor
         args,
         {
           cwd: workspaceRoot,
-          env: buildWorkflowRalphSpawnEnv(process.env),
+          env: buildWorkflowRalphSpawnEnv(process.env, {
+            canonicalCortexPostgresUrl: getCortexPostgresUrl(),
+          }),
         },
         onStdout,
         onStderr,
