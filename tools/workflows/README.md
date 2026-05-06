@@ -118,6 +118,67 @@ Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger
 
 Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `POSTGRES_URL` or `POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details.
 
+### Multi-workspace plans (`workingDirectory`)
+
+Run plans against arbitrary local project folders instead of the monorepo root. This lets you trigger Ralph from the Developer app UI against any local checkout (e.g. `/Users/matt/Development/github/shiftsmart/services/native-apps`).
+
+**How it works:**
+
+1. An optional `workingDirectory` field (absolute path) is accepted by the GraphQL `enqueuePlanRun` and `enqueuePlanRalphOrchestrator` mutations via `EnqueuePlanRunInput` and `EnqueuePlanRalphOrchestratorInput`.
+2. The value flows through `buildRunPlanJobData` / `buildRunPlanOrchestratorJobData` into the BullMQ job payload (`RunPlanSpawnJobData.workingDirectory` / `RunPlanOrchestratorJobData.workingDirectory`).
+3. The plans queue worker (`PlansProcessor`) uses `workingDirectory` as the `cwd` when spawning `pnpm exec workflow-ralph` (spawn path, `processInProcessCwd`). When omitted, the worker falls back to `WORKSPACE_ROOT` or `process.cwd()` (monorepo root).
+4. The Developer app UI provides a **Workspace directory** input (`PlanWorkflowConfigWorkspace`) on the plan detail page, with client-side validation and a recent-paths list persisted in `localStorage`.
+
+**Validation (server-side, authoritative):**
+
+- Must be an absolute path
+- Must exist on the filesystem and be a directory
+- Max length: 4096 characters
+- Optional allowlist via `OPENTHROTTLE_ALLOWED_WORKING_DIRS` env var (comma-separated absolute path prefixes); when set, `workingDirectory` must start with one of the listed prefixes
+
+Validation runs at enqueue time in `validateWorkingDirectory` (`enqueue-plan-ralph-tuning.ts`). Invalid paths produce a `BadRequestException` visible in the Developer app.
+
+**Validation (client-side, advisory):**
+
+- Must start with `/` (absolute)
+- Max 4096 characters
+- No null bytes
+
+Client-side checks are in `validateWorkspacePathClient` (`workspace-path.ts`). They provide immediate feedback but are not authoritative.
+
+**Environment variable:**
+
+| Variable                            | Purpose                                                                                                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENTHROTTLE_ALLOWED_WORKING_DIRS` | Comma-separated absolute path prefixes. When set, only directories under these prefixes are accepted. Unset = any existing directory (local-only trust boundary). |
+
+**Default behavior (backward compatible):** When `workingDirectory` is omitted or empty, all paths behave exactly as before — worker uses `WORKSPACE_ROOT` or `process.cwd()`.
+
+**Local-only constraint:** `workingDirectory` is resolved on the same machine running `openthrottle-server`. This feature assumes a local-only deployment where the API server, worker, and project directories share a filesystem. Containerized or remote deployments would need bind mounts or volume mapping (tracked under plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`).
+
+**Recent paths (Developer app):** The UI stores up to 10 recently used workspace paths in `localStorage` (key: `openthrottle:recent-workspace-paths`). A popover on the workspace input lets users pick from or remove recent entries. Paths are added to the MRU list after a successful enqueue.
+
+**Example — enqueue via GraphQL:**
+
+```graphql
+mutation {
+  enqueuePlanRun(
+    input: {
+      planId: "77cb14a0-5eb0-4061-87ea-d618b85e8818"
+      workingDirectory: "/Users/matt/Development/github/shiftsmart/services/native-apps"
+    }
+  ) {
+    jobId
+    planId
+    queuePosition
+  }
+}
+```
+
+**Example — Developer app UI:**
+
+On the plan detail page, expand the **Workflow configuration** card. The **Workspace directory** fieldset accepts an absolute path. Leave empty for monorepo root. The path is validated server-side on enqueue; client-side validation provides immediate feedback for obviously invalid paths.
+
 ## Worktree + BullMQ workflow (fan-out/fan-in)
 
 Ralph-related execution splits into **three surfaces** (same Cortex plan/task semantics; different host process):
