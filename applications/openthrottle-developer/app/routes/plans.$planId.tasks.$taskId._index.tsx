@@ -4,6 +4,7 @@ import {
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
+  Spinner,
 } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
@@ -127,7 +128,10 @@ export default function Component(
       </GlobalCollapsible>
 
       <GlobalCollapsible icon={ListCheckIcon} title="Task Requirements">
-        <TaskDetails planId={effectivePlanId} task={task} />
+        <div>
+          coming soon
+          <Spinner className="size-8 text-muted-foreground" />
+        </div>
       </GlobalCollapsible>
     </GlobalScreen>
   );

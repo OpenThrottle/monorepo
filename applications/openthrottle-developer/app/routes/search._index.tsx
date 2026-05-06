@@ -136,6 +136,12 @@ export default function Component(
           icon={SearchIcon}
           title="Search"
         />
+        <p className="text-sm text-muted-foreground mb-4">
+          Semantic search over embedded plan, task, and documentation chunks.
+          {/* Open “Why this result?” on a card to see ranking notes, similarity,
+          and entity ids. Enable power-user mode below to expand every card’s
+          ranking section and add result position labels. */}
+        </p>
         <WorkspaceEntityCrossLinks
           label="Jump to a workspace area"
           variant="full"

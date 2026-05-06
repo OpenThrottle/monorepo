@@ -3,7 +3,12 @@
  * Use this entry point to avoid pulling in the full MCP server.
  */
 
-export { getPostgresConfig } from './config.js';
+export {
+  buildWorkflowRalphSpawnEnv,
+  getPostgresConfig,
+  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  resolveCortexPostgresConnectionStringFromEnv,
+} from './config.js';
 export type { CortexPostgresConfig } from './config.js';
 export { embedQuery } from './embedding.js';
 export {

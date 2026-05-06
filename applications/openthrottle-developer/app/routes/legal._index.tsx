@@ -54,10 +54,18 @@ export default function Component(
 
         <div className="mt-6 mb-2">
           <p className="text-sm text-muted-foreground">
-            <strong>Matthew Scholta</strong> is a software developer and creator
-            of OpenThrottle. With a passion for crafting robust platforms and
-            empowering developers, Matthew is dedicated to building
-            high-quality, user-focused solutions.
+            Created by{' '}
+            <strong>
+              <Link
+                target="_blank"
+                to="https://mattscholta.com?ref=openthrottle-developer"
+              >
+                Matthew Scholta
+              </Link>
+            </strong>
+            , a software developer with a passion for crafting robust platforms
+            and empowering developers. Matthew is dedicated to building
+            high-quality, user-focused solutions for the modern developer.
           </p>
         </div>
       </div>

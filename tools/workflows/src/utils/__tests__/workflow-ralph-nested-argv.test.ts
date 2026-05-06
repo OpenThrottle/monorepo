@@ -11,15 +11,14 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
   });
 
   it('omits backend when cursor (default)', () => {
-    expect(
-      buildWorkflowRalphRunTuningArgv({ backend: 'cursor' }),
-    ).toEqual([]);
+    expect(buildWorkflowRalphRunTuningArgv({ backend: 'cursor' })).toEqual([]);
   });
 
   it('includes --iterations when set', () => {
-    expect(
-      buildWorkflowRalphRunTuningArgv({ iterations: 7 }),
-    ).toEqual(['--iterations', '7']);
+    expect(buildWorkflowRalphRunTuningArgv({ iterations: 7 })).toEqual([
+      '--iterations',
+      '7',
+    ]);
   });
 
   it('includes --prompt when not default', () => {
@@ -38,11 +37,11 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
   });
 
   it('includes --debug and --verbose when set', () => {
-    expect(
-      buildWorkflowRalphRunTuningArgv({ ralphDebugCli: 'debug' }),
-    ).toEqual(['--debug']);
-    expect(
-      buildWorkflowRalphRunTuningArgv({ ralphDebugCli: 'verbose' }),
-    ).toEqual(['--verbose']);
+    expect(buildWorkflowRalphRunTuningArgv({ debug: 'debug' })).toEqual([
+      '--debug',
+    ]);
+    expect(buildWorkflowRalphRunTuningArgv({ debug: 'verbose' })).toEqual([
+      '--verbose',
+    ]);
   });
 });

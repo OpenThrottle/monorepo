@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nx/devkit": "22.6.4",
+    "@openthrottle/ai-mcp": "workspace:*",
     "@tools/generators": "workspace:*",
     "commander": "^14.0.2",
     "pg": "^8.17.1",

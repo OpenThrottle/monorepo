@@ -11,6 +11,7 @@ import {
   OnApplicationShutdown,
   OnModuleInit,
 } from '@nestjs/common';
+import { buildWorkflowRalphSpawnEnv } from '@openthrottle/ai-mcp/src/cortex-server';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getWorktreeTargetsFromEnv,
@@ -18,7 +19,11 @@ import {
   WORKTREE_TRACKER_TOKEN,
 } from '@openthrottle/nestjs-worktrees';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
-import { buildWorkflowRalphRunTuningArgv, runChildJob } from '@tools/workflows';
+import {
+  buildWorkflowRalphRunTuningArgv,
+  formatPlansProcessorSpawnOtDiagnosticsMessage,
+  runChildJob,
+} from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
 import {
   PlanOutputStreamService,
@@ -102,7 +107,7 @@ interface SpawnAndWaitResult {
 function spawnAndWait(
   command: string,
   args: string[],
-  options: { cwd: string },
+  options: { cwd: string; env?: NodeJS.ProcessEnv },
   onStdout: (chunk: string) => void,
   onStderr: (chunk: string) => void,
   signal?: AbortSignal,
@@ -925,11 +930,26 @@ export class WorkflowProcessor
       writer: this.bullMqRunOutputWriter,
     });
 
+    const spawnOtDiag = formatPlansProcessorSpawnOtDiagnosticsMessage({
+      jobId,
+      planId,
+      queueLabel: WORKFLOW_NAME,
+      spawnCwd: workspaceRoot,
+      workerEnv: process.env,
+    });
+
+    if (spawnOtDiag) {
+      this.logger.log(spawnOtDiag, WorkflowProcessor.name);
+    }
+
     try {
       const { cancelled, exitCode } = await spawnAndWait(
         'pnpm',
         args,
-        { cwd: workspaceRoot },
+        {
+          cwd: workspaceRoot,
+          env: buildWorkflowRalphSpawnEnv(process.env),
+        },
         onStdout,
         onStderr,
         cancelSignal,

@@ -26,6 +26,7 @@ import {
   updateTaskStatus,
   RALPH_WORKFLOW_FATAL_PREFIX,
 } from '../utils/cortex-ralph';
+import { logWorkflowRalphOtDiagnostics } from '../utils/ot-diagnostics';
 import { ARTWORK_THANK_YOU } from '../config/index';
 import {
   runIteration,
@@ -90,6 +91,11 @@ export const main = async (): Promise<void> => {
     }
     effectivePlanId = taskRow.planId;
   }
+
+  logWorkflowRalphOtDiagnostics({
+    connectionString: cortexConfig.connectionString,
+    planId: effectivePlanId,
+  });
 
   const [planRow, tasksRows] = await Promise.all([
     getPlanById(cortexConfig, effectivePlanId),
