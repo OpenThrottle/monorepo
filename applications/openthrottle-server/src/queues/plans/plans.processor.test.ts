@@ -217,6 +217,48 @@ describe('PlansProcessor', () => {
     );
   });
 
+  it('should use workingDirectory as cwd when provided in job data', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        workingDirectory: '/Users/matt/Development/some-project',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'pnpm',
+      ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
+      expect.objectContaining({
+        cwd: '/Users/matt/Development/some-project',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
+  });
+
+  it('should fall back to process.cwd() when workingDirectory is not set', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'pnpm',
+      expect.any(Array),
+      expect.objectContaining({
+        cwd: process.cwd(),
+      }),
+    );
+  });
+
   it('should call runPlanOrchestratorJob and not spawn when runKind is orchestrator', async () => {
     mockJob = {
       data: {
