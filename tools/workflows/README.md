@@ -158,6 +158,17 @@ Client-side checks are in `validateWorkspacePathClient` (`workspace-path.ts`). T
 
 **Recent paths (Developer app):** The UI stores up to 10 recently used workspace paths in `localStorage` (key: `openthrottle:recent-workspace-paths`). A popover on the workspace input lets users pick from or remove recent entries. Paths are added to the MRU list after a successful enqueue.
 
+**Cortex DB identity (fixes “Plan not found” with a foreign cwd):** The worker resolves the same Cortex connection string it uses for OpenThrottle and passes it into the nested process as **`OPENTHROTTLE_CORTEX_POSTGRES_URL`** and **`POSTGRES_URL`**. `getPostgresConfig()` prefers `OPENTHROTTLE_CORTEX_POSTGRES_URL` first, so tooling in another repo (env loaders, `pnpm`, or a local `.env`) cannot point Ralph at a different Postgres than the worker. You normally do not set these manually.
+
+**Diagnostics (compare worker vs nested CLI):** Nested `workflow-ralph` does **not** load `.env` from `workingDirectory`. Plan lookup is **Postgres** (`getPostgresConfig` in `@openthrottle/ai-mcp`), not `API_URL_INTERNAL` / GraphQL. To verify identity when debugging “Plan not found” with a custom cwd:
+
+1. Set **`WORKFLOW_RALPH_OT_DIAGNOSTICS=1`** when running `workflow-ralph` (locally or via worker): one stderr JSON line is emitted before plan fetch — includes `cwd`, sanitized `postgresIdentity`, plan id, and booleans for `API_URL_*` / `POSTGRES_*` presence (no secrets).
+2. Set **`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1`** on **openthrottle-server** (worker): the plans processor logs one line before spawn with `spawnCwd`, `jobId`, `planId`, worker `postgresIdentity`, and the same env-presence booleans.
+
+Compare **worker** vs **nested** `postgresIdentity` and confirm they match the database where the plan row exists. If `pnpm exec workflow-ralph` resolves to a different install when `spawnCwd` is another repo, fix the spawn command or ensure that repo’s toolchain still invokes this monorepo’s binary (see “Cross-repo usage” above).
+
+**Manual E2E (Developer app + spawn queue):** With `openthrottle-server`, the BullMQ plans worker, Redis, and Cortex DB running from the same `.env` as usual, open a plan in the Developer app, set **Workspace directory** to an absolute path on this machine (must exist; optional `OPENTHROTTLE_ALLOWED_WORKING_DIRS` must allow it), and enqueue **Run plan** (spawn). The job should not fail immediately with Ralph’s fatal `Plan not found` when the plan id exists in Cortex—nested `workflow-ralph` receives the worker’s `POSTGRES_URL` / `OPENTHROTTLE_CORTEX_POSTGRES_URL` override regardless of cwd. Success still depends on `pnpm` resolving `workflow-ralph` (this monorepo’s package) from that directory; if the foreign tree has no workspace link to `@tools/workflows`, install or invoke per **Cross-repo usage**. For scripted checks, `pnpm nx run openthrottle-server:test` includes processor tests that assert foreign `cwd` plus canonical Postgres injection.
+
 **Example — enqueue via GraphQL:**
 
 ```graphql
