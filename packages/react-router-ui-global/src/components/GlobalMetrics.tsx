@@ -32,14 +32,11 @@ import {
 } from '../utils/storage';
 import {
   GLOBAL_METRICS_CHART_CONFIG,
-  GLOBAL_METRICS_CHART_LINE_KEYS,
-  GLOBAL_METRICS_LINE_DEFINITIONS,
   GLOBAL_METRICS_POLL_INTERVAL_DEFAULT,
   GLOBAL_METRICS_POLL_INTERVAL_PRESETS,
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
-import type { GlobalMetricsChartLineKey } from '../config';
 import { formatCpuMs, formatMb } from '../utils/utils.global';
 import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
 
@@ -64,9 +61,9 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
   const {
     className,
     definitionsHref,
-    diagnosticsHref = '/settings/debug',
+    diagnosticsHref: _diagnosticsHref = '/settings/debug',
     pollIntervalMs: propPollIntervalMs,
-    showSamplingDetails = true,
+    showSamplingDetails: _showSamplingDetails = true,
   } = props;
 
   // Hooks
@@ -155,7 +152,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     return [];
   }, [loading, metricsHistory, serverMetrics]);
 
-  const metricsEndpointSummary = React.useMemo((): string => {
+  const _metricsEndpointSummary = React.useMemo((): string => {
     try {
       const parsed = new URL(url);
 
@@ -165,7 +162,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     }
   }, [url]);
 
-  const pollIntervalLabel = React.useMemo((): string => {
+  const _pollIntervalLabel = React.useMemo((): string => {
     const preset = GLOBAL_METRICS_POLL_INTERVAL_PRESETS.find(
       (p) => p.valueMs === intervalMs,
     );

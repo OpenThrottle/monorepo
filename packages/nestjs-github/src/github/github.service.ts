@@ -137,6 +137,7 @@ export class GitHubService {
     }
 
     const data = (await res.json()) as GitHubPullItem;
+
     return toPullListItemDto(data);
   }
 
@@ -222,7 +223,9 @@ export class GitHubService {
           state: item.state,
         });
       }
+
       if (data.length < perPage) return pageResults;
+
       return [...pageResults, ...(await fetchPage(page + 1))];
     };
 
@@ -264,7 +267,9 @@ export class GitHubService {
       }
 
       const data = (await res.json()) as ReadonlyArray<unknown>;
+
       if (data.length < perPage) return data.length;
+
       return data.length + (await fetchPageCount(page + 1));
     };
 
@@ -310,7 +315,9 @@ export class GitHubService {
         state: r.state,
         submittedAt: r.submitted_at,
       }));
+
       if (data.length < perPage) return pageResults;
+
       return [...pageResults, ...(await fetchPage(page + 1))];
     };
 

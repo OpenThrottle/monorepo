@@ -20,11 +20,14 @@ const testWindowEnv = {
   ROLLBAR_TOKEN: '',
 } as const;
 
-(
-  window as unknown as typeof window & {
-    readonly env: typeof testWindowEnv;
-  }
-).env = testWindowEnv;
+// FIXME: Lets look into this
+// (
+//   window as unknown as typeof window & {
+//     readonly env: typeof testWindowEnv;
+//   } as any
+// ).env = testWindowEnv;
+
+(window as any).env = testWindowEnv;
 
 /**
  * @description jsdom does not implement `ResizeObserver`; cmdk and other deps expect it.

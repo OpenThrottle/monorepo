@@ -134,7 +134,7 @@ export class GithubResolver {
       input.repo,
       {
         maxPrs: input.maxPrs ?? undefined,
-        period: (input.period ?? 'month') as 'month' | 'week',
+        period: input.period ?? 'month',
       },
     );
   }
@@ -153,7 +153,7 @@ export class GithubResolver {
       input.owner,
       input.repo,
       {
-        period: (input.period ?? undefined) as 'month' | 'week' | undefined,
+        period: input.period ?? undefined,
       },
     );
   }
@@ -169,7 +169,7 @@ export class GithubResolver {
     setCacheHint(info, this.CACHE_MAX_AGE);
 
     return this.githubStatsService.getPrCountByLabel(input.owner, input.repo, {
-      state: (input.state ?? 'all') as 'all' | 'closed' | 'open',
+      state: input.state ?? 'all',
     });
   }
 
@@ -187,7 +187,7 @@ export class GithubResolver {
       input.owner,
       input.repo,
       {
-        period: input.period as 'month' | 'week',
+        period: input.period,
       },
     );
   }
@@ -204,7 +204,7 @@ export class GithubResolver {
 
     return this.githubStatsService.getReviewCycleTime(input.owner, input.repo, {
       maxPrs: input.maxPrs ?? undefined,
-      period: (input.period ?? undefined) as 'month' | 'week' | undefined,
+      period: input.period ?? undefined,
     });
   }
 
@@ -220,7 +220,7 @@ export class GithubResolver {
 
     return this.githubStatsService.getCommitsPerPr(input.owner, input.repo, {
       maxPrs: input.maxPrs ?? undefined,
-      period: (input.period ?? undefined) as 'month' | 'week' | undefined,
+      period: input.period ?? undefined,
     });
   }
 }

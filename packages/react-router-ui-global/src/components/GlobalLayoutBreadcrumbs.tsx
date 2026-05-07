@@ -19,12 +19,11 @@ export const GlobalLayoutBreadcrumbs = (
 
   // Hooks
 
+  type Matches = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
+
   ///// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 
-  const matches = useMatches() as UIMatch<
-    string,
-    GlobalLayoutBreadcrumbsHandle
-  >[];
+  const matches = useMatches() as Matches[];
 
   // Setup
   const breadcrumb = matches
