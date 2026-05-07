@@ -10,20 +10,20 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import type { Route } from '@/app/routes/+types/profile._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Profile',
   links: (_match) => [],
 };
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Profile | ${SITE_TITLE}` }];
@@ -73,8 +73,8 @@ export default function Component(
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

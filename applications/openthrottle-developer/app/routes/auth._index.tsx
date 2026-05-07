@@ -23,6 +23,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {};
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
@@ -64,8 +68,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -1,7 +1,5 @@
 import * as React from 'react';
-// import { Analytics } from '@vercel/analytics/react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
-import { executeGraphql } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayout,
   GlobalMetrics,
@@ -19,7 +17,7 @@ import {
   useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
-import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 import { OpenThrottleCommander } from '@openthrottle/react-router-ui';
 import { Toaster } from '@openthrottle/react-router-shadcn';
 import {
@@ -42,9 +40,6 @@ import { GlobalLayoutHeader } from '@openthrottle/react-router-ui-global/src/com
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
-  LoginDocument,
-  RegisterDocument,
-  ServerHealthObject,
   UserObject,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
@@ -74,60 +69,11 @@ import {
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
-
-/** Path prefixes that require authentication when FEATURE_BETA_PREVIEW is on. */
-const PROTECTED_PATH_PREFIXES = [
-  '/dashboard',
-  '/generators',
-  '/notes',
-  '/plans',
-  '/projects',
-  '/pull-requests',
-  '/queues',
-  '/search',
-  '/settings',
-];
-
-export function decodeAuthTokenEmail(token: string): string {
-  try {
-    const payload = token.split('.')[1];
-    if (!payload) return '';
-    const decoded = JSON.parse(
-      atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
-    );
-    return decoded.email ?? decoded.sub ?? '';
-  } catch {
-    return '';
-  }
-}
-
-/**
- * @description Call login GraphQL mutation on openthrottle-server. Uses API_URL (same as executeGraphql).
- */
-async function callLoginMutation(
-  email: string,
-  password: string,
-): Promise<string | null> {
-  const data = await executeGraphql(LoginDocument, {
-    input: { email, password },
-  });
-
-  return data?.login?.accessToken ?? null;
-}
-
-/**
- * @description Call login GraphQL mutation on openthrottle-server. Uses API_URL (same as executeGraphql).
- */
-async function callRegisterMutation(
-  email: string,
-  password: string,
-): Promise<string | null> {
-  const data = await executeGraphql(RegisterDocument, {
-    input: { email, password },
-  });
-
-  return data.register.accessToken ?? null;
-}
+import {
+  callLoginMutation,
+  callRegisterMutation,
+} from '~/global/utils/utils.auth';
+import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate
@@ -139,7 +85,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
   return false;
 };
 
-export const links: LinksFunction = () => {
+export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
 
@@ -525,9 +471,11 @@ export const action = async (args: Route.ActionArgs) => {
     if (jump === 'plans-index') {
       return redirect('/plans');
     }
+
     if (jump === 'queues-index') {
       return redirect('/queues');
     }
+
     if (jump === 'generators-index') {
       return redirect('/generators');
     }
@@ -639,10 +587,6 @@ export const action = async (args: Route.ActionArgs) => {
 
   return null;
 };
-
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
 
 /**
  * @link https://reactrouter.com/how-to/error-boundary

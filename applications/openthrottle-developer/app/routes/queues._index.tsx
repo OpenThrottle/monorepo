@@ -12,9 +12,9 @@ import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Queues',
   links: (_match) => [],
 };
@@ -28,13 +28,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { queues };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
-
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `QueuesIndex | ${SITE_TITLE}` }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Queues | ${SITE_TITLE}` }];
@@ -66,8 +62,8 @@ export default function Component(
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

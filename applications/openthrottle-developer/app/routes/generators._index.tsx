@@ -17,9 +17,9 @@ import {
 } from '~/routing/generators/constants/generator-nx-docs';
 import type { Route } from '@/app/routes/+types/generators._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Generators',
   links: (_match) => [],
 };
@@ -33,9 +33,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { generators };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Generators | ${SITE_TITLE}` }];
@@ -94,8 +94,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

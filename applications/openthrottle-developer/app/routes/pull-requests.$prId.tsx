@@ -30,9 +30,9 @@ import {
 } from '~/routing/pull-requests/utils/github-pr-links';
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => match.params.prId,
   links: (_match) => [{ children: 'Pull requests', to: '/pull-requests' }],
 };
@@ -68,6 +68,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   };
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const pull = args.loaderData?.pull;
   const title = pull?.title
@@ -82,6 +86,18 @@ export default function Component(
 ): React.ReactElement {
   const { loaderData } = props;
   const { listQuery, owner, pull, repo } = loaderData;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <GlobalScreen>
@@ -386,5 +402,9 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

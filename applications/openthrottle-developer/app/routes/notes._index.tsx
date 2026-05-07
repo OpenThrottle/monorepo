@@ -16,9 +16,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/notes._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Notes',
   links: (_match) => [],
 };
@@ -32,9 +32,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { notes };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Notes | ${SITE_TITLE}` }];
@@ -95,8 +95,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

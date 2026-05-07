@@ -17,7 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   CreatePromptDocument,
   type CreateCustomPromptInput,
@@ -30,6 +33,21 @@ import {
   PROMPTS_DEFAULT_CONTENT,
 } from '~/routing/prompts/config';
 import type { Route } from '@/app/routes/+types/prompts.create';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) => match.loaderData?.prompt?.title ?? 'Prompt Details',
+  links: (_match) => [{ children: 'Prompts', to: '/prompts' }],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create Prompt | ${SITE_TITLE}` }];

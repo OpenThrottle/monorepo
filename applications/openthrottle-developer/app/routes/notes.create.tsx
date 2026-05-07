@@ -12,24 +12,20 @@ import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create Note',
   links: (_match) => [{ children: 'All Notes', to: '/notes' }],
 };
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {}
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
-
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `NoteCreate | ${SITE_TITLE}` }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create note | ${SITE_TITLE}` }];

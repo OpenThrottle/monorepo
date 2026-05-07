@@ -12,15 +12,11 @@ import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugP
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
 import type { Route } from '@/app/routes/+types/settings.debug';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Debug',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
-};
-
-export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `SettingsDebug | ${SITE_TITLE}` }];
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -54,6 +50,14 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
+export const meta = (_args: Route.MetaArgs) => {
+  return [{ title: `SettingsDebug | ${SITE_TITLE}` }];
+};
+
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
@@ -76,5 +80,9 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

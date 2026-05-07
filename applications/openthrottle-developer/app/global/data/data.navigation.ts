@@ -1,6 +1,7 @@
 import { GlobalSidebarLinkProps } from '@openthrottle/react-router-ui-global';
 import {
   BellIcon,
+  BinaryIcon,
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
@@ -12,7 +13,6 @@ import {
   ListOrderedIcon,
   NotebookTextIcon,
   Search,
-  SettingsIcon,
   SwatchBookIcon,
   TerminalSquareIcon,
   UserCircle,
@@ -71,6 +71,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   ],
   Settings: [
     {
+      children: 'Application',
+      icon: BinaryIcon,
+      to: '/settings/application',
+    },
+    {
       children: 'Appearance',
       icon: SwatchBookIcon,
       to: '/settings/appearance',
@@ -79,12 +84,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Debug',
       icon: BugIcon,
       to: '/settings/debug',
-    },
-    {
-      children: 'General',
-      icon: SettingsIcon,
-      end: true,
-      to: '/settings',
     },
     {
       children: 'Logs',

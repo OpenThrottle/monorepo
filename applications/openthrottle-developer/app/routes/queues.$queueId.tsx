@@ -48,9 +48,9 @@ const parseQueueJobsPagination = (
   return { limit, offset, page };
 };
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => match.loaderData?.queue?.name ?? 'Queue Details',
   links: (_match) => [{ children: 'Queues', to: '/queues' }],
 };
@@ -83,6 +83,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { limit, page, queue };
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const queueName = args.params.queueId ?? 'Queue';
 
@@ -95,16 +99,28 @@ export default function Component(
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
   const { limit, page, queue } = loaderData;
 
+  // Hooks
+  const params = new URLSearchParams();
+
+  // Setup
   const jobs = queue.jobs?.jobs ?? [];
   const hasNext = queue.jobs?.hasNext ?? false;
   const queueBasePath = `/queues/${encodeURIComponent(queue.name)}`;
+
   const buildJobsPageHref = (nextPage: number): string => {
-    const params = new URLSearchParams();
     params.set('page', String(nextPage));
     params.set('limit', String(limit));
 
     return `${queueBasePath}?${params.toString()}`;
   };
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <GlobalScreen>
@@ -204,8 +220,8 @@ export default function Component(
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -34,9 +34,9 @@ import type { Route } from '@/app/routes/+types/projects.$projectId';
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => match.loaderData?.project?.name ?? 'Details',
   links: (_match) => [{ children: 'Projects', to: '/projects' }],
 };
@@ -76,6 +76,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     projectTasks,
     totalTaskCount,
   };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
@@ -225,8 +229,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

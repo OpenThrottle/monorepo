@@ -11,9 +11,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { GeneratorNxBridge } from '~/routing/generators/components/GeneratorNxBridge';
 import type { Route } from '@/app/routes/+types/generators.$generatorId';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) =>
     match.loaderData?.generator?.name ?? 'Generator Details',
   links: (_match) => [{ children: 'Generators', to: '/generators' }],
@@ -40,9 +40,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { generator };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const raw = args.params.generatorId ?? 'Generator';
@@ -83,8 +83,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

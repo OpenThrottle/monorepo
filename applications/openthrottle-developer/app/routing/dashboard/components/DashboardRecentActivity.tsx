@@ -118,7 +118,8 @@ function TypeIcon({ type }: { type: ActivityRow['type'] }): React.ReactElement {
 function formatActivityDate(dateStr: string): string {
   const date = new Date(dateStr);
 
-  return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
+  // return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
+  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 /**

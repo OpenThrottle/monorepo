@@ -32,9 +32,9 @@ import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
 import { PullRequestStats } from '~/routing/pull-requests/components/PullRequestStats';
 import { PullRequestsToolbar } from '~/routing/pull-requests/components/PullRequestsToolbar';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Pull requests',
   links: (_match) => [],
 };
@@ -117,6 +117,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     listQuery: listSearchParams.toString(),
     pulls: filteredPulls,
   };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
@@ -330,5 +334,9 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

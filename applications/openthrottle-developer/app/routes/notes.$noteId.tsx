@@ -15,9 +15,9 @@ import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.$noteId';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Details',
   links: (_match) => [{ children: 'Notes', to: '/notes' }],
 };
@@ -33,9 +33,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { note };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Note Details | ${SITE_TITLE}` }];

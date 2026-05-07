@@ -28,9 +28,9 @@ import type { Route } from '@/app/routes/+types/prompts._index';
 import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
 import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Prompts',
   links: (_match) => [],
 };
@@ -171,8 +171,8 @@ export default function Component(
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

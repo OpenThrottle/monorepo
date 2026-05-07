@@ -15,9 +15,9 @@ import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.edit';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Edit',
   links: (match) => [
     { children: 'Plans', to: '/plans' },
@@ -43,9 +43,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { plan: result.plan ?? null };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const plan = args.loaderData?.plan;

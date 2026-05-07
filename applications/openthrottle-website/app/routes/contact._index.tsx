@@ -8,9 +8,9 @@ import type { Route } from '@/app/routes/+types/contact._index';
 //   return {};
 // };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [{ href: stylesheet, rel: 'stylesheet' }];
+};
 
 // export const meta = (_args: Route.MetaArgs) => {
 //   return [{ title: `ContactIndex | ${SITE_TITLE}` }];

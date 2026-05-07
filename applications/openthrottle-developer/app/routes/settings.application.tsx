@@ -4,18 +4,20 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { CogIcon } from 'lucide-react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+import { CogIcon } from 'lucide-react';
+import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
 import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/settings._index';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+import type { Route } from '@/app/routes/+types/settings.application';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'General',
+  breadcrumb: (_match) => 'Application',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };
 
@@ -63,10 +65,11 @@ export default function Component(
           className="mb-4"
           heading="h3"
           icon={CogIcon}
-          title="Settings"
+          title="Application"
         />
         <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
-          Controls for the OpenThrottle Developer portal.
+          Theme controls for this portal. Diagnostics below mirror General
+          settings and help verify URLs and build metadata.
         </p>
         <div className="space-y-8">
           <SettingsEnvironmentDiagnostics
@@ -74,6 +77,8 @@ export default function Component(
             idPrefix="settings-general"
             supportBundle={loaderData.supportBundle}
           />
+          <NotificationPreferencesSection className="flex-1" />
+          <EventSubscriptionsSection className="flex-1" />
         </div>
       </div>
     </GlobalScreen>

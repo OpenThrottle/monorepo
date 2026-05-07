@@ -11,27 +11,20 @@ import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.create';
 
-// export const handle = {
-//   breadcrumb: () => <Link to="/parent/child">Child Route</Link>,
-// };
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create',
   links: (_match) => [{ children: 'Plans', to: '/plans' }],
 };
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
-
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `PlansCreate | ${SITE_TITLE}` }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create plan | ${SITE_TITLE}` }];

@@ -1,19 +1,21 @@
 import * as React from 'react';
+import { BellIcon } from 'lucide-react';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { BookOpenIcon } from 'lucide-react';
+import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/legal.license';
+import type { Route } from '@/app/routes/+types/notifications._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'License',
-  links: (_match) => [{ children: 'Legal', to: '/legal' }],
+  breadcrumb: (_match) => 'NotificationsIndex',
+  links: (_match) => [],
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {
@@ -25,7 +27,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `License | ${SITE_TITLE}` }];
+  return [{ title: `NotificationsIndex | ${SITE_TITLE}` }];
 };
 
 export default function Component(
@@ -51,13 +53,16 @@ export default function Component(
         <GlobalHeading
           className="mb-4"
           heading="h1"
-          icon={BookOpenIcon}
-          title="License"
+          icon={BellIcon}
+          title="Notifications"
         />
         <p className="text-sm text-muted-foreground">
-          Open source and third-party license notices will be published here.
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
+          architecto ea?
         </p>
       </div>
+      <NotificationPreferencesSection className="flex-1" />
+      <EventSubscriptionsSection className="flex-1" />
     </GlobalScreen>
   );
 }

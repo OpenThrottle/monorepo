@@ -13,9 +13,9 @@ import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/auth.logout';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Logout',
   links: (_match) => [{ children: 'Auth', to: '/auth' }],
 };

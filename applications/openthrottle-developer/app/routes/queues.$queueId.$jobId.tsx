@@ -20,9 +20,9 @@ import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => {
     const id = match?.params?.jobId;
     if (id == null || id === '') {
@@ -70,6 +70,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   return { job: result.job, queueName };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
@@ -125,9 +129,7 @@ export default function Component(
   );
 }
 
-export const action = async (
-  args: Route.ActionArgs,
-): Promise<Route.ComponentProps['actionData']> => {
+export const action = async (args: Route.ActionArgs) => {
   const queueName = args.params.queueId;
   const jobIdParam = args.params.jobId;
 

@@ -12,20 +12,20 @@ import { CreateProjectDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/projects.create';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create',
   links: (_match) => [{ children: 'Projects', to: '/projects' }],
 };
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create project | ${SITE_TITLE}` }];

@@ -10,7 +10,10 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { redirect } from 'react-router';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import {
   GetTaskByIdDocument,
@@ -19,6 +22,17 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskForm } from '~/routing/plans/components/TaskForm';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.edit';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+// FIXME:
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [
+    { children: 'Plans', to: '/plans' },
+    { children: 'Tasks', to: '/plans/tasks' },
+  ],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
@@ -40,9 +54,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { task };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const task = args.loaderData?.task;

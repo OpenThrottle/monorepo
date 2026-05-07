@@ -15,9 +15,9 @@ import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Usage',
   links: (_match) => [],
 };
@@ -43,6 +43,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     rangeEndIso: endIso,
     rangeStartIso: startIso,
   };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
@@ -81,5 +85,9 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

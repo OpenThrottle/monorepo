@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../settings._index';
+// import { default as Route } from '../notifications._index';
 
-describe('routes/settings._index.tsx', () => {
+describe('routes/notifications._index.tsx', () => {
   // let component: RenderResult;
 
   // beforeEach(() => {

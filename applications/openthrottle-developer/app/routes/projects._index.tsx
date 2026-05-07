@@ -31,9 +31,9 @@ import { sortProjects } from '~/routing/projects/utils/sorting';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import type { Route } from '@/app/routes/+types/projects._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Projects',
   links: (_match) => [],
 };
@@ -99,9 +99,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Projects | ${SITE_TITLE}` }];
@@ -191,8 +191,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -26,9 +26,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
       className="cursor-pointer whitespace-nowrap"
@@ -74,6 +74,10 @@ export const loader = async (args: Route.LoaderArgs) => {
       : null;
 
   return { plan, task };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
@@ -137,8 +141,8 @@ export default function Component(
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

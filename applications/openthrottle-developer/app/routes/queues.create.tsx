@@ -12,20 +12,20 @@ import { QueueForm } from '~/routing/queues/components/QueueForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.create';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create',
   links: (_match) => [{ children: 'Queues', to: '/queues' }],
 };
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create queue | ${SITE_TITLE}` }];
@@ -35,6 +35,18 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData: _l, matches: _m, params: _p } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <GlobalScreen>

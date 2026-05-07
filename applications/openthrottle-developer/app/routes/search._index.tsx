@@ -20,9 +20,9 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/search._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => {
     const query = match.loaderData?.query ?? '';
     const isEmpty = query === '';
@@ -80,6 +80,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     results: { chunks: pageChunks },
     total: chunks.length,
   };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
@@ -228,8 +232,8 @@ export default function Component(
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

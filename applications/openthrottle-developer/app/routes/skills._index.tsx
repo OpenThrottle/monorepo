@@ -12,11 +12,19 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import type { Route } from '@/app/routes/+types/skills._index';
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Skills',
   links: (_match) => [],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
@@ -46,5 +54,9 @@ export default function Component(
     </GlobalScreen>
   );
 }
+
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

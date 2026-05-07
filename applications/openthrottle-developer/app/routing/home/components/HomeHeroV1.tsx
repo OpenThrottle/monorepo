@@ -24,13 +24,9 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
     <section className={classnames(className)} data-testid="HomeHeroV1">
       <div className="max-w-7xl mx-auto max-h-svh">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-sans leading-tight pb-52">
-            {/* <span className="text-foreground">Get </span>{' '} */}
-            {/* <span className="text-highlight">Started!</span> */}
-            Stop <span className="text-highlight-red font-black">
-              losing
-            </span>{' '}
-            the <span className="text-accent font-black">Plan</span>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-normal font-sans leading-tight pb-52">
+            Stop <span className="text-highlight-red font-black">losing</span>{' '}
+            the <span className="text-accent font-black">plan</span>
             <br />
             in{' '}
             <span className="tracking-tighter font-thin text-current/60">

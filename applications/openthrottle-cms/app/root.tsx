@@ -9,7 +9,7 @@ import {
   ScrollRestoration,
   useRouteLoaderData,
 } from 'react-router';
-import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 import {
   artwork,
   OPEN_THROTTLE_BUCKET,
@@ -21,7 +21,7 @@ import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
 
-export const links: LinksFunction = () => {
+export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
 

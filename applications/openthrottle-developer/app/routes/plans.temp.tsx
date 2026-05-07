@@ -17,9 +17,9 @@ export const loader = async (_args: Route.LoaderArgs) => {
   return {};
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `TEMP | ${SITE_TITLE}` }];

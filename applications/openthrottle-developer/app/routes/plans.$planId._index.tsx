@@ -76,9 +76,9 @@ const parsePlanTasksView = (raw: string | null): 'board' | 'table' | null => {
 //   return false;
 // };
 
-type LoaderData = Route.ComponentProps['loaderData'];
+type HandleData = Route.ComponentProps['loaderData'];
 
-export const handle: GlobalLayoutBreadcrumbsHandle<LoaderData> = {
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
       className="cursor-pointer whitespace-nowrap"
@@ -113,6 +113,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     recentPlanRuns: page.metrics.recentPlanRunsMetrics ?? [],
     tasks: page.tasksByPlanId ?? [],
   };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
