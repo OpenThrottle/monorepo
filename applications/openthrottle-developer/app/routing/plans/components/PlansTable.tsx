@@ -6,16 +6,16 @@ import {
   DataTable,
   Input,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import { formatDate } from 'date-fns';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import type { PlanCardFragment } from '~/__generated__/graphql';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
-import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
-import { PlanStatusKey } from '~/routing/plans/types';
 import { ArrowRightIcon } from 'lucide-react';
+import { formatDate } from 'date-fns';
+import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
+import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { Link, useFetcher } from 'react-router';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { PlanStatusKey } from '~/routing/plans/types';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { PlanCardFragment } from '~/__generated__/graphql';
 
 export interface PlansTableProps {
   className?: string;
@@ -24,10 +24,43 @@ export interface PlansTableProps {
   statusFilterUrls?: Record<string, string>;
 }
 
-function buildPlanTableColumns(
+export const PlansTable = (props: PlansTableProps) => {
+  const { className, plans, statusFilterUrls } = props;
+
+  // Hooks
+  const runPlanFetcher = useFetcher<typeof planDetailAction>();
+
+  // Setup
+  const columns = React.useMemo(
+    () => PlansTable.buildTable(statusFilterUrls, runPlanFetcher),
+    [statusFilterUrls, runPlanFetcher],
+  );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PlansTable"
+    >
+      <DataTable<PlanCardFragment, string | number | null | undefined>
+        columns={columns}
+        data={plans}
+      />
+    </div>
+  );
+};
+
+PlansTable.buildTable = (
   statusFilterUrls: PlansTableProps['statusFilterUrls'],
   runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
-): ColumnDef<PlanCardFragment, string | number | null | undefined>[] {
+): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [
     // {
     //   accessorKey: 'status',
@@ -204,37 +237,4 @@ function buildPlanTableColumns(
       id: 'actions',
     },
   ];
-}
-
-export const PlansTable = (props: PlansTableProps) => {
-  const { className, plans, statusFilterUrls } = props;
-
-  // Hooks
-  const runPlanFetcher = useFetcher<typeof planDetailAction>();
-
-  // Setup
-  const columns = React.useMemo(
-    () => buildPlanTableColumns(statusFilterUrls, runPlanFetcher),
-    [statusFilterUrls, runPlanFetcher],
-  );
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <div
-      className={classnames('border ui-border rounded-lg', className)}
-      data-testid="PlansTable"
-    >
-      <DataTable<PlanCardFragment, string | number | null | undefined>
-        columns={columns}
-        data={plans}
-      />
-    </div>
-  );
 };

@@ -97,7 +97,7 @@ export class GitHubService {
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as GitHubPullItem[];
+    const data = (await res.json()) as unknown as GitHubPullItem[];
     let list = data.map((p) => toPullListItemDto(p));
 
     if (mergedFilter === true) {
@@ -136,7 +136,7 @@ export class GitHubService {
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as GitHubPullItem;
+    const data = (await res.json()) as unknown as GitHubPullItem;
 
     return toPullListItemDto(data);
   }
@@ -165,7 +165,8 @@ export class GitHubService {
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as GitHubPullDetail;
+    const data = (await res.json()) as unknown as GitHubPullDetail;
+
     return {
       additions: data.additions,
       author: data.user?.login ?? '',
@@ -213,8 +214,9 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as GitHubIssueItem[];
+      const data = (await res.json()) as unknown as GitHubIssueItem[];
       const pageResults: IssueWithLabelsDto[] = [];
+
       for (const item of data) {
         if (item.pull_request === undefined) continue;
         pageResults.push({
@@ -266,7 +268,7 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as ReadonlyArray<unknown>;
+      const data = (await res.json()) as unknown as ReadonlyArray<unknown>;
 
       if (data.length < perPage) return data.length;
 
@@ -310,7 +312,7 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as GitHubReviewItem[];
+      const data = (await res.json()) as unknown as GitHubReviewItem[];
       const pageResults = data.map((r) => ({
         state: r.state,
         submittedAt: r.submitted_at,

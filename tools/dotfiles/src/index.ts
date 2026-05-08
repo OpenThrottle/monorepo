@@ -1,6 +1,6 @@
 // Global type declarations - imported only for type checking, not at runtime
-// @ts-expect-error - This is a type-only import that doesn't need to resolve at runtime
-import type {} from './global';
+// import type {} from './global';
+//// @ts-expect-error - This is a type-only import that doesn't need to resolve at runtime
 
 // import pluginTypescript from '@typescript-eslint/eslint-plugin';
 import { getDirname } from './vite-config.js';

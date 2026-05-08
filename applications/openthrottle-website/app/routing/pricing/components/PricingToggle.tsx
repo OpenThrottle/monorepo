@@ -11,7 +11,8 @@ import type { BillingInterval } from '~/routing/pricing/types';
 export type { BillingInterval };
 
 export interface PricingToggleProps {
-  readonly onValueChange: (value: BillingInterval) => void;
+  // FIXME: We should remove the string typing here
+  readonly onValueChange: (value: BillingInterval | string) => void;
   readonly value: BillingInterval;
   readonly className?: string;
 }
@@ -24,7 +25,7 @@ export const PricingToggle = (props: PricingToggleProps) => {
       className={cn(className)}
       data-testid="PricingToggle"
       onValueChange={(next) => {
-        onValueChange(next as unknown as BillingInterval);
+        onValueChange(next);
       }}
       value={value}
     >
