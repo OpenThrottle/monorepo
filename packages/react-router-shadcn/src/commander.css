@@ -57,6 +57,7 @@
 
 [cmdk-input]::placeholder {
   color: var(--muted-foreground);
+  opacity: 0.5;
 }
 
 [cmdk-item] {

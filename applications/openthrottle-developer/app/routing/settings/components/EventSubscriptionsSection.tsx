@@ -1,10 +1,7 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
-  Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Label,
   Separator,
   Switch,
@@ -63,45 +60,37 @@ export const EventSubscriptionsSection = (
   // 🔌 Short Circuit
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-xl">Event subscriptions</CardTitle>
-        <CardDescription>
-          Choose which real-time notification events you want to receive in the
-          app. Preferences are saved in this browser and stay in sync if you
-          change them in another tab.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-0">
-        {EVENT_SUBSCRIPTION_ROWS.map((row, index) => (
-          <React.Fragment key={row.id}>
-            {index > 0 ? <Separator className="my-4" /> : null}
-            <div
-              className="flex flex-row items-center justify-between gap-4"
-              data-testid={`event-subscription-${row.id}`}
-            >
-              <div className="space-y-1">
-                <Label htmlFor={`event-subscription-${row.id}`}>
-                  {row.label}
-                </Label>
-                {/* <p className="font-mono text-xs text-muted-foreground">
+    <div
+      className={classnames(
+        'space-y-0 bg-card rounded-lg border border-card-border p-4',
+        className,
+      )}
+    >
+      {EVENT_SUBSCRIPTION_ROWS.map((row, index) => (
+        <React.Fragment key={row.id}>
+          {index > 0 ? <Separator className="my-4" /> : null}
+          <div
+            className="flex flex-row items-center justify-between gap-4"
+            data-testid={`event-subscription-${row.id}`}
+          >
+            <div className="space-y-1">
+              <Label htmlFor={`event-subscription-${row.id}`}>
+                {row.label}
+              </Label>
+              {/* <p className="font-mono text-xs text-muted-foreground">
                   {row.id}
                 </p> */}
-                <p className="text-sm text-muted-foreground">
-                  {row.description}
-                </p>
-              </div>
-              <Switch
-                aria-label={`Subscribe to ${row.label}`}
-                checked={subscribed[row.id]}
-                id={`event-subscription-${row.id}`}
-                onCheckedChange={handleCheckedChange(row.id)}
-              />
+              <p className="text-sm text-muted-foreground">{row.description}</p>
             </div>
-          </React.Fragment>
-        ))}
-      </CardContent>
-    </Card>
+            <Switch
+              aria-label={`Subscribe to ${row.label}`}
+              checked={subscribed[row.id]}
+              id={`event-subscription-${row.id}`}
+              onCheckedChange={handleCheckedChange(row.id)}
+            />
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
   );
 };

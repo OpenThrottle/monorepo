@@ -21,8 +21,8 @@ export const GlobalLayoutBreadcrumbs = (
 
   type Matches = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
 
-  ///// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-
+  //// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+   
   const matches = useMatches() as Matches[];
 
   // Setup

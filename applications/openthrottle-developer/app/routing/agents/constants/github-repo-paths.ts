@@ -3,5 +3,5 @@
  */
 export function githubOpenThrottleMainBlob(repoRelativePath: string): string {
   const trimmed = repoRelativePath.replace(/^\//, '');
-  return `https://github.com/OpenThrottle/OpenThrottle/blob/main/${trimmed}`;
+  return `https://github.com/OpenThrottle/monorepo/blob/main/${trimmed}`;
 }

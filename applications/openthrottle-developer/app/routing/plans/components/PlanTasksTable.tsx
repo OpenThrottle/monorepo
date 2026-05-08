@@ -184,7 +184,7 @@ export const PlanTasksTable = (
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      // className={classnames('border ui-border rounded-lg', className)}
       data-testid="PlanTasksTable"
     >
       <DataTable<PlanTaskRowFragment, string | null | undefined>

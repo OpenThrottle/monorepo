@@ -1,22 +1,13 @@
 import * as React from 'react';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-  Spinner,
-} from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalCollapsible,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { redirect } from 'react-router';
-import { ListCheckIcon } from 'lucide-react';
+import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import {
   GetPlanByIdDocument,
@@ -36,13 +27,18 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
       text={match.loaderData?.task?.id ?? ''}
     />
   ),
-  links: (match) => [
-    { children: 'Plans', to: '/plans' },
-    {
-      children: match.loaderData?.plan?.title ?? '',
-      to: `/plans/${match.loaderData?.plan?.id ?? ''}`,
-    },
-  ],
+  links: (match) => {
+    const title = match.loaderData?.plan?.title;
+    const planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
+
+    return [
+      { children: 'Plans', to: '/plans' },
+      {
+        children: planTitle,
+        to: `/plans/${match.loaderData?.plan?.id ?? ''}`,
+      },
+    ];
+  },
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -99,6 +95,7 @@ export default function Component(
 
   // Setup
   const _taskId = params.taskId ?? '';
+  const effectivePlanId = task != null ? (task.planId ?? '') : '';
 
   // Handlers
 
@@ -110,33 +107,14 @@ export default function Component(
   if (task == null) {
     return (
       <GlobalScreen>
-        <Empty>
-          <EmptyMedia variant="icon">
-            <PuzzlePieceIcon size={48} />
-          </EmptyMedia>
-          <EmptyTitle>Task not found</EmptyTitle>
-          <EmptyDescription>
-            The task you are looking for does not exist.
-          </EmptyDescription>
-        </Empty>
+        <PlanTaskNotFound />
       </GlobalScreen>
     );
   }
 
-  const effectivePlanId = task.planId ?? '';
-
   return (
     <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8">
-      <GlobalCollapsible icon={PuzzlePieceIcon} title="Task Details">
-        <TaskDetails planId={effectivePlanId} task={task} />
-      </GlobalCollapsible>
-
-      <GlobalCollapsible icon={ListCheckIcon} title="Task Requirements">
-        <div>
-          coming soon
-          <Spinner className="size-8 text-muted-foreground" />
-        </div>
-      </GlobalCollapsible>
+      <TaskDetails planId={effectivePlanId} task={task} />
     </GlobalScreen>
   );
 }

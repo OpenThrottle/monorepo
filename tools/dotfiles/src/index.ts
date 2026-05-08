@@ -3,6 +3,7 @@
 import type {} from './global';
 
 // import pluginTypescript from '@typescript-eslint/eslint-plugin';
+import { getDirname } from './vite-config.js';
 import js from '@eslint/js';
 import pluginComments from 'eslint-plugin-eslint-comments';
 import pluginImport from 'eslint-plugin-import';
@@ -15,7 +16,6 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
 import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 import tslint from 'typescript-eslint';
-import { getDirname } from './vite-config.js';
 
 export type { Config as EslintFlatConfig } from 'eslint/config';
 export {
@@ -193,7 +193,20 @@ export const eslintConfig = tslint.config([
       ],
       curly: ['error', 'multi-line'],
       'import/no-named-as-default-member': 'off',
-      'import/order': ['error', { 'newlines-between': 'never' }],
+      // 'import/order': [
+      //   'error',
+      //   {
+      //     groups: [
+      //       'builtin', // Imports of builtins are first
+      //       ['sibling', 'parent'], // Then sibling and parent imports. They can be mingled together
+      //       'index', // Then index file imports
+      //       'object', // Then any arcane TypeScript imports
+
+      //       // Then the omitted imports: internal, external, type, unknown
+      //     ],
+      //     'newlines-between': 'never',
+      //   },
+      // ],
       'jsdoc/no-undefined-types': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
@@ -205,6 +218,21 @@ export const eslintConfig = tslint.config([
       'react/jsx-uses-react': 'off',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      // 'sort-imports': [
+      //   'error',
+      //   {
+      //     allowSeparatedGroups: false,
+      //     ignoreCase: false,
+      //     ignoreDeclarationSort: false,
+      //     ignoreMemberSort: false,
+      //     memberSyntaxSortOrder: ['all', 'none', 'single', 'multiple'],
+      //   },
+      // ],
+      'sort-keys': [
+        'error',
+        'asc',
+        { caseSensitive: true, minKeys: 2, natural: false },
+      ],
       'sort-keys-fix/sort-keys-fix': 'error',
 
       // '@typescript-eslint/naming-convention': [

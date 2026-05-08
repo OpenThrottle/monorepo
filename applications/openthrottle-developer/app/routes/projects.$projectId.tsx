@@ -118,35 +118,19 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <Tabs className="w-full">
+      <Tabs
+        className="w-full"
+        onValueChange={(next) => {
+          setActiveTab(next as ProjectTabValue);
+        }}
+        value={activeTab}
+      >
         <TabsList aria-label="Project sections" className="mb-4">
-          <TabsTrigger
-            aria-controls="project-overview-panel"
-            aria-selected={activeTab === 'overview'}
-            data-state={activeTab === 'overview' ? 'active' : 'inactive'}
-            id="project-overview-tab"
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger
-            aria-controls="project-tasks-panel"
-            aria-selected={activeTab === 'tasks'}
-            data-state={activeTab === 'tasks' ? 'active' : 'inactive'}
-            id="project-tasks-tab"
-            onClick={() => setActiveTab('tasks')}
-          >
-            Tasks
-          </TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
         </TabsList>
 
-        <TabsContent
-          aria-hidden={activeTab !== 'overview'}
-          aria-labelledby="project-overview-tab"
-          className="mt-0"
-          hidden={activeTab !== 'overview'}
-          id="project-overview-panel"
-        >
+        <TabsContent className="mt-0" value="overview">
           <Card aria-labelledby="project-overview-heading">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
@@ -189,13 +173,7 @@ export default function Component(
           </Card>
         </TabsContent>
 
-        <TabsContent
-          aria-hidden={activeTab !== 'tasks'}
-          aria-labelledby="project-tasks-tab"
-          className="mt-0"
-          hidden={activeTab !== 'tasks'}
-          id="project-tasks-panel"
-        >
+        <TabsContent className="mt-0" value="tasks">
           <section
             aria-labelledby="project-tasks-heading"
             className="space-y-3"

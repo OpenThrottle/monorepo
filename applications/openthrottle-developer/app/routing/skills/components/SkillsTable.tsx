@@ -1,8 +1,10 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 export interface SkillsTableProps {
   readonly className?: string;
+  readonly entries?: readonly RepoSkillEntry[];
 }
 
 export const SkillsTable = (props: SkillsTableProps) => {

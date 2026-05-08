@@ -363,6 +363,11 @@
       "keytar",
       "msgpackr-extract",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ],
     "overrides": {
@@ -380,7 +385,7 @@
     "patchedDependencies": {}
   },
   "private": true,
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
     "build": "pnpm run build:packages",
     "build:docker": "pnpm run docker:build",

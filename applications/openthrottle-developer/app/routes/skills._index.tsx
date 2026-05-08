@@ -11,6 +11,9 @@ import { REPO_SKILLS_REGISTRY } from '~/routing/agents/data/repo-skills-registry
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import type { Route } from '@/app/routes/+types/skills._index';
+import { SkillsList } from '~/routing/skills/components/SkillsList';
+import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
+import { SkillsTable } from '~/routing/skills/components/SkillsTable';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -49,7 +52,10 @@ export default function Component(
   return (
     <GlobalScreen>
       <SkillsIntroduction />
-      <AgentsSectionQuickLinks />
+      <SkillsToolbar />
+      {/* <AgentsSectionQuickLinks /> */}
+      {/* <SkillsList entries={REPO_SKILLS_REGISTRY} /> */}
+      <SkillsTable entries={REPO_SKILLS_REGISTRY} />
       <AgentsSkillsRegistry entries={REPO_SKILLS_REGISTRY} />
     </GlobalScreen>
   );

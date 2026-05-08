@@ -1,8 +1,14 @@
 import * as React from 'react';
-import { Card } from '@openthrottle/react-router-shadcn';
+import {
+  Card,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalCollapsible,
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -16,14 +22,15 @@ import type {
   TaskStatusChangedPayload,
 } from '@openthrottle/openthrottle-notifications';
 import {
+  BadgeCheckIcon,
+  BoltIcon,
   CogIcon,
-  ListOrderedIcon,
+  FileIcon,
+  LayoutListIcon,
   LucideIcon,
   NotebookTextIcon,
-  TerminalSquareIcon,
 } from 'lucide-react';
 import {
-  CancelPlanRunInputSchema,
   EnqueuePlanRunInputSchema,
   RalphPlanRunTuningInputSchema,
   SetPlanStatusInputSchema,
@@ -36,7 +43,6 @@ import {
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
-  PlanDetailCancelPlanRunDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailIndexLoaderDocument,
   PlanDetailSetPlanStatusDocument,
@@ -47,45 +53,41 @@ import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
+import { cancelPlanRun } from '~/routing/plans/actions/planId';
 import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
-import { PlanDetails } from '~/routing/plans/components/PlanDetails';
-import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
+import {
+  isPlanStatusKey,
+  PlanStatusBadge,
+} from '~/routing/plans/components/PlanStatusBadge';
+import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
 import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
+import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
+import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
+import { PlanTabRequirements } from '~/routing/plans/components/PlanTabRequirements';
+import { PlanTabsMetadata } from '~/routing/plans/components/PlanTabsMetadata';
+import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
-import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
-import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-
-/**
- * @description Parses `view` query/localStorage values for the plan tasks table vs board switcher.
- */
-const parsePlanTasksView = (raw: string | null): 'board' | 'table' | null => {
-  if (raw === 'board' || raw === 'table') return raw;
-  return null;
-};
-
-// /**
-//  * @external https://remix.run/docs/en/main/route/should-revalidate
-//  * @description We only need to revalidate when we login or logout which
-//  * is already taken care of by the auth routes. So we don't need to revalidate
-//  * (refetch) to data at this level.
-//  */
-// export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
-//   return false;
-// };
+// import { formatPlanDate } from '~/routing/plans/utils/formatters';
+// import { PlanDetails } from '~/routing/plans/components/PlanDetails';
+// import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
+// import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
+// import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => (
-    <OpenThrottleClipboard
-      className="cursor-pointer whitespace-nowrap"
-      label={match?.loaderData?.plan?.id ?? ''}
-      text={match?.loaderData?.plan?.id ?? ''}
-    />
-  ),
+  breadcrumb: (match) => match?.loaderData?.plan?.id,
+  // breadcrumb: (_match) => 'asdfasdfsfd',
+  // breadcrumb: (match) => (
+  //   <OpenThrottleClipboard
+  //     className="cursor-pointer whitespace-nowrap"
+  //     label={match?.loaderData?.plan?.id ?? ''}
+  //     text={match?.loaderData?.plan?.id ?? ''}
+  //   />
+  // ),
   links: (_match) => [{ children: 'Plans', to: '/plans' }],
 };
 
@@ -132,7 +134,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, planOutputChunks, recentPlanRuns, tasks } = loaderData;
+  const { plan, recentPlanRuns, tasks } = loaderData;
 
   // Hooks
   const revalidator = useRevalidator();
@@ -163,6 +165,8 @@ export default function Component(
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
   const planId = params.planId ?? '';
+  const status =
+    plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
 
   // Handlers
   const onResetToDefaults = (): void => {
@@ -271,57 +275,106 @@ export default function Component(
   }
 
   const items: Item[] = [
-    {
-      content: (
-        <PlanDetails
-          plan={plan}
-          ralphTuningJson={ralphTuningJson}
-          recentPlanRuns={recentPlanRuns}
-          workflowInput={workflowInput}
-          workflowTimeout={workflowTimeout}
-          workingDirectory={workingDirectory}
-        />
-      ),
-      icon: NotebookTextIcon,
-      title: 'Details',
-    },
     // {
-    //   content: <PlanTasksTable tasks={tasks} />,
-    //   icon: ListChecksIcon,
-    //   title: 'Requirements',
+    //   content: (
+    //     <PlanWorkflowConfig
+    //       iterationTimeoutText={workflowTimeout}
+    //       onCollapse={() => onToggleExpanded(false)}
+    //       onIterationTimeoutTextChange={setWorkflowTimeout}
+    //       onResetToDefaults={onResetToDefaults}
+    //       onValueChange={setWorkflowInput}
+    //       onWorkingDirectoryChange={setWorkingDirectory}
+    //       planId={plan.id}
+    //       value={workflowInput}
+    //       workingDirectory={workingDirectory}
+    //     />
+    //   ),
+    //   icon: CogIcon,
+    //   title: 'Configuration',
     // },
-    {
-      content: <PlanTasksTable tasks={tasks} />,
-      icon: ListOrderedIcon,
-      title: 'Tasks',
-    },
-    {
-      content: (
-        <PlanWorkflowConfig
-          iterationTimeoutText={workflowTimeout}
-          onCollapse={() => onToggleExpanded(false)}
-          onIterationTimeoutTextChange={setWorkflowTimeout}
-          onResetToDefaults={onResetToDefaults}
-          onValueChange={setWorkflowInput}
-          onWorkingDirectoryChange={setWorkingDirectory}
-          planId={plan.id}
-          value={workflowInput}
-          workingDirectory={workingDirectory}
-        />
-      ),
-      icon: CogIcon,
-      title: 'Configuration',
-    },
-    {
-      content: <PlanLoggerOutput chunks={planOutputChunks} />,
-      icon: TerminalSquareIcon,
-      title: 'Output',
-    },
+    // {
+    //   content: <PlanLoggerOutput chunks={planOutputChunks} />,
+    //   icon: TerminalSquareIcon,
+    //   title: 'Output',
+    // },
   ];
 
   return (
     <>
-      <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8">
+      <GlobalScreen>
+        <div>
+          <GlobalHeading
+            className="mb-4"
+            icon={NotebookTextIcon}
+            title={plan.title ?? 'Untitled'}
+          >
+            <div></div>
+          </GlobalHeading>
+          <div className="text-sm text-muted-foreground line-clamp-3">
+            <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
+            {/* {formatPlanDate(plan.updatedAt)} */}
+            {/* {plan.description ?? 'No description'} */}
+          </div>
+        </div>
+
+        <Tabs
+          className="w-full"
+          defaultValue="overview"
+          onValueChange={(value) => {
+            console.log('value', value);
+          }}
+        >
+          <TabsList className="mb-8 gap-4 w-full" variant="line">
+            <TabsTrigger className="flex-0 cursor-pointer" value="overview">
+              <BoltIcon />
+              Details
+            </TabsTrigger>
+            <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
+              <LayoutListIcon />
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger className="flex-0 cursor-pointer" value="requirements">
+              <BadgeCheckIcon />
+              Requirements
+            </TabsTrigger>
+            <div className="flex-1" />
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              value="configuration"
+            >
+              <CogIcon />
+              Configuration
+            </TabsTrigger>
+            <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
+              <FileIcon />
+              Metadata
+            </TabsTrigger>
+          </TabsList>
+
+          <PlanTabDetails
+            plan={plan}
+            ralphTuningJson={ralphTuningJson}
+            recentPlanRuns={recentPlanRuns}
+            workflowInput={workflowInput}
+            workflowTimeout={workflowTimeout}
+            workingDirectory={workingDirectory}
+          />
+          <PlanTabTasks tasks={tasks} />
+          <PlanTabConfiguration
+            iterationTimeoutText={workflowTimeout}
+            onCollapse={() => onToggleExpanded(false)}
+            onIterationTimeoutTextChange={setWorkflowTimeout}
+            onResetToDefaults={onResetToDefaults}
+            onValueChange={setWorkflowInput}
+            onWorkingDirectoryChange={setWorkingDirectory}
+            planId={plan.id}
+            value={workflowInput}
+            workingDirectory={workingDirectory}
+          />
+          <PlanTabRequirements />
+          <PlanTabsMetadata plan={plan} />
+        </Tabs>
+
         {items.map((item) => {
           return (
             <GlobalCollapsible
@@ -357,16 +410,7 @@ export const action = async (args: Route.ActionArgs) => {
 
   if (intent === 'cancelPlanRun') {
     try {
-      const input = CancelPlanRunInputSchema().parse({ planId });
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        PlanDetailCancelPlanRunDocument,
-        { input },
-      );
-
-      if (!result.cancelPlanRun) {
-        return { cancelPlanRunError: 'Failed to cancel plan run.' };
-      }
+      const result = await cancelPlanRun(args, planId);
 
       return { cancelPlanRun: result.cancelPlanRun };
     } catch (error) {

@@ -64,7 +64,7 @@
     }
   },
   "private": true,
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
     "langgraph": "npx @langchain/langgraph-cli dev",
     "start:docker": "node -r dotenv/config ./build/src/main.js"

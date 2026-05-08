@@ -5,6 +5,19 @@ import {
 } from '~/routing/plans/config/types';
 
 /**
+ * @description Parses `view` query/localStorage values for the plan tasks table vs board switcher.
+ */
+export const parsePlanTasksView = (
+  raw: string | null,
+): 'board' | 'table' | null => {
+  if (raw === 'board' || raw === 'table') {
+    return raw;
+  }
+
+  return null;
+};
+
+/**
  * @description Parses sortBy and sortOrder from URL search params; defaults to createdAt-desc.
  */
 export function parsePlansSortFromSearch(searchParams: URLSearchParams): {

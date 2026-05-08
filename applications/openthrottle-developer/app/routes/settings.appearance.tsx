@@ -64,36 +64,28 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="space-y-8">
-        <div>
-          <GlobalHeading
-            className="mb-4"
-            heading="h2"
-            icon={SwatchBookIcon}
-            title="Appearance"
-          />
-          <p className="text-sm text-muted-foreground">
-            Theme controls for this portal. Diagnostics below mirror General
-            settings and help verify URLs and build metadata.
-          </p>
-        </div>
-
-        <SettingsEnvironmentDiagnostics
-          env={loaderData.env}
-          idPrefix="settings-appearance"
-          supportBundle={loaderData.supportBundle}
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h2"
+          icon={SwatchBookIcon}
+          title="Appearance"
         />
+        <p className="mb-4 text-sm text-muted-foreground">
+          Theme controls for this portal. Diagnostics below mirror General
+          settings and help verify URLs and build metadata.
+        </p>
 
-        <hr />
-
-        <div className="flex items-center gap-2">
-          <Label className="whitespace-nowrap">Accent color</Label>
-          <div className="aspect-square w-10">
-            <Input
-              onInput={handleColorChange}
-              type="color"
-              value={config.accentColor}
-            />
+        <div className="space-y-8">
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">Accent color</Label>
+            <div className="aspect-square w-10">
+              <Input
+                onInput={handleColorChange}
+                type="color"
+                value={config.accentColor}
+              />
+            </div>
           </div>
         </div>
       </div>

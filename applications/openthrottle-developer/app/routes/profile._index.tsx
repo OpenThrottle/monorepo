@@ -47,7 +47,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex h-full items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <div className="p-12 relative flex flex-col gap-8">
         <Avatar className="size-24 md:size-32 mx-auto mb-4 md:mb-4">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
@@ -69,7 +69,7 @@ export default function Component(
           */}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

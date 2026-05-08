@@ -64,7 +64,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "__type": "module",
   "types": "./src/index.ts"
 }

@@ -8,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Markdown,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
@@ -111,8 +112,8 @@ export const PlanDetails = (props: PlanDetailsProps) => {
 
   return (
     <div className={className} data-testid="PlanDetails">
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
+      <div>
+        <div className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
             <CardTitle className="flex items-center gap-4 mb-4">
               <PlanStatusBadge status={status} />
@@ -165,19 +166,19 @@ export const PlanDetails = (props: PlanDetailsProps) => {
               </div>
             </dl>
           </div>
-        </CardHeader>
+        </div>
 
         {(hasDescription || hasSummary) && (
-          <CardContent className="space-y-4">
+          <div className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                {/* <Markdown
+                <Markdown
                   className={classnames(
-                    'text-sm text-muted-foreground whitespace-normal',
-                    expanded && 'line-clamp-4',
+                    'text-sm my-8 text-muted-foreground whitespace-normal',
+                    !expanded && 'line-clamp-4',
                   )}
                   content={plan.description ?? ''}
-                /> */}
+                />
                 {/* <p
                   className={classnames(
                     'text-md leading-relaxed transition-colors',
@@ -213,21 +214,21 @@ export const PlanDetails = (props: PlanDetailsProps) => {
                 )}
               </div>
             )}
-          </CardContent>
+          </div>
         )}
 
-        <CardFooter>
-          <PlanToolbar
-            planId={plan.id}
-            planStatus={plan.status}
-            planTitle={plan.title ?? 'Untitled'}
-            ralphTuningJson={ralphTuningJson}
-            workflowRunBlocked={workflowRunBlocked}
-            workflowRunBlockedReason={workflowRunBlockedReason}
-            workingDirectory={workingDirectory}
-          />
-        </CardFooter>
-      </Card>
+        <CardFooter></CardFooter>
+      </div>
+
+      <PlanToolbar
+        planId={plan.id}
+        planStatus={plan.status}
+        planTitle={plan.title ?? 'Untitled'}
+        ralphTuningJson={ralphTuningJson}
+        workflowRunBlocked={workflowRunBlocked}
+        workflowRunBlockedReason={workflowRunBlockedReason}
+        workingDirectory={workingDirectory}
+      />
     </div>
   );
 };

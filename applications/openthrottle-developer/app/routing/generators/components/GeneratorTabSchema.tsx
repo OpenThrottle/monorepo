@@ -1,0 +1,74 @@
+import * as React from 'react';
+import classnames from 'classnames';
+import { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  TabsContent,
+} from '@openthrottle/react-router-shadcn';
+
+export interface GeneratorTabSchemaProps {
+  readonly generator: GeneratorDetailCardFragment;
+}
+
+export const GeneratorTabSchema = (props: GeneratorTabSchemaProps) => {
+  const { generator } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+  const formattedSchema = React.useMemo(() => {
+    if (generator.schemaJson == null || generator.schemaJson === '') {
+      return null;
+    }
+
+    try {
+      return JSON.stringify(JSON.parse(generator.schemaJson), null, 2);
+    } catch {
+      return generator.schemaJson;
+    }
+  }, [generator.schemaJson]);
+
+  // 🔌 Short Circuit
+
+  return (
+    <TabsContent value="schema">
+      <Card>
+        <CardHeader>
+          {/* <CardTitle>Generator schema (JSON)</CardTitle> */}
+          <CardDescription>
+            Snapshot from the GraphQL API; use{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              --describe
+            </code>{' '}
+            locally for the live schema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Collapsible>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium hover:bg-muted/50">
+              Show schema
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <pre className="max-h-96 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed">
+                <code>{formattedSchema}</code>
+              </pre>
+            </CollapsibleContent>
+          </Collapsible>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
+};

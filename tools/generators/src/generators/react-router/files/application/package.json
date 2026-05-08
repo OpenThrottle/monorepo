@@ -36,7 +36,7 @@
     }
   },
   "private": true,
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "sideEffects": false,
   "scripts": {},
   "type": "module"

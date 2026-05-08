@@ -4,13 +4,13 @@
  */
 export const NOTIFICATION_PREFERENCE_ROWS = [
   {
-    defaultEnabled: true,
+    defaultEnabled: false,
     description: 'Receive a periodic summary of plans and tasks in your inbox.',
     id: 'weeklyDigest',
     label: 'Weekly digest email',
   },
   {
-    defaultEnabled: true,
+    defaultEnabled: false,
     description: 'When someone assigns you a task or mentions you.',
     id: 'assignments',
     label: 'Assignments and mentions',
@@ -22,7 +22,7 @@ export const NOTIFICATION_PREFERENCE_ROWS = [
     label: 'Pull request activity',
   },
   {
-    defaultEnabled: true,
+    defaultEnabled: false,
     description: 'When queue jobs or workflows need attention.',
     id: 'queues',
     label: 'Queue and workflow alerts',

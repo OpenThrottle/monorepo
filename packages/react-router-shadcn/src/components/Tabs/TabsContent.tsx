@@ -1,36 +1,24 @@
+import * as TabsPrimitive from '@radix-ui/react-tabs';
 import * as React from 'react';
 import { cn } from '../../utils/cn';
 
-export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface TabsContentProps
+  extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content> {}
 
-export const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
-  (props, ref): React.ReactElement => {
-    const { className, ...rest } = props;
+export const TabsContent = React.forwardRef<
+  React.ComponentRef<typeof TabsPrimitive.Content>,
+  TabsContentProps
+>((props, ref): React.ReactElement => {
+  const { className, ...rest } = props;
 
-    // Hooks
+  return (
+    <TabsPrimitive.Content
+      className={cn('flex-1 outline-none', className)}
+      data-slot="tabs-content"
+      ref={ref}
+      {...rest}
+    />
+  );
+});
 
-    // Setup
-
-    // Handlers
-
-    // Markup
-
-    // Life Cycle
-
-    // 🔌 Short Circuit
-
-    return (
-      <div
-        className={cn(
-          'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-          className,
-        )}
-        ref={ref}
-        role="tabpanel"
-        {...rest}
-      />
-    );
-  },
-);
-
-TabsContent.displayName = 'TabsContent';
+TabsContent.displayName = TabsPrimitive.Content.displayName;

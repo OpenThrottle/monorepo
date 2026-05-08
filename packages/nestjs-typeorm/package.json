@@ -60,7 +60,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
     "typeorm": "ts-node ./node_modules/typeorm/cli.js",
     "typeorm:generate-migration": "npm run typeorm -- -d ./dataSource.ts migration:generate ./migrations/$npm_config_name",
