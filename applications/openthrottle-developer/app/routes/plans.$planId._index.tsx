@@ -14,7 +14,6 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { redirect, useRevalidator, useSearchParams } from 'react-router';
 import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
 import type {

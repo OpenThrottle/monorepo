@@ -1,16 +1,5 @@
 import * as React from 'react';
-import classnames from 'classnames';
-import {
-  Blockquote,
-  Button,
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  Markdown,
-  Separator,
-  TabsContent,
-} from '@openthrottle/react-router-shadcn';
+import { Card, Markdown, TabsContent } from '@openthrottle/react-router-shadcn';
 import type {
   PlanDetailIndexLoaderQuery,
   PlanDetailsFragment,
@@ -31,7 +20,6 @@ import {
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanTabDetailsProps {
-  readonly className?: string;
   readonly plan: PlanDetailsFragment;
   readonly ralphTuningJson: string;
   readonly recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
@@ -42,7 +30,6 @@ export interface PlanTabDetailsProps {
 
 export const PlanTabDetails = (props: PlanTabDetailsProps) => {
   const {
-    className,
     plan,
     ralphTuningJson,
     recentPlanRuns,
@@ -52,8 +39,7 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
   } = props;
 
   // Hooks
-  const [expanded, setExpanded] = React.useState(false);
-  const [summary, setSummary] = React.useState(false);
+  const [summary, _setSummary] = React.useState(false);
 
   const canonicalWorkflowCommand = React.useMemo(() => {
     const merged: WorkflowRalphRunOptionsInput = {
@@ -92,8 +78,8 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
 
   const isLongSummary = summaryLines > DEFAULT_PLAN_SUMMARY_PREVIEW_LINES;
 
-  const isLongDescription = descriptionLines > DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES; // prettier-ignore
-  const showSummaryPreview = hasSummary && isLongSummary && !summary;
+  const _isLongDescription = descriptionLines > DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES; // prettier-ignore
+  const _showSummaryPreview = hasSummary && isLongSummary && !summary;
 
   // Handlers
 

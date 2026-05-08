@@ -18,7 +18,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 
-/* eslint-disable sort-keys-fix/sort-keys-fix */
+/* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
 export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   Workspace: [
     {
@@ -132,4 +132,4 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
     },
   ],
 };
-/* eslint-enable sort-keys-fix/sort-keys-fix */
+/* eslint-enable sort-keys, sort-keys-fix/sort-keys-fix */

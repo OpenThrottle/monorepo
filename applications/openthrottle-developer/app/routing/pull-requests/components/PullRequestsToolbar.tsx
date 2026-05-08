@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import { Form, Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
+import { Building2Icon, GitGraphIcon } from 'lucide-react';
 
 export interface PullRequestsToolbarProps {
   readonly className?: string;
@@ -27,14 +28,67 @@ export const PullRequestsToolbar = (props: PullRequestsToolbarProps) => {
   return (
     <Form
       className={classnames(
-        'mb-8 flex flex-col gap-4 rounded-lg border border-border p-4',
+        // 'mb-8 flex flex-col gap-4 rounded-lg border border-border p-4',
+        'flex flex-col gap-4 w-full',
         className,
       )}
       method="get"
     >
+      <div className="flex gap-2 w-full">
+        <div className="flex items-center gap-2">
+          <Building2Icon className="size-4" />
+          <Input
+            defaultValue={filters.owner}
+            id="pr-filter-owner"
+            name="owner"
+            placeholder="org or user"
+            type="text"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <GitGraphIcon className="size-4" />
+          <Input
+            defaultValue={filters.repo}
+            id="pr-filter-repo"
+            name="repo"
+            placeholder="repository name"
+            type="text"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <GitGraphIcon className="size-4" />
+          <select
+            className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            defaultValue={filters.state ?? ''}
+            id="pr-filter-state"
+            name="state"
+          >
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div className="flex flex-1 justify-end gap-2">
+          <Button asChild={true} size="sm" variant="outline">
+            <Link to="/pull-requests">Reset</Link>
+          </Button>
+          <Button size="sm" type="submit" variant="secondary">
+            Apply
+          </Button>
+        </div>
+      </div>
+
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="pr-filter-owner">Owner</Label>
+        <div className="flex items-center gap-2">
+          <Building2Icon className="size-4" />
           <Input
             defaultValue={filters.owner}
             id="pr-filter-owner"
@@ -117,6 +171,7 @@ export const PullRequestsToolbar = (props: PullRequestsToolbarProps) => {
           </select>
         </div>
       </div>
+
       <div className="flex gap-2">
         <Button size="sm" type="submit" variant="default">
           Apply filters

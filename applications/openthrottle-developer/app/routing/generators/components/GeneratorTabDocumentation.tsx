@@ -4,11 +4,9 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { generators } from '~/routing/generators/data/data.generators';
 
 export interface GeneratorTabDocumentationProps {

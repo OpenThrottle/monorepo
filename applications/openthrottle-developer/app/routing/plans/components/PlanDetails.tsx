@@ -3,10 +3,7 @@ import classnames from 'classnames';
 import {
   Blockquote,
   Button,
-  Card,
-  CardContent,
   CardFooter,
-  CardHeader,
   CardTitle,
   Markdown,
   Separator,

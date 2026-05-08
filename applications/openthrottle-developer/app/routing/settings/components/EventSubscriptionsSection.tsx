@@ -1,11 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import {
-  CardContent,
-  Label,
-  Separator,
-  Switch,
-} from '@openthrottle/react-router-shadcn';
+import { Label, Separator, Switch } from '@openthrottle/react-router-shadcn';
 import {
   EVENT_SUBSCRIPTION_ROWS,
   type EventSubscriptionId,

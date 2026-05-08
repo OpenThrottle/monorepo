@@ -2,10 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import {
-  PlanDetailsFragment,
-  ProjectDetailsFragment,
-} from '@openthrottle/openthrottle-developer-codegen';
+import { PlanDetailsFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 
 export interface PlanTabsMetadataProps {

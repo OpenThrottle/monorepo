@@ -9,7 +9,6 @@ import { Input, Label } from '@openthrottle/react-router-shadcn';
 import { SwatchBookIcon } from 'lucide-react';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import type { Route } from '@/app/routes/+types/settings.appearance';
 import { configAtom } from '~/global/data/atom.config';

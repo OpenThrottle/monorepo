@@ -6,12 +6,7 @@
     "rootDirs": ["./src", "./tests"]
   },
   "include": ["**/*.json", "src/**/*", "tests/**/*"],
-  "exclude": [
-    "dist",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "src/components/shadcn-raw"
-  ],
+  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

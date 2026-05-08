@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   DataTable,
   Tooltip,
@@ -20,7 +19,6 @@ import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTab
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
 export interface PlanTasksTableProps {
-  readonly className?: string;
   readonly tasks: PlanTaskRowFragment[];
 }
 
@@ -143,7 +141,7 @@ function buildPlanTaskTableColumns(): ColumnDef<
 export const PlanTasksTable = (
   props: PlanTasksTableProps,
 ): React.ReactElement => {
-  const { className, tasks } = props;
+  const { tasks } = props;
 
   // Hooks
   const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);

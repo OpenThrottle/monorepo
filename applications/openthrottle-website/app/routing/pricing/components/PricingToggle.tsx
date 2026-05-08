@@ -24,7 +24,7 @@ export const PricingToggle = (props: PricingToggleProps) => {
       className={cn(className)}
       data-testid="PricingToggle"
       onValueChange={(next) => {
-        onValueChange(next as BillingInterval);
+        onValueChange(next as unknown as BillingInterval);
       }}
       value={value}
     >

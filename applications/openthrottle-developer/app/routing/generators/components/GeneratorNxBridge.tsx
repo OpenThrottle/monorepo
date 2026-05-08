@@ -21,8 +21,8 @@ export interface GeneratorNxBridgeProps {
 export const GeneratorNxBridge = (props: GeneratorNxBridgeProps) => {
   const { className, generator } = props;
 
-  const [cliOutput, setCliOutput] = React.useState('');
-  const [mounted, setMounted] = React.useState(false);
+  const [_cliOutput, setCliOutput] = React.useState('');
+  const [_mounted, setMounted] = React.useState(false);
 
   const formattedSchema = React.useMemo(() => {
     if (generator.schemaJson == null || generator.schemaJson === '') {

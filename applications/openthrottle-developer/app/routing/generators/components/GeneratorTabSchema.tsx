@@ -1,12 +1,10 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Card,
   CardContent,
@@ -21,7 +20,6 @@ import {
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigTuningProps {
-  readonly className?: string;
   readonly input: WorkflowRalphRunOptionsInput;
   readonly iterationTimeoutText: string;
   readonly setInput: (
@@ -33,13 +31,8 @@ export interface PlanWorkflowConfigTuningProps {
 export const PlanWorkflowConfigTuning = (
   props: PlanWorkflowConfigTuningProps,
 ) => {
-  const {
-    className,
-    input,
-    iterationTimeoutText,
-    setInput,
-    setIterationTimeoutText,
-  } = props;
+  const { input, iterationTimeoutText, setInput, setIterationTimeoutText } =
+    props;
 
   // Hooks
 

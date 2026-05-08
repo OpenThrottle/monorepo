@@ -1,12 +1,10 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
   Separator,
   TabsContent,
   TextArea,
@@ -25,11 +23,11 @@ export interface GeneratorTabDebugProps {
 }
 
 export const GeneratorTabDebug = (props: GeneratorTabDebugProps) => {
-  const { className, generator } = props;
+  const { generator } = props;
 
   // Hooks
   const [cliOutput, setCliOutput] = React.useState('');
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, _setMounted] = React.useState(false);
 
   // Setup
 

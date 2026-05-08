@@ -4,14 +4,9 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import {
-  GlobalHeader,
-  GlobalHeading,
-} from '@openthrottle/react-router-ui-global';
 import { buildGeneratorNxPresets } from '~/routing/generators/utils/build-generator-nx-presets';
 import { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 
