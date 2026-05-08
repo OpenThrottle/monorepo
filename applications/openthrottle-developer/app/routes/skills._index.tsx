@@ -4,16 +4,14 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { AgentsSectionQuickLinks } from '~/routing/agents/components/AgentsSectionQuickLinks';
-import { AgentsSkillsRegistry } from '~/routing/agents/components/AgentsSkillsRegistry';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { REPO_SKILLS_REGISTRY } from '~/routing/agents/data/repo-skills-registry';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
-import type { Route } from '@/app/routes/+types/skills._index';
-import { SkillsList } from '~/routing/skills/components/SkillsList';
-import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
+import { SkillsOverviewModal } from '~/routing/skills/components/SkillsOverviewModal';
 import { SkillsTable } from '~/routing/skills/components/SkillsTable';
+import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
+import type { Route } from '@/app/routes/+types/skills._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -50,14 +48,19 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
-      <SkillsIntroduction />
-      <SkillsToolbar />
-      {/* <AgentsSectionQuickLinks /> */}
-      {/* <SkillsList entries={REPO_SKILLS_REGISTRY} /> */}
-      <SkillsTable entries={REPO_SKILLS_REGISTRY} />
-      <AgentsSkillsRegistry entries={REPO_SKILLS_REGISTRY} />
-    </GlobalScreen>
+    <>
+      <GlobalScreen>
+        <SkillsIntroduction entries={REPO_SKILLS_REGISTRY} />
+        <SkillsToolbar />
+        <SkillsTable entries={REPO_SKILLS_REGISTRY} />
+
+        {/* <AgentsSectionQuickLinks /> */}
+        {/* <SkillsList entries={REPO_SKILLS_REGISTRY} /> */}
+        {/* <AgentsSkillsRegistry entries={REPO_SKILLS_REGISTRY} /> */}
+      </GlobalScreen>
+
+      <SkillsOverviewModal />
+    </>
   );
 }
 

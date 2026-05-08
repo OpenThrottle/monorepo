@@ -1,0 +1,53 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PlanTasksList Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="bg-card rounded-lg border border-card-border"
+      data-testid="PlanTasksList"
+    >
+      <div
+        class="p-4"
+        data-testid="PlanTasksListItem"
+      >
+        <h2>
+          PlanTasksListItem
+        </h2>
+      </div>
+      <div
+        class="p-4"
+        data-testid="PlanTasksListItem"
+      >
+        <h2>
+          PlanTasksListItem
+        </h2>
+      </div>
+      <div
+        class="p-4"
+        data-testid="PlanTasksListItem"
+      >
+        <h2>
+          PlanTasksListItem
+        </h2>
+      </div>
+      <div
+        class="p-4"
+        data-testid="PlanTasksListItem"
+      >
+        <h2>
+          PlanTasksListItem
+        </h2>
+      </div>
+      <div
+        class="p-4"
+        data-testid="PlanTasksListItem"
+      >
+        <h2>
+          PlanTasksListItem
+        </h2>
+      </div>
+    </div>
+  </div>
+</body>
+`;

@@ -1,0 +1,38 @@
+import * as React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@openthrottle/react-router-shadcn';
+import { AgentsSkillsRegistry } from '~/routing/agents/components/AgentsSkillsRegistry';
+import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+
+export interface SkillsOverviewDialogProps {
+  readonly children: React.ReactNode;
+  readonly entries?: ReadonlyArray<RepoSkillEntry>;
+}
+
+export const SkillsOverviewDialog = (props: SkillsOverviewDialogProps) => {
+  const { children, entries } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <Dialog>
+      <DialogTrigger className="cursor-help">{children}</DialogTrigger>
+      <DialogContent>
+        <AgentsSkillsRegistry entries={entries} />
+      </DialogContent>
+    </Dialog>
+  );
+};

@@ -1,6 +1,12 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { DataTable } from '@openthrottle/react-router-shadcn';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import {
+  getSkillsTableRowId,
+  skillsTableColumns,
+} from '~/routing/skills/config/skills-table-columns';
+import type { SkillsTableColumnValue } from '~/routing/skills/config/skills-table-columns';
 
 export interface SkillsTableProps {
   readonly className?: string;
@@ -8,11 +14,14 @@ export interface SkillsTableProps {
 }
 
 export const SkillsTable = (props: SkillsTableProps) => {
-  const { className } = props;
+  const { className, entries = [] } = props;
 
   // Hooks
 
   // Setup
+  const data = React.useMemo(() => [...entries], [entries]);
+
+  const getRowId = React.useCallback(getSkillsTableRowId, []);
 
   // Handlers
 
@@ -23,8 +32,15 @@ export const SkillsTable = (props: SkillsTableProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="SkillsTable">
-      <h2>SkillsTable</h2>
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="SkillsTable"
+    >
+      <DataTable<RepoSkillEntry, SkillsTableColumnValue>
+        columns={skillsTableColumns}
+        data={data}
+        getRowId={getRowId}
+      />
     </div>
   );
 };

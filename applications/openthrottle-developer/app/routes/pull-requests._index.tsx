@@ -1,36 +1,21 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Badge, Button, Card } from '@openthrottle/react-router-shadcn';
-import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  GetPullRequestsDocument,
-  type ListPullsInput,
-} from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
-import { SITE_TITLE } from '~/global/config/settings';
-import {
-  githubCommitChecksUrl,
-  githubCommitUrl,
-  githubPullChecksUrl,
-  githubPullCommitsUrl,
-  githubPullCompareUrl,
-  githubPullConversationUrl,
-  githubRepoActionsForBranchUrl,
-  githubRepoActionsPullRequestRunsUrl,
-} from '~/routing/pull-requests/utils/github-pr-links';
-import type { Route } from '@/app/routes/+types/pull-requests._index';
-import { PullRequestsIntroduction } from '~/routing/pull-requests/components/PullRequestsIntroduction';
-import { PullRequestsEmpty } from '~/routing/pull-requests/components/PullRequestsEmpty';
+import { GetPullRequestsDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
+import { PullRequestsIntroduction } from '~/routing/pull-requests/components/PullRequestsIntroduction';
+import { PullRequestsTable } from '~/routing/pull-requests/components/PullRequestsTable';
 import { PullRequestStats } from '~/routing/pull-requests/components/PullRequestStats';
 import { PullRequestsToolbar } from '~/routing/pull-requests/components/PullRequestsToolbar';
+import { SITE_TITLE } from '~/global/config/settings';
+import type { ListPullsInput } from '~/__generated__/graphql';
+import type { Route } from '@/app/routes/+types/pull-requests._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -150,8 +135,13 @@ export default function Component(
       <PullRequestStats />
       <PullRequestsIntroduction />
       <PullRequestsToolbar filters={filters} />
+      <PullRequestsTable
+        filters={filters}
+        listQuery={listQuery}
+        pulls={pulls}
+      />
 
-      <div className="grid grid-cols-1 gap-4 lg:gap-8">
+      {/* <div className="grid grid-cols-1 gap-4 lg:gap-8">
         {pulls.map((pull) => (
           <Card className="p-4 lg:p-8" key={pull.number}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -188,149 +178,12 @@ export default function Component(
                 ) : null}
               </div>
               <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
-                <Badge
-                  variant={pull.state === 'open' ? 'default' : 'secondary'}
-                >
-                  {pull.state}
-                </Badge>
+                <PullRequestStatus state={pull.state} />
               </div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
-              <Button asChild={true} size="sm" variant="outline">
-                <Link to={`/pull-requests/${pull.number}?${listQuery}`}>
-                  In portal
-                </Link>
-              </Button>
-              <Button asChild={true} size="sm" variant="outline">
-                <a
-                  href={githubPullConversationUrl(
-                    filters.owner,
-                    filters.repo,
-                    pull.number,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  GitHub PR
-                </a>
-              </Button>
-              <Button asChild={true} size="sm" variant="default">
-                <a
-                  href={githubPullChecksUrl(
-                    filters.owner,
-                    filters.repo,
-                    pull.number,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Checks (CI)
-                </a>
-              </Button>
-              {pull.headSha !== null ? (
-                <>
-                  <Button asChild={true} size="sm" variant="secondary">
-                    <a
-                      href={githubCommitChecksUrl(
-                        filters.owner,
-                        filters.repo,
-                        pull.headSha,
-                      )}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      Checks at SHA
-                    </a>
-                  </Button>
-                  <Button asChild={true} size="sm" variant="outline">
-                    <a
-                      href={githubCommitUrl(
-                        filters.owner,
-                        filters.repo,
-                        pull.headSha,
-                      )}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      Head{' '}
-                      <span className="font-mono">
-                        {pull.headSha.slice(0, 7)}
-                      </span>
-                    </a>
-                  </Button>
-                </>
-              ) : null}
-              <Button asChild={true} size="sm" variant="outline">
-                <a
-                  href={githubPullCommitsUrl(
-                    filters.owner,
-                    filters.repo,
-                    pull.number,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Commits
-                </a>
-              </Button>
-              {pull.baseRef !== null && pull.headRef !== null ? (
-                <Button asChild={true} size="sm" variant="outline">
-                  <a
-                    href={githubPullCompareUrl(
-                      filters.owner,
-                      filters.repo,
-                      pull.baseRef,
-                      pull.headRef,
-                    )}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Compare base…head
-                  </a>
-                </Button>
-              ) : null}
-              {pull.headRef !== null ? (
-                <Button asChild={true} size="sm" variant="outline">
-                  <a
-                    href={githubRepoActionsForBranchUrl(
-                      filters.owner,
-                      filters.repo,
-                      pull.headRef,
-                    )}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Actions (branch)
-                  </a>
-                </Button>
-              ) : null}
-              <Button asChild={true} size="sm" variant="outline">
-                <a
-                  href={githubRepoActionsPullRequestRunsUrl(
-                    filters.owner,
-                    filters.repo,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Actions (PR runs)
-                </a>
-              </Button>
-              <Button asChild={true} size="sm" variant="ghost">
-                <a
-                  href={pull.htmlUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  html_url
-                </a>
-              </Button>
             </div>
           </Card>
         ))}
-      </div>
-
-      {pulls.length === 0 ? <PullRequestsEmpty /> : null}
+      </div> */}
     </GlobalScreen>
   );
 }

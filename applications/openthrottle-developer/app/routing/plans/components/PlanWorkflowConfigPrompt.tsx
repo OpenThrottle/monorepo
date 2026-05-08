@@ -71,7 +71,9 @@ export const PlanWorkflowConfigPrompt = (
 
   return (
     <Card className="mt-8">
-      <CardHeader className="pb-2 mb-4">Layer 1 — Prompt profile</CardHeader>
+      <CardHeader className="pb-2 mb-4 flex gap-2">
+        <b>Layer 1</b> — Prompt profile
+      </CardHeader>
       <CardContent>
         <fieldset
           aria-labelledby="workflow-run-layer1-legend"

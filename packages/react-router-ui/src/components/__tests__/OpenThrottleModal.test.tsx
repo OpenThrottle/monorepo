@@ -1,19 +1,18 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestCard } from '../PullRequestCard';
-import type { PullRequestCardProps } from '../PullRequestCard';
+import { OpenThrottleModal } from '../OpenThrottleModal';
+import type { OpenThrottleModalProps } from '../OpenThrottleModal';
 
-describe('PullRequestCard Component', () => {
+describe('OpenThrottleModal Component', () => {
   let component: RenderResult;
-  let props: PullRequestCardProps;
+  let props: OpenThrottleModalProps;
 
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PullRequestCard {...props} />;
+    const Component = () => <OpenThrottleModal {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

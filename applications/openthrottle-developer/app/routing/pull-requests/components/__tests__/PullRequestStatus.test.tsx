@@ -3,17 +3,17 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestsEmpty } from '../PullRequestsEmpty';
-import type { PullRequestsEmptyProps } from '../PullRequestsEmpty';
+import { PullRequestStatus } from '../PullRequestStatus';
+import type { PullRequestStatusProps } from '../PullRequestStatus';
 
-describe('PullRequestsEmpty Component', () => {
+describe('PullRequestStatus Component', () => {
   let component: RenderResult;
-  let props: PullRequestsEmptyProps;
+  let props: PullRequestStatusProps;
 
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PullRequestsEmpty {...props} />;
+    const Component = () => <PullRequestStatus {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -179,7 +179,10 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   // 🔌 Short Circuit
 
   return (
-    <TabsContent value="configuration">
+    <TabsContent
+      className="bg-card rounded-lg border border-card-border"
+      value="configuration"
+    >
       <Card>
         <CardHeader className="pb-2 mb-4">
           <div className="flex items-start justify-between gap-3">
@@ -312,20 +315,20 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
         </CardContent>
       </Card>
 
-      <Card className="mt-8">
+      {/* <Card className="mt-8">
         <CardHeader className="pb-2 mb-4">
           PlanWorkflowConfigExecution
         </CardHeader>
         <CardContent>
-          <PlanWorkflowConfigTarget input={input} setInput={setInput} />
-          {onWorkingDirectoryChange != null && (
-            <PlanWorkflowConfigWorkspace
-              onChange={onWorkingDirectoryChange}
-              value={workingDirectory}
-            />
-          )}
         </CardContent>
-      </Card>
+      </Card> */}
+      <PlanWorkflowConfigTarget input={input} setInput={setInput} />
+      {onWorkingDirectoryChange != null && (
+        <PlanWorkflowConfigWorkspace
+          onChange={onWorkingDirectoryChange}
+          value={workingDirectory}
+        />
+      )}
 
       <PlanWorkflowConfigPrompt
         onPromptChange={(next) =>

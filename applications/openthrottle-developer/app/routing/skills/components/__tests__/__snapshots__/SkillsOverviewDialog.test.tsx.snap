@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SkillsOverviewDialog Component > should render 1`] = `
+<body>
+  <div>
+    <button
+      aria-controls="radix-_r_0_"
+      aria-expanded="false"
+      aria-haspopup="dialog"
+      class="cursor-help"
+      data-state="closed"
+      type="button"
+    />
+  </div>
+</body>
+`;

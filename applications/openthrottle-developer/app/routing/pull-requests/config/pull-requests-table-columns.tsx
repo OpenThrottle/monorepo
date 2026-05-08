@@ -1,14 +1,17 @@
 import * as React from 'react';
-import { Link } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import { ArrowRightIcon, GitPullRequestIcon } from 'lucide-react';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import {
   githubCommitUrl,
   githubPullChecksUrl,
   githubPullConversationUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
+import { Link } from 'react-router';
+import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
 export type PullRequestsTableColumnValue =
   | PullRequestCardFragment['author']
@@ -27,9 +30,8 @@ export type PullRequestsTableColumnValue =
  * @description Context for PR table columns that build portal routes and GitHub URLs (aligned with pull-requests cards).
  */
 export interface PullRequestsTableColumnsContext {
+  readonly filters: PullRequestsListFilters;
   readonly listQuery: string;
-  readonly owner: string;
-  readonly repo: string;
 }
 
 /**
@@ -53,98 +55,96 @@ export const createPullRequestsTableColumns = (
       accessorKey: 'title',
       cell: ({ row }) => {
         const pull = row.original;
-        const portalPath =
-          context.listQuery === ''
-            ? `/pull-requests/${pull.number}`
-            : `/pull-requests/${pull.number}?${context.listQuery}`;
-
         return (
-          <div className="max-w-md p-2">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-              <Link
-                className="hover:underline"
-                to={portalPath}
-                viewTransition={true}
-              >
-                {pull.title}
-              </Link>{' '}
-              <span className="font-normal text-muted-foreground">
-                #{pull.number}
-              </span>
-            </h3>
+          <div className="p-2">
+            <div className="flex items-center gap-4 mb-2">
+              <PullRequestStatus state={pull.state} />
+              <h3 className="font-medium line-clamp-1">
+                #{row.original.number} {row.original.title}
+              </h3>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — Updated{' '}
+              {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
+            </p>
           </div>
         );
       },
       header: () => <div className="p-2">Title</div>,
     },
     {
-      accessorKey: 'state',
-      cell: ({ row }) => (
-        <div className="p-2">
-          <Badge
-            variant={row.original.state === 'open' ? 'default' : 'secondary'}
-          >
-            {row.original.state}
-          </Badge>
-        </div>
-      ),
-      header: () => <div className="p-2">State</div>,
-    },
-    {
       accessorKey: 'author',
-      cell: ({ row }) => (
-        <div className="p-2">
-          <span className="text-sm font-medium text-foreground">
-            {row.original.author}
-          </span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const pull = row.original;
+        const { owner, repo } = context.filters;
+
+        return (
+          <div className="p-2 flex flex-col gap-2">
+            <span className="text-sm font-medium text-foreground">
+              {row.original.author}
+            </span>
+
+            {pull.headSha !== null && pull.headSha !== undefined ? (
+              <Button asChild={true} size="xs" variant="secondary">
+                <a
+                  href={githubCommitUrl(owner, repo, pull.headSha)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Head{' '}
+                  <span className="font-mono">{pull.headSha.slice(0, 7)}</span>
+                </a>
+              </Button>
+            ) : null}
+          </div>
+        );
+      },
       header: () => <div className="p-2">Author</div>,
     },
-    {
-      accessorKey: 'updatedAt',
-      cell: ({ row }) => {
-        const pull = row.original;
+    // {
+    //   accessorKey: 'updatedAt',
+    //   cell: ({ row }) => {
+    //     const pull = row.original;
 
-        return (
-          <div className="p-2 text-xs text-muted-foreground">
-            Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — updated{' '}
-            {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
-            {pull.mergedAt !== null && pull.mergedAt !== undefined ? (
-              <>
-                <br />
-                Merged {formatDate(pull.mergedAt, 'MM/dd/yyyy')}
-              </>
-            ) : null}
-          </div>
-        );
-      },
-      header: () => <div className="p-2">Dates</div>,
-    },
-    {
-      accessorKey: 'headRef',
-      cell: ({ row }) => {
-        const pull = row.original;
+    //     return (
+    //       <div className="p-2 text-xs text-muted-foreground">
+    //         Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — updated{' '}
+    //         {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
+    //         {pull.mergedAt !== null && pull.mergedAt !== undefined ? (
+    //           <>
+    //             <br />
+    //             Merged {formatDate(pull.mergedAt, 'MM/dd/yyyy')}
+    //           </>
+    //         ) : null}
+    //       </div>
+    //     );
+    //   },
+    //   header: () => <div className="p-2">Dates</div>,
+    // },
+    // {
+    //   accessorKey: 'headRef',
+    //   cell: ({ row }) => {
+    //     const pull = row.original;
 
-        return (
-          <div className="p-2 font-mono text-xs text-muted-foreground">
-            {pull.baseRef !== null && pull.baseRef !== undefined
-              ? pull.baseRef
-              : '—'}{' '}
-            ←{' '}
-            {pull.headRef !== null && pull.headRef !== undefined
-              ? pull.headRef
-              : '—'}
-            {pull.headSha !== null && pull.headSha !== undefined ? (
-              <span className="block pt-1 text-[11px] text-muted-foreground/90">
-                {pull.headSha.slice(0, 7)}
-              </span>
-            ) : null}
-          </div>
-        );
-      },
-      header: () => <div className="p-2">Refs</div>,
-    },
+    //     return (
+    //       <div className="p-2 font-mono text-xs text-muted-foreground">
+    //         {pull.baseRef !== null && pull.baseRef !== undefined
+    //           ? pull.baseRef
+    //           : '—'}{' '}
+    //         ←{' '}
+    //         {pull.headRef !== null && pull.headRef !== undefined
+    //           ? pull.headRef
+    //           : '—'}
+    //         {pull.headSha !== null && pull.headSha !== undefined ? (
+    //           <span className="block pt-1 text-[11px] text-muted-foreground/90">
+    //             {pull.headSha.slice(0, 7)}
+    //           </span>
+    //         ) : null}
+    //       </div>
+    //     );
+    //   },
+    //   header: () => <div className="p-2">Refs</div>,
+    // },
     {
       cell: ({ row }) => {
         const pull = row.original;
@@ -157,27 +157,29 @@ export const createPullRequestsTableColumns = (
           <div className="flex flex-wrap gap-2 p-2">
             <Button asChild={true} size="xs" variant="outline">
               <Link to={portalPath} viewTransition={true}>
-                In portal
+                {/* In portal */}
+                <ArrowRightIcon className="w-4 h-4" />
               </Link>
             </Button>
             <Button asChild={true} size="xs" variant="outline">
               <a
                 href={githubPullConversationUrl(
-                  context.owner,
-                  context.repo,
+                  context.filters.owner,
+                  context.filters.repo,
                   pull.number,
                 )}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                GitHub PR
+                <GitPullRequestIcon className="w-4 h-4" />
+                <span className="sr-only">GitHub PR</span>
               </a>
             </Button>
             <Button asChild={true} size="xs" variant="default">
               <a
                 href={githubPullChecksUrl(
-                  context.owner,
-                  context.repo,
+                  context.filters.owner,
+                  context.filters.repo,
                   pull.number,
                 )}
                 rel="noopener noreferrer"
@@ -186,22 +188,6 @@ export const createPullRequestsTableColumns = (
                 Checks (CI)
               </a>
             </Button>
-            {pull.headSha !== null && pull.headSha !== undefined ? (
-              <Button asChild={true} size="xs" variant="secondary">
-                <a
-                  href={githubCommitUrl(
-                    context.owner,
-                    context.repo,
-                    pull.headSha,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Head{' '}
-                  <span className="font-mono">{pull.headSha.slice(0, 7)}</span>
-                </a>
-              </Button>
-            ) : null}
           </div>
         );
       },

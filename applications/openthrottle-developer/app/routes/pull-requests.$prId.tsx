@@ -8,7 +8,6 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { GetPullRequestDetailDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
@@ -29,11 +28,12 @@ import {
   githubRepoWorkflowsDirUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
+import { PullRequestNotFound } from '~/routing/pull-requests/components/PullRequestNotFound';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match.params.prId,
+  breadcrumb: (match) => `#${match.params.prId}`,
   links: (_match) => [{ children: 'Pull requests', to: '/pull-requests' }],
 };
 
@@ -102,35 +102,7 @@ export default function Component(
   return (
     <GlobalScreen>
       {!pull ? (
-        <>
-          <OpenThrottleEmptyState
-            description="This PR was not found for the selected owner and repo. Try another filter from the list or open the repository on GitHub."
-            title="Pull request not found"
-          />
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild={true} size="sm" variant="outline">
-              <Link
-                to={
-                  listQuery === ''
-                    ? '/pull-requests'
-                    : `/pull-requests?${listQuery}`
-                }
-                viewTransition={true}
-              >
-                Back to list
-              </Link>
-            </Button>
-            <Button asChild={true} size="sm" variant="outline">
-              <a
-                href={`https://github.com/${owner}/${repo}`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Open repo on GitHub
-              </a>
-            </Button>
-          </div>
-        </>
+        <PullRequestNotFound listQuery={listQuery} owner={owner} repo={repo} />
       ) : (
         <>
           <div className="mb-6">

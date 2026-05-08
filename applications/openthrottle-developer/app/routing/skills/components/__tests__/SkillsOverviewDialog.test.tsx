@@ -3,17 +3,17 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SkillsOverview } from '../SkillsOverview';
-import type { SkillsOverviewProps } from '../SkillsOverview';
+import { SkillsOverviewDialog } from '../SkillsOverviewDialog';
+import type { SkillsOverviewDialogProps } from '../SkillsOverviewDialog';
 
-describe('SkillsOverview Component', () => {
+describe('SkillsOverviewDialog Component', () => {
   let component: RenderResult;
-  let props: SkillsOverviewProps;
+  let props: SkillsOverviewDialogProps;
 
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SkillsOverview {...props} />;
+    const Component = () => <SkillsOverviewDialog {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

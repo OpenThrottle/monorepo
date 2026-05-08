@@ -2,18 +2,11 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Form, Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
 export interface PullRequestsToolbarProps {
   readonly className?: string;
-  readonly filters: {
-    author: string;
-    authorExact: boolean;
-    base: string;
-    merged: boolean | undefined;
-    owner: string;
-    repo: string;
-    state: 'all' | 'closed' | 'open';
-  };
+  readonly filters: PullRequestsListFilters;
 }
 
 export const PullRequestsToolbar = (props: PullRequestsToolbarProps) => {

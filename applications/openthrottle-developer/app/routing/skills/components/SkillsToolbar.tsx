@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { Button, Input } from '@openthrottle/react-router-shadcn';
 
 export interface SkillsToolbarProps {
   readonly className?: string;
@@ -21,8 +22,14 @@ export const SkillsToolbar = (props: SkillsToolbarProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('p-4', className)} data-testid="SkillsToolbar">
-      <h2>SkillsToolbar</h2>
+    <div
+      className={classnames('flex gap-2', className)}
+      data-testid="SkillsToolbar"
+    >
+      <Input placeholder="Filter by slug, path, or summary" />
+      <Button type="submit" variant="outline">
+        Search
+      </Button>
     </div>
   );
 };

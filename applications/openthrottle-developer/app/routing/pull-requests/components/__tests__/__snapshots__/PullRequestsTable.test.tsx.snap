@@ -1,15 +1,297 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PullRequestsTable Component > should render 1`] = `
+exports[`PullRequestsTable Component > matches snapshot for empty list 1`] = `
 <body>
   <div>
     <div
-      class="p-4"
+      class="border ui-border rounded-lg"
       data-testid="PullRequestsTable"
     >
-      <h2>
-        PullRequestsTable
-      </h2>
+      <div
+        class="relative w-full overflow-auto"
+      >
+        <table
+          class="w-full caption-bottom text-sm overflow-hidden rounded-md border"
+        >
+          <thead
+            class="[&_tr]:border-b"
+          >
+            <tr
+              class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+            >
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Title
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  State
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Author
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Dates
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Refs
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="text-center"
+                >
+                  Actions
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody
+            class="[&_tr:last-child]:border-0"
+          >
+            <tr
+              class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+            >
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] h-24 text-center"
+                colspan="6"
+              >
+                No results.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+`;
+
+exports[`PullRequestsTable Component > when pulls are provided > matches snapshot with one pull 1`] = `
+<body>
+  <div>
+    <div
+      class="border ui-border rounded-lg"
+      data-testid="PullRequestsTable"
+    >
+      <div
+        class="relative w-full overflow-auto"
+      >
+        <table
+          class="w-full caption-bottom text-sm overflow-hidden rounded-md border"
+        >
+          <thead
+            class="[&_tr]:border-b"
+          >
+            <tr
+              class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+            >
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Title
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  State
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Author
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Dates
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Refs
+                </div>
+              </th>
+              <th
+                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="text-center"
+                >
+                  Actions
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody
+            class="[&_tr:last-child]:border-0"
+          >
+            <tr
+              class="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+            >
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  Fix the thing
+                </div>
+              </td>
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  <div
+                    class="inline-flex text-center items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80"
+                  >
+                    open
+                  </div>
+                </div>
+              </td>
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2"
+                >
+                  <span
+                    class="text-sm font-medium text-foreground"
+                  >
+                    visormatt
+                  </span>
+                </div>
+              </td>
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2 text-xs text-muted-foreground"
+                >
+                  Created 
+                  01/01/2026
+                   — updated
+                   
+                  01/02/2026
+                </div>
+              </td>
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="p-2 font-mono text-xs text-muted-foreground"
+                >
+                  main
+                   
+                  ←
+                   
+                  feature/foo
+                  <span
+                    class="block pt-1 text-[11px] text-muted-foreground/90"
+                  >
+                    deadbee
+                  </span>
+                </div>
+              </td>
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="flex flex-wrap gap-2 p-2"
+                >
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    data-discover="true"
+                    href="/pull-requests/42"
+                  >
+                    In portal
+                  </a>
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    href="https://github.com/acme/demo/pull/42"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    GitHub PR
+                  </a>
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                    href="https://github.com/acme/demo/pull/42/checks"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Checks (CI)
+                  </a>
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    href="https://github.com/acme/demo/commit/deadbeef1234567890abcdef"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Head
+                     
+                    <span
+                      class="font-mono"
+                    >
+                      deadbee
+                    </span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </body>

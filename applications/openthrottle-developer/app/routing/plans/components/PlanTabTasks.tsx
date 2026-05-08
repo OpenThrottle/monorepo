@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   DataTable,
   TabsContent,
@@ -19,8 +18,6 @@ import {
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
-import { PlanTasksList } from '~/routing/plans/components/PlanTasksList';
-import { PlanTasksToolbar } from '~/routing/plans/components/PlanTasksToolbar';
 
 function buildPlanTaskTableColumns(): ColumnDef<
   PlanTaskRowFragment,
@@ -139,12 +136,11 @@ function buildPlanTaskTableColumns(): ColumnDef<
 }
 
 export interface PlanTabTasksProp {
-  readonly className?: string;
   readonly tasks: PlanTaskRowFragment[];
 }
 
 export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
-  const { className, tasks } = props;
+  const { tasks } = props;
 
   // Hooks
   const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);
@@ -183,9 +179,12 @@ export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
 
   return (
     <TabsContent value="tasks">
-      <div className="flex flex-col gap-4 md:gap-8">
-        <PlanTasksToolbar className="bg-card rounded-lg border border-card-border" />
-        <PlanTasksList />
+      <div
+        // className="flex flex-col gap-4 md:gap-8"
+        className="bg-card rounded-lg border border-card-border"
+      >
+        {/* <PlanTasksToolbar className="bg-card rounded-lg border border-card-border" /> */}
+        {/* <PlanTasksList /> */}
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
           data={data}

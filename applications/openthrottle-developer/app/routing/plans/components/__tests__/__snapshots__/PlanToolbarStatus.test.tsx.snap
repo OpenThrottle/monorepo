@@ -1,14 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SkillsTable Component > should render 1`] = `
+exports[`PlanToolbarStatus Component > should render 1`] = `
 <body>
   <div>
     <div
       class="p-4"
-      data-testid="SkillsTable"
+      data-testid="PlanToolbarStatus"
     >
       <h2>
-        SkillsTable
+        PlanToolbarStatus
       </h2>
     </div>
   </div>
