@@ -20,12 +20,8 @@ const Card = React.forwardRef<
   return (
     <div
       className={cn(
-        'bg-card',
-        // 'border border-transparent hover:ui-border',
-        // 'border hover:border-accent/30',
-        // 'border hover:border-accent/60',
+        'bg-card rounded-lg transition-colors',
         'border hover:border-muted-foreground/40',
-        'rounded-lg transition-colors',
         className,
       )}
       ref={ref}

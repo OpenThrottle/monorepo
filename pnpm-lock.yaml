@@ -1270,6 +1270,9 @@ importers:
       dataloader:
         specifier: ^2.2.3
         version: 2.2.3
+      fishery:
+        specifier: ^2.4.0
+        version: 2.4.0
       pg:
         specifier: ^8.17.1
         version: 8.20.0
@@ -1283,9 +1286,6 @@ importers:
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
-      fishery:
-        specifier: ^2.4.0
-        version: 2.4.0
 
   packages/nestjs-slack: {}
 

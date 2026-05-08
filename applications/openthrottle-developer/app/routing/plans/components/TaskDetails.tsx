@@ -2,15 +2,15 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { format } from 'date-fns';
 import {
-  Badge,
   Button,
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-  Markdown,
   Separator,
+  // Badge,
+  // Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -71,14 +71,14 @@ export const TaskDetails = (props: TaskDetailsProps) => {
       <Card className="mb-6">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-4">
               <PlanStatusBadge
                 status={task.status as keyof typeof PlanStatusBadge}
               />
-              <h1 className="text-xl text-accent">{task.title}</h1>
+              <h1 className="text-lg text-accent line-clamp-1">{task.title}</h1>
 
               <div className="flex-1" />
-              <Badge variant="secondary">Task</Badge>
+              {/* <Badge variant="secondary">Task</Badge> */}
             </CardTitle>
 
             <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
@@ -136,21 +136,21 @@ export const TaskDetails = (props: TaskDetailsProps) => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                <Markdown
+                {/* <Markdown
                   className={classnames(
                     'text-sm text-muted-foreground whitespace-normal',
                     showDescriptionPreview && 'line-clamp-4',
                   )}
                   content={task.description ?? ''}
-                />
-                {/* <p
+                /> */}
+                <p
                   className={classnames(
                     'text-sm text-muted-foreground',
                     showDescriptionPreview && 'line-clamp-4',
                   )}
                 >
                   {task.description}
-                </p> */}
+                </p>
                 {isLongDescription && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"

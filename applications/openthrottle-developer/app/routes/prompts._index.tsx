@@ -135,14 +135,13 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <PromptsIntroduction />
-
-      <AgentsSectionQuickLinks />
       <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
         <OpenThrottleStatCard title="Agents-type prompts" value={countAgents} />
         <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
         <OpenThrottleStatCard title="Total (this list)" value={total} />
       </div>
+      <PromptsIntroduction />
+      <AgentsSectionQuickLinks />
 
       <PromptToolbar
         limit={limit}

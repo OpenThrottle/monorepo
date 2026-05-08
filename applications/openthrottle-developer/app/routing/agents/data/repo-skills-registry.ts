@@ -38,8 +38,7 @@ export const REPO_SKILLS_REGISTRY: readonly RepoSkillEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',
     slug: 'brag-sheet',
-    summary:
-      'Impact statements and work history from sessions, git, and PRs (review prep, brag sheet).',
+    summary: `Impact statements and work history from sessions, git, and PRs (review prep, brag sheet).`,
   },
   {
     layout: 'agents',
@@ -123,8 +122,7 @@ export const REPO_SKILLS_REGISTRY: readonly RepoSkillEntry[] = [
     layout: 'cursor',
     repoRelativePath: '.cursor/skills/link-workspace-packages/SKILL.md',
     slug: 'link-workspace-packages',
-    summary:
-      'Cursor-routed skill: link workspace packages (same topic as .agents; different path for IDE).',
+    summary: `Cursor-routed skill: link workspace packages (same topic as .agents; different path for IDE).`,
   },
   {
     layout: 'cursor',

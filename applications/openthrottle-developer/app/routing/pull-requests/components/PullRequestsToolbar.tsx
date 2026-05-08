@@ -133,7 +133,7 @@ export const PullRequestsToolbar = (props: PullRequestsToolbarProps) => {
         <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-1">
           <Label htmlFor="pr-filter-author">Author (optional)</Label>
           <Input
-            defaultValue={filters ?? ''}
+            defaultValue={filters.author ?? ''}
             id="pr-filter-author"
             name="author"
             placeholder="GitHub login"
