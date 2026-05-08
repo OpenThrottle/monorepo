@@ -21,4 +21,5 @@ export * from './components/OpenThrottleTabs';
 
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';
+export * from './hooks/useDebouncedSearchParam';
 export * from './hooks/usePollServerMetrics';
