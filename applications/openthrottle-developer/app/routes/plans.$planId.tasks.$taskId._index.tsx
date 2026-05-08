@@ -29,13 +29,14 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   ),
   links: (match) => {
     const title = match.loaderData?.plan?.title;
+    const id = match.loaderData?.plan?.id ?? 'not-found';
     const planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
 
     return [
       { children: 'Plans', to: '/plans' },
       {
         children: planTitle,
-        to: `/plans/${match.loaderData?.plan?.id ?? ''}`,
+        to: `/plans/${id}`,
       },
     ];
   },
@@ -113,7 +114,6 @@ export default function Component(
   }
 
   return (
-    // <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8">
     <GlobalScreen>
       <TaskDetails planId={effectivePlanId} task={task} />
     </GlobalScreen>

@@ -69,6 +69,7 @@ import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 // import { formatPlanDate } from '~/routing/plans/utils/formatters';
 // import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 // import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
@@ -78,15 +79,13 @@ import type { Route } from '@/app/routes/+types/plans.$planId._index';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match?.loaderData?.plan?.id,
-  // breadcrumb: (_match) => 'asdfasdfsfd',
-  // breadcrumb: (match) => (
-  //   <OpenThrottleClipboard
-  //     className="cursor-pointer whitespace-nowrap"
-  //     label={match?.loaderData?.plan?.id ?? ''}
-  //     text={match?.loaderData?.plan?.id ?? ''}
-  //   />
-  // ),
+  breadcrumb: (match) => (
+    <OpenThrottleClipboard
+      className="cursor-pointer whitespace-nowrap"
+      label={match?.loaderData?.plan?.id ?? ''}
+      text={match?.loaderData?.plan?.id ?? ''}
+    />
+  ),
   links: (_match) => [{ children: 'Plans', to: '/plans' }],
 };
 
