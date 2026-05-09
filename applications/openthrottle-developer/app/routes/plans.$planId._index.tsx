@@ -58,7 +58,12 @@ import {
   isPlanStatusKey,
   PlanStatusBadge,
 } from '~/routing/plans/components/PlanStatusBadge';
-import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
+import {
+  PLANS_DETAIL_TAB_SEARCH_PARAM,
+  parsePlanDetailTab,
+  parsePlanTasksView,
+  type PlanDetailTab,
+} from '~/routing/plans/utils/parsers';
 import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
@@ -162,6 +167,25 @@ export default function Component(
   const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
+  const planDetailTab: PlanDetailTab =
+    parsePlanDetailTab(searchParams.get(PLANS_DETAIL_TAB_SEARCH_PARAM)) ??
+    'overview';
+
+  const onPlanDetailTabChange = (next: string): void => {
+    const parsed = parsePlanDetailTab(next);
+    const tab: PlanDetailTab = parsed ?? 'overview';
+    const nextParams = new URLSearchParams(searchParams);
+    if (tab === 'overview') {
+      nextParams.delete(PLANS_DETAIL_TAB_SEARCH_PARAM);
+    } else {
+      nextParams.set(PLANS_DETAIL_TAB_SEARCH_PARAM, tab);
+    }
+
+    setSearchParams(nextParams, {
+      preventScrollReset: true,
+      replace: true,
+    });
+  };
   const planId = params.planId ?? '';
   const status =
     plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
@@ -317,10 +341,8 @@ export default function Component(
 
         <Tabs
           className="w-full"
-          defaultValue="overview"
-          onValueChange={(value) => {
-            console.log('value', value);
-          }}
+          onValueChange={onPlanDetailTabChange}
+          value={planDetailTab}
         >
           <TabsList className="mb-8 gap-4 w-full" variant="line">
             <TabsTrigger className="flex-0 cursor-pointer" value="overview">
