@@ -218,8 +218,7 @@ export const createWorkflowRalphOrchestrator = (
             iteration,
             model: context.model,
             onChunk,
-            // runner: context.runner, // FIXME: Swap this out...
-            runner: 'cursor',
+            runner: context.runner,
             signal: abortSignal,
             timeoutMs,
           });

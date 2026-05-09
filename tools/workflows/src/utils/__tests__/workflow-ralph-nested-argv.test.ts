@@ -3,7 +3,10 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildWorkflowRalphRunTuningArgv } from '../workflow-ralph-nested-argv';
+import {
+  buildWorkflowRalphRunTuningArgv,
+  mergeRalphNestedRunTuningWithExecutionBackend,
+} from '../workflow-ralph-nested-argv';
 
 describe('buildWorkflowRalphRunTuningArgv', () => {
   it('returns empty when input is empty', () => {
@@ -50,5 +53,35 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     expect(buildWorkflowRalphRunTuningArgv({ debug: 'verbose' })).toEqual([
       '--verbose',
     ]);
+  });
+});
+
+describe('mergeRalphNestedRunTuningWithExecutionBackend', () => {
+  it('fills backend from executionBackend when ralph omits backend', () => {
+    expect(
+      mergeRalphNestedRunTuningWithExecutionBackend(undefined, 'claude'),
+    ).toEqual({ backend: 'claude' });
+    expect(
+      buildWorkflowRalphRunTuningArgv(
+        mergeRalphNestedRunTuningWithExecutionBackend(undefined, 'claude'),
+      ),
+    ).toEqual(['--backend', 'claude']);
+  });
+
+  it('prefers explicit ralph.backend over executionBackend', () => {
+    expect(
+      mergeRalphNestedRunTuningWithExecutionBackend(
+        { backend: 'cursor', iterations: 2 },
+        'claude',
+      ),
+    ).toEqual({ backend: 'cursor', iterations: 2 });
+  });
+
+  it('defaults to cursor when both are absent', () => {
+    expect(
+      mergeRalphNestedRunTuningWithExecutionBackend(undefined, undefined),
+    ).toEqual({
+      backend: 'cursor',
+    });
   });
 });

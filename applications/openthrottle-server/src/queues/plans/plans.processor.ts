@@ -22,6 +22,7 @@ import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
 import {
   buildWorkflowRalphRunTuningArgv,
   formatPlansProcessorSpawnOtDiagnosticsMessage,
+  mergeRalphNestedRunTuningWithExecutionBackend,
   runChildJob,
 } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
@@ -632,7 +633,7 @@ export class PlansProcessor
   /**
    * @description In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
    * `@openthrottle/openthrottle-agentic-ralph`. Does not use worktrees or `workflow-ralph` spawn;
-   * iteration uses `runIterationAsync` (Cursor) in the server process.
+   * iteration uses `runIterationAsync` (Cursor or Claude per job `executionBackend`) in the server process.
    */
   private async processOrchestrator(
     job: RunPlanJob,
@@ -802,7 +803,12 @@ export class PlansProcessor
             );
           },
           planId,
-          ...ralphTuningForChildJob(job.data.ralph),
+          ...ralphTuningForChildJob(
+            mergeRalphNestedRunTuningWithExecutionBackend(
+              job.data.ralph,
+              job.data.executionBackend,
+            ),
+          ),
           signal: cancelSignal,
         });
 
@@ -997,7 +1003,12 @@ export class PlansProcessor
       RALPH_CMD,
       '--plan',
       planId,
-      ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
+      ...buildWorkflowRalphRunTuningArgv(
+        mergeRalphNestedRunTuningWithExecutionBackend(
+          job.data.ralph,
+          job.data.executionBackend,
+        ),
+      ),
     ];
 
     console.error('____ 1 👀 👀 👀 👀 ', { args });

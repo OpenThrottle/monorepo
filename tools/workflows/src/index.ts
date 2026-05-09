@@ -56,7 +56,10 @@ export type {
   WorktreeWorkflowResult,
 } from './types/worktree';
 export { runChildJob } from './utils/child-job';
-export { buildWorkflowRalphRunTuningArgv } from './utils/workflow-ralph-nested-argv';
+export {
+  buildWorkflowRalphRunTuningArgv,
+  mergeRalphNestedRunTuningWithExecutionBackend,
+} from './utils/workflow-ralph-nested-argv';
 export type {
   RalphNestedDebugCli,
   RalphNestedRunTuningInput,

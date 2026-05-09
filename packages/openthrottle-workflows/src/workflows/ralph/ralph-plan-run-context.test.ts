@@ -39,6 +39,38 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(ctx.taskId).toBe('');
   });
 
+  it('maps backend claude to runner claude', () => {
+    const ctx = buildRalphFlowContextFromPlanRunTuning({
+      mode: 'plan',
+      planId,
+      ralph: { backend: 'claude' },
+    });
+
+    expect(ctx.runner).toBe('claude');
+  });
+
+  it('uses executionBackend when ralph omits backend', () => {
+    const ctx = buildRalphFlowContextFromPlanRunTuning({
+      executionBackend: 'claude',
+      mode: 'plan',
+      planId,
+      ralph: undefined,
+    });
+
+    expect(ctx.runner).toBe('claude');
+  });
+
+  it('prefers ralph.backend over executionBackend', () => {
+    const ctx = buildRalphFlowContextFromPlanRunTuning({
+      executionBackend: 'claude',
+      mode: 'plan',
+      planId,
+      ralph: { backend: 'cursor' },
+    });
+
+    expect(ctx.runner).toBe('cursor');
+  });
+
   it('maps nested ralph fields and debug enum', () => {
     const ctx = buildRalphFlowContextFromPlanRunTuning({
       mode: 'plan',

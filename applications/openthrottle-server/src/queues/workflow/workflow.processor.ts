@@ -22,6 +22,7 @@ import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
 import {
   buildWorkflowRalphRunTuningArgv,
   formatPlansProcessorSpawnOtDiagnosticsMessage,
+  mergeRalphNestedRunTuningWithExecutionBackend,
   runChildJob,
 } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
@@ -726,7 +727,12 @@ export class WorkflowProcessor
             );
           },
           planId,
-          ...ralphTuningForChildJob(job.data.ralph),
+          ...ralphTuningForChildJob(
+            mergeRalphNestedRunTuningWithExecutionBackend(
+              job.data.ralph,
+              job.data.executionBackend,
+            ),
+          ),
           signal: cancelSignal,
         });
 
@@ -921,7 +927,12 @@ export class WorkflowProcessor
       RALPH_CMD,
       '--plan',
       planId,
-      ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
+      ...buildWorkflowRalphRunTuningArgv(
+        mergeRalphNestedRunTuningWithExecutionBackend(
+          job.data.ralph,
+          job.data.executionBackend,
+        ),
+      ),
     ];
 
     const { onStderr, onStdout } = createSpawnRunOutputHandlers({

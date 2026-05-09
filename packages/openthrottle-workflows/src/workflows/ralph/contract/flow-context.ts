@@ -59,7 +59,7 @@ export const DEFAULT_RALPH_MODEL = 'auto';
  * @description Execution backend id for `--backend`; keep aligned with `workflow-ralph --backend`
  * and {@link DEFAULT_RALPH_RUNNER}.
  */
-export type WorkflowRunner = typeof DEFAULT_RALPH_RUNNER;
+export type WorkflowRunner = 'claude' | 'cursor';
 
 export type WorkflowMode = 'plan' | 'task';
 

@@ -218,6 +218,35 @@ describe('PlansProcessor', () => {
     );
   });
 
+  it('should pass --backend claude when job executionBackend is claude and ralph omits backend', async () => {
+    mockJob = {
+      data: {
+        executionBackend: 'claude',
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'pnpm',
+      [
+        'exec',
+        'workflow-ralph',
+        '--plan',
+        mockJob.data.planId,
+        '--backend',
+        'claude',
+      ],
+      expect.objectContaining({
+        cwd: process.cwd(),
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
+  });
+
   it('should inject canonical Cortex Postgres URL into nested workflow-ralph env when POSTGRES_URL is set', async () => {
     const prevUrl = process.env.POSTGRES_URL;
     process.env.POSTGRES_URL = 'postgresql://u:p@localhost:5432/cortex_test';

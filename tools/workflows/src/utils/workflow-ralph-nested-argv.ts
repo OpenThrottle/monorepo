@@ -107,3 +107,19 @@ export const buildWorkflowRalphRunTuningArgv = (
 
   return ralphArgs;
 };
+
+/**
+ * @description Fills `backend` from the BullMQ job’s persisted {@link executionBackend} when tuning
+ * omits `backend`, so nested argv and in-process orchestrator resolve the same runner for the whole run.
+ */
+export const mergeRalphNestedRunTuningWithExecutionBackend = (
+  ralph: RalphNestedRunTuningInput | undefined,
+  executionBackend: RalphExecutionBackendId | undefined,
+): RalphNestedRunTuningInput => {
+  const base = ralph ?? {};
+  const backend =
+    base.backend != null
+      ? base.backend
+      : (executionBackend ?? DEFAULT_RALPH_RUNNER);
+  return { ...base, backend };
+};
