@@ -4,7 +4,10 @@ import {
   DEFAULT_PAGINATION_LIMIT,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleEmptyState,
+  OpenThrottleStatCard,
+} from '@openthrottle/react-router-ui';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
@@ -124,6 +127,14 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <div className="grid md:grid-cols-5 gap-4 md:gap-8 lg:gap-12">
+        <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
+        <OpenThrottleStatCard title="Active" value={queue.activeCount} />
+        <OpenThrottleStatCard title="Waiting" value={queue.waitingCount} />
+        <OpenThrottleStatCard title="Delayed" value={queue.delayedCount} />
+        <OpenThrottleStatCard title="Failed" value={queue.failedCount} />
+      </div>
+
       <div>
         <GlobalHeading
           className="mb-4"
@@ -147,18 +158,15 @@ export default function Component(
         </p>
       </div>
 
-      <div className="grid md:grid-cols-5 gap-4 lg:gap-8">
-        <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
-        <OpenThrottleStatCard title="Active" value={queue.activeCount} />
-        <OpenThrottleStatCard title="Waiting" value={queue.waitingCount} />
-        <OpenThrottleStatCard title="Delayed" value={queue.delayedCount} />
-        <OpenThrottleStatCard title="Failed" value={queue.failedCount} />
-      </div>
+      {/* <QueueJobEmpty /> */}
 
-      <h1 className="text-xl my-4 text-accent">Jobs</h1>
       {jobs.length === 0 ? (
-        <p className="text-muted-foreground">No jobs in this queue.</p>
+        <OpenThrottleEmptyState
+          description="Try again later."
+          title="No jobs in this queue."
+        />
       ) : (
+        // <p className="text-muted-foreground"></p>
         <>
           <ul className="space-y-3 mb-4">
             {jobs.map((job) => (

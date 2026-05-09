@@ -23,7 +23,7 @@ export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
 
   return (
     <div className={className} data-testid="OpenThrottleEmptyState">
-      <h2 className="text-2xl font-bold mb-2">{title}</h2>
+      <h2 className="text-lg font-bold mb-2">{title}</h2>
       <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );

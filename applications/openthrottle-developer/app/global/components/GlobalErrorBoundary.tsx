@@ -182,6 +182,7 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
         </p>
       );
     }
+
     return (
       <p className="mt-2 text-sm text-muted-foreground">
         {clientErrorKindLabel(kind)}
