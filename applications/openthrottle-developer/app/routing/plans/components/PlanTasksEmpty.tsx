@@ -1,14 +1,22 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
+  Button,
   Empty,
   EmptyDescription,
+  EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
+import { SearchAlertIcon } from 'lucide-react';
 
-export interface PlanTasksEmptyProps {}
+export interface PlanTasksEmptyProps {
+  className?: string;
+  search?: string;
+}
 
-export const PlanTasksEmpty = (_props: PlanTasksEmptyProps) => {
-  // const { className } = _props;
+export const PlanTasksEmpty = (props: PlanTasksEmptyProps) => {
+  const { className, search } = props;
 
   // Hooks
 
@@ -23,9 +31,25 @@ export const PlanTasksEmpty = (_props: PlanTasksEmptyProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Empty>
-      <EmptyTitle>No tasks</EmptyTitle>
-      <EmptyDescription>This plan has no tasks yet.</EmptyDescription>
+    <Empty className={classnames('my-8', className)}>
+      <EmptyMedia variant="icon">
+        <SearchAlertIcon className="size-6" />
+      </EmptyMedia>
+      <EmptyTitle>
+        {search ? 'No plans match your filters' : 'No plans yet'}
+      </EmptyTitle>
+      <EmptyDescription>
+        {search
+          ? 'Try clearing the search to see all plans.'
+          : 'Create your first plan to get started.'}
+      </EmptyDescription>
+      <Button asChild={true} variant="secondary">
+        {search ? (
+          <Link to="/plans">Clear filters</Link>
+        ) : (
+          <Link to="/plans/create">New plan</Link>
+        )}
+      </Button>
     </Empty>
   );
 };

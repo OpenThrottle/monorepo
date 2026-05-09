@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import {
   Button,
   Card,
@@ -17,16 +16,13 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import type { GlobalMetricsChartLineKey } from '@openthrottle/react-router-ui-global';
 import { BugIcon } from 'lucide-react';
-import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-env';
-import {
-  VITE_DEVTOOLS_DOC_HREF,
-  VITE_DEVTOOLS_DOC_PROFILING_HREF,
-  VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
-} from '~/routing/settings/utils/settings-docs-links';
 import { SettingsPortsTroubleshootingCard } from '~/routing/settings/components/SettingsPortsTroubleshootingCard';
 import type { ServerHealthObject } from '~/__generated__/graphql';
-
-const STORAGE_PREVIEW_MAX = 140;
+import { SettingsFeatureFlags } from '~/routing/settings/components/SettingsFeatureFlags';
+import { SettingsEnvironment } from '~/routing/settings/components/SettingsEnvironment';
+import { SettingsBuildTools } from '~/routing/settings/components/SettingsBuildTools';
+import { SettingsStorage } from '~/routing/settings/components/SettingsStorage';
+import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 
 export type SettingsDebugGraphQLResult =
   | {
@@ -45,68 +41,41 @@ interface SettingsDebugPanelProps {
   readonly graphQL: SettingsDebugGraphQLResult;
 }
 
-const summarizeStoragePair = (key: string, raw: string): string => {
-  const lower = key.toLowerCase();
-  if (
-    lower.includes('token') ||
-    lower.includes('auth') ||
-    lower.includes('secret')
-  ) {
-    return maskSensitiveEnvValue(key, raw);
-  }
-  if (raw.length > STORAGE_PREVIEW_MAX) {
-    return `${raw.slice(0, STORAGE_PREVIEW_MAX)}…`;
-  }
-  return raw;
-};
-
-const readStorageEntries = (
-  storage: Storage | undefined,
-): readonly { readonly key: string; readonly preview: string }[] => {
-  if (!storage || typeof storage.length !== 'number') {
-    return [];
-  }
-  const out: { key: string; preview: string }[] = [];
-  for (let i = 0; i < storage.length; i += 1) {
-    const key = storage.key(i);
-    if (!key) continue;
-    const raw = storage.getItem(key) ?? '';
-    out.push({ key, preview: summarizeStoragePair(key, raw) });
-  }
-  out.sort((a, b) => a.key.localeCompare(b.key));
-  return out;
-};
-
 export function SettingsDebugPanel({
   envSnapshot,
   graphQL,
 }: SettingsDebugPanelProps): React.ReactElement {
+  type TTemporary = {
+    readonly key: string;
+    readonly preview: string;
+  };
+
+  // Hooks
   const { revalidate, state } = useRevalidator();
-  const [localEntries, setLocalEntries] = React.useState<
-    readonly { readonly key: string; readonly preview: string }[]
+  const [_localEntries, setLocalEntries] = React.useState<
+    readonly TTemporary[]
   >([]);
-  const [sessionEntries, setSessionEntries] = React.useState<
-    readonly { readonly key: string; readonly preview: string }[]
+  const [_sessionEntries, setSessionEntries] = React.useState<
+    readonly TTemporary[]
   >([]);
 
+  // Setup
+
+  // Handlers
+  const _handleRefreshStorage = (): void => {
+    setLocalEntries(readStorageEntries(globalThis.localStorage));
+    setSessionEntries(readStorageEntries(globalThis.sessionStorage));
+  };
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     setLocalEntries(readStorageEntries(globalThis.localStorage));
     setSessionEntries(readStorageEntries(globalThis.sessionStorage));
   }, []);
 
-  const handleCopyEnv = async (): Promise<void> => {
-    const text = JSON.stringify(envSnapshot, null, 2);
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleRefreshStorage = (): void => {
-    setLocalEntries(readStorageEntries(globalThis.localStorage));
-    setSessionEntries(readStorageEntries(globalThis.sessionStorage));
-  };
+  // 🔌 Short Circuit
 
   return (
     <div className="space-y-6">
@@ -117,7 +86,7 @@ export function SettingsDebugPanel({
           icon={BugIcon}
           title="Debug"
         />
-        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+        <p className="mb-6 text-sm text-muted-foreground">
           Client-side diagnostics for this shell: public{' '}
           <code className="rounded bg-muted px-1 py-0.5 text-xs">
             window.env
@@ -128,218 +97,12 @@ export function SettingsDebugPanel({
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Feature flags</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            <span className="font-medium text-foreground">
-              FEATURE_BETA_PREVIEW
-            </span>{' '}
-            (dev shell):{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              {FEATURE_BETA_PREVIEW ? 'true' : 'false'}
-            </code>
-          </p>
-          <p>
-            <span className="font-medium text-foreground">
-              REACT_ROUTER_DEV_TOOLS
-            </span>{' '}
-            is read when the Vite dev server starts. Set{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              REACT_ROUTER_DEV_TOOLS=true
-            </code>{' '}
-            in <code className="text-xs">.env</code> and restart{' '}
-            <code className="text-xs">nx run openthrottle-developer:dev</code>.
-            See the monorepo doc below.
-          </p>
-          <p>
-            <span className="font-medium text-foreground">
-              APP_ENABLE_ANALYTICS
-            </span>{' '}
-            and{' '}
-            <span className="font-medium text-foreground">
-              APP_ENABLE_AUTHENTICATION
-            </span>{' '}
-            are not included in <code className="text-xs">window.env</code>;
-            check your environment or deployment config if you need them.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-          <CardTitle className="text-base">Sanitized env snapshot</CardTitle>
-          <Button
-            onClick={handleCopyEnv}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            Copy JSON
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-64 overflow-auto rounded-md border">
-            <table className="w-full text-left text-xs">
-              <thead className="sticky top-0 bg-muted/80">
-                <tr>
-                  <th className="p-2 font-medium">Key</th>
-                  <th className="p-2 font-medium">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(envSnapshot).map(([key, value]) => (
-                  <tr className="border-t" key={key}>
-                    <td className="align-top p-2 font-mono text-muted-foreground">
-                      {key}
-                    </td>
-                    <td className="break-all p-2 font-mono">{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            React Router / Vite devtools
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>
-            <span className="font-medium text-foreground">When to open:</span>{' '}
-            Use the bundle analyzer for chunk overlap, duplicate packages, or
-            split issues. Use React Router DevTools when debugging routes,
-            loaders, and actions. For slow production builds, use Vite{' '}
-            <code className="text-xs">build --profile</code> (see profiling doc
-            below). Enable{' '}
-            <code className="text-xs">REACT_ROUTER_DEV_TOOLS</code> only for
-            those sessions; leave it off for a quieter console day to day.
-          </p>
-          <p>
-            Bundle analyzer,{' '}
-            <code className="text-xs">vite-plugin-devtools-json</code>, and
-            React Router DevTools hook order are documented here:
-          </p>
-          <p>
-            <a
-              className="text-primary underline-offset-4 hover:underline"
-              href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Quick reference (when to enable what)
-            </a>
-            {' · '}
-            <a
-              className="text-primary underline-offset-4 hover:underline"
-              href={VITE_DEVTOOLS_DOC_HREF}
-              rel="noreferrer"
-              target="_blank"
-            >
-              docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
-            </a>
-            {' · '}
-            <a
-              className="text-primary underline-offset-4 hover:underline"
-              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Vite CLI build profiling
-            </a>
-          </p>
-          <p>
-            <span className="font-medium text-foreground">Clone path:</span>{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              docs/monorepo/openthrottle-developer-vite-devtools.md
-            </code>
-          </p>
-        </CardContent>
-      </Card>
+      <SettingsFeatureFlags />
+      <SettingsEnvironment envSnapshot={envSnapshot} />
+      <SettingsBuildTools />
+      <SettingsStorage />
 
       <SettingsPortsTroubleshootingCard />
-
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-          <CardTitle className="text-base">
-            localStorage & sessionStorage
-          </CardTitle>
-          <Button
-            onClick={handleRefreshStorage}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            Refresh
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          <div>
-            <p className="mb-2 font-medium text-foreground">localStorage</p>
-            {localEntries.length === 0 ? (
-              <p className="text-muted-foreground">No keys.</p>
-            ) : (
-              <div className="max-h-48 overflow-auto rounded-md border">
-                <table className="w-full text-left text-xs">
-                  <thead className="sticky top-0 bg-muted/80">
-                    <tr>
-                      <th className="p-2 font-medium">Key</th>
-                      <th className="p-2 font-medium">Preview</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {localEntries.map((row) => (
-                      <tr className="border-t" key={row.key}>
-                        <td className="align-top p-2 font-mono text-muted-foreground">
-                          {row.key}
-                        </td>
-                        <td className="break-all p-2 font-mono">
-                          {row.preview}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="mb-2 font-medium text-foreground">sessionStorage</p>
-            {sessionEntries.length === 0 ? (
-              <p className="text-muted-foreground">No keys.</p>
-            ) : (
-              <div className="max-h-48 overflow-auto rounded-md border">
-                <table className="w-full text-left text-xs">
-                  <thead className="sticky top-0 bg-muted/80">
-                    <tr>
-                      <th className="p-2 font-medium">Key</th>
-                      <th className="p-2 font-medium">Preview</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sessionEntries.map((row) => (
-                      <tr className="border-t" key={row.key}>
-                        <td className="align-top p-2 font-mono text-muted-foreground">
-                          {row.key}
-                        </td>
-                        <td className="break-all p-2 font-mono">
-                          {row.preview}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       <Card id="server-metrics-definitions">
         <CardHeader>

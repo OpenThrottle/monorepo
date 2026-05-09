@@ -157,25 +157,26 @@ export function SettingsLogsPanel(
   }, []);
 
   return (
-    <div className="space-y-6">
-      <GlobalHeading
-        className="mb-2"
-        heading="h3"
-        icon={ScrollText}
-        title="Logs"
-      />
-      <p className="text-sm text-muted-foreground">
-        Capture browser console output in this tab, copy lines, and export a
-        sanitized support bundle (JSON) with env metadata and log lines. Server
-        workflow and agent streams are described below—when an operator API
-        exists, optional tailing can plug into the same bundle shape.
-      </p>
-
-      <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
-        Logs may include URLs or user-visible strings. Only copy or export what
-        you intend to share; the support bundle redacts env secrets but not
-        every substring inside log lines.
-      </p>
+    <>
+      <div>
+        <GlobalHeading
+          className="mb-2"
+          heading="h3"
+          icon={ScrollText}
+          title="Logs"
+        />
+        <p className="text-sm text-muted-foreground mb-4">
+          Capture browser console output in this tab, copy lines, and export a
+          sanitized support bundle (JSON) with env metadata and log lines.
+          Server workflow and agent streams are described below—when an operator
+          API exists, optional tailing can plug into the same bundle shape.
+        </p>
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
+          Logs may include URLs or user-visible strings. Only copy or export
+          what you intend to share; the support bundle redacts env secrets but
+          not every substring inside log lines.
+        </p>
+      </div>
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
@@ -313,6 +314,6 @@ export function SettingsLogsPanel(
           </p>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

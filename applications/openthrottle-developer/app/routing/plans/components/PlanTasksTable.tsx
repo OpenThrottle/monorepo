@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
@@ -22,10 +22,61 @@ export interface PlanTasksTableProps {
   readonly tasks: PlanTaskRowFragment[];
 }
 
-function buildPlanTaskTableColumns(): ColumnDef<
+export const PlanTasksTable = (
+  props: PlanTasksTableProps,
+): React.ReactElement => {
+  const { tasks } = props;
+
+  // Hooks
+  const columns = React.useMemo(() => PlanTasksTable.buildTable(), []);
+  const [data, _setData] = React.useState(tasks);
+  const [searchParams] = useSearchParams();
+
+  // Setup
+  const search = searchParams.get('q') ?? '';
+
+  const getRowId = React.useCallback(
+    (task: PlanTaskRowFragment) => task.id,
+    [],
+  );
+
+  const getRowProps = React.useCallback(
+    (row: { original: PlanTaskRowFragment }) => ({
+      id: `task-${row.original.id}`,
+    }),
+    [],
+  );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (tasks.length === 0) {
+    return <PlanTasksEmpty search={search} />;
+  }
+
+  return (
+    <div
+      // className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PlanTasksTable"
+    >
+      <DataTable<PlanTaskRowFragment, string | null | undefined>
+        columns={columns}
+        data={data}
+        getRowId={getRowId}
+        getRowProps={getRowProps}
+      />
+    </div>
+  );
+};
+
+PlanTasksTable.buildTable = (): ColumnDef<
   PlanTaskRowFragment,
   string | null | undefined
->[] {
+>[] => {
   return [
     {
       accessorKey: 'status',
@@ -136,61 +187,4 @@ function buildPlanTaskTableColumns(): ColumnDef<
       id: 'actions',
     },
   ];
-}
-
-export const PlanTasksTable = (
-  props: PlanTasksTableProps,
-): React.ReactElement => {
-  const { tasks } = props;
-
-  // Hooks
-  const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);
-  const [data, _setData] = React.useState(tasks);
-
-  // Setup
-  const getRowId = React.useCallback(
-    (task: PlanTaskRowFragment) => task.id,
-    [],
-  );
-
-  const getRowProps = React.useCallback(
-    (row: { original: PlanTaskRowFragment }) => ({
-      id: `task-${row.original.id}`,
-    }),
-    [],
-  );
-
-  // Handlers
-  // const addRowBetween = (index: number) => {
-  //   const newRow = { id: "new-id", name: "New Entry", status: "pending" };
-  //   const updatedData = [...data];
-  //
-  //   // Inserts newRow at the specified index without deleting any items
-  //   updatedData.splice(index, 0, newRow);
-  //
-  //   setData(updatedData);
-  // };
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-  if (tasks.length === 0) {
-    return <PlanTasksEmpty />;
-  }
-
-  return (
-    <div
-      // className={classnames('border ui-border rounded-lg', className)}
-      data-testid="PlanTasksTable"
-    >
-      <DataTable<PlanTaskRowFragment, string | null | undefined>
-        columns={columns}
-        data={data}
-        getRowId={getRowId}
-        getRowProps={getRowProps}
-      />
-    </div>
-  );
 };

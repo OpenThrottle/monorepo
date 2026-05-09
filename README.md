@@ -20,6 +20,10 @@ After years of development, I've refined my tech stack to focus on a core set of
   - [☁️ GCP Auth | gcloud CLI](#️-gcp-auth--gcloud-cli)
   - [🛟 Troubleshooting](#-troubleshooting)
 
+Specific Reads:
+
+- [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
+
 ## 🤖 Ralph Loops
 
 ```bash

@@ -17,7 +17,6 @@ import {
 import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { AgentsSectionQuickLinks } from '~/routing/agents/components/AgentsSectionQuickLinks';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
 import { PromptCard } from '~/routing/prompts/components/PromptCard';
 import {
@@ -140,8 +139,9 @@ export default function Component(
         <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
         <OpenThrottleStatCard title="Total (this list)" value={total} />
       </div>
+
       <PromptsIntroduction />
-      <AgentsSectionQuickLinks />
+      {/* <AgentsSectionQuickLinks /> */}
 
       <PromptToolbar
         limit={limit}
@@ -151,7 +151,7 @@ export default function Component(
         types={types}
       />
 
-      {prompts.length > 0 ? (
+      {prompts.length === 0 ? (
         <>
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"

@@ -1,3 +1,4 @@
+import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { isRouteErrorResponse } from 'react-router';
 
 /**
@@ -182,20 +183,24 @@ export const isUsableRollbarClientToken = (
   if (token == null || token.length < 8) {
     return false;
   }
+
   const trimmed = token.trim();
   if (trimmed.length < 8) {
     return false;
   }
+
   // Single repeated character (common .env placeholders: xxxxx…)
   if (/^(.)\1+$/.test(trimmed)) {
     return false;
   }
+
   const lower = trimmed.toLowerCase();
   for (const fragment of ROLLBAR_TOKEN_PLACEHOLDER_FRAGMENTS) {
     if (lower.includes(fragment)) {
       return false;
     }
   }
+
   return true;
 };
 
@@ -209,6 +214,7 @@ export const createIncidentReferenceId = (): string => {
   ) {
     return crypto.randomUUID();
   }
+
   return `ot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
@@ -223,10 +229,12 @@ export const incidentClassificationSummary = (params: {
     const bucket = bucketRouteHttpStatus(params.error.status);
     return `HTTP ${params.error.status} ${params.error.statusText} (${bucket})`;
   }
+
   if (params.error instanceof Error) {
     const sub = inferJavascriptErrorSubtype(params.error);
     return `JavaScript · ${JAVASCRIPT_SUBTYPE_SUMMARY[sub]}`;
   }
+
   return clientErrorKindLabel(params.kind);
 };
 
@@ -237,10 +245,13 @@ export const getLooseErrorStack = (error: unknown): string | undefined => {
   if (error instanceof Error && typeof error.stack === 'string') {
     return error.stack;
   }
+
   if (typeof error !== 'object' || error === null) {
     return undefined;
   }
+
   const stack = (error as { readonly stack?: unknown }).stack;
+
   return typeof stack === 'string' ? stack : undefined;
 };
 
@@ -252,10 +263,12 @@ export const isClientStackToggleEligible = (): boolean => {
   if (typeof window === 'undefined') {
     return false;
   }
+
   const env = window.env;
   if (env == null) {
     return false;
   }
+
   return env.APP_ENV === 'development' || env.NODE_ENV === 'development';
 };
 
@@ -267,9 +280,14 @@ export const readSafeClientEnvironmentTags = (): {
   readonly appVersion: string | undefined;
   readonly nodeEnv: string | undefined;
 } => {
-  if (typeof window === 'undefined') {
-    return { appEnv: undefined, appVersion: undefined, nodeEnv: undefined };
+  if (!IS_BROWSER) {
+    return {
+      appEnv: undefined,
+      appVersion: undefined,
+      nodeEnv: undefined,
+    };
   }
+
   return {
     appEnv: window.env?.APP_ENV,
     appVersion: window.env?.APP_VERSION,

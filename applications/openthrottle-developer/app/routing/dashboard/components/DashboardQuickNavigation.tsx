@@ -15,7 +15,7 @@ export function DashboardQuickNavigation(props: DashboardQuickNavigationProps) {
 
   return (
     <section className={className} data-testid="DashboardQuickNavigation">
-      <h3 className="text-lg font-bold mb-2">Jump to</h3>
+      <h3 className="mb-2">Jump to</h3>
       <p className="text-muted-foreground text-sm mb-3">
         Quick paths across plans, search, queues, and tooling—same destinations
         as the command palette navigation items.

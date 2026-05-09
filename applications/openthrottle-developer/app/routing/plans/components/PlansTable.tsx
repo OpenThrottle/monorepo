@@ -11,11 +11,12 @@ import { ArrowRightIcon } from 'lucide-react';
 import { formatDate } from 'date-fns';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
-import { Link, useFetcher } from 'react-router';
+import { Link, useFetcher, useSearchParams } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanStatusKey } from '~/routing/plans/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanCardFragment } from '~/__generated__/graphql';
+import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
 export interface PlansTableProps {
   className?: string;
@@ -29,8 +30,11 @@ export const PlansTable = (props: PlansTableProps) => {
 
   // Hooks
   const runPlanFetcher = useFetcher<typeof planDetailAction>();
+  const [searchParams] = useSearchParams();
 
   // Setup
+  const search = searchParams.get('q') ?? '';
+
   const columns = React.useMemo(
     () => PlansTable.buildTable(statusFilterUrls, runPlanFetcher),
     [statusFilterUrls, runPlanFetcher],
@@ -43,6 +47,9 @@ export const PlansTable = (props: PlansTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (plans.length === 0) {
+    return <PlanTasksEmpty search={search} />;
+  }
 
   return (
     <div

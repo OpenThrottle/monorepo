@@ -63,7 +63,7 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
 
   return (
     <div data-testid="DashboardQueueStats">
-      <h2 className="text-lg font-bold mb-4">Queue Stats</h2>
+      <h2 className="mb-4">Queue Stats</h2>
       {isEmpty ? (
         <p className="mt-2 text-sm text-muted-foreground">No queues</p>
       ) : (

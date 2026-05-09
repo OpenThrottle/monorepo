@@ -7,6 +7,7 @@ import {
   skillsTableColumns,
 } from '~/routing/skills/config/skills-table-columns';
 import type { SkillsTableColumnValue } from '~/routing/skills/config/skills-table-columns';
+import { SkillsEmpty } from '~/routing/skills/components/SkillsEmpty';
 
 export interface SkillsTableProps {
   readonly className?: string;
@@ -30,6 +31,9 @@ export const SkillsTable = (props: SkillsTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (entries.length === 0) {
+    return <SkillsEmpty />;
+  }
 
   return (
     <div

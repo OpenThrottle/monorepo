@@ -64,7 +64,6 @@ import {
   parsePlanTasksView,
   type PlanDetailTab,
 } from '~/routing/plans/utils/parsers';
-import { PlanNotFound } from '~/routing/plans/components/PlanNotFound';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
 import { PlanTabRequirements } from '~/routing/plans/components/PlanTabRequirements';
@@ -74,7 +73,10 @@ import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleClipboard,
+  OpenThrottleEmptyState,
+} from '@openthrottle/react-router-ui';
 // import { formatPlanDate } from '~/routing/plans/utils/formatters';
 // import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 // import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
@@ -87,8 +89,8 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
       className="cursor-pointer whitespace-nowrap"
-      label={match?.loaderData?.plan?.id ?? ''}
-      text={match?.loaderData?.plan?.id ?? ''}
+      label={match.params.planId}
+      text={match.params.planId ?? 'not-found'}
     />
   ),
   links: (_match) => [{ children: 'Plans', to: '/plans' }],
@@ -188,10 +190,7 @@ export default function Component(
       nextParams.set(PLANS_DETAIL_TAB_SEARCH_PARAM, tab);
     }
 
-    setSearchParams(nextParams, {
-      preventScrollReset: true,
-      replace: true,
-    });
+    setSearchParams(nextParams, { preventScrollReset: true });
   };
 
   const onResetToDefaults = (): void => {
@@ -290,7 +289,14 @@ export default function Component(
 
   // 🔌 Short Circuit
   if (!plan) {
-    return <PlanNotFound />;
+    return (
+      <GlobalScreen>
+        <OpenThrottleEmptyState
+          description="The plan you are looking for does not exist."
+          title="Plan not found"
+        />
+      </GlobalScreen>
+    );
   }
 
   interface Item {

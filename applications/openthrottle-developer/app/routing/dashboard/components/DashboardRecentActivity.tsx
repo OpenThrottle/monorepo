@@ -231,7 +231,7 @@ export const DashboardRecentActivity = (
       className={classnames(className)}
       data-testid="DashboardRecentActivity"
     >
-      <h2 className="text-lg font-bold mb-4">Recent Activity</h2>
+      <h2 className="mb-4">Recent Activity</h2>
 
       {activityRows.length === 0 ? (
         <p

@@ -77,10 +77,9 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-accent">New task</h1>
-        <TaskForm actionData={actionData} planId={planId} />
-      </div>
+      {/* <div className="max-w-xl mx-auto"> */}
+      <TaskForm actionData={actionData} planId={planId} />
+      {/* </div> */}
     </GlobalScreen>
   );
 }

@@ -10,12 +10,12 @@ import {
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
 
-export interface PromptsEmptyProps {
+export interface SkillsEmptyProps {
   className?: string;
   search?: string;
 }
 
-export const PromptsEmpty = (props: PromptsEmptyProps) => {
+export const SkillsEmpty = (props: SkillsEmptyProps) => {
   const { className, search } = props;
 
   // Hooks
@@ -36,18 +36,18 @@ export const PromptsEmpty = (props: PromptsEmptyProps) => {
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
       <EmptyTitle>
-        {search ? 'No prompts match your filters' : 'No prompts yet'}
+        {search ? 'No skills match your filters' : 'No skills yet'}
       </EmptyTitle>
       <EmptyDescription>
         {search
-          ? 'Try clearing the search to see all prompts.'
-          : 'Create your first prompt to get started.'}
+          ? 'Try clearing the search to see all skills.'
+          : 'Create your first skill to get started.'}
       </EmptyDescription>
       <Button asChild={true} variant="secondary">
         {search ? (
-          <Link to="/prompts">Clear filters</Link>
+          <Link to="/skills">Clear filters</Link>
         ) : (
-          <Link to="/prompts/create">New prompt</Link>
+          <Link to="/skills/create">New skill</Link>
         )}
       </Button>
     </Empty>

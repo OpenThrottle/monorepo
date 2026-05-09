@@ -55,7 +55,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `SettingsDebug | ${SITE_TITLE}` }];
+  return [{ title: `Settings | Debug | ${SITE_TITLE}` }];
 };
 
 export default function Component(
@@ -63,6 +63,17 @@ export default function Component(
 ): React.ReactElement {
   const { loaderData } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (!loaderData) {
     return (
       <GlobalScreen>

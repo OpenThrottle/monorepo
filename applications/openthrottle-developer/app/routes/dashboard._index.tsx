@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import { Link, useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
@@ -15,15 +14,18 @@ import {
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
+import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
+import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
 import { DashboardQueueStats } from '~/routing/dashboard/components/DashboardQueueStats';
+import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
+import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
+import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
-import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
-import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -103,11 +105,9 @@ export default function Component(
     <GlobalScreen
     // className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12"
     >
-      <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
-        <OpenThrottleStatCard title="Total plans" value={12} />
-        <OpenThrottleStatCard title="Active tasks" value={3} />
-        <OpenThrottleStatCard title="Scheduled tasks" value={23} />
-      </div>
+      <DashboardStats />
+      <DashboardIntroduction />
+      <DashboardToolbar />
 
       <div
         className="gap-4 md:gap-8 lg:gap-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
@@ -121,9 +121,13 @@ export default function Component(
 
           <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-bold">Daily Stats</h2>
+              <h2>Daily Stats</h2>
               <Button asChild={true} size="sm" variant="outline">
-                <Link to="/dashboard?modal=daily-stats" viewTransition={true}>
+                <Link
+                  preventScrollReset={true}
+                  to="/dashboard?modal=daily-stats"
+                  viewTransition={true}
+                >
                   Expand chart details
                 </Link>
               </Button>
@@ -132,7 +136,7 @@ export default function Component(
           </div>
 
           <div>
-            <h3 className="text-lg font-bold">PR Time in State</h3>
+            <h3>PR Time in State</h3>
             <DashboardPrTimeInStateCard
               prTimeInStateSummary={githubStats.prTimeInStateSummary}
             />
@@ -141,14 +145,14 @@ export default function Component(
           <DashboardQueueStats data={queues} />
 
           <div>
-            <h3 className="text-lg font-bold">Open PRs by Author</h3>
+            <h3>Open PRs by Author</h3>
             <DashboardOpenPrsByAuthorCard
               openPrCountByAuthor={githubStats.openPrCountByAuthor}
             />
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4">Development</h3>
+            <h3 className="text-lg mb-4">Development</h3>
             <p className="text-muted-foreground text-sm mb-4">
               Trigger a test websocket notification to verify the notification
               flow end-to-end. Check the notification bell for the alert.
