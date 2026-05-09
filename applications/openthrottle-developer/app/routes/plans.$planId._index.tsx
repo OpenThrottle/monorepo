@@ -150,6 +150,20 @@ export default function Component(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
 
+  // Setup
+
+  const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
+  const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
+  const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
+  const isBoardView = planTasksView === 'board';
+  const planDetailTab: PlanDetailTab =
+    parsePlanDetailTab(searchParams.get(PLANS_DETAIL_TAB_SEARCH_PARAM)) ??
+    'overview';
+
+  const planId = params.planId ?? '';
+  const status =
+    plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
+
   const ralphTuningJson = React.useMemo((): string => {
     const merged: WorkflowRalphRunOptionsInput = {
       ...workflowInput,
@@ -162,19 +176,12 @@ export default function Component(
     return tuning === undefined ? '' : JSON.stringify(tuning);
   }, [workflowInput, workflowTimeout]);
 
-  // Setup
-  const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
-  const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
-  const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
-  const isBoardView = planTasksView === 'board';
-  const planDetailTab: PlanDetailTab =
-    parsePlanDetailTab(searchParams.get(PLANS_DETAIL_TAB_SEARCH_PARAM)) ??
-    'overview';
-
+  // Handlers
   const onPlanDetailTabChange = (next: string): void => {
     const parsed = parsePlanDetailTab(next);
     const tab: PlanDetailTab = parsed ?? 'overview';
     const nextParams = new URLSearchParams(searchParams);
+
     if (tab === 'overview') {
       nextParams.delete(PLANS_DETAIL_TAB_SEARCH_PARAM);
     } else {
@@ -186,11 +193,7 @@ export default function Component(
       replace: true,
     });
   };
-  const planId = params.planId ?? '';
-  const status =
-    plan != null && isPlanStatusKey(plan.status) ? plan.status : 'PENDING';
 
-  // Handlers
   const onResetToDefaults = (): void => {
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),

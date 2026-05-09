@@ -23,8 +23,6 @@ export * from './components/GlobalTheme';
 // export * from './components/GlobalSignOut';
 // export * from './components/GlobalUserMenu';
 export * from './config';
+export * from './hooks/use-url-synced-overlay';
 // export * from './data';
-// export * from './hooks';
 // export * from './utils';
-
-export const REMOVE_ME = `We can remove this when we actually have some code to export.`;

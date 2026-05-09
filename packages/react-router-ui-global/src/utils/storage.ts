@@ -3,13 +3,14 @@ import {
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config/index';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 
 type ServerMetricsSnapshot = GetRootMetricsQuery['serverMetrics'];
 
 /**
  * @description Namespaced storage key; bump suffix when the on-disk JSON shape changes.
  */
-export const GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY = `openthrottle-developer:globalMetricsChartHistory:v1`;
+export const GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY = `${APP_NAME}:global-metrics:v1`;
 
 /**
  * @description Schema version stored inside the JSON payload (must match parsers).

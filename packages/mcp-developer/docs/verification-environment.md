@@ -74,6 +74,14 @@ These checks do **not** depend on which folder is the Cursor workspace root; the
    Adjust the host/port if **`API_URL_INTERNAL`** is not the default. Expect JSON with **`data.serverHealth`**.
 3. **In Cursor (secondary workspace):** after **`health`** succeeds in the MCP panel, call an authenticated tool (**`list_sources`**, **`list_plans_by_status`**, or **`create_plan`** / **`create_task`**) with **`MCP_DEVELOPER_AUTH_TOKEN`** set in the global MCP **`env`** block. **Required:** GraphQL base aligned with the server (**`/graphql`** on the same origin as **`API_URL_INTERNAL`**); token format and acquisition: [AUTH.md](./AUTH.md).
 
+### Containerized API — MCP on the host (Docker Compose)
+
+When **openthrottle-server** runs in Docker and publishes **`OPENTHROTTLE_SERVER_PORT`** to the host (see [compose-topology-phase-1.md](../../../docs/openthrottle/compose-topology-phase-1.md)), **Cursor and mcp-developer on the host** should target **`http://localhost:<port>/graphql`** (same host/port as **`GET /health`**). **`host.docker.internal`** is for processes **inside** a container to reach the host (or host-published ports); it is **not** the right URL for host-side MCP talking **into** a container that listens on `localhost:<published-port>`.
+
+**Validated:** With Postgres and Redis reachable from the API container (for example **`POSTGRES_HOST=host.docker.internal`** / **`REDIS_HOST=host.docker.internal`** when compose publishes **6010**/**6011** on the host), **`curl`** from macOS to **`http://localhost:<published-port>/graphql`** successfully exercised **`createPlan`** and **`createTask`** against the containerized API (investigation plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`**, smoke task).
+
+**Note:** A bare **`docker run`** of **`openthrottle-server:latest`** must include required env not baked into the image (for example **`BULLMQ_BOARD_ADMIN_USERNAME`** / **`BULLMQ_BOARD_ADMIN_PASSWORD`**); root **`docker-compose.yml`** supplies these via the **`openthrottle-server`** environment anchor.
+
 **Backlog (not blocking MCP):** storing **per-workspace or absolute repo roots** inside OpenThrottle for linking or semantic context remains a product/backlog item—the MCP uses HTTP to the server only. **Compose, bind mounts, worker paths, and Ollama reachability from containers** are tracked under investigation plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`**.
 
 ## Build and run the MCP locally

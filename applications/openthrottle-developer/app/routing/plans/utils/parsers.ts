@@ -15,7 +15,7 @@ export type PlanDetailTab =
 /**
  * @description Search param for the active tab on plan detail (`plansDetailTab`). Omitted when `overview`.
  */
-export const PLANS_DETAIL_TAB_SEARCH_PARAM = 'plansDetailTab' as const;
+export const PLANS_DETAIL_TAB_SEARCH_PARAM = 'tab';
 
 const PLAN_DETAIL_TAB_VALUES = new Set<string>([
   'configuration',

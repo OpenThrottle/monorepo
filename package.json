@@ -378,6 +378,11 @@
       "keytar",
       "msgpackr-extract",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ],
     "overrides": {

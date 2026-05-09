@@ -363,3 +363,30 @@ For **text fields**, keep **local state** for typing; commit identifiers or filt
 - [ ] Closing a **parent** clears **child** query keys.
 - [ ] Param-only UI updates use **`preventScrollReset`** where scroll preservation matters.
 - [ ] Loader reads **committed** params; search inputs use **local + debounced/blur/Enter** commit unless exempted.
+
+---
+
+## 11. Shared helper: `useUrlSyncedOverlay`
+
+[`@openthrottle/react-router-ui-global`](../../packages/react-router-ui-global/README.md) exports **`useUrlSyncedOverlay`** for the common case: one search param toggles open state (`param` equals `openValue`, default `open`), optional **`clearParamsOnClose`** removes nested keys when the overlay closes, and **`setSearchParamsOptions`** forwards [**`NavigateOptions`**](https://reactrouter.com/en/main/hooks/use-search-params) (defaults merge in **`preventScrollReset: true`**).
+
+Use it for controlled **`Dialog` / `Sheet` / `Drawer`** roots when you want the same behavior as the doc snippets in section 9 without duplicating merge logic. **`GlobalModal`** is implemented with this hook for a single-token dialog.
+
+```tsx
+import * as React from 'react';
+import { Sheet, SheetContent } from '@openthrottle/react-router-shadcn';
+import { useUrlSyncedOverlay } from '@openthrottle/react-router-ui-global';
+
+export const ExampleSheet = () => {
+  const { onOpenChange, open } = useUrlSyncedOverlay({
+    clearParamsOnClose: ['exampleConfirm'],
+    param: 'exampleSheet',
+  });
+
+  return (
+    <Sheet onOpenChange={onOpenChange} open={open}>
+      <SheetContent>{/* … */}</SheetContent>
+    </Sheet>
+  );
+};
+```

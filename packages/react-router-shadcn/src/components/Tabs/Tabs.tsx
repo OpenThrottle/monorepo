@@ -2,8 +2,9 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 import * as React from 'react';
 import { cn } from '../../utils/cn';
 
-export interface TabsProps
-  extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root> {}
+export interface TabsProps extends React.ComponentPropsWithoutRef<
+  typeof TabsPrimitive.Root
+> {}
 
 export const Tabs = React.forwardRef<
   React.ComponentRef<typeof TabsPrimitive.Root>,

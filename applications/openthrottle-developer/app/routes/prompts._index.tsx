@@ -135,7 +135,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
         <OpenThrottleStatCard title="Agents-type prompts" value={countAgents} />
         <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
         <OpenThrottleStatCard title="Total (this list)" value={total} />

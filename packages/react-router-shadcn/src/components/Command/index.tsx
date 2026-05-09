@@ -9,8 +9,8 @@ import {
   CommandList as CmdkCommandList,
   CommandSeparator as CmdkCommandSeparator,
 } from 'cmdk';
-import { cn } from '../utils/cn';
-import { Kbd } from './Kbd';
+import { cn } from '../../utils/cn';
+import { Kbd } from '../Kbd';
 
 const Command = React.forwardRef<
   React.ComponentRef<typeof CmdkCommand>,
