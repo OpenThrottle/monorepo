@@ -7,7 +7,13 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist"
+  ],
   "references": [
     {
       "path": "../../packages/ai-mcp/tsconfig.lib.json"

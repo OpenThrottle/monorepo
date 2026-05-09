@@ -9,7 +9,15 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ],
   "references": [
     {
       "path": "../nestjs-repositories/tsconfig.lib.json"
