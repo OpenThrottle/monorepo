@@ -40,10 +40,10 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build-package": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
+      "build": {
         "executor": "@nx/js:tsc"
       },
       "dev": {
@@ -56,7 +56,8 @@
       },
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {

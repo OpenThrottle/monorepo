@@ -10,7 +10,7 @@ describe('GlobalSidebarHeader Component', () => {
   let props: GlobalSidebarHeaderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { name: '' };
 
     const Component = () => <GlobalSidebarHeader {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

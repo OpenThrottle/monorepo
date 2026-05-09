@@ -46,9 +46,6 @@
       "type:package"
     ],
     "targets": {
-      "build": {
-        "executor": "@nx/js:tsc"
-      },
       "__dev": {
         "continuous": true,
         "executor": "@nx/js:tsc",
@@ -56,6 +53,9 @@
           "clean": false,
           "watch": true
         }
+      },
+      "build": {
+        "executor": "@nx/js:tsc"
       },
       "lint": {},
       "serve": {
@@ -70,7 +70,8 @@
         }
       },
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {},

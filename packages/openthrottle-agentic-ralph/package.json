@@ -57,7 +57,8 @@
           "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
           "cwd": "{workspaceRoot}"
         }
-      }
+      },
+      "typecheck-tests": {}
     }
   },
   "private": true,

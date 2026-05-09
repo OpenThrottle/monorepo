@@ -10,7 +10,7 @@ describe('OpenThrottleModal Component', () => {
   let props: OpenThrottleModalProps;
 
   beforeEach(() => {
-    props = {};
+    props = { param: 'modal', value: 'open' };
 
     const Component = () => <OpenThrottleModal {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

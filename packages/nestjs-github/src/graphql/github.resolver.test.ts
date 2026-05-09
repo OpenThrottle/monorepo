@@ -1,10 +1,13 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
+import type { GraphQLResolveInfo } from 'graphql';
 import type { PullListItemDto } from '../github/dto/pull-list-item.dto';
 import { GitHubService } from '../github/github.service';
 import { GithubResolver } from './github.resolver';
 import { GitHubStatsService } from './github-stats.service';
+
+const gqlInfo = {} as GraphQLResolveInfo;
 
 describe('GithubResolver', () => {
   let resolver: GithubResolver;
@@ -64,13 +67,16 @@ describe('GithubResolver', () => {
     test('returns array of PullListItemObject from GitHubService', async () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([mockPullDto]);
 
-      const result = await resolver.pulls({
-        base: null,
-        merged: null,
-        owner: 'owner',
-        repo: 'repo',
-        state: 'open',
-      });
+      const result = await resolver.pulls(
+        {
+          base: null,
+          merged: null,
+          owner: 'owner',
+          repo: 'repo',
+          state: 'open',
+        },
+        gqlInfo,
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0]?.author).toBe(mockPullDto.author);
@@ -95,13 +101,16 @@ describe('GithubResolver', () => {
     test('passes optional state, base, merged to GitHubService', async () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([]);
 
-      await resolver.pulls({
-        base: 'main',
-        merged: true,
-        owner: 'o',
-        repo: 'r',
-        state: 'all',
-      });
+      await resolver.pulls(
+        {
+          base: 'main',
+          merged: true,
+          owner: 'o',
+          repo: 'r',
+          state: 'all',
+        },
+        gqlInfo,
+      );
 
       expect(githubService.listPulls).toHaveBeenCalledWith('o', 'r', {
         base: 'main',
@@ -113,13 +122,16 @@ describe('GithubResolver', () => {
     test('returns empty array when no pulls', async () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([]);
 
-      const result = await resolver.pulls({
-        base: null,
-        merged: null,
-        owner: 'owner',
-        repo: 'repo',
-        state: null,
-      });
+      const result = await resolver.pulls(
+        {
+          base: null,
+          merged: null,
+          owner: 'owner',
+          repo: 'repo',
+          state: null,
+        },
+        gqlInfo,
+      );
 
       expect(result).toEqual([]);
       expect(githubService.listPulls).toHaveBeenCalledWith('owner', 'repo', {
@@ -134,11 +146,14 @@ describe('GithubResolver', () => {
     test('returns PullListItemObject from GitHubService', async () => {
       vi.mocked(githubService.getPullListItem).mockResolvedValue(mockPullDto);
 
-      const result = await resolver.pull({
-        number: 1,
-        owner: 'owner',
-        repo: 'repo',
-      });
+      const result = await resolver.pull(
+        {
+          number: 1,
+          owner: 'owner',
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(result).toEqual(mockPullDto);
       expect(githubService.getPullListItem).toHaveBeenCalledWith(
@@ -151,11 +166,14 @@ describe('GithubResolver', () => {
     test('returns null when GitHubService returns null', async () => {
       vi.mocked(githubService.getPullListItem).mockResolvedValue(null);
 
-      const result = await resolver.pull({
-        number: 404,
-        owner: 'owner',
-        repo: 'repo',
-      });
+      const result = await resolver.pull(
+        {
+          number: 404,
+          owner: 'owner',
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(result).toBeNull();
     });
@@ -168,10 +186,14 @@ describe('GithubResolver', () => {
         { author: 'bob', openCount: 1 },
       ]);
 
-      const result = await resolver.openPrCountByAuthor({
-        owner: 'owner',
-        repo: 'repo',
-      });
+      const result = await resolver.openPrCountByAuthor(
+        {
+          owner: 'owner',
+          repo: 'repo',
+          state: 'open',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
         'owner',
@@ -187,10 +209,14 @@ describe('GithubResolver', () => {
         [],
       );
 
-      const result = await resolver.openPrCountByAuthor({
-        owner: 'o',
-        repo: 'r',
-      });
+      const result = await resolver.openPrCountByAuthor(
+        {
+          owner: 'o',
+          repo: 'r',
+          state: 'open',
+        },
+        gqlInfo,
+      );
 
       expect(result).toEqual([]);
     });
@@ -203,10 +229,14 @@ describe('GithubResolver', () => {
         { avgDaysInState: 4.0, count: 10, state: 'merged' },
       ]);
 
-      const result = await resolver.prTimeInStateSummary({
-        owner: 'owner',
-        repo: 'repo',
-      });
+      const result = await resolver.prTimeInStateSummary(
+        {
+          owner: 'owner',
+          repo: 'repo',
+          state: 'open',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getPrTimeInStateSummary).toHaveBeenCalledWith(
         'owner',
@@ -230,10 +260,14 @@ describe('GithubResolver', () => {
         [],
       );
 
-      const result = await resolver.prTimeInStateSummary({
-        owner: 'o',
-        repo: 'r',
-      });
+      const result = await resolver.prTimeInStateSummary(
+        {
+          owner: 'o',
+          repo: 'r',
+          state: 'open',
+        },
+        gqlInfo,
+      );
 
       expect(result).toEqual([]);
     });
@@ -254,12 +288,15 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.linesAddedDeleted({
-        maxPrs: null,
-        owner: 'owner',
-        period: 'month',
-        repo: 'repo',
-      });
+      const result = await resolver.linesAddedDeleted(
+        {
+          maxPrs: null,
+          owner: 'owner',
+          period: 'month',
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
@@ -283,12 +320,15 @@ describe('GithubResolver', () => {
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
       ).mockResolvedValue([]);
 
-      await resolver.linesAddedDeleted({
-        maxPrs: 50,
-        owner: 'o',
-        period: 'week',
-        repo: 'r',
-      });
+      await resolver.linesAddedDeleted(
+        {
+          maxPrs: 50,
+          owner: 'o',
+          period: 'week',
+          repo: 'r',
+        },
+        gqlInfo,
+      );
 
       expect(
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
@@ -303,12 +343,15 @@ describe('GithubResolver', () => {
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
       ).mockResolvedValue([]);
 
-      await resolver.linesAddedDeleted({
-        maxPrs: null,
-        owner: 'o',
-        period: null,
-        repo: 'r',
-      });
+      await resolver.linesAddedDeleted(
+        {
+          maxPrs: null,
+          owner: 'o',
+          period: null,
+          repo: 'r',
+        },
+        gqlInfo,
+      );
 
       expect(
         githubStatsService.getLinesAddedDeletedByPeriodOrAuthor,
@@ -330,11 +373,14 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.openToMergedCycleTime({
-        owner: 'owner',
-        period: null,
-        repo: 'repo',
-      });
+      const result = await resolver.openToMergedCycleTime(
+        {
+          owner: 'owner',
+          period: null,
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getOpenToMergedCycleTime).toHaveBeenCalledWith(
         'owner',
@@ -355,11 +401,14 @@ describe('GithubResolver', () => {
         { medianDays: 3, p90Days: 7, period: '2026-02', prCount: 4 },
       ]);
 
-      await resolver.openToMergedCycleTime({
-        owner: 'o',
-        period: 'month',
-        repo: 'r',
-      });
+      await resolver.openToMergedCycleTime(
+        {
+          owner: 'o',
+          period: 'month',
+          repo: 'r',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getOpenToMergedCycleTime).toHaveBeenCalledWith(
         'o',
@@ -376,11 +425,14 @@ describe('GithubResolver', () => {
         { count: 3, label: 'feature' },
       ]);
 
-      const result = await resolver.prCountByLabel({
-        owner: 'owner',
-        repo: 'repo',
-        state: null,
-      });
+      const result = await resolver.prCountByLabel(
+        {
+          owner: 'owner',
+          repo: 'repo',
+          state: null,
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getPrCountByLabel).toHaveBeenCalledWith(
         'owner',
@@ -395,11 +447,14 @@ describe('GithubResolver', () => {
     test('passes state to service when provided', async () => {
       vi.mocked(githubStatsService.getPrCountByLabel).mockResolvedValue([]);
 
-      await resolver.prCountByLabel({
-        owner: 'o',
-        repo: 'r',
-        state: 'open',
-      });
+      await resolver.prCountByLabel(
+        {
+          owner: 'o',
+          repo: 'r',
+          state: 'open',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getPrCountByLabel).toHaveBeenCalledWith(
         'o',
@@ -416,11 +471,14 @@ describe('GithubResolver', () => {
         { count: 3, period: '2026-01' },
       ]);
 
-      const result = await resolver.prsMergedPerPeriod({
-        owner: 'owner',
-        period: 'month',
-        repo: 'repo',
-      });
+      const result = await resolver.prsMergedPerPeriod(
+        {
+          owner: 'owner',
+          period: 'month',
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getPrsMergedPerPeriod).toHaveBeenCalledWith(
         'owner',
@@ -437,11 +495,14 @@ describe('GithubResolver', () => {
         { count: 2, period: '2026-W06' },
       ]);
 
-      await resolver.prsMergedPerPeriod({
-        owner: 'o',
-        period: 'week',
-        repo: 'r',
-      });
+      await resolver.prsMergedPerPeriod(
+        {
+          owner: 'o',
+          period: 'week',
+          repo: 'r',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getPrsMergedPerPeriod).toHaveBeenCalledWith(
         'o',
@@ -462,12 +523,15 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.reviewCycleTime({
-        maxPrs: null,
-        owner: 'owner',
-        period: null,
-        repo: 'repo',
-      });
+      const result = await resolver.reviewCycleTime(
+        {
+          maxPrs: null,
+          owner: 'owner',
+          period: null,
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getReviewCycleTime).toHaveBeenCalledWith(
         'owner',
@@ -488,12 +552,15 @@ describe('GithubResolver', () => {
         { medianDays: 1, p90Days: 2, period: '2026-02', prCount: 3 },
       ]);
 
-      await resolver.reviewCycleTime({
-        maxPrs: 50,
-        owner: 'o',
-        period: 'month',
-        repo: 'r',
-      });
+      await resolver.reviewCycleTime(
+        {
+          maxPrs: 50,
+          owner: 'o',
+          period: 'month',
+          repo: 'r',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getReviewCycleTime).toHaveBeenCalledWith(
         'o',
@@ -514,12 +581,15 @@ describe('GithubResolver', () => {
         },
       ]);
 
-      const result = await resolver.commitsPerPr({
-        maxPrs: null,
-        owner: 'owner',
-        period: 'month',
-        repo: 'repo',
-      });
+      const result = await resolver.commitsPerPr(
+        {
+          maxPrs: null,
+          owner: 'owner',
+          period: 'month',
+          repo: 'repo',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getCommitsPerPr).toHaveBeenCalledWith(
         'owner',
@@ -538,12 +608,15 @@ describe('GithubResolver', () => {
     test('passes maxPrs and period to service', async () => {
       vi.mocked(githubStatsService.getCommitsPerPr).mockResolvedValue([]);
 
-      await resolver.commitsPerPr({
-        maxPrs: 50,
-        owner: 'o',
-        period: 'week',
-        repo: 'r',
-      });
+      await resolver.commitsPerPr(
+        {
+          maxPrs: 50,
+          owner: 'o',
+          period: 'week',
+          repo: 'r',
+        },
+        gqlInfo,
+      );
 
       expect(githubStatsService.getCommitsPerPr).toHaveBeenCalledWith(
         'o',

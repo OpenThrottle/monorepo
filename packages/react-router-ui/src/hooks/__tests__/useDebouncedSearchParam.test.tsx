@@ -8,6 +8,8 @@ import {
   type UseDebouncedSearchParamOptions,
 } from '../useDebouncedSearchParam';
 
+const DISPLAY_ID = 'search-params-string';
+
 function SearchHarness(props: {
   readonly options?: UseDebouncedSearchParamOptions;
 }) {

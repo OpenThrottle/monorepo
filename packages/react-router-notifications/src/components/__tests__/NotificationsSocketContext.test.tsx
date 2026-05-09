@@ -1,18 +1,21 @@
+import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { NotificationsSocketContext } from '../NotificationsSocketContext';
-import type { NotificationsSocketContextProps } from '../NotificationsSocketContext';
 
-describe('NotificationsSocketContext Component', () => {
+describe('NotificationsSocketContext', () => {
   let component: RenderResult;
-  let props: NotificationsSocketContextProps;
 
   beforeEach(() => {
-    props = {};
-
-    const Component = () => <NotificationsSocketContext {...props} />;
+    const Component = () => (
+      <NotificationsSocketContext.Provider
+        value={{ socket: null, status: 'disconnected' }}
+      >
+        <span data-testid="ctx-child">child</span>
+      </NotificationsSocketContext.Provider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

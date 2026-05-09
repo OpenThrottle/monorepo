@@ -18,5 +18,6 @@
     "tests/**/*.test.tsx",
     "vitest.setup.ts",
     "vitest.setup.tsx"
-  ]
+  ],
+  "exclude": ["src/generators/**/files/**"]
 }

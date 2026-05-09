@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import type { DeepPartial } from 'typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Project } from './project.entity';
 import { projectsFactory } from './projects.factory';
@@ -15,12 +16,16 @@ describe('ProjectsService', () => {
 
   beforeAll(async () => {
     mockRepo = createMock<GetRepository>({
-      create: (data) => projectsFactory.build(data),
+      create: (data: DeepPartial<Project>) =>
+        projectsFactory.build(
+          data as Parameters<typeof projectsFactory.build>[0],
+        ),
       delete: () => Promise.resolve({ affected: 1, raw: [] }),
-      find: () => Promise.resolve(projectsFactory.buildList(2)),
-      findOne: () => Promise.resolve(projectsFactory.build()),
-      merge: () => {},
-      save: (entity) => Promise.resolve(entity),
+      find: () => Promise.resolve(projectsFactory.buildList(2) as Project[]),
+      findOne: () => Promise.resolve(projectsFactory.build() as Project),
+      merge: (mergeIntoEntity: Project) => mergeIntoEntity,
+      save: (entity: DeepPartial<Project>) =>
+        Promise.resolve(entity as Project),
     });
     const app = await Test.createTestingModule({
       controllers: [],

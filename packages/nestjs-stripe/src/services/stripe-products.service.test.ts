@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- Stripe SDK mocks and fixture objects */
 /**
  * @description Tests for {@link StripeProductsService} with mocked Stripe API.
  */
 
 import { Test } from '@nestjs/testing';
+import Stripe from 'stripe';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   partitionPricesByDefault,
@@ -156,12 +156,9 @@ describe('StripeProductsService', () => {
   });
 
   it('getProductById returns null on resource_missing', async () => {
-    const { default: Stripe } = await import('stripe');
-
     mockProductsRetrieve.mockRejectedValue(
       Object.assign(
         new Stripe.errors.StripeInvalidRequestError({
-          doc_url: '',
           message: 'No such product',
           param: 'id',
           type: 'invalid_request_error',

@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { Test } from '@nestjs/testing';
-import type { Socket } from 'socket.io';
+import type { Server, Socket } from 'socket.io';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   applyNestjsLoggingModuleDefaults,
@@ -98,6 +98,22 @@ interface MockLogSocket {
 }
 
 /**
+ * @description {@link buildNestjsLoggingWebsocketGatewayClass} is typed as `Type<object>`;
+ * tests need the public handler surface for typechecking. Payload/result shapes are asserted in tests.
+ */
+interface CompiledNestjsLoggingWebsocketGateway {
+  server: Server;
+  handleConnection(client: Socket): void;
+  handleDisconnect(client: Socket): void;
+  onLogsHistory(payload: unknown): Promise<any>;
+  onLogsReplay(payload: unknown): Promise<any>;
+  onLogsSubscribe(client: Socket, payload: unknown): any;
+  onLogsTail(client: Socket, payload: unknown): Promise<any>;
+  onLogsUnsubscribe(client: Socket, payload: unknown): any;
+  onModuleDestroy(): void;
+}
+
+/**
  * @description Minimal Socket.IO stub for gateway tests (only `emit` / `disconnect` are used).
  */
 const createMockSocket = (): MockLogSocket => {
@@ -106,8 +122,7 @@ const createMockSocket = (): MockLogSocket => {
   const stub = { disconnect, emit };
 
   return {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Socket.IO `Socket` is a large interface; gateway tests only need emit/disconnect.
-    client: stub as Socket,
+    client: stub as unknown as Socket,
     disconnect,
     emit,
   };
@@ -141,7 +156,7 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
       ],
     }).compile();
 
-    return moduleRef.get(GatewayClass);
+    return moduleRef.get(GatewayClass) as CompiledNestjsLoggingWebsocketGateway;
   };
 
   it('disconnects the socket when websocket is disabled on connection', async () => {
@@ -258,7 +273,6 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     const gateway = await compileGateway(hub, resolved);
     const disconnectSockets = vi.fn();
 
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- minimal Socket.IO server stub
     gateway.server = { disconnectSockets } as unknown as typeof gateway.server;
 
     gateway.onModuleDestroy();
@@ -477,7 +491,10 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     }
 
     expect(ok.lines).toHaveLength(2);
-    expect(ok.lines.map((l) => l.message)).toEqual(['one', 'two']);
+    expect(ok.lines.map((l: { message: string }) => l.message)).toEqual([
+      'one',
+      'two',
+    ]);
     expect(ok.nextByteOffset).toBe(999);
   });
 
@@ -685,7 +702,10 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     gateway.handleConnection(client);
     gateway.onLogsSubscribe(client, {});
 
-    const listener = hubSubscribe.mock.calls[0]?.[0];
+    const call0 = hubSubscribe.mock.calls[0] as unknown as
+      | [(record: StructuredLogRecord) => void]
+      | undefined;
+    const listener = call0?.[0];
 
     if (listener === undefined) {
       throw new Error('expected hub listener');

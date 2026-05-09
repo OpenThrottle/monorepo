@@ -10,7 +10,7 @@ describe('GlobalHeading Component', () => {
   let props: GlobalHeadingProps;
 
   beforeEach(() => {
-    props = {};
+    props = { title: '' };
 
     const Component = () => <GlobalHeading {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

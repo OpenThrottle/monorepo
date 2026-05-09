@@ -61,7 +61,8 @@
       },
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "private": true,

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import type { DeepPartial } from 'typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { DailyStat } from './daily-stat.entity';
 import { dailyStatsFactory } from './daily-stats.factory';
@@ -24,22 +25,25 @@ describe('DailyStatsService', () => {
         {
           provide: getRepositoryToken(DailyStat),
           useValue: createMock<GetRepository>({
-            create: (d) => ({ ...dailyStatsFactory.build(), ...d }),
+            create: (d: DeepPartial<DailyStat>) => ({
+              ...dailyStatsFactory.build(),
+              ...d,
+            }),
             findOne: async ({ where }) => {
               return (
                 // FIXME: Tighten this up
-                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
                 saved.find((r) => r.date === (where as { date: Date }).date) ??
                 null
               );
             },
-            save: async (e) => {
+            save: async (e: DeepPartial<DailyStat>) => {
               // FIXME: Tighten this up
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
               saved.push(e as DailyStat);
 
               // FIXME: Tighten this up
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
               return e as DailyStat;
             },
           }),

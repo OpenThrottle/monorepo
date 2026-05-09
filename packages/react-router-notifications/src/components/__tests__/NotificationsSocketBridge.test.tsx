@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { NotificationsStoreProvider } from '../../data/notifications-store.context';
+import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 import { getSystemNotificationsPreference } from '../../utils/system-notification';
 import { NotificationsSocketBridge } from '../NotificationsSocketBridge';
 import type { NotificationsSocketBridgeProps } from '../NotificationsSocketBridge';

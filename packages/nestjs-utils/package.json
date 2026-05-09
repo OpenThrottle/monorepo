@@ -37,9 +37,6 @@
       "type:package"
     ],
     "targets": {
-      "build": {
-        "executor": "@nx/js:tsc"
-      },
       "__dev": {
         "continuous": true,
         "executor": "@nx/js:tsc",
@@ -48,9 +45,13 @@
           "watch": true
         }
       },
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "private": true,

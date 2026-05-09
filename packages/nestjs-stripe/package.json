@@ -53,7 +53,8 @@
       },
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "devDependencies": {},

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
-import type { WorkflowRalphRunOptionsShape } from './contract/index.js';
+import type { WorkflowOptions } from './contract/flow-context.js';
 import {
   DEFAULT_RALPH_RUNNER,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
-} from './contract/index.js';
+} from './contract/flow-context.js';
 import {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
@@ -45,12 +45,12 @@ describe('RalphFlowContext from GraphQL / run options', () => {
       planId,
       ralph: {
         backend: 'cursor',
-        debug: RalphNestedDebugCli.Debug,
         iterationTimeoutSeconds: 120,
         iterations: 3,
         model: 'fast',
         project: 'openthrottle-workflows',
         prompt: '/custom',
+        ralphDebugCli: RalphNestedDebugCli.Debug,
       },
     });
 
@@ -86,7 +86,7 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     const ctx = buildRalphFlowContextFromPlanRunTuning({
       mode: 'plan',
       planId,
-      ralph: { debug: RalphNestedDebugCli.Verbose },
+      ralph: { ralphDebugCli: RalphNestedDebugCli.Verbose },
     });
 
     expect(ctx.debug).toBe('verbose');
@@ -96,7 +96,7 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     const ctx = buildRalphFlowContextFromPlanRunTuning({
       mode: 'plan',
       planId,
-      ralph: { debug: RalphNestedDebugCli.Omit },
+      ralph: { ralphDebugCli: RalphNestedDebugCli.Omit },
     });
 
     expect(ctx.debug).toBe('omit');
@@ -191,7 +191,7 @@ describe('resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning', () => {
  */
 describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFromRunOptionsShape)', () => {
   it('round-trips a full WorkflowRalphRunOptionsShape like the plan run form', () => {
-    const uiLike: WorkflowRalphRunOptionsShape = {
+    const uiLike: WorkflowOptions = {
       debug: 'debug',
       iterationMax: 7,
       iterationTimeout: 90,
@@ -227,7 +227,7 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
 
   it('task mode keeps iterations for --iterations semantics while iterations is 1 for orchestration', () => {
     const taskId = '18142b71-cca2-4242-a4e5-a5b984c7e61d';
-    const uiLike: WorkflowRalphRunOptionsShape = {
+    const uiLike: WorkflowOptions = {
       debug: 'omit',
       iterationMax: 25,
       iterationTimeout: 90,

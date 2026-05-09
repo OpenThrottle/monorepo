@@ -34,13 +34,14 @@
       "type:package"
     ],
     "targets": {
+      "__build-package": {},
       "build": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {},

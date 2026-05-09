@@ -129,6 +129,7 @@
       "type:package"
     ],
     "targets": {
+      "_____________________PROJECT_SPECIFIC_____________________": {},
       "build": {
         "executor": "nx:noop",
         "dependsOn": [
@@ -146,9 +147,6 @@
         }
       },
       "lint": {},
-      "test": {},
-      "typecheck": {},
-      "_____________________PROJECT_SPECIFIC_____________________": {},
       "project:build": {
         "dependsOn": [
           "project:typescript"
@@ -171,7 +169,10 @@
       },
       "project:typescript": {
         "executor": "@nx/js:tsc"
-      }
+      },
+      "test": {},
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "private": true,

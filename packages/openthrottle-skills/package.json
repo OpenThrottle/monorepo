@@ -28,7 +28,8 @@
       "__build-package": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {},

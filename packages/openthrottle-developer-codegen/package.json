@@ -31,7 +31,8 @@
       "codegen-graphql-watch": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {},

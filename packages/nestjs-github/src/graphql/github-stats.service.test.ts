@@ -1,6 +1,6 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { createMock } from '@golevelup/ts-vitest';
 import { GitHubService } from '../github/github.service';
 import { GitHubStatsService } from './github-stats.service';
 
@@ -36,7 +36,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: null,
           number: 1,
@@ -46,7 +49,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: null,
           number: 2,
@@ -56,7 +62,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: null,
           number: 3,
@@ -92,7 +101,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: '',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: null,
           number: 1,
@@ -117,7 +129,10 @@ describe('GitHubStatsService', () => {
         .mockResolvedValueOnce([
           {
             author: 'alice',
+            baseRef: null,
             createdAt: '2026-01-01T00:00:00Z',
+            headRef: null,
+            headSha: null,
             htmlUrl: '',
             mergedAt: null,
             number: 1,
@@ -129,7 +144,10 @@ describe('GitHubStatsService', () => {
         .mockResolvedValueOnce([
           {
             author: 'bob',
+            baseRef: null,
             createdAt: '2026-01-01T00:00:00Z',
+            headRef: null,
+            headSha: null,
             htmlUrl: '',
             mergedAt: '2026-01-11T00:00:00Z',
             number: 2,
@@ -139,7 +157,10 @@ describe('GitHubStatsService', () => {
           },
           {
             author: 'bob',
+            baseRef: null,
             createdAt: '2026-01-05T00:00:00Z',
+            headRef: null,
+            headSha: null,
             htmlUrl: '',
             mergedAt: null,
             number: 3,
@@ -198,7 +219,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-01T00:00:00Z',
           number: 1,
@@ -208,7 +232,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-01T00:00:00Z',
           number: 2,
@@ -272,7 +299,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-01T00:00:00Z',
           number: 1,
@@ -282,7 +312,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-01T00:00:00Z',
           number: 2,
@@ -340,7 +373,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-02T00:00:00Z',
           number: 1,
@@ -350,7 +386,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-11T00:00:00Z',
           number: 2,
@@ -360,7 +399,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-06T00:00:00Z',
           number: 3,
@@ -392,7 +434,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-11T00:00:00Z',
           number: 1,
@@ -402,7 +447,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '2026-02-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-03T00:00:00Z',
           number: 2,
@@ -450,7 +498,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: null,
           number: 1,
@@ -548,7 +599,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-15T00:00:00Z',
           number: 1,
@@ -558,7 +612,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-20T00:00:00Z',
           number: 2,
@@ -568,7 +625,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-02-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-10T00:00:00Z',
           number: 3,
@@ -601,7 +661,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-05T00:00:00Z',
           number: 1,
@@ -611,7 +674,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-12T00:00:00Z',
           number: 2,
@@ -651,7 +717,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: null,
           number: 1,
@@ -681,7 +750,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-05T00:00:00Z',
           number: 1,
@@ -691,7 +763,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-12T00:00:00Z',
           number: 2,
@@ -741,7 +816,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-06T00:00:00Z',
           number: 1,
@@ -771,7 +849,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '2026-01-01T00:00:00Z',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-05T00:00:00Z',
           number: 1,
@@ -799,7 +880,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-15T00:00:00Z',
           number: 1,
@@ -809,7 +893,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-10T00:00:00Z',
           number: 2,
@@ -867,7 +954,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-05T00:00:00Z',
           number: 1,
@@ -877,7 +967,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-10T00:00:00Z',
           number: 2,
@@ -907,7 +1000,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-10T00:00:00Z',
           number: 1,
@@ -946,7 +1042,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-01T00:00:00Z',
           number: 1,
@@ -956,7 +1055,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-15T00:00:00Z',
           number: 2,
@@ -1006,7 +1108,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-02-01T00:00:00Z',
           number: 1,
@@ -1032,7 +1137,10 @@ describe('GitHubStatsService', () => {
       vi.mocked(githubService.listPulls).mockResolvedValue([
         {
           author: 'alice',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-01T00:00:00Z',
           number: 1,
@@ -1042,7 +1150,10 @@ describe('GitHubStatsService', () => {
         },
         {
           author: 'bob',
+          baseRef: null,
           createdAt: '',
+          headRef: null,
+          headSha: null,
           htmlUrl: '',
           mergedAt: '2026-01-02T00:00:00Z',
           number: 2,

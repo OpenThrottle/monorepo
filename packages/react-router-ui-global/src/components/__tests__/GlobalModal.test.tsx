@@ -10,7 +10,7 @@ describe('GlobalModal Component', () => {
   let props: GlobalModalProps;
 
   beforeEach(() => {
-    props = {};
+    props = { param: 'modal', value: 'open' };
 
     const Component = () => <GlobalModal {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

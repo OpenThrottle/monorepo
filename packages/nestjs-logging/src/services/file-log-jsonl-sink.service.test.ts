@@ -7,13 +7,16 @@ import {
   applyNestjsLoggingModuleDefaults,
   NESTJS_LOGGING_MODULE_OPTIONS,
 } from '../config/nestjs-logging.options';
-import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels';
+import {
+  NESTJS_LOGGING_LEVELS,
+  type NestjsLoggingLevel,
+} from '../config/nestjs-logging-levels';
 import type { StructuredLogRecord } from '../ports/logging-ports';
 import { FileLogJsonlSink } from './file-log-jsonl-sink.service';
 
 const baseRecord = (
   message: string,
-  level = NESTJS_LOGGING_LEVELS.log,
+  level: NestjsLoggingLevel = NESTJS_LOGGING_LEVELS.log,
 ): StructuredLogRecord => ({
   context: 'Test',
   correlationId: undefined,
