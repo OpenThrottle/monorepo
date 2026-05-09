@@ -51,7 +51,9 @@
           "rootDir": "{projectRoot}/src",
           "tsConfig": "{projectRoot}/tsconfig.lib.json"
         }
-      }
+      },
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {},

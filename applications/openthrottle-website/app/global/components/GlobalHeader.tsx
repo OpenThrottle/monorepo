@@ -1,12 +1,9 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
-import {
-  FEATURE_BETA_PREVIEW,
-  OPEN_THROTTLE_GITHUB_URL,
-} from '@openthrottle/react-router-utils';
+import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import { SITE_SUBDOMAIN } from '~/global/config/settings';
 
 export interface GlobalHeaderProps {
@@ -21,59 +18,6 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
   // Setup
 
   // Handlers
-  const renderNavItems = () => {
-    if (!FEATURE_BETA_PREVIEW) return null;
-
-    return (
-      <>
-        {/*
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/"
-          viewTransition={true}
-        >
-          About
-        </NavLink>
-
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/#features"
-          viewTransition={true}
-        >
-          Features
-        </NavLink>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/#how-it-works"
-          viewTransition={true}
-        >
-          How it works
-        </NavLink>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/#built-by-engineers"
-          viewTransition={true}
-        >
-          Built By Engineers
-        </NavLink>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/case-studies"
-          viewTransition={true}
-        >
-          Case Studies
-        </NavLink>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/pricing"
-          viewTransition={true}
-        >
-          Pricing
-        </NavLink>
-        */}
-      </>
-    );
-  };
 
   // Markup
 
@@ -99,8 +43,6 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}
         >
-          <div className="flex gap-1 mr-8 h-full">{renderNavItems()}</div>
-
           <NavLink
             // className="text-sm h-full hover:text-accent p-4 transition"
             target="_blank"

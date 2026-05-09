@@ -1,10 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router';
-import {
-  ENV_SOURCE,
-  FEATURE_BETA_PREVIEW,
-} from '@openthrottle/react-router-utils';
+import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import { NotificationStatusBadge } from '@openthrottle/react-router-notifications';
 // import { ServerHealthObject } from '~/__generated__/graphql';
 
@@ -57,7 +54,6 @@ export const GlobalFooter = (props: GlobalFooterProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!FEATURE_BETA_PREVIEW) return null;
 
   return (
     <footer

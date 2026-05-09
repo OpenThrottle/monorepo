@@ -74,6 +74,7 @@ import {
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
+import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate
@@ -274,19 +275,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="min-h-screen flex flex-col relative">
-        <NotificationsStoreProvider>
-          <NotificationsSocketBridge
-            webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
-          >
-            <div className="flex flex-1 flex-col">{children}</div>
-          </NotificationsSocketBridge>
-        </NotificationsStoreProvider>
+        <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />
         <ScrollRestoration />
-
-        {/* FIXME: Uncomment this when we have a production environment */}
-        {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />
@@ -339,20 +331,18 @@ export default function App(): React.ReactElement {
   const submitCommanderSearch = React.useCallback(
     (fields: CommanderSearchFields) => {
       const body: Record<string, string> = { intent: 'commander-search' };
-      if (fields.jump) {
-        body.jump = fields.jump;
-      }
-      if (fields.id) {
-        body.id = fields.id;
-      }
-      if (fields.id2) {
-        body.id2 = fields.id2;
-      }
+
+      if (fields.id) body.id = fields.id;
+      if (fields.id2) body.id2 = fields.id2;
+      if (fields.jump) body.jump = fields.jump;
+
       if (fields.q !== undefined && fields.q !== '') {
         body.q = fields.q;
       }
+
       fetcher.submit(body, { method: 'post' });
     },
+
     [fetcher],
   );
 
@@ -382,79 +372,87 @@ export default function App(): React.ReactElement {
 
   return (
     <>
-      <GlobalProviders>
-        <GlobalLayout
-          data={dataNavigationV2}
-          health={data?.serverHealth}
-          overrides={{ footer: isFooterHidden }}
+      <NotificationsStoreProvider>
+        <NotificationsSocketBridge
+          webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
         >
-          <GlobalRootLoaderFailureBanner
-            diagnostics={data?.rootLoaderDiagnostics}
-            failure={data?.rootLoaderFailure ?? null}
-            isRevalidating={revalidator.state === 'loading'}
-            onRetry={handleRootLoaderRetry}
-            userLoadOk={data?.userLoadOk !== false}
-          />
+          <GlobalProviders>
+            <GlobalLayout
+              data={dataNavigationV2}
+              health={data?.serverHealth}
+              overrides={{ footer: isFooterHidden }}
+            >
+              <GlobalRootLoaderFailureBanner
+                diagnostics={data?.rootLoaderDiagnostics}
+                failure={data?.rootLoaderFailure ?? null}
+                isRevalidating={revalidator.state === 'loading'}
+                onRetry={handleRootLoaderRetry}
+                userLoadOk={data?.userLoadOk !== false}
+              />
 
-          <GlobalServerHealthBanner
-            health={data?.serverHealth}
-            suppress={data?.rootLoaderFailure?.step === 'health'}
-          />
+              <GlobalServerHealthBanner
+                health={data?.serverHealth}
+                suppress={data?.rootLoaderFailure?.step === 'health'}
+              />
 
-          {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
-          <Outlet />
-          {!isMetricsHidden ? (
-            <GlobalMetrics
-              definitionsHref="/settings/debug#server-metrics-definitions"
-              diagnosticsHref="/settings/debug#graphql-endpoint-health"
-            />
-          ) : null}
+              {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
+              <Outlet />
+              {!isMetricsHidden ? (
+                <GlobalMetrics
+                  definitionsHref="/settings/debug#server-metrics-definitions"
+                  diagnosticsHref="/settings/debug#graphql-endpoint-health"
+                />
+              ) : null}
 
-          <OpenThrottleCommander
-            className="m-0! p-0!"
-            emptyStateExtras={commanderEmptyExtras}
-            emptyStateMessage={
-              <span className="block px-2 text-center leading-relaxed text-sm">
-                <span className="block font-medium">
-                  Nothing matched that filter
-                </span>
-                <span className="mt-2 block text-xs text-muted-foreground">
-                  <span className="block">
-                    1) Keep typing to narrow the list, or 2) paste one Cortex
-                    UUID for plan/queue/generator/search rows, or 3) paste two
-                    UUIDs with <code className="text-[10px]">/</code> or a space
-                    to jump to a queue job or a plan task.
+              <OpenThrottleCommander
+                className="m-0! p-0!"
+                emptyStateExtras={commanderEmptyExtras}
+                emptyStateMessage={
+                  <span className="block px-2 text-center leading-relaxed text-sm">
+                    <span className="block font-medium">
+                      Nothing matched that filter
+                    </span>
+                    <span className="mt-2 block text-xs text-muted-foreground">
+                      <span className="block">
+                        1) Keep typing to narrow the list, or 2) paste one
+                        Cortex UUID for plan/queue/generator/search rows, or 3)
+                        paste two UUIDs with{' '}
+                        <code className="text-[10px]">/</code> or a space to
+                        jump to a queue job or a plan task.
+                      </span>
+                    </span>
+                    <span className="mt-2 block text-xs text-muted-foreground">
+                      When you have typed text (even if it is not a UUID), the
+                      list below offers browse shortcuts and a full-text search
+                      action.
+                    </span>
+                    <span className="mt-2 block text-[10px] text-muted-foreground">
+                      Server metrics (when visible) use{' '}
+                      <code className="text-[10px]">serverMetrics</code> from
+                      openthrottle-server; definitions and GraphQL health:
+                      Settings → Debug.
+                    </span>
                   </span>
-                </span>
-                <span className="mt-2 block text-xs text-muted-foreground">
-                  When you have typed text (even if it is not a UUID), the list
-                  below offers browse shortcuts and a full-text search action.
-                </span>
-                <span className="mt-2 block text-[10px] text-muted-foreground">
-                  Server metrics (when visible) use{' '}
-                  <code className="text-[10px]">serverMetrics</code> from
-                  openthrottle-server; definitions and GraphQL health: Settings
-                  → Debug.
-                </span>
-              </span>
-            }
-            footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
-            groups={groups}
-            onEmptyStateSearch={handleSearch}
-            placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
-          />
-        </GlobalLayout>
-      </GlobalProviders>
+                }
+                footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
+                groups={groups}
+                onEmptyStateSearch={handleSearch}
+                placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
+              />
+            </GlobalLayout>
+          </GlobalProviders>
 
-      {/* We can allow for more customization here as well... */}
-      <style type="text/css">{`
-        :root {
-          ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
-          ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
-          ${config.accentColor ? `--color-sidebar-ring: ${config.accentColor}` : ``};
-          ${config.accentColor ? `--tw-ring-color: ${config.accentColor}` : ``};
-        }
-      `}</style>
+          {/* We can allow for more customization here as well... */}
+          <style type="text/css">{`
+            :root {
+              ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
+              ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
+              ${config.accentColor ? `--color-sidebar-ring: ${config.accentColor}` : ``};
+              ${config.accentColor ? `--tw-ring-color: ${config.accentColor}` : ``};
+            }
+          `}</style>
+        </NotificationsSocketBridge>
+      </NotificationsStoreProvider>
     </>
   );
 }

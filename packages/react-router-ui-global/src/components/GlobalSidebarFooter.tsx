@@ -1,10 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router';
-import {
-  ENV_SOURCE,
-  FEATURE_BETA_PREVIEW,
-} from '@openthrottle/react-router-utils';
+import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
   SidebarFooter,
@@ -34,7 +31,6 @@ export const GlobalSidebarFooter = (props: GlobalSidebarFooterProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!FEATURE_BETA_PREVIEW) return null;
 
   return (
     <SidebarFooter className="border-t border-border bg-card px-6 py-4 overflow-hidden text-center">

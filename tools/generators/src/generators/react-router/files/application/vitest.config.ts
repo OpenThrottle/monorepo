@@ -10,7 +10,7 @@ export default (config: ConfigEnv) => {
     plugins: [
       tsconfigPaths({
         ignoreConfigErrors: false,
-        projects: [join(__dirname, 'tsconfig.json')],
+        projects: [join(__dirname, 'tsconfig.test.json')],
       }),
     ],
     resolve: {
