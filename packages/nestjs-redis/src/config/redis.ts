@@ -11,7 +11,6 @@
  *
  */
 
-// import { getRedisConfiguration } from '@shiftsmartinc/nestjs-common';
 import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import { ErrorsAreMissesCache } from '@apollo/utils.keyvaluecache';
 import Keyv from 'keyv';

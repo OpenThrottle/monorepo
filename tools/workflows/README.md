@@ -120,7 +120,7 @@ Ralph can be invoked from another repo by pointing at this monorepo's workflow b
 
 ### Multi-workspace plans (`workingDirectory`)
 
-Run plans against arbitrary local project folders instead of the monorepo root. This lets you trigger Ralph from the Developer app UI against any local checkout (e.g. `/Users/matt/Development/github/shiftsmart/services/native-apps`).
+Run plans against arbitrary local project folders instead of the monorepo root. This lets you trigger Ralph from the Developer app UI against any local checkout (e.g. `~/Development/openthrottle`).
 
 **How it works:**
 
@@ -176,7 +176,7 @@ mutation {
   enqueuePlanRun(
     input: {
       planId: "77cb14a0-5eb0-4061-87ea-d618b85e8818"
-      workingDirectory: "/Users/matt/Development/github/shiftsmart/services/native-apps"
+      workingDirectory: "~/Development/openthrottle"
     }
   ) {
     jobId
