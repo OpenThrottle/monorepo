@@ -1,12 +1,11 @@
 /**
- * @description Factory for a {@link WorkflowRalphIterationRunner}-compatible Cursor iteration runner
+ * @description Factory for a {@link WorkflowRalphIterationRunner}-compatible iteration runner
  * (see `@openthrottle/openthrottle-workflows` `WorkflowRalphOrchestratorDeps.iterationRunner`).
  * Wraps {@link runIterationAsync} so hosts can attach streaming side effects without duplicating field mapping.
  *
- * Backend selection is **per plan run**: pass `runner: 'cursor'` for this Cursor-backed factory.
- * The `claude` runner is registered alongside `cursor` in {@link RalphExecutionBackendId} but its
- * spawn path is delivered by a follow-up factory; the orchestrator will receive a sibling
- * Claude-backed runner once that lands.
+ * Backend selection is **per plan run**: pass {@link CursorWorkflowRalphIterationRunParams.runner}
+ * (`cursor` | `claude`). Dispatch is implemented in {@link runIterationAsync}; both backends share the same
+ * injected prompt string and streaming/timeout behavior.
  */
 
 import { runIterationAsync } from '../bin/run-iteration';
@@ -74,8 +73,9 @@ export interface CursorWorkflowRalphIterationRunner {
 }
 
 /**
- * @description Returns a Cursor-backed iteration runner that delegates to {@link runIterationAsync}.
- * Pass optional hooks for streaming logs or plan output without importing orchestrator internals.
+ * @description Returns an iteration runner that delegates to {@link runIterationAsync} (any
+ * {@link RalphExecutionBackendId} via `params.runner`). Pass optional hooks for streaming logs or
+ * plan output without importing orchestrator internals.
  */
 export const createCursorWorkflowRalphIterationRunner = (
   options?: CreateCursorWorkflowRalphIterationRunnerOptions,

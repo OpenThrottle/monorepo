@@ -104,7 +104,7 @@ When Ralph seems stuck (for example while waiting for agent output), turn on the
 - `[workflow-ralph:debug]` — every shim line starts with this (stderr).
 - `[workflow-ralph:debug] [verbose] …` — extra-noisy path (stream chunks, etc.); only when level is `verbose`.
 
-Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger.ts). Instrumentation uses the global `ralphDebugLogger` in the Ralph entry flow, [`run-iteration`](src/bin/run-iteration.ts) (cursor-agent spawn/stream), [`child-job`](src/utils/child-job.ts) (nested `workflow-ralph`), [`cortex-ralph`](src/utils/cortex-ralph.ts), and parsers (`parseRalphResponse`, complete-task parsing).
+Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger.ts). Instrumentation uses the global `ralphDebugLogger` in the Ralph entry flow, [`run-iteration`](src/bin/run-iteration.ts) (cursor-agent / Claude Code spawn and stream), [`child-job`](src/utils/child-job.ts) (nested `workflow-ralph`), [`cortex-ralph`](src/utils/cortex-ralph.ts), and parsers (`parseRalphResponse`, complete-task parsing).
 
 **Reporting a hang**
 
