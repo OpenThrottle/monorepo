@@ -34,7 +34,7 @@
 
 ## CLI usage
 
-- **Plan-centric:** `pnpm exec workflow-ralph --plan <cortex-plan-uuid>` (optional: `--iterations`, `--model`, `--prompt`).
+- **Plan-centric:** `pnpm exec workflow-ralph --plan <cortex-plan-uuid>` (optional: `--iterations`, `--model`, `--prompt`, `--backend cursor|claude` — **one** runner for the entire run).
 - **Task-centric:** `pnpm exec workflow-ralph --task <cortex-task-uuid>` (plan is resolved from the task; Cortex Postgres env required). Or `--plan <plan-uuid> --task <task-uuid>` to pass both.
 
 ## Plan-centric task status

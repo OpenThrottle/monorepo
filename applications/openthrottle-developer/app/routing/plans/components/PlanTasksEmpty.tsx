@@ -31,7 +31,7 @@ export const PlanTasksEmpty = (props: PlanTasksEmptyProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={classnames('my-8', className)}>
+    <Empty className={classnames('', className)}>
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>

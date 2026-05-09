@@ -22,6 +22,24 @@ export const DEFAULT_RALPH_MODEL = 'auto';
 export const WORKFLOW_RALPH_KNOWN_BACKENDS = ['claude', 'cursor'] as const;
 
 /**
+ * @description Short label for plan-run history and queue job detail (`cursor` | `claude` from the API).
+ */
+export const formatWorkflowRalphExecutionBackendLabel = (
+  backend: string | null | undefined,
+): string => {
+  if (backend === 'claude') {
+    return 'Claude Code CLI';
+  }
+  if (backend === 'cursor') {
+    return 'Cursor (cursor-agent)';
+  }
+  if (backend == null || backend === '') {
+    return '—';
+  }
+  return backend;
+};
+
+/**
  * @description Default precedence for resolving Ralph prompt + run tuning (matches CLI help).
  */
 export const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =

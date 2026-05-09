@@ -197,7 +197,7 @@ Ralph-related execution splits into **three surfaces** (same Cortex plan/task se
 
 | Surface                        | What runs                                                                                                                                                                                                          | Typical trigger                                                                           |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| **Local CLI**                  | `pnpm exec workflow-ralph` — Cursor subprocess per iteration; Cortex via **this process** `POSTGRES_*`                                                                                                             | Developer terminal, scripts, cross-repo invoke                                            |
+| **Local CLI**                  | `pnpm exec workflow-ralph` — **one** runner subprocess per iteration (`cursor-agent` or Claude Code CLI per `--backend`); Cortex via **this process** `POSTGRES_*`                                                 | Developer terminal, scripts, cross-repo invoke                                            |
 | **Plans queue — spawn**        | Nested `pnpm exec workflow-ralph --plan <planId>` inside the worker (`runChildJob`), optionally inside an acquired worktree when `WORKTREE_TARGETS` is set                                                         | GraphQL **`enqueuePlanRun`** → job payload `runKind: 'spawn'` or omit `runKind` (default) |
 | **Plans queue — orchestrator** | **No** nested `workflow-ralph` child: in-process **`createWorkflowRalphOrchestrator`** (server uses `@openthrottle/openthrottle-agentic-ralph`; same logical loop as CLI with injected GraphQL + iteration runner) | GraphQL **`enqueuePlanRalphOrchestrator`** → job payload `runKind: 'orchestrator'`        |
 
@@ -206,6 +206,14 @@ Implementation notes: discriminant and argv/context mapping are documented in `a
 **Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` (spawn path) resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). Spawn jobs map `job.data.ralph` with `buildWorkflowRalphRunTuningArgv`; orchestrator jobs map it with `buildRalphFlowContextFromPlanRunTuning` (see `plans.types.ts`).
 
 **Deferred (Docker / compose / paths):** Open items such as **`WORKSPACE_ROOT`** when the API is not started from the repo root, compose-side worker layout, and host-specific path assumptions are tracked for investigation under OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** — not finalized in this document.
+
+### Containers, PATH, and execution backends (BYO)
+
+Official Docker images for this repo (**`Dockerfile.NestJS`**, **`Dockerfile.ReactRouter`**, root **`docker-compose.yml`**) **do not bundle** the Cursor CLI (`cursor-agent`) or Anthropic’s Claude Code CLI (`claude`). Plan-queue workers that spawn `pnpm exec workflow-ralph` expect those binaries on **`PATH`** in the environment where the worker runs (typically the **host** or a custom image that installs them). **Bring-your-own (BYO)** is the supported stance: install the CLI you need, authenticate per vendor docs (Cursor login / Claude Code API or subscription as applicable), and ensure the worker `cwd` can resolve `pnpm` and `@tools/workflows`.
+
+- **Exclusive backend per plan run:** The same `cursor` or `claude` id applies to every iteration and is forwarded from GraphQL enqueue (`ralph` / plan-run tuning) into nested argv when set; see `RunPlanJobData` and `buildWorkflowRalphRunTuningArgv`.
+- **Choosing Claude in automation:** Prefer enqueue-time or env defaults in the worktree (`WORKFLOW_RALPH_BACKEND=claude` or `.workflow-ralph.json`) so headless workers do not require interactive Cursor.
+- **Compose:** Services in `docker-compose.yml` are API, Postgres, Redis, and UI — not a full “Ralph runner” appliance. Running Ralph **inside** a minimal container without BYO CLIs will fail at spawn unless you extend the image or mount a host toolchain.
 
 A reusable workflow composes worktree allocation, a pluggable loop, and commit guarantees so you can run any loop (e.g. Ralph) with:
 

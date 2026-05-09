@@ -1,5 +1,6 @@
 fragment JobDetailsCard on JobObject {
   data
+  executionBackend
   failedReason
   finishedOn
   id

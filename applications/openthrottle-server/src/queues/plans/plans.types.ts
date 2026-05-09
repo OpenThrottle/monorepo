@@ -2,6 +2,7 @@ import type { Job, Queue } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
 import type {
   ChildProcessMetrics,
+  RalphExecutionBackendId,
   RalphNestedRunTuningInput,
   WallClockMetrics,
 } from '@tools/workflows';
@@ -42,6 +43,10 @@ export { isRunPlanOrchestratorJobData };
  * remains unchanged for out-of-band runs.
  */
 export interface RunPlanSpawnJobData {
+  /**
+   * Execution backend selected once for this run. Optional only for previously persisted BullMQ jobs.
+   */
+  readonly executionBackend?: RalphExecutionBackendId;
   readonly planId: string;
   /**
    * Optional Ralph runtime (layers 1–3): prompt profile, execution backend, run tuning.

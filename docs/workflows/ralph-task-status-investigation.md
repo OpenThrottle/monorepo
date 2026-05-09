@@ -71,6 +71,20 @@ So even without the tag, if the agent signals COMPLETE, the task can be marked C
 
 ---
 
+## Claude Code CLI (`--backend claude`)
+
+**Contract:** The Ralph parser does not branch on execution backend. Both `cursor-agent` and Claude Code (`claude --bare -p …`) feed a single UTF-8 string into `parseRalphCompleteTaskSignals` and `parseRalphResponse`: async/sync runners concatenate **stdout** and **stderr** (when stderr is non-empty: `stdoutTrim + "\n" + stderrTrim`; see `tools/workflows/src/bin/run-iteration.ts`). Chunk ordering during streaming does not matter because parsing runs **after** the child exits on the full combined string.
+
+**Validation (fixtures, no live CLI):** `tools/workflows/src/utils/__tests__/parsers.test.ts` includes “Claude-shaped” samples (stderr noise + stdout body, ANSI near markers, markdown fences). They confirm the existing regex still extracts `<ralph:task-complete>uuid</ralph:task-complete>` and that `<promise>COMPLETE</promise>` / ERROR / INPUT_REQUIRED behave like the Cursor path.
+
+**Operational risks (same class as cursor-agent):**
+
+1. **Markers must appear literally** in the combined output. HTML-escaped tags (e.g. `&lt;ralph:task-complete&gt;`) do **not** match; the model should emit raw angle brackets, matching the injected prompt.
+2. **Buffering:** If a future CLI revision withheld assistant text until EOF, Ralph would still parse correctly once the process closes; if final text never reached stdout/stderr, neither backend would mark tasks complete (same failure mode as § Root causes).
+3. **Strip/reformat:** If a CLI stripped XML-like substrings from logged output, task completion would fail; mitigation is the same as for `cursor-agent`: verify runner forwards the model’s final message verbatim into the pipes Ralph reads.
+
+---
+
 ## References
 
 - `tools/workflows/src/bin/ralph.ts` — main loop, prompt building, parsing, updateTaskStatus calls
@@ -78,3 +92,4 @@ So even without the tag, if the agent signals COMPLETE, the task can be marked C
 - `tools/workflows/src/utils/cortex-ralph.ts` — `updateTaskStatus`, `updatePlanStatus`
 - `databases/cortex/migrations/028_plan_task_status_enum.sql` — status enum
 - `docs/workflows/ralph-design.md` — Plan-centric task status section
+- `tools/workflows/src/bin/run-iteration.ts` — stdout/stderr combine for both backends

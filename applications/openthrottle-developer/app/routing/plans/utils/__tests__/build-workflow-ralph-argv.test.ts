@@ -8,6 +8,7 @@ import {
   buildWorkflowRalphOptionArgs,
   buildWorkflowRalphTuningDiffLabels,
   formatWorkflowRalphCommandLine,
+  formatWorkflowRalphExecutionBackendLabel,
   getDefaultWorkflowRalphRunOptionsInput,
   getWorkflowRalphUiBaselineForDiff,
   isUuid,
@@ -64,6 +65,27 @@ describe('isCortexUuid', () => {
     expect(isUuid('not-a-uuid')).toBe(false);
     expect(isUuid('')).toBe(false);
     expect(isUuid('00000000-0000-9000-8000-000000000000')).toBe(false);
+  });
+});
+
+describe('formatWorkflowRalphExecutionBackendLabel', () => {
+  test('maps known backend ids to short labels', () => {
+    expect(formatWorkflowRalphExecutionBackendLabel('cursor')).toBe(
+      'Cursor (cursor-agent)',
+    );
+    expect(formatWorkflowRalphExecutionBackendLabel('claude')).toBe(
+      'Claude Code CLI',
+    );
+  });
+
+  test('returns em dash for empty values', () => {
+    expect(formatWorkflowRalphExecutionBackendLabel(null)).toBe('—');
+    expect(formatWorkflowRalphExecutionBackendLabel(undefined)).toBe('—');
+    expect(formatWorkflowRalphExecutionBackendLabel('')).toBe('—');
+  });
+
+  test('passes through unknown non-empty strings', () => {
+    expect(formatWorkflowRalphExecutionBackendLabel('codex')).toBe('codex');
   });
 });
 

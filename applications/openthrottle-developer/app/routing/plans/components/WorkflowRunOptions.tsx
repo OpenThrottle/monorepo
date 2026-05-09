@@ -29,6 +29,7 @@ import {
   WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
   WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphDebugCli,
+  type WorkflowRalphExecutionBackendUi,
   type WorkflowRalphRunOptionsInput,
   type WorkflowRalphTargetMode,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -383,7 +384,6 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
         <fieldset
           aria-labelledby="workflow-run-layer2-legend"
           className="space-y-3 rounded-md border border-border p-4"
-          disabled={true} // FIXME: When we have runners remove this
         >
           <legend
             className="px-1 text-sm font-medium text-foreground"
@@ -392,22 +392,42 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             Layer 2 — Execution backend
           </legend>
           <p className="text-muted-foreground text-xs">
-            Which runner executes each iteration (UI-only stub; no CLI flag
-            yet). Phase 2 will add runner selection when the workflow exposes
-            it.
+            One runner for the entire plan run—serialized as{' '}
+            <code className="text-[0.65rem]">--backend</code> on{' '}
+            <code className="text-[0.65rem]">workflow-ralph</code> and stored on
+            the queued job for auditing.
           </p>
           <div className="space-y-2">
             <Label htmlFor="workflow-run-backend">Runner</Label>
-            <Select disabled={true} value="cursor">
+            <Select
+              onValueChange={(next) =>
+                setInput((prev) => ({
+                  ...prev,
+                  executionBackend: next as WorkflowRalphExecutionBackendUi,
+                }))
+              }
+              value={input.executionBackend}
+            >
               <SelectTrigger
-                aria-label="Execution backend (stub)"
+                aria-label="Execution backend for this plan run"
                 className="max-w-md"
                 id="workflow-run-backend"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cursor">Cursor (current)</SelectItem>
+                {(
+                  [
+                    'cursor',
+                    'claude',
+                  ] as const satisfies readonly WorkflowRalphExecutionBackendUi[]
+                ).map((id) => (
+                  <SelectItem key={id} value={id}>
+                    {id === 'cursor'
+                      ? 'Cursor (cursor-agent)'
+                      : 'Claude Code CLI'}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

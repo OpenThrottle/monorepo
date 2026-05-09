@@ -4,22 +4,24 @@ This document describes how Node.js processes are spawned and how the worktree w
 
 ## Overview
 
-**Current code:** `ralph.ts` uses **spawn** for **cursor-agent** when non-interactive (no TTY) and `spawnSync` when interactive; `child-job.ts` uses **spawn** for **pnpm exec workflow-ralph**. `runWorktreeWorkflow` composes acquire → runLoop (e.g. Ralph) → ensureCommit (lint/test/typecheck) → release. Tracker is in-memory or Redis-backed; no HTTP/API server yet for orchestrating spawns.
+**Current code:** `ralph.ts` dispatches each iteration to **one** execution backend (`cursor` or `claude`) via `run-iteration.ts` — **cursor-agent** or **Claude Code** (`claude` CLI) — selected once per process by `--backend` / env / `.workflow-ralph.json` (no mixing backends within a single plan run). It uses **spawn** when non-interactive (no TTY) and `spawnSync` when interactive; `child-job.ts` uses **spawn** for **pnpm exec workflow-ralph**. `runWorktreeWorkflow` composes acquire → runLoop (e.g. Ralph) → ensureCommit (lint/test/typecheck) → release. Tracker is in-memory or Redis-backed; no HTTP/API server yet for orchestrating spawns.
 
-- **Ralph CLI** (`src/bin/ralph.ts`): Runs in the current process; spawns **cursor-agent** via `spawnSync` when interactive (TTY) and via `spawn` + Promise when non-interactive, with optional per-iteration timeout (`--iteration-timeout`) and optional `onChunk` for streaming.
+- **Ralph CLI** (`src/bin/ralph.ts`): Runs in the current process; each iteration runs the configured runner (default **cursor-agent**) via `spawnSync` when interactive (TTY) and via `spawn` + Promise when non-interactive, with optional per-iteration timeout (`--iteration-timeout`) and optional `onChunk` for streaming. Implementation: `src/bin/run-iteration.ts`.
 - **Child job** (`src/utils/child-job.ts`): Runs inside a parent (e.g. BullMQ worker); spawns **pnpm exec workflow-ralph** via `spawn` in a worktree (timeout, AbortSignal, streaming).
 - **Parent job** (`src/utils/parent-job.ts`): Uses `spawnSync` for git and for nx (lint/test/typecheck).
 - **Workflow** (`src/utils/workflow.ts`): Composes acquire → runLoop → ensureCommit → release; the loop is async (e.g. `runChildJob`), but all subprocess calls inside it are currently synchronous.
 
-No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory or Redis-backed (`IWorktreeTargetsTracker`), and jobs are triggered by BullMQ in openthrottle-server when worktree targets are configured.
+No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory or Redis-backed (`IWorktreeTargetsTracker`), and jobs are triggered by BullMQ in openthrottle-server when worktree targets are configured. Queue spawns forward optional `ralph.backend` as `--backend` on nested `workflow-ralph` so automated runs match CLI defaults per plan run (exclusive runner for all iterations).
 
 ---
 
-## 1. ralph.ts (CLI): spawning cursor-agent
+## 1. ralph.ts (CLI): spawning the iteration runner
 
-**File:** `tools/workflows/src/bin/ralph.ts`
+**Files:** `tools/workflows/src/bin/ralph.ts` (loop, Cortex), `tools/workflows/src/bin/run-iteration.ts` (single iteration)
 
-- **What it spawns:** `cursor-agent --force -p "<agentPrompt>" [--model <model>]` via a **shell** (e.g. `cursor-agent` on PATH).
+- **What it spawns (one backend per run):** A shell command built from `--backend` (default `cursor`):
+  - **`cursor`:** `cursor-agent --force -p "<agentPrompt>" [--model <model>]` (`cursor-agent` on PATH).
+  - **`claude`:** `claude --bare --permission-mode acceptEdits -p "<agentPrompt>"` (optional `--model` unless preset is `auto`). Same injected prompt string as `cursor`; requires `claude` on PATH and Anthropic auth per their docs.
 - **How (interactive, TTY):** `spawnSync(command, [], { encoding: 'utf-8', shell: true, stdio: ['inherit', 'pipe', 'pipe'] })`. Blocks until the child exits.
 - **How (non-interactive, no TTY):** `spawn` + Promise; optional `timeoutMs` (per-iteration timeout, e.g. `--iteration-timeout <seconds>`), optional `AbortSignal`, optional `onChunk` for stdout/stderr streaming. On timeout or abort, child is killed (SIGTERM then SIGKILL after grace).
 - **Blocking:** When interactive, the main process blocks for the entire duration of one agent run. When non-interactive, the loop uses async `runIterationAsync` so the process can handle timeouts and streaming; each iteration still runs sequentially.
@@ -33,11 +35,9 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 - **What it spawns:**
   - **Git:** `git -C <worktreePath> ...` via `spawnSync` (no shell) for `rev-parse` (branch name, HEAD SHA). Short, fast calls.
-  - **Ralph:** `pnpm exec workflow-ralph --plan <planId> [--iterations N]` with `cwd: worktreePath`, via `spawnSync(..., { encoding: 'utf-8', shell: true, stdio: ['inherit', 'pipe', 'pipe'] })`.
-- **Blocking:** Yes. `runChildJob` is async (it awaits Cortex checks), but the actual Ralph run is synchronous: the parent Node process blocks until `pnpm exec workflow-ralph` exits. No output is streamed back; stdout/stderr are buffered and only used when the process has finished (e.g. for error reporting).
-- **Where streaming/async would help:**
-  - **Streaming:** Forwarding Ralph’s stdout/stderr to the API (or to Cortex `plan_output_stream`) so progress is visible without waiting for the child to exit. Would require `spawn` + stream forwarding or a side-channel (e.g. append to plan output on each chunk).
-  - **Async:** The caller (`runWorktreeWorkflow`) already uses `await runLoop(handoff)`; the bottleneck is that `runLoop` internally blocks on `spawnSync`. Using `spawn` + Promises would allow the process to do other work while waiting, and would be a prerequisite for cancellation/timeouts and for streaming.
+  - **Ralph:** `pnpm exec workflow-ralph --plan <planId>` plus optional argv from `buildWorkflowRalphRunTuningArgv` (e.g. `--backend`, `--iterations`) with `cwd: worktreePath`, via **`spawn`** + Promise (`runRalphAsync`). Optional `onChunk` forwards stdout/stderr; optional timeout and `AbortSignal`.
+- **Blocking:** The caller awaits the Promise until `workflow-ralph` exits. Inner iteration runners (`cursor-agent` / `claude`) are spawned by the nested CLI per `--backend`.
+- **Where streaming/async would help:** Chunk forwarding and `streamToCortex` already use `onChunk`; further work could push more progress surfaces without changing the spawn model.
 
 ---
 
@@ -66,7 +66,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
    - Synchronous. Tracker locks a target; git creates a branch in the worktree. On failure (e.g. no targets, checkout failure), returns immediately; target is released if branch creation fails.
 
 2. **Run loop:** `await runLoop(handoff)`
-   - Async from the workflow’s perspective. Typical implementation: `runChildJob({ handoff, planId, iterations })`, which internally uses `spawnSync` for Ralph, so the process blocks for the whole Ralph run. No intermediate progress is exposed; the workflow only gets a result when the child exits.
+   - Async from the workflow’s perspective. Typical implementation: `runChildJob({ handoff, planId, iterations })`, which awaits **`spawn`**-based `pnpm exec workflow-ralph` until exit. Optional streaming attaches while the child runs.
 
 3. **Ensure commit (if loop succeeded):** `parentJobEnsureCommitBeforeRelease(handoff, ensureCommitOptions)`
    - Synchronous. Ensures working tree is clean; optionally runs lint/test/typecheck via nx (all `spawnSync`). Result is returned before release.
@@ -76,23 +76,21 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 **Blocking vs non-blocking:**
 
-- The workflow function itself is async and uses `await runLoop(handoff)`, so the _caller_ can be async (e.g. BullMQ worker). The actual work inside the loop and inside ensure-commit is blocking because all subprocess calls use `spawnSync`.
-- No streaming: the API or caller only sees the final `WorktreeWorkflowResult` (acquire, loop, ensureCommit, released) after the whole workflow finishes.
+- The workflow function itself is async and uses `await runLoop(handoff)`, so the _caller_ can be async (e.g. BullMQ worker). Ralph in the loop uses async `spawn`; ensure-commit still uses `spawnSync` for git and nx checks unless migrated.
+- **Streaming:** `runChildJob` can forward chunks (`onChunk`) and optional Cortex `plan_output_stream` mirroring while the nested `workflow-ralph` runs. The workflow still returns a single `WorktreeWorkflowResult` when the loop finishes.
 
-**Where streaming/async would help:**
+**Where more observability would help:**
 
-- **Progress:** Exposing loop progress (e.g. agent output, iteration count) and ensure-commit progress (which check is running, stdout/stderr) would require either:
-  - Switching child-job (and optionally ralph.ts) to `spawn` and forwarding streams to the API or to Cortex `plan_output_stream`, or
-  - A separate side-channel (e.g. job progress updates, Redis, or DB) that the child or parent writes to while running.
-- **Cancellation/timeouts:** Implementing timeouts or “cancel run” from an API would require async spawn (e.g. `spawn` + `child.kill()`) and possibly propagating abort to the Ralph process.
-- **Concurrency:** The workflow already supports fan-out (one run per acquired target). The main limitation is that each run blocks the worker for the full duration of Ralph + ensure-commit; async spawn wouldn’t increase parallelism per run but would allow the process to handle other work or stream output while waiting.
+- **Ensure-commit:** Exposing nx lint/test/typecheck output in real time would require streaming or polling around those `spawnSync` calls.
+- **Cancellation:** Nested Ralph already supports timeout/abort on the `pnpm` child; propagating cancel from an HTTP API is a separate wiring task.
+- **Concurrency:** Fan-out is one run per acquired target; each run still occupies the worker until Ralph + ensure-commit complete.
 
 ---
 
 ## 5. Tracker and process binding
 
 - **Tracker:** `IWorktreeTargetsTracker` (implemented in-memory by `WorktreeTargetsTracker` or by a Redis-backed implementation). Used to acquire/release worktree targets; no process binding is stored—only `lockedBy` (e.g. job id).
-- **Process binding:** The spawned Ralph process is bound to a repo/worktree only by **cwd**: `child-job` passes `cwd: worktreePath` to `spawnSync('pnpm', ralphArgs, { cwd: worktreePath, ... })`. There is no process registry or PID stored in the tracker; the coordinator (e.g. BullMQ) knows “job J holds target T” but not the PID of the Ralph process. For cancellation or “list running runs,” a future design would need to track PIDs or use another mechanism (e.g. job token, sidecar process).
+- **Process binding:** The spawned Ralph process is bound to a repo/worktree only by **cwd**: `child-job` passes `cwd: worktreePath` to `spawn('pnpm', ralphArgs, { cwd: worktreePath, ... })`. Optional metrics sample the child PID while it runs. The tracker does not store PID; the coordinator (e.g. BullMQ) knows “job J holds target T” but not the nested PID unless logging/metrics add it.
 
 ### 5.1 Tracker thread-safety (acquire/release)
 
@@ -103,12 +101,12 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 ## 6. Summary table
 
-| Component           | Spawns                   | Method                          | Blocking?                               | Output handling                        |
-| ------------------- | ------------------------ | ------------------------------- | --------------------------------------- | -------------------------------------- |
-| ralph.ts            | cursor-agent             | spawnSync (TTY), spawn (no TTY) | Yes when TTY                            | Buffered; optional stream when spawn   |
-| child-job.ts        | git, pnpm workflow-ralph | spawn (Ralph), spawnSync (git)  | No for Ralph                            | Stream → callback / plan_output_stream |
-| parent-job.ts       | git, pnpm nx             | spawnSync                       | Yes                                     | Buffered / exit code                   |
-| runWorktreeWorkflow | (orchestrates above)     | N/A                             | Loop async, steps async when spawn used | Final result + optional live stream    |
+| Component           | Spawns                          | Method                          | Blocking?                               | Output handling                        |
+| ------------------- | ------------------------------- | ------------------------------- | --------------------------------------- | -------------------------------------- |
+| ralph.ts            | cursor-agent or Claude Code CLI | spawnSync (TTY), spawn (no TTY) | Yes when TTY                            | Buffered; optional stream when spawn   |
+| child-job.ts        | git, pnpm workflow-ralph        | spawn (Ralph), spawnSync (git)  | No for Ralph                            | Stream → callback / plan_output_stream |
+| parent-job.ts       | git, pnpm nx                    | spawnSync                       | Yes                                     | Buffered / exit code                   |
+| runWorktreeWorkflow | (orchestrates above)            | N/A                             | Loop async, steps async when spawn used | Final result + optional live stream    |
 
 **Takeaways for a future API/server:**
 

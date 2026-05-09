@@ -151,6 +151,7 @@ export const runIteration = (config: RunIterationConfig): string => {
       return runClaudeIterationSync(config);
     case 'cursor':
       return runCursorIterationSync(config);
+
     default: {
       const _exhaustive: never = backend;
       throw new Error(`Unsupported execution backend: ${_exhaustive}`);

@@ -11,6 +11,7 @@ import { Note } from './modules/notes/note.entity';
 import { Plan } from './modules/plans/plan.entity';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity';
+import { PlanRun } from './modules/plan-runs/plan-run.entity';
 import { Permission } from './modules/roles/permission.entity';
 import { Role } from './modules/roles/role.entity';
 import { Project } from './modules/projects/project.entity';
@@ -63,6 +64,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Plan,
       PlanEmbedding,
       PlanOutputStreamChunk,
+      PlanRun,
       Project,
       Role,
       Subscription,

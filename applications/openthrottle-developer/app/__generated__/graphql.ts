@@ -103,6 +103,13 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type AddPermissionToRoleInput = {
+  /** Permission id to add */
+  permissionId: Scalars['ID']['input'];
+  /** Role id to add the permission to */
+  roleId: Scalars['ID']['input'];
+};
+
 export type AppendPlanOutputInput = {
   /** Content of the output chunk */
   content: Scalars['String']['input'];
@@ -110,6 +117,13 @@ export type AppendPlanOutputInput = {
   iteration?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to append output to */
   planId: Scalars['ID']['input'];
+};
+
+export type AssignRoleToUserInput = {
+  /** Role id to assign */
+  roleId: Scalars['ID']['input'];
+  /** User id to assign the role to */
+  userId: Scalars['ID']['input'];
 };
 
 export type CancelPlanRunInput = {
@@ -200,6 +214,21 @@ export type CommitsPerPrRowObject = {
   prNumber: Scalars['Int']['output'];
 };
 
+export type CreateCheckoutSessionInput = {
+  /** URL to redirect to if the user cancels checkout. */
+  cancelUrl: Scalars['String']['input'];
+  /** Stripe Price ID (e.g. price_xxx) for the subscription. */
+  priceId: Scalars['String']['input'];
+  /** URL to redirect to after successful payment. */
+  successUrl: Scalars['String']['input'];
+};
+
+export type CreateCheckoutSessionPayload = {
+  __typename?: 'CreateCheckoutSessionPayload';
+  /** Redirect URL to Stripe Checkout. Null if user not found or session creation failed. */
+  url?: Maybe<Scalars['String']['output']>;
+};
+
 /** Input for creating a new custom prompt */
 export type CreateCustomPromptInput = {
   content: Scalars['String']['input'];
@@ -255,6 +284,12 @@ export type CreateQueueResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type CreateRoleInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Role name (e.g. admin, user, viewer). Must be unique. */
+  name: Scalars['String']['input'];
+};
+
 export type CreateTaskInput = {
   assignee?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
@@ -273,7 +308,7 @@ export type CreateTaskInput = {
 
 export type CreateUserInput = {
   email?: InputMaybe<Scalars['String']['input']>;
-  /** GitHub user or Organization name (e.g. OpenThrottle) */
+  /** GitHub username (e.g. visormatt) */
   githubUsername: Scalars['String']['input'];
 };
 
@@ -388,16 +423,17 @@ export type EnqueueDocIngestionResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+/** Input for enqueuePlanRalphOrchestrator: in-process orchestrator run on the plans queue. */
 export type EnqueuePlanRalphOrchestratorInput = {
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
-  /** Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric). */
+  /** Omit or plan for plan-scoped run; task requires taskId (task-centric). */
   mode?: InputMaybe<PlanRalphWorkflowMode>;
-  /** Plan id to run the orchestrator for */
+  /** Plan id to run the orchestrator for. */
   planId: Scalars['ID']['input'];
   /** Job priority (lower = higher priority). Same as enqueuePlanRun. */
   priority?: InputMaybe<Scalars['Int']['input']>;
-  /** Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.). */
+  /** Optional Ralph tuning for the in-process orchestrator. */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Required when mode is task; must belong to the plan. */
   taskId?: InputMaybe<Scalars['ID']['input']>;
@@ -418,6 +454,8 @@ export type EnqueuePlanRunInput = {
 
 export type EnqueuePlanRunResultObject = {
   __typename?: 'EnqueuePlanRunResultObject';
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend: Scalars['String']['output'];
   /** BullMQ job id */
   jobId: Scalars['String']['output'];
   /** Plan id that was enqueued */
@@ -488,6 +526,8 @@ export type JobObject = {
   __typename?: 'JobObject';
   /** JSON string of job data (e.g. { planId } for run-plan). */
   data?: Maybe<Scalars['String']['output']>;
+  /** Execution backend selected once for this plan run. Present for plans queue jobs. */
+  executionBackend?: Maybe<Scalars['String']['output']>;
   /** Error message if the job failed. */
   failedReason?: Maybe<Scalars['String']['output']>;
   /** Unix timestamp when the job finished. */
@@ -726,10 +766,16 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Add a permission to a role */
+  addPermissionToRole: Scalars['Boolean']['output'];
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
   appendPlanOutput: PlanOutputStreamChunkObject;
-  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
+  /** Assign a role to a user */
+  assignRoleToUser: Scalars['Boolean']['output'];
+  /** Cancel queued or delayed BullMQ plan-run jobs for a plan (stops Ralph when the job has not started yet). Active jobs are reported in activeJobIdsCouldNotCancel because BullMQ cannot remove locked jobs from outside the worker. */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Create a Stripe Checkout session for the current user. Returns redirect URL for subscription signup. */
+  createCheckoutSession: CreateCheckoutSessionPayload;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -740,6 +786,8 @@ export type Mutation = {
   createProject: ProjectObject;
   /** Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error. */
   createQueue: CreateQueueResultObject;
+  /** Create a role */
+  createRole: RoleObject;
   /** Create a task */
   createTask: TaskObject;
   /** Create a user */
@@ -750,8 +798,10 @@ export type Mutation = {
   deleteNote: Scalars['Boolean']['output'];
   /** Delete a plan by ID */
   deletePlan: Scalars['Boolean']['output'];
-  /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
+  /** Delete a project by ID. Related plans and tasks remain; their project link is cleared. */
   deleteProject: Scalars['Boolean']['output'];
+  /** Delete a role */
+  deleteRole: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
   /** Disable a user; they will not be able to log in. */
@@ -762,7 +812,7 @@ export type Mutation = {
   enableUser?: Maybe<UserObject>;
   /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
-  /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
+  /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline). Same result shape and plan/task status updates as enqueuePlanRun. */
   enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;
   /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
@@ -772,10 +822,16 @@ export type Mutation = {
   linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
+  /** Verify and process a Stripe webhook. Pass the exact raw body bytes as base64 and the Stripe-Signature header value. */
+  processStripeWebhook: StripeWebhookProcessedPayload;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
+  /** Remove a permission from a role */
+  removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
+  /** Remove a role from a user */
+  removeRoleFromUser: Scalars['Boolean']['output'];
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
@@ -784,8 +840,6 @@ export type Mutation = {
   setPlanStatus?: Maybe<PlanObject>;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
-  /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
-  triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
   /** Update an existing custom prompt */
@@ -796,22 +850,34 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
+  /** Update a role */
+  updateRole?: Maybe<RoleObject>;
   /** Update a task */
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
-  /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
-  workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
+};
+
+export type MutationAddPermissionToRoleArgs = {
+  input: AddPermissionToRoleInput;
 };
 
 export type MutationAppendPlanOutputArgs = {
   input: AppendPlanOutputInput;
 };
 
+export type MutationAssignRoleToUserArgs = {
+  input: AssignRoleToUserInput;
+};
+
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCreateCheckoutSessionArgs = {
+  input: CreateCheckoutSessionInput;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -832,6 +898,10 @@ export type MutationCreateProjectArgs = {
 
 export type MutationCreateQueueArgs = {
   input: CreateQueueInput;
+};
+
+export type MutationCreateRoleArgs = {
+  input: CreateRoleInput;
 };
 
 export type MutationCreateTaskArgs = {
@@ -856,6 +926,10 @@ export type MutationDeletePlanArgs = {
 
 export type MutationDeleteProjectArgs = {
   input: DeleteProjectInput;
+};
+
+export type MutationDeleteRoleArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationDeleteTaskArgs = {
@@ -898,12 +972,24 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
+export type MutationProcessStripeWebhookArgs = {
+  input: ProcessStripeWebhookInput;
+};
+
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationRemovePermissionFromRoleArgs = {
+  input: RemovePermissionFromRoleInput;
+};
+
 export type MutationRemoveRepeatableJobArgs = {
   input: RemoveRepeatableJobInput;
+};
+
+export type MutationRemoveRoleFromUserArgs = {
+  input: RemoveRoleFromUserInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -934,16 +1020,16 @@ export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
 };
 
+export type MutationUpdateRoleArgs = {
+  input: UpdateRoleInput;
+};
+
 export type MutationUpdateTaskArgs = {
   input: UpdateTaskInput;
 };
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
-};
-
-export type MutationWorkflowPlanRunArgs = {
-  input: EnqueuePlanRunInput;
 };
 
 export type MutationWriteCustomPromptToFileSystemArgs = {
@@ -986,6 +1072,15 @@ export type OpenToMergedCycleTimeObject = {
   period?: Maybe<Scalars['String']['output']>;
   /** Number of merged PRs in this bucket. */
   prCount: Scalars['Int']['output'];
+};
+
+export type PermissionObject = {
+  __typename?: 'PermissionObject';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /** Permission identifier (e.g. users:read, settings:write) */
+  name: Scalars['String']['output'];
 };
 
 export type PlanEmbeddingObject = {
@@ -1038,7 +1133,7 @@ export type PlanOutputStreamChunkObject = {
   planId: Scalars['String']['output'];
 };
 
-/** Plan-scoped run (default) or task-centric run (`task` requires taskId). */
+/** Plan vs task-centric scope for in-process Ralph orchestrator runs. */
 export enum PlanRalphWorkflowMode {
   Plan = 'plan',
   Task = 'task',
@@ -1047,12 +1142,37 @@ export enum PlanRalphWorkflowMode {
 /** A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end). */
 export type PlanRunMetricsEntry = {
   __typename?: 'PlanRunMetricsEntry';
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend?: Maybe<Scalars['String']['output']>;
   /** Unix timestamp when the job finished. */
   finishedOn?: Maybe<Scalars['Float']['output']>;
   /** BullMQ job id for this run. */
   jobId: Scalars['String']['output'];
   /** Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics. */
   taskRunMetrics?: Maybe<TaskRunMetrics>;
+};
+
+export type PlanRunObject = {
+  __typename?: 'PlanRunObject';
+  /** BullMQ job id for this run. */
+  bullmqJobId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  planId: Scalars['String']['output'];
+  queueName: Scalars['String']['output'];
+  /** Ralph run implementation: spawn or orchestrator. */
+  runKind: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PlanRunsByPlanIdInput = {
+  /** Max plan-run audit rows to return, newest first. */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Plan id whose run audit rows should be returned */
+  planId: Scalars['ID']['input'];
 };
 
 export type PlanStatusCountObject = {
@@ -1111,6 +1231,13 @@ export type ProcessMetricsSnapshot = {
   rssMb: Scalars['Float']['output'];
 };
 
+export type ProcessStripeWebhookInput = {
+  /** Canonical raw request body encoded as standard base64. Must match the bytes Stripe signed. */
+  rawPayloadBase64: Scalars['String']['input'];
+  /** Value of the Stripe-Signature header from the original HTTP request. */
+  stripeSignature: Scalars['String']['input'];
+};
+
 export type ProjectObject = {
   __typename?: 'ProjectObject';
   createdAt: Scalars['DateTime']['output'];
@@ -1167,8 +1294,10 @@ export type PsiCpuMetrics = {
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
   author: Scalars['String']['output'];
+  /** Merge target branch ref when GitHub returns base.ref. */
   baseRef?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  /** PR branch ref when GitHub returns head.ref. */
   headRef?: Maybe<Scalars['String']['output']>;
   /** Head commit SHA when GitHub returns head.sha (for commit/checks drill-down). */
   headSha?: Maybe<Scalars['String']['output']>;
@@ -1196,6 +1325,8 @@ export type Query = {
   commitLinksByTaskId: Array<CommitLinkObject>;
   /** Commits per PR (PR size in commits) for merged PRs. Paginates commits per PR; maxPrs caps API calls. Optional period bucket (week/month UTC). */
   commitsPerPr: Array<CommitsPerPrRowObject>;
+  /** Cortex DB health: ok | unconfigured | unreachable. Used by cortex app status page. */
+  cortexHealth: Scalars['String']['output'];
   /** Get a custom prompt by ID */
   customPrompt?: Maybe<CustomPromptObject>;
   /** List custom prompts with optional filters */
@@ -1204,8 +1335,6 @@ export type Query = {
   dailyStats?: Maybe<DailyStatsObject>;
   /** Aggregated plan and task stats for a date range (start and end inclusive, YYYY-MM-DD). */
   dailyStatsRange: DailyStatsRangeResultObject;
-  /** Database health: ok | unconfigured | unreachable. Used by app status page. */
-  databaseHealth: Scalars['String']['output'];
   /** Development ping. Returns "pong" when the development GraphQL API is reachable. */
   developmentPing: Scalars['String']['output'];
   /** Get a generator by name (includes schema JSON) */
@@ -1234,6 +1363,10 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
+  /** Get permission names for the current user */
+  myPermissions: Array<Scalars['String']['output']>;
+  /** Current user's active subscription (entitlement). Null if none. */
+  mySubscription?: Maybe<SubscriptionObject>;
   /** Get a note by ID */
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
@@ -1242,6 +1375,10 @@ export type Query = {
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
   /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
+  /** List all permissions */
+  permissions: Array<PermissionObject>;
+  /** Get permission names for a user (union of all their roles' permissions) */
+  permissionsForUser: Array<Scalars['String']['output']>;
   /** Get a plan by ID */
   plan?: Maybe<PlanObject>;
   /** Plan count per status for sidebar/filters */
@@ -1254,6 +1391,8 @@ export type Query = {
   planOutputStreamChunk?: Maybe<PlanOutputStreamChunkObject>;
   /** List plan output stream chunks by plan ID, ordered by createdAt ascending */
   planOutputStreamChunks: Array<PlanOutputStreamChunkObject>;
+  /** Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend. */
+  planRunsByPlanId: Array<PlanRunObject>;
   /** List all plans */
   plans: Array<PlanObject>;
   /** PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all). */
@@ -1280,14 +1419,24 @@ export type Query = {
   repeatableJobs: Array<RepeatableJobObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
+  /** Get a role by ID */
+  role?: Maybe<RoleObject>;
+  /** List all roles with their permissions */
+  roles: Array<RoleObject>;
+  /** Get roles assigned to a user */
+  rolesForUser: Array<RoleObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
   searchPlans: ListPlansByStatusResultObject;
-  /** Server health: API, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
+  /** Server health: API, Cortex DB, Redis (BullMQ), and WebSocket. Each component is ok | unconfigured | unreachable. */
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
+  /** A single Stripe product by ID, or null if not found. */
+  stripeProduct?: Maybe<StripeProductObject>;
+  /** Active Stripe products (catalog). Does not require authentication. */
+  stripeProducts: Array<StripeProductObject>;
   /** Get a task by ID */
   task?: Maybe<TaskObject>;
   /** Get a task embedding by ID */
@@ -1384,6 +1533,10 @@ export type QueryOpenToMergedCycleTimeArgs = {
   input: OpenToMergedCycleTimeInput;
 };
 
+export type QueryPermissionsForUserArgs = {
+  userId: Scalars['ID']['input'];
+};
+
 export type QueryPlanArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1402,6 +1555,10 @@ export type QueryPlanOutputStreamChunkArgs = {
 
 export type QueryPlanOutputStreamChunksArgs = {
   input: ListPlanOutputStreamChunksInput;
+};
+
+export type QueryPlanRunsByPlanIdArgs = {
+  input: PlanRunsByPlanIdInput;
 };
 
 export type QueryPrCountByLabelArgs = {
@@ -1444,12 +1601,24 @@ export type QueryReviewCycleTimeArgs = {
   input: ReviewCycleTimeInput;
 };
 
+export type QueryRoleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryRolesForUserArgs = {
+  userId: Scalars['ID']['input'];
+};
+
 export type QuerySearchArgs = {
   input: SearchInput;
 };
 
 export type QuerySearchPlansArgs = {
   input: SearchPlansInput;
+};
+
+export type QueryStripeProductArgs = {
+  id: Scalars['String']['input'];
 };
 
 export type QueryTaskArgs = {
@@ -1530,6 +1699,10 @@ export enum RalphNestedDebugCli {
   Verbose = 'verbose',
 }
 
+/**
+ * Optional Ralph / workflow-ralph runtime tuning for queued plan runs (iterations, model, backend, etc.).
+ * When set, workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+ */
 export type RalphPlanRunTuningInput = {
   /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
   backend?: InputMaybe<Scalars['String']['input']>;
@@ -1573,6 +1746,13 @@ export type RemainingTasksByPlanIdInput = {
   planId: Scalars['ID']['input'];
 };
 
+export type RemovePermissionFromRoleInput = {
+  /** Permission id to remove */
+  permissionId: Scalars['ID']['input'];
+  /** Role id to remove the permission from */
+  roleId: Scalars['ID']['input'];
+};
+
 export type RemoveRepeatableJobInput = {
   /** Repeatable job key (from repeatableJobs query). Required to remove a repeatable job. */
   key: Scalars['String']['input'];
@@ -1586,6 +1766,13 @@ export type RemoveRepeatableJobResultObject = {
   error?: Maybe<Scalars['String']['output']>;
   /** Whether the repeatable job was removed. */
   success: Scalars['Boolean']['output'];
+};
+
+export type RemoveRoleFromUserInput = {
+  /** Role id to remove */
+  roleId: Scalars['ID']['input'];
+  /** User id to remove the role from */
+  userId: Scalars['ID']['input'];
 };
 
 export type RepeatableJobObject = {
@@ -1659,6 +1846,18 @@ export type ReviewCycleTimeObject = {
   prCount: Scalars['Int']['output'];
 };
 
+export type RoleObject = {
+  __typename?: 'RoleObject';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /** Role identifier (e.g. admin, user, viewer) */
+  name: Scalars['String']['output'];
+  /** Permissions assigned to this role */
+  permissions: Array<PermissionObject>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type SearchChunk = {
   __typename?: 'SearchChunk';
   /** Chunk content (plan or task text). */
@@ -1709,7 +1908,7 @@ export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
-  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
+  /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing cortexHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
   redis: Scalars['String']['output'];
@@ -1745,6 +1944,65 @@ export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
   success: Scalars['Boolean']['output'];
+};
+
+/** Stripe price for catalog or checkout. */
+export type StripePriceObject = {
+  __typename?: 'StripePriceObject';
+  active: Scalars['Boolean']['output'];
+  /** Three-letter ISO currency code. */
+  currency: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  /** Present when type is recurring. */
+  recurring?: Maybe<StripePriceRecurringObject>;
+  /** Stripe price type: one_time or recurring. */
+  type: Scalars['String']['output'];
+  /** Unit amount in the smallest currency unit (e.g. cents). Null for some metered or custom schemes. */
+  unitAmount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** Recurring billing details when a Stripe price is recurring. */
+export type StripePriceRecurringObject = {
+  __typename?: 'StripePriceRecurringObject';
+  /** Billing interval (e.g. month, year). */
+  interval: Scalars['String']['output'];
+  /** Number of intervals between billings. */
+  intervalCount: Scalars['Int']['output'];
+};
+
+/** Stripe catalog product. */
+export type StripeProductObject = {
+  __typename?: 'StripeProductObject';
+  active: Scalars['Boolean']['output'];
+  /** Default Stripe Price ID when set on the product. */
+  defaultPriceId?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  images: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** Active prices for this product. Populated by resolvers that batch-fetch prices to avoid N+1 queries. */
+  prices: Array<StripePriceObject>;
+};
+
+export type StripeWebhookProcessedPayload = {
+  __typename?: 'StripeWebhookProcessedPayload';
+  /** True when the webhook was verified and handled (including ignored event types). */
+  received: Scalars['Boolean']['output'];
+};
+
+export type SubscriptionObject = {
+  __typename?: 'SubscriptionObject';
+  cancelAtPeriodEnd: Scalars['Boolean']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  currentPeriodEnd?: Maybe<Scalars['DateTime']['output']>;
+  currentPeriodStart?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  stripeCustomerId?: Maybe<Scalars['String']['output']>;
+  stripePriceId: Scalars['String']['output'];
+  stripeSubscriptionId?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['String']['output'];
 };
 
 /** Complete system CPU metrics for a job, including start/end snapshots and pressure interpretation. */
@@ -1899,6 +2157,14 @@ export type UpdateProjectInput = {
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateRoleInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Role id to update */
+  id: Scalars['ID']['input'];
+  /** Role name. Pass null to leave unchanged. */
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateTaskInput = {
   assignee?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
@@ -1932,7 +2198,7 @@ export type UserObject = {
   /** When set, user is disabled and cannot log in. */
   disabledAt?: Maybe<Scalars['DateTime']['output']>;
   email?: Maybe<Scalars['String']['output']>;
-  /** GitHub user or Organization name (e.g. OpenThrottle) */
+  /** GitHub username (e.g. visormatt) */
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -2420,8 +2686,11 @@ export type PlanDetailEnqueuePlanRunMutation = {
   __typename?: 'Mutation';
   enqueuePlanRun: {
     __typename?: 'EnqueuePlanRunResultObject';
+    executionBackend: string;
     jobId: string;
     planId: string;
+    queuePosition: number;
+    queueTotal: number;
   };
 };
 
@@ -2540,6 +2809,7 @@ export type PlanDetailIndexLoaderQuery = {
     __typename?: 'MetricsObject';
     recentPlanRunsMetrics: Array<{
       __typename?: 'PlanRunMetricsEntry';
+      executionBackend?: string | null;
       finishedOn?: number | null;
       jobId: string;
       taskRunMetrics?: {
@@ -2780,6 +3050,7 @@ export type TestWorkflowMutation = {
   __typename?: 'Mutation';
   enqueuePlanRun: {
     __typename?: 'EnqueuePlanRunResultObject';
+    executionBackend: string;
     jobId: string;
     planId: string;
   };
@@ -3052,6 +3323,7 @@ export type GetPullRequestsQuery = {
 export type JobDetailsCardFragment = {
   __typename?: 'JobObject';
   data?: string | null;
+  executionBackend?: string | null;
   failedReason?: string | null;
   finishedOn?: number | null;
   id: string;
@@ -3086,6 +3358,7 @@ export type GetQueueJobDetailsQuery = {
   job?: {
     __typename?: 'JobObject';
     data?: string | null;
+    executionBackend?: string | null;
     failedReason?: string | null;
     finishedOn?: number | null;
     id: string;
@@ -3795,6 +4068,7 @@ export const JobDetailsCardFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
           { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
@@ -5058,8 +5332,17 @@ export const PlanDetailEnqueuePlanRunDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'queuePosition' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
               ],
             },
           },
@@ -5432,6 +5715,10 @@ export const PlanDetailIndexLoaderDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'executionBackend' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'finishedOn' },
@@ -6202,6 +6489,10 @@ export const TestWorkflowDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
               ],
@@ -7079,6 +7370,7 @@ export const GetQueueJobDetailsDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
           { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },

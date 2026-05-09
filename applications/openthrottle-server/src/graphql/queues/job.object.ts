@@ -20,6 +20,13 @@ export class JobObject {
 
   @Field(() => String, {
     description:
+      'Execution backend selected once for this plan run. Present for plans queue jobs.',
+    nullable: true,
+  })
+  executionBackend!: string | null;
+
+  @Field(() => String, {
+    description:
       'Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.',
     nullable: true,
   })

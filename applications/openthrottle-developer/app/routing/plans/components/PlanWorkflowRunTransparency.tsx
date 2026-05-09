@@ -13,6 +13,7 @@ import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   buildWorkflowRalphDebugBundleText,
   buildWorkflowRalphTuningDiffLabels,
+  formatWorkflowRalphExecutionBackendLabel,
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -90,10 +91,11 @@ export const PlanWorkflowRunTransparency = (
               <code className="text-[0.65rem]">--task &lt;uuid&gt;</code>.
               Toolbar “Add to Queue” enqueues a{' '}
               <span className="font-medium text-foreground">plan-scoped</span>{' '}
-              worker job (GraphQL tuning only); use{' '}
-              <code className="text-[0.65rem]">--task</code> in the preview when
-              you run <code className="text-[0.65rem]">workflow-ralph</code>{' '}
-              locally in task-centric mode.
+              worker job with one execution backend for the whole run (Cursor or
+              Claude Code); use <code className="text-[0.65rem]">--task</code>{' '}
+              in the preview when you run{' '}
+              <code className="text-[0.65rem]">workflow-ralph</code> locally in
+              task-centric mode.
             </CardDescription>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">
@@ -155,14 +157,18 @@ export const PlanWorkflowRunTransparency = (
           <div className="overflow-x-auto">
             <table className="text-muted-foreground w-full min-w-[28rem] border-collapse text-xs mt-8">
               <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
-                Recent enqueue history (completed jobs for this plan). After
-                “Add to Queue” or “Run plan”, finished workers appear here —
-                open a job id for payload and state in the queue UI.
+                Recent enqueue history (completed jobs for this plan). Each row
+                shows which runner executed that run (one backend per job).
+                After “Add to Queue” or “Run plan”, finished workers appear here
+                — open a job id for payload and state in the queue UI.
               </caption>
               <thead>
                 <tr className="border-border border-b text-left">
                   <th className="text-foreground py-1.5 pr-2 font-medium">
                     Job id
+                  </th>
+                  <th className="text-foreground py-1.5 pr-2 font-medium">
+                    Runner
                   </th>
                   <th className="text-foreground py-1.5 pr-2 font-medium">
                     Finished (UTC)
@@ -175,7 +181,7 @@ export const PlanWorkflowRunTransparency = (
               <tbody>
                 {recentPlanRuns.length === 0 ? (
                   <tr>
-                    <td className="py-2 text-[0.7rem]" colSpan={3}>
+                    <td className="py-2 text-[0.7rem]" colSpan={4}>
                       No completed runs recorded for this plan yet. After you
                       enqueue from the toolbar, finished jobs appear here with a
                       link to the job detail view.
@@ -194,6 +200,11 @@ export const PlanWorkflowRunTransparency = (
                         >
                           {row.jobId}
                         </Link>
+                      </td>
+                      <td className="py-1.5 pr-2 align-top text-[0.65rem]">
+                        {formatWorkflowRalphExecutionBackendLabel(
+                          row.executionBackend,
+                        )}
                       </td>
                       <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
                         {formatFinishedOn(row.finishedOn)}

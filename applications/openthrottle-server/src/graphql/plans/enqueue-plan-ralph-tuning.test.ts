@@ -87,8 +87,9 @@ describe('parseEnqueueRalphTuning', () => {
 });
 
 describe('buildRunPlanJobData', () => {
-  test('returns only planId when ralph is omitted', () => {
+  test('returns default execution backend when ralph is omitted', () => {
     expect(buildRunPlanJobData({ planId: 'p1', ralph: null })).toEqual({
+      executionBackend: 'cursor',
       planId: 'p1',
     });
   });
@@ -103,8 +104,25 @@ describe('buildRunPlanJobData', () => {
         },
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       planId: 'p1',
       ralph: { iterations: 2 },
+    });
+  });
+
+  test('uses explicit execution backend for the whole run', () => {
+    expect(
+      buildRunPlanJobData({
+        planId: 'p1',
+        ralph: {
+          ...emptyTuningInput(),
+          backend: 'claude',
+        },
+      }),
+    ).toEqual({
+      executionBackend: 'claude',
+      planId: 'p1',
+      ralph: { backend: 'claude' },
     });
   });
 });
@@ -120,6 +138,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         ralph: null,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
     });
@@ -133,6 +152,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         ralph: null,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       mode: 'plan',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
@@ -148,6 +168,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         taskId: SAMPLE_TASK_ID,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       mode: 'task',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
@@ -191,6 +212,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         workingDirectory: tempDir,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
       workingDirectory: tempDir,
@@ -254,7 +276,7 @@ describe('buildRunPlanJobData with workingDirectory', () => {
       ralph: null,
       workingDirectory: null,
     });
-    expect(result).toEqual({ planId: 'p1' });
+    expect(result).toEqual({ executionBackend: 'cursor', planId: 'p1' });
     expect(result).not.toHaveProperty('workingDirectory');
   });
 
@@ -265,7 +287,11 @@ describe('buildRunPlanJobData with workingDirectory', () => {
       ralph: null,
       workingDirectory: tempDir,
     });
-    expect(result).toEqual({ planId: 'p1', workingDirectory: tempDir });
+    expect(result).toEqual({
+      executionBackend: 'cursor',
+      planId: 'p1',
+      workingDirectory: tempDir,
+    });
   });
 
   test('throws for an invalid workingDirectory', () => {

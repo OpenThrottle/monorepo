@@ -355,7 +355,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
         promptLayer={input.promptLayer}
       />
 
-      <PlanWorkflowConfigExecution />
+      <PlanWorkflowConfigExecution input={input} setInput={setInput} />
 
       <PlanWorkflowConfigTuning
         input={input}

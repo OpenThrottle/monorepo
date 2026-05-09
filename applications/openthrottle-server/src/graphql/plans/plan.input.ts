@@ -292,6 +292,20 @@ export class EnqueuePlanRalphOrchestratorInput {
 }
 
 @InputType()
+export class PlanRunsByPlanIdInput {
+  @Field(() => Int, {
+    description: `Max plan-run audit rows to return, newest first.`,
+    nullable: true,
+  })
+  limit!: number | null;
+
+  @Field(() => ID, {
+    description: `Plan id whose run audit rows should be returned`,
+  })
+  planId!: string;
+}
+
+@InputType()
 export class SetPlanStatusInput {
   @Field(() => ID, { description: `Plan id to update status for` })
   planId!: string;

@@ -153,6 +153,7 @@ export default function Component(
     );
 
   // Setup
+  const [fullscreen, setFullscreen] = React.useState(false);
 
   const { PLAN_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
   const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
@@ -381,9 +382,11 @@ export default function Component(
           </TabsList>
 
           <PlanTabDetails
+            fullscreen={fullscreen}
             plan={plan}
             ralphTuningJson={ralphTuningJson}
             recentPlanRuns={recentPlanRuns}
+            setFullscreen={setFullscreen}
             workflowInput={workflowInput}
             workflowTimeout={workflowTimeout}
             workingDirectory={workingDirectory}
@@ -438,16 +441,13 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'cancelPlanRun') {
-    try {
-      const result = await cancelPlanRun(args, planId);
+    const result = await cancelPlanRun(args, planId);
 
-      return { cancelPlanRun: result.cancelPlanRun };
-    } catch (error) {
-      const isError = error instanceof Error;
-      const message = isError ? error.message : String(error);
-
-      return { cancelPlanRunError: message };
+    if (result.cancelPlanRunError != null && result.cancelPlanRunError !== '') {
+      return { cancelPlanRunError: result.cancelPlanRunError };
     }
+
+    return { cancelPlanRun: result.cancelPlanRun };
   }
 
   if (intent === 'setPlanStatus') {

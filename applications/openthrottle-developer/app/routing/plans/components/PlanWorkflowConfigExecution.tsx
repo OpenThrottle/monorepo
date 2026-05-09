@@ -11,55 +11,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import type {
+  WorkflowRalphExecutionBackendUi,
+  WorkflowRalphRunOptionsInput,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-export interface PlanWorkflowConfigExecutionProps {}
+export interface PlanWorkflowConfigExecutionProps {
+  readonly className?: string;
+  readonly input: WorkflowRalphRunOptionsInput;
+  readonly setInput: (
+    updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
+  ) => void;
+}
 
 export const PlanWorkflowConfigExecution = (
-  _props: PlanWorkflowConfigExecutionProps,
+  props: PlanWorkflowConfigExecutionProps,
 ) => {
-  // const { className } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
+  const { className, input, setInput } = props;
 
   // 🔌 Short Circuit
 
   return (
-    <Card className="mt-8">
+    <Card className={classnames('mt-8', className)}>
       <CardHeader className="pb-2 mb-4">Layer 2 — Execution backend</CardHeader>
       <CardContent>
         <fieldset
-          aria-labelledby="workflow-run-layer2-legend"
+          aria-labelledby="plan-workflow-config-layer2-legend"
           className={classnames('space-y-4')}
           data-testid="PlanWorkflowConfigExecution"
-          disabled={true} // FIXME: When we have runners remove this
         >
+          <legend className="sr-only" id="plan-workflow-config-layer2-legend">
+            Layer 2 — Execution backend
+          </legend>
           <p className="text-muted-foreground text-xs">
-            Maps to <code className="text-xs">workflow-ralph --backend</code> (
-            <code className="text-xs">WORKFLOW_RALPH_BACKEND</code> /{' '}
-            <code className="text-xs">.workflow-ralph.json</code>
-            ). Today only <code className="text-xs">cursor</code> is
-            implemented; this panel stays fixed until additional backends ship.
+            One runner for the entire plan run—serialized as{' '}
+            <code className="text-xs">--backend</code> on{' '}
+            <code className="text-xs">workflow-ralph</code> and stored on the
+            queued job for auditing.
           </p>
           <div className="space-y-2">
-            <Label htmlFor="workflow-run-backend">Runner</Label>
-            <Select disabled={true} value="cursor">
+            <Label htmlFor="plan-workflow-config-backend">Runner</Label>
+            <Select
+              onValueChange={(next) =>
+                setInput((prev) => ({
+                  ...prev,
+                  executionBackend: next as WorkflowRalphExecutionBackendUi,
+                }))
+              }
+              value={input.executionBackend}
+            >
               <SelectTrigger
-                aria-label="Execution backend (stub)"
+                aria-label="Execution backend for this plan run"
                 className="max-w-md"
-                id="workflow-run-backend"
+                id="plan-workflow-config-backend"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cursor">Cursor (current)</SelectItem>
+                {(
+                  [
+                    'cursor',
+                    'claude',
+                  ] as const satisfies readonly WorkflowRalphExecutionBackendUi[]
+                ).map((id) => (
+                  <SelectItem key={id} value={id}>
+                    {id === 'cursor'
+                      ? 'Cursor (cursor-agent)'
+                      : 'Claude Code CLI'}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

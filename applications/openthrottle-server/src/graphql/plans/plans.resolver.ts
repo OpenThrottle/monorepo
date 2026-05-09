@@ -23,9 +23,11 @@ import {
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   PlansService,
+  PlanRunsService,
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { In } from 'typeorm';
 import type { Project } from '@openthrottle/nestjs-repositories';
@@ -52,6 +54,7 @@ import {
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
+  PlanRunsByPlanIdInput,
   SearchPlansInput,
   SetPlanStatusInput,
   UpdatePlanInput,
@@ -61,10 +64,13 @@ import {
   EnqueuePlanRunResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
+  PlanRunObject,
   PlanStatusCountObject,
 } from './plan.object';
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
+const DEFAULT_PLAN_RUNS_LIMIT = 20;
+const MAX_PLAN_RUNS_LIMIT = 100;
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`;
 
 /**
@@ -87,6 +93,7 @@ export class PlansResolver {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly planRunCancellation: PlanRunCancellationService,
+    private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
     private readonly projectsService: ProjectsService,
     private readonly queuesService: QueuesService,
@@ -116,6 +123,41 @@ export class PlansResolver {
     return this.tasksService
       .getRepository()
       .count({ where: { planId: parent.id } });
+  }
+
+  private mapPlanRunObject(planRun: PlanRun): PlanRunObject {
+    const out = new PlanRunObject();
+
+    out.bullmqJobId = planRun.bullmqJobId;
+    out.createdAt = planRun.createdAt;
+    out.executionBackend = planRun.executionBackend;
+    out.id = planRun.id;
+    out.planId = planRun.planId;
+    out.queueName = planRun.queueName;
+    out.runKind = planRun.runKind;
+    out.status = planRun.status;
+    out.updatedAt = planRun.updatedAt;
+
+    return out;
+  }
+
+  @Query(() => [PlanRunObject], {
+    description: `Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.`,
+  })
+  async planRunsByPlanId(
+    @Args('input', { type: () => PlanRunsByPlanIdInput })
+    input: PlanRunsByPlanIdInput,
+  ): Promise<PlanRunObject[]> {
+    const effectiveLimit = Math.min(
+      Math.max(1, input.limit ?? DEFAULT_PLAN_RUNS_LIMIT),
+      MAX_PLAN_RUNS_LIMIT,
+    );
+    const runs = await this.planRunsService.findRecentByPlanId(
+      input.planId,
+      effectiveLimit,
+    );
+
+    return runs.map((run) => this.mapPlanRunObject(run));
   }
 
   // @ProfileResponseTime('PlansResolver.plan')
@@ -604,6 +646,15 @@ export class PlansResolver {
     const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
       priority: jobPriority,
     });
+    const jobId = String(job.id ?? job.name);
+
+    await this.planRunsService.recordQueuedRun({
+      bullmqJobId: jobId,
+      executionBackend: jobData.executionBackend ?? 'cursor',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      runKind: 'spawn',
+    });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
@@ -639,7 +690,8 @@ export class PlansResolver {
 
     const result = new EnqueuePlanRunResultObject();
 
-    result.jobId = String(job.id ?? job.name);
+    result.executionBackend = jobData.executionBackend ?? 'cursor';
+    result.jobId = jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;
     result.queueTotal = queueTotal;
@@ -704,6 +756,15 @@ export class PlansResolver {
     const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
       priority: jobPriority,
     });
+    const jobId = String(job.id ?? job.name);
+
+    await this.planRunsService.recordQueuedRun({
+      bullmqJobId: jobId,
+      executionBackend: jobData.executionBackend ?? 'cursor',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      runKind: 'spawn',
+    });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
@@ -737,7 +798,8 @@ export class PlansResolver {
     });
 
     const result = new EnqueuePlanRunResultObject();
-    result.jobId = String(job.id ?? job.name);
+    result.executionBackend = jobData.executionBackend ?? 'cursor';
+    result.jobId = jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;
     result.queueTotal = queueTotal;
@@ -852,6 +914,14 @@ export class PlansResolver {
       throw new BadRequestException(enqueueResult.error);
     }
 
+    await this.planRunsService.recordQueuedRun({
+      bullmqJobId: enqueueResult.jobId,
+      executionBackend: jobData.executionBackend ?? 'cursor',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      runKind: 'orchestrator',
+    });
+
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
     const statusesToReset = [
@@ -885,6 +955,7 @@ export class PlansResolver {
     });
 
     const result = new EnqueuePlanRunResultObject();
+    result.executionBackend = jobData.executionBackend ?? 'cursor';
     result.jobId = enqueueResult.jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;

@@ -2,7 +2,7 @@
  * @description GraphQL ObjectType for Plan. Implements {@link PlanData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
  */
 
-import type { PlanData } from '@openthrottle/nestjs-repositories/src/modules/plans/plan.entity';
+import type { PlanData, PlanRunData } from '@openthrottle/nestjs-repositories';
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ProjectObject } from '../projects/project.object';
 
@@ -70,6 +70,41 @@ export class PlanStatusCountObject {
   status!: string;
 }
 
+@ObjectType()
+export class PlanRunObject implements PlanRunData {
+  @Field(() => String, { description: 'BullMQ job id for this run.' })
+  bullmqJobId!: string;
+
+  @Field(() => Date)
+  createdAt!: Date;
+
+  @Field(() => String, {
+    description:
+      'Execution backend selected once for the whole run: cursor or claude.',
+  })
+  executionBackend!: 'claude' | 'cursor';
+
+  @Field(() => String)
+  id!: string;
+
+  @Field(() => String)
+  planId!: string;
+
+  @Field(() => String)
+  queueName!: string;
+
+  @Field(() => String, {
+    description: 'Ralph run implementation: spawn or orchestrator.',
+  })
+  runKind!: 'orchestrator' | 'spawn';
+
+  @Field(() => String)
+  status!: string;
+
+  @Field(() => Date)
+  updatedAt!: Date;
+}
+
 /** Result of listPlansByStatus: plans and total count. */
 @ObjectType()
 export class ListPlansByStatusResultObject {
@@ -83,6 +118,12 @@ export class ListPlansByStatusResultObject {
 /** Result of enqueuePlanRun: job id, plan id, and queue position for UI feedback. */
 @ObjectType()
 export class EnqueuePlanRunResultObject {
+  @Field(() => String, {
+    description:
+      'Execution backend selected once for the whole run: cursor or claude.',
+  })
+  executionBackend!: 'claude' | 'cursor';
+
   @Field(() => String, { description: 'BullMQ job id' })
   jobId!: string;
 

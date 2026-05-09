@@ -36,6 +36,16 @@ describe('runIteration (sync) backend dispatch', () => {
     vi.restoreAllMocks();
   });
 
+  it('defaults to cursor-agent when backend omitted', () => {
+    runIteration({
+      agentPrompt: 'x',
+      iteration: 1,
+    });
+    expect(spawnSync).toHaveBeenCalledTimes(1);
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toMatch(/^cursor-agent --force -p "/);
+  });
+
   it('invokes cursor-agent for --backend cursor', () => {
     runIteration({
       agentPrompt: 'hello "world"',
@@ -104,6 +114,15 @@ describe('runIterationAsync backend dispatch', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('defaults to cursor-agent when backend omitted', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      iteration: 1,
+    });
+    const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
+    expect(firstArg).toMatch(/^cursor-agent --force -p "/);
   });
 
   it('spawns claude command for --backend claude', async () => {

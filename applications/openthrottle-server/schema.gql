@@ -238,12 +238,40 @@ type PlanStatusCountObject {
   status: String!
 }
 
+type PlanRunObject {
+  """
+  BullMQ job id for this run.
+  """
+  bullmqJobId: String!
+  createdAt: DateTime!
+
+  """
+  Execution backend selected once for the whole run: cursor or claude.
+  """
+  executionBackend: String!
+  id: String!
+  planId: String!
+  queueName: String!
+
+  """
+  Ralph run implementation: spawn or orchestrator.
+  """
+  runKind: String!
+  status: String!
+  updatedAt: DateTime!
+}
+
 type ListPlansByStatusResultObject {
   plans: [PlanObject!]!
   totalCount: Int!
 }
 
 type EnqueuePlanRunResultObject {
+  """
+  Execution backend selected once for the whole run: cursor or claude.
+  """
+  executionBackend: String!
+
   """
   BullMQ job id
   """
@@ -1019,6 +1047,11 @@ type JobObject {
   data: String
 
   """
+  Execution backend selected once for this plan run. Present for plans queue jobs.
+  """
+  executionBackend: String
+
+  """
   Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.
   """
   name: String
@@ -1229,6 +1262,11 @@ type PlanRunMetricsEntry {
   Unix timestamp when the job finished.
   """
   finishedOn: Float
+
+  """
+  Execution backend selected once for the whole run: cursor or claude.
+  """
+  executionBackend: String
 
   """
   Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.
@@ -1764,6 +1802,11 @@ type Query {
   planOutputStreamChunks(
     input: ListPlanOutputStreamChunksInput!
   ): [PlanOutputStreamChunkObject!]!
+
+  """
+  Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.
+  """
+  planRunsByPlanId(input: PlanRunsByPlanIdInput!): [PlanRunObject!]!
 
   """
   Active Stripe products (catalog). Does not require authentication.
@@ -3044,6 +3087,18 @@ input EnqueuePlanRalphOrchestratorInput {
   Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
   """
   workingDirectory: String
+}
+
+input PlanRunsByPlanIdInput {
+  """
+  Max plan-run audit rows to return, newest first.
+  """
+  limit: Int
+
+  """
+  Plan id whose run audit rows should be returned
+  """
+  planId: ID!
 }
 
 input CreateProjectInput {

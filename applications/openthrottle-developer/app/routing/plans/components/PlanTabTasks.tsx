@@ -19,10 +19,68 @@ import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksT
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
-function buildPlanTaskTableColumns(): ColumnDef<
+export interface PlanTabTasksProp {
+  readonly tasks: PlanTaskRowFragment[];
+}
+
+export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
+  const { tasks } = props;
+
+  // Hooks
+  const columns = React.useMemo(() => PlanTabTasks.buildTable(), []);
+  const [data, _setData] = React.useState(tasks);
+
+  // Setup
+  const getRowId = React.useCallback(
+    (task: PlanTaskRowFragment) => task.id,
+    [],
+  );
+
+  const getRowProps = React.useCallback(
+    (row: { original: PlanTaskRowFragment }) => ({
+      id: `task-${row.original.id}`,
+    }),
+    [],
+  );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (tasks.length === 0) {
+    return (
+      <TabsContent value="tasks">
+        <PlanTasksEmpty />
+      </TabsContent>
+    );
+  }
+
+  return (
+    <TabsContent value="tasks">
+      <div
+        // className="flex flex-col gap-4 md:gap-8"
+        className="bg-card rounded-lg border border-card-border"
+      >
+        {/* <PlanTasksToolbar className="bg-card rounded-lg border border-card-border" /> */}
+        {/* <PlanTasksList /> */}
+        <DataTable<PlanTaskRowFragment, string | null | undefined>
+          columns={columns}
+          data={data}
+          getRowId={getRowId}
+          getRowProps={getRowProps}
+        />
+      </div>
+    </TabsContent>
+  );
+};
+
+PlanTabTasks.buildTable = (): ColumnDef<
   PlanTaskRowFragment,
   string | null | undefined
->[] {
+>[] => {
   return [
     {
       accessorKey: 'status',
@@ -133,65 +191,4 @@ function buildPlanTaskTableColumns(): ColumnDef<
       id: 'actions',
     },
   ];
-}
-
-export interface PlanTabTasksProp {
-  readonly tasks: PlanTaskRowFragment[];
-}
-
-export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
-  const { tasks } = props;
-
-  // Hooks
-  const columns = React.useMemo(() => buildPlanTaskTableColumns(), []);
-  const [data, _setData] = React.useState(tasks);
-
-  // Setup
-  const getRowId = React.useCallback(
-    (task: PlanTaskRowFragment) => task.id,
-    [],
-  );
-
-  const getRowProps = React.useCallback(
-    (row: { original: PlanTaskRowFragment }) => ({
-      id: `task-${row.original.id}`,
-    }),
-    [],
-  );
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-  if (tasks.length === 0) {
-    return (
-      <TabsContent
-        className="bg-card rounded-lg border border-card-border"
-        value="tasks"
-      >
-        <PlanTasksEmpty />
-      </TabsContent>
-    );
-  }
-
-  return (
-    <TabsContent value="tasks">
-      <div
-        // className="flex flex-col gap-4 md:gap-8"
-        className="bg-card rounded-lg border border-card-border"
-      >
-        {/* <PlanTasksToolbar className="bg-card rounded-lg border border-card-border" /> */}
-        {/* <PlanTasksList /> */}
-        <DataTable<PlanTaskRowFragment, string | null | undefined>
-          columns={columns}
-          data={data}
-          getRowId={getRowId}
-          getRowProps={getRowProps}
-        />
-      </div>
-    </TabsContent>
-  );
 };

@@ -52,8 +52,11 @@ query getTasksByPlanId($input: TasksByPlanIdInput!) {
 
 mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
   enqueuePlanRun(input: $input) {
+    executionBackend
     jobId
     planId
+    queuePosition
+    queueTotal
   }
 }
 
@@ -99,6 +102,7 @@ query PlanDetailIndexLoader($planId: ID!) {
   }
   metrics {
     recentPlanRunsMetrics(planId: $planId, limit: 25) {
+      executionBackend
       finishedOn
       jobId
       taskRunMetrics {

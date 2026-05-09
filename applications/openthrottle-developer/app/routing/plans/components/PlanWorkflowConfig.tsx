@@ -331,7 +331,7 @@ export const PlanWorkflowConfig = (props: PlanWorkflowConfigProps) => {
           promptFile={input.promptFile}
           promptLayer={input.promptLayer}
         />
-        <PlanWorkflowConfigExecution />
+        <PlanWorkflowConfigExecution input={input} setInput={setInput} />
         <PlanWorkflowConfigTuning
           input={input}
           iterationTimeoutText={iterationTimeoutText}

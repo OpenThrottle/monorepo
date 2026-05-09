@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { Card, Markdown, TabsContent } from '@openthrottle/react-router-shadcn';
+import classnames from 'classnames';
+import {
+  Button,
+  Card,
+  Markdown,
+  TabsContent,
+} from '@openthrottle/react-router-shadcn';
 import type {
   PlanDetailIndexLoaderQuery,
   PlanDetailsFragment,
@@ -18,11 +24,14 @@ import {
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
-
 export interface PlanTabDetailsProps {
+  readonly fullscreen: boolean;
   readonly plan: PlanDetailsFragment;
   readonly ralphTuningJson: string;
   readonly recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
+  readonly setFullscreen: React.SetStateAction<
+    React.Dispatch<React.SetStateAction<boolean>>
+  >;
   readonly workingDirectory?: string;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workflowTimeout: string;
@@ -30,9 +39,11 @@ export interface PlanTabDetailsProps {
 
 export const PlanTabDetails = (props: PlanTabDetailsProps) => {
   const {
+    fullscreen,
     plan,
     ralphTuningJson,
     recentPlanRuns,
+    setFullscreen,
     workingDirectory,
     workflowInput,
     workflowTimeout,
@@ -92,7 +103,18 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
   return (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
-        <Card>
+        <Card
+          className={classnames({
+            'absolute inset-0 z-50': fullscreen,
+          })}
+        >
+          <Button
+            onClick={() => {
+              setFullscreen((prev) => !prev);
+            }}
+          >
+            Full Screen
+          </Button>
           <PlanToolbar
             // className="bg-card rounded-lg border border-card-border p-4"
             className="p-4"
@@ -105,10 +127,28 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
             workingDirectory={workingDirectory}
           />
           {/* <CardContent> */}
+
+          {/*
+            <EditorWindow
+              className="flex-1 transition-all duration-300"
+              height={fullscreen ? '100vh' : '300px'}
+              language="markdown"
+              options={{
+                minimap: { enabled: false },
+              }}
+              value={plan.description ?? ''}
+              width="100%"
+              wrapperProps={{ className: 'transition-all duration-300' }}
+              // height="100vh"
+              // onChange={handleEditorChange}
+            />
+          */}
+
           <Markdown
             className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
             content={plan.description ?? ''}
           />
+
           {/* </CardContent> */}
 
           {/* <div>

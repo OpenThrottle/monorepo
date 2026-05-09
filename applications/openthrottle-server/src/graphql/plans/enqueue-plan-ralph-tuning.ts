@@ -8,10 +8,14 @@ import { existsSync, statSync } from 'fs';
 import { isAbsolute } from 'path';
 import type {
   ChildJobInput,
+  RalphExecutionBackendId,
   RalphNestedDebugCli,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
-import { parseRalphExecutionBackendId } from '@tools/workflows';
+import {
+  DEFAULT_RALPH_RUNNER,
+  parseRalphExecutionBackendId,
+} from '@tools/workflows';
 import type {
   RunPlanOrchestratorJobData,
   RunPlanSpawnJobData,
@@ -234,6 +238,13 @@ export const parseEnqueueRalphTuning = (
 };
 
 /**
+ * @description Resolves the execution backend persisted for the plan run. GraphQL omission falls back to the workflow-ralph default.
+ */
+export const resolvePlanRunExecutionBackend = (
+  ralph: RalphNestedRunTuningInput | undefined,
+): RalphExecutionBackendId => ralph?.backend ?? DEFAULT_RALPH_RUNNER;
+
+/**
  * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
  */
 export const buildRunPlanJobData = (input: {
@@ -242,9 +253,11 @@ export const buildRunPlanJobData = (input: {
   readonly workingDirectory?: string | null;
 }): RunPlanSpawnJobData => {
   const ralph = parseEnqueueRalphTuning(input.ralph);
+  const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
 
   return {
+    executionBackend,
     planId: input.planId,
     ...(ralph !== undefined ? { ralph } : {}),
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),
@@ -282,7 +295,9 @@ export const buildRunPlanOrchestratorJobData = (input: {
       throw new Error('taskId must be a valid Cortex UUID');
     }
     const ralph = parseEnqueueRalphTuning(input.ralph);
+    const executionBackend = resolvePlanRunExecutionBackend(ralph);
     return {
+      executionBackend,
       mode: 'task',
       planId,
       ...(ralph !== undefined ? { ralph } : {}),
@@ -297,7 +312,9 @@ export const buildRunPlanOrchestratorJobData = (input: {
   }
 
   const ralph = parseEnqueueRalphTuning(input.ralph);
+  const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const data: RunPlanOrchestratorJobData = {
+    executionBackend,
     planId,
     runKind: 'orchestrator',
     ...(mode === 'plan' ? { mode: 'plan' } : {}),

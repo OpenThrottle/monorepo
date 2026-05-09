@@ -2,16 +2,20 @@ import { z } from 'zod/v3';
 import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
+  AddPermissionToRoleInput,
   AppendPlanOutputInput,
+  AssignRoleToUserInput,
   CancelPlanRunInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
+  CreateCheckoutSessionInput,
   CreateCustomPromptInput,
   CreateNoteInput,
   CreatePlanInput,
   CreateProjectInput,
   CreateQueueInput,
+  CreateRoleInput,
   CreateTaskInput,
   CreateUserInput,
   CustomPromptType,
@@ -40,15 +44,19 @@ import {
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
   PlanRalphWorkflowMode,
+  PlanRunsByPlanIdInput,
   PrCountByLabelInput,
   PressureLevel,
+  ProcessStripeWebhookInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
+  RemovePermissionFromRoleInput,
   RemoveRepeatableJobInput,
+  RemoveRoleFromUserInput,
   RepeatableJobsInput,
   RetryJobInput,
   ReviewCycleTimeInput,
@@ -62,6 +70,7 @@ import {
   UpdateNoteInput,
   UpdatePlanInput,
   UpdateProjectInput,
+  UpdateRoleInput,
   UpdateTaskInput,
   UpdateUserInput,
   WallClockInterpretation,
@@ -114,6 +123,15 @@ export function ActivityByDateRangeInputSchema(): z.ZodObject<
   });
 }
 
+export function AddPermissionToRoleInputSchema(): z.ZodObject<
+  Properties<AddPermissionToRoleInput>
+> {
+  return z.object({
+    permissionId: z.string(),
+    roleId: z.string(),
+  });
+}
+
 export function AppendPlanOutputInputSchema(): z.ZodObject<
   Properties<AppendPlanOutputInput>
 > {
@@ -121,6 +139,15 @@ export function AppendPlanOutputInputSchema(): z.ZodObject<
     content: z.string(),
     iteration: z.number().nullish(),
     planId: z.string(),
+  });
+}
+
+export function AssignRoleToUserInputSchema(): z.ZodObject<
+  Properties<AssignRoleToUserInput>
+> {
+  return z.object({
+    roleId: z.string(),
+    userId: z.string(),
   });
 }
 
@@ -156,6 +183,16 @@ export function CommitsPerPrInputSchema(): z.ZodObject<
     owner: z.string(),
     period: z.string().nullish(),
     repo: z.string(),
+  });
+}
+
+export function CreateCheckoutSessionInputSchema(): z.ZodObject<
+  Properties<CreateCheckoutSessionInput>
+> {
+  return z.object({
+    cancelUrl: z.string(),
+    priceId: z.string(),
+    successUrl: z.string(),
   });
 }
 
@@ -214,6 +251,15 @@ export function CreateQueueInputSchema(): z.ZodObject<
   Properties<CreateQueueInput>
 > {
   return z.object({
+    name: z.string(),
+  });
+}
+
+export function CreateRoleInputSchema(): z.ZodObject<
+  Properties<CreateRoleInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
     name: z.string(),
   });
 }
@@ -478,6 +524,15 @@ export function PlanEmbeddingsByPlanInputSchema(): z.ZodObject<
   });
 }
 
+export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
+  Properties<PlanRunsByPlanIdInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    planId: z.string(),
+  });
+}
+
 export function PrCountByLabelInputSchema(): z.ZodObject<
   Properties<PrCountByLabelInput>
 > {
@@ -485,6 +540,15 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
     owner: z.string(),
     repo: z.string(),
     state: z.string().nullish(),
+  });
+}
+
+export function ProcessStripeWebhookInputSchema(): z.ZodObject<
+  Properties<ProcessStripeWebhookInput>
+> {
+  return z.object({
+    rawPayloadBase64: z.string(),
+    stripeSignature: z.string(),
   });
 }
 
@@ -541,12 +605,30 @@ export function RemainingTasksByPlanIdInputSchema(): z.ZodObject<
   });
 }
 
+export function RemovePermissionFromRoleInputSchema(): z.ZodObject<
+  Properties<RemovePermissionFromRoleInput>
+> {
+  return z.object({
+    permissionId: z.string(),
+    roleId: z.string(),
+  });
+}
+
 export function RemoveRepeatableJobInputSchema(): z.ZodObject<
   Properties<RemoveRepeatableJobInput>
 > {
   return z.object({
     key: z.string(),
     queueName: z.string(),
+  });
+}
+
+export function RemoveRoleFromUserInputSchema(): z.ZodObject<
+  Properties<RemoveRoleFromUserInput>
+> {
+  return z.object({
+    roleId: z.string(),
+    userId: z.string(),
   });
 }
 
@@ -682,6 +764,16 @@ export function UpdateProjectInputSchema(): z.ZodObject<
     id: z.string(),
     name: z.string().nullish(),
     nxProjectName: z.string().nullish(),
+  });
+}
+
+export function UpdateRoleInputSchema(): z.ZodObject<
+  Properties<UpdateRoleInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    id: z.string(),
+    name: z.string().nullish(),
   });
 }
 

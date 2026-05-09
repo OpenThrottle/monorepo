@@ -17,6 +17,7 @@ import type {
   QueueJobDetailCancelPlanRunMutation,
   QueueJobDetailRetryMutation,
 } from '~/__generated__/graphql';
+import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { describeCancelPlanRunResult } from '~/routing/plans/utils/describe-cancel-plan-run-result';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
@@ -78,9 +79,13 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
       lines.push(`correlationId: ${parsed.correlationId}`);
     }
     if (job.name) lines.push(`name: ${job.name}`);
+    if (job.executionBackend != null && job.executionBackend !== '') {
+      lines.push(`executionBackend: ${job.executionBackend}`);
+    }
     lines.push(`urlPath: ${queueJobDetailPath(queueName, job.id)}`);
     return `${lines.join('\n')}\n`;
   }, [
+    job.executionBackend,
     job.id,
     job.name,
     job.state,
@@ -218,6 +223,17 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
               {queueName}
             </code>
           </p>
+          {job.executionBackend != null && job.executionBackend !== '' && (
+            <p>
+              <span className="text-muted-foreground">Runner</span>{' '}
+              <span className="text-foreground text-xs">
+                {formatWorkflowRalphExecutionBackendLabel(job.executionBackend)}{' '}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.65rem]">
+                  {job.executionBackend}
+                </code>
+              </span>
+            </p>
+          )}
           <p>
             <span className="text-muted-foreground">Job id</span>{' '}
             <code
