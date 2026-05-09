@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { ArrowRightIcon, GitPullRequestIcon } from 'lucide-react';
+import {
+  ArrowRightIcon,
+  GitPullRequestIcon,
+  PanelRightIcon,
+} from 'lucide-react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import {
@@ -9,6 +13,7 @@ import {
 } from '~/routing/pull-requests/utils/github-pr-links';
 import { Link } from 'react-router';
 import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
+import { buildPullRequestListSearchWithPreview } from '~/routing/pull-requests/constants/pull-request-list-url';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
@@ -148,6 +153,11 @@ export const createPullRequestsTableColumns = (
     {
       cell: ({ row }) => {
         const pull = row.original;
+        const previewSearch = buildPullRequestListSearchWithPreview(
+          context.listQuery,
+          pull.number,
+        );
+        const previewPath = `/pull-requests?${previewSearch}`;
         const portalPath =
           context.listQuery === ''
             ? `/pull-requests/${pull.number}`
@@ -156,9 +166,15 @@ export const createPullRequestsTableColumns = (
         return (
           <div className="flex flex-wrap gap-2 p-2">
             <Button asChild={true} size="xs" variant="outline">
+              <Link to={previewPath} viewTransition={true}>
+                <PanelRightIcon aria-hidden={true} className="w-4 h-4" />
+                <span className="sr-only">Preview in side panel</span>
+              </Link>
+            </Button>
+            <Button asChild={true} size="xs" variant="outline">
               <Link to={portalPath} viewTransition={true}>
-                {/* In portal */}
-                <ArrowRightIcon className="w-4 h-4" />
+                <ArrowRightIcon aria-hidden={true} className="w-4 h-4" />
+                <span className="sr-only">Open full pull request page</span>
               </Link>
             </Button>
             <Button asChild={true} size="xs" variant="outline">

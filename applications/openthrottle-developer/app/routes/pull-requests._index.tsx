@@ -8,6 +8,11 @@ import {
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { GetPullRequestsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import {
+  parsePullRequestListPreviewNumber,
+  PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM,
+} from '~/routing/pull-requests/constants/pull-request-list-url';
+import { PullRequestPreviewSheet } from '~/routing/pull-requests/components/PullRequestPreviewSheet';
 import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
 import { PullRequestsIntroduction } from '~/routing/pull-requests/components/PullRequestsIntroduction';
 import { PullRequestsTable } from '~/routing/pull-requests/components/PullRequestsTable';
@@ -66,6 +71,15 @@ export const loader = async (args: Route.LoaderArgs) => {
             : login.includes(authorFilterLower);
         });
 
+  const prPreviewRaw = url.searchParams.get(
+    PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM,
+  );
+  const prPreviewNumber = parsePullRequestListPreviewNumber(prPreviewRaw);
+  const prPreviewPull =
+    prPreviewNumber === null
+      ? null
+      : (filteredPulls.find((item) => item.number === prPreviewNumber) ?? null);
+
   const listSearchParams = new URLSearchParams();
   listSearchParams.set('owner', ownerParam);
   listSearchParams.set('repo', repoParam);
@@ -100,6 +114,8 @@ export const loader = async (args: Route.LoaderArgs) => {
       state,
     },
     listQuery: listSearchParams.toString(),
+    prPreviewNumber,
+    prPreviewPull,
     pulls: filteredPulls,
   };
 };
@@ -116,7 +132,8 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { filters, listQuery, pulls } = loaderData;
+  const { filters, listQuery, prPreviewNumber, prPreviewPull, pulls } =
+    loaderData;
 
   // Hooks
 
@@ -139,6 +156,13 @@ export default function Component(
         filters={filters}
         listQuery={listQuery}
         pulls={pulls}
+      />
+
+      <PullRequestPreviewSheet
+        filters={filters}
+        listQuery={listQuery}
+        prPreviewNumber={prPreviewNumber}
+        prPreviewPull={prPreviewPull}
       />
 
       {/* <div className="grid grid-cols-1 gap-4 lg:gap-8">

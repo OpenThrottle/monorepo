@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
-import { useFetcher } from 'react-router';
+import { Link, useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -120,7 +120,14 @@ export default function Component(
           <DashboardQuickNavigation />
 
           <div>
-            <h2 className="text-lg font-bold mb-4">Daily Stats</h2>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-bold">Daily Stats</h2>
+              <Button asChild={true} size="sm" variant="outline">
+                <Link to="/dashboard?modal=daily-stats" viewTransition={true}>
+                  Expand chart details
+                </Link>
+              </Button>
+            </div>
             <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
           </div>
 

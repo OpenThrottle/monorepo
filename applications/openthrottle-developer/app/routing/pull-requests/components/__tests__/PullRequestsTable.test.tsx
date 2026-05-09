@@ -58,16 +58,7 @@ describe('PullRequestsTable Component', () => {
       component.getByRole('columnheader', { name: 'Title' }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'State' }),
-    ).toBeInTheDocument();
-    expect(
       component.getByRole('columnheader', { name: 'Author' }),
-    ).toBeInTheDocument();
-    expect(
-      component.getByRole('columnheader', { name: 'Dates' }),
-    ).toBeInTheDocument();
-    expect(
-      component.getByRole('columnheader', { name: 'Refs' }),
     ).toBeInTheDocument();
     expect(
       component.getByRole('columnheader', { name: 'Actions' }),
@@ -95,15 +86,22 @@ describe('PullRequestsTable Component', () => {
       component = render(<RoutesStub />);
     });
 
-    test('renders ref cells for head and base', () => {
+    test('renders row title and author', () => {
       const table = component.getByRole('table');
-      expect(table).toHaveTextContent('main');
-      expect(table).toHaveTextContent('feature/foo');
+      expect(table).toHaveTextContent('Fix the thing');
+      expect(table).toHaveTextContent('visormatt');
       expect(table).toHaveTextContent('deadbee');
     });
 
-    test('renders action links with expected GitHub and portal targets', () => {
-      const portalLink = component.getByRole('link', { name: 'In portal' });
+    test('renders preview, full-page, GitHub, and checks targets', () => {
+      const preview = component.getByRole('link', {
+        name: 'Preview in side panel',
+      });
+      expect(preview).toHaveAttribute('href', '/pull-requests?pr=42');
+
+      const portalLink = component.getByRole('link', {
+        name: 'Open full pull request page',
+      });
       expect(portalLink).toHaveAttribute('href', '/pull-requests/42');
 
       const githubPr = component.getByRole('link', { name: 'GitHub PR' });
@@ -125,7 +123,7 @@ describe('PullRequestsTable Component', () => {
       );
     });
 
-    test('includes list query in portal link when listQuery is set', () => {
+    test('includes list query in preview and full-page links when listQuery is set', () => {
       cleanup();
       props = {
         filters: baseFilters,
@@ -136,7 +134,17 @@ describe('PullRequestsTable Component', () => {
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
 
-      const portalLink = component.getByRole('link', { name: 'In portal' });
+      const preview = component.getByRole('link', {
+        name: 'Preview in side panel',
+      });
+      expect(preview).toHaveAttribute(
+        'href',
+        '/pull-requests?state=open&pr=42',
+      );
+
+      const portalLink = component.getByRole('link', {
+        name: 'Open full pull request page',
+      });
       expect(portalLink).toHaveAttribute(
         'href',
         '/pull-requests/42?state=open',

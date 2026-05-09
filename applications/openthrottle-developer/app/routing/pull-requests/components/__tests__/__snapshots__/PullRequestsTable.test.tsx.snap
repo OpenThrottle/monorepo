@@ -34,34 +34,7 @@ exports[`PullRequestsTable Component > matches snapshot for empty list 1`] = `
                 <div
                   class="p-2"
                 >
-                  State
-                </div>
-              </th>
-              <th
-                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
                   Author
-                </div>
-              </th>
-              <th
-                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
-                  Dates
-                </div>
-              </th>
-              <th
-                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
-                  Refs
                 </div>
               </th>
               <th
@@ -83,7 +56,7 @@ exports[`PullRequestsTable Component > matches snapshot for empty list 1`] = `
             >
               <td
                 class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] h-24 text-center"
-                colspan="6"
+                colspan="3"
               >
                 No results.
               </td>
@@ -130,34 +103,7 @@ exports[`PullRequestsTable Component > when pulls are provided > matches snapsho
                 <div
                   class="p-2"
                 >
-                  State
-                </div>
-              </th>
-              <th
-                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
                   Author
-                </div>
-              </th>
-              <th
-                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
-                  Dates
-                </div>
-              </th>
-              <th
-                class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
-                  Refs
                 </div>
               </th>
               <th
@@ -183,95 +129,68 @@ exports[`PullRequestsTable Component > when pulls are provided > matches snapsho
                 <div
                   class="p-2"
                 >
-                  Fix the thing
-                </div>
-              </td>
-              <td
-                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2"
-                >
                   <div
-                    class="inline-flex text-center items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80"
+                    class="flex items-center gap-4 mb-2"
                   >
-                    open
+                    <div
+                      class="rounded-full bg-green-500/20 border-green-500/50 text-green-500"
+                    >
+                      <span
+                        class="sr-only"
+                      >
+                        open
+                      </span>
+                      <svg
+                        aria-hidden="true"
+                        class="lucide lucide-circle size-3"
+                        fill="none"
+                        height="24"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                        />
+                      </svg>
+                    </div>
+                    <h3
+                      class="font-medium line-clamp-1"
+                    >
+                      #
+                      42
+                       
+                      Fix the thing
+                    </h3>
                   </div>
+                  <p
+                    class="text-xs text-muted-foreground"
+                  >
+                    Created 
+                    01/01/2026
+                     — Updated
+                     
+                    01/02/2026
+                  </p>
                 </div>
               </td>
               <td
                 class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
               >
                 <div
-                  class="p-2"
+                  class="p-2 flex flex-col gap-2"
                 >
                   <span
                     class="text-sm font-medium text-foreground"
                   >
                     visormatt
                   </span>
-                </div>
-              </td>
-              <td
-                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2 text-xs text-muted-foreground"
-                >
-                  Created 
-                  01/01/2026
-                   — updated
-                   
-                  01/02/2026
-                </div>
-              </td>
-              <td
-                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="p-2 font-mono text-xs text-muted-foreground"
-                >
-                  main
-                   
-                  ←
-                   
-                  feature/foo
-                  <span
-                    class="block pt-1 text-[11px] text-muted-foreground/90"
-                  >
-                    deadbee
-                  </span>
-                </div>
-              </td>
-              <td
-                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-              >
-                <div
-                  class="flex flex-wrap gap-2 p-2"
-                >
-                  <a
-                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                    data-discover="true"
-                    href="/pull-requests/42"
-                  >
-                    In portal
-                  </a>
-                  <a
-                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                    href="https://github.com/acme/demo/pull/42"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    GitHub PR
-                  </a>
-                  <a
-                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                    href="https://github.com/acme/demo/pull/42/checks"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Checks (CI)
-                  </a>
                   <a
                     class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     href="https://github.com/acme/demo/commit/deadbeef1234567890abcdef"
@@ -285,6 +204,133 @@ exports[`PullRequestsTable Component > when pulls are provided > matches snapsho
                     >
                       deadbee
                     </span>
+                  </a>
+                </div>
+              </td>
+              <td
+                class="p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+              >
+                <div
+                  class="flex flex-wrap gap-2 p-2"
+                >
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    data-discover="true"
+                    href="/pull-requests?pr=42"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      class="lucide lucide-panel-right w-4 h-4"
+                      fill="none"
+                      height="24"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        height="18"
+                        rx="2"
+                        width="18"
+                        x="3"
+                        y="3"
+                      />
+                      <path
+                        d="M15 3v18"
+                      />
+                    </svg>
+                    <span
+                      class="sr-only"
+                    >
+                      Preview in side panel
+                    </span>
+                  </a>
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    data-discover="true"
+                    href="/pull-requests/42"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      class="lucide lucide-arrow-right w-4 h-4"
+                      fill="none"
+                      height="24"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 12h14"
+                      />
+                      <path
+                        d="m12 5 7 7-7 7"
+                      />
+                    </svg>
+                    <span
+                      class="sr-only"
+                    >
+                      Open full pull request page
+                    </span>
+                  </a>
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    href="https://github.com/acme/demo/pull/42"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      class="lucide lucide-git-pull-request w-4 h-4"
+                      fill="none"
+                      height="24"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="3"
+                      />
+                      <circle
+                        cx="6"
+                        cy="6"
+                        r="3"
+                      />
+                      <path
+                        d="M13 6h3a2 2 0 0 1 2 2v7"
+                      />
+                      <line
+                        x1="6"
+                        x2="6"
+                        y1="9"
+                        y2="21"
+                      />
+                    </svg>
+                    <span
+                      class="sr-only"
+                    >
+                      GitHub PR
+                    </span>
+                  </a>
+                  <a
+                    class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-sm text-xs px-2 py-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                    href="https://github.com/acme/demo/pull/42/checks"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Checks (CI)
                   </a>
                 </div>
               </td>
