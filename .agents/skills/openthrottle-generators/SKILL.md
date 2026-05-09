@@ -4,12 +4,12 @@ description: >-
   OpenThrottle monorepo scaffolding with @tools/generators: mandatory
   NX_ISOLATE_PLUGINS=false, pnpm nx, list/describe/--list discovery, and
   registered generator names (react-router, nestjs, react, package, folders).
-  Use when adding apps, packages, React Router UI, NestJS services, or any
-  new file that should be generated; when docs say "remix" but Nx cannot
-  resolve the generator; or when aligning with AGENT_USAGE and
-  personal-generators.mdc. Defer deep Nx graph/target questions to
-  nx-workspace; generic multi-plugin generator flow to nx-generate; running
-  build/test after codegen to nx-run-tasks.
+  USE WHEN scaffolding new code, fixing Unable to resolve @tools/generators or
+  Cannot find generator, aligning with docs/tools/templates/AGENT_USAGE.md or
+  personal-generators.mdc, or adding apps, packages, React Router UI, or NestJS
+  services. When docs say remix but Nx fails, use react-router generator
+  instead. Defer graph/target exploration to nx-workspace; generic non-OT
+  generator flow to nx-generate; run targets after codegen to nx-run-tasks.
 ---
 
 # OpenThrottle generators and Nx conventions

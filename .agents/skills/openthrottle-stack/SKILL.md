@@ -2,15 +2,14 @@
 name: openthrottle-stack
 description: >-
   OpenThrottle platform slices beyond generators and OT plans: NestJS GraphQL
-  patterns in openthrottle-server (resolver wrappers, backwards-compatible
-  schema); Postgres/pgvector and ingest scripts (databases/README.md); React
-  Router UI in openthrottle-developer (@openthrottle/react-router-shadcn,
-  routes under app/routes); @openthrottle/mcp-developer GraphQL boundary,
-  auth, and local verification. Use when working on openthrottle-server,
-  openthrottle-developer, databases/migrations/embedding imports,
-  packages/mcp-developer, Cortex Postgres schema, semantic search ingestion,
-  Ollama vs OpenAI embeddings, verify-openthrottle-mcp-env, or extending MCP
-  tools against openthrottle-server only.
+  in openthrottle-server (Result/ListResult/PaginatedResult, deprecate instead
+  of breaking schema); Postgres/pgvector, migrations, and ingest in
+  databases/README.md; React Router UI in openthrottle-developer and
+  @openthrottle/react-router-shadcn; packages/mcp-developer GraphQL-only
+  boundary, auth, verification-environment. USE WHEN changing openthrottle-server,
+  openthrottle-developer, databases or database:import, embeddings (Ollama vs
+  hosted), packages/mcp-developer, verify-openthrottle-mcp-env, or Cortex
+  schema and semantic ingest—not for routine OT plan CRUD (see ot-plans).
 ---
 
 # OpenThrottle stack (server, data, developer app, MCP)

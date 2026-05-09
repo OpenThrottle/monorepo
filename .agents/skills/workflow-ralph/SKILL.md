@@ -2,13 +2,13 @@
 name: workflow-ralph
 description: >-
   OpenThrottle Ralph CLI and queue workflows: pnpm exec workflow-ralph with
-  Cortex plan/task UUIDs; injected prompt vs OT MCP calls; spawn queue vs
+  Cortex plan/task UUIDs; injected /agents/ralph prompt layer; spawn worker vs
   in-process orchestrator (enqueuePlanRun vs enqueuePlanRalphOrchestrator);
-  BullMQ/worktree pointers; commit cadence and post-merge link_commit;
-  debugging via WORKFLOW_RALPH_DEBUG / --debug. Use when the user mentions
-  workflow-ralph, Ralph iterations, /agents/ralph, plan queue, enqueuePlanRun,
-  enqueuePlanRalphOrchestrator, nested workflow-ralph, Cursor backend,
-  workflow-link-merge after merge, or tools/workflows.
+  BullMQ and worktree docs in tools/workflows; commit cadence and post-merge
+  link_commit; WORKFLOW_RALPH_DEBUG and --debug. USE WHEN running Ralph,
+  debugging iterations, or the user mentions workflow-ralph, Ralph, plan
+  queue, nested workflow-ralph, Cursor backend, workflow-link-merge, or
+  tools/workflows README.
 ---
 
 # Workflow Ralph (CLI and queue)

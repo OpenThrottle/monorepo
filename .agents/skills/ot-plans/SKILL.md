@@ -1,13 +1,14 @@
 ---
 name: ot-plans
 description: >-
-  OpenThrottle (OT) plans and tasks via the mcp-developer MCP server: when to
-  use OT vs repo docs, plan/task lifecycle, Plan-Id and Task-Id in commits,
-  linking squash commits after merge, and failing loudly when OT is unavailable
-  (no Markdown plan fallbacks). Use when the user mentions OpenThrottle, OT,
-  mcp-developer, Cortex plans, plan UUIDs, task UUIDs, /ot commands, semantic
-  search over plans, link_commit, workflow-link-merge, or traceability between
-  git and OT.
+  OpenThrottle (OT) plans and tasks via the mcp-developer MCP server (GraphQL
+  to openthrottle-server). USE WHEN creating or updating plans/tasks, plans in
+  OT only, failing loudly when MCP is unavailable (no Markdown plan
+  fallbacks), Plan-Id and Task-Id in commits, link_commit or
+  workflow-link-merge after merge, or the user mentions OpenThrottle, OT,
+  Cortex, mcp-developer, plan UUIDs, task UUIDs, /ot commands, semantic search
+  over plans, or git–OT traceability. Covers when to use OT vs docs-mcp vs
+  databases/README and plan/task lifecycle.
 ---
 
 # OpenThrottle plans and MCP traceability

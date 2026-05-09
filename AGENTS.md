@@ -22,6 +22,15 @@
 
 <!-- nx configuration end-->
 
+## Cursor Agent Skills (OpenThrottle)
+
+Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above.
+
+- **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`.agents/skills/openthrottle-generators/SKILL.md`](./.agents/skills/openthrottle-generators/SKILL.md)
+- **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, mcp-developer package: [`.agents/skills/openthrottle-stack/SKILL.md`](./.agents/skills/openthrottle-stack/SKILL.md)
+- **ot-plans** — mcp-developer, plans/tasks, `Plan-Id` / `Task-Id`, post-merge `link_commit`: [`.agents/skills/ot-plans/SKILL.md`](./.agents/skills/ot-plans/SKILL.md)
+- **workflow-ralph** — CLI, queue spawn vs orchestrator, commit cadence: [`.agents/skills/workflow-ralph/SKILL.md`](./.agents/skills/workflow-ralph/SKILL.md)
+
 ## Workflow CLI (@tools/workflows)
 
 - **Discoverability:** Run `pnpm exec workflow-ralph --help` (and other bins) for usage. See `tools/workflows/README.md` for bin list.
