@@ -1,12 +1,18 @@
 /**
  * @description Layer 2 — execution backend (runner): which process invokes each Ralph iteration.
- * Today only `cursor` (Cursor `cursor-agent` CLI) is implemented; additional backends register here
- * without forking `workflow-ralph`.
+ * A single plan run uses **exactly one** runner for **all** iterations; no per-iteration switching.
+ * To use a different runner, start a new plan run / re-queue with that choice.
+ *
+ * Implemented today: `cursor` (Cursor `cursor-agent` CLI).
+ * Reserved (CLI/env/defaults plumbed; spawn implementation pending in a follow-up task): `claude`
+ * (Anthropic Claude Code CLI).
+ *
+ * Adding a runner: register the id below, implement spawn paths in `bin/run-iteration.ts`, and
+ * keep CLI help text in `config/messages.ts` aligned.
  */
 
 /** Known backend ids; extend when adding a runner implementation. */
-export const RALPH_EXECUTION_BACKEND_IDS = ['cursor'] as const;
-// export const RALPH_EXECUTION_BACKEND_IDS = ['cursor', 'claude'] as const;
+export const RALPH_EXECUTION_BACKEND_IDS = ['claude', 'cursor'] as const;
 
 /** @description Which CLI/process runs each agentic iteration. */
 export type RalphExecutionBackendId =

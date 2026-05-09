@@ -1,6 +1,9 @@
 /**
  * @description Single-iteration runner for Ralph (sync and async). Injected by ralph.ts so tests can mock it.
- * Dispatches to a {@link RalphExecutionBackendId} implementation (today: Cursor `cursor-agent`).
+ * Dispatches to a {@link RalphExecutionBackendId} implementation. Today `cursor` (Cursor
+ * `cursor-agent`) is implemented; `claude` (Anthropic Claude Code CLI) is registered and threaded
+ * through the CLI/env/defaults but its spawn path is pending in a follow-up task — invoking it
+ * fails fast with a clear error rather than falling back to another backend.
  */
 
 import { spawn } from 'child_process';
@@ -39,6 +42,8 @@ const SIGKILL_GRACE_MS = 10_000;
 
 const backendIterationLabel = (backend: RalphExecutionBackendId): string => {
   switch (backend) {
+    case 'claude':
+      return 'claude-code';
     case 'cursor':
       return 'cursor-agent';
     default: {
@@ -47,6 +52,14 @@ const backendIterationLabel = (backend: RalphExecutionBackendId): string => {
     }
   }
 };
+
+/**
+ * @description Error thrown when {@link runIteration} / {@link runIterationAsync} is called with a
+ * registered-but-unimplemented backend id. Keeps the registry exhaustive while spawn paths are
+ * delivered incrementally.
+ */
+const claudeRunnerNotImplementedMessage =
+  'Execution backend "claude" is registered but its spawn path is not yet implemented. Use --backend cursor for now; Claude Code support is delivered by a follow-up task in the per-plan runner plan.';
 
 /**
  * @description Escapes a string for safe use inside a double-quoted shell argument.
@@ -104,6 +117,8 @@ export const runIteration = (config: RunIterationConfig): string => {
   console.log(message);
 
   switch (backend) {
+    case 'claude':
+      throw new Error(claudeRunnerNotImplementedMessage);
     case 'cursor':
       return runCursorIterationSync(config);
     default: {
@@ -287,6 +302,8 @@ export const runIterationAsync = (
   console.log(message);
 
   switch (backend) {
+    case 'claude':
+      return Promise.reject(new Error(claudeRunnerNotImplementedMessage));
     case 'cursor':
       return runCursorIterationAsync(config);
     default: {

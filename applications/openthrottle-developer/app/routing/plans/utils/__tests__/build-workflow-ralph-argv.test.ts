@@ -110,6 +110,19 @@ describe('buildWorkflowRalphOptionArgs', () => {
     ]);
   });
 
+  test('includes --backend claude when execution backend is claude (non-default)', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ executionBackend: 'claude' }),
+      ),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--backend',
+      'claude',
+    ]);
+  });
+
   test('includes --prompt when prompt differs from default', () => {
     const args = buildWorkflowRalphOptionArgs(
       basePlanInput({ prompt: '/agents/custom' }),
@@ -480,6 +493,29 @@ describe('validateWorkflowRalphRunOptionsState', () => {
         requireCliTargetIds: true,
       }),
     ).toEqual({ ok: true });
+  });
+
+  test('passes when execution backend is claude (aligned with workflow-ralph --backend)', () => {
+    expect(
+      validateWorkflowRalphRunOptionsState(
+        basePlanInput({ executionBackend: 'claude' }),
+        '',
+        { requireCliTargetIds: true },
+      ),
+    ).toEqual({ ok: true });
+  });
+
+  test('fails when execution backend is not a known id', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ executionBackend: 'codex' as 'cursor' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'backend')).toBe(true);
   });
 
   test('fails when plan id is not a v4 uuid', () => {

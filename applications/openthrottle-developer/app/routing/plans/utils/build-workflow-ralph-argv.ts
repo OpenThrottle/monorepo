@@ -19,7 +19,7 @@ export const DEFAULT_RALPH_MODEL = 'auto';
  * @description Same ids as `tools/workflows/src/utils/ralph-execution-backend.ts`
  * (`RALPH_EXECUTION_BACKEND_IDS`). UI layer-2 must stay aligned with `workflow-ralph --backend`.
  */
-export const WORKFLOW_RALPH_KNOWN_BACKENDS = ['cursor'] as const;
+export const WORKFLOW_RALPH_KNOWN_BACKENDS = ['claude', 'cursor'] as const;
 
 /**
  * @description Default precedence for resolving Ralph prompt + run tuning (matches CLI help).
@@ -69,9 +69,10 @@ export type WorkflowRalphPromptLayer = 'named' | 'file';
 export type WorkflowRalphDebugCli = 'omit' | 'debug' | 'verbose';
 
 /**
- * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link DEFAULT_RALPH_RUNNER}.
+ * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link WORKFLOW_RALPH_KNOWN_BACKENDS}.
  */
-export type WorkflowRalphExecutionBackendUi = typeof DEFAULT_RALPH_RUNNER;
+export type WorkflowRalphExecutionBackendUi =
+  (typeof WORKFLOW_RALPH_KNOWN_BACKENDS)[number];
 
 export interface WorkflowRalphRunOptionsInput {
   readonly debugCli: WorkflowRalphDebugCli;

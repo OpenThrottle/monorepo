@@ -17,7 +17,7 @@ Required (one of):
   ${COLORS.cyan}--task ${COLORS.gray}<uuid>${COLORS.reset}  Cortex task ID (UUID); task-centric mode  ${COLORS.gray}ex: 45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}
 
 Options:
-  ${COLORS.cyan}--backend ${COLORS.gray}<id>${COLORS.reset}        Execution backend (runner) for each iteration  ${COLORS.gray}default: ${COLORS.blue}cursor${COLORS.reset} (Cursor ${COLORS.gray}cursor-agent${COLORS.reset})
+  ${COLORS.cyan}--backend ${COLORS.gray}<cursor|claude>${COLORS.reset}  Execution backend (runner) for the entire plan run; ${COLORS.gray}claude${COLORS.reset} reserved (spawn pending)  ${COLORS.gray}default: ${COLORS.blue}cursor${COLORS.reset} (Cursor ${COLORS.gray}cursor-agent${COLORS.reset})
   ${COLORS.cyan}--debug ${COLORS.gray}[=verbose]${COLORS.reset}   Shim debug to stderr (lines prefixed ${COLORS.gray}[workflow-ralph:debug]${COLORS.reset}; see Environment below)
   ${COLORS.cyan}--help ${COLORS.reset}              Show this message
   ${COLORS.cyan}--iteration-timeout ${COLORS.gray}<seconds>${COLORS.reset}  Per-iteration timeout (non-interactive only)  ${COLORS.gray}e.g. 1800${COLORS.reset}
@@ -34,7 +34,7 @@ Environment (debug shim; optional — omit both flags to rely on env only):
   If ${COLORS.cyan}--debug${COLORS.reset} or ${COLORS.cyan}--verbose${COLORS.reset} appears on the command line, it overrides these variables for this run.
 
 Environment (prompt profile + run tuning; optional):
-  ${COLORS.gray}${WORKFLOW_RALPH_ENV.backend}${COLORS.reset}   Default execution backend id (${COLORS.green}cursor${COLORS.reset} today), same as ${COLORS.cyan}--backend${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.backend}${COLORS.reset}   Default execution backend id (${COLORS.green}cursor${COLORS.reset} or ${COLORS.green}claude${COLORS.reset}; one per plan run), same as ${COLORS.cyan}--backend${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.prompt}${COLORS.reset}   Default prompt profile (command-style), same as ${COLORS.cyan}--prompt${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.promptFile}${COLORS.reset}   Default prompt file path (UTF-8), same as ${COLORS.cyan}--prompt-file${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterations}${COLORS.reset}   Default iteration count (positive integer)

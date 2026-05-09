@@ -21,6 +21,11 @@ export type RalphNestedDebugCli = 'omit' | 'debug' | 'verbose';
  * All fields optional; omitted fields do not produce argv (defaults resolved in the child process).
  */
 export interface RalphNestedRunTuningInput {
+  /**
+   * Execution backend id ({@link RalphExecutionBackendId}: `cursor` or `claude`). Selection applies
+   * to the **entire** nested run; not switched per iteration. Omit (or pass the default) to let the
+   * child resolve from env / `.workflow-ralph.json`.
+   */
   readonly backend?: RalphExecutionBackendId | null;
   readonly debug?: RalphNestedDebugCli;
   readonly iterationTimeoutSeconds?: number | null;

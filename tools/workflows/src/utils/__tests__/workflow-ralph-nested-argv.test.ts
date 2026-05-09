@@ -14,6 +14,13 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     expect(buildWorkflowRalphRunTuningArgv({ backend: 'cursor' })).toEqual([]);
   });
 
+  it('includes --backend claude (non-default runner)', () => {
+    expect(buildWorkflowRalphRunTuningArgv({ backend: 'claude' })).toEqual([
+      '--backend',
+      'claude',
+    ]);
+  });
+
   it('includes --iterations when set', () => {
     expect(buildWorkflowRalphRunTuningArgv({ iterations: 7 })).toEqual([
       '--iterations',
