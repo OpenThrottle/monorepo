@@ -152,6 +152,8 @@ export default function Component(
       />
 
       {prompts.length === 0 ? (
+        <PromptsEmpty />
+      ) : (
         <>
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
@@ -163,8 +165,6 @@ export default function Component(
           </div>
           <OpenThrottlePagination limit={limit} page={page} total={total} />
         </>
-      ) : (
-        <PromptsEmpty />
       )}
     </GlobalScreen>
   );

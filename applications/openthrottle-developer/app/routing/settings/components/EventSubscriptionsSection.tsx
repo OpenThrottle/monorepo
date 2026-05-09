@@ -36,7 +36,9 @@ export const EventSubscriptionsSection = (
     (id: EventSubscriptionId) => (checked: boolean) => {
       setSubscribed((prev) => {
         const next = { ...prev, [id]: checked };
+
         setEventSubscriptionsInStorage(next);
+
         return next;
       });
     };
