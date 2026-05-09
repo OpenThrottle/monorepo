@@ -27,6 +27,7 @@ const testWindowEnv = {
 //   } as any
 // ).env = testWindowEnv;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).env = testWindowEnv;
 
 /**
@@ -72,9 +73,11 @@ if (typeof Element !== 'undefined') {
   if (!Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = (): boolean => false;
   }
+
   if (!Element.prototype.setPointerCapture) {
     Element.prototype.setPointerCapture = (): void => {};
   }
+
   if (!Element.prototype.releasePointerCapture) {
     Element.prototype.releasePointerCapture = (): void => {};
   }

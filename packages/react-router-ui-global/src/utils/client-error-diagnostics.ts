@@ -11,9 +11,9 @@ export type ClientErrorKind = 'http' | 'javascript' | 'unknown';
  */
 export type JavascriptErrorSubtype =
   | 'chunk_load'
-  | 'user_abort'
+  | 'generic'
   | 'network'
-  | 'generic';
+  | 'user_abort';
 
 const JAVASCRIPT_SUBTYPE = {
   chunk_load: 'chunk_load',
