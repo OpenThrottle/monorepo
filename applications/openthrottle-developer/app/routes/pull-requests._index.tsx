@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { GetPullRequestsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   parsePullRequestListPreviewNumber,
   PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM,

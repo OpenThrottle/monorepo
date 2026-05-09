@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphql } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CheckoutForm } from '~/routing/checkout/components/CheckoutForm';
 import { CheckoutSummary } from '~/routing/checkout/components/CheckoutSummary';

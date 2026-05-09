@@ -26,7 +26,7 @@ import {
   type CreateCustomPromptInput,
   CustomPromptType,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   PROMPTS_BASE_PATH,

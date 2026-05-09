@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,12 +9,10 @@ import type { MockedFunction } from 'vitest';
 import { GlobalErrorBoundary } from '../GlobalErrorBoundary';
 import type { GlobalErrorBoundaryProps } from '../GlobalErrorBoundary';
 
-vi.mock('react-router', async () => {
-  const actual =
-    await vi.importActual<typeof import('react-router')>('react-router');
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>();
   return {
     ...actual,
-    isRouteErrorResponse: vi.fn(),
     useRouteError: vi.fn(),
   };
 });
@@ -23,59 +20,72 @@ vi.mock('react-router', async () => {
 describe('GlobalErrorBoundary Component', () => {
   let component: RenderResult;
   let props: GlobalErrorBoundaryProps;
-  let isRouteErrorResponseMock: MockedFunction<
-    typeof ReactRouter.isRouteErrorResponse
-  >;
   let useRouteErrorMock: MockedFunction<typeof ReactRouter.useRouteError>;
 
   beforeEach(() => {
     props = {};
-    isRouteErrorResponseMock = vi.mocked(ReactRouter.isRouteErrorResponse);
     useRouteErrorMock = vi.mocked(ReactRouter.useRouteError);
     useRouteErrorMock.mockReset();
-    isRouteErrorResponseMock.mockReset();
   });
 
-  test('renders route error details and markdown content', () => {
+  test('renders route error details, support reference, and markdown content', () => {
     const routeError: ErrorResponse = {
       data: 'Not found content',
+      internal: false,
       status: 404,
       statusText: 'Not Found',
     };
 
     useRouteErrorMock.mockReturnValue(routeError);
-    isRouteErrorResponseMock.mockReturnValue(true);
     const Component = () => <GlobalErrorBoundary {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 
     expect(component.getByText('404 Not Found')).toBeInTheDocument();
     expect(component.getByText('Not found content')).toBeInTheDocument();
+    expect(component.getByText('Support reference')).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: /back to home/i }),
     ).toHaveAttribute('href', '/');
   });
 
-  test('renders error message and stack trace when error is an Error', () => {
+  test('uses homePath for back link', () => {
+    const routeError: ErrorResponse = {
+      data: 'x',
+      internal: false,
+      status: 500,
+      statusText: 'Error',
+    };
+    useRouteErrorMock.mockReturnValue(routeError);
+    const Component = () => (
+      <GlobalErrorBoundary {...props} homePath="/mail/" />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    component = render(<RoutesStub />);
+    expect(
+      component.getByRole('link', { name: /back to home/i }),
+    ).toHaveAttribute('href', '/mail/');
+  });
+
+  test('renders JavaScript error with subtype title and support reference', () => {
     const genericError = new Error('Something exploded');
     genericError.stack = 'Error stack trace';
 
     useRouteErrorMock.mockReturnValue(genericError);
-    isRouteErrorResponseMock.mockReturnValue(false);
     const Component = () => <GlobalErrorBoundary {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 
-    expect(component.getByText('Error Message:')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'Application error' }),
+    ).toBeInTheDocument();
     expect(component.getByText('Something exploded')).toBeInTheDocument();
-    expect(component.getByText('Stack trace:')).toBeInTheDocument();
-    expect(component.getByText('Error stack trace')).toBeInTheDocument();
+    expect(component.getByText('Support reference')).toBeInTheDocument();
   });
 
   test('renders refresh control for Error branch', async () => {
     const genericError = new Error('Refresh me');
     useRouteErrorMock.mockReturnValue(genericError);
-    isRouteErrorResponseMock.mockReturnValue(false);
     const Component = () => <GlobalErrorBoundary {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
@@ -89,14 +99,15 @@ describe('GlobalErrorBoundary Component', () => {
 
   test('renders unknown error fallback when route error is not Error or route response', () => {
     useRouteErrorMock.mockReturnValue('unexpected');
-    isRouteErrorResponseMock.mockReturnValue(false);
     const Component = () => <GlobalErrorBoundary {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 
-    expect(component.getByText('Unknown Error')).toBeInTheDocument();
     expect(
-      component.getByText(/sorry we've encountered an unknown error/i),
+      component.getByRole('heading', { name: 'Unexpected error' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(/sorry we've encountered an unexpected problem/i),
     ).toBeInTheDocument();
   });
 });

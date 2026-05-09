@@ -8,7 +8,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { redirect } from 'react-router';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,

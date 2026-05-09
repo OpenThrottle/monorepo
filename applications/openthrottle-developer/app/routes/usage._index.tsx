@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GetUsageDailyStatsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { UsageDailyActivity } from '~/routing/usage/components/UsageDailyActivity';
 import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction';

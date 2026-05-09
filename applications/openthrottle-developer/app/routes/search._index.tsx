@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router';
 import { SearchIcon } from 'lucide-react';
 import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';

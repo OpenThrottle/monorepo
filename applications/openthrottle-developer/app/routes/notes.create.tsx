@@ -7,7 +7,7 @@ import {
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';

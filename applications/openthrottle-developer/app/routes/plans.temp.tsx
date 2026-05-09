@@ -5,7 +5,7 @@ import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.temp';
 import {

@@ -7,7 +7,10 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:*",
+    "rollbar": "^3.1.0"
+  },
   "devDependencies": {},
   "main": "./src/index.ts",
   "module": "./src/index.ts",

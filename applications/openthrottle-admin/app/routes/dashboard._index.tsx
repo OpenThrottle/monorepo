@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ADMIN_PATHS } from '~/global/data/data.navigation';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';

@@ -13,7 +13,7 @@ import {
 } from '~/routing/generators/constants/generator-nx-docs';
 import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
 import { GetGeneratorsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/generators._index';
 

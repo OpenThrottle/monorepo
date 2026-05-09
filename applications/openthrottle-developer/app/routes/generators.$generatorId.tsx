@@ -13,7 +13,7 @@ import { GeneratorTabDebug } from '~/routing/generators/components/GeneratorTabD
 import { GeneratorTabDocumentation } from '~/routing/generators/components/GeneratorTabDocumentation';
 import { GeneratorTabPresets } from '~/routing/generators/components/GeneratorTabPresets';
 import { GetGeneratorByNameDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/generators.$generatorId';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';

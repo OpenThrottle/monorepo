@@ -4,7 +4,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { buildCheckoutPath } from '~/routing/checkout/utils';
 import { GetPricingDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { parseIntervalFromSearchParams } from '~/routing/pricing/utils';
 import { PRICING_INTERVAL_PARAM } from '~/routing/pricing/config';
 import { PricingCard } from '~/routing/pricing/components/PricingCard';

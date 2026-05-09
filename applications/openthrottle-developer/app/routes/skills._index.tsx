@@ -4,7 +4,7 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { REPO_SKILLS_REGISTRY } from '~/routing/agents/data/repo-skills-registry';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';

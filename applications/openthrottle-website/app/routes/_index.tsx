@@ -1,5 +1,5 @@
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { HomeBuiltBy } from '~/routing/home/components/HomeBuiltBy';
 import { HomeContext } from '~/routing/home/components/HomeContext';
 import { HomeHeroV1 } from '~/routing/home/components/HomeHeroV1';

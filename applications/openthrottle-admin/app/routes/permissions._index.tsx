@@ -2,9 +2,11 @@ import * as React from 'react';
 import { redirect } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GetPermissionsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
 import type { Route } from '@/app/routes/+types/permissions._index';

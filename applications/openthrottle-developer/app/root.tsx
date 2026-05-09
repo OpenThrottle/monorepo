@@ -42,7 +42,7 @@ import {
   GetRootHealthDocument,
   UserObject,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import type {

@@ -5,7 +5,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal.privacy-policy';
 

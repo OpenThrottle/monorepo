@@ -25,7 +25,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
 import { SITE_TITLE } from '~/global/config/settings';

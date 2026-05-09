@@ -15,7 +15,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { AgentsSectionQuickLinks } from '~/routing/agents/components/AgentsSectionQuickLinks';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';

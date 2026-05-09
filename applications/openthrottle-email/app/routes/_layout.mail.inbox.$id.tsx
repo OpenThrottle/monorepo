@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { getMockMessageById } from '~/global/data/mock.mail';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { MessageDetail } from '~/routing/inbox/components/MessageDetail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.inbox.$id';
@@ -54,4 +54,4 @@ export const action = async (_args: Route.ActionArgs) => {
   return {};
 };
 
-export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = MailGlobalErrorBoundary;

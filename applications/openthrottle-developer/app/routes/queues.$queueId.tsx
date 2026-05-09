@@ -17,7 +17,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { ListOrderedIcon } from 'lucide-react';
 import { GetQueueDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId';

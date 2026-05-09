@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GetQueuesDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroduction';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { SITE_TITLE } from '~/global/config/settings';

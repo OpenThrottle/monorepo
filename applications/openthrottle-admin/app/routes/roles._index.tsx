@@ -14,7 +14,7 @@ import { useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RolesTable } from '~/routing/roles/components/RolesTable';
 import type { Route } from '@/app/routes/+types/roles._index';

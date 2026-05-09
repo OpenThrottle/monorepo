@@ -12,7 +12,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { ListChevronsUpDownIcon } from 'lucide-react';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanAssigneeOptionsDocument,
   GetPlanCountsByStatusDocument,

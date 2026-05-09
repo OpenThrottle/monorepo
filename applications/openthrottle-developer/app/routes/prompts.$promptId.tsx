@@ -15,7 +15,7 @@ import {
   WritePromptToFileSystemDocument,
   type UpdateCustomPromptInput,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDetailMetadataPanel';
 import { SITE_TITLE } from '~/global/config/settings';

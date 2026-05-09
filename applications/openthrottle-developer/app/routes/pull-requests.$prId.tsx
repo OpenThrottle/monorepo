@@ -9,7 +9,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GetPullRequestDetailDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
 import { SITE_TITLE } from '~/global/config/settings';
 import {

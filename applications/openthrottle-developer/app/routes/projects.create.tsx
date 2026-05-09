@@ -7,7 +7,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { CreateProjectDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/projects.create';
