@@ -1,9 +1,7 @@
 /**
  * @description Single-iteration runner for Ralph (sync and async). Injected by ralph.ts so tests can mock it.
- * Dispatches to a {@link RalphExecutionBackendId} implementation. Today `cursor` (Cursor
- * `cursor-agent`) is implemented; `claude` (Anthropic Claude Code CLI) is registered and threaded
- * through the CLI/env/defaults but its spawn path is pending in a follow-up task — invoking it
- * fails fast with a clear error rather than falling back to another backend.
+ * Dispatches to a {@link RalphExecutionBackendId} implementation: `cursor` (Cursor `cursor-agent`) and
+ * `claude` (Anthropic Claude Code CLI, `claude --bare -p …` — see code.claude.com headless docs).
  */
 
 import { spawn } from 'child_process';
@@ -27,7 +25,7 @@ export interface RunIterationConfig {
   backend?: RalphExecutionBackendId;
   /** Iteration number. */
   iteration: number;
-  /** Model preset when the backend supports it (Cursor: `--model`). */
+  /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
   model?: string;
   /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
   timeoutMs?: number;
@@ -54,14 +52,6 @@ const backendIterationLabel = (backend: RalphExecutionBackendId): string => {
 };
 
 /**
- * @description Error thrown when {@link runIteration} / {@link runIterationAsync} is called with a
- * registered-but-unimplemented backend id. Keeps the registry exhaustive while spawn paths are
- * delivered incrementally.
- */
-const claudeRunnerNotImplementedMessage =
-  'Execution backend "claude" is registered but its spawn path is not yet implemented. Use --backend cursor for now; Claude Code support is delivered by a follow-up task in the per-plan runner plan.';
-
-/**
  * @description Escapes a string for safe use inside a double-quoted shell argument.
  * Prevents plan/task text containing " or \ from breaking the shell command.
  */
@@ -70,13 +60,51 @@ function escapeForShellDoubleQuoted(prompt: string): string {
 }
 
 /**
- * @description Cursor backend: one sync iteration (`cursor-agent --force -p …`).
+ * @description Cursor: non-interactive iteration (`cursor-agent --force -p …`).
  */
-const runCursorIterationSync = (config: RunIterationConfig): string => {
-  const { agentPrompt, iteration, model } = config;
+const buildCursorShellCommand = (config: RunIterationConfig): string => {
+  const { agentPrompt, model } = config;
   const modelFlag = model ? ` --model ${model}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
-  const command = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+  return `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+};
+
+/**
+ * @description Claude Code CLI: scripted / headless mode (`claude --bare -p …`).
+ * Uses `--bare` for reproducible startup (see code.claude.com docs); `--permission-mode acceptEdits`
+ * avoids blocking prompts for common file edits while keeping bash/tool rules otherwise intact.
+ * Omits `--model` when unset or `auto` (Claude uses its own defaults / aliases).
+ */
+const buildClaudeShellCommand = (config: RunIterationConfig): string => {
+  const { agentPrompt, model } = config;
+  const modelNorm = model?.trim() ?? '';
+  const modelFlag =
+    modelNorm !== '' && modelNorm !== 'auto' ? ` --model ${modelNorm}` : '';
+  const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
+  return `claude --bare --permission-mode acceptEdits -p "${safePrompt}"${modelFlag}`;
+};
+
+/**
+ * @description Cursor backend: one sync iteration.
+ */
+const runCursorIterationSync = (config: RunIterationConfig): string => {
+  const command = buildCursorShellCommand(config);
+  return runShellIterationSync(command, 'cursor-agent', config.iteration);
+};
+
+/**
+ * @description Claude Code backend: one sync iteration.
+ */
+const runClaudeIterationSync = (config: RunIterationConfig): string => {
+  const command = buildClaudeShellCommand(config);
+  return runShellIterationSync(command, 'claude-code', config.iteration);
+};
+
+const runShellIterationSync = (
+  command: string,
+  runnerLabel: string,
+  iteration: number,
+): string => {
   const child = spawnSync(command, [], {
     encoding: 'utf-8',
     shell: true,
@@ -91,14 +119,16 @@ const runCursorIterationSync = (config: RunIterationConfig): string => {
     ralphDebugLogger.debug('runIteration (sync): spawn error', {
       iteration,
       message: child.error.message,
+      runnerLabel,
     });
     return child.error.message;
   }
 
-  ralphDebugLogger.debug('runIteration (sync): cursor-agent exited', {
+  ralphDebugLogger.debug('runIteration (sync): runner exited', {
     exitCode: child.status,
     iteration,
     resultLen: result.length,
+    runnerLabel,
     stderrLen: stderr.length,
     stdoutLen: stdout.length,
   });
@@ -118,7 +148,7 @@ export const runIteration = (config: RunIterationConfig): string => {
 
   switch (backend) {
     case 'claude':
-      throw new Error(claudeRunnerNotImplementedMessage);
+      return runClaudeIterationSync(config);
     case 'cursor':
       return runCursorIterationSync(config);
     default: {
@@ -129,21 +159,19 @@ export const runIteration = (config: RunIterationConfig): string => {
 };
 
 /**
- * @description Cursor backend: one async iteration with streaming and timeout.
- * On timeout or abort, kills child with SIGTERM then SIGKILL after grace; returned output includes markers so parseRalphResponse exits(1) or the orchestrator treats the run as failed.
+ * @description Shared async iteration: streaming, timeout, abort — same behavior for any shell-backed runner.
  */
-const runCursorIterationAsync = (
+const runShellIterationAsync = (
+  command: string,
+  runnerLabel: string,
   config: RunIterationConfig,
 ): Promise<string> => {
-  const { agentPrompt, iteration, model, timeoutMs, signal, onChunk } = config;
-  const modelFlag = model ? ` --model ${model}` : '';
-  const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
-  const command = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
-  const runnerLabel = backendIterationLabel('cursor');
+  const { iteration, timeoutMs, signal, onChunk } = config;
 
   return new Promise((resolve, reject) => {
-    ralphDebugLogger.debug('runIterationAsync: spawning cursor-agent', {
+    ralphDebugLogger.debug('runIterationAsync: spawning runner', {
       iteration,
+      runnerLabel,
       timeoutMs: timeoutMs ?? null,
     });
 
@@ -165,6 +193,7 @@ const runCursorIterationAsync = (
       ralphDebugLogger.verbose('runIterationAsync: chunk', {
         chunkIndex: chunkCount,
         chunkLen: data.length,
+        runnerLabel,
         stderrLen: stderr.length,
         stdoutLen: stdout.length,
         stream,
@@ -216,6 +245,7 @@ const runCursorIterationAsync = (
           {
             chunkCount,
             iteration,
+            runnerLabel,
             stderrLen: stderr.length,
             stdoutLen: stdout.length,
           },
@@ -232,6 +262,7 @@ const runCursorIterationAsync = (
           {
             chunkCount,
             iteration,
+            runnerLabel,
             stderrLen: stderr.length,
             stdoutLen: stdout.length,
           },
@@ -253,6 +284,7 @@ const runCursorIterationAsync = (
         exitCode: _status,
         iteration,
         resultLen: result.length,
+        runnerLabel,
         stderrLen: stderr.length,
         stdoutLen: stdout.length,
       });
@@ -276,6 +308,7 @@ const runCursorIterationAsync = (
         chunkCount,
         err,
         iteration,
+        runnerLabel,
         stderrLen: stderr.length,
         stdoutLen: stdout.length,
       });
@@ -287,6 +320,34 @@ const runCursorIterationAsync = (
       }
     });
   });
+};
+
+/**
+ * @description Cursor backend: one async iteration with streaming and timeout.
+ */
+const runCursorIterationAsync = (
+  config: RunIterationConfig,
+): Promise<string> => {
+  const command = buildCursorShellCommand(config);
+  return runShellIterationAsync(
+    command,
+    backendIterationLabel('cursor'),
+    config,
+  );
+};
+
+/**
+ * @description Claude Code backend: one async iteration with streaming and timeout.
+ */
+const runClaudeIterationAsync = (
+  config: RunIterationConfig,
+): Promise<string> => {
+  const command = buildClaudeShellCommand(config);
+  return runShellIterationAsync(
+    command,
+    backendIterationLabel('claude'),
+    config,
+  );
 };
 
 /**
@@ -303,7 +364,7 @@ export const runIterationAsync = (
 
   switch (backend) {
     case 'claude':
-      return Promise.reject(new Error(claudeRunnerNotImplementedMessage));
+      return runClaudeIterationAsync(config);
     case 'cursor':
       return runCursorIterationAsync(config);
     default: {

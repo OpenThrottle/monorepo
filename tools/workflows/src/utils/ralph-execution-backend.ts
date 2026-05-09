@@ -3,9 +3,8 @@
  * A single plan run uses **exactly one** runner for **all** iterations; no per-iteration switching.
  * To use a different runner, start a new plan run / re-queue with that choice.
  *
- * Implemented today: `cursor` (Cursor `cursor-agent` CLI).
- * Reserved (CLI/env/defaults plumbed; spawn implementation pending in a follow-up task): `claude`
- * (Anthropic Claude Code CLI).
+ * Implemented: `cursor` (Cursor `cursor-agent` CLI) and `claude` (Anthropic Claude Code CLI, `claude`
+ * on PATH — non-interactive `-p` / `--print` with `--bare`; see `bin/run-iteration.ts`).
  *
  * Adding a runner: register the id below, implement spawn paths in `bin/run-iteration.ts`, and
  * keep CLI help text in `config/messages.ts` aligned.
