@@ -73,6 +73,10 @@ export function logWorkflowRalphOtDiagnostics(params: {
         env.POSTGRES_HOST?.trim() || env.POSTGRES_DB?.trim(),
       ),
       postgresqlUrlSet: Boolean(env.POSTGRES_URL?.trim()),
+      spawnHomeOverrideSet: Boolean(env.WORKFLOW_RALPH_SPAWN_HOME?.trim()),
+      spawnXdgConfigHomeOverrideSet: Boolean(
+        env.WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME?.trim(),
+      ),
       workspaceRootEnvSet: Boolean(env.WORKSPACE_ROOT?.trim()),
     },
     home: env.HOME ?? '(unset)',
@@ -125,6 +129,10 @@ export function formatPlansProcessorSpawnOtDiagnosticsMessage(
       graphqlUrlSet: Boolean(env.GRAPHQL_URL?.trim()),
       jwtSecretSet: Boolean(env.JWT_SECRET?.trim()),
       postgresqlUrlSet: Boolean(pgUrl),
+      spawnHomeOverrideSet: Boolean(env.WORKFLOW_RALPH_SPAWN_HOME?.trim()),
+      spawnXdgConfigHomeOverrideSet: Boolean(
+        env.WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME?.trim(),
+      ),
     },
     home: env.HOME ?? '(unset)',
     jobId: params.jobId,

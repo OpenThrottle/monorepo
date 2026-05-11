@@ -31,7 +31,7 @@ Use this section when choosing an auth strategy (task `2af0a6ce-0072-4319-8cde-d
 
 ### Environment (`buildWorkflowRalphSpawnEnv`)
 
-- **Implementation:** `packages/ai-mcp/src/config.ts` — `{ ...workerEnv, OPENTHROTTLE_CORTEX_POSTGRES_URL: conn, POSTGRES_URL: conn }` when a canonical connection string is known; otherwise returns `workerEnv` unchanged.
+- **Implementation:** `packages/ai-mcp/src/config.ts` — `{ ...workerEnv, OPENTHROTTLE_CORTEX_POSTGRES_URL: conn, POSTGRES_URL: conn }` when a canonical connection string is known; otherwise starts from `workerEnv`. Optional worker-set **`WORKFLOW_RALPH_SPAWN_HOME`** / **`WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME`** override nested `HOME` / `XDG_CONFIG_HOME` (for bind-mounted Claude config). See `tools/workflows/README.md` (queue + Claude section).
 - **Implication:** Every key visible to the BullMQ worker (`ANTHROPIC_API_KEY`, `HOME`, `PATH`, etc.) is passed through unless the **host** (systemd, Docker, IDE) never injected it into the worker. There is **no** separate allowlist or denylist in this helper.
 
 ### Where the child is spawned

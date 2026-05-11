@@ -13,6 +13,18 @@ export const OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV =
   'OPENTHROTTLE_CORTEX_POSTGRES_URL' as const;
 
 /**
+ * @description When set (non-empty after trim) on the BullMQ worker, nested `workflow-ralph` children receive this as `HOME` so Claude Code and similar CLIs resolve OAuth paths under a directory you control (e.g. bind-mount host credentials into `/var/ralph-home` and set this to that path).
+ */
+export const WORKFLOW_RALPH_SPAWN_HOME_ENV =
+  'WORKFLOW_RALPH_SPAWN_HOME' as const;
+
+/**
+ * @description When set on the worker, nested Ralph children receive this as `XDG_CONFIG_HOME` for tools that read config from XDG paths instead of `HOME` alone.
+ */
+export const WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV =
+  'WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME' as const;
+
+/**
  * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
  * @returns Connection string or `undefined` when required vars are missing.
  */
@@ -45,6 +57,31 @@ export function resolveCortexPostgresConnectionStringFromEnv(
   return connectionString;
 }
 
+/**
+ * @description Applies optional identity overrides from {@link WORKFLOW_RALPH_SPAWN_HOME_ENV} and {@link WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV} so queue workers can align nested CLIs with mounted credentials.
+ */
+function applyWorkflowRalphSpawnIdentityOverrides(
+  env: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
+  const home = env[WORKFLOW_RALPH_SPAWN_HOME_ENV]?.trim();
+  const xdgConfigHome = env[WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV]?.trim();
+
+  if (
+    (home === undefined || home === '') &&
+    (xdgConfigHome === undefined || xdgConfigHome === '')
+  ) {
+    return env;
+  }
+
+  return {
+    ...env,
+    ...(home !== undefined && home !== '' ? { HOME: home } : {}),
+    ...(xdgConfigHome !== undefined && xdgConfigHome !== ''
+      ? { XDG_CONFIG_HOME: xdgConfigHome }
+      : {}),
+  };
+}
+
 /** Optional overrides for {@link buildWorkflowRalphSpawnEnv}. */
 export interface BuildWorkflowRalphSpawnEnvOptions {
   /**
@@ -66,15 +103,17 @@ export function buildWorkflowRalphSpawnEnv(
     trimmed !== undefined && trimmed !== ''
       ? trimmed
       : resolveCortexPostgresConnectionStringFromEnv(workerEnv);
-  if (conn === undefined) {
-    return workerEnv;
-  }
 
-  return {
-    ...workerEnv,
-    [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]: conn,
-    POSTGRES_URL: conn,
-  };
+  const withPostgres: NodeJS.ProcessEnv =
+    conn === undefined
+      ? workerEnv
+      : {
+          ...workerEnv,
+          [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]: conn,
+          POSTGRES_URL: conn,
+        };
+
+  return applyWorkflowRalphSpawnIdentityOverrides(withPostgres);
 }
 
 /**
