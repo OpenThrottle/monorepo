@@ -24,6 +24,29 @@
 | 2026-05-11 | `7aafef66-8b91-42be-9d5a-20465df32261` | Queue / processor investigation    | Claude or flow surfaces `/login` under queue-driven Ralph               | Prior plan: compared interactive vs worker HOME, env propagation, spawn wiring; see plan tasks for details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | —           |
 | 2026-05-11 | `002f6dd9-c013-4348-8cf3-b49b1ab80641` | Dev UI → BullMQ → `PlansProcessor` | Claude path: “Not logged in · Please run /login”; nested child exit `1` | **Reproduced (captured logs, plan `8d943945-d185-4a0c-b80c-9689263e0cec`, job `17`):** `[workflow-ralph:debug]` shows `backend: 'claude'`, `runnerLabel: 'claude-code'`, `nonInteractive: true`, one stdout chunk (`stdoutLen: 34`), `exitCode: 1`. Parsed agent text length `33` then server logs Claude message **“Not logged in · Please run /login”** — this is **Claude Code CLI** session/OAuth, **not** OpenThrottle Developer `/login` and **not** a missing `ANTHROPIC_API_KEY` string in these lines. **Spawn (legacy no-worktree):** `pnpm exec workflow-ralph --plan <planId>` + argv from `buildWorkflowRalphRunTuningArgv` / `mergeRalphNestedRunTuningWithExecutionBackend`; **`cwd`** = `job.data.workingDirectory ?? WORKSPACE_ROOT ?? process.cwd()`; **`env`** = `buildWorkflowRalphSpawnEnv(process.env, { canonicalCortexPostgresUrl })` (overrides Postgres URL only; otherwise child inherits **worker** `HOME`, `PATH`, etc.). Worktree path uses the same env helper from `runChildJob` (`tools/workflows/src/utils/child-job.ts`). | —           |
 | 2026-05-10 | `002f6dd9-c013-4348-8cf3-b49b1ab80641` | Code review (CLI vs queue)         | —                                                                       | **Diff successful CLI vs queue spawn:** See [CLI vs queue spawn (code diff)](#cli-vs-queue-spawn-code-diff) below. **Headline:** nested `workflow-ralph` gets **full worker `process.env`** plus canonical Cortex `POSTGRES_URL` / `OPENTHROTTLE_CORTEX_POSTGRES_URL`; there is **no env allowlist and no stripping** in `buildWorkflowRalphSpawnEnv`. Gaps are **runtime identity** (different `HOME`/user than your terminal, Docker `appuser`, compose not mounting Claude/Cursor credential dirs) and **cwd** (worktree path vs monorepo root), not a minimal child env. Root `docker-compose.yml` does not volume-mount host OAuth/config paths into `openthrottle-server`. **Footgun:** `packages/nestjs-worktrees/src/utils/child-job.ts` still spawns without `buildWorkflowRalphSpawnEnv`; **openthrottle-server** uses `@tools/workflows` `runChildJob`, which does use it.                                                                                                                                                                        | —           |
+| 2026-05-10 | `002f6dd9-c013-4348-8cf3-b49b1ab80641` | Verification (task `6858cb8b…`)    | —                                                                       | **Pass criteria + cold/warm protocol:** see [Pass criteria and cold vs warm runs](#pass-criteria-and-cold-vs-warm-runs). **Automated (CI-local):** `pnpm nx run openthrottle-server:test --testPathPattern=plans.processor.test` and `pnpm nx run workflows:test --testPathPattern=workflow-ralph-spawn-env` — green; covers enqueue → job payload, foreign `cwd` + canonical Postgres, `buildWorkflowRalphSpawnEnv` overrides. **Manual sign-off:** after applying the auth strategy from `tools/workflows/README.md` (spawn `HOME` / API key / orchestrator), run Dev UI enqueue **cold** then **warm** per that section; logs must not show Claude Code **“Not logged in · Please run /login”** unless you intentionally have no headless credential.                                                                                                                                                                                                                                                                                                     | —           |
+
+## Pass criteria and cold vs warm runs
+
+Use this to close verification for plan `002f6dd9-c013-4348-8cf3-b49b1ab80641` without ambiguous “it worked once” notes.
+
+### Pass (all must hold for the backend you use)
+
+1. **No spurious auth prompt from the nested runner:** Worker logs (with `WORKFLOW_RALPH_DEBUG=1` or UI tuning `ralphDebugCli`) do **not** show Claude Code’s **“Not logged in · Please run /login”** when you intended a headless queue run. (That message is **Claude Code CLI** session/OAuth, not OpenThrottle Developer `/login`.)
+2. **Runner actually executes:** At least one iteration returns non-login agent output; optional: `<ralph:task-complete>` or plan/task state moves as expected for your test plan.
+3. **Postgres identity:** Nested child `postgresIdentity` matches the Cortex DB where the plan lives (use `WORKFLOW_RALPH_OT_DIAGNOSTICS=1` on the child and `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1` on the server when debugging).
+
+### Cold vs warm (Dev UI → `enqueuePlanRun` spawn)
+
+| Run  | When                                                                                            | What it guards                                                       |
+| ---- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Cold | First enqueue **after** starting (or restarting) the plans worker process                       | First-spawn `HOME`/`PATH`/tooling; missing mounts on fresh container |
+| Warm | Second enqueue **without** restarting the worker, immediately after a finished or cancelled job | Stable env inheritance; flaky one-shot injection                     |
+
+### Fail (any is enough to stop and fix auth / wiring)
+
+- Repeated `/login` or exit `1` from `claude-code` with ~34-byte stdout (see [Error Logs](#error-logs-run-summary)).
+- `Plan not found` when the plan exists in Cortex (wrong DB string in child — should be ruled out by canonical URL injection).
 
 ## CLI vs queue spawn (code diff)
 
@@ -55,11 +78,18 @@ Argv for nested runs is built with `buildWorkflowRalphRunTuningArgv` / `mergeRal
 
 ## Quick verification checklist (queue path)
 
-Use this when you believe auth is fixed; adjust commands to match your local compose and env.
+Use this when you believe auth is fixed; adjust commands to match your local compose and env. **Pass/fail lines** are defined in [Pass criteria and cold vs warm runs](#pass-criteria-and-cold-vs-warm-runs).
 
-- [ ] Worker logs show expected `HOME` and cwd for the child job.
-- [ ] Required secrets or Claude config paths are present inside the worker (or explicitly documented as host-only with a workaround).
-- [ ] Enqueue from **OpenThrottle Developer UI** completes a short plan iteration without an unexpected `/login` or auth redirect loop.
+**Automated (repeatable, no Dev UI):**
+
+- [x] `pnpm nx run openthrottle-server:test --testPathPattern=plans.processor.test`
+- [x] `pnpm nx run workflows:test --testPathPattern=workflow-ralph-spawn-env`
+
+**Manual (operator):**
+
+- [ ] Worker logs show expected `HOME` and cwd for the child job (`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1` optional).
+- [ ] Required secrets or Claude config paths are present inside the worker (or `WORKFLOW_RALPH_SPAWN_HOME` / `WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME` per README).
+- [ ] **Cold** then **warm** enqueue from **OpenThrottle Developer** both satisfy [pass criteria](#pass-criteria-and-cold-vs-warm-runs) (no spurious Claude `/login` text).
 - [ ] Same machine: `pnpm exec workflow-ralph --plan <uuid>` still succeeds (regression check).
 
 ## References (code)
