@@ -107,9 +107,12 @@ const runShellIterationSync = (
 ): string => {
   const child = spawnSync(command, [], {
     encoding: 'utf-8',
+    env: process.env,
     shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
   });
+
+  console.log('child.env 🟠 🟠 🟠 SYNC', process.env.POSTGRES_URL);
 
   const stdout = child.stdout?.trim() ?? '';
   const stderr = child.stderr?.trim() ?? '';
@@ -121,6 +124,7 @@ const runShellIterationSync = (
       message: child.error.message,
       runnerLabel,
     });
+
     return child.error.message;
   }
 
@@ -177,9 +181,12 @@ const runShellIterationAsync = (
     });
 
     const child: ChildProcess = spawn(command, [], {
+      env: process.env,
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
     });
+
+    console.log('child.env 🟠 🟠 🟠 ASYNC', process.env.POSTGRES_URL);
 
     let stdout = '';
     let stderr = '';
@@ -344,6 +351,7 @@ const runClaudeIterationAsync = (
   config: RunIterationConfig,
 ): Promise<string> => {
   const command = buildClaudeShellCommand(config);
+
   return runShellIterationAsync(
     command,
     backendIterationLabel('claude'),

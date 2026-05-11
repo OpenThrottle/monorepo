@@ -24,6 +24,7 @@ import {
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
+import { EditorWindow } from '@openthrottle/react-router-editor';
 export interface PlanTabDetailsProps {
   readonly fullscreen: boolean;
   readonly plan: PlanDetailsFragment;
@@ -128,7 +129,7 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
           />
           {/* <CardContent> */}
 
-          {/*
+          {fullscreen ? (
             <EditorWindow
               className="flex-1 transition-all duration-300"
               height={fullscreen ? '100vh' : '300px'}
@@ -139,15 +140,14 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
               value={plan.description ?? ''}
               width="100%"
               wrapperProps={{ className: 'transition-all duration-300' }}
-              // height="100vh"
               // onChange={handleEditorChange}
             />
-          */}
-
-          <Markdown
-            className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
-            content={plan.description ?? ''}
-          />
+          ) : (
+            <Markdown
+              className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
+              content={plan.description ?? ''}
+            />
+          )}
 
           {/* </CardContent> */}
 

@@ -215,6 +215,21 @@ Official Docker images for this repo (**`Dockerfile.NestJS`**, **`Dockerfile.Rea
 - **Choosing Claude in automation:** Prefer enqueue-time or env defaults in the worktree (`WORKFLOW_RALPH_BACKEND=claude` or `.workflow-ralph.json`) so headless workers do not require interactive Cursor.
 - **Compose:** Services in `docker-compose.yml` are API, Postgres, Redis, and UI — not a full “Ralph runner” appliance. Running Ralph **inside** a minimal container without BYO CLIs will fail at spawn unless you extend the image or mount a host toolchain.
 
+#### Claude Code: “Please run /login” (workers vs interactive terminal)
+
+That message comes from **Anthropic’s Claude Code CLI** (`claude`), not from this repo. The nested process does not see valid Claude Code auth for **that** OS user and environment.
+
+- **Why it happens:** Interactive login in your own terminal stores OAuth/session data for **your** user and `HOME`. A BullMQ worker, Docker service, or `nx`/launchd job often runs as **another user**, with a **different `HOME`**, or inside a container **without** those files—so `claude --bare -p …` exits unauthenticated even though you logged in elsewhere.
+- **What OpenThrottle passes through:** `runChildJob` spawns `pnpm exec workflow-ralph` with `buildWorkflowRalphSpawnEnv` (`@openthrottle/ai-mcp`), which merges **Cortex Postgres** (`POSTGRES_URL` / `OPENTHROTTLE_CORTEX_POSTGRES_URL`) and otherwise forwards the worker’s `process.env`. It does **not** inject Claude credentials; you must configure them for the worker process.
+- **What to do:** (1) Complete Claude Code login **as the same UNIX user** that runs the worker, on the **same machine** where jobs run (or mount/copy the credential paths Claude Code documents into that environment). (2) If your install supports headless/API access, set **`ANTHROPIC_API_KEY`** (and any vars Claude Code documents) on the worker—common for CI/Docker. (3) Confirm as that user: `pnpm exec workflow-ralph --plan <uuid> --backend claude --iterations 1` with `WORKFLOW_RALPH_DEBUG=1`; fix auth until that succeeds before relying on the queue.
+
+**Verification (queue-driven Claude, same host as worker)**
+
+1. Set **`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1`** on **openthrottle-server** and enqueue a plan run whose tuning uses **`claude`** (`executionBackend` / `WORKFLOW_RALPH_BACKEND`).
+2. Before spawn, the worker logs one JSON line (`[plans-spawn:ot-diagnostics]`). Check **`home`**, **`unixUser`**, and **`workerEffectiveUnixUid`** match the account where interactive `claude` login succeeded (or align users/mounts until they do).
+3. Check **`envPresence.anthropicApiKeySet`** when using API-key auth; if false, the nested CLI cannot authenticate headlessly—export the key for the worker process or switch auth mechanism per Anthropic docs.
+4. Optionally set **`WORKFLOW_RALPH_OT_DIAGNOSTICS=1`** for nested **`workflow-ralph`** stderr (same plan fetch path): compare **`home`** / **`unixUser`** there with the worker line to confirm the child inherited the same identity.
+
 A reusable workflow composes worktree allocation, a pluggable loop, and commit guarantees so you can run any loop (e.g. Ralph) with:
 
 - **Acquire:** Lock an available worktree target and create a branch.
