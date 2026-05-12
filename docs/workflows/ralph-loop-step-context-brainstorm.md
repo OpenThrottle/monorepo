@@ -2,6 +2,10 @@
 
 **OpenThrottle plan:** `c6d0d88c-5fb0-4b11-8da0-bd68a89e20d4`
 
+## Problem statement
+
+Ralph advances work by completing tasks across iterations. Today, **git** is the natural place to see _what code changed_, and **OpenThrottle** holds the plan, task statuses, and optional `plan_output_stream`. Traceability from branch commits back to a plan/task is supported via **`Plan-Id` / `Task-Id` footers** in commit messages, while **landed** work is summarized in OT via **`commit_links`** (squash SHA after merge). None of that guarantees a **readable, ordered narrative per iteration** inside OT or the developer app: to understand _what happened in step N_ (decisions, scope, files touched, partial attempts), people still reach for **GitHub** (PR, compare, commit list). The goal of this brainstorm is options to **summarize and reuse step-level context** without treating GitHub as the primary story.
+
 ## Goals
 
 - **See what happened each Ralph step** (iteration / task completion) without opening GitHub for commit history or diffs.
@@ -16,6 +20,23 @@
 | Ralph runs can be noisy                | Raw logs help ops; **humans** need condensed summaries or structured fields.                                 |
 | OT already stores plans/tasks          | Natural place for **plan-scoped** narrative if we avoid duplicating git unnecessarily.                       |
 | Cost / latency                         | Full diff embedding every iteration is expensive; **tier** what gets stored (summary vs excerpt vs pointer). |
+
+## What Plan-Id / Task-Id give today
+
+- **Branch commits:** Footers like `Plan-Id: <uuid>` and `Task-Id: <uuid>` tie a commit message to Cortex rows. Humans and scripts can **grep** history locally; the linkage is **textual**, not a first-class per-step record in Postgres until merge tooling runs.
+- **After squash merge:** `link_commit` (or `workflow-link-merge`) stores one row in **`commit_links`** (plan, optional task, repo, squash SHA, message). **`get_activity_by_date`** and **`get_last_activity`** surface **landed** commits only—not every Ralph iteration commit on a feature branch.
+- **Tasks table:** Status transitions (`QUEUED` → `COMPLETED`, etc.) and optional **`summary`** give a **per-task** wrap-up when filled; they do not by themselves capture **each iteration’s** reasoning or intermediate state.
+- **Plan output stream:** **`append_plan_output` / `get_plan_output`** can log iteration text into **`plan_output_stream`** (ordered chunks, optional `iteration`). Workers can append metrics lines; nested Ralph with **`streamToCortex`** can mirror stdout/stderr. **Coverage is optional** and often unstructured unless prompts or orchestration enforce a shape.
+
+## Commits vs OT plan output (current roles)
+
+| Dimension                    | Git commits (+ Plan-Id / Task-Id)                                                           | OT `plan_output_stream`                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Source of truth for code** | Yes (diffs, SHAs, blame).                                                                   | No.                                                                                |
+| **Granularity**              | One commit per logical chunk (agent-dependent); may bundle multiple sub-steps.              | Many append chunks per plan; can align to iteration if writers set `iteration`.    |
+| **When OT “sees” it**        | Branch: only via message parsing. Main: **`commit_links`** after merge.                     | Immediately when MCP/workers/agents append.                                        |
+| **Best for**                 | Auditing **what merged**, bisect, code review.                                              | **Narrative / log** while the loop runs; agent-visible tail for `get_plan_output`. |
+| **Without GitHub**           | Local `git log` still works; **no** friendly plan-scoped timeline in OT from commits alone. | Readable in OT **if** something appends consistently; otherwise empty or noisy.    |
 
 ## Current state (mental model)
 
@@ -39,7 +60,13 @@ flowchart LR
   PO -. today often CLI/agent .-> P
 ```
 
-**Today:** traceability from git → OT is strong if commits include footers. **Gap:** the _semantic_ “what we did this step” is split across GitHub UI, local git, and optionally OT plan output—nothing guarantees a **single step-level timeline** unless you discipline logging.
+## Gaps for step-level narrative
+
+- **No required artifact per iteration:** Unlike task status, there is no schema-enforced “step N summary” stored for every Ralph loop; plan output and task summaries are **conventions**, not guarantees.
+- **Split attention:** Code story lives in **git/GitHub**; intent and agent trace may live in **OT or only in the terminal**—reviewers must mentally join them.
+- **Branch commits vs activity APIs:** Pre-merge commits with Plan-Id/Task-Id are **not** the same as `commit_links`; **`get_activity_by_date`** will not list every iteration commit until (if) they land as linked squash SHAs.
+- **Unstructured plan output:** Raw streams help debugging but are weak for “what changed this step?” unless summarized or templated.
+- **UI surfacing:** Even when chunks exist, the **developer app** may not yet expose a first-class “iteration timeline” (product gap depends on current UI; data model supports append + read).
 
 ## Solution axes (brainstorm)
 
