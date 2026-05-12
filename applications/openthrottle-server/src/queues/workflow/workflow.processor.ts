@@ -117,7 +117,7 @@ function spawnAndWait(
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       ...options,
-      stdio: ['inherit', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
 
     child.stdout?.on('data', (data: Buffer) => onStdout(data.toString()));
