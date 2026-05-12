@@ -172,18 +172,80 @@ flowchart TB
   OUT --> AGENT
 ```
 
+## Data flow: Ralph iteration → storage → retrieval
+
+The diagram below is the **end-to-end path** for step-level narrative: what produces rows, where they land, and who reads them. Git stays the code authority; OT holds **durable narrative** when writers call GraphQL (or sync from local manifests).
+
+```mermaid
+flowchart TB
+  subgraph iter [Ralph iteration]
+    RX[Receive plan + task + optional prior output]
+    AG[Agent: tools, edits, tests]
+    TC[Task completes or advances]
+  end
+  subgraph write [Writers]
+    ORC[Orchestrator / workflow-ralph]
+    MCP[mcp-developer → GraphQL]
+    LOC[Optional local manifest e.g. jsonl]
+  end
+  subgraph store [Storage]
+    PO[(plan_output_stream)]
+    TK[(tasks: status + summary)]
+    GIT[git: commits + Plan-Id / Task-Id]
+    CL[(commit_links: squash SHA)]
+    EMB[(optional: embeddings on chunks)]
+  end
+  subgraph read [Retrieval]
+    GOP[get_plan_output]
+    UI[Developer app plan / task views]
+    ACT[get_activity_by_date / last activity]
+    INJ[Inject tail into next iteration]
+  end
+  RX --> AG --> TC
+  TC --> ORC
+  ORC --> MCP
+  ORC --> LOC
+  MCP --> PO
+  MCP --> TK
+  ORC --> GIT
+  GIT -. after merge .-> CL
+  PO -. policy-driven .-> EMB
+  PO --> GOP
+  TK --> UI
+  CL --> ACT
+  GOP --> INJ
+  TK --> INJ
+  ACT --> INJ
+```
+
+**How to read it:** `ORC` is the single place to enforce “after every iteration, write X” (append + optional structured field). `LOC` survives OT outages but needs a defined **sync or merge** rule so retrieval does not fork. `INJ` is where **token cost** matters: injecting the full stream every time scales poorly; prefer a **bounded tail** or a **rolled-up summary** row (see below).
+
+## Privacy and token cost notes
+
+- **Privacy / leakage:** Step summaries often repeat file paths, error messages, or pasted logs. Treat them like commit messages: **no secrets**, same org RBAC as OT, and avoid shipping customer data into plan output unless the plan is already restricted.
+- **Prompt injection surface:** If the next iteration blindly includes `get_plan_output`, a malicious or accidental chunk in the stream becomes part of the model context—**cap length**, prefer **sanitized templates**, and separate **machine events** from **raw agent prose** when possible.
+- **Token economics (retrieval → next iteration):** Full plan output history in every prompt is linear in loop depth. Prefer **(a)** last-K chunks, **(b)** a maintained “running summary” append (cheap model or heuristic rollup), or **(c)** structured short fields only in context, with verbose trace on demand via MCP/UI.
+- **Storage and embeddings:** Persisting every iteration verbatim is cheap in Postgres relative to **embedding** every chunk. If you add semantic search over steps, scope it (e.g. summaries only, or cap tokens per embedded document) to control **OpenAI/Ollama** cost and index size.
+
 ## Risks
 
 - **Duplication:** Same sentence in commit body, task summary, and plan output—mitigate with clear roles: commit = conventional + IDs; task = user-facing “what shipped”; plan output = verbose trace.
-- **PII / secrets:** Summaries must inherit whatever redaction you use elsewhere.
-- **Volume:** Cap plan output chunk size or summarize older iterations.
+- **PII / secrets:** Summaries must inherit whatever redaction you use elsewhere (aligned with the privacy notes above).
+- **Volume:** Cap plan output chunk size or summarize older iterations so retrieval stays bounded.
 
-## Possible next spike (for implementation planning)
+## Recommendation sketch (next spike)
 
-1. Define a **minimal iteration payload**: `planId`, `taskId?`, `iteration`, `summary` (1–3 sentences), `filesTouched[]`, `commitSha?`.
-2. Decide **writer**: orchestrator after successful iteration vs worker post-commit.
-3. **Expose** last N payloads in developer UI or a read-only MCP tool if missing.
-4. Keep GitHub as optional detail view, not the primary narrative.
+**Objective:** Prove that a human (or agent) can answer “what happened in step N?” from **OT + local git** alone, without opening GitHub, for one representative Ralph run.
+
+| Phase                      | What to build / decide                                                                                                                                                                                               | Done when                                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **0. Contract**            | Freeze a **minimal iteration payload** (even if initially stored as JSON inside one `append_plan_output` line per step): `planId`, `taskId`, `iteration`, `summary` (1–3 sentences), `filesTouched[]`, `commitSha?`. | Payload documented; example populated for 3+ iterations in a test plan.                                     |
+| **1. Writer**              | Pick **one writer path** (orchestrator post-step is ideal): always append contract + optional verbose trace; optionally mirror to **local jsonl** on failure.                                                        | 100% of steps in a dry-run produce the contract row (allow empty `filesTouched` but not missing `summary`). |
+| **2. Read path**           | **CLI or MCP**: print last N contract rows for a `planId` (parse marker-prefixed JSON or query new API if introduced).                                                                                               | Reviewer reconstructs order without GitHub in under 2 minutes.                                              |
+| **3. UX slice (optional)** | Surface last N summaries on the plan page in openthrottle-developer (even read-only list).                                                                                                                           | Clicking the plan shows an ordered step list tied to tasks.                                                 |
+| **4. Hardening**           | Redaction checklist, max chunk size, and **prompt budget** for `INJ` documented.                                                                                                                                     | Spike doc updated; no full-stream injection by default.                                                     |
+
+**Explicit non-goals for the spike:** Replacing `commit_links`, changing merge workflow, or embedding every chunk—defer until the read path proves useful.
 
 ---
 
