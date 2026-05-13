@@ -23,6 +23,7 @@ After years of development, I've refined my tech stack to focus on a core set of
 Specific Reads:
 
 - [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
+- [HTML vs Markdown for agents (Ralph research, WIP)](./docs/openthrottle/research/html-over-markdown-for-agents.md)
 
 ## 🤖 Ralph Loops
 
