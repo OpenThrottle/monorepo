@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS documentation (
 );
 
 -- FIXME: bring this back
--- CREATE UNIQUE INDEX IF NOT EXISTS idx_documentation_repo_sha_path ON documentation (repo, sha, path);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_documentation_repo_sha_path ON documentation (repo, sha, path);
 
 CREATE INDEX IF NOT EXISTS idx_documentation_path ON documentation (path);
 

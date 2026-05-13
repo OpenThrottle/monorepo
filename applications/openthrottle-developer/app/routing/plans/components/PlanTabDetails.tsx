@@ -143,10 +143,15 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
               // onChange={handleEditorChange}
             />
           ) : (
-            <Markdown
-              className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
-              content={plan.description ?? ''}
-            />
+            <>
+              <Markdown
+                className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
+                content={plan.description ?? ''}
+              />
+              <p className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal">
+                {plan.description ?? ''}
+              </p>
+            </>
           )}
 
           {/* </CardContent> */}
