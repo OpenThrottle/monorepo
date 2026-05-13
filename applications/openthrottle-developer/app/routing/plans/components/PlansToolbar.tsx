@@ -8,7 +8,7 @@ import {
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
-import { PlusIcon } from 'lucide-react';
+import { FileUpIcon, PlusIcon } from 'lucide-react';
 import {
   PLAN_STATUS_FILTER_OPTIONS,
   STATUS_OPTIONS,
@@ -225,6 +225,11 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
             sortOrder={sortOrder}
           />
           <div className="flex-1 min-w-0" />
+          <Button asChild={true} className="shrink-0" variant="outline">
+            <Link to="/plans/upload-decompose">
+              <FileUpIcon className="w-4 h-4" /> Upload document
+            </Link>
+          </Button>
           <Button asChild={true} className="shrink-0" variant="outline">
             <Link to="/plans/create">
               <PlusIcon className="w-4 h-4" /> Create plan
