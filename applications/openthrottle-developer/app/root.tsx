@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import {
+  GlobalErrorBoundary,
   GlobalLayout,
+  GlobalLayoutHeader,
   GlobalMetrics,
   GlobalProviders,
 } from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
 import {
   Links,
   Meta,
@@ -36,13 +39,11 @@ import {
   NotificationsStoreProvider,
 } from '@openthrottle/react-router-notifications';
 import { useAtom } from 'jotai';
-import { GlobalLayoutHeader } from '@openthrottle/react-router-ui-global/src/components/GlobalLayoutHeader';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
   UserObject,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import type {
@@ -302,6 +303,7 @@ export default function App(): React.ReactElement {
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
   const [config, _setConfig] = useAtom(configAtom);
+  const [commanderOpen, setCommanderOpen] = React.useState(false);
 
   // Setup
   const isAuthRoute = pathname.startsWith('/auth');
@@ -354,6 +356,20 @@ export default function App(): React.ReactElement {
   );
 
   /**
+   * @description Chrome search in {@link GlobalLayoutHeader}: focus opens the single commander; Enter with text uses the same POST as palette empty-state search.
+   */
+  const handleSearchChromeEvent = React.useCallback(
+    (event: GlobalLayoutHeaderSearchEvent) => {
+      if (event.type === 'engage') {
+        setCommanderOpen(true);
+        return;
+      }
+      submitCommanderSearch({ q: event.query });
+    },
+    [submitCommanderSearch],
+  );
+
+  /**
    * @description When the palette query matches no static commands, offer POST-backed jumps (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
    */
   const commanderEmptyExtras = React.useCallback(
@@ -395,7 +411,11 @@ export default function App(): React.ReactElement {
                 suppress={data?.rootLoaderFailure?.step === 'health'}
               />
 
-              {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
+              {!isHeaderHidden ? (
+                <GlobalLayoutHeader
+                  onSearchChromeEvent={handleSearchChromeEvent}
+                />
+              ) : null}
               <Outlet />
               {!isMetricsHidden ? (
                 <GlobalMetrics
@@ -437,6 +457,8 @@ export default function App(): React.ReactElement {
                 footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
                 groups={groups}
                 onEmptyStateSearch={handleSearch}
+                onOpenChange={setCommanderOpen}
+                open={commanderOpen}
                 placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
               />
             </GlobalLayout>
