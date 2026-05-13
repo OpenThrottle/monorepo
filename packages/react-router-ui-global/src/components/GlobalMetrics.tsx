@@ -42,18 +42,12 @@ import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
 
 export interface GlobalMetricsProps {
   readonly className?: string;
-  /**
-   * In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer).
-   */
+  /** In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer). */
   readonly diagnosticsHref?: string;
-  /**
-   * Deep link to a persistent metric-definitions panel (e.g. Settings → Debug → Server metrics definitions).
-   */
+  /** Deep link to a persistent metric-definitions panel (e.g. Settings → Debug → Server metrics definitions). */
   readonly definitionsHref?: string;
   readonly pollIntervalMs?: number;
-  /**
-   * When true, show a collapsed “Sampling & endpoint” block with poll interval, sample count, and GraphQL URL (for support / debugging).
-   */
+  /** When true, show a collapsed “Sampling & endpoint” block with poll interval, sample count, and GraphQL URL (for support / debugging). */
   readonly showSamplingDetails?: boolean;
 }
 
@@ -90,6 +84,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
 
   // Setup
   const query = print(GetRootMetricsDocument);
+
   /** HttpOnly auth cookies are not readable in JS; metrics calls run without Bearer unless wired server-side. */
   const url = `${ENV_SOURCE.API_URL_EXTERNAL}/graphql`;
 
@@ -146,9 +141,11 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     if (metricsHistory.length > 0) {
       return [...metricsHistory];
     }
+
     if (serverMetrics != null && !loading) {
       return [{ ...serverMetrics, i: 0 }];
     }
+
     return [];
   }, [loading, metricsHistory, serverMetrics]);
 
@@ -403,7 +400,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           >
             <LineChart
               data={chartLineData}
-              margin={{ bottom: 8, left: 0, right: 12, top: 4 }}
+              margin={{ bottom: 8, left: 10, right: 12, top: 4 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
