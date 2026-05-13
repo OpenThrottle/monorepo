@@ -39,6 +39,21 @@ vitest.config.*.timestamp*
 vitest.config.ts.timestamp*
 
 #############################################################################
+# Claude Code
+#############################################################################
+# Claude Code - personal/secrets
+.claude/settings.local.json
+.claude/backups/
+.claude/debug/
+.claude/projects/
+.claude/sessions/
+.claude.json
+CLAUDE.local.md
+
+# Cursor CLI
+.cursor/cli-config.json
+
+#############################################################################
 # Includes
 #############################################################################
 !.cursor/commands
