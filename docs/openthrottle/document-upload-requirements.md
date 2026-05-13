@@ -71,6 +71,7 @@ The **mapper** (separate task) reads `sections` + `artifacts` + `diagnostics` an
 
 ## References
 
+- `docs/openthrottle/document-upload-mapping-rules.md` — deterministic CIR → Plan / Tasks / Requirements mapping.
 - `applications/openthrottle-server/src/graphql/plans/plan.input.ts` — `CreatePlanInput`
 - `applications/openthrottle-server/src/graphql/tasks/task.input.ts` — `CreateTaskInput`, `requirements` JSON string
 - `applications/openthrottle-server/src/services/plan-creation/plan-creation.service.ts` — shared plan creation and assignee normalization
