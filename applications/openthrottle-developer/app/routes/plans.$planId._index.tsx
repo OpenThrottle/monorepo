@@ -403,7 +403,7 @@ export default function Component(
             value={workflowInput}
             workingDirectory={workingDirectory}
           />
-          <PlanTabRequirements />
+          <PlanTabRequirements plan={plan} tasks={tasks} />
           <PlanTabsMetadata plan={plan} />
         </Tabs>
 

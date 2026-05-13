@@ -107,6 +107,7 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
         <Card
           className={classnames({
             'absolute inset-0 z-50': fullscreen,
+            'border-transparent hover:border-transparent': fullscreen,
           })}
         >
           <Button

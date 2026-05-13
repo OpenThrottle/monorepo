@@ -416,6 +416,42 @@ type CommitLinkObject {
   taskId: String
 }
 
+type PreviewCortexDocumentIngestResultObject {
+  """True when the document parsed successfully."""
+  success: Boolean!
+
+  """Parse error code when success is false."""
+  errorCode: String
+
+  """Human-readable error when success is false."""
+  errorMessage: String
+
+  """Detected upload format when parsing ran (e.g. markdown)."""
+  detectedFormat: String
+
+  """Suggested plan title from the document structure."""
+  planTitleSuggested: String
+
+  """JSON array of proposed tasks: { title, description, requirements[] }."""
+  proposedTasksJson: String
+}
+
+type CommitCortexDocumentIngestResultObject {
+  """True when the plan and all tasks were created."""
+  success: Boolean!
+
+  """
+  Error message when success is false (parse failure or rollback after partial task create).
+  """
+  error: String
+
+  """Created plan when success is true."""
+  plan: PlanObject
+
+  """Created tasks when success is true."""
+  tasks: [TaskObject!]!
+}
+
 """A custom prompt document for AI workflow customization"""
 type CustomPromptObject {
   id: String!
@@ -1681,6 +1717,16 @@ type Mutation {
   """
   linkCommit(input: LinkCommitInput!): CommitLinkObject!
 
+  """
+  Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting.
+  """
+  previewCortexDocumentIngest(input: PreviewCortexDocumentIngestInput!): PreviewCortexDocumentIngestResultObject!
+
+  """
+  Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails.
+  """
+  commitCortexDocumentIngest(input: CommitCortexDocumentIngestInput!): CommitCortexDocumentIngestResultObject!
+
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
 
@@ -1839,6 +1885,49 @@ input LinkCommitInput {
   message: String
 }
 
+input PreviewCortexDocumentIngestInput {
+  """File bytes encoded as standard base64 (no data: URL prefix)."""
+  fileBase64: String!
+
+  """MIME type from the upload when known (e.g. text/markdown)."""
+  mimeType: String
+
+  """Original filename for format detection fallback."""
+  originalFilename: String
+}
+
+input CommitCortexDocumentIngestInput {
+  """File bytes encoded as standard base64 (no data: URL prefix)."""
+  fileBase64: String!
+
+  """MIME type from the upload when known (e.g. text/markdown)."""
+  mimeType: String
+
+  """Original filename for format detection fallback."""
+  originalFilename: String
+
+  """
+  Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used.
+  """
+  plan: CreatePlanInput!
+}
+
+input CreatePlanInput {
+  assignee: String
+  author: String!
+  category: String!
+  description: String
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
+  """
+  projectId: ID
+  status: String
+  summary: String
+  title: String!
+}
+
 """Input for creating a new custom prompt"""
 input CreateCustomPromptInput {
   title: String!
@@ -1947,22 +2036,6 @@ input AppendPlanOutputInput {
 
   """Plan id to append output to"""
   planId: ID!
-}
-
-input CreatePlanInput {
-  assignee: String
-  author: String!
-  category: String!
-  description: String
-  project: String
-
-  """
-  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
-  """
-  projectId: ID
-  status: String
-  summary: String
-  title: String!
 }
 
 input UpdatePlanInput {
