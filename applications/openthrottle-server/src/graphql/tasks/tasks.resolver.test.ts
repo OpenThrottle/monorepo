@@ -2,7 +2,7 @@ import { TasksService } from '@openthrottle/nestjs-repositories';
 import type { Task } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { TasksLoaders } from './tasks-loaders';
 import { TasksResolver } from './tasks.resolver';
@@ -18,6 +18,13 @@ describe('TasksResolver', () => {
 
   const mockTasksService = createMock<TasksService>({
     getRepository: vi.fn().mockReturnValue(repo),
+    syncParentPlanToInProgressWhenTaskInProgress: vi
+      .fn()
+      .mockResolvedValue(false),
+  });
+
+  const mockNotificationsService = createMock<NotificationsService>({
+    emitPlanStatusChanged: vi.fn(),
   });
 
   const mockLoaders = createMock<TasksLoaders>({
@@ -70,7 +77,7 @@ describe('TasksResolver', () => {
         { provide: TasksLoaders, useValue: mockLoaders },
         {
           provide: NotificationsService,
-          useValue: createMock<NotificationsService>(),
+          useValue: mockNotificationsService,
         },
         { provide: TasksService, useValue: mockTasksService },
       ],
