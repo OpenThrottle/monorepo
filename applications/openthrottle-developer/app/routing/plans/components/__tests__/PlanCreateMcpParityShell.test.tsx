@@ -19,11 +19,9 @@ describe('PlanCreateMcpParityShell Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render placeholder copy when children omitted', () => {
+  test('should render shell without default inner copy when children omitted', () => {
     const shell = component.getByTestId('PlanCreateMcpParityShell');
-    expect(
-      within(shell).getByText(/MCP parity shell — not wired/i),
-    ).toBeInTheDocument();
+    expect(within(shell).queryByText(/MCP parity/i)).not.toBeInTheDocument();
   });
 
   test('should render children when provided', () => {

@@ -19,6 +19,7 @@ import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { QueuesService } from '../queues/queues.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import {
   CreatePlanInput,
   EnqueuePlanRunInput,
@@ -86,6 +87,10 @@ describe('PlansResolver', () => {
     update: vi.fn().mockResolvedValue(undefined),
   };
 
+  const mockPlanCreationService = {
+    createPlanFromInput: vi.fn(),
+  };
+
   const mockPlansService = createMock<PlansService>({
     getRepository: vi.fn().mockReturnValue(repo),
   });
@@ -134,6 +139,10 @@ describe('PlansResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         PlansResolver,
+        {
+          provide: PlanCreationService,
+          useValue: mockPlanCreationService,
+        },
         {
           provide: NotificationsService,
           useValue: createMock<NotificationsService>(),
@@ -938,7 +947,6 @@ describe('PlansResolver', () => {
 
   describe('createPlan', () => {
     test('creates plan from input and returns PlanObject', async () => {
-      const repo = plansService.getRepository();
       const input: CreatePlanInput = {
         assignee: null,
         author: 'visormatt',
@@ -957,29 +965,21 @@ describe('PlansResolver', () => {
         title: input.title,
         updatedAt: new Date(),
       };
-      vi.mocked(repo.create).mockReturnValue(created as Plan);
-      vi.mocked(repo.save).mockResolvedValue(created as Plan);
+      mockPlanCreationService.createPlanFromInput.mockResolvedValue(
+        created as Plan,
+      );
 
       const result = await resolver.createPlan(input);
 
-      expect(repo.create).toHaveBeenCalledWith({
-        assignee: null,
-        author: input.author,
-        category: input.category,
-        description: null,
-        project: null,
-        projectId: null,
-        status: 'PENDING',
-        summary: null,
-        title: input.title,
-      });
+      expect(mockPlanCreationService.createPlanFromInput).toHaveBeenCalledWith(
+        input,
+      );
       expect(result).not.toBeNull();
       expect(result?.id).toBe('new-id');
       expect(result?.title).toBe(input.title);
     });
 
     test('creates plan with projectId null when projectId omitted', async () => {
-      const repo = plansService.getRepository();
       const input = {
         assignee: null,
         author: 'visormatt',
@@ -996,16 +996,12 @@ describe('PlansResolver', () => {
         projectId: null,
         title: input.title,
       } as Plan;
-      vi.mocked(repo.create).mockReturnValue(created);
-      vi.mocked(repo.save).mockResolvedValue(created);
+      mockPlanCreationService.createPlanFromInput.mockResolvedValue(created);
 
       const result = await resolver.createPlan(input);
 
-      expect(repo.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          projectId: null,
-          title: 'Plan without project',
-        }),
+      expect(mockPlanCreationService.createPlanFromInput).toHaveBeenCalledWith(
+        input,
       );
       expect(result?.projectId).toBeNull();
     });

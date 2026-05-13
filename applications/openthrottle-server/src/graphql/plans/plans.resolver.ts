@@ -39,6 +39,7 @@ import {
 } from '../../queues/plans/plans.constants';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { ProjectObject } from '../projects/project.object';
 import { QueuesService } from '../queues/queues.service';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
@@ -92,6 +93,7 @@ function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
 export class PlansResolver {
   constructor(
     private readonly notificationsService: NotificationsService,
+    private readonly planCreationService: PlanCreationService,
     private readonly planRunCancellation: PlanRunCancellationService,
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
@@ -400,22 +402,7 @@ export class PlansResolver {
   async createPlan(
     @Args('input', { type: () => CreatePlanInput }) input: CreatePlanInput,
   ): Promise<PlanObject> {
-    const repo = this.plansService.getRepository();
-    const entity = repo.create({
-      assignee: input.assignee ?? null,
-      author: input.author,
-      category: input.category,
-      description: input.description ?? null,
-      project: input.project ?? null,
-      projectId: input.projectId ?? null,
-      status: (input.status ?? 'PENDING').toUpperCase(),
-      summary: input.summary ?? null,
-      title: input.title,
-    });
-
-    const saved = await repo.save(entity);
-
-    return saved;
+    return this.planCreationService.createPlanFromInput(input);
   }
 
   // @ProfileResponseTime('PlansResolver.updatePlan')

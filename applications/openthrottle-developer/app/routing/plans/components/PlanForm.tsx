@@ -91,10 +91,20 @@ export const PlanForm = (props: PlanFormProps) => {
                 defaultValue={plan?.author ?? ''}
                 id="plan-author"
                 name="author"
-                placeholder="e.g. visormatt"
-                required={true}
+                placeholder={
+                  isEdit
+                    ? 'e.g. visormatt'
+                    : 'GitHub username; optional if API has GITHUB_USER'
+                }
+                required={isEdit}
                 type="text"
               />
+              {isEdit ? null : (
+                <p className="text-muted-foreground text-xs mt-1">
+                  Leave blank only when the API server has GITHUB_USER set;
+                  otherwise create will fail validation.
+                </p>
+              )}
             </div>
 
             <div>

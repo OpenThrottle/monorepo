@@ -6,7 +6,9 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { redirect } from 'react-router';
 import { CreatePlanDocument } from '~/__generated__/graphql';
+import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.create';
@@ -49,7 +51,9 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <PlanForm actionData={actionData} />
+      <PlanCreateMcpParityShell>
+        <PlanForm actionData={actionData} />
+      </PlanCreateMcpParityShell>
     </GlobalScreen>
   );
 }
@@ -61,10 +65,6 @@ export const action = async (args: Route.ActionArgs) => {
   const category = formData.get('category');
   const title = formData.get('title');
 
-  if (typeof author !== 'string' || !author.trim()) {
-    return { error: 'Author is required.' };
-  }
-
   if (typeof category !== 'string' || !category.trim()) {
     return { error: 'Category is required.' };
   }
@@ -72,6 +72,8 @@ export const action = async (args: Route.ActionArgs) => {
   if (typeof title !== 'string' || !title.trim()) {
     return { error: 'Title is required.' };
   }
+
+  const authorStr = typeof author === 'string' ? author.trim() : '';
 
   const assignee = formData.get('assignee');
   const description = formData.get('description');
@@ -81,7 +83,7 @@ export const action = async (args: Route.ActionArgs) => {
   const summary = formData.get('summary');
 
   const input = {
-    author: author.trim(),
+    author: authorStr,
     category: category.trim(),
     title: title.trim(),
     ...(typeof assignee === 'string' &&
