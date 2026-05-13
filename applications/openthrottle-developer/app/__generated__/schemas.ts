@@ -4,6 +4,7 @@ import {
   ActivityByDateRangeInput,
   AppendPlanOutputInput,
   CancelPlanRunInput,
+  CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
@@ -43,6 +44,7 @@ import {
   PlanRunsByPlanIdInput,
   PrCountByLabelInput,
   PressureLevel,
+  PreviewCortexDocumentIngestInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
   RalphNestedDebugCli,
@@ -130,6 +132,17 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string(),
+  });
+}
+
+export function CommitCortexDocumentIngestInputSchema(): z.ZodObject<
+  Properties<CommitCortexDocumentIngestInput>
+> {
+  return z.object({
+    fileBase64: z.string(),
+    mimeType: z.string().nullish(),
+    originalFilename: z.string().nullish(),
+    plan: z.lazy(() => CreatePlanInputSchema()),
   });
 }
 
@@ -495,6 +508,16 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
     owner: z.string(),
     repo: z.string(),
     state: z.string().nullish(),
+  });
+}
+
+export function PreviewCortexDocumentIngestInputSchema(): z.ZodObject<
+  Properties<PreviewCortexDocumentIngestInput>
+> {
+  return z.object({
+    fileBase64: z.string(),
+    mimeType: z.string().nullish(),
+    originalFilename: z.string().nullish(),
   });
 }
 
