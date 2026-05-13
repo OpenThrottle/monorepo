@@ -78,28 +78,104 @@ _(Task: catalog every place Markdown is produced, consumed, or rendered.)_
 
 ## Per-surface evaluation (helps / neutral / hurts)
 
-_(Task: score each inventory row using trq212-style criteria: information density, re-read frequency, team review, filtering, follow-up editing, two-way interaction.)_
+Scores use the trq212 / StableLearn lens: **helps** where outputs are re-read, reviewed, filtered, or edited and layout or interaction buys human time; **hurts** where token budget, parseability, diff hygiene, or embedding signal dominates; **neutral** when HTML neither clearly wins nor clearly loses without extra layers (e.g. transport-only text).
 
-| Surface | Verdict (`helps` / `neutral` / `hurts`) | Rationale (one sentence) |
-| ------- | --------------------------------------- | ------------------------ |
-| _(TBD)_ |                                         |                          |
+| Surface                                       | Verdict   | Rationale (one sentence)                                                                                                                                                                                                                                                                                   |
+| --------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Activity-by-date payloads                     | `neutral` | MCP returns opaque text snippets for agents; wrapping them in HTML adds no structured affordance unless the client adds a renderer, while tags could dilute skim value in plain-text clients.                                                                                                              |
+| Agent Cursor commands (Markdown files)        | `neutral` | IDE-friendly Markdown remains the default for authoring and diff; HTML source in `.md` command files would hurt authoring and reviews without a strong preview pipeline.                                                                                                                                   |
+| Commit messages and OT footers                | `hurts`   | Conventional-commit and `git log` tooling assume compact plain text; HTML bloats messages and fights parsers, hooks, and mail clients.                                                                                                                                                                     |
+| Cortex custom prompts                         | `neutral` | Monaco `language="markdown"` fits human editing; if the same blob is injected wholesale into agents, heavy HTML tends toward **hurts** on tokens—treat rich formatting as optional, not the default transport.                                                                                             |
+| Doc ingestion (batch)                         | `hurts`   | Raw HTML in `documentation` chunks increases tokenizer noise, complicates `chunkTextForEmbedding`, and can weaken semantic retrieval unless normalized or stripped—**helps** only after a deliberate text/HTML policy and pipeline change.                                                                 |
+| Doc ingestion (selective job)                 | `hurts`   | Same as batch: path contract is Markdown-centric today; HTML-first sources need explicit extraction rules before embeddings.                                                                                                                                                                               |
+| Documentation MCP                             | `neutral` | Agents consume string chunks regardless of minor markup; shipping HTML through MCP is fine only if consumers strip or sandbox it—default remains “text for the model,” not a second render tier.                                                                                                           |
+| GitHub PR / issue templates                   | `neutral` | Authors write Markdown; GitHub already renders to HTML for humans—switching templates to hand-authored HTML rarely pays off versus staying in Markdown.                                                                                                                                                    |
+| Monorepo onboarding / agent config (Markdown) | `neutral` | `AGENTS.md` / `docs/**/*.md` stay legible in repo and in Cursor; moving primary authoring to HTML would trade editor ergonomics for layout wins that matter more on published sites than in-tree.                                                                                                          |
+| NestJS LangChain markdown loaders             | `neutral` | Loader and file extension contract are `.md`-oriented; HTML files would need parallel loaders—no inherent win until product asks for HTML artifacts on disk.                                                                                                                                               |
+| Plan and task text fields                     | `neutral` | **Humans** reviewing long PRDs in the app fit the “HTML helps” story if rendered safely; **agents and embeddings** see the same `TEXT` and are hurt by unsanitized tag soup—verdict is split, so **neutral** until a dual representation (canonical text + rendered view) exists.                          |
+| Plan embeddings (semantic search)             | `hurts`   | Embedding models see surface tokens; unnormalized HTML increases noise-to-signal versus prose Markdown unless content is normalized to text before chunking.                                                                                                                                               |
+| Plan output stream                            | `hurts`   | Append-only stdout-style logs, `<ralph:*>` markers, and code fences assume linear text and stable parsing; HTML as the **primary** chunk format worsens diffability and incremental tooling—**helps** only as an optional **derived** artifact (e.g. end-of-run dashboard file), not as the stream itself. |
+| Plans legacy file ingest (`*-output.md`)      | `neutral` | Same dual nature as the stream: Markdown files ingest cleanly; HTML “logs” would need the same embedding and safety analysis as doc HTML.                                                                                                                                                                  |
+| Ralph CLI injected prompt block               | `hurts`   | Injected Cortex blocks should stay dense plain text: HTML tags and attributes burn context without improving model reasoning for task completion markers.                                                                                                                                                  |
+| Task embeddings                               | `hurts`   | Same embedding-signal issue as plan embeddings when descriptions contain markup-heavy HTML.                                                                                                                                                                                                                |
+| UI – global error boundary                    | `neutral` | Errors are short-lived and technical; Markdown/plain is enough unless we invest in rich incident layouts (low ROI).                                                                                                                                                                                        |
+| UI – notes                                    | `neutral` | Short user notes rarely need layout complexity; Markdown (or plain) stays simplest.                                                                                                                                                                                                                        |
+| UI – plan logger (output stream)              | `helps`   | This is the strongest in-app match for trq212: long, re-read iteration logs benefit from hierarchy, collapsible sections, tables, and filters—today’s synthetic Markdown string is a stepping stone, not the ceiling.                                                                                      |
+| UI – plan overview / details                  | `helps`   | Long `plan.description` and PRD-style content are re-read and team-reviewed; safe HTML rendering (or MD with a richer component set) improves scanability versus a single scrolling slab—subject to sanitization and fixing the current Markdown/presentation quirks noted in the inventory.               |
+| UI – tasks                                    | `neutral` | Task body is plain text today; if descriptions grow into mini-specs, **helps** could apply later—no win until content and renderer exist.                                                                                                                                                                  |
+| mcp-developer tool text results               | `hurts`   | JSON/text over MCP is consumed by agents and thin clients; HTML payloads increase tokens and XSS surface without a universal renderer contract.                                                                                                                                                            |
+| Workflow parser fixtures                      | `hurts`   | Tests and `ralph` stdout parsers assume markdown code fences and stable delimiters; HTML-wrapped outputs would break or complicate extraction unless parsers are redesigned.                                                                                                                               |
 
 ### Focus areas called out in the plan
 
-- Ralph iteration prompts: token cost vs structure.
-- Plan output stream: diffability and incremental append.
-- Developer app plan/task views: rich tables and diagrams.
-- Docs embeddings: chunking and semantic search quality on HTML.
+**Ralph iteration prompts (token cost vs structure)** — **Verdict: favor plain text / light Markdown.** The injected block in `cortex-ralph.ts` / `ralph.ts` is model **input**; trq212 and StableLearn explicitly carve out short, disposable, token-sensitive cases for non-HTML. Structure should come from labeled sections and bullet lists, not `<div>` trees.
+
+**Plan output stream (diffability and incremental append)** — **Verdict: keep stream text-first; treat HTML as an optional derivative.** Append-only chunks power `get_plan_output`, activity queries, and Ralph’s own markers; HTML in every chunk would harm `git`-style mental diffs, grep, and fence-based tooling. A separate “run report.html” generated once per iteration or at plan completion matches the **helps** pattern without polluting the canonical stream.
+
+**Developer-app plan/task views (rich tables and diagrams)** — **Verdict: strongest `helps` zone in the product.** These views are human-facing, re-read, and often long; tables, callouts, diagrams (SVG), and responsive layout address real pain—provided output is **sanitized** (agent-generated) and accessibility (headings, landmarks, keyboard) is not an afterthought.
+
+**Docs embeddings (chunking and semantic search on HTML)** — **Verdict: `hurts` until the pipeline changes.** `chunkTextForEmbedding` and vector tables assume prose-like text; raw HTML increases boilerplate tokens per chunk and can split tags awkwardly across chunk boundaries. Any move to HTML sources should include **normalization** (e.g. readability-style extraction or HTML-to-text) before embedding, with spot-checked retrieval quality.
 
 ---
 
 ## Prototype and experiment ideas
 
-_(Task: 3–5 small, well-scoped ideas—documented only, not implemented.)_
+Small, well-scoped experiments the team could run **later**—each is **documentation-only here**; no implementation is part of this research plan.
 
-1. _(TBD)_ — Goal, surface, success criteria, rough effort.
-2. _(TBD)_
-3. _(TBD)_
+### 1. End-of-run HTML “plan dashboard” artifact
+
+| Field                | Detail                                                                                                                                                                                                                                                                                        |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Goal**             | Validate whether a **single self-contained HTML file** (navigation, severity colors, collapsible sections, links back to task UUIDs) reduces human time-to-triage versus scrolling the raw plan output stream.                                                                                |
+| **Surface**          | Ralph / worker writes an optional artifact (e.g. `ralph-run-<iteration>.html`) to a known path or attaches metadata pointing to hosted static HTML; **canonical** stream remains plain/Markdown text in `plan_output_stream`.                                                                 |
+| **Success criteria** | (a) Two engineers independently rank comprehension faster/same/slower vs current `PlanLoggerOutput` for the same run; (b) artifact generation does not regress `<ralph:task-complete>` parsing or append-only ingest; (c) file size and PII policy acceptable (no secrets in inline scripts). |
+| **Rough effort**     | **S** — One-off script or gated flag in `workflow-ralph` path that concatenates chunks + wraps in a static template; no DB schema change if written to CI artifact storage only.                                                                                                              |
+
+### 2. HTML wrapper / “reader mode” for plan output in developer-app
+
+| Field                | Detail                                                                                                                                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Goal**             | Test whether **sanitized HTML rendering** of the same logical content (tables for task list, anchors per chunk) improves scanability without changing what gets stored in Cortex.                                                                             |
+| **Surface**          | `PlanLoggerOutput.tsx` (and optionally `PlanTabDetails` for long descriptions): keep storing Markdown/plain in Postgres; **client-side** convert or alternate view (toggle: “Markdown” / “Rich”) with strict allowlist (e.g. DOMPurify profile, no `script`). |
+| **Success criteria** | (a) No XSS in red-team fixtures of malicious `append_plan_output` content; (b) Lighthouse accessibility score non-regressive on plan detail route; (c) qualitative feedback from 3 internal users on a real long-running plan.                                |
+| **Rough effort**     | **M** — UI toggle, sanitizer dependency, test matrix for edge cases; possible tension with current `Markdown` + `<pre>` behavior documented in the inventory.                                                                                                 |
+
+### 3. HTML-rendered task table for review (read-only)
+
+| Field                | Detail                                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Goal**             | See if a **tabular HTML export** of `get_remaining_tasks_for_plan` / task statuses helps standups and cross-team review vs a bullet list in Markdown.                                      |
+| **Surface**          | Export from developer-app or a small server route that renders HTML from GraphQL (no new MCP contract); optional “Copy as HTML” for pasting into email/wiki.                               |
+| **Success criteria** | (a) Reviewers complete a “mark blocked tasks” exercise faster with the table vs Markdown list (timed); (b) export remains read-only—no interactive params feeding back into prompts in v1. |
+| **Rough effort**     | **S** — Template + one route or CLI subcommand; no embedding pipeline touch.                                                                                                               |
+
+### 4. Interactive HTML “LLM Wiki” slice over docs or plan knowledge
+
+| Field                | Detail                                                                                                                                                                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Goal**             | Prototype the **“live in the artifact”** pattern: filters (tag, path prefix), expand/collapse, and client-side search over a **static bundle** generated from a subset of `documentation` chunks or one plan’s output—mirroring trq212’s gallery idea at a tiny scope. |
+| **Surface**          | Offline-generated `index.html` + JSON data file from `database:import-docs` output or a one-plan export; not wired into `docs-mcp` responses initially.                                                                                                                |
+| **Success criteria** | (a) A non-engineer finds three answers in seeded wiki faster than with `documentation_semantic_search` alone (task-based usability); (b) bundle size & offline use documented; (c) explicit decision on whether MCP ever returns HTML (default stays text).            |
+| **Rough effort**     | **L** — Data shape, build step, and UX for filters; overlaps with embedding/search policy if promoted beyond static demo.                                                                                                                                              |
+
+### 5. Richer change summary in PR bodies (Markdown-first, HTML optional)
+
+| Field                | Detail                                                                                                                                                                                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Goal**             | Assess whether **embedding a small HTML table or diagram** (e.g. Mermaid rendered to SVG screenshot, or paste from static host) in GitHub PR descriptions improves reviewer understanding vs Markdown-only bullets—without violating repo PR template norms. |
+| **Surface**          | `.github/pull_request_template.md` remains Markdown; experiment is **opt-in** on selected PRs (human pastes link or `<img>` if GitHub allows).                                                                                                               |
+| **Success criteria** | (a) Track reviewer comments asking for clarification—count decreases on pilot PRs; (b) no breakage of `gh pr create` automation or commitlint; (c) document “when HTML in PR body helps vs hurts mobile readers.”                                            |
+| **Rough effort**     | **S** — Process/culture experiment with 2–3 PRs; zero code if links only; **M** if automation generates HTML summaries (touches CI/token cost).                                                                                                              |
+
+### Summary
+
+| #   | Idea                                | Effort | Highest risk        |
+| --- | ----------------------------------- | ------ | ------------------- |
+| 1   | End-of-run HTML dashboard file      | S      | Storage / PII       |
+| 2   | Sanitized rich view for plan logger | M      | XSS + a11y          |
+| 3   | Task table HTML export              | S      | Low                 |
+| 4   | Static LLM Wiki slice               | L      | Scope creep vs MCP  |
+| 5   | PR description richness             | S–M    | Automation + mobile |
 
 ---
 
@@ -127,8 +203,9 @@ _(TBD: follow-up OT plans/tasks—no implementation in this research plan.)_
 
 ## Document history
 
-| Date       | Change                                                                                                 |
-| ---------- | ------------------------------------------------------------------------------------------------------ |
-| 2026-05-12 | Skeleton created (`81026da4-a09e-4ab0-8451-6239a7318211`).                                             |
-| 2026-05-12 | Background and thesis summary with primary/secondary sources (`72e674ba-84d3-4709-8acc-f122be88555e`). |
-| 2026-05-12 | Completed Markdown / markdown-adjacent inventory table (`9efae634-6c84-480e-834c-a0e12697f0b6`).       |
+| Date       | Change                                                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-12 | Skeleton created (`81026da4-a09e-4ab0-8451-6239a7318211`).                                                                        |
+| 2026-05-12 | Background and thesis summary with primary/secondary sources (`72e674ba-84d3-4709-8acc-f122be88555e`).                            |
+| 2026-05-12 | Completed Markdown / markdown-adjacent inventory table (`9efae634-6c84-480e-834c-a0e12697f0b6`).                                  |
+| 2026-05-12 | Added five prototype/experiment sketches with goals, surfaces, success criteria, effort (`71b83d0a-75ea-4f7b-aaea-c36bb03d36d4`). |
