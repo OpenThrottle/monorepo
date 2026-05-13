@@ -95,13 +95,44 @@ This is the **single server-side switch** for “commander drove navigation or f
 
 ## Boundaries for the header work (next tasks)
 
-| Concern                       | Recommended home                                                                                                                                                                              |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Open commander / seed query   | Developer `App` (or thin provider), same instance as `OpenThrottleCommander` — avoid a second cmdk tree.                                                                                      |
-| Navigate to `/search`         | React Router `useNavigate` / `<Link>` / GET form from the app or header callback — no new commander logic in `react-router-ui-global`.                                                        |
-| POST `commander-search`       | Stay in developer `root` action + `submitCommanderSearch`; shared header should not import GraphQL or intent strings.                                                                         |
-| Visual search field in chrome | Extend `GlobalLayoutHeader` (or wrapper) with **optional** props only: e.g. `onSearchIntent`, `searchPlaceholder`, controlled `searchValue` — **no** commander imports in the global package. |
+| Concern                       | Recommended home                                                                                                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open commander / seed query   | Developer `App` (or thin provider), same instance as `OpenThrottleCommander` — avoid a second cmdk tree.                                                                                                    |
+| Navigate to `/search`         | React Router `useNavigate` / `<Link>` / GET form from the app or header callback — no new commander logic in `react-router-ui-global`.                                                                      |
+| POST `commander-search`       | Stay in developer `root` action + `submitCommanderSearch`; shared header should not import GraphQL or intent strings.                                                                                       |
+| Visual search field in chrome | Extend `GlobalLayoutHeader` (or a thin wrapper export) with **optional** props only: e.g. `onSearchIntent`, `searchPlaceholder`, controlled `searchValue` — **no** commander imports in the global package. |
+
+## API design decision: GlobalLayoutHeader search (plan task)
+
+**Options considered**
+
+- **(a)** Optional app callback / context only — opens commander (with optional seed) from chrome; no route involvement on focus.
+- **(b)** Navigate to `/search` on submit (or focus-with-intent) — keeps all query handling on the search route; no palette on focus.
+- **(c) Hybrid** — chrome delegates **engage** vs **submit** to the app; app chooses commander open, GET search, or POST `commander-search`.
+
+**Decision: (c) Hybrid**, implemented as **neutral, optional props** on `GlobalLayoutHeader` (no commander types, no `commander-search`, no routes in `@openthrottle/react-router-ui-global`).
+
+**Recommended contract (shared package)**
+
+- Add an optional discriminated callback, e.g. `onSearchChromeEvent?: (event: GlobalLayoutHeaderSearchEvent) => void` with:
+  - `{ type: 'engage' }` — user moved into the chrome search control (e.g. focus or click; exact mapping is an implementation detail in the next task) so the **app** can open the single `OpenThrottleCommander` instance (`open` / `onOpenChange` lifted to `App` where needed).
+  - `{ type: 'submit'; query: string }` — user committed a non-empty query (e.g. Enter on a wrapped field or form submit). The **app** decides: `navigate('/search?q=…')` for “defer to search route directly”, or `submitCommanderSearch({ q })` for parity with commander’s empty-state / “Search for …” POST + redirect (including future `jump` / id behavior if you ever thread it from chrome).
+- Optional `searchPlaceholder`, and optional controlled or uncontrolled **draft** value props for the visible `<Input>` so the header can show typing before submit without the package knowing why.
+- **Default:** when `onSearchChromeEvent` (or the chosen prop name) is omitted, behavior stays **inert** — `openthrottle-admin` and other consumers unchanged.
+
+**Why not (a) or (b) alone**
+
+- **(a) alone** does not satisfy “defer to the search route directly” for Enter/submit without bolting navigation into the shared package.
+- **(b) alone** forces every product to use `/search` semantics and does not launch the existing palette from chrome on engage, which conflicts with “same flow as root / search route” interpreted as **same commander + search system**, not only GET navigation.
+
+**Boundaries**
+
+| Layer                                     | Responsibility                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `react-router-ui-global`                  | Present chrome input + optional `onSearchChromeEvent` / placeholder / value props only.                                                                                                                                                                                                                                                           |
+| `openthrottle-developer` `App`            | Wire events to **one** `OpenThrottleCommander` (`open` state) and/or `useNavigate` / `submitCommanderSearch`.                                                                                                                                                                                                                                     |
+| `react-router-ui` `OpenThrottleCommander` | Palette UX and ⌘K; today it **clears** internal `search` whenever `open` becomes `true`. Carrying a **seed query** from the header into the dialog likely needs a small follow-up there (e.g. optional initial query when opening from outside, or parent-controlled query) — track in the implementation task, not in the global header package. |
 
 ---
 
-_Last updated for plan “Trigger commander from GlobalLayoutHeader search” (documentation task)._
+_Last updated for plan “Trigger commander from GlobalLayoutHeader search” (documentation + API design tasks)._
