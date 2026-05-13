@@ -69,9 +69,6 @@ export default function Component(
   // Setup
   const isSubmitting = fetcher.state === 'submitting';
   const extension = prompt.filePath?.split('.').pop() ?? 'md';
-
-  // FIXME: Swap out eventually
-
   const language = getLanguageFromExt(extension as unknown as any);
 
   // Handlers

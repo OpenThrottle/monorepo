@@ -25,7 +25,6 @@ import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.edit
 
 type HandleData = Route.ComponentProps['loaderData'];
 
-// FIXME:
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Create',
   links: (_match) => [

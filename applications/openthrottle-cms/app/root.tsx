@@ -113,6 +113,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 flex-col">{children}</div>
 
         <ScrollRestoration />
+
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 

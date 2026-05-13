@@ -119,6 +119,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <GlobalFooter /> */}
 
         <ScrollRestoration />
+
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
