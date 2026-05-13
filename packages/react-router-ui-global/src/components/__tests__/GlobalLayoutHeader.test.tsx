@@ -1,24 +1,108 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { GlobalLayoutHeader } from '../GlobalLayoutHeader';
 import type { GlobalLayoutHeaderProps } from '../GlobalLayoutHeader';
+import { GlobalProviders } from '../GlobalProviders';
+
+const renderHeader = (
+  headerProps: GlobalLayoutHeaderProps = {},
+): ReturnType<typeof render> => {
+  const Component = (): React.ReactElement => (
+    <GlobalProviders>
+      <GlobalLayoutHeader {...headerProps} />
+    </GlobalProviders>
+  );
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+};
 
 describe('GlobalLayoutHeader Component', () => {
-  let component: RenderResult;
-  let props: GlobalLayoutHeaderProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <GlobalLayoutHeader {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+  test('renders navigation chrome and inert search field by default', () => {
+    renderHeader({});
+    expect(
+      screen.getByRole('button', { name: 'Toggle sidebar' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('OpenThrottleBreadcrumbs')).toBeInTheDocument();
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('when search is unwired, omits search form wrapper', () => {
+    renderHeader({});
+    expect(
+      screen.queryByTestId('GlobalLayoutHeaderSearch'),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('GlobalLayoutHeader search chrome', () => {
+  test('focus emits engage once wired', async () => {
+    const user = userEvent.setup();
+    const onSearchChromeEvent = vi.fn();
+    renderHeader({ onSearchChromeEvent });
+
+    const field = screen.getByRole('searchbox');
+    await user.click(field);
+
+    expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
+  });
+
+  test('submit emits submit with trimmed query when non-empty', async () => {
+    const user = userEvent.setup();
+    const onSearchChromeEvent = vi.fn();
+    renderHeader({ onSearchChromeEvent });
+
+    const field = screen.getByRole('searchbox');
+    await user.type(field, '  hello world  ');
+    await user.keyboard('{Enter}');
+
+    expect(onSearchChromeEvent).toHaveBeenLastCalledWith({
+      query: 'hello world',
+      type: 'submit',
+    });
+  });
+
+  test('submit with empty draft does not emit submit', async () => {
+    const user = userEvent.setup();
+    const onSearchChromeEvent = vi.fn();
+    renderHeader({ onSearchChromeEvent });
+
+    const field = screen.getByRole('searchbox');
+    await user.click(field);
+    await user.keyboard('{Enter}');
+
+    expect(onSearchChromeEvent).toHaveBeenCalledTimes(1);
+    expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
+  });
+
+  test('controlled searchValue defers draft to parent', async () => {
+    const user = userEvent.setup();
+    const onSearchChromeEvent = vi.fn();
+
+    const ControlledHarness = (): React.ReactElement => {
+      const [value, setValue] = React.useState('seed');
+      return (
+        <GlobalProviders>
+          <GlobalLayoutHeader
+            onSearchChromeEvent={onSearchChromeEvent}
+            onSearchValueChange={setValue}
+            searchValue={value}
+          />
+        </GlobalProviders>
+      );
+    };
+
+    const RoutesStub = createRoutesStub([
+      { Component: ControlledHarness, path: '/' },
+    ]);
+    render(<RoutesStub />);
+
+    const field = screen.getByRole('searchbox');
+    expect(field).toHaveValue('seed');
+
+    await user.type(field, 'x');
+    expect(field).toHaveValue('seedx');
   });
 });
