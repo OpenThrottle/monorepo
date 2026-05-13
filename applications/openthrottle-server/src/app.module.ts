@@ -24,6 +24,7 @@ import {
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
+import { CortexDocumentIngestGraphqlModule } from './graphql/cortex-document-ingest/cortex-document-ingest-graphql.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
@@ -112,6 +113,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     ActivityGraphqlModule,
     AuthGraphqlModule,
     CommitLinksGraphqlModule,
+    CortexDocumentIngestGraphqlModule,
     CustomPromptsGraphqlModule,
     DailyStatsGraphqlModule,
     GeneratorsGraphqlModule,
