@@ -108,7 +108,7 @@ export const meta = (_args: Route.MetaArgs) => {
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
  * @description Document shell only: html/head/body, Links/Meta/Scripts, env bootstrap,
- * and a thin flex region for {@link App} (matches openthrottle-developer root Layout).
+ * and a thin flex region / Layout for the Application.
  */
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks

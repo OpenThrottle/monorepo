@@ -7,13 +7,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import { GlobalMetrics } from '../GlobalMetrics';
 import type { GlobalMetricsProps } from '../GlobalMetrics';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 import {
   GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION,
   GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY,
   type MetricsChartDatum,
 } from '../global-metrics-chart-history-storage';
 
-const STORAGE_KEY = 'openthrottle-developer:metricsPollInterval';
+const STORAGE_KEY = `${APP_NAME}:metricsPollInterval`;
 
 vi.mock('@openthrottle/react-router-ui', async (importOriginal) => {
   const actual =
