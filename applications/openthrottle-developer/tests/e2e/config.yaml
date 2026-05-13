@@ -1,6 +1,7 @@
 # Maestro workspace config for openthrottle-developer
 #
-# This file is consumed by `maestro test --workspace .` (or via `--config ./config.yaml`).
+# This file is consumed by `maestro test ... --config config.yaml` (or when
+# `config.yaml` is auto-discovered from the workspace root).
 # The Ralph plan keeps Maestro assets fully decoupled from `app/`; everything lives
 # under `applications/openthrottle-developer/tests/e2e/` so flows resolve relative
 # to this directory when Maestro is invoked from here.
@@ -13,6 +14,7 @@
 #
 # Tags let CI scope runs (e.g. `--include-tags smoke` for PR checks).
 flows:
+  - 'flows/*.yaml'
   - 'flows/**/*.yaml'
 
 includeTags: []

@@ -4,9 +4,8 @@ Decoupled Maestro harness for the `openthrottle-developer` React Router app. All
 Maestro assets live under this directory so the application source under
 `applications/openthrottle-developer/app/` stays free of test infrastructure.
 
-> Detailed prerequisites and run steps land in a follow-up task. This README is
-> the layout reference; treat it as the source of truth for **where** Maestro
-> files belong.
+Treat this README as the source of truth for **where** Maestro files belong; a
+longer runbook may extend it under the same directory.
 
 ## Layout
 
@@ -31,22 +30,25 @@ applications/openthrottle-developer/tests/e2e/
 - **Do not place Maestro files under `app/`.** Application source must remain
   free of test infrastructure (PR review gate).
 
-## Running locally (placeholder)
+## Running locally
 
-The Nx target wiring lands in a follow-up task. Once available the canonical
-entry point will be:
+**Prerequisites:** [Maestro CLI](https://docs.maestro.dev/getting-started/installing-maestro) on your PATH, dev server reachable at the URL in the flow (default `http://localhost:6020`; see `../../.env.default` and `PORT`).
+
+**Canonical entry (all flows under `flows/`):**
 
 ```bash
 pnpm nx run openthrottle-developer:test-e2e
 ```
 
-Until then flows can be exercised manually from this directory:
+Nx runs Maestro with `cwd` set to this directory. The command discovers every `*.yaml` under `flows/` (including nested folders) and passes them to `maestro test --config config.yaml`. This target expects POSIX `find` and `xargs` (macOS and Linux; on Windows use WSL or run Maestro manually from this directory).
+
+**Manual run (single flow):**
 
 ```bash
 cd applications/openthrottle-developer/tests/e2e
-maestro test flows/<your-flow>.yaml
+maestro test flows/<your-flow>.yaml --config config.yaml
 ```
 
-See the OpenThrottle stack skill (`.agents/skills/openthrottle-stack/SKILL.md`)
-and the developer app env defaults (`../../.env.default`) for ports and URLs
-when pointing flows at a local server.
+**Nx configurations:** `record` (`maestro record --local`), `studio` (`maestro studio`), and `watch` (continuous test) use the same `cwd`; invoke with `pnpm nx run openthrottle-developer:test-e2e --configuration=studio`, etc.
+
+For stack context (GraphQL, env verification), see `.agents/skills/openthrottle-stack/SKILL.md`.

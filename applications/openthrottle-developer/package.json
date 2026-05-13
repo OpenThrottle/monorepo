@@ -31,7 +31,24 @@
       "codegen-react-router-watch": {},
       "lint": {},
       "test": {},
-      "test-e2e": {},
+      "test-e2e": {
+        "configurations": {
+          "record": {
+            "command": "maestro record --local"
+          },
+          "studio": {
+            "command": "maestro studio"
+          },
+          "watch": {
+            "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml -c"
+          }
+        },
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
+          "cwd": "{projectRoot}/tests/e2e"
+        }
+      },
       "typecheck": {}
     }
   },
