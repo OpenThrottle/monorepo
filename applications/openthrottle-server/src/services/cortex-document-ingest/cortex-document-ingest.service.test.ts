@@ -175,6 +175,10 @@ describe('CortexDocumentIngestService', () => {
 
         expect(result.success).toBe(false);
         expect(mockPlansRepo.delete).toHaveBeenCalledWith({ id: 'plan-1' });
+        expect(mockLogger.warn).toHaveBeenCalled();
+        const warnMsg = String(mockLogger.warn.mock.calls[0]?.[0] ?? '');
+        expect(warnMsg).toContain('rolling back plan');
+        expect(warnMsg).toContain('plan-1');
       });
     });
 
