@@ -181,9 +181,71 @@ Small, well-scoped experiments the team could run **later**—each is **document
 
 ## Open questions, risks, and constraints
 
-_(Task: embedding pipeline, tokens, git diff, accessibility/sanitization, MCP transport, storage, authoring DX, backward compatibility.)_
+Before any rollout that treats HTML as a first-class artifact (in streams, MCP payloads, or ingest sources), the following risks and unknowns should be resolved. Each item states an **open question** and a **recommended next step** (still research or spike—no commitment to build).
 
-- _(TBD)_ — Question — Suggested next step.
+### (a) Embedding pipeline behavior on HTML
+
+**Question:** If `documentation` / `plan_embeddings` / `task_embeddings` receive raw HTML (or Markdown with heavy inline HTML), how do `chunkTextForEmbedding` boundaries, tokenizer behavior, and vector similarity change versus prose? Do we strip tags to text first, embed HTML-as-text, or maintain dual columns (raw + `content_text`)?
+
+**Risks:** Tag boilerplate dominates chunk budget; chunks split mid-tag produce invalid fragments and odd nearest-neighbor matches; semantic search quality may drop for natural-language queries unless normalization is consistent.
+
+**Recommended next step:** Run a **controlled ingest spike** on a small corpus: (1) baseline Markdown chunks, (2) same content as minimal HTML, (3) HTML with layout noise (nested `div`s, inline styles). Measure chunk counts, mean chunk length, and top-k retrieval precision on a fixed query set. Document a default policy (e.g. “strip to text before embed” vs “embed as-is”) before changing `openthrottle-ingest-docs` or plan ingest.
+
+### (b) Token cost versus Markdown for agent prompts
+
+**Question:** For equal _human_ information (e.g. a table of ten tasks), what is the token delta between a compact Markdown table, a verbose HTML table, and HTML with CSS classes—especially when the same block is injected every Ralph iteration?
+
+**Risks:** Repeated HTML headers and wrappers multiply context use; models may attend to presentation tokens instead of semantics unless prompts are curated.
+
+**Recommended next step:** Instrument or manually count tokens (same content, three formats) for a **representative Cortex injection** (`formatPlanAndTasksForPrompt` + typical `description` length). Set a **budget guideline** (e.g. “no raw HTML in injected block unless under N tokens”) for any future template change.
+
+### (c) Diff and review friction in Git
+
+**Question:** When HTML artifacts or HTML-heavy files are committed (or when plan output is mirrored to files), do `git diff`, GitHub’s UI, and team review habits degrade versus Markdown line-based diffs?
+
+**Risks:** Minified or long single-line HTML is effectively unreviewable; attribute reordering creates noisy diffs; blame/history becomes harder to read for non-frontend reviewers.
+
+**Recommended next step:** If prototype (1) or (5) produces committed HTML, trial **formatting policy** (pretty-printed HTML, max line length) and compare reviewer time on a paired PR. Prefer **generated artifacts** in `dist/` or CI-only storage if diffs in main are unacceptable.
+
+### (d) Accessibility and sanitization (XSS, untrusted agent output)
+
+**Question:** Any path that renders `plan_output_stream`, task bodies, or MCP-sourced strings as HTML in the browser needs a **threat model**: who can append content, and what tags/events are allowed? How do we meet WCAG-style expectations (headings, focus order, `alt` text) for generated dashboards?
+
+**Risks:** `append_plan_output` and agent stdout are **untrusted**; naive `dangerouslySetInnerHTML` or loose sanitizer profiles enable stored XSS for anyone with write access to plans. Rich layout can also harm screen-reader users if everything is `div`-soup.
+
+**Recommended next step:** Define a **DOMPurify (or equivalent) allowlist** and CSP notes for any rich view spike; add **red-team fixtures** to UI tests (script, `onerror`, `javascript:` URLs). Pair with a11y spot-check (axe or Lighthouse) on `PlanLoggerOutput` / plan detail routes before widening HTML rendering.
+
+### (e) MCP transport and client rendering
+
+**Question:** Should `mcp-developer` or `docs-mcp` ever return **HTML strings** in tool results, or must MCP remain **plain text / JSON** with HTML only in apps or static files? Do Cursor and other MCP clients strip tags, double-encode, or pass through to a markdown renderer that breaks on tags?
+
+**Risks:** Agents consume **more tokens** for the same facts; inconsistent client behavior; debugging becomes “why did the model see angle brackets?”
+
+**Recommended next step:** **Default: keep MCP responses text-first.** If an experiment needs HTML, use an **opaque URL** or file path in the tool result and document the contract. Spike: send a short HTML snippet through `get_document` in a dev MCP client and record behavior (length, escaping, rendering).
+
+### (f) Storage and serving (S3-like hosting, artifact lifecycle)
+
+**Question:** For end-of-run dashboards or large static wikis, is **Postgres `TEXT` / `plan_output_stream`** sufficient, or do we need object storage (GCS/S3), signed URLs, retention policy, and virus/static-analysis scanning?
+
+**Risks:** DB bloat and backup cost; PII or secrets pasted into HTML artifacts; no CDN = slow loads for large self-contained files.
+
+**Recommended next step:** For prototype (1), decide **one** storage class (e.g. CI artifact only vs new bucket vs DB blob column) and document **retention + PII**. Do not mix secrets into HTML without the same handling as logs.
+
+### (g) Authoring experience inside Cursor and for agents
+
+**Question:** Will humans author Cortex `description` / custom prompts primarily in Markdown with occasional HTML, or will we introduce WYSIWYG / split preview? How do agents **author** valid HTML without breaking fences and `<ralph:*>` markers?
+
+**Risks:** Monaco `language="markdown"` does not validate HTML; mixed MD+HTML confuses writers; agents may emit broken partial tags that break downstream parsers.
+
+**Recommended next step:** **Authoring guideline** doc: “HTML allowed only in these fields / these prototypes.” Optionally add lint or server-side validation (balance tags, deny `script`) before persist—scoped to a follow-up plan, not this research file’s implementation.
+
+### (h) Backward compatibility with existing Markdown surfaces
+
+**Question:** How do we avoid breaking **Ralph stdout parsers**, **ingest path assumptions** (`docs/**/*.md`, `expandToMarkdownPaths`), **GraphQL clients** that expect `description` as Markdown-ish text, and **embeddings** already trained on historical chunks?
+
+**Risks:** Silent behavior change if one surface flips to HTML-first; dual formats without a version flag confuse `semantic_search` consumers.
+
+**Recommended next step:** Maintain a **compatibility matrix** (surface × canonical format × optional HTML derivative) for one release cycle. Any new HTML capability should be **additive** (new column, new artifact type, or client-only view) until ingest and MCP contracts are explicitly versioned or migrated.
 
 ---
 
@@ -209,3 +271,4 @@ _(TBD: follow-up OT plans/tasks—no implementation in this research plan.)_
 | 2026-05-12 | Background and thesis summary with primary/secondary sources (`72e674ba-84d3-4709-8acc-f122be88555e`).                            |
 | 2026-05-12 | Completed Markdown / markdown-adjacent inventory table (`9efae634-6c84-480e-834c-a0e12697f0b6`).                                  |
 | 2026-05-12 | Added five prototype/experiment sketches with goals, surfaces, success criteria, effort (`71b83d0a-75ea-4f7b-aaea-c36bb03d36d4`). |
+| 2026-05-12 | Documented open questions, risks, constraints (a–h) with recommended next steps (`5093bf77-aa26-4058-888c-7bdaa8e89029`).         |
