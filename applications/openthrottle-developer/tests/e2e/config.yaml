@@ -1,0 +1,24 @@
+# Maestro workspace config for openthrottle-developer
+#
+# This file is consumed by `maestro test --workspace .` (or via `--config ./config.yaml`).
+# The Ralph plan keeps Maestro assets fully decoupled from `app/`; everything lives
+# under `applications/openthrottle-developer/tests/e2e/` so flows resolve relative
+# to this directory when Maestro is invoked from here.
+#
+# Resolution model:
+#   cwd           : applications/openthrottle-developer/tests/e2e
+#   flows glob    : flows/**/*.yaml
+#   shared steps  : helpers/**/*.yaml (subflows referenced via `runFlow`)
+#   artifacts     : output/ (gitignored — recordings, screenshots, reports)
+#
+# Tags let CI scope runs (e.g. `--include-tags smoke` for PR checks).
+flows:
+  - 'flows/**/*.yaml'
+
+includeTags: []
+excludeTags:
+  - wip
+
+# Maestro v1.x supports `local` settings to stabilise CI runs. Tune as flows grow.
+local:
+  deterministicOrder: true
