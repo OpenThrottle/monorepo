@@ -7,6 +7,21 @@ import { GlobalLayoutHeader } from '../GlobalLayoutHeader';
 import type { GlobalLayoutHeaderProps } from '../GlobalLayoutHeader';
 import { GlobalProviders } from '../GlobalProviders';
 
+/**
+ * @description Advance tab focus until `element` is focused or the tab budget is exhausted.
+ */
+const tabUntilFocused = async (
+  user: ReturnType<typeof userEvent.setup>,
+  element: HTMLElement,
+  maxTabs: number,
+): Promise<void> => {
+  if (maxTabs <= 0 || document.activeElement === element) {
+    return;
+  }
+  await user.tab();
+  await tabUntilFocused(user, element, maxTabs - 1);
+};
+
 const renderHeader = (
   headerProps: GlobalLayoutHeaderProps = {},
 ): ReturnType<typeof render> => {
@@ -46,6 +61,18 @@ describe('GlobalLayoutHeader search chrome', () => {
     const field = screen.getByRole('searchbox');
     await user.click(field);
 
+    expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
+  });
+
+  test('focus via keyboard Tab emits engage', async () => {
+    const user = userEvent.setup();
+    const onSearchChromeEvent = vi.fn();
+    renderHeader({ onSearchChromeEvent });
+
+    const field = screen.getByRole('searchbox');
+    await tabUntilFocused(user, field, 30);
+
+    expect(field).toHaveFocus();
     expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
   });
 

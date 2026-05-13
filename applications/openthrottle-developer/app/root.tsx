@@ -69,6 +69,7 @@ import {
   buildCommanderEmptyStateExtras,
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
+import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import {
   callLoginMutation,
@@ -360,11 +361,10 @@ export default function App(): React.ReactElement {
    */
   const handleSearchChromeEvent = React.useCallback(
     (event: GlobalLayoutHeaderSearchEvent) => {
-      if (event.type === 'engage') {
-        setCommanderOpen(true);
-        return;
-      }
-      submitCommanderSearch({ q: event.query });
+      handleGlobalLayoutHeaderSearchChromeEvent(
+        { setCommanderOpen, submitCommanderSearch },
+        event,
+      );
     },
     [submitCommanderSearch],
   );
