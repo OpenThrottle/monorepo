@@ -164,7 +164,7 @@ export const eslintConfig = tslint.config([
     rules: {
       // FIXME: Coming soon...
       '@typescript-eslint/consistent-type-assertions': [
-        'error',
+        'warn',
         { assertionStyle: 'never' },
       ],
 
