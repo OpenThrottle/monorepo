@@ -2,16 +2,22 @@
 # v2 copy: created from Dockerfile.NestJS with no behavior change. All optimizations go here; baseline stays in Dockerfile.NestJS.
 # Build: docker build -f Dockerfile.NestJS.v2 [--build-arg ...] .
 # See docs/openthrottle/docker-image-build-strategy.md.
+#
+# Production runtime: gcr.io/distroless/nodejs22-debian12:nonroot (glibc). Build stages use
+# node:*-bookworm-slim so pruned native addons match distroless; Alpine-built node_modules (musl) would not.
 ###########################################################################
 #
 #     👀 https://pnpm.io/docker using NX for the monorepo build
 #
 ###########################################################################
 ARG NODE_VERSION="22"
-FROM node:${NODE_VERSION}-alpine AS base
-# FROM node:${NODE_VERSION}-slim AS base
+FROM node:${NODE_VERSION}-bookworm-slim AS base
 
 WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
@@ -34,9 +40,9 @@ RUN npm install --global pnpm@${PNPM_VERSION}
 # Only copy what's needed to install our dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
 
-# Avoid gid/uid 1000 — node:alpine already has node:1000:1000
-RUN addgroup --system --gid 1001 appuser
-RUN adduser --system --uid 1001 --ingroup appuser appuser
+# Non-root identity for intermediate stages (final image uses distroless `nonroot`).
+RUN groupadd --system --gid 1001 appuser \
+  && useradd --system --uid 1001 --gid appuser appuser
 
 ################################################################################
 #
@@ -49,19 +55,13 @@ FROM base AS builder
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV NODE_ENV="development"
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.json
 COPY ./packages ./packages
 COPY ./tools ./tools
-
-# Python tools are required to build
-# RUN apk add --update build-base python3 make g++\
-#   && rm -rf /var/cache/apk/*
-
-# General best practice, keep it up to date
-# RUN apk update && apk upgrade
-
-# Enable pnpm via npm
-RUN npm install --global pnpm@${PNPM_VERSION}
 
 # Install "all" dependencies from NPM + Github Packages
 RUN pnpm install --frozen-lockfile
@@ -144,19 +144,16 @@ RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 #   PRODUCTION - Finally, build the production image with a "minimal" footprint
 #
 ################################################################################
-FROM base AS production
+# Distroless: no shell, package manager, or curl — smaller attack surface. Healthchecks from the host
+# or a sidecar should target HTTP; compose maps PORT from OPENTHROTTLE_SERVER_PORT (see docker-nestjs-v2-stage-audit.md).
+FROM gcr.io/distroless/nodejs22-debian12:nonroot AS production
 
-# Set the environment explicitly
+WORKDIR /app
+
 ENV NODE_ENV="production"
 
 # Only the pruned app (no full /app/node_modules, /app/packages, or /app/tools from the monorepo build).
-COPY --from=build /app/pruned/. /app/
+COPY --from=build --chown=65532:65532 /app/pruned/. /app/
 
-# 🚧 MOVE TO DEVELOPMENT ONLY - Used for docker compose healthchecks
-RUN apk --update --no-cache add curl
-
-RUN chown -R appuser:appuser /app
-USER appuser
-
-# Matches applications/${APP_NAME}/package.json start:docker; paths are relative to pruned layout (WORKDIR /app).
-CMD ["node", "-r", "dotenv/config", "build/src/main.js"]
+# ENTRYPOINT is Node; CMD is argv only (see distroless/nodejs README).
+CMD ["-r", "dotenv/config", "build/src/main.js"]

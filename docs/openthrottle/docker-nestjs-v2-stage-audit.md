@@ -8,15 +8,15 @@ See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build
 
 ## 1. Stages in Dockerfile.NestJS.v2 (current)
 
-| Stage            | `FROM`         | Purpose                                                                                                                                                                                                          |
-| ---------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **base**         | node:22-alpine | Node base, global `pnpm`, workspace manifest copies, `appuser` group/user. No application source.                                                                                                                |
-| **builder**      | base           | Copies `applications/${APP_NAME}/package.json`, full `packages/` and `tools/`, runs `pnpm install --frozen-lockfile` (full dev + prod workspace tree).                                                           |
-| **dependencies** | builder        | `NODE_ENV=production`, second `pnpm install --frozen-lockfile --prod` with cache mount, `pnpm store prune`, removes Radix/React paths under `node_modules/.pnpm`.                                                |
-| **build**        | builder        | `COPY . .`, full `pnpm install`, Nx `run-many` for packages/tools then `nx run ${APP_NAME}:build`, optional GCS credentials for Nx cache, then prod `pnpm install` and store prune / React removals.             |
-| **production**   | base           | Copies full `/app/node_modules`, server `build/` + `i18n` + `package.json`, full `/app/packages` and `/app/tools` from **build**, installs **curl** via `apk`, runs as `appuser`; `CMD` runs compiled `main.js`. |
+| Stage            | `FROM`                                      | Purpose                                                                                                                                                                                                    |
+| ---------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **base**         | node:22-bookworm-slim                       | Node base (glibc, matches distroless), `ca-certificates`, global `pnpm`, workspace manifest copies, `appuser` for intermediate stages. No application source.                                              |
+| **builder**      | base                                        | `python3` / `make` / `g++` for native addons, copies `applications/${APP_NAME}/package.json`, full `packages/` and `tools/`, `pnpm install --frozen-lockfile`.                                             |
+| **dependencies** | builder                                     | `NODE_ENV=production`, `pnpm install --frozen-lockfile --prod` with cache mount, `pnpm store prune`, removes Radix/React paths under `node_modules/.pnpm`.                                                 |
+| **build**        | builder                                     | `COPY . .`, full `pnpm install`, Nx `run-many` for packages/tools then `nx run ${APP_NAME}:build`, optional GCS credentials for Nx cache, prod `pnpm install`, `pnpm deploy` → `/app/pruned`.              |
+| **production**   | gcr.io/distroless/nodejs22-debian12:nonroot | Copy **only** `/app/pruned` from **build** with `--chown=65532:65532` (distroless `nonroot`). No shell, `apk`, or **curl**. `CMD` is argv-only for distroless Node (`-r dotenv/config build/src/main.js`). |
 
-There is **no** separate `production-alpine` or distroless stage in the current v2 Dockerfile; those are candidates for later tasks in the same plan.
+**Why bookworm-slim + distroless:** Distroless Node on Debian is **glibc**. Dependencies built on **Alpine** are **musl**; copying those `node_modules` into distroless would break native addons at runtime. All stages that produce `/app/pruned` therefore run on **bookworm-slim** so the pruned tree is glibc-aligned with `nodejs22-debian12`.
 
 ---
 
@@ -45,7 +45,19 @@ Recorded on **2026-05-14** on **Docker Desktop (linux/amd64 or arm64 per daemon)
 | **build**        | _pending_            | —                             | Not completed in this audit run: in-container `pnpm install` after full `COPY . .` pulls many optional platform tarballs; flaky registry (`EAI_AGAIN`) can make the step very slow or fail. Re-run on a stable network or in CI with cache. |
 | **production**   | _pending_            | —                             | Depends on **build**. Expect large final image because production copies full monorepo `node_modules`, `packages/`, and `tools/` from **build** (plan target ~6GB class before v2 optimizations).                                           |
 
-**Takeaway:** Through **dependencies**, almost all disk cost is the monorepo `node_modules` tree. **build** adds full source and a second full install plus Nx outputs; **production** currently re-imports that heavy tree plus Alpine `curl`.
+**Takeaway:** Through **dependencies**, almost all disk cost is the monorepo `node_modules` tree. **build** adds full source and a second full install plus Nx outputs; **production** copies only **`pnpm deploy` output** under `/app/pruned` on top of a **distroless** runtime (no curl).
+
+### 3.1 Production base change (distroless, 2026-05-14)
+
+| Item                         | Notes                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Final `FROM`**             | `gcr.io/distroless/nodejs22-debian12:nonroot`                                                                                                                                                                                                                                                                                                                       |
+| **Build libc**               | `node:22-bookworm-slim` for **base** / **builder** / **dependencies** / **build** so native `.node` binaries match distroless.                                                                                                                                                                                                                                      |
+| **Compatibility**            | `CMD` must be **arguments to `node` only** (image entrypoint is Node). Same logical command as `start:docker`: preload `dotenv/config`, then `build/src/main.js`.                                                                                                                                                                                                   |
+| **Healthchecks**             | No in-container `curl`/`wget`. Prefer host-side checks, a compose-sidecar, or Kubernetes `exec`/`httpGet` against the published port. Compose maps **`PORT`** from **`OPENTHROTTLE_SERVER_PORT`** (see §4).                                                                                                                                                         |
+| **Size (record when built)** | **Upstream image only (no app):** `gcr.io/distroless/nodejs22-debian12:nonroot` ≈ **155MB** (`154947096` bytes) on one host (2026-05-14). **Full production** (distroless + `/app/pruned`): run `docker images <tag> --format "{{.Size}}"` after a successful `--target production` build; compare to the previous Alpine-based production tag on the same machine. |
+
+Re-run the §5 loop after images pull successfully (Docker Hub / `node:22-bookworm-slim` metadata must complete).
 
 ---
 
@@ -95,4 +107,4 @@ For an apples-to-apples baseline against the original Dockerfile, swap `-f Docke
 
 ## 6. Planned follow-ups (same plan; not yet in v2)
 
-These map to remaining Cortex tasks: pruned/runtime-only `node_modules` in production, smaller final base (for example distroless), remove or conditionalize **curl**, avoid copying full `packages/` and `tools/` when not required, then repeat the per-stage table after each meaningful `.v2` change.
+These map to remaining Cortex tasks: further trim pruned tree, optional **`node:22-bookworm-slim`** final stage if distroless blocks debugging, explicit healthcheck strategy without in-image curl, then repeat the per-stage table after each meaningful `.v2` change.
