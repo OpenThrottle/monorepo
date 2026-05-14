@@ -24,6 +24,8 @@ describe('runIteration (sync) backend dispatch', () => {
     vi.mocked(spawnSync).mockClear();
     vi.mocked(spawnSync).mockReturnValue({
       error: undefined,
+      output: ['done'],
+      pid: 0,
       signal: null,
       status: 0,
       stderr: '',
@@ -103,7 +105,7 @@ describe('runIterationAsync backend dispatch', () => {
       child.stdout = new PassThrough();
       child.stderr = new PassThrough();
       child.kill = vi.fn(() => true);
-      child.killed = false;
+      (child as any).killed = false;
       queueMicrotask(() => {
         child.emit('close', 0);
       });
