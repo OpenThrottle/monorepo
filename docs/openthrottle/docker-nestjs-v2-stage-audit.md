@@ -1,77 +1,76 @@
 # Dockerfile.NestJS.v2 — stage audit and size baseline
 
-Baseline image-size audit for **Dockerfile.NestJS.v2** (optimization target). The v2 file is a copy of Dockerfile.NestJS; all size/optimization work is done in the v2 file so the original remains the working baseline.
+Baseline image-size audit for **Dockerfile.NestJS.v2** (optimization target). The v2 file is a behavioral copy of `Dockerfile.NestJS` at the repo root; optimizations land only in the v2 file so the original stays the working baseline.
 
-See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build strategy. Plan: **Docker image optimizations for NX monorepo** (Cortex).
+See [docker-image-build-strategy.md](./docker-image-build-strategy.md) for build strategy. Cortex plan: **Docker image optimizations for NX monorepo** (Plan-Id: `03259ada-6681-4bb0-bb04-a45d944ab223`).
 
 ---
 
-## 1. Stages in Dockerfile.NestJS.v2
+## 1. Stages in Dockerfile.NestJS.v2 (current)
 
-| Stage                 | FROM                                        | Purpose                                                                                                 |
-| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **base**              | node:22-alpine                              | Node, pnpm, appuser; no app code.                                                                       |
-| **builder**           | base                                        | Dev deps, packages/tools/patches, `pnpm install`, build tooling (apk build-base, python3, make, g++).   |
-| **dependencies**      | builder                                     | Production deps only: `pnpm install --prod`, store prune, remove Expo/React.                            |
-| **build**             | builder                                     | Full source `COPY . .`, pnpm install, `nx run ${APP_NAME}:build`.                                       |
-| **production**        | gcr.io/distroless/nodejs22-debian12:nonroot | Copy only `/app/pruned`; no shell, no curl; run as nonroot (65532). Minimal base for size and security. |
-| **production-alpine** | base (node:22-alpine)                       | Same as production copy; optional target if shell/curl needed for local healthchecks or debugging.      |
+| Stage            | `FROM`         | Purpose                                                                                                                                                                                                          |
+| ---------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **base**         | node:22-alpine | Node base, global `pnpm`, workspace manifest copies, `appuser` group/user. No application source.                                                                                                                |
+| **builder**      | base           | Copies `applications/${APP_NAME}/package.json`, full `packages/` and `tools/`, runs `pnpm install --frozen-lockfile` (full dev + prod workspace tree).                                                           |
+| **dependencies** | builder        | `NODE_ENV=production`, second `pnpm install --frozen-lockfile --prod` with cache mount, `pnpm store prune`, removes Radix/React paths under `node_modules/.pnpm`.                                                |
+| **build**        | builder        | `COPY . .`, full `pnpm install`, Nx `run-many` for packages/tools then `nx run ${APP_NAME}:build`, optional GCS credentials for Nx cache, then prod `pnpm install` and store prune / React removals.             |
+| **production**   | base           | Copies full `/app/node_modules`, server `build/` + `i18n` + `package.json`, full `/app/packages` and `/app/tools` from **build**, installs **curl** via `apk`, runs as `appuser`; `CMD` runs compiled `main.js`. |
+
+There is **no** separate `production-alpine` or distroless stage in the current v2 Dockerfile; those are candidates for later tasks in the same plan.
 
 ---
 
 ## 2. Measurement method
 
-- **Context:** Monorepo root.
-- **Build:** `docker build -f Dockerfile.NestJS.v2 --target <STAGE> -t nestjs-v2-<stage>:audit .` with required build-args.
-- **Size:** After each build, `docker images nestjs-v2-<stage>:audit --format "{{.Size}}"` (human-readable). For reproducible numbers we also record the same in MB (approximate) if needed.
-- **App:** `APP_NAME=openthrottle-server` (NestJS app used for the audit).
-- **Build-args (for builder and later stages):** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, `PNPM_VERSION`. For **build** stage, `--secret id=gcs_credentials,src=<file>` is required (empty `{}` file is enough if not using Nx cloud cache).
+- **Context:** Monorepo root (`.`).
+- **Tags:** `nestjs-v2-<stage>:audit` after `docker build -f Dockerfile.NestJS.v2 --target <stage> ...`.
+- **Size:** `docker images nestjs-v2-<stage>:audit --format "{{.Size}}"` and `docker inspect <image> --format '{{.Size}}'` (bytes).
+- **App:** `APP_NAME=openthrottle-server`.
+- **Typical build-args:** `APP_VERSION`, `NX_VERSION` (match root `package.json` / lockfile), `PNPM_VERSION` (align with `packageManager` in root `package.json`, major **10** at time of audit), `GITHUB_TOKEN` (if private packages), `NX_KEY` (required for Nx in **build** stage to succeed with your Nx Cloud setup).
+- **Build stage secret:** `--secret id=gcs_credentials,src=<path>` (use a JSON file; may be minimal if GCS remote cache is unused).
+
+**Security:** `ARG`/`ENV` values for `GITHUB_TOKEN` and `NX_KEY` can surface in BuildKit metadata and `docker history`. Prefer secret mounts and minimal exposure for real tokens; rotate any token that was ever passed as a plain build-arg.
 
 ---
 
-## 3. Baseline: image size per stage
+## 3. Baseline: image size per stage (measured)
 
-Measured with `APP_NAME=openthrottle-server`, `APP_VERSION=1.3.0`, `NX_VERSION=22.6.4`, `PNPM_VERSION=9`. Date of audit: **2025-03-07**.
+Recorded on **2026-05-14** on **Docker Desktop (linux/amd64 or arm64 per daemon)**, `APP_NAME=openthrottle-server`, `APP_VERSION=1.3.0`, `NX_VERSION=22.6.4`, `PNPM_VERSION=10`. Sizes vary by engine architecture and layer cache.
 
-| Stage        | Image size (human) | Notes                                                                                                                                                                                                                       |
-| ------------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| base         | **190MB**          | Node 22 Alpine + pnpm + appuser.                                                                                                                                                                                            |
-| builder      | **4.88GB**         | After pnpm install (full workspace); includes packages, tools, patches, build-base, python3, make, g++.                                                                                                                     |
-| dependencies | **4.88GB**         | From builder + `pnpm install --prod`, store prune, remove Expo/React. Same total as builder (adds thin layers).                                                                                                             |
-| build        | **N/A**            | Requires successful `nx run openthrottle-server:build`. Audit run failed after build succeeded due to empty `NX_KEY` ("Failed to decode the Nx key"). Re-run with valid `NX_KEY` (and optional GCS credentials) to measure. |
-| production   | **N/A**            | Depends on build stage. Measure after build stage succeeds.                                                                                                                                                                 |
+| Stage            | `docker images` size | `docker inspect` size (bytes) | Notes                                                                                                                                                                                                                                       |
+| ---------------- | -------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **base**         | 193MB                | 193428076                     | Node 22 Alpine + pnpm + manifests + `appuser`.                                                                                                                                                                                              |
+| **builder**      | 1.86GB               | 1855457801                    | Full workspace `pnpm install` after copying `packages/`, `tools/`, and server `package.json`. Dominant cost is `node_modules`.                                                                                                              |
+| **dependencies** | 1.87GB               | 1868100800                    | Prod reinstall + store prune + Radix/React removals; image size remains in the same band as **builder** (thin additional layers on top of builder filesystem).                                                                              |
+| **build**        | _pending_            | —                             | Not completed in this audit run: in-container `pnpm install` after full `COPY . .` pulls many optional platform tarballs; flaky registry (`EAI_AGAIN`) can make the step very slow or fail. Re-run on a stable network or in CI with cache. |
+| **production**   | _pending_            | —                             | Depends on **build**. Expect large final image because production copies full monorepo `node_modules`, `packages/`, and `tools/` from **build** (plan target ~6GB class before v2 optimizations).                                           |
 
-**Summary:** Base is small (190MB). Builder and dependencies are ~4.88GB (monorepo node_modules + tooling). Build and production sizes should be measured in CI or with valid NX_KEY/GCS credentials.
-
----
-
-## 3b. Optimizations applied (v2)
-
-- **Production stage — runtime node_modules only:** The production stage no longer copies `/app/node_modules` from the `dependencies` stage (full monorepo prod deps) or `/app/packages` and `/app/tools` from build. Instead, the **build** stage runs `pnpm --filter ${APP_NAME} --prod deploy /app/pruned --legacy` after the Nx build; the **production** stage copies only `COPY --from=build /app/pruned/. /app/`. The pruned directory contains the app’s files (including `build/`) and an isolated `node_modules` with only that app’s production dependencies (including workspace packages it uses). This reduces final image size by excluding unused monorepo packages and tools from the production image.
-
-- **Production stage — minimal base (distroless):** The default **production** stage now uses `gcr.io/distroless/nodejs22-debian12:nonroot` instead of `base` (node:22-alpine). Benefits: smaller final image (distroless has no shell, apk, or curl), fewer attack surfaces, and Node 22 on Debian 12. Compatibility: no shell — you cannot `docker run -it ... sh` to debug; use `--target production-alpine` for a node:alpine-based image with optional curl/shell for local healthchecks or debugging. The distroless image runs as uid 65532 (nonroot); files are copied with `--chown=65532:65532`.
-
-- **Production stage — no full packages or tools:** The production stage does **not** copy `/app/packages` or `/app/tools` from the build stage. It copies only `COPY --from=build /app/pruned/. /app/`. The pruned directory is produced by `pnpm --filter ${APP_NAME} --prod deploy /app/pruned --legacy` and contains only the app and its runtime dependency tree (including any workspace packages the app actually depends on). Full monorepo `packages/` and `tools/` trees are excluded from the production image to keep size and attack surface minimal.
+**Takeaway:** Through **dependencies**, almost all disk cost is the monorepo `node_modules` tree. **build** adds full source and a second full install plus Nx outputs; **production** currently re-imports that heavy tree plus Alpine `curl`.
 
 ---
 
-## 4. How to re-run the audit
+## 4. Smoke tests and compose port (avoid collisions)
+
+Root **`docker-compose.yml`** maps the server container listen port from **`PORT`**, which is set from **`OPENTHROTTLE_SERVER_PORT`**, and publishes the same host port (see service `openthrottle-server`: `PORT: ${OPENTHROTTLE_SERVER_PORT}` and ports `'${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'`). The healthcheck uses `http://localhost:${OPENTHROTTLE_SERVER_PORT}/health`.
+
+When a server is already bound to the default port, run a one-off test container or a compose override with a different **`OPENTHROTTLE_SERVER_PORT`** and matching published port so the test instance does not collide with the running stack.
+
+---
+
+## 5. How to re-run the audit
 
 From monorepo root:
 
 ```bash
-# Required build-args for stages that need them
+echo '{}' > /tmp/gcs-empty.json
+
 export APP_NAME=openthrottle-server
 export APP_VERSION=1.3.0
 export NX_VERSION=22.6.4
-export PNPM_VERSION=9
-export GITHUB_TOKEN=${GITHUB_TOKEN:-}   # optional if no private deps
-export NX_KEY=${NX_KEY:-}               # optional for build stage
+export PNPM_VERSION=10
+export GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+export NX_KEY="${NX_KEY:-}"
 
-# Optional: empty GCS credentials so build stage mount succeeds; NX_KEY required for nx to exit 0
-echo '{}' > /tmp/gcs-empty.json
-
-# Build each target and print size
 for stage in base builder dependencies build production; do
   docker build -f Dockerfile.NestJS.v2 \
     --build-arg APP_NAME="$APP_NAME" \
@@ -82,37 +81,18 @@ for stage in base builder dependencies build production; do
     --build-arg NX_KEY="$NX_KEY" \
     --target "$stage" \
     --secret id=gcs_credentials,src=/tmp/gcs-empty.json \
-    -t "nestjs-v2-${stage}:audit" . 2>&1 | tail -5
-  echo -n "$stage: "
+    -t "nestjs-v2-${stage}:audit" .
+  echo -n "$stage bytes: "
+  docker inspect "nestjs-v2-${stage}:audit" --format '{{.Size}}'
+  echo -n "$stage human: "
   docker images "nestjs-v2-${stage}:audit" --format "{{.Size}}"
 done
 ```
 
----
-
-## 5. Baseline and target metrics
-
-- **Baseline (original Dockerfile.NestJS production):** ~6GB (full monorepo node_modules + packages + tools in final image; node:alpine base; curl installed). This is the working baseline kept unchanged.
-- **Target (Dockerfile.NestJS.v2 production):** Reduce final image by (1) copying only runtime node_modules (pruned deploy), (2) using minimal base (distroless or Alpine without curl), (3) excluding full `/app/packages` and `/app/tools` from production. Exact size to be measured in CI or with valid `NX_KEY` + GCS credentials (see §3 and §4).
-- **Measurement:** Re-run the script in §4 with a successful build stage to record production stage size for v2; compare to a build of `Dockerfile.NestJS` (same build-args) for baseline.
+For an apples-to-apples baseline against the original Dockerfile, swap `-f Dockerfile.NestJS.v2` for `-f Dockerfile.NestJS` and use distinct tags (for example `nestjs-v1-<stage>:audit`).
 
 ---
 
-## 6. Minimal production base (distroless vs Alpine)
+## 6. Planned follow-ups (same plan; not yet in v2)
 
-| Base                     | Image                                             | Relative size | Shell | curl                            | Use case                                                 |
-| ------------------------ | ------------------------------------------------- | ------------- | ----- | ------------------------------- | -------------------------------------------------------- |
-| **Distroless** (default) | gcr.io/distroless/nodejs22-debian12:nonroot       | Smaller       | No    | No                              | Production; minimal footprint and attack surface.        |
-| **Alpine**               | node:22-alpine (via `--target production-alpine`) | Larger        | Yes   | Optional (add RUN apk add curl) | Local healthchecks, debugging with `docker exec ... sh`. |
-
-To build the Alpine variant: `docker build -f Dockerfile.NestJS.v2 --target production-alpine ...`
-
----
-
-## 7. Curl and healthchecks
-
-- **Default production (distroless):** No curl, no shell. Do not use `HEALTHCHECK` that runs curl inside the container. Use external checks (e.g. Docker TCP health check, or orchestrator HTTP probe from outside) or deploy the Alpine target if you need an in-container HTTP check.
-- **production-alpine:** Curl is **not** installed by default. For dev/docker-compose healthchecks you can either:
-  - Use **wget** (available in Alpine by default). Example: `test: ['CMD-SHELL', 'wget -q --spider http://localhost:${PORT}/health || exit 1']` — see `applications/openthrottle/docker-compose.yml` for openthrottle-server.
-  - Or uncomment `RUN apk --update --no-cache add curl` in the Dockerfile and use `--target production-alpine` when you need curl (e.g. for a template that requires curl).
-- This keeps the production image smaller and limits curl to optional dev/docker-compose use only.
+These map to remaining Cortex tasks: pruned/runtime-only `node_modules` in production, smaller final base (for example distroless), remove or conditionalize **curl**, avoid copying full `packages/` and `tools/` when not required, then repeat the per-stage table after each meaningful `.v2` change.
