@@ -7,43 +7,43 @@
 #
 ################################################################################
 
-name: "🤖 Node Setup"
-description: "Setup NodeJS and PNPM."
+name: '🤖 Node Setup'
+description: 'Setup NodeJS and PNPM.'
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: "💾 Cache node modules"
+    - name: '💾 Cache node modules'
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5.0.5
       with:
         key: cache-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
         path: node_modules
 
     # Node first so Corepack matches .nvmrc (Corepack ships with Node ≥16.13).
-    - name: "⚙️ Setup NodeJS"
+    - name: '⚙️ Setup NodeJS'
       uses: actions/setup-node@v6.4.0
       with:
-        node-version-file: ".nvmrc"
+        node-version-file: '.nvmrc'
 
     # Parity with root package.json "packageManager"; avoids npm i -g pnpm.
-    - name: "📦 Enable PNPM (Corepack)"
+    - name: '📦 Enable PNPM (Corepack)'
       run: |
         corepack enable
         corepack prepare pnpm@10.33.4 --activate
       shell: bash
 
     # Second setup-node restores pnpm store cache; requires pnpm on PATH (Corepack above).
-    - name: "⚙️ Setup NodeJS (pnpm store cache)"
+    - name: '⚙️ Setup NodeJS (pnpm store cache)'
       if: steps.cache.outputs.cache-hit != 'true'
       uses: actions/setup-node@v6.4.0
       with:
-        cache: "pnpm"
-        cache-dependency-path: "pnpm-lock.yaml"
-        node-version-file: ".nvmrc"
+        cache: 'pnpm'
+        cache-dependency-path: 'pnpm-lock.yaml'
+        node-version-file: '.nvmrc'
 
-    - name: "💾 Cache Nx local cache"
-      uses: actions/cache@v4
+    - name: '💾 Cache Nx local cache'
+      uses: actions/cache@v5.0.5
       id: nx-cache
       with:
         key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}
@@ -52,7 +52,7 @@ runs:
           cache-nx-${{ runner.os }}-
 
     # - name: "💾 Cache pnpm store"
-    #   uses: actions/cache@v4
+    #   uses: actions/cache@v5.0.5
     #   id: pnpm-store-cache
     #   with:
     #     key: cache-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
@@ -61,7 +61,7 @@ runs:
     #       cache-pnpm-store-
 
     # - name: "💾 Cache node modules"
-    #   uses: actions/cache@v4
+    #   uses: actions/cache@v5.0.5
     #   id: node-modules-cache
     #   with:
     #     key: cache-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
@@ -69,7 +69,7 @@ runs:
     #     restore-keys: |
     #       cache-node-modules-
 
-    - name: "📦 Install packages"
+    - name: '📦 Install packages'
       if: steps.cache.outputs.cache-hit != 'true'
       run: pnpm install
       shell: bash
