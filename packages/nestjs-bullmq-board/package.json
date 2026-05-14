@@ -8,9 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@bull-board/api": "^6.16.2",
-    "@bull-board/express": "^6.16.2",
-    "@bull-board/nestjs": "^6.16.2",
+    "@bull-board/api": "7.0.0",
+    "@bull-board/express": "7.0.0",
+    "@bull-board/nestjs": "7.0.0",
     "express-basic-auth": "^1.2.1"
   },
   "exports": {
