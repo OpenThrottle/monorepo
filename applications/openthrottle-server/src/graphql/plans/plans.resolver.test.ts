@@ -1,6 +1,10 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import {
   PlansService,
+  PlanRunsService,
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -15,6 +19,7 @@ import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { QueuesService } from '../queues/queues.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import {
   CreatePlanInput,
   EnqueuePlanRunInput,
@@ -82,6 +87,10 @@ describe('PlansResolver', () => {
     update: vi.fn().mockResolvedValue(undefined),
   };
 
+  const mockPlanCreationService = {
+    createPlanFromInput: vi.fn(),
+  };
+
   const mockPlansService = createMock<PlansService>({
     getRepository: vi.fn().mockReturnValue(repo),
   });
@@ -111,6 +120,12 @@ describe('PlansResolver', () => {
   });
 
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
+  const mockRecordQueuedRun = vi.fn().mockResolvedValue({});
+  const mockFindRecentByPlanId = vi.fn().mockResolvedValue([]);
+  const mockPlanRunsService = createMock<PlanRunsService>({
+    findRecentByPlanId: mockFindRecentByPlanId,
+    recordQueuedRun: mockRecordQueuedRun,
+  });
 
   const mockEnqueuePlanRalphOrchestrator = vi
     .fn()
@@ -125,6 +140,10 @@ describe('PlansResolver', () => {
       providers: [
         PlansResolver,
         {
+          provide: PlanCreationService,
+          useValue: mockPlanCreationService,
+        },
+        {
           provide: NotificationsService,
           useValue: createMock<NotificationsService>(),
         },
@@ -132,6 +151,7 @@ describe('PlansResolver', () => {
           provide: PlanRunCancellationService,
           useValue: { abort: mockPlanRunCancellationAbort },
         },
+        { provide: PlanRunsService, useValue: mockPlanRunsService },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
         { provide: QueuesService, useValue: mockQueuesService },
@@ -383,6 +403,7 @@ describe('PlansResolver', () => {
     test('returns job id, plan id, and queue position when plan exists', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockRecordQueuedRun.mockClear();
 
       const result = await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -390,10 +411,18 @@ describe('PlansResolver', () => {
       });
 
       expect(result).not.toBeNull();
+      expect(result.executionBackend).toBe('cursor');
       expect(result.jobId).toBe('job-1');
       expect(result.planId).toBe(mockPlan.id);
       expect(result.queuePosition).toBe(1);
       expect(result.queueTotal).toBe(1);
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith({
+        bullmqJobId: 'job-1',
+        executionBackend: 'cursor',
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runKind: 'spawn',
+      });
     });
 
     test('throws when plan does not exist', async () => {
@@ -478,7 +507,7 @@ describe('PlansResolver', () => {
 
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
-        { planId: mockPlan.id },
+        { executionBackend: 'cursor', planId: mockPlan.id },
         { priority: 1 },
       );
     });
@@ -492,7 +521,7 @@ describe('PlansResolver', () => {
 
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
-        { planId: mockPlan.id },
+        { executionBackend: 'cursor', planId: mockPlan.id },
         { priority: 10 },
       );
     });
@@ -505,7 +534,10 @@ describe('PlansResolver', () => {
       await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
 
       const jobData = mockAdd.mock.calls[0]?.[1];
-      expect(jobData).toEqual({ planId: mockPlan.id });
+      expect(jobData).toEqual({
+        executionBackend: 'cursor',
+        planId: mockPlan.id,
+      });
       expect(jobData).not.toHaveProperty('ralph');
     });
 
@@ -518,7 +550,7 @@ describe('PlansResolver', () => {
 
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
-        { planId: mockPlan.id },
+        { executionBackend: 'cursor', planId: mockPlan.id },
         { priority: 100 },
       );
     });
@@ -546,6 +578,7 @@ describe('PlansResolver', () => {
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
         expect.objectContaining({
+          executionBackend: 'cursor',
           planId: mockPlan.id,
           ralph: expect.objectContaining({
             backend: 'cursor',
@@ -557,6 +590,40 @@ describe('PlansResolver', () => {
         }),
         { priority: 10 },
       );
+    });
+
+    /**
+     * @description Enqueue with a real directory outside the OT tree so `buildRunPlanJobData` validation
+     * passes; BullMQ payload must carry `workingDirectory` for the processor spawn cwd (regression:
+     * nested CLI must still use worker POSTGRES / canonical Cortex URL).
+     */
+    test('includes external workingDirectory in queue job data (enqueue → processor contract)', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+
+      const externalDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'ot-external-wd-'),
+      );
+      try {
+        await resolver.enqueuePlanRun({
+          planId: mockPlan.id,
+          priority: null,
+          workingDirectory: externalDir,
+        });
+
+        expect(mockAdd).toHaveBeenCalledWith(
+          'run-plan',
+          {
+            executionBackend: 'cursor',
+            planId: mockPlan.id,
+            workingDirectory: externalDir,
+          },
+          { priority: 10 },
+        );
+      } finally {
+        fs.rmSync(externalDir, { force: true, recursive: true });
+      }
     });
 
     test('throws BadRequestException when ralph tuning is invalid', async () => {
@@ -633,6 +700,7 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       mockEnqueuePlanRalphOrchestrator.mockClear();
       mockAdd.mockClear();
+      mockRecordQueuedRun.mockClear();
 
       const result = await resolver.enqueuePlanRalphOrchestrator({
         idempotencyKey: null,
@@ -643,14 +711,23 @@ describe('PlansResolver', () => {
         taskId: null,
       });
 
+      expect(result.executionBackend).toBe('cursor');
       expect(result.jobId).toBe('job-orch-1');
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith({
         idempotencyKey: undefined,
         jobData: {
+          executionBackend: 'cursor',
           planId: mockPlan.id,
           runKind: 'orchestrator',
         },
         priority: 10,
+      });
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith({
+        bullmqJobId: 'job-orch-1',
+        executionBackend: 'cursor',
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runKind: 'orchestrator',
       });
       expect(mockAdd).not.toHaveBeenCalled();
     });
@@ -705,6 +782,40 @@ describe('PlansResolver', () => {
           taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
         }),
       ).rejects.toThrow(/Task not found for this plan/);
+    });
+  });
+
+  describe('planRunsByPlanId', () => {
+    test('returns recent persisted run audit rows with execution backend', async () => {
+      const createdAt = new Date('2026-05-09T12:00:00.000Z');
+      const updatedAt = new Date('2026-05-09T12:01:00.000Z');
+      mockFindRecentByPlanId.mockResolvedValueOnce([
+        {
+          bullmqJobId: 'job-claude-1',
+          createdAt,
+          executionBackend: 'claude',
+          id: 'run-1',
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runKind: 'spawn',
+          status: 'QUEUED',
+          updatedAt,
+        },
+      ]);
+
+      const result = await resolver.planRunsByPlanId({
+        limit: 5,
+        planId: mockPlan.id,
+      });
+
+      expect(mockFindRecentByPlanId).toHaveBeenCalledWith(mockPlan.id, 5);
+      expect(result).toEqual([
+        expect.objectContaining({
+          bullmqJobId: 'job-claude-1',
+          executionBackend: 'claude',
+          planId: mockPlan.id,
+        }),
+      ]);
     });
   });
 
@@ -836,7 +947,6 @@ describe('PlansResolver', () => {
 
   describe('createPlan', () => {
     test('creates plan from input and returns PlanObject', async () => {
-      const repo = plansService.getRepository();
       const input: CreatePlanInput = {
         assignee: null,
         author: 'visormatt',
@@ -855,29 +965,21 @@ describe('PlansResolver', () => {
         title: input.title,
         updatedAt: new Date(),
       };
-      vi.mocked(repo.create).mockReturnValue(created as Plan);
-      vi.mocked(repo.save).mockResolvedValue(created as Plan);
+      mockPlanCreationService.createPlanFromInput.mockResolvedValue(
+        created as Plan,
+      );
 
       const result = await resolver.createPlan(input);
 
-      expect(repo.create).toHaveBeenCalledWith({
-        assignee: null,
-        author: input.author,
-        category: input.category,
-        description: null,
-        project: null,
-        projectId: null,
-        status: 'PENDING',
-        summary: null,
-        title: input.title,
-      });
+      expect(mockPlanCreationService.createPlanFromInput).toHaveBeenCalledWith(
+        input,
+      );
       expect(result).not.toBeNull();
       expect(result?.id).toBe('new-id');
       expect(result?.title).toBe(input.title);
     });
 
     test('creates plan with projectId null when projectId omitted', async () => {
-      const repo = plansService.getRepository();
       const input = {
         assignee: null,
         author: 'visormatt',
@@ -894,16 +996,12 @@ describe('PlansResolver', () => {
         projectId: null,
         title: input.title,
       } as Plan;
-      vi.mocked(repo.create).mockReturnValue(created);
-      vi.mocked(repo.save).mockResolvedValue(created);
+      mockPlanCreationService.createPlanFromInput.mockResolvedValue(created);
 
       const result = await resolver.createPlan(input);
 
-      expect(repo.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          projectId: null,
-          title: 'Plan without project',
-        }),
+      expect(mockPlanCreationService.createPlanFromInput).toHaveBeenCalledWith(
+        input,
       );
       expect(result?.projectId).toBeNull();
     });

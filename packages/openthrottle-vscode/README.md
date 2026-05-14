@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-vscode
 ```bash
 npm install @openthrottle/openthrottle-vscode
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-vscode
-```

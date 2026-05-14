@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { getRedisCache } from '@openthrottle/nestjs-redis';
 import {
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,
@@ -109,9 +110,13 @@ export class NestjsGraphqlModule {
    */
   static forRoot(options?: NestjsGraphqlModuleOptions): DynamicModule {
     const config = options ? buildDriverConfig(options) : DEFAULT_DRIVER_CONFIG;
+
     return {
       imports: [
-        GraphQLModule.forRoot<ApolloDriverConfig>(config),
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+          cache: getRedisCache(),
+          ...config,
+        }),
         LoggerModule,
       ],
       module: NestjsGraphqlModule,

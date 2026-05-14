@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { createRoutesStub, useSearchParams, type UIMatch } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import PlanDetail from '../plans.$planId._index';
 
@@ -38,47 +40,77 @@ const mockTask = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
+function PlanDetailSearchParamsProbe(): React.ReactElement {
+  const [searchParams] = useSearchParams();
+
+  return (
+    <span data-testid="plan-detail-search-params">
+      {searchParams.toString()}
+    </span>
+  );
+}
+
 describe('routes/plans.$planId.tsx', () => {
-  test('should render plan detail with tasks', () => {
+  test('should render plan detail with tasks', async () => {
+    const user = userEvent.setup();
     const Component = () => (
-      <PlanDetail
-        actionData={undefined}
-        loaderData={{ plan: mockPlan, tasks: [mockTask] }}
-        matches={[] as any}
-        params={{ planId: mockPlan.id }}
-      />
+      <TooltipProvider>
+        <PlanDetailSearchParamsProbe />
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: mockPlan,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [mockTask],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const component = render(<RoutesStub />);
-    expect(component.getByRole('main')).toBeInTheDocument();
-    expect(component.getAllByText('Test Plan').length).toBeGreaterThanOrEqual(
-      1,
-    );
+    const component = render(<RoutesStub initialEntries={['/?view=table']} />);
+    expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
+
+    expect(component.getByText('Test Plan')).toBeInTheDocument();
     expect(component.getByText('In Progress')).toBeInTheDocument();
-    expect(
-      component.getByRole('link', { name: 'Test Project' }),
-    ).toHaveAttribute('href', '/projects/proj-1');
     expect(component.getByText('Plan description')).toBeInTheDocument();
-    expect(component.getByText('Plan summary')).toBeInTheDocument();
-    expect(component.getByText('Test Task')).toBeInTheDocument();
-    expect(component.getByRole('link', { name: 'Plans' })).toHaveAttribute(
-      'href',
-      '/plans',
+
+    await user.click(screen.getByRole('tab', { name: 'Tasks' }));
+
+    const paramsAfterTasks = new URLSearchParams(
+      screen.getByTestId('plan-detail-search-params').textContent ?? '',
     );
+    expect(paramsAfterTasks.get('plansDetailTab')).toBe('tasks');
+    expect(paramsAfterTasks.get('view')).toBe('table');
+
+    expect(component.getByText('Test Task')).toBeInTheDocument();
   });
 
-  test('should render plan detail with no tasks', () => {
+  test('should render plan detail with no tasks', async () => {
+    const user = userEvent.setup();
     const Component = () => (
-      <PlanDetail
-        actionData={undefined}
-        loaderData={{ plan: mockPlan, tasks: [] }}
-        matches={[] as any}
-        params={{ planId: mockPlan.id }}
-      />
+      <TooltipProvider>
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: mockPlan,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const component = render(<RoutesStub />);
-    expect(component.getByRole('main')).toBeInTheDocument();
+    const component = render(<RoutesStub initialEntries={['/?view=table']} />);
+    expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Tasks' }));
+
     expect(component.getByText('No tasks')).toBeInTheDocument();
     expect(
       component.getByText('This plan has no tasks yet.'),
@@ -87,17 +119,88 @@ describe('routes/plans.$planId.tsx', () => {
 
   test('should render empty state when plan not found', () => {
     const Component = () => (
-      <PlanDetail
-        actionData={undefined}
-        loaderData={{ plan: null, tasks: [] }}
-        matches={[] as any}
-        params={{ planId: mockPlan.id }}
-      />
+      <TooltipProvider>
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: null,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByRole('main')).toBeInTheDocument();
     expect(component.getByText('Plan not found')).toBeInTheDocument();
     expect(component.getByText(/does not exist/)).toBeInTheDocument();
+  });
+
+  test('opens Tasks tab from URL and drops param when switching back to Details', async () => {
+    const user = userEvent.setup();
+    const Component = () => (
+      <TooltipProvider>
+        <PlanDetailSearchParamsProbe />
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: mockPlan,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [mockTask],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+    render(
+      <RoutesStub initialEntries={['/?plansDetailTab=tasks&view=table']} />,
+    );
+
+    const tasksTab = screen.getByRole('tab', { name: 'Tasks' });
+    expect(tasksTab).toHaveAttribute('data-state', 'active');
+
+    await user.click(screen.getByRole('tab', { name: 'Details' }));
+
+    const paramsAfterDetails = new URLSearchParams(
+      screen.getByTestId('plan-detail-search-params').textContent ?? '',
+    );
+    expect(paramsAfterDetails.get('plansDetailTab')).toBeNull();
+    expect(paramsAfterDetails.get('view')).toBe('table');
+  });
+
+  test('invalid plansDetailTab falls back to Details', () => {
+    const Component = () => (
+      <TooltipProvider>
+        <PlanDetail
+          actionData={undefined}
+          loaderData={{
+            plan: mockPlan,
+            planOutputChunks: [],
+            recentPlanRuns: [],
+            tasks: [],
+          }}
+          matches={[] as UIMatch[]}
+          params={{ planId: mockPlan.id }}
+        />
+      </TooltipProvider>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+    render(
+      <RoutesStub initialEntries={['/?plansDetailTab=nope&view=table']} />,
+    );
+
+    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute(
+      'data-state',
+      'active',
+    );
   });
 });

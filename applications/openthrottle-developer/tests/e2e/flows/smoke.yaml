@@ -1,0 +1,6 @@
+# Web smoke: launch dev server URL and assert shell chrome (breadcrumb brand).
+# Prerequisite: `pnpm nx serve openthrottle-developer` (default port 6020 per `.env.default`).
+url: http://localhost:6020
+---
+- launchApp
+- assertVisible: 'OpenThrottle'

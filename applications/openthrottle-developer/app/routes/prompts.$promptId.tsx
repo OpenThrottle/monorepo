@@ -5,16 +5,28 @@ import { Editor, getLanguageFromExt } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
 import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import {
   DeletePromptDocument,
   GetPromptDocument,
   UpdatePromptDocument,
   WritePromptToFileSystemDocument,
   type UpdateCustomPromptInput,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
+import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDetailMetadataPanel';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) => match.loaderData?.prompt?.title ?? 'Prompt Details',
+  links: (_match) => [{ children: 'Prompts', to: '/prompts' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const promptId = args.params.promptId;
@@ -57,9 +69,6 @@ export default function Component(
   // Setup
   const isSubmitting = fetcher.state === 'submitting';
   const extension = prompt.filePath?.split('.').pop() ?? 'md';
-
-  // FIXME: Swap out eventually
-
   const language = getLanguageFromExt(extension as unknown as any);
 
   // Handlers
@@ -132,7 +141,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex flex-col flex-1" data-testid="prompts-editor">
+    <GlobalScreen className="flex flex-col flex-1">
       {/* Header with prompt info and actions */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
@@ -187,12 +196,11 @@ export default function Component(
         </div>
       </div>
 
-      {/* Prompt metadata */}
-      {/* {prompt.description && (
-        <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700 text-sm text-gray-400">
-          {prompt.description}
-        </div>
-      )} */}
+      <PromptDetailMetadataPanel
+        contentLength={content.length}
+        debugContent={content}
+        prompt={prompt}
+      />
 
       {/* Editor */}
       <Editor
@@ -205,7 +213,7 @@ export default function Component(
         value={content}
         wrapperProps={{ className: 'flex-1' }}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 

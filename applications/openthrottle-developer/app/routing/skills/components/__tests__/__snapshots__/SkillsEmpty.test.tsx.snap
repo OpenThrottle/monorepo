@@ -1,0 +1,61 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SkillsEmpty Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-8 text-center my-8"
+    >
+      <div
+        class="flex items-center justify-center rounded-full bg-muted p-3 text-muted-foreground"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-search-alert size-6"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="11"
+            cy="11"
+            r="8"
+          />
+          <path
+            d="m21 21-4.3-4.3"
+          />
+          <path
+            d="M11 7v4"
+          />
+          <path
+            d="M11 15h.01"
+          />
+        </svg>
+      </div>
+      <h3
+        class="text-lg font-semibold leading-none tracking-tight"
+      >
+        No skills yet
+      </h3>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Create your first skill to get started.
+      </p>
+      <a
+        class="cursor-pointer disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center gap-2 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-sm font-medium whitespace-nowrap rounded-md [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+        data-discover="true"
+        href="/skills/create"
+      >
+        New skill
+      </a>
+    </div>
+  </div>
+</body>
+`;

@@ -13,7 +13,12 @@ describe('GitHubService', () => {
   test('listPulls returns mapped DTOs from GitHub API response', async () => {
     const mockPulls = [
       {
+        base: { ref: 'main' },
         created_at: '2025-01-01T00:00:00Z',
+        head: {
+          ref: 'feat/add-thing',
+          sha: 'abc123def456abc123def456abc123def456abcd',
+        },
         html_url: 'https://github.com/owner/repo/pull/1',
         merged_at: null,
         number: 1,
@@ -37,12 +42,76 @@ describe('GitHubService', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       author: 'octocat',
+      baseRef: 'main',
       createdAt: '2025-01-01T00:00:00Z',
+      headRef: 'feat/add-thing',
+      headSha: 'abc123def456abc123def456abc123def456abcd',
       htmlUrl: 'https://github.com/owner/repo/pull/1',
       mergedAt: null,
       number: 1,
       state: 'open',
       title: 'feat: add thing',
+      updatedAt: '2025-01-02T00:00:00Z',
+    });
+
+    vi.unstubAllGlobals();
+  });
+
+  test('getPullListItem returns null when GitHub returns 404', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 404,
+      }),
+    );
+
+    const service = new GitHubService(mockConfig);
+    const result = await service.getPullListItem('owner', 'repo', 99);
+
+    expect(result).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  test('getPullListItem returns mapped DTO from single PR endpoint', async () => {
+    const mockPull = {
+      base: { ref: 'develop' },
+      created_at: '2025-01-01T00:00:00Z',
+      head: {
+        ref: 'fix/thing',
+        sha: '1111111111111111111111111111111111111111',
+      },
+      html_url: 'https://github.com/owner/repo/pull/2',
+      merged_at: null,
+      number: 2,
+      state: 'open' as const,
+      title: 'fix: thing',
+      updated_at: '2025-01-02T00:00:00Z',
+      user: { login: 'dev' },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve(mockPull),
+        ok: true,
+        status: 200,
+      }),
+    );
+
+    const service = new GitHubService(mockConfig);
+    const result = await service.getPullListItem('owner', 'repo', 2);
+
+    expect(result).toEqual({
+      author: 'dev',
+      baseRef: 'develop',
+      createdAt: '2025-01-01T00:00:00Z',
+      headRef: 'fix/thing',
+      headSha: '1111111111111111111111111111111111111111',
+      htmlUrl: 'https://github.com/owner/repo/pull/2',
+      mergedAt: null,
+      number: 2,
+      state: 'open',
+      title: 'fix: thing',
       updatedAt: '2025-01-02T00:00:00Z',
     });
 

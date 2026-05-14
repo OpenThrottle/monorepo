@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { describe, expect, test } from 'vitest';
 import {
   RalphNestedDebugCliGraphQL,
@@ -7,6 +10,7 @@ import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
   parseEnqueueRalphTuning,
+  validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
 
 const emptyTuningInput = (): RalphPlanRunTuningInput => ({
@@ -83,8 +87,9 @@ describe('parseEnqueueRalphTuning', () => {
 });
 
 describe('buildRunPlanJobData', () => {
-  test('returns only planId when ralph is omitted', () => {
+  test('returns default execution backend when ralph is omitted', () => {
     expect(buildRunPlanJobData({ planId: 'p1', ralph: null })).toEqual({
+      executionBackend: 'cursor',
       planId: 'p1',
     });
   });
@@ -99,8 +104,25 @@ describe('buildRunPlanJobData', () => {
         },
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       planId: 'p1',
       ralph: { iterations: 2 },
+    });
+  });
+
+  test('uses explicit execution backend for the whole run', () => {
+    expect(
+      buildRunPlanJobData({
+        planId: 'p1',
+        ralph: {
+          ...emptyTuningInput(),
+          backend: 'claude',
+        },
+      }),
+    ).toEqual({
+      executionBackend: 'claude',
+      planId: 'p1',
+      ralph: { backend: 'claude' },
     });
   });
 });
@@ -116,6 +138,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         ralph: null,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
     });
@@ -129,6 +152,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         ralph: null,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       mode: 'plan',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
@@ -144,6 +168,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
         taskId: SAMPLE_TASK_ID,
       }),
     ).toEqual({
+      executionBackend: 'cursor',
       mode: 'task',
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
@@ -176,5 +201,106 @@ describe('buildRunPlanOrchestratorJobData', () => {
         taskId: SAMPLE_TASK_ID,
       }),
     ).toThrow(/taskId is only allowed when mode is task/);
+  });
+
+  test('includes workingDirectory when provided', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: null,
+        workingDirectory: tempDir,
+      }),
+    ).toEqual({
+      executionBackend: 'cursor',
+      planId: SAMPLE_PLAN_ID,
+      runKind: 'orchestrator',
+      workingDirectory: tempDir,
+    });
+  });
+
+  test('omits workingDirectory when null', () => {
+    const result = buildRunPlanOrchestratorJobData({
+      planId: SAMPLE_PLAN_ID,
+      ralph: null,
+      workingDirectory: null,
+    });
+    expect(result).not.toHaveProperty('workingDirectory');
+  });
+});
+
+describe('validateWorkingDirectory', () => {
+  test('returns undefined for null, undefined, or empty string', () => {
+    expect(validateWorkingDirectory(null)).toBeUndefined();
+    expect(validateWorkingDirectory(undefined)).toBeUndefined();
+    expect(validateWorkingDirectory('')).toBeUndefined();
+    expect(validateWorkingDirectory('   ')).toBeUndefined();
+  });
+
+  test('returns trimmed path for an existing directory', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    expect(validateWorkingDirectory(`  ${tempDir}  `)).toBe(tempDir);
+  });
+
+  test('throws for a relative path', () => {
+    expect(() => validateWorkingDirectory('relative/path')).toThrow(
+      /must be an absolute path/,
+    );
+  });
+
+  test('throws for a non-existent path', () => {
+    expect(() =>
+      validateWorkingDirectory('/does/not/exist/ot-test-9999'),
+    ).toThrow(/does not exist/);
+  });
+
+  test('throws for a file instead of a directory', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    const filePath = join(tempDir, 'somefile.txt');
+    writeFileSync(filePath, 'test');
+    expect(() => validateWorkingDirectory(filePath)).toThrow(/not a directory/);
+  });
+
+  test('throws for excessively long paths', () => {
+    const longPath = '/' + 'a'.repeat(5000);
+    expect(() => validateWorkingDirectory(longPath)).toThrow(
+      /at most 4096 characters/,
+    );
+  });
+});
+
+describe('buildRunPlanJobData with workingDirectory', () => {
+  test('omits workingDirectory when null or undefined', () => {
+    const result = buildRunPlanJobData({
+      planId: 'p1',
+      ralph: null,
+      workingDirectory: null,
+    });
+    expect(result).toEqual({ executionBackend: 'cursor', planId: 'p1' });
+    expect(result).not.toHaveProperty('workingDirectory');
+  });
+
+  test('includes workingDirectory for a valid directory', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    const result = buildRunPlanJobData({
+      planId: 'p1',
+      ralph: null,
+      workingDirectory: tempDir,
+    });
+    expect(result).toEqual({
+      executionBackend: 'cursor',
+      planId: 'p1',
+      workingDirectory: tempDir,
+    });
+  });
+
+  test('throws for an invalid workingDirectory', () => {
+    expect(() =>
+      buildRunPlanJobData({
+        planId: 'p1',
+        ralph: null,
+        workingDirectory: '/no/such/dir/ot-test',
+      }),
+    ).toThrow(/does not exist/);
   });
 });

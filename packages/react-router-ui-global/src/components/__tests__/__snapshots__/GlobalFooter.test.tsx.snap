@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GlobalFooter Component > should render 1`] = `
+<body>
+  <div>
+    <footer
+      class="border-t border-border bg-card sm:px-6 lg:px-8"
+      data-testid="GlobalFooter"
+    >
+      <div
+        class="border-t border-border p-8 pb-2 text-center text-sm text-muted-foreground"
+      >
+        <p>
+          Built by engineers • Open source • Run locally • No Commitment
+        </p>
+      </div>
+      <a
+        class="flex items-center justify-center gap-2 text-muted-foreground text-sm mb-8"
+        href="http://localhost/api/health"
+        target="_blank"
+      >
+        <div>
+          <div
+            class="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500"
+          />
+            API
+        </div>
+        <div
+          class="opacity-50"
+        >
+          •
+        </div>
+        <div>
+          <div
+            class="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500"
+          />
+            Postgres
+        </div>
+        <div
+          class="opacity-50"
+        >
+          •
+        </div>
+        <div>
+          <div
+            class="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500"
+          />
+            Redis
+        </div>
+        <div
+          class="opacity-50"
+        >
+          •
+        </div>
+        <div
+          class="flex items-center gap-1"
+        >
+            Sockets
+        </div>
+      </a>
+    </footer>
+  </div>
+</body>
+`;

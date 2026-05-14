@@ -35,7 +35,7 @@ query GetPlan($id: ID!) {
   }
 }
 
-query GetPlansByStatus($input: ListPlansByStatusInput!) {
+query GetPlansByStatusVSCode($input: ListPlansByStatusInput!) {
   listPlansByStatus(input: $input) {
     plans {
       ...PlanResponse

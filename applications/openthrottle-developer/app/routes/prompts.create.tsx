@@ -18,17 +18,36 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import {
   CreatePromptDocument,
   type CreateCustomPromptInput,
   CustomPromptType,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   PROMPTS_BASE_PATH,
   PROMPTS_DEFAULT_CONTENT,
 } from '~/routing/prompts/config';
 import type { Route } from '@/app/routes/+types/prompts.create';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) => match.loaderData?.prompt?.title ?? 'Prompt Details',
+  links: (_match) => [{ children: 'Prompts', to: '/prompts' }],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create Prompt | ${SITE_TITLE}` }];
@@ -115,7 +134,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex flex-col flex-1" data-testid="prompts-create">
+    <GlobalScreen>
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
           <a
@@ -225,7 +244,7 @@ export default function Component(
         value={content}
         wrapperProps={{ className: 'flex-1' }}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 

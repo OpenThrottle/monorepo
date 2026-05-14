@@ -8,6 +8,7 @@ After years of development, I've refined my tech stack to focus on a core set of
 **See also:** [docs/](./docs/) for detailed guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
 - [🐙 Monorepo](#-monorepo)
+  - [🤖 Ralph Loops](#-ralph-loops)
   - [🏠 Architecture](#-architecture)
   - [⚙️ Installation](#️-installation)
   - [🧑‍💻 Development](#-development)
@@ -18,6 +19,22 @@ After years of development, I've refined my tech stack to focus on a core set of
     - [Using Reserved Worktrees](#using-reserved-worktrees)
   - [☁️ GCP Auth | gcloud CLI](#️-gcp-auth--gcloud-cli)
   - [🛟 Troubleshooting](#-troubleshooting)
+
+Specific Reads:
+
+- [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
+- [HTML vs Markdown for agents (Ralph research, WIP)](./docs/openthrottle/research/html-over-markdown-for-agents.md)
+
+## 🤖 Ralph Loops
+
+```bash
+# From this repository root (adjust POSTGRES_URL if your local DB differs).
+export POSTGRES_URL="postgresql://openthrottle_user:openthrottle_password@localhost:6010/openthrottle"
+
+pnpm exec workflow-ralph \
+  --plan b0e4bb13-0df3-4d7c-b165-7daf2fdf910e \
+  --prompt-file .cursor/commands/agents/ralph.md
+```
 
 ## 🏠 Architecture
 
@@ -59,10 +76,10 @@ Monorepos streamline our development process by centralizing code management, en
 docker compose up openthrottle-redis openthrottle-postgres --detach
 
 # 🚀 A React Router application
-nx run openthrottle-developer:dev
+pnpm nx run openthrottle-developer:dev
 
 # 📱 If we need to access it over our local network
-nx run openthrottle-developer:dev -- --host
+pnpm nx run openthrottle-developer:dev -- --host
 ```
 
 ### Common Commands
@@ -75,7 +92,7 @@ pnpm add <PROJECT_NAME> -w -S
 pnpm add <PROJECT_NAME> --filter openthrottle-developer -S
 
 # 🧪 Run only the changed tests and watch for changes
-nx run @tools/generators:test --changed --watch
+pnpm nx run @tools/generators:test --changed --watch
 ```
 
 ### TypeScript Execution (SWC)

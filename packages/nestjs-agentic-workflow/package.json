@@ -44,10 +44,10 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build-package": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
+      "build": {
         "executor": "@nx/js:tsc"
       },
       "dev": {
@@ -60,7 +60,8 @@
       },
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {
@@ -90,7 +91,7 @@
     "module": "./src/index.js",
     "types": "./src/index.d.ts"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts",

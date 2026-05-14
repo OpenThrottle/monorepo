@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { MockedFunction } from 'vitest';
 import {
   GetPlanDocument,
   GetServerHealthDocument,
@@ -111,29 +112,35 @@ const createMockExecute = (opts: {
   const getTasksByPlanId =
     opts.getTasksByPlanId ?? ((): GetTasksByPlanIdQuery['tasksByPlanId'] => []);
 
-  return async (document) => {
-    if (document === GetServerHealthDocument) {
+  return (async (document) => {
+    const doc = document as unknown;
+    if (doc === GetServerHealthDocument) {
       return { serverHealth: serverHealthOk };
     }
-    if (document === GetTaskDocument) {
+    if (doc === GetTaskDocument) {
       return { task: getTask() };
     }
-    if (document === GetPlanDocument) {
+    if (doc === GetPlanDocument) {
       return { plan: getPlan() };
     }
-    if (document === GetTasksByPlanIdDocument) {
+    if (doc === GetTasksByPlanIdDocument) {
       return { tasksByPlanId: getTasksByPlanId() };
     }
-    if (document === UpdatePlanDocument) {
+    if (doc === UpdatePlanDocument) {
       return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
     }
-    if (document === UpdateTaskDocument) {
+    if (doc === UpdateTaskDocument) {
       return { updateTask: baseTask(TASK_A, 'IN_PROGRESS') };
     }
     opts.onUnhandled?.();
     throw new Error('unmocked GraphQL document in test');
-  };
+  }) as WorkflowExecuteGraphqlV2;
 };
+
+const wrapWorkflowExecute = (
+  impl: WorkflowExecuteGraphqlV2,
+): MockedFunction<WorkflowExecuteGraphqlV2> =>
+  vi.fn(impl) as unknown as MockedFunction<WorkflowExecuteGraphqlV2>;
 
 const noopRunner: WorkflowRalphIterationRunner = {
   run: async () => '',
@@ -141,7 +148,7 @@ const noopRunner: WorkflowRalphIterationRunner = {
 
 describe('createWorkflowRalphOrchestrator', () => {
   it('returns unhandled when plan and task ids are both empty (after health)', async () => {
-    const executeGraphqlV2 = vi.fn(createMockExecute({}));
+    const executeGraphqlV2 = wrapWorkflowExecute(createMockExecute({}));
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
       iterationRunner: noopRunner,
@@ -161,9 +168,9 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns unhandled when GraphQL fails (e.g. health check)', async () => {
-    const executeGraphqlV2 = vi.fn(async (): Promise<never> => {
+    const executeGraphqlV2 = wrapWorkflowExecute((async () => {
       throw new Error('network');
-    });
+    }) as WorkflowExecuteGraphqlV2);
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2,
       iterationRunner: noopRunner,
@@ -179,7 +186,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns unhandled when task lookup returns no task (task-only bootstrap)', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTask: () => null,
       }),
@@ -205,7 +212,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns unhandled when plan is missing after load', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getPlan: () => null,
         getTasksByPlanId: () => [],
@@ -226,7 +233,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns plan_already_terminal when plan is COMPLETED before run', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getPlan: () => basePlan({ status: 'COMPLETED' }),
         getTasksByPlanId: () => [],
@@ -247,7 +254,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns tasks_exhausted when no remaining tasks at first iteration', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getPlan: () => basePlan(),
         getTasksByPlanId: () => [baseTask(TASK_A, 'COMPLETED')],
@@ -271,7 +278,7 @@ describe('createWorkflowRalphOrchestrator', () => {
     const abortController = new AbortController();
     abortController.abort();
 
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -300,7 +307,7 @@ describe('createWorkflowRalphOrchestrator', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -324,7 +331,7 @@ describe('createWorkflowRalphOrchestrator', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -346,7 +353,7 @@ describe('createWorkflowRalphOrchestrator', () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
 
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -366,7 +373,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns agent_complete when output contains promise COMPLETE', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -391,7 +398,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns agent_error when output contains promise ERROR', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -414,7 +421,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns input_required when output contains promise INPUT_REQUIRED', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -437,7 +444,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('returns unhandled when iteration runner throws', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
       }),
@@ -463,7 +470,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
   it('returns max_iterations when iterations exhaust without terminal agent signal', async () => {
     let tasks = [baseTask(TASK_A, 'PENDING')];
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTasksByPlanId: () => tasks,
       }),
@@ -491,7 +498,7 @@ describe('createWorkflowRalphOrchestrator', () => {
   });
 
   it('resolves plan id from task when only task id is set', async () => {
-    const executeGraphqlV2 = vi.fn(
+    const executeGraphqlV2 = wrapWorkflowExecute(
       createMockExecute({
         getTask: () => baseTask(TASK_A, 'QUEUED'),
         getTasksByPlanId: () => [baseTask(TASK_A, 'QUEUED')],

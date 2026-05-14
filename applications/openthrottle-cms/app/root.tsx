@@ -1,3 +1,4 @@
+import * as React from 'react';
 // import { Analytics } from '@vercel/analytics/react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import {
@@ -8,7 +9,7 @@ import {
   ScrollRestoration,
   useRouteLoaderData,
 } from 'react-router';
-import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 import {
   artwork,
   OPEN_THROTTLE_BUCKET,
@@ -20,7 +21,7 @@ import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
 
-export const links: LinksFunction = () => {
+export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
 
@@ -108,12 +109,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
-      <body className="min-h-screen flex flex-col">
-        <GlobalHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
-        <GlobalFooter />
+      <body className="relative flex min-h-screen flex-col">
+        <div className="flex flex-1 flex-col">{children}</div>
 
         <ScrollRestoration />
+
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
@@ -128,7 +128,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App(): React.ReactElement {
-  return <Outlet />;
+  return (
+    <>
+      <GlobalHeader />
+      <main className="flex flex-1 flex-col">
+        <Outlet />
+      </main>
+      <GlobalFooter />
+    </>
+  );
 }
 
 /**

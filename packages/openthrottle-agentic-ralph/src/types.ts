@@ -5,6 +5,8 @@ import type {
   WorkflowOrchestrator as WorkflowOrchestratorBase,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
+import type { WorkflowRunner } from './config/index.js';
+
 export type WorkflowFinishedReason =
   | 'agent_complete'
   | 'cancelled'
@@ -40,7 +42,7 @@ export interface WorkflowContext extends WorkflowConfig {
   readonly mode: 'plan' | 'task';
   readonly planId: string;
   readonly project: string | undefined;
-  readonly runner: 'RALPH';
+  readonly runner: WorkflowRunner;
   readonly taskId: string;
 }
 

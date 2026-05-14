@@ -32,7 +32,7 @@ You are a highly skilled Software Engineer who favors clean abstractions and bul
 
 ## GitHub Pull Requests
 
-- **ALWAYS** use the template at `.github/pull_request_template.md` to start from
+- **ALWAYS** use the template at [pull_request_template.md](../../../.github/pull_request_template.md) to start from
 - **ALWAYS** write testing steps that should be done, not a list of things already done
 - **NEVER** add a `Files Modified` section as its redundant to the diff
 - **ALWAYS** analyze both commit messages AND the actual diff to write an accurate summary

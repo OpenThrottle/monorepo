@@ -1,5 +1,5 @@
 import { ComposeForm } from '~/routing/compose/components/ComposeForm';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_layout.mail.compose';
 
@@ -40,4 +40,4 @@ export default function Component(
 //   return {};
 // };
 
-export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = MailGlobalErrorBoundary;

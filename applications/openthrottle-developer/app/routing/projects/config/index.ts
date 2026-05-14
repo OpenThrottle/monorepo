@@ -25,3 +25,11 @@ export const PROJECTS_SORT_OPTIONS: readonly {
   { label: 'Name A-Z', value: 'name-asc' },
   { label: 'Name Z-A', value: 'name-desc' },
 ];
+
+export const SORT_BY_VALUES = ['name', 'createdAt', 'updatedAt'] as const;
+export const SORT_ORDER_VALUES = ['asc', 'desc'] as const;
+export const VIEW_VALUES = ['table', 'card'] as const;
+
+export type SortBy = (typeof SORT_BY_VALUES)[number];
+export type SortOrder = (typeof SORT_ORDER_VALUES)[number];
+export type View = (typeof VIEW_VALUES)[number];

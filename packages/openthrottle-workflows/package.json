@@ -37,6 +37,7 @@
       "type:package"
     ],
     "targets": {
+      "__codegen-graphql-watch": {},
       "build": {
         "dependsOn": [
           "^build",
@@ -45,7 +46,6 @@
       },
       "build-package": {},
       "codegen-graphql": {},
-      "__codegen-graphql-watch": {},
       "lint": {},
       "test": {
         "dependsOn": [
@@ -55,7 +55,8 @@
           "configFile": "{projectRoot}/vitest.config.mjs"
         }
       },
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "private": true,
@@ -77,7 +78,7 @@
     "module": "./src/index.js",
     "types": "./src/index.d.ts"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts",

@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SettingsBuildTools Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="bg-card rounded-lg transition-colors border hover:border-muted-foreground/40"
+    >
+      <div
+        class="flex flex-col space-y-1.5 p-6"
+      >
+        <div
+          class="font-semibold tracking-tight text-base"
+        >
+          React Router / Vite devtools
+        </div>
+      </div>
+      <div
+        class="p-6 pt-0 space-y-3 text-sm text-muted-foreground"
+      >
+        <p>
+          <span
+            class="font-medium text-foreground"
+          >
+            When to open:
+          </span>
+           Use the bundle analyzer for chunk overlap, duplicate packages, or split issues. Use React Router DevTools when debugging routes, loaders, and actions. For slow production builds, use Vite
+           
+          <code
+            class="text-xs"
+          >
+            build --profile
+          </code>
+           (see profiling doc below). Enable 
+          <code
+            class="text-xs"
+          >
+            REACT_ROUTER_DEV_TOOLS
+          </code>
+           
+          only for those sessions; leave it off for a quieter console day to day.
+        </p>
+        <p>
+          Bundle analyzer,
+           
+          <code
+            class="text-xs"
+          >
+            vite-plugin-devtools-json
+          </code>
+          , and React Router DevTools hook order are documented here:
+        </p>
+        <p>
+          <a
+            class="text-primary underline-offset-4 hover:underline"
+            href="https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/openthrottle-developer-vite-devtools.md#quick-reference"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Quick reference (when to enable what)
+          </a>
+           · 
+          <a
+            class="text-primary underline-offset-4 hover:underline"
+            href="https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/openthrottle-developer-vite-devtools.md"
+            rel="noreferrer"
+            target="_blank"
+          >
+            docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
+          </a>
+           · 
+          <a
+            class="text-primary underline-offset-4 hover:underline"
+            href="https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/openthrottle-developer-vite-devtools.md#vite-cli-build-profiling"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Vite CLI build profiling
+          </a>
+        </p>
+        <p>
+          <span
+            class="font-medium text-foreground"
+          >
+            Clone path:
+          </span>
+           
+          <code
+            class="rounded bg-muted px-1.5 py-0.5 text-xs"
+          >
+            docs/monorepo/openthrottle-developer-vite-devtools.md
+          </code>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+`;

@@ -76,6 +76,7 @@ export class QueuesResolver {
       jobsResult.jobs = result.jobs.map((dto) => {
         const job = new JobObject();
         job.data = dto.data;
+        job.executionBackend = dto.executionBackend;
         job.failedReason = dto.failedReason;
         job.finishedOn = dto.finishedOn;
         job.id = dto.id;
@@ -116,6 +117,7 @@ export class QueuesResolver {
 
     const job = new JobObject();
     job.data = dto.data;
+    job.executionBackend = dto.executionBackend;
     job.failedReason = dto.failedReason;
     job.finishedOn = dto.finishedOn;
     job.id = dto.id;

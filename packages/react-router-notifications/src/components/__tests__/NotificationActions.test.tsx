@@ -11,7 +11,11 @@ describe('NotificationActions Component', () => {
   let props: NotificationActionsProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      dismissAll: () => undefined,
+      markAllAsRead: () => undefined,
+      setOpen: () => undefined,
+    };
 
     const Component = () => <NotificationActions {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

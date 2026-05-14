@@ -18,12 +18,6 @@ pnpm add @openthrottle/nestjs-profiling
 npm install @openthrottle/nestjs-profiling
 ```
 
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-profiling
-```
-
 ## Module registration
 
 Import `NestjsProfilingModule` in your app module to use the profiling service and ensure logger context is available:

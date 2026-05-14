@@ -43,4 +43,10 @@ describe('SearchForm Component', () => {
     const button = component.getByRole('button', { name: /search/i });
     expect(button).toHaveAttribute('type', 'submit');
   });
+
+  test('should submit hidden details=ranking when preserveRankingDetails is true', () => {
+    const { container } = render(<SearchForm preserveRankingDetails={true} />);
+    const hidden = container.querySelector('input[name="details"]');
+    expect(hidden).toHaveAttribute('value', 'ranking');
+  });
 });

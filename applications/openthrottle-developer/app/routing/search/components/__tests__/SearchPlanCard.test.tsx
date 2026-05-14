@@ -17,6 +17,9 @@ function mockSearchChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
     planTitle: null,
     similarity: 0.85,
     source: 'plan',
+    sourcePath: null,
+    sourceRepo: null,
+    sourceSha: null,
     taskId: null,
     taskTitle: null,
     ...overrides,
@@ -73,6 +76,23 @@ describe('SearchPlanCard Component', () => {
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute('href', '/plans/plan-123');
       expect(within(link).getByText('My Plan')).toBeInTheDocument();
+    });
+
+    test('should show related task link when plan chunk includes task ids', () => {
+      props.result = mockSearchChunk({
+        planId: 'plan-123',
+        planTitle: 'My Plan',
+        source: 'plan',
+        taskId: 'task-999',
+        taskTitle: 'Do the thing',
+      });
+      const Component = () => <SearchPlanCard {...props} />;
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      component.rerender(<RoutesStub />);
+
+      const taskLink = component.getByTestId('SearchPlanCard-taskLink');
+      expect(taskLink).toHaveAttribute('href', '/plans/plan-123#task-task-999');
+      expect(taskLink).toHaveTextContent('Task: Do the thing');
     });
   });
 

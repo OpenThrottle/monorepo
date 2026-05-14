@@ -1,0 +1,222 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`UsageDailyActivityOverview Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="border hover:border-accent/60 rounded-lg transition-colors bg-transparent"
+      >
+        <div
+          class="flex flex-col space-y-1.5 p-6"
+        >
+          <div
+            class="font-semibold tracking-tight text-base"
+          >
+            What this chart includes
+          </div>
+          <div
+            class="text-sm text-muted-foreground"
+          >
+            Daily counts are aggregated in OpenThrottle for each calendar day over the last 
+             days. They reflect Cortex plan and task activity surfaced through the developer portal and automation—not IDE-only runs or model billing.
+          </div>
+        </div>
+        <div
+          class="p-6 pt-0"
+        >
+          <dl
+            class="grid gap-3 text-sm sm:grid-cols-2"
+          >
+            <div
+              class="min-w-0"
+            >
+              <dt
+                class="font-medium text-foreground"
+              >
+                Plans completed
+              </dt>
+              <dd
+                class="text-muted-foreground"
+              >
+                Plans moved to a completed (or equivalent terminal) state on that calendar day, as recorded in the OT rollups.
+              </dd>
+            </div>
+            <div
+              class="min-w-0"
+            >
+              <dt
+                class="font-medium text-foreground"
+              >
+                Plans created
+              </dt>
+              <dd
+                class="text-muted-foreground"
+              >
+                New plan records created in OpenThrottle for that day (Ralph, portal, or API), per daily aggregation.
+              </dd>
+            </div>
+            <div
+              class="min-w-0"
+            >
+              <dt
+                class="font-medium text-foreground"
+              >
+                Plans updated
+              </dt>
+              <dd
+                class="text-muted-foreground"
+              >
+                Plan records that received an update (status, fields, or content) on that day, per daily aggregation.
+              </dd>
+            </div>
+            <div
+              class="min-w-0"
+            >
+              <dt
+                class="font-medium text-foreground"
+              >
+                Tasks completed
+              </dt>
+              <dd
+                class="text-muted-foreground"
+              >
+                Tasks marked completed (or equivalent) on that day, per daily aggregation.
+              </dd>
+            </div>
+            <div
+              class="min-w-0"
+            >
+              <dt
+                class="font-medium text-foreground"
+              >
+                Tasks created
+              </dt>
+              <dd
+                class="text-muted-foreground"
+              >
+                New task rows associated with plans for that day, per daily aggregation.
+              </dd>
+            </div>
+            <div
+              class="min-w-0"
+            >
+              <dt
+                class="font-medium text-foreground"
+              >
+                Tasks updated
+              </dt>
+              <dd
+                class="text-muted-foreground"
+              >
+                Tasks updated (pending → in progress, blocked, etc.) on that day, per daily aggregation.
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      <div
+        class="border hover:border-accent/60 rounded-lg transition-colors border-dashed bg-muted/20"
+      >
+        <div
+          class="flex flex-col space-y-1.5 p-6"
+        >
+          <div
+            class="font-semibold tracking-tight text-base"
+          >
+            Analytics gaps (by design today)
+          </div>
+          <div
+            class="text-sm text-muted-foreground"
+          >
+            Use other surfaces when you need finer-grained debugging—the Usage chart is a coarse workload signal only.
+          </div>
+        </div>
+        <div
+          class="p-6 pt-0 space-y-3 text-sm text-muted-foreground"
+        >
+          <ul
+            class="list-disc space-y-1 pl-5"
+          >
+            <li>
+              No per-prompt, per-skill, or per-command invocation counts.
+            </li>
+            <li>
+              No model token, cost, or latency metrics.
+            </li>
+            <li>
+              No visibility into user-local skills under
+               
+              <code
+                class="text-xs"
+              >
+                ~/.cursor/skills-cursor
+              </code>
+               (not in-repo).
+            </li>
+            <li>
+              For prompt identity and version drift, open a prompt and expand
+               
+              <span
+                class="text-foreground"
+              >
+                Prompt versioning & debug
+              </span>
+               
+              (relative timestamps and content fingerprints), or jump from
+               
+              <a
+                class="text-primary underline"
+                data-discover="true"
+                href="/prompts"
+              >
+                Prompts
+              </a>
+              .
+            </li>
+            <li>
+              Use
+               
+              <span
+                class="text-foreground"
+              >
+                Copy usage snapshot (JSON)
+              </span>
+               
+              above to attach the same daily rows and totals to a ticket—still no per-prompt metrics, but easier than screenshots.
+            </li>
+            <li>
+              For in-repo skill paths, see
+               
+              <a
+                class="text-primary underline"
+                data-discover="true"
+                href="/skills"
+              >
+                Skills
+              </a>
+               
+              (
+              <code
+                class="text-xs"
+              >
+                .agents/skills
+              </code>
+               vs
+               
+              <code
+                class="text-xs"
+              >
+                .cursor/skills
+              </code>
+              ).
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+`;

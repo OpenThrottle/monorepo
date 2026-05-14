@@ -102,10 +102,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 
 ### 4.1 Documentation / workflow
 
-- **personal-general.mdc** still documents **yarn** and old generator CLI:
-  - `yarn generate:remix --generator=... --name=... --project=... --folder=...`
-  - `yarn generate:nestjs --generator=... --name=... --project=...`
-  - **Gap:** Agents and humans following personal-general.mdc may use the wrong entrypoint. **Recommendation:** Update personal-general.mdc to point to @tools/generators and AGENT_USAGE.md (e.g. “Use Nx generators: see personal-generators.mdc and docs/tools/templates/AGENT_USAGE.md”).
+- **personal-general.mdc** — **Aligned (2026):** Documents **`pnpm nx g @tools/generators:react-router`** / **`nestjs`** with `NX_ISOLATE_PLUGINS=false`, plus discovery via `--list` / `--describe`. Legacy `yarn generate:*` examples removed; see AGENT_USAGE.md for full flag matrices.
 - **personal-generators.mdc** example uses `--type`, `--target`, `--name` generically; React uses `--subGenerator` and `--destination`, React Native uses `--type` and `--target`. **Gap:** One example doesn’t fit all. **Recommendation:** Keep one canonical “discover then generate” flow in personal-generators.mdc and link to AGENT_USAGE.md (and generator docs) for exact flags per generator.
 
 ### 4.2 Generator coverage
@@ -128,14 +125,14 @@ Which rules apply to code produced by (or that should be produced by) each gener
 
 ## 5. Summary table: rules ↔ generators
 
-| Rule source                | Primary generators                          | Notes                                                                        |
-| -------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
-| personal-generators.mdc    | All                                         | Generator-first workflow; NX_ISOLATE_PLUGINS=false; React Native uses --type |
-| personal-general.mdc (UI)  | remix, react                                | Creation, testing, shared-ui; update to Nx generator commands                |
-| personal-general.mdc (API) | nestjs                                      | ListResult/Result, deprecate not remove, testing                             |
-| cursor-commands.mdc        | remix, react, react-native, package         | PNPM, NX, import \* as React                                                 |
-| coding/\* (style)          | remix, react, react-native, nestjs, package | default-exports, return-types, naming, import-type, etc.                     |
-| folders                    | folders                                     | Structure only; kebab-case names                                             |
+| Rule source                | Primary generators                                 | Notes                                                                         |
+| -------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| personal-generators.mdc    | All                                                | Generator-first workflow; NX_ISOLATE_PLUGINS=false; React Native uses --type  |
+| personal-general.mdc (UI)  | react-router, react                                | Creation, testing; `@openthrottle/react-router-shadcn`; Nx generator commands |
+| personal-general.mdc (API) | nestjs                                             | ListResult/Result, deprecate not remove, testing                              |
+| cursor-commands.mdc        | react-router, react, react-native, package         | PNPM, NX, import \* as React                                                  |
+| coding/\* (style)          | react-router, react, react-native, nestjs, package | default-exports, return-types, naming, import-type, etc.                      |
+| folders                    | folders                                            | Structure only; kebab-case names                                              |
 
 ---
 

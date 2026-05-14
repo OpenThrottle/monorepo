@@ -6,7 +6,7 @@ import { generatorNestJSQueue } from './generator.queue';
 describe('nestjs "queue" generator', () => {
   let tree: Tree;
 
-  const application = 'accounts-central-api';
+  const application = 'nestjs-api';
   const name = 'example-queue';
 
   beforeEach(() => {

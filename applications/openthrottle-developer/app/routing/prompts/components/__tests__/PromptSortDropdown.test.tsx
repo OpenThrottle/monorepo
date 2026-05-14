@@ -1,13 +1,12 @@
 import * as React from 'react';
-import { cleanup, render, fireEvent } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createRoutesStub } from 'react-router';
 import { PromptSortDropdown } from '../PromptSortDropdown';
 import type { PromptSortDropdownProps } from '../PromptSortDropdown';
 
 describe('PromptSortDropdown Component', () => {
-  let component: RenderResult;
   let props: PromptSortDropdownProps;
 
   beforeEach(() => {
@@ -16,50 +15,47 @@ describe('PromptSortDropdown Component', () => {
       sortBy: 'updatedAt',
       sortOrder: 'desc',
     };
-
-    const Component = () => <PromptSortDropdown {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
   });
 
   test('should have data-testid', () => {
-    expect(
-      component.getByTestId('PromptSortDropdown'),
-    ).toBeInTheDocument();
+    const Component = () => <PromptSortDropdown {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+    expect(screen.getByTestId('PromptSortDropdown')).toBeInTheDocument();
   });
 
   test('should have aria-label', () => {
-    expect(component.getByLabelText('Sort prompts')).toBeInTheDocument();
+    const Component = () => <PromptSortDropdown {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+    expect(
+      screen.getByRole('combobox', { name: 'Sort prompts' }),
+    ).toBeInTheDocument();
   });
 
   test('should show "Recently updated" as default selected option', () => {
-    const select = component.getByTestId(
-      'PromptSortDropdown',
-    ) as HTMLSelectElement;
-    expect(select.value).toBe('updatedAt-desc');
+    const Component = () => <PromptSortDropdown {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+    expect(
+      screen.getByRole('combobox', { name: 'Sort prompts' }),
+    ).toHaveTextContent('Recently updated');
   });
 
-  describe('when user changes sort', () => {
-    beforeEach(() => {
-      cleanup();
-      props = {
-        onChange: vi.fn(),
-        sortBy: 'updatedAt',
-        sortOrder: 'desc',
-      };
+  test('when user changes sort should call onChange with new sortBy and sortOrder', async () => {
+    const user = userEvent.setup();
+    props = {
+      onChange: vi.fn(),
+      sortBy: 'updatedAt',
+      sortOrder: 'desc',
+    };
+    const Component = () => <PromptSortDropdown {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-      const Component = () => <PromptSortDropdown {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    await user.click(screen.getByRole('combobox', { name: 'Sort prompts' }));
+    await user.click(screen.getByRole('option', { name: 'Title A-Z' }));
 
-      component = render(<RoutesStub />);
-
-      const select = component.getByTestId('PromptSortDropdown');
-      fireEvent.change(select, { target: { value: 'title-asc' } });
-    });
-
-    test('should call onChange with new sortBy and sortOrder', () => {
-      expect(props.onChange).toHaveBeenCalledWith('title', 'asc');
-    });
+    expect(props.onChange).toHaveBeenCalledWith('title', 'asc');
   });
 });

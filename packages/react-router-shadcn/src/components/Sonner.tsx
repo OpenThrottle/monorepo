@@ -33,11 +33,11 @@ export const Toaster = (props: ToasterProps): React.ReactElement => {
     <SonnerToaster
       className="toaster group"
       icons={{
-        error: <OctagonX className="h-4 w-4" />,
-        info: <Info className="h-4 w-4" />,
-        loading: <LoaderCircle className="h-4 w-4 animate-spin" />,
-        success: <CircleCheck className="h-4 w-4" />,
-        warning: <TriangleAlert className="h-4 w-4" />,
+        error: <OctagonX className="h-4 w-4 text-red-600" />,
+        info: <Info className="h-4 w-4 text-blue-600" />,
+        loading: <LoaderCircle className="h-4 w-4 text-accent animate-spin" />,
+        success: <CircleCheck className="h-4 w-4 text-green-600" />,
+        warning: <TriangleAlert className="h-4 w-4 text-yellow-600" />,
       }}
       theme={theme}
       toastOptions={{

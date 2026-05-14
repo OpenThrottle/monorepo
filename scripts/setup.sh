@@ -19,7 +19,7 @@ echo "- setup_environment.sh"
 echo "- setup_software.sh"
 echo ""
 
-# 1. We re-use the troubleshooting script from the "shiftsmart" repository
+# 1. Run our troubleshooting script
 ./scripts/setup_troubleshooting.sh
 
 # 2. Kick off the install/setup scripts

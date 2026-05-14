@@ -6,7 +6,13 @@
     "rootDirs": ["./src", "./tests"]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist"
+  ],
   "references": [
     {
       "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"

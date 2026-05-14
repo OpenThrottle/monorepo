@@ -1,16 +1,24 @@
 import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { BookOpenIcon } from 'lucide-react';
+import { GlobalHeading, GlobalLayoutBreadcrumbsHandle, GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import type { Route } from '@/app/routes/+types/<%= name %>';
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {};
-// };
+type HandleData = Route.ComponentProps['loaderData'];
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => '<%= namePascal %>',
+  links: (_match) => [],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `<%= namePascal %> | ${SITE_TITLE}` }];
@@ -34,18 +42,25 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-12 relative h-full">
-      <h1 className="text-3xl my-4"><%= namePascal %></h1>
-      <p>
-      Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-      architecto ea?
-      </p>
-    </main>
+    <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={BookOpenIcon}
+          title="<%= namePascal %>"
+        />
+        <p className="text-sm text-muted-foreground">
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
+          architecto ea?
+        </p>
+      </div>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

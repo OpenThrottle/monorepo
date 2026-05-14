@@ -44,6 +44,18 @@ export const ConfirmModal = (props: ConfirmModalProps) => {
     destructive = false,
   } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <AlertDialog onOpenChange={(o) => !o && onCancel()} open={open}>
       <AlertDialogContent>

@@ -21,6 +21,11 @@ export type RalphNestedDebugCli = 'omit' | 'debug' | 'verbose';
  * All fields optional; omitted fields do not produce argv (defaults resolved in the child process).
  */
 export interface RalphNestedRunTuningInput {
+  /**
+   * Execution backend id ({@link RalphExecutionBackendId}: `cursor` or `claude`). Selection applies
+   * to the **entire** nested run; not switched per iteration. Omit (or pass the default) to let the
+   * child resolve from env / `.workflow-ralph.json`.
+   */
   readonly backend?: RalphExecutionBackendId | null;
   readonly debug?: RalphNestedDebugCli;
   readonly iterationTimeoutSeconds?: number | null;
@@ -101,4 +106,20 @@ export const buildWorkflowRalphRunTuningArgv = (
   }
 
   return ralphArgs;
+};
+
+/**
+ * @description Fills `backend` from the BullMQ job’s persisted {@link executionBackend} when tuning
+ * omits `backend`, so nested argv and in-process orchestrator resolve the same runner for the whole run.
+ */
+export const mergeRalphNestedRunTuningWithExecutionBackend = (
+  ralph: RalphNestedRunTuningInput | undefined,
+  executionBackend: RalphExecutionBackendId | undefined,
+): RalphNestedRunTuningInput => {
+  const base = ralph ?? {};
+  const backend =
+    base.backend != null
+      ? base.backend
+      : (executionBackend ?? DEFAULT_RALPH_RUNNER);
+  return { ...base, backend };
 };

@@ -1,11 +1,13 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { X } from 'lucide-react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import { X } from 'lucide-react';
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
 export interface GlobalServerHealthBannerProps {
   readonly health?: ServerHealthObject;
+  /** When true, hide this banner (e.g. root loader already shows a detailed API failure). */
+  readonly suppress?: boolean;
 }
 
 /**
@@ -15,7 +17,7 @@ export interface GlobalServerHealthBannerProps {
 export const GlobalServerHealthBanner = (
   props: GlobalServerHealthBannerProps,
 ) => {
-  const { health } = props;
+  const { health, suppress } = props;
 
   // Hooks
   const [dismissed, setDismissed] = React.useState(false);
@@ -35,7 +37,7 @@ export const GlobalServerHealthBanner = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!isUnhealthy || dismissed) return null;
+  if (suppress || !isUnhealthy || dismissed) return null;
 
   return (
     <div
@@ -49,8 +51,9 @@ export const GlobalServerHealthBanner = (
       role="alert"
     >
       <span className="flex-1">
-        The OpenThrottle Server is unreachable or misconfigured. Plans and tasks
-        may be unavailable.
+        The <b>OpenThrottle Server</b> is unreachable or misconfigured. Plans
+        and tasks are{' '}
+        <b className="underline underline-offset-2">unavailable</b>.
       </span>
       <Button
         aria-label="Dismiss banner"

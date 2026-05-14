@@ -4,12 +4,18 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
 ## Setup
 
-1. **Start the cortex Postgres container**
+1. **Start Postgres and Redis (OpenThrottle)**
 
-   From the repo root, using env from `.env.default` (or copy to `.env`). To verify OpenThrottle and the MCP are reachable, use the **mcp-developer `health` tool** — see `packages/openthrottle/mcp-developer/README.md` § **Is OpenThrottle running?**
+   From the repo root, using env from `.env.default` (or copy to `.env`). This brings up **`openthrottle-postgres`** and **`openthrottle-redis`** from the root `docker-compose.yml` (same as `pnpm run database:start`). For the full minimal API + UI path (install, migrate, `openthrottle-server:dev`, optional `openthrottle-developer:dev`), see [docs/openthrottle/run-openthrottle-server-developer.md](../docs/openthrottle/run-openthrottle-server-developer.md). To verify OpenThrottle and the MCP are reachable after the API is up, use the **mcp-developer `health` tool** — see [packages/mcp-developer/docs/verification-environment.md](../packages/mcp-developer/docs/verification-environment.md) (smoke baseline).
 
    ```bash
-   docker compose -f docker-compose-databases.yml up -d cortex
+   pnpm run database:start
+   ```
+
+   Equivalent explicit Compose invocation:
+
+   ```bash
+   docker compose up -d openthrottle-postgres openthrottle-redis
    ```
 
 2. **Environment variables**
@@ -133,10 +139,6 @@ We use **Option A:** link only the **squash commit after a PR is merged**. The r
     (optional: `--message`, `--task`).
     This keeps `commit_links` in sync with main and powers activity-by-date and last-activity for the plan/task.
 
-### Documentation tables (docs watch)
-
-The **documentation** and **documentation_embeddings** tables support the "docs folder watch and re-index on main" flow: when changes to `docs/` land on main (single squash commit), ingest parses and vectorizes content into these tables. Metadata (repo, sha, PR number, authors, message) mirrors the commit/PR context, similar to how **commit_links** stores plan/task ↔ repo/sha. Search is exposed via a dedicated MCP server (e.g. `@openthrottle/docs-mcp`), separate from mcp-developer (plans/tasks). Idempotency: one row per (repo, sha, path); ingest can replace-by-sha for a given path.
-
 ### Plan and task attributes (PRD mapping)
 
 When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/cortex/planning-mode`), use this mapping. Timestamps are always handled by the DB; the agent infers author (GitHub handle) when missing and always evaluates category (infer when missing, or confirm/adjust when provided so it fits the plan).
@@ -243,7 +245,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/mcp-developer** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle/mcp-developer/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
+**@openthrottle/mcp-developer** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/mcp-developer/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
 
 ## Example queries
 

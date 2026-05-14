@@ -3,9 +3,14 @@ import { SearchDocumentationCard } from '~/routing/search/components/SearchDocum
 import { SearchPlanCard } from '~/routing/search/components/SearchPlanCard';
 import { SearchTaskCard } from '~/routing/search/components/SearchTaskCard';
 import type { SearchChunk } from '~/__generated__/graphql';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+
+export type { SearchRankMeta };
 
 export interface SearchCardProps {
   className?: string;
+  readonly defaultOpenWhy?: boolean;
+  readonly rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
@@ -26,7 +31,7 @@ function normalizeSource(source: string): SearchSource {
  * @description Delegates by result.source to SearchPlanCard, SearchTaskCard, or SearchDocumentationCard.
  */
 export const SearchCard = (props: SearchCardProps) => {
-  const { className, result } = props;
+  const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks
 
@@ -41,12 +46,33 @@ export const SearchCard = (props: SearchCardProps) => {
 
   // 🔌 Short Circuit
   if (source === 'documentation') {
-    return <SearchDocumentationCard className={className} result={result} />;
+    return (
+      <SearchDocumentationCard
+        className={className}
+        defaultOpenWhy={defaultOpenWhy}
+        rankMeta={rankMeta}
+        result={result}
+      />
+    );
   }
 
   if (source === 'task') {
-    return <SearchTaskCard className={className} result={result} />;
+    return (
+      <SearchTaskCard
+        className={className}
+        defaultOpenWhy={defaultOpenWhy}
+        rankMeta={rankMeta}
+        result={result}
+      />
+    );
   }
 
-  return <SearchPlanCard className={className} result={result} />;
+  return (
+    <SearchPlanCard
+      className={className}
+      defaultOpenWhy={defaultOpenWhy}
+      rankMeta={rankMeta}
+      result={result}
+    />
+  );
 };

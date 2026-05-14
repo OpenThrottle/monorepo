@@ -1,4 +1,4 @@
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { getMockMessages } from '~/global/data/mock.mail';
 import { MAIL_FOLDER_IDS } from '~/types/mail';
 import { MessageList } from '~/routing/inbox/components/MessageList';
@@ -40,4 +40,4 @@ export default function Component(
 //   return {};
 // };
 
-export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = MailGlobalErrorBoundary;

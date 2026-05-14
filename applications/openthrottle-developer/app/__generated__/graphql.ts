@@ -152,6 +152,29 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+export type CommitCortexDocumentIngestInput = {
+  /** File bytes encoded as standard base64 (no data: URL prefix). */
+  fileBase64: Scalars['String']['input'];
+  /** MIME type from the upload when known (e.g. text/markdown). */
+  mimeType?: InputMaybe<Scalars['String']['input']>;
+  /** Original filename for format detection fallback. */
+  originalFilename?: InputMaybe<Scalars['String']['input']>;
+  /** Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used. */
+  plan: CreatePlanInput;
+};
+
+export type CommitCortexDocumentIngestResultObject = {
+  __typename?: 'CommitCortexDocumentIngestResultObject';
+  /** Error message when success is false (parse failure or rollback after partial task create). */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Created plan when success is true. */
+  plan?: Maybe<PlanObject>;
+  /** True when the plan and all tasks were created. */
+  success: Scalars['Boolean']['output'];
+  /** Created tasks when success is true. */
+  tasks: Array<TaskObject>;
+};
+
 export type CommitLinkObject = {
   __typename?: 'CommitLinkObject';
   createdAt: Scalars['DateTime']['output'];
@@ -401,6 +424,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Required when mode is task; must belong to the plan. */
   taskId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunInput = {
@@ -410,10 +435,14 @@ export type EnqueuePlanRunInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunResultObject = {
   __typename?: 'EnqueuePlanRunResultObject';
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend: Scalars['String']['output'];
   /** BullMQ job id */
   jobId: Scalars['String']['output'];
   /** Plan id that was enqueued */
@@ -457,6 +486,15 @@ export type GetPlanOutputStreamChunkInput = {
   id: Scalars['ID']['input'];
 };
 
+export type GetPullInput = {
+  /** Pull request number */
+  number: Scalars['Int']['input'];
+  /** Repository owner (e.g. GitHub username or org) */
+  owner: Scalars['String']['input'];
+  /** Repository name */
+  repo: Scalars['String']['input'];
+};
+
 export type GetTaskEmbeddingInput = {
   /** Task embedding id */
   id: Scalars['ID']['input'];
@@ -475,6 +513,8 @@ export type JobObject = {
   __typename?: 'JobObject';
   /** JSON string of job data (e.g. { planId } for run-plan). */
   data?: Maybe<Scalars['String']['output']>;
+  /** Execution backend selected once for this plan run. Present for plans queue jobs. */
+  executionBackend?: Maybe<Scalars['String']['output']>;
   /** Error message if the job failed. */
   failedReason?: Maybe<Scalars['String']['output']>;
   /** Unix timestamp when the job finished. */
@@ -717,6 +757,8 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
+  commitCortexDocumentIngest: CommitCortexDocumentIngestResultObject;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -759,6 +801,8 @@ export type Mutation = {
   linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
+  /** Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting. */
+  previewCortexDocumentIngest: PreviewCortexDocumentIngestResultObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
@@ -771,6 +815,8 @@ export type Mutation = {
   setPlanStatus?: Maybe<PlanObject>;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
+  /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
+  triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
   /** Update an existing custom prompt */
@@ -797,6 +843,10 @@ export type MutationAppendPlanOutputArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCommitCortexDocumentIngestArgs = {
+  input: CommitCortexDocumentIngestInput;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -881,6 +931,10 @@ export type MutationLinkCommitArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+export type MutationPreviewCortexDocumentIngestArgs = {
+  input: PreviewCortexDocumentIngestInput;
 };
 
 export type MutationRegisterArgs = {
@@ -1032,12 +1086,37 @@ export enum PlanRalphWorkflowMode {
 /** A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end). */
 export type PlanRunMetricsEntry = {
   __typename?: 'PlanRunMetricsEntry';
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend?: Maybe<Scalars['String']['output']>;
   /** Unix timestamp when the job finished. */
   finishedOn?: Maybe<Scalars['Float']['output']>;
   /** BullMQ job id for this run. */
   jobId: Scalars['String']['output'];
   /** Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics. */
   taskRunMetrics?: Maybe<TaskRunMetrics>;
+};
+
+export type PlanRunObject = {
+  __typename?: 'PlanRunObject';
+  /** BullMQ job id for this run. */
+  bullmqJobId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  planId: Scalars['String']['output'];
+  queueName: Scalars['String']['output'];
+  /** Ralph run implementation: spawn or orchestrator. */
+  runKind: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PlanRunsByPlanIdInput = {
+  /** Max plan-run audit rows to return, newest first. */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Plan id whose run audit rows should be returned */
+  planId: Scalars['ID']['input'];
 };
 
 export type PlanStatusCountObject = {
@@ -1080,6 +1159,31 @@ export enum PressureLevel {
   Moderate = 'moderate',
   Unknown = 'unknown',
 }
+
+export type PreviewCortexDocumentIngestInput = {
+  /** File bytes encoded as standard base64 (no data: URL prefix). */
+  fileBase64: Scalars['String']['input'];
+  /** MIME type from the upload when known (e.g. text/markdown). */
+  mimeType?: InputMaybe<Scalars['String']['input']>;
+  /** Original filename for format detection fallback. */
+  originalFilename?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PreviewCortexDocumentIngestResultObject = {
+  __typename?: 'PreviewCortexDocumentIngestResultObject';
+  /** Detected upload format when parsing ran (e.g. markdown). */
+  detectedFormat?: Maybe<Scalars['String']['output']>;
+  /** Parse error code when success is false. */
+  errorCode?: Maybe<Scalars['String']['output']>;
+  /** Human-readable error when success is false. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Suggested plan title from the document structure. */
+  planTitleSuggested?: Maybe<Scalars['String']['output']>;
+  /** JSON array of proposed tasks: { title, description, requirements[] }. */
+  proposedTasksJson?: Maybe<Scalars['String']['output']>;
+  /** True when the document parsed successfully. */
+  success: Scalars['Boolean']['output'];
+};
 
 /** Process metrics snapshot: memory (RSS, heap, external in MB) and CPU (user/system in ms). */
 export type ProcessMetricsSnapshot = {
@@ -1152,7 +1256,11 @@ export type PsiCpuMetrics = {
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
   author: Scalars['String']['output'];
+  baseRef?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  headRef?: Maybe<Scalars['String']['output']>;
+  /** Head commit SHA when GitHub returns head.sha (for commit/checks drill-down). */
+  headSha?: Maybe<Scalars['String']['output']>;
   htmlUrl: Scalars['String']['output'];
   mergedAt?: Maybe<Scalars['String']['output']>;
   number: Scalars['Int']['output'];
@@ -1235,6 +1343,8 @@ export type Query = {
   planOutputStreamChunk?: Maybe<PlanOutputStreamChunkObject>;
   /** List plan output stream chunks by plan ID, ordered by createdAt ascending */
   planOutputStreamChunks: Array<PlanOutputStreamChunkObject>;
+  /** Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend. */
+  planRunsByPlanId: Array<PlanRunObject>;
   /** List all plans */
   plans: Array<PlanObject>;
   /** PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all). */
@@ -1247,6 +1357,8 @@ export type Query = {
   projects: Array<ProjectObject>;
   /** PRs merged per week or month (throughput trend). Buckets by merged_at in UTC. */
   prsMergedPerPeriod: Array<PrsMergedPerPeriodObject>;
+  /** Get one pull request by repository and PR number (GitHub API) */
+  pull?: Maybe<PullListItemObject>;
   /** List pull requests for a repository (GitHub API) */
   pulls: Array<PullListItemObject>;
   /** Single queue by name with optional paginated jobs (limit/offset/states/asc). */
@@ -1383,6 +1495,10 @@ export type QueryPlanOutputStreamChunksArgs = {
   input: ListPlanOutputStreamChunksInput;
 };
 
+export type QueryPlanRunsByPlanIdArgs = {
+  input: PlanRunsByPlanIdInput;
+};
+
 export type QueryPrCountByLabelArgs = {
   input: PrCountByLabelInput;
 };
@@ -1397,6 +1513,10 @@ export type QueryProjectArgs = {
 
 export type QueryPrsMergedPerPeriodArgs = {
   input: PrsMergedPerPeriodInput;
+};
+
+export type QueryPullArgs = {
+  input: GetPullInput;
 };
 
 export type QueryPullsArgs = {
@@ -2395,8 +2515,11 @@ export type PlanDetailEnqueuePlanRunMutation = {
   __typename?: 'Mutation';
   enqueuePlanRun: {
     __typename?: 'EnqueuePlanRunResultObject';
+    executionBackend: string;
     jobId: string;
     planId: string;
+    queuePosition: number;
+    queueTotal: number;
   };
 };
 
@@ -2457,6 +2580,73 @@ export type PlanDetailUpdateTaskMutation = {
       name: string;
     } | null;
   } | null;
+};
+
+export type PlanDetailIndexLoaderQueryVariables = Exact<{
+  planId: Scalars['ID']['input'];
+}>;
+
+export type PlanDetailIndexLoaderQuery = {
+  __typename?: 'Query';
+  plan?: {
+    __typename?: 'PlanObject';
+    assignee?: string | null;
+    author: string;
+    category: string;
+    createdAt: any;
+    description?: string | null;
+    id: string;
+    projectId?: string | null;
+    status: string;
+    summary?: string | null;
+    title: string;
+    updatedAt: any;
+    projectRelation?: {
+      __typename?: 'ProjectObject';
+      id: string;
+      name: string;
+    } | null;
+  } | null;
+  tasksByPlanId: Array<{
+    __typename?: 'TaskObject';
+    assignee?: string | null;
+    category?: string | null;
+    createdAt: any;
+    description?: string | null;
+    id: string;
+    planId: string;
+    requirementsJson: string;
+    status: string;
+    summary?: string | null;
+    title: string;
+    updatedAt: any;
+    projectRelation?: {
+      __typename?: 'ProjectObject';
+      id: string;
+      name: string;
+    } | null;
+  }>;
+  planOutputStreamChunks: Array<{
+    __typename?: 'PlanOutputStreamChunkObject';
+    id: string;
+    content: string;
+    createdAt: any;
+    iteration?: number | null;
+    planId: string;
+  }>;
+  metrics: {
+    __typename?: 'MetricsObject';
+    recentPlanRunsMetrics: Array<{
+      __typename?: 'PlanRunMetricsEntry';
+      executionBackend?: string | null;
+      finishedOn?: number | null;
+      jobId: string;
+      taskRunMetrics?: {
+        __typename?: 'TaskRunMetrics';
+        atEnd: { __typename?: 'ProcessMetricsSnapshot'; rssMb: number };
+      } | null;
+    }>;
+  };
 };
 
 export type UpdatePlanMutationVariables = Exact<{
@@ -2625,6 +2815,14 @@ export type GetPlansByStatusQueryVariables = Exact<{
 
 export type GetPlansByStatusQuery = {
   __typename?: 'Query';
+  allPlansCount: {
+    __typename?: 'ListPlansByStatusResultObject';
+    totalCount: number;
+  };
+  queuedPlansCount: {
+    __typename?: 'ListPlansByStatusResultObject';
+    totalCount: number;
+  };
   listPlansByStatus: {
     __typename?: 'ListPlansByStatusResultObject';
     totalCount: number;
@@ -2681,6 +2879,7 @@ export type TestWorkflowMutation = {
   __typename?: 'Mutation';
   enqueuePlanRun: {
     __typename?: 'EnqueuePlanRunResultObject';
+    executionBackend: string;
     jobId: string;
     planId: string;
   };
@@ -2891,22 +3090,60 @@ export type CreatePromptMutation = {
   };
 };
 
+export type GetPullRequestDetailQueryVariables = Exact<{
+  input: GetPullInput;
+}>;
+
+export type GetPullRequestDetailQuery = {
+  __typename?: 'Query';
+  pull?: {
+    __typename?: 'PullListItemObject';
+    author: string;
+    baseRef?: string | null;
+    createdAt: string;
+    headRef?: string | null;
+    headSha?: string | null;
+    htmlUrl: string;
+    mergedAt?: string | null;
+    number: number;
+    state: string;
+    title: string;
+    updatedAt: string;
+  } | null;
+};
+
 export type PullRequestCardFragment = {
   __typename?: 'PullListItemObject';
+  author: string;
+  baseRef?: string | null;
   createdAt: string;
+  headRef?: string | null;
+  headSha?: string | null;
+  htmlUrl: string;
+  mergedAt?: string | null;
   number: number;
+  state: string;
   title: string;
   updatedAt: string;
 };
 
-export type GetPullRequestsQueryVariables = Exact<{ [key: string]: never }>;
+export type GetPullRequestsQueryVariables = Exact<{
+  input: ListPullsInput;
+}>;
 
 export type GetPullRequestsQuery = {
   __typename?: 'Query';
   pulls: Array<{
     __typename?: 'PullListItemObject';
+    author: string;
+    baseRef?: string | null;
     createdAt: string;
+    headRef?: string | null;
+    headSha?: string | null;
+    htmlUrl: string;
+    mergedAt?: string | null;
     number: number;
+    state: string;
     title: string;
     updatedAt: string;
   }>;
@@ -2915,6 +3152,7 @@ export type GetPullRequestsQuery = {
 export type JobDetailsCardFragment = {
   __typename?: 'JobObject';
   data?: string | null;
+  executionBackend?: string | null;
   failedReason?: string | null;
   finishedOn?: number | null;
   id: string;
@@ -2924,6 +3162,19 @@ export type JobDetailsCardFragment = {
   returnvalue?: string | null;
   state: string;
   timestamp?: number | null;
+  taskRunMetrics?: {
+    __typename?: 'TaskRunMetrics';
+    atEnd: {
+      __typename?: 'ProcessMetricsSnapshot';
+      heapUsedMb: number;
+      rssMb: number;
+    };
+    atStart: {
+      __typename?: 'ProcessMetricsSnapshot';
+      heapUsedMb: number;
+      rssMb: number;
+    };
+  } | null;
 };
 
 export type GetQueueJobDetailsQueryVariables = Exact<{
@@ -2936,6 +3187,7 @@ export type GetQueueJobDetailsQuery = {
   job?: {
     __typename?: 'JobObject';
     data?: string | null;
+    executionBackend?: string | null;
     failedReason?: string | null;
     finishedOn?: number | null;
     id: string;
@@ -2945,7 +3197,51 @@ export type GetQueueJobDetailsQuery = {
     returnvalue?: string | null;
     state: string;
     timestamp?: number | null;
+    taskRunMetrics?: {
+      __typename?: 'TaskRunMetrics';
+      atEnd: {
+        __typename?: 'ProcessMetricsSnapshot';
+        heapUsedMb: number;
+        rssMb: number;
+      };
+      atStart: {
+        __typename?: 'ProcessMetricsSnapshot';
+        heapUsedMb: number;
+        rssMb: number;
+      };
+    } | null;
   } | null;
+};
+
+export type QueueJobDetailRetryMutationVariables = Exact<{
+  input: RetryJobInput;
+}>;
+
+export type QueueJobDetailRetryMutation = {
+  __typename?: 'Mutation';
+  retryJob: {
+    __typename?: 'RetryJobResultObject';
+    error?: string | null;
+    jobId?: string | null;
+    success: boolean;
+  };
+};
+
+export type QueueJobDetailCancelPlanRunMutationVariables = Exact<{
+  input: CancelPlanRunInput;
+}>;
+
+export type QueueJobDetailCancelPlanRunMutation = {
+  __typename?: 'Mutation';
+  cancelPlanRun: {
+    __typename?: 'CancelPlanRunResultObject';
+    activeJobIdsCouldNotCancel: Array<string>;
+    noMatchingJob: boolean;
+    planId: string;
+    planStatusAfter?: string | null;
+    removedJobIds: Array<string>;
+    signaledActiveRunToStop: boolean;
+  };
 };
 
 export type GetQueueQueryVariables = Exact<{
@@ -3042,6 +3338,39 @@ export type GetSearchResultsQuery = {
       sourceSha?: string | null;
       taskId?: string | null;
       taskTitle?: string | null;
+    }>;
+  };
+};
+
+export type UsageDailyStatsRowFragment = {
+  __typename?: 'DailyStatsObject';
+  date: string;
+  plansCompleted: number;
+  plansCreated: number;
+  plansUpdated: number;
+  tasksCompleted: number;
+  tasksCreated: number;
+  tasksUpdated: number;
+};
+
+export type GetUsageDailyStatsQueryVariables = Exact<{
+  start: Scalars['String']['input'];
+  end: Scalars['String']['input'];
+}>;
+
+export type GetUsageDailyStatsQuery = {
+  __typename?: 'Query';
+  dailyStatsRange: {
+    __typename?: 'DailyStatsRangeResultObject';
+    items: Array<{
+      __typename?: 'DailyStatsObject';
+      date: string;
+      plansCompleted: number;
+      plansCreated: number;
+      plansUpdated: number;
+      tasksCompleted: number;
+      tasksCreated: number;
+      tasksUpdated: number;
     }>;
   };
 };
@@ -3538,8 +3867,15 @@ export const PullRequestCardFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -3561,6 +3897,7 @@ export const JobDetailsCardFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
           { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
@@ -3569,6 +3906,43 @@ export const JobDetailsCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
           { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
           { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskRunMetrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atEnd' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atStart' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
         ],
       },
@@ -3599,6 +3973,31 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const UsageDailyStatsRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageDailyStatsRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DailyStatsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansUpdated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksUpdated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageDailyStatsRowFragment, unknown>;
 export const RegisterDocument = {
   kind: 'Document',
   definitions: [
@@ -4762,8 +5161,17 @@ export const PlanDetailEnqueuePlanRunDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'queuePosition' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'queueTotal' } },
               ],
             },
           },
@@ -4997,6 +5405,276 @@ export const PlanDetailUpdateTaskDocument = {
 } as unknown as DocumentNode<
   PlanDetailUpdateTaskMutation,
   PlanDetailUpdateTaskMutationVariables
+>;
+export const PlanDetailIndexLoaderDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PlanDetailIndexLoader' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'planId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'plan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanDetails' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanTaskRow' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planOutputStreamChunks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'metrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'recentPlanRunsMetrics' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'limit' },
+                      value: { kind: 'IntValue', value: '25' },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'executionBackend' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'finishedOn' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskRunMetrics' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'atEnd' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'rssMb' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectDetails' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTaskRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailIndexLoaderQuery,
+  PlanDetailIndexLoaderQueryVariables
 >;
 export const UpdatePlanDocument = {
   kind: 'Document',
@@ -5399,6 +6077,69 @@ export const GetPlansByStatusDocument = {
         selections: [
           {
             kind: 'Field',
+            alias: { kind: 'Name', value: 'allPlansCount' },
+            name: { kind: 'Name', value: 'listPlansByStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'statuses' },
+                      value: { kind: 'ListValue', values: [] },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            alias: { kind: 'Name', value: 'queuedPlansCount' },
+            name: { kind: 'Name', value: 'listPlansByStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'statuses' },
+                      value: {
+                        kind: 'ListValue',
+                        values: [
+                          {
+                            kind: 'StringValue',
+                            value: 'QUEUED',
+                            block: false,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'listPlansByStatus' },
             arguments: [
               {
@@ -5577,6 +6318,10 @@ export const TestWorkflowDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
               ],
@@ -6227,6 +6972,70 @@ export const CreatePromptDocument = {
   CreatePromptMutation,
   CreatePromptMutationVariables
 >;
+export const GetPullRequestDetailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPullRequestDetail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'GetPullInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pull' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPullRequestDetailQuery,
+  GetPullRequestDetailQueryVariables
+>;
 export const GetPullRequestsDocument = {
   kind: 'Document',
   definitions: [
@@ -6234,6 +7043,22 @@ export const GetPullRequestsDocument = {
       kind: 'OperationDefinition',
       operation: 'query',
       name: { kind: 'Name', value: 'getPullRequests' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ListPullsInput' },
+            },
+          },
+        },
+      ],
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
@@ -6245,27 +7070,8 @@ export const GetPullRequestsDocument = {
                 kind: 'Argument',
                 name: { kind: 'Name', value: 'input' },
                 value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'owner' },
-                      value: {
-                        kind: 'StringValue',
-                        value: 'visormatt',
-                        block: false,
-                      },
-                    },
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'repo' },
-                      value: {
-                        kind: 'StringValue',
-                        value: 'monorepo',
-                        block: false,
-                      },
-                    },
-                  ],
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
                 },
               },
             ],
@@ -6292,8 +7098,15 @@ export const GetPullRequestsDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -6386,6 +7199,7 @@ export const GetQueueJobDetailsDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
           { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
@@ -6394,6 +7208,43 @@ export const GetQueueJobDetailsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
           { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
           { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskRunMetrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atEnd' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'atStart' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'heapUsedMb' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rssMb' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
         ],
       },
@@ -6402,6 +7253,136 @@ export const GetQueueJobDetailsDocument = {
 } as unknown as DocumentNode<
   GetQueueJobDetailsQuery,
   GetQueueJobDetailsQueryVariables
+>;
+export const QueueJobDetailRetryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'QueueJobDetailRetry' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RetryJobInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'retryJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  QueueJobDetailRetryMutation,
+  QueueJobDetailRetryMutationVariables
+>;
+export const QueueJobDetailCancelPlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'QueueJobDetailCancelPlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CancelPlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelPlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'activeJobIdsCouldNotCancel' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'noMatchingJob' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'planStatusAfter' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'removedJobIds' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'signaledActiveRunToStop' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  QueueJobDetailCancelPlanRunMutation,
+  QueueJobDetailCancelPlanRunMutationVariables
 >;
 export const GetQueueDocument = {
   kind: 'Document',
@@ -6732,4 +7713,109 @@ export const GetSearchResultsDocument = {
 } as unknown as DocumentNode<
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
+>;
+export const GetUsageDailyStatsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageDailyStats' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'start' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'end' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'dailyStatsRange' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'start' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'start' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'end' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'end' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'items' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageDailyStatsRow' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageDailyStatsRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DailyStatsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plansUpdated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCompleted' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksCreated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tasksUpdated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageDailyStatsQuery,
+  GetUsageDailyStatsQueryVariables
 >;

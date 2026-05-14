@@ -14,7 +14,7 @@ Audit date: 2025-02-12. Compare `docs/openthrottle/features.md` to `databases/co
 
 - **features.md:** Not mentioned.
 - **Codebase:** `projects` table; plans/tasks have `project` (TEXT, NX project name) and `project_id` (FK). MCP: `list_plans_by_status(project?, projectId?)`, create/update plan/task support `project`/`projectId`. openthrottle-server GraphQL has projects resolver; openthrottle-developer has projects UI.
-- **Fix:** Add a **Projects** subsection: group plans/tasks by NX project; filter by project in list; optional project on create/update. Link to `databases/cortex/README.md` § Project association.
+- **Fix:** Add a **Projects** subsection: group plans/tasks by NX project; filter by project in list; optional project on create/update. Link to `databases/README.md` § Project association.
 
 ### 3. Assignee and summary
 

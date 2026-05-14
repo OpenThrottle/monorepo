@@ -4,11 +4,17 @@ import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
+  buildWorkflowRalphDebugBundleText,
   buildWorkflowRalphOptionArgs,
+  buildWorkflowRalphTuningDiffLabels,
   formatWorkflowRalphCommandLine,
+  formatWorkflowRalphExecutionBackendLabel,
   getDefaultWorkflowRalphRunOptionsInput,
+  getWorkflowRalphUiBaselineForDiff,
   isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
+  planRunJobDetailPath,
+  validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
 import { RalphNestedDebugCli } from '~/__generated__/graphql';
@@ -24,6 +30,8 @@ const basePlanInput = (
   planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
   project: '',
   prompt: DEFAULT_RALPH_PROMPT,
+  promptFile: '',
+  promptLayer: 'named',
   targetMode: 'plan',
   taskId: '',
   ...overrides,
@@ -40,6 +48,8 @@ const baseTaskInput = (
   planId: '',
   project: '',
   prompt: DEFAULT_RALPH_PROMPT,
+  promptFile: '',
+  promptLayer: 'named',
   targetMode: 'task',
   taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
   ...overrides,
@@ -55,6 +65,27 @@ describe('isCortexUuid', () => {
     expect(isUuid('not-a-uuid')).toBe(false);
     expect(isUuid('')).toBe(false);
     expect(isUuid('00000000-0000-9000-8000-000000000000')).toBe(false);
+  });
+});
+
+describe('formatWorkflowRalphExecutionBackendLabel', () => {
+  test('maps known backend ids to short labels', () => {
+    expect(formatWorkflowRalphExecutionBackendLabel('cursor')).toBe(
+      'Cursor (cursor-agent)',
+    );
+    expect(formatWorkflowRalphExecutionBackendLabel('claude')).toBe(
+      'Claude Code CLI',
+    );
+  });
+
+  test('returns em dash for empty values', () => {
+    expect(formatWorkflowRalphExecutionBackendLabel(null)).toBe('—');
+    expect(formatWorkflowRalphExecutionBackendLabel(undefined)).toBe('—');
+    expect(formatWorkflowRalphExecutionBackendLabel('')).toBe('—');
+  });
+
+  test('passes through unknown non-empty strings', () => {
+    expect(formatWorkflowRalphExecutionBackendLabel('codex')).toBe('codex');
   });
 });
 
@@ -101,12 +132,53 @@ describe('buildWorkflowRalphOptionArgs', () => {
     ]);
   });
 
+  test('includes --backend claude when execution backend is claude (non-default)', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({ executionBackend: 'claude' }),
+      ),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--backend',
+      'claude',
+    ]);
+  });
+
   test('includes --prompt when prompt differs from default', () => {
     const args = buildWorkflowRalphOptionArgs(
       basePlanInput({ prompt: '/agents/custom' }),
     );
     expect(args).toContain('--prompt');
     expect(args).toContain('/agents/custom');
+  });
+
+  test('includes --prompt-file when promptLayer is file', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({
+          promptFile: 'prompts/x.md',
+          promptLayer: 'file',
+        }),
+      ),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--prompt-file',
+      'prompts/x.md',
+    ]);
+  });
+
+  test('does not emit --prompt when using prompt-file layer', () => {
+    const args = buildWorkflowRalphOptionArgs(
+      basePlanInput({
+        prompt: '/agents/custom',
+        promptFile: 'a.md',
+        promptLayer: 'file',
+      }),
+    );
+    expect(args).not.toContain('--prompt');
+    expect(args).toContain('--prompt-file');
   });
 
   test('omits --prompt when prompt is empty or whitespace (same as default)', () => {
@@ -258,6 +330,17 @@ describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
     });
   });
 
+  test('maps prompt file layer to GraphQL promptFile', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({
+          promptFile: 'docs/p.md',
+          promptLayer: 'file',
+        }),
+      ),
+    ).toEqual({ promptFile: 'docs/p.md' });
+  });
+
   test('includes iteration timeout from merged input', () => {
     expect(
       buildRalphPlanRunTuningInputFromWorkflowRunOptions(
@@ -358,6 +441,215 @@ describe('formatWorkflowRalphCommandLine', () => {
     ]);
     expect(line).toBe(
       "pnpm exec workflow-ralph --prompt '/path with spaces/ralph'",
+    );
+  });
+});
+
+describe('buildWorkflowRalphDebugBundleText', () => {
+  test('includes plan id, canonical command, argv segments, and queue path metadata', () => {
+    const text = buildWorkflowRalphDebugBundleText({
+      iterationTimeoutText: '',
+      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+      workflowInput: basePlanInput(),
+    });
+    const parsed = JSON.parse(text) as {
+      argvSegments: readonly string[];
+      canonicalCommand: string;
+      planId: string;
+      precedence: string;
+      queue: { jobListPath: string };
+    };
+
+    expect(parsed.planId).toBe('0c2720a9-920f-4b16-865a-f803eb444e18');
+    expect(parsed.precedence).toContain('CLI flags');
+    expect(parsed.canonicalCommand).toContain('pnpm exec workflow-ralph');
+    expect(parsed.argvSegments).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+    ]);
+    expect(parsed.queue.jobListPath).toBe('/queues/Plans');
+  });
+});
+
+describe('getWorkflowRalphUiBaselineForDiff', () => {
+  test('preserves target ids while resetting tuning to seeded defaults', () => {
+    const input = basePlanInput({
+      iterations: 3,
+      model: 'fast',
+      prompt: '/custom',
+    });
+    const baseline = getWorkflowRalphUiBaselineForDiff(input);
+
+    expect(baseline.planId).toBe(input.planId);
+    expect(baseline.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
+    expect(baseline.model).toBe(DEFAULT_RALPH_MODEL);
+    expect(baseline.prompt).toBe(DEFAULT_RALPH_PROMPT);
+  });
+});
+
+describe('buildWorkflowRalphTuningDiffLabels', () => {
+  test('returns empty when options match baseline', () => {
+    expect(buildWorkflowRalphTuningDiffLabels(basePlanInput(), '')).toEqual([]);
+  });
+
+  test('lists iterations when they diverge from defaults', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(
+      basePlanInput({ iterations: 3 }),
+      '',
+    );
+    expect(labels.some((l) => l.includes('Iterations'))).toBe(true);
+    expect(labels.some((l) => l.includes('3'))).toBe(true);
+  });
+
+  test('lists iteration timeout when set', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(basePlanInput(), '120');
+    expect(labels.some((l) => l.includes('Iteration timeout'))).toBe(true);
+    expect(labels.some((l) => l.includes('120'))).toBe(true);
+  });
+});
+
+describe('validateWorkflowRalphRunOptionsState', () => {
+  test('passes for valid plan-centric defaults', () => {
+    expect(
+      validateWorkflowRalphRunOptionsState(basePlanInput(), '', {
+        requireCliTargetIds: true,
+      }),
+    ).toEqual({ ok: true });
+  });
+
+  test('passes when execution backend is claude (aligned with workflow-ralph --backend)', () => {
+    expect(
+      validateWorkflowRalphRunOptionsState(
+        basePlanInput({ executionBackend: 'claude' }),
+        '',
+        { requireCliTargetIds: true },
+      ),
+    ).toEqual({ ok: true });
+  });
+
+  test('fails when execution backend is not a known id', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ executionBackend: 'codex' as 'cursor' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'backend')).toBe(true);
+  });
+
+  test('fails when plan id is not a v4 uuid', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ planId: 'plan-1' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'plan_uuid')).toBe(true);
+  });
+
+  test('without strict target ids, allows empty plan field (sandbox)', () => {
+    expect(
+      validateWorkflowRalphRunOptionsState(basePlanInput({ planId: '' }), '', {
+        requireCliTargetIds: false,
+      }),
+    ).toEqual({ ok: true });
+  });
+
+  test('fails when iteration-timeout text is non-empty but invalid', () => {
+    const result = validateWorkflowRalphRunOptionsState(basePlanInput(), '0', {
+      requireCliTargetIds: true,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'iteration_timeout')).toBe(
+      true,
+    );
+    expect(
+      result.issues.find((i) => i.code === 'iteration_timeout')?.message,
+    ).toBe('--iteration-timeout must be a positive integer (seconds)');
+  });
+
+  test('fails when iterations are below CLI minimum', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ iterations: 0 }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'iterations')).toBe(true);
+    expect(result.issues.find((i) => i.code === 'iterations')?.message).toBe(
+      '--iterations must be a positive integer greater than 0',
+    );
+  });
+
+  test('fails when named prompt and prompt-file path are both set (parser parity)', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({
+        prompt: '/agents/custom',
+        promptFile: 'x.md',
+        promptLayer: 'named',
+      }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'prompt_conflict')).toBe(true);
+  });
+
+  test('fails when prompt-file layer is selected with an empty path (parseRalphArgs parity)', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({
+        prompt: DEFAULT_RALPH_PROMPT,
+        promptFile: '',
+        promptLayer: 'file',
+      }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'prompt_file_empty')).toBe(
+      true,
+    );
+    expect(
+      result.issues.find((i) => i.code === 'prompt_file_empty')?.message,
+    ).toBe('--prompt-file requires a non-empty path');
+  });
+
+  test('fails in task mode when task id is empty', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      baseTaskInput({ taskId: '' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'task_required')).toBe(true);
+  });
+});
+
+describe('planRunJobDetailPath', () => {
+  test('encodes queue name and job id for the developer portal route', () => {
+    expect(planRunJobDetailPath('ralph-orch:abc')).toBe(
+      '/queues/Plans/ralph-orch%3Aabc',
     );
   });
 });

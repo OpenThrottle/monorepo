@@ -10,7 +10,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 | Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | mcp-developer `semantic_search`          |
 | Docs   | `documentation_embeddings` | Chunked content from `docs/` + NX READMEs   | vector(1536)    | docs-mcp `documentation_semantic_search` |
 
-**Ingest:** `cortex:import` (plans); `cortex:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/cortex/README.md` § Embedding dimension strategy).
+**Ingest:** `cortex:import` (plans); `cortex:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/README.md` § Embedding dimension strategy).
 
 **Gap:** mcp-developer and docs-mcp are separate MCPs — semantic search does not cross plans + tasks + docs + commits in one query.
 
@@ -79,7 +79,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 ## 6. References
 
-- Schema: `databases/cortex/README.md`
-- OT MCP tools: `.cursor/rules/commands/cortex.mdc`
-- Ingest: `scripts/ingest-plans-to-cortex.ts`, `scripts/ingest-docs-to-cortex.ts`
-- Activity: `packages/openthrottle/mcp-developer/src/tools/activity.ts`, `applications/openthrottle-server/src/graphql/activity/`
+- Schema: `databases/README.md`
+- OT MCP tools: `.cursor/rules/commands/openthrottle.mdc`
+- Ingest: `scripts/openthrottle-ingest-plans.ts`, `scripts/openthrottle-ingest-docs.ts` (see root `package.json` scripts `database:import`, `database:import-docs`)
+- Activity: `packages/mcp-developer/src/tools/activity.ts`, `applications/openthrottle-server/src/graphql/activity/`

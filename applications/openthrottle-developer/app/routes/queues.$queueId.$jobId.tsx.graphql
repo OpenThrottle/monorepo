@@ -1,5 +1,6 @@
 fragment JobDetailsCard on JobObject {
   data
+  executionBackend
   failedReason
   finishedOn
   id
@@ -8,11 +9,40 @@ fragment JobDetailsCard on JobObject {
   progress
   returnvalue
   state
+  taskRunMetrics {
+    atEnd {
+      heapUsedMb
+      rssMb
+    }
+    atStart {
+      heapUsedMb
+      rssMb
+    }
+  }
   timestamp
 }
 
 query getQueueJobDetails($jobId: ID!, $queueName: String!) {
   job(jobId: $jobId, queueName: $queueName) {
     ...JobDetailsCard
+  }
+}
+
+mutation QueueJobDetailRetry($input: RetryJobInput!) {
+  retryJob(input: $input) {
+    error
+    jobId
+    success
+  }
+}
+
+mutation QueueJobDetailCancelPlanRun($input: CancelPlanRunInput!) {
+  cancelPlanRun(input: $input) {
+    activeJobIdsCouldNotCancel
+    noMatchingJob
+    planId
+    planStatusAfter
+    removedJobIds
+    signaledActiveRunToStop
   }
 }

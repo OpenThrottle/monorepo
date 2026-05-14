@@ -26,6 +26,10 @@ Developer portal for [OpenThrottle](https://developer.openthrottle.ai)—dashboa
 pnpm nx run openthrottle-developer:dev
 ```
 
+## Local Vite and devtools
+
+Opt-in and dev-only tooling (React Router DevTools, bundle analyzer, plugin order), **production build profiling** (`pnpm nx run openthrottle-developer:build -- --profile`), and **troubleshooting** (ports, hosts, `API_URL_*` / internal vs external) are in **[docs/monorepo/openthrottle-developer-vite-devtools.md](../../docs/monorepo/openthrottle-developer-vite-devtools.md)**. **Settings → Debug**, **Settings → General**, and **Settings → Appearance** link there (including the profiling section); ports are covered in [local services and ports](./../../docs/monorepo/local-services-and-ports.md).
+
 ## Scripts
 
 Run via Nx from the monorepo root:
@@ -39,6 +43,10 @@ Run via Nx from the monorepo root:
 | `pnpm nx run openthrottle-developer:typecheck`            | TypeScript check                      |
 | `pnpm nx run openthrottle-developer:codegen-graphql`      | Generate GraphQL types and operations |
 | `pnpm nx run openthrottle-developer:codegen-react-router` | Generate React Router route types     |
+
+## Unit tests and route fixtures
+
+Vitest + [`app/testing/route-fixtures.tsx`](./app/testing/route-fixtures.tsx) replace Storybook for isolated routing UI. Prioritized modules for snapshots and interaction coverage are listed in **[docs/routing-modules-debug-harness.md](./docs/routing-modules-debug-harness.md)**.
 
 ## Prompts UI
 

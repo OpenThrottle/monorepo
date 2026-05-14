@@ -67,8 +67,13 @@ export function OpenThrottleClipboard(props: OpenThrottleClipboardProps) {
   // Life Cycle
   React.useEffect(() => {
     if (!copied) return undefined;
-    const t = window.setTimeout(() => setCopied(false), 2000);
-    return () => window.clearTimeout(t);
+    const t = window.setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(t);
+    };
   }, [copied]);
 
   // 🔌 Short Circuit

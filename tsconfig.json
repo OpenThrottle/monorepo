@@ -143,9 +143,6 @@
       "path": "./packages/nestjs-rbac"
     },
     {
-      "path": "./packages/docs-mcp"
-    },
-    {
       "path": "./packages/ai-mcp"
     },
     {
@@ -168,6 +165,18 @@
     },
     {
       "path": "./packages/openthrottle-agentic-workflow"
+    },
+    {
+      "path": "./packages/nestjs-agentic-workflow"
+    },
+    {
+      "path": "./packages/openthrottle-developer-codegen"
+    },
+    {
+      "path": "./packages/react-router-ui-global"
+    },
+    {
+      "path": "./packages/nestjs-logging"
     }
   ]
 }

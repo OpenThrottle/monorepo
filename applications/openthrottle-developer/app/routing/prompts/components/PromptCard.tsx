@@ -93,6 +93,10 @@ export const PromptCard = (props: PromptCardProps) => {
               {formatPromptDate(prompt.updatedAt)}
             </span>
           </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Detail page includes versioning and debug (fingerprints, JSON
+            snapshot).
+          </p>
         </CardContent>
       </Link>
     </Card>

@@ -17,9 +17,3 @@ pnpm add @openthrottle/nestjs-postgres
 ```bash
 npm install @openthrottle/nestjs-postgres
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-postgres
-```

@@ -48,12 +48,12 @@ export const QueueForm = (props: QueueFormProps) => {
           </p>
         ) : null}
 
-        <div className="flex gap-3">
-          <Button type="submit" variant="secondary">
-            Create queue
-          </Button>
+        <div className="flex gap-3 justify-end">
           <Button asChild={true} type="submit" variant="outline">
             <Link to="/queues">Cancel</Link>
+          </Button>
+          <Button type="submit" variant="secondary">
+            Create queue
           </Button>
         </div>
       </Form>

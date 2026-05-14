@@ -128,8 +128,9 @@ export interface ChildJobInput {
   /** Max Ralph iterations when not task-centric. Omitted uses Ralph default. */
   readonly iterations?: number;
   /**
-   * Execution backend (layer 2). Omitted uses workflow-ralph default (`cursor`).
-   * Passed as `--backend` when not the default.
+   * Execution backend (layer 2). One of {@link RalphExecutionBackendId} (`cursor` | `claude`); the
+   * same id applies to the entire nested run, not per iteration. Omitted uses workflow-ralph
+   * default (`cursor`). Passed as `--backend` when not the default.
    */
   readonly backend?: RalphExecutionBackendId;
   /**
@@ -172,6 +173,11 @@ export interface ChildJobInput {
    * and returns ChildProcessMetrics in the result. Defaults to enabled with 5s interval.
    */
   readonly childProcessMetrics?: ChildProcessMetricsOptions | false;
+  /**
+   * When set, nested `workflow-ralph` and parent-side Cortex checks use this URL (e.g. TypeORM `url`
+   * from openthrottle-server) so foreign `cwd` cannot desync Postgres identity from the API worker.
+   */
+  readonly canonicalCortexPostgresUrl?: string;
 }
 
 /** Successful result of the child job: branch and commit SHA for parent to validate before release. */

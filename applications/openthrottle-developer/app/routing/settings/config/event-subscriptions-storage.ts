@@ -74,6 +74,7 @@ export const getEventSubscriptionsFromStorage = (): Record<
       return defaults;
     }
     const parsed: unknown = JSON.parse(raw);
+
     return mergeEventSubscriptionPreferencesFromUnknown(parsed, defaults);
   } catch {
     return defaults;

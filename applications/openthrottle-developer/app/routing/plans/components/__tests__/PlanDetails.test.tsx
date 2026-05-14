@@ -1,24 +1,19 @@
 import * as React from 'react';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub, useSearchParams } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { createRoutesStub } from 'react-router';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { PlanDetails } from '../PlanDetails';
 import type { PlanDetailsProps } from '../PlanDetails';
-import type { PlanDetailsFragment } from '~/__generated__/graphql';
+import type {
+  PlanDetailIndexLoaderQuery,
+  PlanDetailsFragment,
+} from '~/__generated__/graphql';
 import {
-  WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
-  WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-} from '~/routing/plans/utils/workflow-run-options-search-param';
-
-/**
- * @description Renders current URLSearchParams for assertions (memory router does not update window.location).
- */
-const SearchParamsProbe = () => {
-  const [params] = useSearchParams();
-  return <span data-testid="search-params-probe">{params.toString()}</span>;
-};
+  getDefaultWorkflowRalphRunOptionsInput,
+  type WorkflowRalphRunOptionsInput,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 const mockPlan: PlanDetailsFragment = {
   __typename: 'PlanObject',
@@ -27,11 +22,11 @@ const mockPlan: PlanDetailsFragment = {
   category: 'feature',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Plan description',
-  id: 'plan-1',
-  projectId: 'proj-1',
+  id: '0c2720a9-920f-4b16-865a-f803eb444e18',
+  projectId: '11111111-1111-4111-8111-111111111111',
   projectRelation: {
     __typename: 'ProjectObject',
-    id: 'proj-1',
+    id: '11111111-1111-4111-8111-111111111111',
     name: 'Test Project',
   },
   status: 'IN_PROGRESS',
@@ -40,17 +35,37 @@ const mockPlan: PlanDetailsFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
+const defaultWorkflow: WorkflowRalphRunOptionsInput =
+  getDefaultWorkflowRalphRunOptionsInput({ planId: mockPlan.id });
+
+const defaultRecent: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'] =
+  [];
+
 describe('PlanDetails Component', () => {
   let component: RenderResult;
   let props: PlanDetailsProps;
 
   beforeEach(() => {
-    props = { plan: mockPlan };
+    props = {
+      plan: mockPlan,
+      ralphTuningJson: '',
+      recentPlanRuns: defaultRecent,
+      workflowInput: defaultWorkflow,
+      workflowTimeout: '',
+    };
 
-    const Component = () => <PlanDetails {...props} />;
+    const Component = () => (
+      <TooltipProvider>
+        <PlanDetails {...props} />
+      </TooltipProvider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub initialEntries={['/']} />);
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   test('should render plan shell and title', () => {
@@ -58,100 +73,19 @@ describe('PlanDetails Component', () => {
     expect(component.getByText('Test Plan')).toBeInTheDocument();
   });
 
-  test('should collapse workflow run options by default', () => {
+  test('should render workflow run transparency', () => {
     expect(
-      component.getByTestId('workflow-run-options-collapsed'),
+      component.getByTestId('PlanWorkflowRunTransparency'),
     ).toBeInTheDocument();
-    expect(
-      component.queryByTestId('PlanWorkflowConfig'),
-    ).not.toBeInTheDocument();
+    expect(component.getByRole('table')).toBeInTheDocument();
   });
 
-  test('should show full workflow run options when runOptions is expanded in the URL', () => {
-    const Component = () => <PlanDetails {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const expanded = render(
-      <RoutesStub
-        initialEntries={[
-          `/?${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
-        ]}
-      />,
+  test('should show canonical workflow-ralph CLI preview with plan id', () => {
+    const pre = component.getByTestId(
+      'PlanWorkflowRunTransparency-canonical-cli',
     );
-
-    expect(expanded.getByTestId('PlanWorkflowConfig')).toBeInTheDocument();
-    expect(expanded.getByTestId('workflow-run-plan-id-input')).toHaveValue(
-      'plan-1',
-    );
-  });
-
-  test('should add runOptions to the URL when expanding and remove it when collapsing', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const Component = () => (
-      <>
-        <SearchParamsProbe />
-        <PlanDetails {...props} />
-      </>
-    );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const r = render(<RoutesStub initialEntries={['/']} />);
-
-    expect(r.getByTestId('search-params-probe')).toHaveTextContent('');
-    await user.click(r.getByTestId('workflow-run-options-expand'));
-
-    await waitFor(() => {
-      expect(r.getByTestId('search-params-probe')).toHaveTextContent(
-        `${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
-      );
-    });
-    expect(r.getByTestId('PlanWorkflowConfig')).toBeInTheDocument();
-
-    await user.click(
-      r.getByRole('button', { name: 'Hide workflow run options' }),
-    );
-
-    await waitFor(() => {
-      expect(r.getByTestId('search-params-probe')).toHaveTextContent('');
-    });
-    expect(r.queryByTestId('PlanWorkflowConfig')).not.toBeInTheDocument();
-  });
-
-  test('should preserve other query params when toggling workflow run options', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const Component = () => (
-      <>
-        <SearchParamsProbe />
-        <PlanDetails {...props} />
-      </>
-    );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const r = render(<RoutesStub initialEntries={['/?view=board&keep=1']} />);
-
-    expect(r.getByTestId('search-params-probe')).toHaveTextContent(
-      'view=board&keep=1',
-    );
-
-    await user.click(r.getByTestId('workflow-run-options-expand'));
-
-    await waitFor(() => {
-      const raw = r.getByTestId('search-params-probe').textContent ?? '';
-      expect(raw).toContain('view=board');
-      expect(raw).toContain('keep=1');
-      expect(raw).toContain(
-        `${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
-      );
-    });
-
-    await user.click(
-      r.getByRole('button', { name: 'Hide workflow run options' }),
-    );
-
-    await waitFor(() => {
-      expect(r.getByTestId('search-params-probe')).toHaveTextContent(
-        'view=board&keep=1',
-      );
-    });
+    expect(pre).toHaveTextContent('pnpm exec workflow-ralph');
+    expect(pre).toHaveTextContent(mockPlan.id);
   });
 
   test('should show formatted metadata with labels', () => {
@@ -168,73 +102,30 @@ describe('PlanDetails Component', () => {
     expect(component.getByText('Plan summary')).toBeInTheDocument();
   });
 
-  test('should put tuning JSON on the run form when a workflow option differs from defaults', async () => {
+  test('passes ralphTuningJson through to the toolbar enqueue form', () => {
     cleanup();
-    const user = userEvent.setup();
-    const Component = () => <PlanDetails {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const r = render(
-      <RoutesStub
-        initialEntries={[
-          `/?${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
-        ]}
-      />,
+    const payload = JSON.stringify({ model: 'fast' });
+    const Component = () => (
+      <TooltipProvider>
+        <PlanDetails
+          plan={mockPlan}
+          ralphTuningJson={payload}
+          recentPlanRuns={defaultRecent}
+          workflowInput={defaultWorkflow}
+          workflowTimeout=""
+        />
+      </TooltipProvider>
     );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const r = render(<RoutesStub initialEntries={['/']} />);
 
-    const tuningNode = r
-      .getByTestId('PlanToolbar')
-      .querySelector('input[name="ralphTuning"]');
-    expect(tuningNode).toBeInstanceOf(HTMLInputElement);
-    if (!(tuningNode instanceof HTMLInputElement)) {
+    const el = r.container
+      .querySelector('[data-testid="PlanToolbar"]')
+      ?.querySelector('input[name="ralphTuning"]');
+    expect(el).toBeInstanceOf(HTMLInputElement);
+    if (!(el instanceof HTMLInputElement)) {
       throw new Error('expected ralphTuning hidden input');
     }
-    expect(tuningNode.value).toBe('');
-
-    const modelInput = r.getByLabelText('Cursor model for --model');
-    await user.clear(modelInput);
-    await user.type(modelInput, 'fast');
-
-    await waitFor(() => {
-      expect(tuningNode.value).toBe(JSON.stringify({ model: 'fast' }));
-    });
-  });
-
-  test('should clear tuning payload after Reset to defaults when options were changed', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const Component = () => <PlanDetails {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const r = render(
-      <RoutesStub
-        initialEntries={[
-          `/?${WORKFLOW_RUN_OPTIONS_SEARCH_PARAM}=${WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE}`,
-        ]}
-      />,
-    );
-
-    const tuningNode = r
-      .getByTestId('PlanToolbar')
-      .querySelector('input[name="ralphTuning"]');
-    expect(tuningNode).toBeInstanceOf(HTMLInputElement);
-    if (!(tuningNode instanceof HTMLInputElement)) {
-      throw new Error('expected ralphTuning hidden input');
-    }
-
-    const modelInput = r.getByLabelText('Cursor model for --model');
-    await user.clear(modelInput);
-    await user.type(modelInput, 'fast');
-
-    await waitFor(() => {
-      expect(tuningNode.value).toBe(JSON.stringify({ model: 'fast' }));
-    });
-
-    await user.click(r.getByTestId('workflow-run-options-reset'));
-
-    await waitFor(() => {
-      expect(tuningNode.value).toBe('');
-    });
-    expect(r.getByTestId('workflow-run-cli-preview')).not.toHaveTextContent(
-      '--model fast',
-    );
+    expect(el.value).toBe(payload);
   });
 });

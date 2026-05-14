@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { QueuesTable } from '../QueuesTable';
@@ -43,7 +44,10 @@ describe('QueuesTable Component', () => {
 
   test('should render empty state when no queues', () => {
     expect(component.getByTestId('QueuesTable')).toBeInTheDocument();
-    expect(component.getByText('No queues yet.')).toBeInTheDocument();
+    expect(component.getByTestId('OpenThrottleEmptyState')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 2, name: 'No queues' }),
+    ).toBeInTheDocument();
   });
 
   test('renders table with column headers when queues provided', () => {
@@ -55,25 +59,22 @@ describe('QueuesTable Component', () => {
     component.rerender(<RoutesStub />);
 
     expect(
-      component.getByRole('columnheader', { name: 'Name' }),
+      component.getByRole('columnheader', { name: /Queue/i }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'Waiting' }),
+      component.getByRole('columnheader', { name: /Backlog/i }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'Active' }),
+      component.getByRole('columnheader', { name: /In flight/i }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'Completed' }),
+      component.getByRole('columnheader', { name: /Completed/i }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'Delayed' }),
+      component.getByRole('columnheader', { name: /Failed/i }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'Failed' }),
-    ).toBeInTheDocument();
-    expect(
-      component.getByRole('columnheader', { name: 'Actions' }),
+      component.getByRole('columnheader', { name: /Actions/i }),
     ).toBeInTheDocument();
   });
 
@@ -94,10 +95,14 @@ describe('QueuesTable Component', () => {
     });
     expect(notificationsLink).toHaveAttribute('href', '/queues/notifications');
 
-    const viewLinks = component.getAllByRole('link', { name: /^View$/ });
-    expect(viewLinks).toHaveLength(2);
-    expect(viewLinks[0]).toHaveAttribute('href', '/queues/default');
-    expect(viewLinks[1]).toHaveAttribute('href', '/queues/notifications');
+    expect(
+      component.getByRole('link', { name: 'View queue details for default' }),
+    ).toHaveAttribute('href', '/queues/default');
+    expect(
+      component.getByRole('link', {
+        name: 'View queue details for notifications',
+      }),
+    ).toHaveAttribute('href', '/queues/notifications');
   });
 
   test('renders queue counts in table cells', () => {
@@ -108,20 +113,59 @@ describe('QueuesTable Component', () => {
     ]);
     component.rerender(<RoutesStub />);
 
-    expect(component.getByLabelText('5 waiting')).toBeInTheDocument();
-    expect(component.getByLabelText('2 active')).toBeInTheDocument();
+    expect(
+      component.getByLabelText('Backlog: 5 total (5 waiting, 0 delayed)'),
+    ).toBeInTheDocument();
+    expect(component.getByLabelText('2 in flight')).toBeInTheDocument();
     expect(component.getByLabelText('100 completed')).toBeInTheDocument();
     expect(component.getByLabelText('1 failed')).toBeInTheDocument();
   });
 
-  test('should render with queues snapshot', () => {
+  test('exposes accessible labels for zero-count backlog and failed', () => {
     props = { queues: mockQueues };
-
     const TableComponent = () => <QueuesTable {...props} />;
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);
-
     component.rerender(<RoutesStub />);
+
+    expect(
+      component.getByLabelText('Backlog: 0 total (0 waiting, 0 delayed)'),
+    ).toBeInTheDocument();
+    expect(component.getByLabelText('0 in flight')).toBeInTheDocument();
+    expect(component.getByLabelText('0 completed')).toBeInTheDocument();
+    expect(component.getByLabelText('0 failed')).toBeInTheDocument();
+  });
+
+  test('queue name links and View actions receive keyboard focus in row order', async () => {
+    props = { queues: mockQueues };
+    const TableComponent = () => <QueuesTable {...props} />;
+    const RoutesStub = createRoutesStub([
+      { Component: TableComponent, path: '/' },
+    ]);
+    component.rerender(<RoutesStub />);
+
+    const user = userEvent.setup();
+    const defaultName = component.getByRole('link', {
+      name: 'View queue: default',
+    });
+    const defaultView = component.getByRole('link', {
+      name: 'View queue details for default',
+    });
+    const notificationsName = component.getByRole('link', {
+      name: 'View queue: notifications',
+    });
+    const notificationsView = component.getByRole('link', {
+      name: 'View queue details for notifications',
+    });
+
+    await user.tab();
+    expect(defaultName).toHaveFocus();
+    await user.tab();
+    expect(defaultView).toHaveFocus();
+    await user.tab();
+    expect(notificationsName).toHaveFocus();
+    await user.tab();
+    expect(notificationsView).toHaveFocus();
   });
 });

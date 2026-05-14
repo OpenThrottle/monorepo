@@ -216,13 +216,13 @@ The `workspace:*` protocol tells pnpm to use the local workspace version.
 
 ```bash
 # Run tests for a specific project
-nx run <project-name>:test
+pnpm nx run <project-name>:test
 
 # Run tests for changed projects
-nx run <project-name>:test --changed
+pnpm nx run <project-name>:test --changed
 
 # Watch mode
-nx run <project-name>:test --watch
+pnpm nx run <project-name>:test --watch
 ```
 
 ### Test Coverage Expectations

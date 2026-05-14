@@ -11,6 +11,7 @@ import { Note } from './modules/notes/note.entity';
 import { Plan } from './modules/plans/plan.entity';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity';
+import { PlanRun } from './modules/plan-runs/plan-run.entity';
 import { Permission } from './modules/roles/permission.entity';
 import { Role } from './modules/roles/role.entity';
 import { Project } from './modules/projects/project.entity';
@@ -23,8 +24,9 @@ import { User } from './modules/users/user.entity';
 
 /**
  * @description Returns Cortex Postgres URL from POSTGRES_URL or POSTGRES_* env vars.
+ * Same resolution as TypeORM registration; use for nested `workflow-ralph` env so spawns match the server DataSource.
  */
-function getPostgresUrl(): string {
+export function getCortexPostgresUrl(): string {
   const url = process.env.POSTGRES_URL?.trim();
 
   if (url) return url;
@@ -62,6 +64,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Plan,
       PlanEmbedding,
       PlanOutputStreamChunk,
+      PlanRun,
       Project,
       Role,
       Subscription,
@@ -71,6 +74,6 @@ export function getTypeOrmOptions(): DataSourceOptions {
     ],
     logging: process.env.NODE_ENV === 'development',
     type: 'postgres',
-    url: getPostgresUrl(),
+    url: getCortexPostgresUrl(),
   };
 }

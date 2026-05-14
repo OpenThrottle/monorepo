@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PullRequestsEmpty Component > should render 1`] = `
+<body>
+  <div>
+    <p
+      class="text-muted-foreground mt-8 text-sm"
+    >
+      No pull requests match these filters. Try another repo or clear the author filter.
+    </p>
+  </div>
+</body>
+`;

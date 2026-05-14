@@ -17,8 +17,8 @@ This directory is the **single source of truth** for how we write code in this r
 
 ## Agent behavior
 
-- **Plans in OT only:** Plans and tasks MUST be created and managed in OpenThrottle via the OT MCP (mcp-developer; `create_plan`, `create_task`). Do **not** create plans in Markdown files or under `docs/`.
-- **Fail loudly when unavailable:** If the OT MCP is unavailable or plan/task creation fails, report the error clearly to the user. Do **not** silently fall back to writing a plan to a `.md` file or skipping. See `.cursor/rules/commands/cortex.mdc` and `.cursor/rules/commands/agents.mdc` for command-level rules.
+- **Plans in OT only:** Plans and tasks MUST be created and managed in OpenThrottle via the OT MCP (mcp-developer; `create_plan`, `create_task`). Do **not** create plans in Markdown files or under [docs](../../docs/).
+- **Fail loudly when unavailable:** If the OT MCP is unavailable or plan/task creation fails, report the error clearly to the user. Do **not** silently fall back to writing a plan to a `.md` file or skipping. See `.cursor/rules/commands/openthrottle.mdc` and `.cursor/rules/commands/agents.mdc` for command-level rules.
 - **Generators first:** Before writing new code, components, or services, check for and use `@tools/generators` generators. See [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md).
 
 ## How to use

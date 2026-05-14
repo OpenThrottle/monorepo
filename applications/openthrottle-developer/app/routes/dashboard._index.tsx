@@ -1,9 +1,12 @@
 import * as React from 'react';
-import { Button, Card, Input } from '@openthrottle/react-router-shadcn';
+import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
-import { useFetcher } from 'react-router';
+import { Link, useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   GetDashboardDocument,
   GetDashboardGithubStatsDocument,
@@ -11,14 +14,25 @@ import {
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
+import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
+import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
 import { DashboardQueueStats } from '~/routing/dashboard/components/DashboardQueueStats';
+import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
+import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
-import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Dashboard',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const end = new Date();
@@ -55,9 +69,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Dashboard | ${SITE_TITLE}` }];
@@ -88,44 +102,57 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
-        <OpenThrottleStatCard title="Total plans" value={12} />
-        <OpenThrottleStatCard title="Active tasks" value={3} />
-        <OpenThrottleStatCard title="Scheduled tasks" value={23} />
-      </div>
+    <GlobalScreen
+    // className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12"
+    >
+      <DashboardStats />
+      <DashboardIntroduction />
+      <DashboardToolbar />
 
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
+        className="gap-4 md:gap-8 lg:gap-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
         data-testid="dashboard-content-grid"
       >
         <div
-          className="col-span-1 flex min-w-0 flex-col gap-4 lg:gap-8"
+          className="gap-4 md:gap-8 lg:gap-12 col-span-1 flex min-w-0 flex-col"
           data-testid="dashboard-charts-column"
         >
-          <Card className="p-8 rounded-xl">
-            <h2 className="text-lg font-bold">Daily Stats</h2>
-            <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
-          </Card>
+          <DashboardQuickNavigation />
 
-          <Card className="p-4 lg:p-8">
-            <h3 className="text-lg font-bold">PR Time in State</h3>
+          <div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <h2>Daily Stats</h2>
+              <Button asChild={true} size="sm" variant="outline">
+                <Link
+                  preventScrollReset={true}
+                  to="/dashboard?modal=daily-stats"
+                  viewTransition={true}
+                >
+                  Expand chart details
+                </Link>
+              </Button>
+            </div>
+            <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
+          </div>
+
+          <div>
+            <h3>PR Time in State</h3>
             <DashboardPrTimeInStateCard
               prTimeInStateSummary={githubStats.prTimeInStateSummary}
             />
-          </Card>
+          </div>
 
           <DashboardQueueStats data={queues} />
 
-          <Card className="p-4 lg:p-8">
-            <h3 className="text-lg font-bold">Open PRs by Author</h3>
+          <div>
+            <h3>Open PRs by Author</h3>
             <DashboardOpenPrsByAuthorCard
               openPrCountByAuthor={githubStats.openPrCountByAuthor}
             />
-          </Card>
+          </div>
 
-          <Card className="p-4 lg:p-8">
-            <h3 className="text-lg font-bold mb-4">Development</h3>
+          <div>
+            <h3 className="text-lg mb-4">Development</h3>
             <p className="text-muted-foreground text-sm mb-4">
               Trigger a test websocket notification to verify the notification
               flow end-to-end. Check the notification bell for the alert.
@@ -153,7 +180,7 @@ export default function Component(
                   : devMessage.error}
               </p>
             )}
-          </Card>
+          </div>
           <div className="flex-1" />
         </div>
 
@@ -166,7 +193,7 @@ export default function Component(
       </div>
 
       <DashboardDailyStatsModal />
-    </main>
+    </GlobalScreen>
   );
 }
 

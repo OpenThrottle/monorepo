@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanNotFound } from '../PlanNotFound';
 import type { PlanNotFoundProps } from '../PlanNotFound';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('PlanNotFound Component', () => {
   let component: RenderResult;
@@ -13,10 +12,7 @@ describe('PlanNotFound Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanNotFound {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderRoutesStub(<PlanNotFound {...props} />);
   });
 
   test('should render', () => {

@@ -16,7 +16,7 @@ This package makes use of the `bin` folder and package.json conventions to allow
 
 ### Bins
 
-- `workflow-link-merge` — link the squash commit (after PR merge) to an OpenThrottle (OT) plan; run with `--plan <uuid> --sha <squash-sha> --repo <owner/repo>` (Option A: no pre-merge linking). See **Commit links (Option A workflow)** in `databases/cortex/README.md` for when to link and how activity tools use `commit_links`.
+- `workflow-link-merge` — link the squash commit (after PR merge) to an OpenThrottle (OT) plan; run with `--plan <uuid> --sha <squash-sha> --repo <owner/repo>` (Option A: no pre-merge linking). See **Commit links (Option A workflow)** in `databases/README.md` for when to link and how activity tools use `commit_links`.
 - A future `workflow-commit` script could optionally standardize commits after task completion (conventional message + Plan-Id/Task-Id footer); for now use `/github/commit` or manual `git add` / `git commit` with the footer.
 - `workflow-ralph` — agentic Ralph workflow (plan execution; OT plan/task UUID only). **Typed orchestrator (GraphQL + injected runner):** `@openthrottle/openthrottle-workflows` exports **`createWorkflowRalphOrchestrator`** for the same pipeline without binding to this CLI’s subprocess; see that package’s README. **Debug / hangs:** enable the shim logger via `WORKFLOW_RALPH_DEBUG=1` or `--debug` (see [Debugging Ralph (shim logger)](#debugging-ralph-shim-logger)). **Prompt + run tuning defaults:** optional `.workflow-ralph.json` in the cwd and `WORKFLOW_RALPH_*` env vars (`WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_PROMPT_FILE`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`, `WORKFLOW_RALPH_BACKEND`); precedence is CLI > env > file > built-ins. **Prompt text:** use `--prompt` (command-style, default `/agents/ralph`), or `--prompt-file <path>` / `--prompt-stdin` for UTF-8 body (see `pnpm exec workflow-ralph --help`). Full flags and env are in `--help`.
 - `workflow-nx-validate` — Nx validation.
@@ -55,18 +55,19 @@ Optional follow-up: call `getServerHealth` before other workflow GraphQL for ric
 
 - **Test run:** Plan `11290613-8484-44fe-853a-d9bec535d9a9` (Test #2) completed via Ralph; task `b3466d60-45db-45d0-804c-51f69a5a03ae` closed. Plan `d3f01693-7fa1-4c0f-a619-970d982214c5` (Test #6) completed via Ralph; task `171c3dab-58a9-4104-8916-2893d56fa869` closed. Plan `f3408cc7-5ee6-47f2-8db5-d2dd3ccbe4c8` (Test #7) completed via Ralph; task `e3c4ffa7-c44c-4179-9b6b-ec3e923d9dbd` closed. Plan `32d1a4f1-4b40-4032-8178-f8fd39363b65` (Test #10) completed via Ralph; task `987a9f11-ab24-4eb2-8b52-152a8937c13f` closed. Plan `5efeca89-f57c-43d9-b13a-e2486e46e40c` (Test #13) completed via Ralph; task `4f47a9a9-6cca-483d-8a77-d34829007bbd` closed.
 - **Task status updates (plan-centric):** When running with `--plan` only (no `--task`), Ralph fetches tasks each iteration, picks the first IN_PROGRESS or first PENDING task, sets it to IN_PROGRESS, and injects into the prompt the current task UUID and: "When you complete it output `<ralph:task-complete>uuid</ralph:task-complete>` so the CLI can mark it completed." When the agent outputs that signal, Ralph marks the task COMPLETED in Cortex. If the agent outputs `<promise>COMPLETE</promise>` but omits the tag, Ralph marks the current iteration's task COMPLETED so Cortex stays in sync.
-- **Commit as you go:** After each task (or logical chunk), commit and push with conventional commits; include `Plan-Id` and `Task-Id` in the commit body or footer. Do **not** link those commits in Cortex; link only the squash commit after PR merge via `workflow-link-merge` (see **Commit links** in `databases/cortex/README.md`).
-- **Design:** `docs/workflows/ralph-design.md`. **Runtime config (agents, limits, prompts):** `docs/workflows/ralph-workflow-runtime-config.md`. PRD attribute mapping (required / inferred / optional): `databases/cortex/README.md`. **Cross-repo:** See **Cross-repo usage** below.
+- **Commit as you go:** After each task (or logical chunk), commit and push with conventional commits; include `Plan-Id` and `Task-Id` in the commit body or footer. Do **not** link those commits in Cortex; link only the squash commit after PR merge via `workflow-link-merge` (see **Commit links** in `databases/README.md`).
+- **Design:** `docs/workflows/ralph-design.md`. **Runtime config (agents, limits, prompts):** `docs/workflows/ralph-workflow-runtime-config.md`. PRD attribute mapping (required / inferred / optional): `databases/README.md`. **Cross-repo:** See **Cross-repo usage** below.
 
 ### Execution backend (layer 2)
 
 Ralph selects **one** runner implementation per process via `--backend` (default `cursor`), or `WORKFLOW_RALPH_BACKEND` / optional `backend` in `.workflow-ralph.json`, with the same precedence as other defaults (CLI > env > file > built-in). The binary stays `workflow-ralph`; additional backends are implemented behind this switch in `src/bin/run-iteration.ts`, not as separate executables.
 
-| Backend id | Runner                                                                    | Layer 1 (prompt profile)                                                                                                                                                                                                                                                                                    |
-| ---------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cursor`   | Cursor CLI `cursor-agent --force -p "<full prompt>"` (optional `--model`) | **Named:** command-style path (e.g. `/agents/ralph`) as the start of the injected prompt string. **File / stdin:** `--prompt-file` / `--prompt-stdin` supply the same string shape (full text before plan/task injection); use a file path to reference `.cursor/commands/...` without duplicating content. |
+| Backend id | Runner                                                                                                                                                                                    | Layer 1 (prompt profile)                                                                                                                                                                                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cursor`   | Cursor CLI `cursor-agent --force -p "<full prompt>"` (optional `--model`)                                                                                                                 | **Named:** command-style path (e.g. `/agents/ralph`) as the start of the injected prompt string. **File / stdin:** `--prompt-file` / `--prompt-stdin` supply the same string shape (full text before plan/task injection); use a file path to reference `.cursor/commands/...` without duplicating content. |
+| `claude`   | Claude Code CLI `claude --bare --permission-mode acceptEdits -p "<full prompt>"` (optional `--model`; omit when preset is `auto`). Requires `claude` on PATH and auth per Anthropic docs. | Same injected prompt string as `cursor`; layer 1 resolution is unchanged.                                                                                                                                                                                                                                   |
 
-Other backends are not implemented yet; unknown `--backend` values fail at config parse time with a clear error. Nested runs (`runChildJob`, worktrees) forward `--backend` when it differs from the default so automated runs match manual CLI behavior.
+Unknown `--backend` values fail at config parse time with a clear error. Nested runs (`runChildJob`, worktrees) forward `--backend` when it differs from the default so automated runs match manual CLI behavior.
 
 **Embedded orchestrator (BullMQ / in-process):** Import **`createCursorWorkflowRalphIterationRunner`** from `@tools/workflows` to build a `WorkflowRalphIterationRunner`-compatible object for `createWorkflowRalphOrchestrator` (`@openthrottle/openthrottle-workflows`). It wraps **`runIterationAsync`** with the same field mapping as the plans queue worker; optional **`onChunk`** and **`appendPlanOutput`** (per-chunk text + iteration) forward stdout/stderr for logs or OpenThrottle `append_plan_output` while the resolved promise remains the full iteration string. See `src/utils/cursor-workflow-ralph-iteration-runner.ts`.
 
@@ -103,7 +104,7 @@ When Ralph seems stuck (for example while waiting for agent output), turn on the
 - `[workflow-ralph:debug]` — every shim line starts with this (stderr).
 - `[workflow-ralph:debug] [verbose] …` — extra-noisy path (stream chunks, etc.); only when level is `verbose`.
 
-Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger.ts). Instrumentation uses the global `ralphDebugLogger` in the Ralph entry flow, [`run-iteration`](src/bin/run-iteration.ts) (cursor-agent spawn/stream), [`child-job`](src/utils/child-job.ts) (nested `workflow-ralph`), [`cortex-ralph`](src/utils/cortex-ralph.ts), and parsers (`parseRalphResponse`, complete-task parsing).
+Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger.ts). Instrumentation uses the global `ralphDebugLogger` in the Ralph entry flow, [`run-iteration`](src/bin/run-iteration.ts) (cursor-agent / Claude Code spawn and stream), [`child-job`](src/utils/child-job.ts) (nested `workflow-ralph`), [`cortex-ralph`](src/utils/cortex-ralph.ts), and parsers (`parseRalphResponse`, complete-task parsing).
 
 **Reporting a hang**
 
@@ -118,9 +119,117 @@ Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger
 
 Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `POSTGRES_URL` or `POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details.
 
+### Multi-workspace plans (`workingDirectory`)
+
+Run plans against arbitrary local project folders instead of the monorepo root. This lets you trigger Ralph from the Developer app UI against any local checkout (e.g. `~/Development/openthrottle`).
+
+**How it works:**
+
+1. An optional `workingDirectory` field (absolute path) is accepted by the GraphQL `enqueuePlanRun` and `enqueuePlanRalphOrchestrator` mutations via `EnqueuePlanRunInput` and `EnqueuePlanRalphOrchestratorInput`.
+2. The value flows through `buildRunPlanJobData` / `buildRunPlanOrchestratorJobData` into the BullMQ job payload (`RunPlanSpawnJobData.workingDirectory` / `RunPlanOrchestratorJobData.workingDirectory`).
+3. The plans queue worker (`PlansProcessor`) uses `workingDirectory` as the `cwd` when spawning `pnpm exec workflow-ralph` (spawn path, `processInProcessCwd`). When omitted, the worker falls back to `WORKSPACE_ROOT` or `process.cwd()` (monorepo root).
+4. The Developer app UI provides a **Workspace directory** input (`PlanWorkflowConfigWorkspace`) on the plan detail page, with client-side validation and a recent-paths list persisted in `localStorage`.
+
+**Validation (server-side, authoritative):**
+
+- Must be an absolute path
+- Must exist on the filesystem and be a directory
+- Max length: 4096 characters
+- Optional allowlist via `OPENTHROTTLE_ALLOWED_WORKING_DIRS` env var (comma-separated absolute path prefixes); when set, `workingDirectory` must start with one of the listed prefixes
+
+Validation runs at enqueue time in `validateWorkingDirectory` (`enqueue-plan-ralph-tuning.ts`). Invalid paths produce a `BadRequestException` visible in the Developer app.
+
+**Validation (client-side, advisory):**
+
+- Must start with `/` (absolute)
+- Max 4096 characters
+- No null bytes
+
+Client-side checks are in `validateWorkspacePathClient` (`workspace-path.ts`). They provide immediate feedback but are not authoritative.
+
+**Environment variable:**
+
+| Variable                            | Purpose                                                                                                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENTHROTTLE_ALLOWED_WORKING_DIRS` | Comma-separated absolute path prefixes. When set, only directories under these prefixes are accepted. Unset = any existing directory (local-only trust boundary). |
+
+**Default behavior (backward compatible):** When `workingDirectory` is omitted or empty, all paths behave exactly as before — worker uses `WORKSPACE_ROOT` or `process.cwd()`.
+
+**Local-only constraint:** `workingDirectory` is resolved on the same machine running `openthrottle-server`. This feature assumes a local-only deployment where the API server, worker, and project directories share a filesystem. Containerized or remote deployments would need bind mounts or volume mapping (tracked under plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`).
+
+**Recent paths (Developer app):** The UI stores up to 10 recently used workspace paths in `localStorage` (key: `openthrottle:recent-workspace-paths`). A popover on the workspace input lets users pick from or remove recent entries. Paths are added to the MRU list after a successful enqueue.
+
+**Cortex DB identity (fixes “Plan not found” with a foreign cwd):** The worker resolves the same Cortex connection string it uses for OpenThrottle and passes it into the nested process as **`OPENTHROTTLE_CORTEX_POSTGRES_URL`** and **`POSTGRES_URL`**. `getPostgresConfig()` prefers `OPENTHROTTLE_CORTEX_POSTGRES_URL` first, so tooling in another repo (env loaders, `pnpm`, or a local `.env`) cannot point Ralph at a different Postgres than the worker. You normally do not set these manually.
+
+**Diagnostics (compare worker vs nested CLI):** Nested `workflow-ralph` does **not** load `.env` from `workingDirectory`. Plan lookup is **Postgres** (`getPostgresConfig` in `@openthrottle/ai-mcp`), not `API_URL_INTERNAL` / GraphQL. To verify identity when debugging “Plan not found” with a custom cwd:
+
+1. Set **`WORKFLOW_RALPH_OT_DIAGNOSTICS=1`** when running `workflow-ralph` (locally or via worker): one stderr JSON line is emitted before plan fetch — includes `cwd`, sanitized `postgresIdentity`, plan id, and booleans for `API_URL_*` / `POSTGRES_*` presence (no secrets).
+2. Set **`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1`** on **openthrottle-server** (worker): the plans processor logs one line before spawn with `spawnCwd`, `jobId`, `planId`, worker `postgresIdentity`, and the same env-presence booleans.
+
+Compare **worker** vs **nested** `postgresIdentity` and confirm they match the database where the plan row exists. If `pnpm exec workflow-ralph` resolves to a different install when `spawnCwd` is another repo, fix the spawn command or ensure that repo’s toolchain still invokes this monorepo’s binary (see “Cross-repo usage” above).
+
+**Manual E2E (Developer app + spawn queue):** With `openthrottle-server`, the BullMQ plans worker, Redis, and Cortex DB running from the same `.env` as usual, open a plan in the Developer app, set **Workspace directory** to an absolute path on this machine (must exist; optional `OPENTHROTTLE_ALLOWED_WORKING_DIRS` must allow it), and enqueue **Run plan** (spawn). The job should not fail immediately with Ralph’s fatal `Plan not found` when the plan id exists in Cortex—nested `workflow-ralph` receives the worker’s `POSTGRES_URL` / `OPENTHROTTLE_CORTEX_POSTGRES_URL` override regardless of cwd. Success still depends on `pnpm` resolving `workflow-ralph` (this monorepo’s package) from that directory; if the foreign tree has no workspace link to `@tools/workflows`, install or invoke per **Cross-repo usage**. For scripted checks, `pnpm nx run openthrottle-server:test` includes processor tests that assert foreign `cwd` plus canonical Postgres injection.
+
+**Example — enqueue via GraphQL:**
+
+```graphql
+mutation {
+  enqueuePlanRun(
+    input: {
+      planId: "77cb14a0-5eb0-4061-87ea-d618b85e8818"
+      workingDirectory: "~/Development/openthrottle"
+    }
+  ) {
+    jobId
+    planId
+    queuePosition
+  }
+}
+```
+
+**Example — Developer app UI:**
+
+On the plan detail page, expand the **Workflow configuration** card. The **Workspace directory** fieldset accepts an absolute path. Leave empty for monorepo root. The path is validated server-side on enqueue; client-side validation provides immediate feedback for obviously invalid paths.
+
 ## Worktree + BullMQ workflow (fan-out/fan-in)
 
-**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). The legacy in-process cwd path uses the same argv builder for `job.data.ralph`.
+Ralph-related execution splits into **three surfaces** (same Cortex plan/task semantics; different host process):
+
+| Surface                        | What runs                                                                                                                                                                                                          | Typical trigger                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| **Local CLI**                  | `pnpm exec workflow-ralph` — **one** runner subprocess per iteration (`cursor-agent` or Claude Code CLI per `--backend`); Cortex via **this process** `POSTGRES_*`                                                 | Developer terminal, scripts, cross-repo invoke                                            |
+| **Plans queue — spawn**        | Nested `pnpm exec workflow-ralph --plan <planId>` inside the worker (`runChildJob`), optionally inside an acquired worktree when `WORKTREE_TARGETS` is set                                                         | GraphQL **`enqueuePlanRun`** → job payload `runKind: 'spawn'` or omit `runKind` (default) |
+| **Plans queue — orchestrator** | **No** nested `workflow-ralph` child: in-process **`createWorkflowRalphOrchestrator`** (server uses `@openthrottle/openthrottle-agentic-ralph`; same logical loop as CLI with injected GraphQL + iteration runner) | GraphQL **`enqueuePlanRalphOrchestrator`** → job payload `runKind: 'orchestrator'`        |
+
+Implementation notes: discriminant and argv/context mapping are documented in `applications/openthrottle-server/src/queues/plans/plans.types.ts` (`RunPlanJobData`, `runKind`). The typed orchestrator package (`@openthrottle/openthrottle-workflows`) remains the portable contract; the API worker wires deps via `@openthrottle/openthrottle-agentic-ralph` (`AgenticRalphOrchestratorService`, `plans.processor.ts`).
+
+**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` (spawn path) resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). Spawn jobs map `job.data.ralph` with `buildWorkflowRalphRunTuningArgv`; orchestrator jobs map it with `buildRalphFlowContextFromPlanRunTuning` (see `plans.types.ts`).
+
+**Deferred (Docker / compose / paths):** Open items such as **`WORKSPACE_ROOT`** when the API is not started from the repo root, compose-side worker layout, and host-specific path assumptions are tracked for investigation under OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** — not finalized in this document.
+
+### Containers, PATH, and execution backends (BYO)
+
+Official Docker images for this repo (**`Dockerfile.NestJS`**, **`Dockerfile.ReactRouter`**, root **`docker-compose.yml`**) **do not bundle** the Cursor CLI (`cursor-agent`) or Anthropic’s Claude Code CLI (`claude`). Plan-queue workers that spawn `pnpm exec workflow-ralph` expect those binaries on **`PATH`** in the environment where the worker runs (typically the **host** or a custom image that installs them). **Bring-your-own (BYO)** is the supported stance: install the CLI you need, authenticate per vendor docs (Cursor login / Claude Code API or subscription as applicable), and ensure the worker `cwd` can resolve `pnpm` and `@tools/workflows`.
+
+- **Exclusive backend per plan run:** The same `cursor` or `claude` id applies to every iteration and is forwarded from GraphQL enqueue (`ralph` / plan-run tuning) into nested argv when set; see `RunPlanJobData` and `buildWorkflowRalphRunTuningArgv`.
+- **Choosing Claude in automation:** Prefer enqueue-time or env defaults in the worktree (`WORKFLOW_RALPH_BACKEND=claude` or `.workflow-ralph.json`) so headless workers do not require interactive Cursor.
+- **Compose:** Services in `docker-compose.yml` are API, Postgres, Redis, and UI — not a full “Ralph runner” appliance. Running Ralph **inside** a minimal container without BYO CLIs will fail at spawn unless you extend the image or mount a host toolchain.
+
+#### Claude Code: “Please run /login” (workers vs interactive terminal)
+
+That message comes from **Anthropic’s Claude Code CLI** (`claude`), not from this repo. The nested process does not see valid Claude Code auth for **that** OS user and environment.
+
+- **Why it happens:** Interactive login in your own terminal stores OAuth/session data for **your** user and `HOME`. A BullMQ worker, Docker service, or `nx`/launchd job often runs as **another user**, with a **different `HOME`**, or inside a container **without** those files—so `claude --bare -p …` exits unauthenticated even though you logged in elsewhere.
+- **What OpenThrottle passes through:** `runChildJob` spawns `pnpm exec workflow-ralph` with `buildWorkflowRalphSpawnEnv` (`@openthrottle/ai-mcp`), which merges **Cortex Postgres** (`POSTGRES_URL` / `OPENTHROTTLE_CORTEX_POSTGRES_URL`) and otherwise forwards the worker’s `process.env`. It does **not** inject Claude credentials; you must configure them for the worker process.
+- **Optional spawn identity (Docker / different worker user):** On the **openthrottle-server** worker process, set **`WORKFLOW_RALPH_SPAWN_HOME`** to an absolute path that should become the nested child’s `HOME` (for example a directory in the container where you bind-mounted the host’s Claude Code config, or a shared volume that already contains a successful `claude` login tree). Set **`WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME`** when you need the child’s `XDG_CONFIG_HOME` to point at a separate config root. These are merged in `buildWorkflowRalphSpawnEnv` after the Cortex URL overrides. Diagnostics (`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1`) report `spawnHomeOverrideSet` / `spawnXdgConfigHomeOverrideSet` without printing the paths.
+- **What to do:** (1) Complete Claude Code login **as the same UNIX user** that runs the worker, on the **same machine** where jobs run (or mount/copy the credential paths Claude Code documents into that environment). (2) If your install supports headless/API access, set **`ANTHROPIC_API_KEY`** (and any vars Claude Code documents) on the worker—common for CI/Docker. (3) When the worker cannot share your interactive `HOME`, use **`WORKFLOW_RALPH_SPAWN_HOME`** (and mounts) or API-key auth so the nested CLI sees credentials. (4) Confirm as that user: `pnpm exec workflow-ralph --plan <uuid> --backend claude --iterations 1` with `WORKFLOW_RALPH_DEBUG=1`; fix auth until that succeeds before relying on the queue.
+
+**Verification (queue-driven Claude, same host as worker)**
+
+1. Set **`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS=1`** on **openthrottle-server** and enqueue a plan run whose tuning uses **`claude`** (`executionBackend` / `WORKFLOW_RALPH_BACKEND`).
+2. Before spawn, the worker logs one JSON line (`[plans-spawn:ot-diagnostics]`). Check **`home`**, **`unixUser`**, and **`workerEffectiveUnixUid`** match the account where interactive `claude` login succeeded (or align users/mounts until they do).
+3. Check **`envPresence.anthropicApiKeySet`** when using API-key auth; if false, the nested CLI cannot authenticate headlessly—export the key for the worker process or switch auth mechanism per Anthropic docs.
+4. Optionally set **`WORKFLOW_RALPH_OT_DIAGNOSTICS=1`** for nested **`workflow-ralph`** stderr (same plan fetch path): compare **`home`** / **`unixUser`** there with the worker line to confirm the child inherited the same identity.
 
 A reusable workflow composes worktree allocation, a pluggable loop, and commit guarantees so you can run any loop (e.g. Ralph) with:
 

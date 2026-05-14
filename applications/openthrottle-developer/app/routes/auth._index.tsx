@@ -5,7 +5,8 @@ import {
 } from '@openthrottle/react-router-ui';
 import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 import { redirect } from 'react-router';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
 
@@ -20,6 +21,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta = (_args: Route.MetaArgs) => {
@@ -49,7 +54,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <div
+    <GlobalScreen
       className="mx-auto flex-1 max-w-xl w-full flex flex-col justify-center p-4 md:p-8 lg:p-12"
       onClick={onIncrementCount}
     >
@@ -59,12 +64,12 @@ export default function Component(
           <OpenThrottleAuthForm action="/" title="Sign in" />
         ) : null}
       </div>
-    </div>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

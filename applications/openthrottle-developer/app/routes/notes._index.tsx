@@ -1,13 +1,27 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { Link } from 'react-router';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { NotebookTextIcon } from 'lucide-react';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GetNotesDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
 import { SITE_TITLE } from '~/global/config/settings';
+import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/notes._index';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Notes',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { notes } = await executeGraphqlWithAuth(
@@ -18,9 +32,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { notes };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Notes | ${SITE_TITLE}` }];
@@ -45,14 +59,31 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl my-4 text-highlight">Notes</h1>
-        <Button asChild={true} size="sm">
-          <Link to="/notes/create" viewTransition={true}>
-            Create Note
-          </Link>
-        </Button>
+    <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={NotebookTextIcon}
+          title="Notes"
+        />
+        <p className="text-sm text-muted-foreground">
+          Notes are a collection of unstructured thoughts and ideas.
+        </p>
+      </div>
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <WorkspaceEntityCrossLinks
+          className="min-w-0"
+          label="Workspace shortcuts from notes"
+        />
+        <div className="flex shrink-0 items-center justify-end">
+          <Button asChild={true} size="sm" variant="outline">
+            <Link to="/notes/create" viewTransition={true}>
+              Create Note
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
@@ -60,12 +91,12 @@ export default function Component(
           <NoteCard key={note.id} note={note} />
         ))}
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

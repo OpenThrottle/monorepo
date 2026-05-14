@@ -26,6 +26,7 @@ import {
   updateTaskStatus,
   RALPH_WORKFLOW_FATAL_PREFIX,
 } from '../utils/cortex-ralph';
+import { logWorkflowRalphOtDiagnostics } from '../utils/ot-diagnostics';
 import { ARTWORK_THANK_YOU } from '../config/index';
 import {
   runIteration,
@@ -66,6 +67,16 @@ export const main = async (): Promise<void> => {
     process.exit(1);
   }
 
+  const { iterations, plan, prompt, task } = parsedArgs;
+
+  /**
+   * Resolve Cortex from env before any NX project-graph work: `createProjectGraphAsync()` runs with
+   * `cwd` (e.g. foreign `workingDirectory`) and may load that repo's `.env`, overwriting `POSTGRES_URL`
+   * and causing false "Plan not found" against the wrong database.
+   */
+  const cortexConfig = getCortexConfigOrExit();
+  await ensureDatabaseReachableOrExit(cortexConfig);
+
   if (parsedArgs.project) {
     const allowed = await getNxProjectNames();
     if (!allowed.includes(parsedArgs.project)) {
@@ -76,11 +87,6 @@ export const main = async (): Promise<void> => {
     }
   }
 
-  const { iterations, plan, prompt, task } = parsedArgs;
-
-  const cortexConfig = getCortexConfigOrExit();
-  await ensureDatabaseReachableOrExit(cortexConfig);
-
   let effectivePlanId: string = plan ?? '';
   if (task && !plan) {
     const taskRow = await getTaskById(cortexConfig, task);
@@ -90,6 +96,11 @@ export const main = async (): Promise<void> => {
     }
     effectivePlanId = taskRow.planId;
   }
+
+  logWorkflowRalphOtDiagnostics({
+    connectionString: cortexConfig.connectionString,
+    planId: effectivePlanId,
+  });
 
   const [planRow, tasksRows] = await Promise.all([
     getPlanById(cortexConfig, effectivePlanId),

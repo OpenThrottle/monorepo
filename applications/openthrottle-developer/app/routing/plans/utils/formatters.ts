@@ -77,7 +77,8 @@ export function formatPlanDate(value: string | number | unknown): string {
   const isNumber = typeof value === 'number';
   const date = isNumber ? new Date(value) : new Date(String(value));
 
-  return Number.isNaN(date.getTime())
-    ? '—'
-    : format(date, 'MMM d, yyyy h:mm a');
+  return date.toLocaleString('en-US', { timeZone: 'America/New_York' });
+  // return Number.isNaN(date.getTime())
+  // ? '—'
+  // : format(date, 'MMM d, yyyy h:mm a', {});
 }

@@ -9,6 +9,10 @@ export default createVitestConfigJsdom({
     resolve: {
       alias: {
         '@': path.resolve(getDirname(import.meta.url), './src'),
+        '@openthrottle/react-router-shadcn': path.resolve(
+          getDirname(import.meta.url),
+          './src/index.ts',
+        ),
       },
     },
   },

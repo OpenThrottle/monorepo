@@ -13,7 +13,11 @@ describe('PlanWorkflowConfigPrompt Component', () => {
   beforeEach(() => {
     props = {
       onPromptChange: vi.fn(),
+      onPromptFileChange: vi.fn(),
+      onPromptLayerChange: vi.fn(),
       prompt: '',
+      promptFile: '',
+      promptLayer: 'named',
     };
   });
 
@@ -42,7 +46,14 @@ describe('PlanWorkflowConfigPrompt Component', () => {
   test('should call onPromptChange when prompt input changes', async () => {
     const user = userEvent.setup();
     const onPromptChange = vi.fn();
-    props = { onPromptChange, prompt: '' };
+    props = {
+      onPromptChange,
+      onPromptFileChange: vi.fn(),
+      onPromptLayerChange: vi.fn(),
+      prompt: '',
+      promptFile: '',
+      promptLayer: 'named',
+    };
 
     const Component = () => <PlanWorkflowConfigPrompt {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -60,7 +71,14 @@ describe('PlanWorkflowConfigPrompt Component', () => {
   });
 
   test('should show placeholder from DEFAULT_RALPH_PROMPT when prompt is empty', () => {
-    props = { onPromptChange: vi.fn(), prompt: '' };
+    props = {
+      onPromptChange: vi.fn(),
+      onPromptFileChange: vi.fn(),
+      onPromptLayerChange: vi.fn(),
+      prompt: '',
+      promptFile: '',
+      promptLayer: 'named',
+    };
 
     const Component = () => <PlanWorkflowConfigPrompt {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -70,5 +88,23 @@ describe('PlanWorkflowConfigPrompt Component', () => {
       'placeholder',
       DEFAULT_RALPH_PROMPT,
     );
+  });
+
+  test('should show --prompt-file input when promptLayer is file', () => {
+    props = {
+      onPromptChange: vi.fn(),
+      onPromptFileChange: vi.fn(),
+      onPromptLayerChange: vi.fn(),
+      prompt: DEFAULT_RALPH_PROMPT,
+      promptFile: '',
+      promptLayer: 'file',
+    };
+
+    const Component = () => <PlanWorkflowConfigPrompt {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const { getByLabelText, queryByLabelText } = render(<RoutesStub />);
+
+    expect(queryByLabelText('Prompt profile for --prompt')).toBeNull();
+    expect(getByLabelText('Path for --prompt-file')).toBeInTheDocument();
   });
 });

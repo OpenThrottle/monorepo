@@ -2,11 +2,30 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { CreateQueueDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { QueueForm } from '~/routing/queues/components/QueueForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.create';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [{ children: 'Queues', to: '/queues' }],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create queue | ${SITE_TITLE}` }];
@@ -17,13 +36,22 @@ export default function Component(
 ): React.ReactElement {
   const { actionData, loaderData: _l, matches: _m, params: _p } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">Create queue</h1>
-        <QueueForm actionData={actionData} />
-      </div>
-    </main>
+    <GlobalScreen>
+      <QueueForm actionData={actionData} />
+    </GlobalScreen>
   );
 }
 

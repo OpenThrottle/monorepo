@@ -129,9 +129,11 @@
       "type:package"
     ],
     "targets": {
+      "_____________________PROJECT_SPECIFIC_____________________": {},
       "build": {
+        "executor": "nx:noop",
         "dependsOn": [
-          "project:build"
+          "codegen-graphql"
         ]
       },
       "codegen-graphql": {},
@@ -145,9 +147,6 @@
         }
       },
       "lint": {},
-      "test": {},
-      "typecheck": {},
-      "_____________________PROJECT_SPECIFIC_____________________": {},
       "project:build": {
         "dependsOn": [
           "project:typescript"
@@ -170,7 +169,10 @@
       },
       "project:typescript": {
         "executor": "@nx/js:tsc"
-      }
+      },
+      "test": {},
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "private": true,
@@ -178,7 +180,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts",

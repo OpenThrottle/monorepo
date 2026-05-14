@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DashboardToolbar Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="DashboardToolbar"
+    >
+      <h2>
+        DashboardToolbar
+      </h2>
+    </div>
+  </div>
+</body>
+`;

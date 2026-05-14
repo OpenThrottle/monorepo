@@ -3,10 +3,8 @@ import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import {
-  NotificationsStoreProvider,
-  useNotificationsStore,
-} from '../notifications-store.context';
+import { NotificationsStoreProvider } from '../../components/NotificationsStoreProvider';
+import { useNotificationsStore } from '../../hooks/useNotificationsStore';
 
 const systemAlertPayload = {
   message: 'Test alert',

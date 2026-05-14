@@ -1,7 +1,6 @@
-import type { EslintFlatConfig } from '@tools/dotfiles';
 import { eslintConfig } from '@tools/dotfiles';
 
-const eslintRootConfig = [
+export default [
   {
     ignores: [
       '!**/*',
@@ -10,7 +9,13 @@ const eslintRootConfig = [
       'skills/**/*',
     ],
   },
-  ...eslintConfig,
-] as EslintFlatConfig[];
 
-export default eslintRootConfig;
+  ...eslintConfig,
+
+  {
+    rules: {
+      // FIXME: Swap out eventually
+      '@typescript-eslint/consistent-type-assertions': 'off',
+    },
+  },
+];

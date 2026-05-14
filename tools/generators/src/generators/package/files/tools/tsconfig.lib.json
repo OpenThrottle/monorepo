@@ -4,12 +4,24 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "rootDir": "./",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
   "references": [
     {
-      "path": "../../../../../../dotfiles/tsconfig.lib.json"
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "tests/**"
   ]
 }

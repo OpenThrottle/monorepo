@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GlobalProviders Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar"
+      style="--sidebar-width: 16rem; --sidebar-width-icon: 3rem;"
+    />
+  </div>
+</body>
+`;

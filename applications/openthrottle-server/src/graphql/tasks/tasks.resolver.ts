@@ -16,6 +16,7 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import { TasksService } from '@openthrottle/nestjs-repositories';
 import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
 import { In } from 'typeorm';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { PlanObject } from '../plans/plan.object';
 import { ProjectObject } from '../projects/project.object';
 import {
@@ -33,6 +34,7 @@ import { TasksLoaders } from './tasks-loaders';
 export class TasksResolver {
   constructor(
     private readonly loaders: TasksLoaders,
+    private readonly notificationsService: NotificationsService,
     private readonly tasksService: TasksService,
   ) {}
 
@@ -203,6 +205,19 @@ export class TasksResolver {
 
     const saved = await repo.save(entity);
 
+    if (saved.status === 'IN_PROGRESS') {
+      const promoted =
+        await this.tasksService.syncParentPlanToInProgressWhenTaskInProgress(
+          saved.planId,
+        );
+      if (promoted) {
+        this.notificationsService.emitPlanStatusChanged({
+          planId: saved.planId,
+          status: 'IN_PROGRESS',
+        });
+      }
+    }
+
     return saved;
   }
 
@@ -250,6 +265,8 @@ export class TasksResolver {
 
     if (!entity) return null;
 
+    const previousStatus = entity.status.toUpperCase();
+
     if (input.planId != null) entity.planId = input.planId;
     if (input.requirements != null) {
       entity.requirements = JSON.parse(input.requirements) as unknown[];
@@ -264,7 +281,22 @@ export class TasksResolver {
     if (input.projectId !== undefined) entity.projectId = input.projectId;
     if (input.summary !== undefined) entity.summary = input.summary;
 
-    return repo.save(entity);
+    const saved = await repo.save(entity);
+
+    if (saved.status === 'IN_PROGRESS' && previousStatus !== 'IN_PROGRESS') {
+      const promoted =
+        await this.tasksService.syncParentPlanToInProgressWhenTaskInProgress(
+          saved.planId,
+        );
+      if (promoted) {
+        this.notificationsService.emitPlanStatusChanged({
+          planId: saved.planId,
+          status: 'IN_PROGRESS',
+        });
+      }
+    }
+
+    return saved;
   }
 
   @Mutation(() => Boolean, {

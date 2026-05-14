@@ -29,7 +29,8 @@ export class AgenticRalphOrchestratorService {
   ) {}
 
   /**
-   * @description Runs one orchestrator job: GraphQL-backed pipeline with Cursor iteration runner.
+   * @description Runs one orchestrator job: GraphQL-backed pipeline with iteration runner chosen by
+   * `executionBackend` / tuning (`cursor` or `claude`).
    */
   async runPlanOrchestratorJob(params: {
     readonly correlation?: WorkflowRunCorrelation;
@@ -42,6 +43,7 @@ export class AgenticRalphOrchestratorService {
     );
 
     const baseContext = buildRalphFlowContextFromPlanRunTuning({
+      executionBackend: jobData.executionBackend,
       mode: jobData.mode ?? 'plan',
       planId: jobData.planId,
       ralph: jobData.ralph as PlanRunTuningInput | undefined,

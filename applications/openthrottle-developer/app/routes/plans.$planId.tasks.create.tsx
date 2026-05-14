@@ -2,7 +2,11 @@ import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.create';
 import {
@@ -10,6 +14,16 @@ import {
   GetPlanByIdDocument,
 } from '~/__generated__/graphql';
 import { TaskForm } from '~/routing/plans/components/TaskForm';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [
+    { children: 'Plans', to: '/plans' },
+    { children: 'Tasks', to: '/plans/tasks' },
+  ],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId } = args.params;
@@ -28,9 +42,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { plan, planId };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const plan = args.loaderData?.plan;
@@ -62,12 +76,11 @@ export default function Component(
   }
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">New task</h1>
-        <TaskForm actionData={actionData} planId={planId} />
-      </div>
-    </main>
+    <GlobalScreen>
+      {/* <div className="max-w-xl mx-auto"> */}
+      <TaskForm actionData={actionData} planId={planId} />
+      {/* </div> */}
+    </GlobalScreen>
   );
 }
 

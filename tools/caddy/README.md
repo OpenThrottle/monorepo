@@ -52,7 +52,7 @@ For path-based, use `Caddyfile.path-based` instead of `Caddyfile`.
 
 - **api.local** (or **/api**) → `localhost:6021` (openthrottle-server: GraphQL, REST, Socket.IO). WebSocket is passed through by default.
 - **developer.local** (or **/developer** and **/**) → `localhost:6020` (openthrottle-developer; see `applications/openthrottle-developer/.env.default`).
-- **ollama.local** (or **/ollama**) → `localhost:11434` (Ollama). Set `OLLAMA_BASE_URL` to the proxied URL when using Caddy (see AGENTS.md and databases/cortex/README.md).
+- **ollama.local** (or **/ollama**) → `localhost:11434` (Ollama). Set `OLLAMA_BASE_URL` to the proxied URL when using Caddy (see AGENTS.md and databases/README.md).
 
 Ensure the backend services are running on their usual ports before using the proxy.
 

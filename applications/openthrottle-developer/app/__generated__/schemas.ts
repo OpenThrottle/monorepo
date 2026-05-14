@@ -4,6 +4,7 @@ import {
   ActivityByDateRangeInput,
   AppendPlanOutputInput,
   CancelPlanRunInput,
+  CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
@@ -26,6 +27,7 @@ import {
   GetGeneratorInput,
   GetPlanEmbeddingInput,
   GetPlanOutputStreamChunkInput,
+  GetPullInput,
   GetTaskEmbeddingInput,
   GitHubRepoInput,
   LastActivityInput,
@@ -39,8 +41,10 @@ import {
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
   PlanRalphWorkflowMode,
+  PlanRunsByPlanIdInput,
   PrCountByLabelInput,
   PressureLevel,
+  PreviewCortexDocumentIngestInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
   RalphNestedDebugCli,
@@ -128,6 +132,17 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string(),
+  });
+}
+
+export function CommitCortexDocumentIngestInputSchema(): z.ZodObject<
+  Properties<CommitCortexDocumentIngestInput>
+> {
+  return z.object({
+    fileBase64: z.string(),
+    mimeType: z.string().nullish(),
+    originalFilename: z.string().nullish(),
+    plan: z.lazy(() => CreatePlanInputSchema()),
   });
 }
 
@@ -298,6 +313,7 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     taskId: z.string().nullish(),
+    workingDirectory: z.string().nullish(),
   });
 }
 
@@ -308,6 +324,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
     planId: z.string(),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    workingDirectory: z.string().nullish(),
   });
 }
 
@@ -340,6 +357,14 @@ export function GetPlanOutputStreamChunkInputSchema(): z.ZodObject<
 > {
   return z.object({
     id: z.string(),
+  });
+}
+
+export function GetPullInputSchema(): z.ZodObject<Properties<GetPullInput>> {
+  return z.object({
+    number: z.number(),
+    owner: z.string(),
+    repo: z.string(),
   });
 }
 
@@ -467,6 +492,15 @@ export function PlanEmbeddingsByPlanInputSchema(): z.ZodObject<
   });
 }
 
+export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
+  Properties<PlanRunsByPlanIdInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    planId: z.string(),
+  });
+}
+
 export function PrCountByLabelInputSchema(): z.ZodObject<
   Properties<PrCountByLabelInput>
 > {
@@ -474,6 +508,16 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
     owner: z.string(),
     repo: z.string(),
     state: z.string().nullish(),
+  });
+}
+
+export function PreviewCortexDocumentIngestInputSchema(): z.ZodObject<
+  Properties<PreviewCortexDocumentIngestInput>
+> {
+  return z.object({
+    fileBase64: z.string(),
+    mimeType: z.string().nullish(),
+    originalFilename: z.string().nullish(),
   });
 }
 

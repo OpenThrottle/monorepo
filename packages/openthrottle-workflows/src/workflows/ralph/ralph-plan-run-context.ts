@@ -44,13 +44,26 @@ const mapRalphNestedDebugCliToWorkflowDebugCli = (
   }
 };
 
+/** @description Known ids; aligned with `RALPH_EXECUTION_BACKEND_IDS` in tools/workflows. */
+const WORKFLOW_RUNNER_IDS = ['claude', 'cursor'] as const;
+
 /**
- * @description `WorkflowRalphExecutionBackendId` is a single literal today; GraphQL `backend` is
- * accepted for parity and future union widening.
+ * @description Maps GraphQL / job `backend` string to {@link WorkflowRunner}; unknown values fall back
+ * to {@link DEFAULT_RALPH_RUNNER}.
  */
 const resolveExecutionBackend = (
-  _raw: string | null | undefined,
+  raw: string | null | undefined,
 ): WorkflowRunner => {
+  if (raw == null || raw === '') {
+    return DEFAULT_RALPH_RUNNER;
+  }
+
+  const n = raw.trim().toLowerCase();
+
+  if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
+    return n as unknown as WorkflowRunner;
+  }
+
   return DEFAULT_RALPH_RUNNER;
 };
 
@@ -110,6 +123,7 @@ const resolveProjectFromTuning = (raw: string | null | undefined): string => {
  * {@link WorkflowOptions}. Ignores `promptFile` — layer-1 argv only; not on {@link WorkflowRalphContext}.
  */
 export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
+  readonly executionBackend?: string | null;
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
   readonly mode?: WorkflowMode;
@@ -134,7 +148,7 @@ export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
     planId,
     project: resolveProjectFromTuning(r.project),
     prompt: resolvePromptFromTuning(r.prompt),
-    runner: resolveExecutionBackend(r.backend),
+    runner: resolveExecutionBackend(r.backend ?? params.executionBackend),
     taskId,
     timeout: iterationTimeout,
   };
@@ -164,6 +178,7 @@ export function buildRalphFlowContextFromRunOptionsShape(
  * (see `openthrottle-ralph-parity.ts` queue vs CLI notes).
  */
 export function buildRalphFlowContextFromPlanRunTuning(params: {
+  readonly executionBackend?: string | null;
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
   readonly mode?: WorkflowMode;

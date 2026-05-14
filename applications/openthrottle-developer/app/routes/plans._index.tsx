@@ -1,29 +1,32 @@
 import * as React from 'react';
-import { useSearchParams } from 'react-router';
+import { RouteMatch, useSearchParams } from 'react-router';
 import {
   DEFAULT_PAGINATION_LIMIT,
   DEFAULT_PAGINATION_PAGE,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottlePagination,
-  OpenThrottleStatCard,
-} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalHeading,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { ListChevronsUpDownIcon } from 'lucide-react';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanAssigneeOptionsDocument,
   GetPlanCountsByStatusDocument,
   GetPlansByStatusDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
+import { parsePlansSortFromSearch } from '~/routing/plans/utils/parsers';
 import {
   PLAN_STATUS_FILTER_OPTIONS,
   parseStatusesFromSearchParams,
 } from '~/routing/plans/config/status-options';
-import { parsePlansSortFromSearch } from '~/routing/plans/utils/parsers';
+import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans._index';
 
 /** Parse multiple assignee values from URL (repeated params or comma-separated). */
@@ -34,13 +37,20 @@ function parseAssigneesFromSearchParams(
   return raw.map((a) => a.trim()).filter(Boolean);
 }
 
+export const handle = {
+  breadcrumb: () => 'Plans',
+  links: (_match: RouteMatch) => [],
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
 
   const searchParams = url?.searchParams ?? new URLSearchParams();
+
   const statuses = parseStatusesFromSearchParams(searchParams);
   const assignees = parseAssigneesFromSearchParams(searchParams);
   const pageRaw = url?.searchParams.get('page');
+
   const page = Math.max(
     DEFAULT_PAGINATION_PAGE,
     Number.isFinite(Number(pageRaw))
@@ -51,6 +61,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const limitRaw = url?.searchParams.get('limit');
   const limitParsed =
     limitRaw != null && limitRaw !== '' ? Number(limitRaw) : NaN;
+
   const limit = Math.max(
     1,
     Number.isFinite(limitParsed) && limitParsed >= 1
@@ -99,12 +110,14 @@ export const loader = async (args: Route.LoaderArgs) => {
     statusCounts,
     statuses,
     totalCount: result.listPlansByStatus.totalCount,
+    totalCountAll: result.allPlansCount.totalCount,
+    totalCountQueued: result.queuedPlansCount.totalCount,
   };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Plans | ${SITE_TITLE}` }];
@@ -123,21 +136,23 @@ export default function Component(
     statusCounts,
     statuses,
     totalCount,
+    totalCountAll,
+    totalCountQueued,
   } = loaderData;
 
   // Hooks
   const [searchParams] = useSearchParams();
 
   // Setup
-  const isCard = searchParams.get('view') === 'card';
-
   const countByStatus = (status: string): number =>
     statusCounts.find((s) => s.status === status)?.count ?? 0;
+
+  const isCard = searchParams.get('view') === 'card';
 
   const countInProgress = countByStatus('IN_PROGRESS');
   const countCompleted = countByStatus('COMPLETED');
 
-  const view = (isCard ? 'card' : 'table') as 'card' | 'table';
+  const view: 'card' | 'table' = isCard ? 'card' : 'table';
 
   // Handlers
 
@@ -166,23 +181,33 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-8 mt-4">
-        <OpenThrottleStatCard title="In progress" value={countInProgress} />
-        <OpenThrottleStatCard title="Matching plans" value={totalCount} />
-        <OpenThrottleStatCard title="Completed (all)" value={countCompleted} />
-      </div>
-
-      <PlansToolbar
-        assigneeOptions={assigneeOptions}
-        assignees={assignees}
-        limit={limit}
-        page={page}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        statuses={statuses}
-        view={view}
+    <GlobalScreen>
+      <PlansStats
+        countCompleted={countCompleted}
+        countInProgress={countInProgress}
+        totalCount={totalCount}
+        totalCountAll={totalCountAll}
+        totalCountQueued={totalCountQueued}
       />
+
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ListChevronsUpDownIcon}
+          title="Plans"
+        />
+        <PlansToolbar
+          assigneeOptions={assigneeOptions}
+          assignees={assignees}
+          limit={limit}
+          page={page}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+          view={view}
+        />
+      </div>
       <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
       <OpenThrottlePagination
         assignees={assignees}
@@ -193,12 +218,12 @@ export default function Component(
         statuses={statuses}
         total={totalCount}
       />
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

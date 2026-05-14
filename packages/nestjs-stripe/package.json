@@ -53,7 +53,8 @@
       },
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "devDependencies": {},
@@ -68,7 +69,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

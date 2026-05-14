@@ -55,6 +55,24 @@ export class ListPullsInput {
   state!: 'all' | 'closed' | 'open' | null;
 }
 
+@InputType()
+export class GetPullInput {
+  @Field(() => Int, {
+    description: `Pull request number`,
+  })
+  number!: number;
+
+  @Field(() => String, {
+    description: `Repository owner (e.g. GitHub username or org)`,
+  })
+  owner!: string;
+
+  @Field(() => String, {
+    description: `Repository name`,
+  })
+  repo!: string;
+}
+
 /** Period bucket for lines-added/deleted aggregation. */
 export type LinesAddedDeletedPeriodInput = 'month' | 'week';
 

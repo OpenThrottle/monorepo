@@ -2,11 +2,8 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
+import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
-import {
-  FEATURE_BETA_PREVIEW,
-  OPEN_THROTTLE_GITHUB_URL,
-} from '@openthrottle/react-router-utils';
 import { SITE_SUBDOMAIN } from '~/global/config/settings';
 
 export interface GlobalHeaderProps {
@@ -16,38 +13,13 @@ export interface GlobalHeaderProps {
 export const GlobalHeader = (props: GlobalHeaderProps) => {
   const { className } = props;
 
+  // Hooks
+
+  // Setup
+
   // Handlers
 
   // Markup
-  const renderNavItems = () => {
-    if (!FEATURE_BETA_PREVIEW) return null;
-
-    return (
-      <>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/"
-          viewTransition={true}
-        >
-          Overview
-        </NavLink>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/"
-          viewTransition={true}
-        >
-          Features
-        </NavLink>
-        <NavLink
-          className="text-sm h-full hover:text-accent p-4 transition"
-          to="/"
-          viewTransition={true}
-        >
-          Pricing
-        </NavLink>
-      </>
-    );
-  };
 
   // Life Cycle
 
@@ -71,7 +43,29 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}
         >
-          <div className="flex gap-1 mr-8 h-full">{renderNavItems()}</div>
+          <div className="flex gap-1 mr-8 h-full">
+            <NavLink
+              className="text-sm h-full hover:text-accent p-4 transition"
+              to="/"
+              viewTransition={true}
+            >
+              Overview
+            </NavLink>
+            <NavLink
+              className="text-sm h-full hover:text-accent p-4 transition"
+              to="/"
+              viewTransition={true}
+            >
+              Features
+            </NavLink>
+            <NavLink
+              className="text-sm h-full hover:text-accent p-4 transition"
+              to="/"
+              viewTransition={true}
+            >
+              Pricing
+            </NavLink>
+          </div>
 
           <NavLink target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
             <GithubLogoIcon className="size-5" />

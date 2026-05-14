@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-postgres
 ```bash
 npm install @openthrottle/openthrottle-postgres
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-postgres
-```

@@ -42,6 +42,16 @@
           "tsConfig": "{projectRoot}/tsconfig.lib.json"
         }
       },
+      "e2e": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "commands": [
+            "node scripts/e2e.mjs"
+          ]
+        }
+      },
       "serve": {
         "cache": false,
         "executor": "nx:run-commands",
@@ -54,16 +64,7 @@
           "parallel": false
         }
       },
-      "e2e": {
-        "cache": false,
-        "executor": "nx:run-commands",
-        "options": {
-          "cwd": "{projectRoot}",
-          "commands": [
-            "node scripts/e2e.mjs"
-          ]
-        }
-      }
+      "typecheck-tests": {}
     }
   }
 }

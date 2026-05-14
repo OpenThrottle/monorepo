@@ -6,7 +6,7 @@ import { foldersGenerator } from './generator';
 describe('folders generator', () => {
   let tree: Tree;
 
-  const application = 'accounts-central-api';
+  const application = 'nestjs-api';
   const folder = 'routing';
   const name = 'example-folder';
 

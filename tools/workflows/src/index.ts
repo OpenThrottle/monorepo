@@ -56,7 +56,10 @@ export type {
   WorktreeWorkflowResult,
 } from './types/worktree';
 export { runChildJob } from './utils/child-job';
-export { buildWorkflowRalphRunTuningArgv } from './utils/workflow-ralph-nested-argv';
+export {
+  buildWorkflowRalphRunTuningArgv,
+  mergeRalphNestedRunTuningWithExecutionBackend,
+} from './utils/workflow-ralph-nested-argv';
 export type {
   RalphNestedDebugCli,
   RalphNestedRunTuningInput,
@@ -102,6 +105,12 @@ export type {
   RalphRuntimeSeed,
   WorkflowRalphDefaultsFileJson,
 } from './utils/ralph-runtime-config';
+export {
+  formatPlansProcessorSpawnOtDiagnosticsMessage,
+  logWorkflowRalphOtDiagnostics,
+  OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
+  WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
+} from './utils/ot-diagnostics';
 export { runIteration, runIterationAsync } from './bin/run-iteration';
 export type { CursorAgentChunk, RunIterationConfig } from './bin/run-iteration';
 export { createCursorWorkflowRalphIterationRunner } from './utils/cursor-workflow-ralph-iteration-runner';

@@ -3,7 +3,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeft } from 'lucide-react';
 import { SeparatorProps } from '@radix-ui/react-separator';
-import { useIsMobile } from '../hooks/use-mobile';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { cn } from '../utils/cn';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -391,7 +391,8 @@ export const SidebarInset = React.forwardRef<HTMLDivElement, SidebarInsetProps>(
     return (
       <main
         className={cn(
-          'relative flex w-full flex-1 flex-col bg-background',
+          'bg-background relative',
+          'flex w-full flex-1 flex-col',
           'md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow',
           className,
         )}
@@ -556,7 +557,7 @@ export const SidebarContent = React.forwardRef<
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+        'flex min-h-0 flex-1 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden',
         className,
       )}
       data-sidebar="content"
@@ -587,7 +588,7 @@ export const SidebarGroup = React.forwardRef<HTMLDivElement, SidebarGroupProps>(
 
     return (
       <div
-        className={cn('relative flex w-full min-w-0 flex-col p-2', className)}
+        className={cn('relative flex flex-col w-full min-w-0 p-2', className)}
         data-sidebar="group"
         ref={ref}
         {...rest}

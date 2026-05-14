@@ -17,6 +17,9 @@
       "path": "../../tools/dotfiles"
     },
     {
+      "path": "../../packages/react-router-ui-global"
+    },
+    {
       "path": "../../packages/react-router-auth"
     },
     {

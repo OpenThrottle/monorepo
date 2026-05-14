@@ -16,13 +16,16 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
-  OpenThrottleBreadcrumbs,
   OpenThrottleClipboard,
   OpenThrottlePagination,
 } from '@openthrottle/react-router-ui';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -30,6 +33,13 @@ import type { Route } from '@/app/routes/+types/projects.$projectId';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) => match.loaderData?.project?.name ?? 'Details',
+  links: (_match) => [{ children: 'Projects', to: '/projects' }],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const projectId = args.params.projectId;
@@ -68,6 +78,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   };
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const project = args.loaderData?.project;
   const title = project?.name
@@ -98,64 +112,38 @@ export default function Component(
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!project) return <ProjectNotFound />;
+  if (!project) {
+    return <ProjectNotFound />;
+  }
 
   return (
-    <main
-      aria-label="Project details"
-      className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full"
-    >
-      <OpenThrottleBreadcrumbs
-        children={project.name}
-        className="mb-4"
-        links={[
-          { children: 'Projects', to: `/projects` },
-          // { children: planId, to: `/plans/${planId}` },
-        ]}
-      />
-
-      <Tabs className="w-full">
+    <GlobalScreen>
+      <Tabs
+        className="w-full"
+        onValueChange={(next) => {
+          setActiveTab(next as ProjectTabValue);
+        }}
+        value={activeTab}
+      >
         <TabsList aria-label="Project sections" className="mb-4">
-          <TabsTrigger
-            aria-controls="project-overview-panel"
-            aria-selected={activeTab === 'overview'}
-            data-state={activeTab === 'overview' ? 'active' : 'inactive'}
-            id="project-overview-tab"
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger
-            aria-controls="project-tasks-panel"
-            aria-selected={activeTab === 'tasks'}
-            data-state={activeTab === 'tasks' ? 'active' : 'inactive'}
-            id="project-tasks-tab"
-            onClick={() => setActiveTab('tasks')}
-          >
-            Tasks
-          </TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
         </TabsList>
 
-        <TabsContent
-          aria-hidden={activeTab !== 'overview'}
-          aria-labelledby="project-overview-tab"
-          className="mt-0"
-          hidden={activeTab !== 'overview'}
-          id="project-overview-panel"
-        >
-          <Card aria-labelledby="project-overview-heading" className="mb-6">
+        <TabsContent className="mt-0" value="overview">
+          <Card aria-labelledby="project-overview-heading">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 <h1
-                  className="text-2xl font-semibold leading-none tracking-tight"
+                  className="text-lg font-semibold leading-none tracking-tight"
                   id="project-overview-heading"
                 >
                   {project.name}
                 </h1>
-                {project.nxProjectName != null &&
+                {/* {project.nxProjectName != null &&
                   project.nxProjectName !== '' && (
                     <Badge variant="secondary">{project.nxProjectName}</Badge>
-                  )}
+                  )} */}
               </div>
               <Badge className="shrink-0" variant="secondary">
                 <OpenThrottleClipboard label={project.id} text={project.id} />
@@ -185,13 +173,7 @@ export default function Component(
           </Card>
         </TabsContent>
 
-        <TabsContent
-          aria-hidden={activeTab !== 'tasks'}
-          aria-labelledby="project-tasks-tab"
-          className="mt-0"
-          hidden={activeTab !== 'tasks'}
-          id="project-tasks-panel"
-        >
+        <TabsContent className="mt-0" value="tasks">
           <section
             aria-labelledby="project-tasks-heading"
             className="space-y-3"
@@ -202,15 +184,13 @@ export default function Component(
             {tasks.length > 0 ? (
               <>
                 <ProjectTasksTable tasks={tasks} />
-                {totalTaskCount > limit && (
-                  <OpenThrottlePagination
-                    basePath={`/projects/${project.id}`}
-                    className="mt-6"
-                    limit={limit}
-                    page={page}
-                    total={totalTaskCount}
-                  />
-                )}
+                <OpenThrottlePagination
+                  basePath={`/projects/${project.id}`}
+                  className="mt-6"
+                  limit={limit}
+                  page={page}
+                  total={totalTaskCount}
+                />
               </>
             ) : (
               <Empty className="py-8">
@@ -223,12 +203,12 @@ export default function Component(
           </section>
         </TabsContent>
       </Tabs>
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

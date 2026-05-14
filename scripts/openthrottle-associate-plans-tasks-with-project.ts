@@ -4,7 +4,7 @@
 //  * @description Associates plans and tasks in Cortex with NX projects where the
 //  * association is clear from the title. Uses criteria from
 //  * docs/openthrottle/plans-tasks-without-project-scope.md and
-//  * databases/cortex/README.md § Project association.
+//  * databases/README.md § Project association.
 //  * Usage: pnpm exec tsx ./scripts/openthrottle-associate-plans-tasks-with-project.ts [--dry-run]
 //  */
 

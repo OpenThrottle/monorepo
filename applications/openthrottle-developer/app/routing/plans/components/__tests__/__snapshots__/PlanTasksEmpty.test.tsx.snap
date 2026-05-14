@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PlanTasksEmpty Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-8 text-center"
+    >
+      <h3
+        class="text-lg font-semibold leading-none tracking-tight"
+      >
+        No tasks
+      </h3>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        This plan has no tasks yet.
+      </p>
+    </div>
+  </div>
+</body>
+`;

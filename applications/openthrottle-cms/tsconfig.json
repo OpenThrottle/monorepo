@@ -17,10 +17,10 @@
       "path": "../../tools/dotfiles"
     },
     {
-      "path": "../../packages/react-router-ui"
+      "path": "../../packages/react-router-ui-global"
     },
     {
-      "path": "../../packages/react-router-shadcn"
+      "path": "../../packages/react-router-ui"
     },
     {
       "path": "../../packages/react-router-utils"

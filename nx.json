@@ -111,16 +111,13 @@
       "pattern": "{projectName}@{version}"
     }
   },
+  "sync": {
+    "applyChanges": true
+  },
   "targetDefaults": {
     "@nx/js:tsc": {
       "executor": "@nx/js:tsc",
-      "dependsOn": [
-        "^build",
-        "^codegen-graphql",
-        "^codegen-react-router",
-        "^codegen-supabase-expo",
-        "^codegen-supabase-web"
-      ],
+      "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
       "options": {
         "generateExportsField": false,
         "generatePackageJson": false,
@@ -165,13 +162,7 @@
     "build": {
       "cache": true,
       "executor": "@nx/vite:build",
-      "dependsOn": [
-        "^build",
-        "^codegen-graphql",
-        "^codegen-react-router",
-        "^codegen-supabase-expo",
-        "^codegen-supabase-web"
-      ],
+      "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
       "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
         "buildLibsFromSource": true,
@@ -246,31 +237,14 @@
         "cwd": "{projectRoot}"
       }
     },
-    "codegen-supabase-expo": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm dlx supabase gen types typescript --db-url $EXPO_PUBLIC_SUPABASE_URI > src/__generated__/generated.supabase.ts",
-        "cwd": "{projectRoot}"
-      }
-    },
-    "codegen-supabase-web": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm dlx supabase gen types typescript --db-url $SUPABASE_URI > app/__generated__/generated.supabase.ts",
-        "cwd": "{projectRoot}"
-      }
-    },
     "dev": {
       "dependsOn": [
         "^dev",
         "^generate",
         "^codegen-graphql-watch",
         "^codegen-react-router-watch",
-        "codegen-deep-linking",
         "codegen-graphql-watch",
-        "codegen-react-router-watch",
-        "codegen-supabase-expo",
-        "codegen-supabase-web"
+        "codegen-react-router-watch"
       ]
     },
     "knip": {
@@ -360,22 +334,30 @@
       "cache": true,
       "dependsOn": [
         "^codegen-graphql",
-        "^codegen-supabase-expo",
-        "^codegen-supabase-web",
-        "codegen-deep-linking",
+        "codegen-graphql",
+        "codegen-react-router"
+      ]
+    },
+    "typecheck-tests": {
+      "cache": true,
+      "dependsOn": [
+        "^codegen-graphql",
+        "^typecheck",
         "codegen-graphql",
         "codegen-react-router",
-        "codegen-supabase-expo",
-        "codegen-supabase-web"
-      ]
+        "typecheck"
+      ],
+      "executor": "nx:run-commands",
+      "inputs": ["default", "^default", "{projectRoot}/tsconfig.test.json"],
+      "options": {
+        "command": "pnpm exec tsc --noEmit -p tsconfig.test.json",
+        "cwd": "{projectRoot}"
+      }
     }
   },
   "tui": {
     "autoExit": 3,
     "enabled": true
   },
-  "useInferencePlugins": false,
-  "sync": {
-    "applyChanges": true
-  }
+  "useInferencePlugins": false
 }
