@@ -1,0 +1,15 @@
+query getPullRequestDetail($input: GetPullInput!) {
+  pull(input: $input) {
+    author
+    baseRef
+    createdAt
+    headRef
+    headSha
+    htmlUrl
+    mergedAt
+    number
+    state
+    title
+    updatedAt
+  }
+}

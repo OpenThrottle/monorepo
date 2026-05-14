@@ -6,7 +6,7 @@ import { generatorNestJSModule } from './generator.module';
 describe('nestjs "module" generator', () => {
   let tree: Tree;
 
-  const application = 'accounts-central-api';
+  const application = 'nestjs-api';
   const name = 'example-module';
 
   beforeEach(() => {

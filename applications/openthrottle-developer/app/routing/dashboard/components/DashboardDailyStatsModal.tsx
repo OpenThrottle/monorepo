@@ -1,10 +1,5 @@
 import * as React from 'react';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-} from '@openthrottle/react-router-shadcn';
-import { useSearchParams } from 'react-router';
+import { GlobalModal } from '@openthrottle/react-router-ui-global';
 
 export interface DashboardDailyStatsModalProps {
   // readonly className?: string;
@@ -16,23 +11,8 @@ export const DashboardDailyStatsModal = (
   // const { className } = props;
 
   // Hooks
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const param = searchParams.get('modal');
-  const isOpen = param === DashboardDailyStatsModal.key;
 
   // Handlers
-  const onToggle = () => {
-    const newParams = new URLSearchParams(searchParams);
-
-    if (isOpen) {
-      newParams.delete('modal');
-    } else {
-      newParams.set('modal', DashboardDailyStatsModal.key);
-    }
-
-    setSearchParams(newParams, { preventScrollReset: true });
-  };
 
   // Markup
 
@@ -41,17 +21,15 @@ export const DashboardDailyStatsModal = (
   // 🔌 Short Circuit
 
   return (
-    <>
-      <Button onClick={onToggle} variant="outline">
-        Open
-      </Button>
-      <Dialog onOpenChange={onToggle} open={isOpen}>
-        <DialogContent className="sm:max-w-sm data-[state=closed]:slide-out-to-top-[0%] ">
-          <h2>DashboardDailyStatsModal</h2>
-          <p>lorem ipsum dolor sit amet</p>
-        </DialogContent>
-      </Dialog>
-    </>
+    <GlobalModal param="modal" value={DashboardDailyStatsModal.key}>
+      <h2>Dashboard Daily Stats Modal</h2>
+      <p className="text-sm text-gray-500">
+        lorem ipsum dolor sit amet. Lorem ipsum dolor sit, amet consectetur
+        adipisicing elit. Nihil natus, odio officiis sit aliquid tempore odit
+        eos fuga nemo cupiditate, doloribus quos maxime? Voluptatem aliquid,
+        adipisci itaque ipsum dolore magni!s
+      </p>
+    </GlobalModal>
   );
 };
 

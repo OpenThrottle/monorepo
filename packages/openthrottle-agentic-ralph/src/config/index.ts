@@ -14,4 +14,4 @@ export const DEFAULT_RUNNER = 'cursor';
  * @description Execution backend id for `--backend`; keep aligned with `workflow-ralph --backend`
  * and {@link DEFAULT_RUNNER}.
  */
-export type WorkflowRunner = typeof DEFAULT_RUNNER;
+export type WorkflowRunner = 'claude' | 'cursor';

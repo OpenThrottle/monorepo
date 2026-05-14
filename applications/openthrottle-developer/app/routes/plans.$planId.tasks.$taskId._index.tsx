@@ -1,27 +1,46 @@
 import * as React from 'react';
-import classnames from 'classnames';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from '@openthrottle/react-router-shadcn';
-import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
-import { redirect } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottleBreadcrumbs,
-  OpenThrottleClipboard,
-} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
-import { SITE_TITLE } from '~/global/config/settings';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { redirect } from 'react-router';
+import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) => (
+    <OpenThrottleClipboard
+      className="cursor-pointer whitespace-nowrap"
+      label={match.loaderData?.task?.id ?? ''}
+      text={match.loaderData?.task?.id ?? ''}
+    />
+  ),
+  links: (match) => {
+    const title = match.loaderData?.plan?.title;
+    const id = match.loaderData?.plan?.id ?? 'not-found';
+    const planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
+
+    return [
+      { children: 'Plans', to: '/plans' },
+      {
+        children: planTitle,
+        to: `/plans/${id}`,
+      },
+    ];
+  },
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
@@ -54,6 +73,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { plan, task };
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const task = args.loaderData?.task;
   const title = task?.title
@@ -67,12 +90,13 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, task } = loaderData;
+  const { task } = loaderData;
 
   // Hooks
 
   // Setup
   const _taskId = params.taskId ?? '';
+  const effectivePlanId = task != null ? (task.planId ?? '') : '';
 
   // Handlers
 
@@ -83,51 +107,21 @@ export default function Component(
   // 🔌 Short Circuit
   if (task == null) {
     return (
-      <main
-        className={classnames(
-          'h-full max-w-7xl w-full mx-auto',
-          'flex flex-1 items-center justify-center',
-        )}
-      >
-        <Empty>
-          <EmptyMedia variant="icon">
-            <PuzzlePieceIcon size={48} />
-          </EmptyMedia>
-          <EmptyTitle>Task not found</EmptyTitle>
-          <EmptyDescription>
-            The task you are looking for does not exist.
-          </EmptyDescription>
-        </Empty>
-      </main>
+      <GlobalScreen>
+        <PlanTaskNotFound />
+      </GlobalScreen>
     );
   }
 
-  const effectivePlanId = task.planId ?? '';
-
   return (
-    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
-        children={
-          <OpenThrottleClipboard
-            className="cursor-pointer whitespace-nowrap"
-            label={task.id}
-            text={task.id}
-          />
-        }
-        className="mb-4"
-        links={[
-          { children: 'Plans', to: '/plans' },
-          { children: plan?.title, to: `/plans/${effectivePlanId}` },
-        ]}
-      />
-
+    <GlobalScreen>
       <TaskDetails planId={effectivePlanId} task={task} />
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -1,25 +1,31 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { redirect } from 'react-router';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { CreateProjectDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/projects.create';
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+type HandleData = Route.ComponentProps['loaderData'];
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [{ children: 'Projects', to: '/projects' }],
+};
 
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `ProjectsCreate | ${SITE_TITLE}` }];
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create project | ${SITE_TITLE}` }];
@@ -43,17 +49,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
-        children="Create Project"
-        className="mb-4"
-        links={[{ children: 'Projects', to: '/projects' }]}
-      />
-
-      <div className="max-w-7xl mx-auto">
-        <ProjectForm actionData={actionData} />
-      </div>
-    </main>
+    <GlobalScreen>
+      <ProjectForm actionData={actionData} />
+    </GlobalScreen>
   );
 }
 

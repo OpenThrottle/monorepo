@@ -41,7 +41,6 @@ export function getCortexConfigOrExit(): WorkflowRalphConfig {
     process.exit(1);
   }
 
-  console.log('💰 💰 config 💰 💰', config);
   return config;
 }
 
@@ -58,8 +57,6 @@ export async function ensureDatabaseReachableOrExit(
     console.error(`${RALPH_FATAL_PREFIX}${msg}\n`);
     process.exit(1);
   }
-
-  console.log('💰 💰 ensureDatabaseReachableOrExit 💰 💰 SUCCESS');
 }
 
 /**

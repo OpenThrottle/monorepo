@@ -5,6 +5,8 @@ import {
 
 /** Parsed search URL parameters. */
 export interface ParsedSearchParams {
+  /** When true, power-user mode: expand ranking details on each result (`details=ranking`). */
+  readonly expandRankingDetails: boolean;
   readonly limit: number;
   readonly page: number;
   readonly q: string;
@@ -28,7 +30,9 @@ export function parseSearchParams(
         DEFAULT_SEARCH_LIMIT,
     ),
   );
-  return { limit, page, q };
+  const details = searchParams.get('details') ?? '';
+  const expandRankingDetails = details === 'ranking';
+  return { expandRankingDetails, limit, page, q };
 }
 
 /**
@@ -38,12 +42,16 @@ export function buildSearchUrl(
   q: string,
   page?: number,
   limit?: number,
+  options?: { readonly detailsRanking?: boolean },
 ): string {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (page !== undefined && page > 1) params.set('page', String(page));
   if (limit !== undefined && limit !== DEFAULT_SEARCH_LIMIT) {
     params.set('limit', String(limit));
+  }
+  if (options?.detailsRanking === true) {
+    params.set('details', 'ranking');
   }
   const query = params.toString();
   return query ? `${SEARCH_BASE_PATH}?${query}` : SEARCH_BASE_PATH;

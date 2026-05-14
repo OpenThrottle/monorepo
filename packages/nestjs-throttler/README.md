@@ -21,9 +21,3 @@ pnpm add @openthrottle/nestjs-throttler
 ```bash
 npm install @openthrottle/nestjs-throttler
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-throttler
-```

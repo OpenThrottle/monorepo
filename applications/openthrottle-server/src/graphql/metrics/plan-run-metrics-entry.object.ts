@@ -21,6 +21,13 @@ export class PlanRunMetricsEntryObject {
   })
   finishedOn!: number | null;
 
+  @Field(() => String, {
+    description:
+      'Execution backend selected once for the whole run: cursor or claude.',
+    nullable: true,
+  })
+  executionBackend!: string | null;
+
   @Field(() => TaskRunMetricsObject, {
     description:
       'Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.',

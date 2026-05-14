@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-mcp
 ```bash
 npm install @openthrottle/openthrottle-mcp
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-mcp
-```

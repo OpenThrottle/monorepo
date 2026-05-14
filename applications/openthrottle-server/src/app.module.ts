@@ -12,13 +12,19 @@ import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsGraphqlModule } from '@openthrottle/nestjs-graphql';
+import { NestjsLoggingModule } from '@openthrottle/nestjs-logging';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import type { Provider } from '@nestjs/common';
+import {
+  getOpenthrottleServerDevJsonlLogDirectory,
+  isOpenthrottleServerDevJsonlLoggingEnabled,
+} from './config/openthrottle-server-dev-jsonl-logging';
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
+import { CortexDocumentIngestGraphqlModule } from './graphql/cortex-document-ingest/cortex-document-ingest-graphql.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
@@ -38,6 +44,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
+import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
@@ -60,6 +67,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
       isGlobal: true,
     }),
 
+    BullMqRunOutputModule,
     GlobalClsModule,
     HealthModule,
     LoggerModule,
@@ -79,6 +87,19 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     NestjsRepositoriesModule,
     NestjsWebsocketsModule,
     NotificationsModule,
+    ...(isOpenthrottleServerDevJsonlLoggingEnabled()
+      ? [
+          NestjsLoggingModule.forRoot({
+            fileBasename: 'openthrottle-server',
+            isGlobal: true,
+            logDirectory: getOpenthrottleServerDevJsonlLogDirectory(),
+            websocket: {
+              enabled: true,
+              namespace: '/openthrottle-server',
+            },
+          }),
+        ]
+      : []),
 
     // 🧩 Application Modules
     DailyStatsQueueModule,
@@ -92,6 +113,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     ActivityGraphqlModule,
     AuthGraphqlModule,
     CommitLinksGraphqlModule,
+    CortexDocumentIngestGraphqlModule,
     CustomPromptsGraphqlModule,
     DailyStatsGraphqlModule,
     GeneratorsGraphqlModule,

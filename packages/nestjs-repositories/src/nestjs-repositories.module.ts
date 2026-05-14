@@ -8,6 +8,7 @@ import { getTypeOrmOptions } from './database.config';
 import { NotesModule } from './modules/notes/notes.module';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module';
+import { PlanRunsModule } from './modules/plan-runs/plan-runs.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -25,6 +26,7 @@ import { UsersModule } from './modules/users/users.module';
     NotesModule,
     PlanEmbeddingsModule,
     PlanOutputStreamModule,
+    PlanRunsModule,
     PlansModule,
     ProjectsModule,
     RolesModule,
@@ -45,6 +47,7 @@ import { UsersModule } from './modules/users/users.module';
     NotesModule,
     PlanEmbeddingsModule,
     PlanOutputStreamModule,
+    PlanRunsModule,
     PlansModule,
     ProjectsModule,
     RolesModule,

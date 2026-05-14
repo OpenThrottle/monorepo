@@ -38,7 +38,7 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "target": "esnext",
-    "types": ["vitest/dist/index.d.ts"],
+    "types": ["vitest/globals"],
     "verbatimModuleSyntax": false
   }
 }

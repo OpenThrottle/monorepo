@@ -24,6 +24,8 @@ import type {
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types';
 
+const DEFAULT_PLAN_RUN_EXECUTION_BACKEND = 'cursor';
+
 /** @description Job data type for dynamically created queues (no fixed schema). */
 type DynamicJobData = Record<string, unknown>;
 
@@ -56,6 +58,7 @@ export interface QueueStats {
 /** @description Shape of a job returned by getJobs for GraphQL mapping. */
 export interface JobDto {
   readonly data: string | null;
+  readonly executionBackend: string | null;
   readonly failedReason: string | null;
   readonly finishedOn: number | null;
   readonly id: string;
@@ -65,6 +68,13 @@ export interface JobDto {
   readonly returnvalue: string | null;
   readonly state: string;
   readonly timestamp: number | null;
+}
+
+interface PlanRunExecutionBackendJobData {
+  readonly executionBackend?: unknown;
+  readonly ralph?: {
+    readonly backend?: unknown;
+  };
 }
 
 export interface GetJobsResult {
@@ -154,16 +164,16 @@ export class QueuesService implements OnModuleDestroy {
       };
     }
 
-    if (!QUEUE_NAME_REGEX.test(trimmed)) {
-      return {
-        error: `Queue name must match ${QUEUE_NAME_REGEX.source}`,
-      };
-    }
-
     if (
       REGISTERED_QUEUES.includes(trimmed as (typeof REGISTERED_QUEUES)[number])
     ) {
       return { error: `Queue name "${trimmed}" is reserved` };
+    }
+
+    if (!QUEUE_NAME_REGEX.test(trimmed)) {
+      return {
+        error: `Queue name must match ${QUEUE_NAME_REGEX.source}`,
+      };
     }
 
     const existing = this.dynamicQueues.get(trimmed);
@@ -320,6 +330,34 @@ export class QueuesService implements OnModuleDestroy {
     }
 
     return this.mapJobToDto(job);
+  }
+
+  /**
+   * @description Extracts the selected execution backend from new plan-run job data, falling back for legacy jobs.
+   */
+  private getPlanRunExecutionBackend(
+    data: unknown,
+    queueName: string | null,
+  ): string | null {
+    if (
+      queueName !== PLANS_QUEUE_NAME ||
+      data == null ||
+      typeof data !== 'object'
+    ) {
+      return null;
+    }
+
+    const jobData = data as PlanRunExecutionBackendJobData;
+
+    if (typeof jobData.executionBackend === 'string') {
+      return jobData.executionBackend;
+    }
+
+    if (typeof jobData.ralph?.backend === 'string') {
+      return jobData.ralph.backend;
+    }
+
+    return DEFAULT_PLAN_RUN_EXECUTION_BACKEND;
   }
 
   /**
@@ -585,6 +623,10 @@ export class QueuesService implements OnModuleDestroy {
 
     return {
       data,
+      executionBackend: this.getPlanRunExecutionBackend(
+        job.data,
+        job.queueName ?? null,
+      ),
       failedReason: job.failedReason ?? null,
       finishedOn: job.finishedOn ?? null,
       id: job.id ?? '',

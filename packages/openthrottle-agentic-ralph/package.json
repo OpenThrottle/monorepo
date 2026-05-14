@@ -57,7 +57,8 @@
           "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
           "cwd": "{workspaceRoot}"
         }
-      }
+      },
+      "typecheck-tests": {}
     }
   },
   "private": true,
@@ -79,7 +80,7 @@
     "module": "./src/index.js",
     "types": "./src/index.d.ts"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

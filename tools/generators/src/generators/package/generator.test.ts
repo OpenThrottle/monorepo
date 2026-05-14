@@ -34,6 +34,7 @@ describe('package generator', () => {
           `tools/${name}/src/index.ts`,
           `tools/${name}/tsconfig.json`,
           `tools/${name}/tsconfig.lib.json`,
+          `tools/${name}/tsconfig.test.json`,
           `tools/${name}/vite.config.ts`,
           `tools/${name}/vitest.config.ts`,
         ]),
@@ -44,7 +45,6 @@ describe('package generator', () => {
   describe('@organization', () => {
     const type = 'node';
     const org = '@openthrottle';
-    const orgName = org.replace('@', '');
     const name = 'example-xxx-package';
 
     beforeEach(() => {
@@ -64,14 +64,15 @@ describe('package generator', () => {
           'tsconfig.base.json',
 
           // Organization Package Scaffolding
-          `packages/${orgName}/${name}/README.md`,
-          `packages/${orgName}/${name}/eslint.config.ts`,
-          `packages/${orgName}/${name}/package.json`,
-          `packages/${orgName}/${name}/src/index.ts`,
-          `packages/${orgName}/${name}/tsconfig.json`,
-          `packages/${orgName}/${name}/tsconfig.lib.json`,
-          `packages/${orgName}/${name}/vite.config.ts`,
-          `packages/${orgName}/${name}/vitest.config.ts`,
+          `packages/${name}/README.md`,
+          `packages/${name}/eslint.config.ts`,
+          `packages/${name}/package.json`,
+          `packages/${name}/src/index.ts`,
+          `packages/${name}/tsconfig.json`,
+          `packages/${name}/tsconfig.lib.json`,
+          `packages/${name}/tsconfig.test.json`,
+          `packages/${name}/vite.config.ts`,
+          `packages/${name}/vitest.config.ts`,
         ]),
       );
     });

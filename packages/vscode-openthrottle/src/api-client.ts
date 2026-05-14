@@ -10,7 +10,7 @@ import {
   CreatePlanDocument,
   GetListDistinctCategoriesDocument,
   GetPlanDocument,
-  GetPlansByStatusDocument,
+  GetPlansByStatusVsCodeDocument,
   GetTasksByPlanIdDocument,
   CreatePlanInput,
 } from './__generated__/graphql.js';
@@ -99,7 +99,9 @@ export class OpenThrottleApiClient {
       titleSubstring: null,
     };
 
-    const response = await this.request(GetPlansByStatusDocument, { input });
+    const response = await this.request(GetPlansByStatusVsCodeDocument, {
+      input,
+    });
 
     return response.listPlansByStatus;
   }

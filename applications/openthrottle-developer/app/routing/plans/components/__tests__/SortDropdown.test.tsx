@@ -1,33 +1,38 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { SortDropdown } from '../SortDropdown';
-import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
-// import type { PlansSortBy, PlansSortOrder } from '../SortDropdown';
+import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
 describe('SortDropdown', () => {
   test('should render with current sort and call onChange when selection changes', async () => {
     const onChange =
       vi.fn<(sortBy: PlansSortBy, sortOrder: PlansSortOrder) => void>();
     const user = userEvent.setup();
-    const { getByRole } = render(
+    render(
       <SortDropdown onChange={onChange} sortBy="createdAt" sortOrder="desc" />,
     );
-    const select = getByRole('combobox', { name: 'Sort plans' });
-    expect(select).toBeInTheDocument();
-    expect((select as HTMLSelectElement).value).toBe('createdAt-desc');
+    const combobox = screen.getByRole('combobox', { name: 'Sort plans' });
+    expect(combobox).toHaveTextContent('Newest first');
 
-    await user.selectOptions(select, 'updatedAt-asc');
+    await user.click(combobox);
+    await user.click(
+      screen.getByRole('option', { name: 'Least recently updated' }),
+    );
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('updatedAt', 'asc');
   });
 
   test('should resolve invalid value to createdAt-desc', () => {
-    const { getByRole } = render(
-      <SortDropdown onChange={() => {}} sortBy="createdAt" sortOrder="desc" />,
+    render(
+      <SortDropdown
+        onChange={() => {}}
+        sortBy={'invalid' as PlansSortBy}
+        sortOrder="desc"
+      />,
     );
-    const select = getByRole('combobox', { name: 'Sort plans' });
-    expect((select as HTMLSelectElement).value).toBe('createdAt-desc');
+    const combobox = screen.getByRole('combobox', { name: 'Sort plans' });
+    expect(combobox).toHaveTextContent('Newest first');
   });
 });

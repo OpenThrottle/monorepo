@@ -1,69 +1,52 @@
 import * as React from 'react';
-import classnames from 'classnames';
-import {
-  Button,
-  Card,
-  CardHeader,
-  Markdown,
-} from '@openthrottle/react-router-shadcn';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { mockOutput } from '~/routing/plans/data/mock.output';
+import { Card, Markdown } from '@openthrottle/react-router-shadcn';
+import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
+
+type Chunk = PlanDetailIndexLoaderQuery['planOutputStreamChunks'][number];
 
 export interface PlanLoggerOutputProps {
-  readonly className?: string;
+  readonly chunks: readonly Chunk[];
 }
 
 export const PlanLoggerOutput = (props: PlanLoggerOutputProps) => {
-  const { className } = props;
+  const { chunks } = props;
 
-  // Hooks
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  if (chunks.length === 0) {
+    return (
+      <Card
+        className="text-muted-foreground p-4 md:p-8 w-full"
+        data-testid="PlanLoggerOutput"
+      >
+        <p className="text-sm">
+          No plan output chunks yet. Iterations append here when agents call{' '}
+          <code className="text-xs">appendPlanOutput</code> (for example from
+          workflow-ralph or MCP). Local CLI runs log to your terminal instead.
+        </p>
+      </Card>
+    );
+  }
 
-  // Setup
-  const Icon = isExpanded ? ChevronUp : ChevronDown;
+  const markdown = chunks
+    .map((chunk) => {
+      const iter =
+        chunk.iteration != null
+          ? `iteration ${chunk.iteration}`
+          : 'iteration ?';
+      const when =
+        typeof chunk.createdAt === 'string'
+          ? chunk.createdAt
+          : String(chunk.createdAt);
 
-  // Handlers
-  const onToggleExpanded = () => {
-    setIsExpanded((previous) => !previous);
-  };
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+      return `### ${when} (${iter})\n\n${chunk.content}`;
+    })
+    .join('\n\n---\n\n');
 
   return (
     <Card
-      className={classnames('mb-6', className)}
-      data-testid="workflow-run-options-collapsed"
+      className="p-4 md:p-8 w-full overflow-scroll"
+      data-testid="PlanLoggerOutput"
     >
-      <CardHeader className="flex flex-row w-full gap-4">
-        <div className="min-w-0 space-y-1.5 flex-1">
-          <div className="flex items-center gap-2 justify-between">
-            <h2 className="text-lg font-semibold leading-none tracking-tight">
-              Workflow Output
-            </h2>
-            <Button
-              aria-controls="workflow-run-options"
-              aria-expanded={true}
-              aria-label="Hide workflow run options"
-              className="shrink-0 size-8"
-              onClick={onToggleExpanded}
-              variant="ghost"
-            >
-              <Icon aria-hidden={true} className="size-4" />
-            </Button>
-          </div>
-
-          {isExpanded ? (
-            <Markdown
-              className="overflow-x-auto text-xs text-muted-foreground"
-              content={mockOutput}
-            />
-          ) : null}
-        </div>
-      </CardHeader>
+      <Markdown className="text-xs text-muted-foreground" content={markdown} />
     </Card>
   );
 };

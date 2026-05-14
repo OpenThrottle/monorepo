@@ -61,7 +61,7 @@ describe('GlobalServerHealthBanner', () => {
       expect(banner).toBeInTheDocument();
       expect(banner).toHaveAttribute('role', 'alert');
       expect(banner).toHaveTextContent(
-        'The OpenThrottle Server is unreachable or misconfigured. Plans and tasks may be unavailable.',
+        'The OpenThrottle Server is unreachable or misconfigured. Plans and tasks are unavailable.',
       );
     });
 
@@ -96,7 +96,7 @@ describe('GlobalServerHealthBanner', () => {
       const banner = component.getByTestId('GlobalServerHealthBanner');
       expect(banner).toBeInTheDocument();
       expect(banner).toHaveTextContent(
-        'The OpenThrottle Server is unreachable or misconfigured. Plans and tasks may be unavailable.',
+        'The OpenThrottle Server is unreachable or misconfigured. Plans and tasks are unavailable.',
       );
     });
   });

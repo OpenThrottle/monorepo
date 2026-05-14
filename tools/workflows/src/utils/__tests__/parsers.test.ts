@@ -72,6 +72,68 @@ describe('parseRalphCompleteTaskSignals', () => {
       ),
     ).toEqual([]);
   });
+
+  /**
+   * Claude Code CLI uses the same combined stdout+stderr string as `cursor-agent` in
+   * {@link runShellIterationAsync}. These fixtures approximate headless `claude --bare -p …` noise
+   * (progress / logs on stderr, answer on stdout) without requiring a live CLI in CI.
+   */
+  it('parses task-complete when embedded in Claude-shaped stdout+stderr (async contract)', () => {
+    const stdout = [
+      '## Summary',
+      '',
+      'Implemented the feature.',
+      '',
+      `<ralph:task-complete>${TASK_UUID}</ralph:task-complete>`,
+    ].join('\n');
+    const stderr = ['[claude-code] session started', 'thinking…'].join('\n');
+    const combined = `${stdout}\n${stderr}`;
+    expect(parseRalphCompleteTaskSignals(combined)).toEqual([
+      TASK_UUID.toLowerCase(),
+    ]);
+    expect(getRalphOutputMarkerFlags(combined).hasPromiseComplete).toBe(false);
+  });
+
+  it('parses markers when stderr precedes assistant text (same string contract)', () => {
+    const combined = [
+      'stderr: loading MCP…',
+      '',
+      `Assistant: Done. <ralph:task-complete>${TASK_UUID}</ralph:task-complete>`,
+      '<promise>COMPLETE</promise>',
+    ].join('\n');
+    expect(parseRalphCompleteTaskSignals(combined)).toEqual([
+      TASK_UUID.toLowerCase(),
+    ]);
+    expect(getRalphOutputMarkerFlags(combined).hasPromiseComplete).toBe(true);
+  });
+
+  it('still parses task-complete when ANSI escape codes wrap nearby text', () => {
+    const ansiGreen = '\u001b[32m';
+    const ansiReset = '\u001b[0m';
+    const result = `${ansiGreen}ok${ansiReset} <ralph:task-complete>${TASK_UUID}</ralph:task-complete>`;
+    expect(parseRalphCompleteTaskSignals(result)).toEqual([
+      TASK_UUID.toLowerCase(),
+    ]);
+  });
+
+  it('does not match HTML-escaped tags (model must emit literal angle brackets)', () => {
+    const escaped =
+      '&lt;ralph:task-complete&gt;' +
+      TASK_UUID +
+      '&lt;/ralph:task-complete&gt;';
+    expect(parseRalphCompleteTaskSignals(escaped)).toEqual([]);
+  });
+
+  it('parses task-complete inside a markdown fence (literal tag characters)', () => {
+    const result = [
+      '```',
+      `<ralph:task-complete>${TASK_UUID}</ralph:task-complete>`,
+      '```',
+    ].join('\n');
+    expect(parseRalphCompleteTaskSignals(result)).toEqual([
+      TASK_UUID.toLowerCase(),
+    ]);
+  });
 });
 
 describe('getRalphOutputMarkerFlags', () => {

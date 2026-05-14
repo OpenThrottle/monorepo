@@ -1,4 +1,7 @@
-import type { RalphNestedRunTuningInput } from '@tools/workflows';
+import type {
+  RalphExecutionBackendId,
+  RalphNestedRunTuningInput,
+} from '@tools/workflows';
 
 /**
  * @description Plan vs task-centric scope for in-process Ralph orchestrator runs. Matches `WorkflowMode` on
@@ -11,6 +14,10 @@ export type RunPlanJobWorkflowMode = 'plan' | 'task';
  * `orchestrator` so the worker uses `createWorkflowRalphOrchestrator` instead of spawning `workflow-ralph`.
  */
 export interface RunPlanOrchestratorJobData {
+  /**
+   * Execution backend selected once for this run. Optional only for previously persisted BullMQ jobs.
+   */
+  readonly executionBackend?: RalphExecutionBackendId;
   readonly runKind: 'orchestrator';
   readonly planId: string;
   /**
@@ -22,6 +29,11 @@ export interface RunPlanOrchestratorJobData {
    */
   readonly mode?: RunPlanJobWorkflowMode;
   readonly taskId?: string;
+  /**
+   * Optional absolute path to a local project directory. When set, the orchestrator uses this as the
+   * working directory instead of the monorepo root.
+   */
+  readonly workingDirectory?: string;
 }
 
 /**

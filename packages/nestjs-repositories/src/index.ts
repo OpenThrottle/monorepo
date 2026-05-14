@@ -10,7 +10,10 @@ export { CustomPromptsService } from './modules/prompts/custom-prompts.service';
 export { DailyStat } from './modules/daily-stats/daily-stat.entity';
 export { dailyStatsFactory } from './modules/daily-stats/daily-stats.factory';
 export { DailyStatsService } from './modules/daily-stats/daily-stats.service';
-export { getTypeOrmOptions as getCortexTypeOrmOptions } from './database.config';
+export {
+  getCortexPostgresUrl,
+  getTypeOrmOptions as getCortexTypeOrmOptions,
+} from './database.config';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module';
 export { Note } from './modules/notes/note.entity';
 export { notesFactory } from './modules/notes/notes.factory';
@@ -22,6 +25,8 @@ export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings
 export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity';
 export { planOutputStreamFactory } from './modules/plan-output-stream/plan-output-stream.factory';
 export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service';
+export { PlanRun } from './modules/plan-runs/plan-run.entity';
+export { PlanRunsService } from './modules/plan-runs/plan-runs.service';
 export { plansFactory } from './modules/plans/plans.factory';
 export { PlansService } from './modules/plans/plans.service';
 export { Permission } from './modules/roles/permission.entity';
@@ -55,6 +60,11 @@ export type { NoteFactoryData } from './modules/notes/notes.factory';
 export type { PermissionData } from './modules/roles/permission.entity';
 export type { RoleData } from './modules/roles/role.entity';
 export type { PlanData } from './modules/plans/plan.entity';
+export type {
+  PlanRunData,
+  PlanRunExecutionBackend,
+  PlanRunKind,
+} from './modules/plan-runs/plan-run.entity';
 export type { SubscriptionData } from './modules/subscriptions/subscription.entity';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity';
 export type { ProjectData } from './modules/projects/project.entity';

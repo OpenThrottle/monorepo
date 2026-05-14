@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PlanToolbarSortBy Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="PlanToolbarSortBy"
+    >
+      <h2>
+        PlanToolbarSortBy
+      </h2>
+    </div>
+  </div>
+</body>
+`;

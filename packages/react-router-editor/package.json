@@ -34,7 +34,8 @@
       "__build-package": {},
       "lint": {},
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {
@@ -46,7 +47,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

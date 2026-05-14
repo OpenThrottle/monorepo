@@ -31,8 +31,8 @@ describe('HomeFeatures Component', () => {
     expect(docLink).toHaveAttribute('target', '_blank');
     expect(docLink).toHaveAttribute('rel', 'noopener noreferrer');
 
-    expect(screen.getAllByRole('listitem')).toHaveLength(HOME_FEATURES.length);
-    expect(screen.getByText('Plans and tasks')).toBeInTheDocument();
-    expect(screen.getByText('Semantic search')).toBeInTheDocument();
+    for (const feature of HOME_FEATURES) {
+      expect(screen.getByText(feature.title)).toBeInTheDocument();
+    }
   });
 });

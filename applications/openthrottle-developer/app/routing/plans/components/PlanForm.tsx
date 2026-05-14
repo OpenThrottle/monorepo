@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Button,
   Card,
@@ -27,12 +26,11 @@ const PLAN_CATEGORIES = [
 
 export interface PlanFormProps {
   readonly actionData?: { error?: string } | null;
-  readonly className?: string;
   readonly plan?: PlanDetailsFragment | null;
 }
 
 export const PlanForm = (props: PlanFormProps) => {
-  const { actionData, className, plan } = props;
+  const { actionData, plan } = props;
 
   // Hooks
 
@@ -49,9 +47,9 @@ export const PlanForm = (props: PlanFormProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={classnames('w-full', className)} data-testid="PlanForm">
+    <Card className="w-full p-8 gap-8" data-testid="PlanForm">
       <CardContent className="pt-8">
-        <Form className="gap-4 md:gap-8 w-full flex" method="post">
+        <Form className="gap-4 md:gap-12 w-full flex" method="post">
           <div className="flex-1 space-y-4">
             {isEdit ? <Input name="id" type="hidden" value={plan.id} /> : null}
             <div>
@@ -93,10 +91,20 @@ export const PlanForm = (props: PlanFormProps) => {
                 defaultValue={plan?.author ?? ''}
                 id="plan-author"
                 name="author"
-                placeholder="e.g. visormatt"
-                required={true}
+                placeholder={
+                  isEdit
+                    ? 'e.g. visormatt'
+                    : 'GitHub username; optional if API has GITHUB_USER'
+                }
+                required={isEdit}
                 type="text"
               />
+              {isEdit ? null : (
+                <p className="text-muted-foreground text-xs mt-1">
+                  Leave blank only when the API server has GITHUB_USER set;
+                  otherwise create will fail validation.
+                </p>
+              )}
             </div>
 
             <div>

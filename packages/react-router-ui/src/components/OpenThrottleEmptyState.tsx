@@ -1,12 +1,13 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
 export interface OpenThrottleEmptyStateProps {
   readonly className?: string;
+  readonly description: string;
+  readonly title: string;
 }
 
 export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
-  const { className } = props;
+  const { className, description, title } = props;
 
   // Hooks
 
@@ -21,11 +22,9 @@ export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="OpenThrottleEmptyState"
-    >
-      <h2>OpenThrottle Empty State</h2>
+    <div className={className} data-testid="OpenThrottleEmptyState">
+      <h2 className="text-lg font-bold mb-2">{title}</h2>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );
 };

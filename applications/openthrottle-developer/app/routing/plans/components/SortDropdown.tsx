@@ -50,12 +50,12 @@ export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
   // 🔌 Short Circuit
 
   return (
-    <Select
-      aria-label="Sort plans"
-      onValueChange={handleChange}
-      value={resolvedValue}
-    >
-      <SelectTrigger className="w-[200px]">
+    <Select onValueChange={handleChange} value={resolvedValue}>
+      <SelectTrigger
+        aria-label="Sort plans"
+        className="w-[200px]"
+        data-testid="PlansSortDropdown"
+      >
         <SelectValue placeholder="Add permission…" />
       </SelectTrigger>
       <SelectContent>

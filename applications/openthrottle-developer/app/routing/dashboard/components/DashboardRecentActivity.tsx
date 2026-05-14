@@ -4,9 +4,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { FileText, GitCommit, ListTodo } from 'lucide-react';
 import { Link } from 'react-router';
 import {
-  CardContent,
-  CardHeader,
-  CardTitle,
   Table,
   TableBody,
   TableCaption,
@@ -121,7 +118,8 @@ function TypeIcon({ type }: { type: ActivityRow['type'] }): React.ReactElement {
 function formatActivityDate(dateStr: string): string {
   const date = new Date(dateStr);
 
-  return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
+  // return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
+  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 /**
@@ -233,106 +231,106 @@ export const DashboardRecentActivity = (
       className={classnames(className)}
       data-testid="DashboardRecentActivity"
     >
-      <CardHeader>
-        <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {activityRows.length === 0 ? (
-          <p
-            className="text-sm text-muted-foreground"
-            data-testid="DashboardRecentActivity-empty"
-          >
-            No recent activity.
-          </p>
-        ) : (
-          <Table className="[&_tr]:hover:text-accent">
-            <TableCaption className="sr-only">
-              Recent activity: type, date, and plan
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead align="left" className="pb-2" scope="col">
-                  Type
-                </TableHead>
-                <TableHead align="left" className="pb-2" scope="col">
-                  Date
-                </TableHead>
-                <TableHead align="left" className="pb-2" scope="col">
-                  Plan
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activityRows.map((row) => {
-                const href = activityDetailHref(row);
-                const isCommitWithLink = row.type === 'commit' && href != null;
-                const isOutputWithLink = row.type === 'output' && href != null;
-                const isTaskWithLink = row.type === 'task' && href != null;
-                const content = planCellContent(row);
+      <h2 className="mb-4">Recent Activity</h2>
 
-                const planCell = isCommitWithLink ? (
-                  <Link
-                    aria-label={commitLinkAriaLabel(row)}
-                    to={href}
-                    viewTransition={true}
-                  >
-                    {content}
-                  </Link>
-                ) : isTaskWithLink ? (
-                  <Link
-                    aria-label={taskLinkAriaLabel(row)}
-                    to={href}
-                    viewTransition={true}
-                  >
-                    {content}
-                  </Link>
-                ) : isOutputWithLink ? (
-                  <Link
-                    aria-label={outputLinkAriaLabel(row)}
-                    to={href}
-                    viewTransition={true}
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  content
-                );
+      {activityRows.length === 0 ? (
+        <p
+          className="text-sm text-muted-foreground"
+          data-testid="DashboardRecentActivity-empty"
+        >
+          No recent activity.
+        </p>
+      ) : (
+        <Table className="[&_tr]:hover:text-accent">
+          <TableCaption className="sr-only">
+            Recent activity: type, date, and plan
+          </TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead align="left" className="pb-2" scope="col">
+                Type
+              </TableHead>
+              <TableHead align="left" className="pb-2" scope="col">
+                Date
+              </TableHead>
+              <TableHead align="left" className="pb-2" scope="col">
+                Plan
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {activityRows.map((row) => {
+              const href = activityDetailHref(row);
+              const isCommitWithLink = row.type === 'commit' && href != null;
+              const isOutputWithLink = row.type === 'output' && href != null;
+              const isTaskWithLink = row.type === 'task' && href != null;
+              const content = planCellContent(row);
 
-                const typeBadge = null;
-                // const typeBadge = (
-                //   <Badge size="sm" variant="secondary">
-                //     {row.type}
-                //   </Badge>
-                // );
-                const statusBadge =
-                  row.type === 'task' &&
-                  row.status != null &&
-                  isValidTaskStatus(row.status) ? (
-                    <PlanStatusBadge status={row.status as any} />
-                  ) : null;
+              const planCell = isCommitWithLink ? (
+                <Link
+                  aria-label={commitLinkAriaLabel(row)}
+                  className="line-clamp-2"
+                  to={href}
+                  viewTransition={true}
+                >
+                  {content}
+                </Link>
+              ) : isTaskWithLink ? (
+                <Link
+                  aria-label={taskLinkAriaLabel(row)}
+                  className="line-clamp-2"
+                  to={href}
+                  viewTransition={true}
+                >
+                  {content}
+                </Link>
+              ) : isOutputWithLink ? (
+                <Link
+                  aria-label={outputLinkAriaLabel(row)}
+                  className="line-clamp-2"
+                  to={href}
+                  viewTransition={true}
+                >
+                  {content}
+                </Link>
+              ) : (
+                content
+              );
 
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell className="align-top">
-                      <span className="flex items-center gap-2">
-                        <TypeIcon type={row.type} />
-                        {typeBadge}
-                        {statusBadge}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground align-top text-sm">
-                      {formatActivityDate(row.date)}
-                    </TableCell>
-                    <TableCell className="line-clamp-2 overflow-hidden text-sm">
-                      {planCell}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
+              const typeBadge = null;
+              // const typeBadge = (
+              //   <Badge size="sm" variant="secondary">
+              //     {row.type}
+              //   </Badge>
+              // );
+              const statusBadge =
+                row.type === 'task' &&
+                row.status != null &&
+                isValidTaskStatus(row.status) ? (
+                  <PlanStatusBadge status={row.status as any} />
+                ) : null;
+
+              return (
+                <TableRow key={row.id}>
+                  <TableCell className="align-top">
+                    <span className="flex items-center gap-2">
+                      <TypeIcon type={row.type} />
+                      {typeBadge}
+                      {statusBadge}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground align-top text-sm">
+                    {formatActivityDate(row.date)}
+                  </TableCell>
+                  <TableCell className="overflow-hidden text-sm">
+                    {planCell}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 };

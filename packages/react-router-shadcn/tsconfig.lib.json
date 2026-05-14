@@ -7,10 +7,11 @@
   },
   "include": ["**/*.json", "src/**/*", "tests/**/*"],
   "exclude": [
-    "dist",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "src/components/shadcn-raw"
+    "dist"
   ],
   "references": [
     {

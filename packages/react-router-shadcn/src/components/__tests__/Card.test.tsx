@@ -24,10 +24,9 @@ describe('Card', () => {
     expect(card).toHaveClass(
       'bg-card',
       'border',
+      'hover:border-accent/60',
       'rounded-lg',
       'transition-colors',
-      'ui-border',
-      'hover:border-color-border-dark',
     );
   });
 

@@ -16,7 +16,11 @@ export const DEFAULT_RALPH_PROMPT = '/agents/ralph' as const;
 export const DEFAULT_RALPH_ITERATIONS = 10;
 export const DEFAULT_RALPH_MODEL = 'auto' as const;
 
-/** Environment variable names for run tuning and prompt profile (Phase 1). */
+/**
+ * Environment variable names for run tuning and prompt profile (Phase 1).
+ * `WORKFLOW_RALPH_BACKEND` accepts any registered {@link RalphExecutionBackendId} (`cursor` |
+ * `claude`); the same id applies to the entire plan run.
+ */
 export const WORKFLOW_RALPH_ENV = {
   backend: 'WORKFLOW_RALPH_BACKEND',
   iterationTimeout: 'WORKFLOW_RALPH_ITERATION_TIMEOUT',

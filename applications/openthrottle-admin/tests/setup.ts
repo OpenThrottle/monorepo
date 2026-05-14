@@ -29,6 +29,20 @@ if (typeof window !== 'undefined' && !window.ResizeObserver) {
   };
 }
 
+// Radix Select and cmdk call scrollIntoView; jsdom does not implement it
+Element.prototype.scrollIntoView = (): void => {};
+
+// Radix Select uses pointer capture; jsdom does not implement these on Element
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = (): boolean => false;
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = (): void => {};
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = (): void => {};
+}
+
 // shadcn-ui Sidebar (use-mobile) and other components that rely on matchMedia
 if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query: string) => ({

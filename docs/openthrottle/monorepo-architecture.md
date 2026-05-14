@@ -1,6 +1,6 @@
 # OpenThrottle monorepo architecture
 
-This document describes how the OpenThrottle applications and packages in the monorepo fit together. It uses Mermaid diagrams and short narratives; see also `applications/openthrottle/README.md` and `databases/cortex/README.md`.
+This document describes how the OpenThrottle applications and packages in the monorepo fit together. It uses Mermaid diagrams and short narratives; see also `applications/openthrottle/README.md` and `databases/README.md`.
 
 ## Task breakdown (for this plan)
 
@@ -116,8 +116,8 @@ Shared infra used by the server: **Postgres** (Cortex schema in `databases/corte
 
 ## Related docs
 
-- **Cortex schema and usage:** `databases/cortex/README.md`
+- **Cortex schema and usage:** `databases/README.md`
 - **Run locally (OSS/Ollama):** `docs/openthrottle/run-locally-oss.md`
 - **Docker image strategy:** `docs/openthrottle/docker-image-build-strategy.md`
 - **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`
-- **MCP developer setup:** `packages/openthrottle/mcp-developer/README.md`
+- **MCP developer setup:** `packages/mcp-developer/README.md`

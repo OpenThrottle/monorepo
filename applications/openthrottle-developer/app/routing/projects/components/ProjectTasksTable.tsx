@@ -25,7 +25,7 @@ function buildColumns(): ColumnDef<
         const task = row.original;
         const title = task.title ?? 'Untitled';
         return (
-          <div className="overflow-hidden">
+          <div className="overflow-hidden p-4 py-2">
             <span className="text-sm font-medium">{title}</span>
           </div>
         );
@@ -107,7 +107,10 @@ export const ProjectTasksTable = (
   const getRowId = React.useCallback((task: ProjectTaskRow) => task.id, []);
 
   return (
-    <div className={classnames(className)} data-testid="ProjectTasksTable">
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="ProjectTasksTable"
+    >
       <DataTable<ProjectTaskRow, string | number | null | undefined>
         columns={columns}
         data={data}

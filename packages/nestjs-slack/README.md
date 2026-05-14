@@ -16,12 +16,6 @@ pnpm add @openthrottle/nestjs-slack
 npm install @openthrottle/nestjs-slack
 ```
 
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-slack
-```
-
 ## Usage
 
 Register the module with **`forRoot(options)`**. All required keys must be provided; validation runs in the dynamic module factory, so missing or invalid config fails at app bootstrap.

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- GitHub REST JSON responses lack runtime schema; assertions match documented API shapes */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { IssueWithLabelsDto } from './dto/issue-with-labels.dto';
@@ -8,7 +7,9 @@ import type { PullReviewDto, PullReviewState } from './dto/pull-review.dto';
 
 /** GitHub REST API pull request list item (subset we use). */
 interface GitHubPullItem {
+  readonly base?: { readonly ref: string } | null;
   readonly created_at: string;
+  readonly head?: { readonly ref: string; readonly sha?: string } | null;
   readonly html_url: string;
   readonly merged_at: string | null;
   readonly number: number;
@@ -96,7 +97,7 @@ export class GitHubService {
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as GitHubPullItem[];
+    const data = (await res.json()) as unknown as GitHubPullItem[];
     let list = data.map((p) => toPullListItemDto(p));
 
     if (mergedFilter === true) {
@@ -106,6 +107,38 @@ export class GitHubService {
     }
 
     return list;
+  }
+
+  /**
+   * @description Fetches one PR by number; maps to the same shape as list pulls (conversation metadata).
+   */
+  async getPullListItem(
+    owner: string,
+    repo: string,
+    pullNumber: number,
+  ): Promise<PullListItemDto | null> {
+    const token = this.config.get<string>('GITHUB_TOKEN');
+    const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}`;
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(url, { headers });
+    if (res.status === 404) {
+      return null;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data = (await res.json()) as unknown as GitHubPullItem;
+
+    return toPullListItemDto(data);
   }
 
   /**
@@ -132,7 +165,8 @@ export class GitHubService {
       throw new Error(`GitHub API error ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as GitHubPullDetail;
+    const data = (await res.json()) as unknown as GitHubPullDetail;
+
     return {
       additions: data.additions,
       author: data.user?.login ?? '',
@@ -180,8 +214,9 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as GitHubIssueItem[];
+      const data = (await res.json()) as unknown as GitHubIssueItem[];
       const pageResults: IssueWithLabelsDto[] = [];
+
       for (const item of data) {
         if (item.pull_request === undefined) continue;
         pageResults.push({
@@ -190,7 +225,9 @@ export class GitHubService {
           state: item.state,
         });
       }
+
       if (data.length < perPage) return pageResults;
+
       return [...pageResults, ...(await fetchPage(page + 1))];
     };
 
@@ -231,8 +268,10 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as ReadonlyArray<unknown>;
+      const data = (await res.json()) as unknown as ReadonlyArray<unknown>;
+
       if (data.length < perPage) return data.length;
+
       return data.length + (await fetchPageCount(page + 1));
     };
 
@@ -273,12 +312,14 @@ export class GitHubService {
         );
       }
 
-      const data = (await res.json()) as GitHubReviewItem[];
+      const data = (await res.json()) as unknown as GitHubReviewItem[];
       const pageResults = data.map((r) => ({
         state: r.state,
         submittedAt: r.submitted_at,
       }));
+
       if (data.length < perPage) return pageResults;
+
       return [...pageResults, ...(await fetchPage(page + 1))];
     };
 
@@ -289,7 +330,10 @@ export class GitHubService {
 function toPullListItemDto(p: GitHubPullItem): PullListItemDto {
   return {
     author: p.user?.login ?? '',
+    baseRef: p.base?.ref ?? null,
     createdAt: p.created_at,
+    headRef: p.head?.ref ?? null,
+    headSha: p.head?.sha ?? null,
     htmlUrl: p.html_url,
     mergedAt: p.merged_at,
     number: p.number,

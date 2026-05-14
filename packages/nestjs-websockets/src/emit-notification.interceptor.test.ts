@@ -2,6 +2,11 @@ import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { Reflector } from '@nestjs/core';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import type {
+  HttpArgumentsHost,
+  RpcArgumentsHost,
+  WsArgumentsHost,
+} from '@nestjs/common/interfaces/features/arguments-host.interface.js';
 import {
   EmitNotificationInterceptor,
   type EmitNotificationEmitter,
@@ -15,12 +20,9 @@ function createMockContext(handler: () => void): ExecutionContext {
     getClass: () => ({}) as unknown as Constructor,
     getHandler: () => handler,
     getType: () => 'http',
-    switchToHttp: () =>
-      ({}) as unknown as import('@nestjs/common').HttpArgumentsHost,
-    switchToRpc: () =>
-      ({}) as unknown as import('@nestjs/common').RpcArgumentsHost,
-    switchToWs: () =>
-      ({}) as unknown as import('@nestjs/common').WsArgumentsHost,
+    switchToHttp: () => ({}) as unknown as HttpArgumentsHost,
+    switchToRpc: () => ({}) as unknown as RpcArgumentsHost,
+    switchToWs: () => ({}) as unknown as WsArgumentsHost,
   } as ExecutionContext;
 }
 

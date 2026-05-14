@@ -1,0 +1,2 @@
+{"data":" - 📌 Set task \u001b[0;32m80913064-fccb-47ad-bfa4-1238b7c8147e\u001b[0m to IN_PROGRESS for this iteration.\n","timestamp":"2026-05-03T01:56:06.272Z","type":"stdout"}
+{"data":"[workflow-ralph:debug] main: invoking iteration runner {\n  agentPromptLen: \u001b[33m1187\u001b[39m,\n  backend: \u001b[32m'cursor'\u001b[39m,\n  iteration: \u001b[33m1\u001b[39m,\n  nonInteractive: \u001b[33mtrue\u001b[39m,\n  timeoutMs: \u001b[1mnull\u001b[22m\n}\n","timestamp":"2026-05-03T01:56:06.273Z","type":"stderr"}

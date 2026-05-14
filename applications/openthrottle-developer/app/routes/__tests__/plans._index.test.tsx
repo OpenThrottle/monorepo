@@ -48,6 +48,8 @@ const mockLoaderDataWithStats = {
   ],
   statuses: [] as string[],
   totalCount: 1,
+  totalCountAll: 11,
+  totalCountQueued: 2,
 };
 
 const mockLoaderDataEmpty = {
@@ -70,6 +72,8 @@ const mockLoaderDataEmpty = {
   ],
   statuses: [] as string[],
   totalCount: 0,
+  totalCountAll: 0,
+  totalCountQueued: 0,
 };
 
 describe('routes/plans._index.tsx', () => {
@@ -92,8 +96,8 @@ describe('routes/plans._index.tsx', () => {
     const statCards = component.getAllByTestId('OpenThrottleStatCard');
     expect(statCards).toHaveLength(3);
 
-    expect(component.getByText('Total')).toBeInTheDocument();
-    expect(component.getByText('In progress (all)')).toBeInTheDocument();
+    expect(component.getByText('Matching / Total plans')).toBeInTheDocument();
+    expect(component.getByText('In progress / Queued')).toBeInTheDocument();
     expect(component.getByText('Completed (all)')).toBeInTheDocument();
 
     expect(component.getByText('1')).toBeInTheDocument();
@@ -113,8 +117,8 @@ describe('routes/plans._index.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByRole('main')).toBeInTheDocument();
-    expect(component.getByText('Total')).toBeInTheDocument();
-    expect(component.getByText('In progress (all)')).toBeInTheDocument();
+    expect(component.getByText('Matching / Total plans')).toBeInTheDocument();
+    expect(component.getByText('In progress / Queued')).toBeInTheDocument();
     expect(component.getByText('Completed (all)')).toBeInTheDocument();
     expect(component.getAllByText('0').length).toBeGreaterThanOrEqual(3);
   });

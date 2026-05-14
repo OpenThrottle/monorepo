@@ -3,8 +3,15 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist",
-    "rootDirs": ["./src", "./tests"]
+    "rootDirs": ["./src"]
   },
-  "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "tests/**"
+  ]
 }

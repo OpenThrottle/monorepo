@@ -37,6 +37,15 @@ describe('QueueJobCard Component', () => {
     expect(component.getByTestId('job-id-job-1')).toHaveTextContent('job-1');
   });
 
+  test('should link to job detail when queueName is set', () => {
+    const { getByTestId } = renderCard({
+      job: minimalJob,
+      queueName: 'Plans',
+    });
+    const link = getByTestId('job-detail-link-job-1');
+    expect(link).toHaveAttribute('href', '/queues/Plans/job-1');
+  });
+
   test('should render job-failedReason-* when failedReason is set', () => {
     const jobWithFailure: QueueJobCardProps['job'] = {
       ...minimalJob,
@@ -51,6 +60,26 @@ describe('QueueJobCard Component', () => {
     );
     expect(getByTestId('job-failedReason-job-failed-1')).toHaveTextContent(
       'Connection timeout',
+    );
+  });
+
+  test('should link plan and task from JSON payload when queueName is set', () => {
+    const planId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    const taskId = '11111111-2222-3333-4444-555555555555';
+    const { getByTestId } = renderCard({
+      job: {
+        ...minimalJob,
+        data: JSON.stringify({ planId, taskId }),
+        id: 'job-with-plan',
+      },
+      queueName: 'Plans',
+    });
+    const planLink = getByTestId('queue-job-card-plan-job-with-plan');
+    expect(planLink).toHaveAttribute('href', `/plans/${planId}`);
+    const taskLink = getByTestId('queue-job-card-task-job-with-plan');
+    expect(taskLink).toHaveAttribute(
+      'href',
+      `/plans/${planId}/tasks/${taskId}`,
     );
   });
 });

@@ -49,7 +49,7 @@ export const getVectorStore = async (config: VectorStoreConfig) => {
     throw new Error(`Invalid vector store provider`);
   }
 
-  const dimensions = getEmbeddingModelDimensions('all-minilm');
+  const dimensions = getEmbeddingModelDimensions('gemini-embedding-001');
   const vectorStore = await PGVectorStore.initialize(embeddings, {
     dimensions,
     postgresConnectionOptions: { connectionString },

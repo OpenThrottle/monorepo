@@ -15,28 +15,28 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 - Create and manage **plans** with **tasks**; track status: **backlog**, blocked, **canceled**, completed, in_progress, pending, **queued** (plans only; Run plan enqueues in BullMQ), skipped.
 - Optional **assignee** (GitHub username) and **summary** (PRD wrap-up, next actions) on plans and tasks.
 - List plans by status (and optional project filter); list tasks by plan or category; see remaining tasks per plan (`get_remaining_tasks_for_plan`).
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (schema, plans/tasks tables, Plan and task attributes), [.cursor/rules/commands/cortex.mdc](../../.cursor/rules/commands/cortex.mdc) (MCP tools: `get_plan`, `create_plan`, `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `list_tasks_by_category`, `create_task`, `update_task`; optional `project`/`projectId` on `list_plans_by_status`).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (schema, plans/tasks tables, Plan and task attributes), [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc) (MCP tools: `get_plan`, `create_plan`, `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `list_tasks_by_category`, `create_task`, `update_task`; optional `project`/`projectId` on `list_plans_by_status`).
 
 ### Projects
 
 - Group and filter **plans** (and tasks) by **NX project** (e.g. openthrottle-developer, cortex). Optional `project_id` / project on create/update; leave unset for cross-cutting or docs-only work.
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (§ Project association (when to set project)).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (§ Project association (when to set project)).
 
 ### Semantic search (plans and tasks)
 
 - **Semantic search** over plans and tasks (pgvector embeddings). Ask questions in natural language and get relevant plan/task content via **mcp-developer** (OT MCP).
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (plan_embeddings, task_embeddings, embedding strategy).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (plan_embeddings, task_embeddings, embedding strategy).
 
 ### Documentation search
 
 - Ingest **docs/** and NX project READMEs into OpenThrottle; search documentation semantically via the **docs-mcp** MCP server (separate from mcp-developer; use docs-mcp for docs content, mcp-developer for plans/tasks).
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (documentation, documentation_embeddings, ingest), [packages/docs-mcp/README.md](../../packages/docs-mcp/README.md).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (documentation, documentation_embeddings, ingest), [packages/docs-mcp/README.md](../../packages/docs-mcp/README.md).
 
 ### Activity and commit links
 
 - **Activity by date:** see what was worked on or shipped on a given day or in the last N days (commits, plan output, task updates).
 - **Commit links:** associate a git commit (e.g. squash after PR merge) with a plan and optional task; activity tools use this for “what landed.”
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (commit_links, Option A workflow, get_activity_by_date, get_last_activity).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (commit_links, Option A workflow, get_activity_by_date, get_last_activity).
 
 ### Ralph (agentic execution)
 
@@ -46,7 +46,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 ### Cursor integration (MCP)
 
 - **mcp-developer** (OT) MCP server in Cursor: ask OpenThrottle / ask OT, list plans by status, create/edit plans and tasks, semantic search, activity by date, output stream, commit links.
-- **Detailed docs:** [.cursor/rules/commands/cortex.mdc](../../.cursor/rules/commands/cortex.mdc), [.cursor/commands/cortex/](../../.cursor/commands/cortex/).
+- **Detailed docs:** [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), [.cursor/commands/ot/](../../.cursor/commands/ot/).
 
 ### Dashboard (OpenThrottle app)
 
@@ -56,12 +56,12 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 ### Notes
 
 - Quick **notes** (unstructured thoughts) with optional author; foundation for planning (e.g. create plan from note). Exposed via MCP.
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (notes table, MCP create_note, list_notes, etc.).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (notes table, MCP create_note, list_notes, etc.).
 
 ### Background jobs (optional)
 
 - **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Doc ingestion** (diff-based re-index of `docs/` on main). **Daily stats** for dashboard/analytics.
-- **Detailed docs:** [databases/cortex/README.md](../../databases/cortex/README.md) (queued status, doc tables), [docs/openthrottle/doc-ingestion-job-spec.md](doc-ingestion-job-spec.md).
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (queued status, doc tables), [docs/openthrottle/doc-ingestion-job-spec.md](doc-ingestion-job-spec.md).
 
 ---
 

@@ -1,6 +1,8 @@
 export interface ProjectsSearchParamsExtras {
   /** Plan list assignee filter. When set, multiple assignee params are appended. */
   readonly assignees?: readonly string[];
+  /** Preserved on pagination for routes that use it (e.g. search `details=ranking`). */
+  readonly details?: string;
   readonly search?: string;
   readonly sortBy?: string;
   readonly sortOrder?: string;
@@ -27,6 +29,7 @@ export function buildProjectsSearchParams(
       params.append('assignee', a);
     }
   }
+  if (extras?.details) params.set('details', extras.details);
   if (extras?.search) params.set('q', extras.search);
   if (extras?.sortBy) params.set('sortBy', extras.sortBy);
   if (extras?.sortOrder) params.set('sortOrder', extras.sortOrder);

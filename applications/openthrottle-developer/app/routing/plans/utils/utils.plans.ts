@@ -33,28 +33,28 @@ export const getPlanStatusBadgeColor = (status: PlanStatusKey): string => {
 
   switch (status) {
     case 'BACKLOG':
-      color = `border-yellow-500/50 bg-yellow-500/20 hover:bg-yellow-500/50`;
+      color = `border-violet-500/50 bg-violet-500/20 hover:bg-violet-500/50`;
       break;
     case 'BLOCKED':
       color = `border-amber-500/50 bg-amber-500/20 hover:bg-amber-500/50`;
       break;
     case 'CANCELED':
-      color = `border-red-500/50 bg-red-500/20 hover:bg-red-500/50`;
+      color = `border-slate-500/50 bg-slate-500/20 hover:bg-slate-500/50`;
       break;
     case 'COMPLETED':
-      color = `border-green-500/50 bg-green-500/20 hover:bg-green-500/50`;
+      color = `border-lime-500/50 bg-lime-500/20 hover:bg-lime-500/50`;
       break;
     case 'IN_PROGRESS':
-      color = `border-orange-500/50 bg-orange-500/20 hover:bg-orange-500/50`;
+      color = `border-yellow-400/50 bg-yellow-400/20 hover:bg-yellow-400/50`;
       break;
     case 'PENDING':
-      color = `border-accent/50 bg-accent/20 hover:bg-accent/50`;
+      color = `border-sky-500/50 bg-sky-500/20 hover:bg-sky-500/50`;
       break;
     case 'QUEUED':
-      color = `border-yellow-500/50 bg-yellow-500/20 hover:bg-yellow-500/50`;
+      color = `border-orange-500/50 bg-orange-500/20 hover:bg-orange-500/50`;
       break;
     case 'SKIPPED':
-      color = `border-orange-500/50 bg-orange-500/20 hover:bg-orange-500/50`;
+      color = `border-red-500/50 bg-red-500/20 hover:bg-red-500/50`;
 
       break;
   }

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { NotificationsStoreProvider } from '../../data/notifications-store.context';
+import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 import { NotificationBell } from '../NotificationBell';
 
 describe('NotificationBell Component', () => {

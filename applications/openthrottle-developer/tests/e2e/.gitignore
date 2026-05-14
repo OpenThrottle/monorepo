@@ -1,0 +1,12 @@
+# Maestro run artifacts (recordings, screenshots, reports, debug logs).
+# Ignore the contents but keep the directory itself via the .gitkeep marker.
+output/*
+!output/.gitkeep
+
+# Local-only Maestro cache / debug dumps
+.maestro/
+*.log
+*.har
+
+# OS noise
+.DS_Store

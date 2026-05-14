@@ -14,12 +14,13 @@ import {
   NOTIFICATIONS_MAX_PERSISTED,
 } from '../config/index';
 import { NotificationInstance } from '../types';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 
 /**
  * @description Default localStorage key for persisted notifications. Apps migrating from
  * an older key may pass {@link NotificationsStoreProviderProps.storageKey}.
  */
-export const DEFAULT_NOTIFICATIONS_STORAGE_KEY = `@openthrottle/react-router-notifications:notifications`;
+export const DEFAULT_NOTIFICATIONS_STORAGE_KEY = `${APP_NAME}:notifications`;
 
 export function generateId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {

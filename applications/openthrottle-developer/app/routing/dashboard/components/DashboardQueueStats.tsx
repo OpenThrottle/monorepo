@@ -1,22 +1,10 @@
-/**
- * Queue stats card: renders queue name and counts (waiting, active, completed, failed, delayed).
- * Compact one-line-per-queue list with tooltip for full stats on hover/focus.
- */
 import * as React from 'react';
-import classnames from 'classnames';
 import {
-  Card,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
-
-export interface DashboardQueueStatsProps {
-  readonly className?: string;
-  readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;
-}
 
 const COLUMNS: ReadonlyArray<{
   readonly key: keyof Pick<
@@ -52,8 +40,13 @@ function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
   return `W:${queue.waitingCount} A:${queue.activeCount} C:${queue.completedCount} F:${queue.failedCount} D:${queue.delayedCount}`;
 }
 
+export interface DashboardQueueStatsProps {
+  // readonly className?: string;
+  readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;
+}
+
 export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
-  const { className, data } = props;
+  const { data } = props;
 
   // Hooks
 
@@ -69,11 +62,8 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card
-      className={classnames('p-3', className)}
-      data-testid="DashboardQueueStats"
-    >
-      <h2 className="text-sm font-semibold">Queue Stats</h2>
+    <div data-testid="DashboardQueueStats">
+      <h2 className="mb-4">Queue Stats</h2>
       {isEmpty ? (
         <p className="mt-2 text-sm text-muted-foreground">No queues</p>
       ) : (
@@ -82,37 +72,33 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
           className="mt-2 space-y-0.5 overflow-auto text-xs"
           role="region"
         >
-          <TooltipProvider>
-            <ul className="list-none">
-              {data.map((queue) => (
-                <li key={queue.name}>
-                  <Tooltip>
-                    <TooltipTrigger asChild={true}>
-                      <div
-                        className="flex cursor-default items-center justify-between gap-2 rounded py-0.5 px-1 hover:bg-muted/50"
-                        tabIndex={0}
+          <ul className="list-none">
+            {data.map((queue) => (
+              <li key={queue.name}>
+                <Tooltip>
+                  <TooltipTrigger asChild={true}>
+                    <div
+                      className="flex cursor-default items-center justify-between gap-2 rounded py-0.5 px-1 hover:bg-muted/50"
+                      tabIndex={0}
+                    >
+                      <span className="truncate font-medium">{queue.name}</span>
+                      <span
+                        aria-hidden={true}
+                        className="shrink-0 tabular-nums text-muted-foreground"
                       >
-                        <span className="truncate font-medium">
-                          {queue.name}
-                        </span>
-                        <span
-                          aria-hidden={true}
-                          className="shrink-0 tabular-nums text-muted-foreground"
-                        >
-                          {formatCompactSummary(queue)}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      {formatQueueStatsTooltip(queue)}
-                    </TooltipContent>
-                  </Tooltip>
-                </li>
-              ))}
-            </ul>
-          </TooltipProvider>
+                        {formatCompactSummary(queue)}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {formatQueueStatsTooltip(queue)}
+                  </TooltipContent>
+                </Tooltip>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-    </Card>
+    </div>
   );
 };

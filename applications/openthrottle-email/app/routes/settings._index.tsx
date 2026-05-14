@@ -1,4 +1,4 @@
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/settings._index';
 
@@ -28,7 +28,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <div className="max-w-2xl text-center text-white/20 text-2xl font-semibold">
+    <div className="text-center text-white/20 text-2xl font-semibold">
       <i>Coming soon...</i>
     </div>
   );
@@ -38,4 +38,4 @@ export default function Component(
 //   return {};
 // };
 
-export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = MailGlobalErrorBoundary;

@@ -175,4 +175,4 @@ All technology tags should be validated against this reference document. See the
 ## Related Documentation
 
 - [NX Project Tags Documentation](https://nx.dev/concepts/more-concepts/tags)
-- [AGENTS.md](../../AGENTS.md) (workspace conventions)
+- [AGENTS.md](../../../AGENTS.md) (workspace conventions)

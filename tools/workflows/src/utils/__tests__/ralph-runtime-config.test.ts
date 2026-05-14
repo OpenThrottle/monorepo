@@ -147,6 +147,37 @@ describe('readWorkflowRalphEnv + mergeRalphRuntimeSeed', () => {
     }
   });
 
+  it('merge backend: env claude wins over file cursor', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ backend: 'cursor' }),
+        'utf8',
+      );
+      vi.stubEnv(WORKFLOW_RALPH_ENV.backend, 'claude');
+      const seed = mergeRalphRuntimeSeed(dir);
+      expect(seed.backend).toBe('claude');
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('merge backend: file claude flows through when env unset', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-'));
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ backend: 'claude' }),
+        'utf8',
+      );
+      const seed = mergeRalphRuntimeSeed(dir);
+      expect(seed.backend).toBe('claude');
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
   it('env iteration timeout overrides file', () => {
     const dir = mkdtempSync(join(tmpdir(), 'wr-'));
     try {

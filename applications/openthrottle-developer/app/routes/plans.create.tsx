@@ -1,25 +1,32 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { redirect } from 'react-router';
-import { PlanForm } from '~/routing/plans/components/PlanForm';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { CreatePlanDocument } from '~/__generated__/graphql';
+import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
+import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.create';
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+type HandleData = Route.ComponentProps['loaderData'];
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [{ children: 'Plans', to: '/plans' }],
+};
 
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `PlansCreate | ${SITE_TITLE}` }];
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create plan | ${SITE_TITLE}` }];
@@ -43,14 +50,11 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
-      <OpenThrottleBreadcrumbs
-        children="Create Plan"
-        className="mb-4"
-        links={[{ children: 'Plans', to: '/plans' }]}
-      />
-      <PlanForm actionData={actionData} />
-    </main>
+    <GlobalScreen>
+      <PlanCreateMcpParityShell>
+        <PlanForm actionData={actionData} />
+      </PlanCreateMcpParityShell>
+    </GlobalScreen>
   );
 }
 
@@ -61,10 +65,6 @@ export const action = async (args: Route.ActionArgs) => {
   const category = formData.get('category');
   const title = formData.get('title');
 
-  if (typeof author !== 'string' || !author.trim()) {
-    return { error: 'Author is required.' };
-  }
-
   if (typeof category !== 'string' || !category.trim()) {
     return { error: 'Category is required.' };
   }
@@ -72,6 +72,8 @@ export const action = async (args: Route.ActionArgs) => {
   if (typeof title !== 'string' || !title.trim()) {
     return { error: 'Title is required.' };
   }
+
+  const authorStr = typeof author === 'string' ? author.trim() : '';
 
   const assignee = formData.get('assignee');
   const description = formData.get('description');
@@ -81,7 +83,7 @@ export const action = async (args: Route.ActionArgs) => {
   const summary = formData.get('summary');
 
   const input = {
-    author: author.trim(),
+    author: authorStr,
     category: category.trim(),
     title: title.trim(),
     ...(typeof assignee === 'string' &&

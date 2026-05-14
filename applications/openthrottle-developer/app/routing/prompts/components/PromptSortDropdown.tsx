@@ -55,13 +55,12 @@ export const PromptSortDropdown = (
   // 🔌 Short Circuit
 
   return (
-    <Select
-      aria-label="Sort prompts"
-      data-testid="PromptSortDropdown"
-      onValueChange={handleChange}
-      value={resolvedValue}
-    >
-      <SelectTrigger className="w-[200px]">
+    <Select onValueChange={handleChange} value={resolvedValue}>
+      <SelectTrigger
+        aria-label="Sort prompts"
+        className="w-[200px]"
+        data-testid="PromptSortDropdown"
+      >
         <SelectValue placeholder="Poll interval…" />
       </SelectTrigger>
       <SelectContent>

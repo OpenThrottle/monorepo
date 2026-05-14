@@ -6,8 +6,17 @@
     "rootDirs": ["./src", "./tests"]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist"
+  ],
   "references": [
+    {
+      "path": "../react-router-shadcn/tsconfig.lib.json"
+    },
     {
       "path": "../react-router-utils/tsconfig.lib.json"
     },

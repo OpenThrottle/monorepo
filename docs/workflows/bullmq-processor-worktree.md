@@ -2,6 +2,10 @@
 
 The worktree + BullMQ workflow from plan `2f94f33c` (fan-out/fan-in) can be used **inside** a BullMQ job processor so each job acquires a worktree, runs the loop (e.g. Ralph), ensures commit, then releases the target.
 
+**Run transcripts on disk:** OpenThrottle’s API workers can mirror Ralph `stdout`/`stderr` to per-job JSONL when `OT_BULLMQ_RUN_OUTPUT_DIR` is set (see `packages/nestjs-logging` README, section “BullMQ per-job run transcripts”, and [bullmq-run-output-spec.md](../../packages/nestjs-logging/docs/bullmq-run-output-spec.md)).
+
+**Execution backend (Cursor vs Claude Code):** Plan jobs carry optional `ralph` tuning from GraphQL (`RalphNestedRunTuningInput`), including **`backend`** (`cursor` \| `claude`). The spawn path turns that into `--backend` on nested `workflow-ralph` when non-default, and merges persisted plan-run execution backend when tuning omits it — **one** runner for the whole nested run, matching local CLI semantics. See `applications/openthrottle-server/src/queues/plans/plans.types.ts` and [`tools/workflows/README.md`](../../tools/workflows/README.md) § Worktree + BullMQ workflow.
+
 ## 1. Add dependency
 
 Use `@openthrottle/nestjs-worktrees`, which re-exports the workflow from `@tools/workflows` and provides the tracker from env:

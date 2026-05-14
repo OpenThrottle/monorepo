@@ -52,8 +52,11 @@ query getTasksByPlanId($input: TasksByPlanIdInput!) {
 
 mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
   enqueuePlanRun(input: $input) {
+    executionBackend
     jobId
     planId
+    queuePosition
+    queueTotal
   }
 }
 
@@ -80,5 +83,33 @@ mutation PlanDetailSetPlanStatus($input: SetPlanStatusInput!) {
 mutation PlanDetailUpdateTask($input: UpdateTaskInput!) {
   updateTask(input: $input) {
     ...PlanTaskRow
+  }
+}
+
+query PlanDetailIndexLoader($planId: ID!) {
+  plan(id: $planId) {
+    ...PlanDetails
+  }
+  tasksByPlanId(input: { planId: $planId }) {
+    ...PlanTaskRow
+  }
+  planOutputStreamChunks(input: { planId: $planId }) {
+    id
+    content
+    createdAt
+    iteration
+    planId
+  }
+  metrics {
+    recentPlanRunsMetrics(planId: $planId, limit: 25) {
+      executionBackend
+      finishedOn
+      jobId
+      taskRunMetrics {
+        atEnd {
+          rssMb
+        }
+      }
+    }
   }
 }

@@ -22,12 +22,6 @@ pnpm add @openthrottle/nestjs-typeorm
 npm install @openthrottle/nestjs-typeorm
 ```
 
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-typeorm
-```
-
 ## Provider
 
 The first step we need to do is to establish the connection with our database using new `DataSource().initialize()` class imported from the typeorm package. The `initialize()` function returns a **Promise**, and therefore we have to create an async provider.

@@ -23,9 +23,11 @@ import {
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   PlansService,
+  PlanRunsService,
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { In } from 'typeorm';
 import type { Project } from '@openthrottle/nestjs-repositories';
@@ -37,6 +39,7 @@ import {
 } from '../../queues/plans/plans.constants';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { ProjectObject } from '../projects/project.object';
 import { QueuesService } from '../queues/queues.service';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
@@ -52,6 +55,7 @@ import {
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
+  PlanRunsByPlanIdInput,
   SearchPlansInput,
   SetPlanStatusInput,
   UpdatePlanInput,
@@ -61,10 +65,13 @@ import {
   EnqueuePlanRunResultObject,
   ListPlansByStatusResultObject,
   PlanObject,
+  PlanRunObject,
   PlanStatusCountObject,
 } from './plan.object';
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
+const DEFAULT_PLAN_RUNS_LIMIT = 20;
+const MAX_PLAN_RUNS_LIMIT = 100;
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`;
 
 /**
@@ -86,7 +93,9 @@ function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
 export class PlansResolver {
   constructor(
     private readonly notificationsService: NotificationsService,
+    private readonly planCreationService: PlanCreationService,
     private readonly planRunCancellation: PlanRunCancellationService,
+    private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
     private readonly projectsService: ProjectsService,
     private readonly queuesService: QueuesService,
@@ -116,6 +125,41 @@ export class PlansResolver {
     return this.tasksService
       .getRepository()
       .count({ where: { planId: parent.id } });
+  }
+
+  private mapPlanRunObject(planRun: PlanRun): PlanRunObject {
+    const out = new PlanRunObject();
+
+    out.bullmqJobId = planRun.bullmqJobId;
+    out.createdAt = planRun.createdAt;
+    out.executionBackend = planRun.executionBackend;
+    out.id = planRun.id;
+    out.planId = planRun.planId;
+    out.queueName = planRun.queueName;
+    out.runKind = planRun.runKind;
+    out.status = planRun.status;
+    out.updatedAt = planRun.updatedAt;
+
+    return out;
+  }
+
+  @Query(() => [PlanRunObject], {
+    description: `Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.`,
+  })
+  async planRunsByPlanId(
+    @Args('input', { type: () => PlanRunsByPlanIdInput })
+    input: PlanRunsByPlanIdInput,
+  ): Promise<PlanRunObject[]> {
+    const effectiveLimit = Math.min(
+      Math.max(1, input.limit ?? DEFAULT_PLAN_RUNS_LIMIT),
+      MAX_PLAN_RUNS_LIMIT,
+    );
+    const runs = await this.planRunsService.findRecentByPlanId(
+      input.planId,
+      effectiveLimit,
+    );
+
+    return runs.map((run) => this.mapPlanRunObject(run));
   }
 
   // @ProfileResponseTime('PlansResolver.plan')
@@ -358,22 +402,7 @@ export class PlansResolver {
   async createPlan(
     @Args('input', { type: () => CreatePlanInput }) input: CreatePlanInput,
   ): Promise<PlanObject> {
-    const repo = this.plansService.getRepository();
-    const entity = repo.create({
-      assignee: input.assignee ?? null,
-      author: input.author,
-      category: input.category,
-      description: input.description ?? null,
-      project: input.project ?? null,
-      projectId: input.projectId ?? null,
-      status: (input.status ?? 'PENDING').toUpperCase(),
-      summary: input.summary ?? null,
-      title: input.title,
-    });
-
-    const saved = await repo.save(entity);
-
-    return saved;
+    return this.planCreationService.createPlanFromInput(input);
   }
 
   // @ProfileResponseTime('PlansResolver.updatePlan')
@@ -578,18 +607,21 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority, ralph } = input;
+    const { planId, priority, ralph, workingDirectory } = input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
 
+    console.error('1 -> 🟢 🟡 ♦️ 🟢 🟡 ♦️', { input, plan, planId });
+
     if (!plan) {
+      console.error('1 -> ♦️ ♦️ ♦️ ♦️ ♦️', { input, plan, planId });
       throw new Error(`Plan not found: ${planId}`);
     }
 
     let jobData: RunPlanJobData;
     try {
-      jobData = buildRunPlanJobData({ planId, ralph });
+      jobData = buildRunPlanJobData({ planId, ralph, workingDirectory });
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -600,6 +632,15 @@ export class PlansResolver {
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
     const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
       priority: jobPriority,
+    });
+    const jobId = String(job.id ?? job.name);
+
+    await this.planRunsService.recordQueuedRun({
+      bullmqJobId: jobId,
+      executionBackend: jobData.executionBackend ?? 'cursor',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      runKind: 'spawn',
     });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
@@ -613,6 +654,7 @@ export class PlansResolver {
       'SKIPPED',
       'CANCELED',
     ] as const;
+
     await taskRepo.update(
       {
         planId,
@@ -634,10 +676,14 @@ export class PlansResolver {
     });
 
     const result = new EnqueuePlanRunResultObject();
-    result.jobId = String(job.id ?? job.name);
+
+    result.executionBackend = jobData.executionBackend ?? 'cursor';
+    result.jobId = jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;
     result.queueTotal = queueTotal;
+
+    console.error('10 -> 👀 👀 👀 👀 ', Object.entries(result));
 
     return result;
   }
@@ -673,18 +719,19 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority, ralph } = input;
+    const { planId, priority, ralph, workingDirectory } = input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
+      console.error('2 -> ♦️ ♦️ ♦️ ♦️ ♦️', { input, plan, planId });
       throw new Error(`Plan not found: ${planId}`);
     }
 
     let jobData: RunPlanJobData;
     try {
-      jobData = buildRunPlanJobData({ planId, ralph });
+      jobData = buildRunPlanJobData({ planId, ralph, workingDirectory });
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -695,6 +742,15 @@ export class PlansResolver {
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
     const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
       priority: jobPriority,
+    });
+    const jobId = String(job.id ?? job.name);
+
+    await this.planRunsService.recordQueuedRun({
+      bullmqJobId: jobId,
+      executionBackend: jobData.executionBackend ?? 'cursor',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      runKind: 'spawn',
     });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
@@ -729,7 +785,8 @@ export class PlansResolver {
     });
 
     const result = new EnqueuePlanRunResultObject();
-    result.jobId = String(job.id ?? job.name);
+    result.executionBackend = jobData.executionBackend ?? 'cursor';
+    result.jobId = jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;
     result.queueTotal = queueTotal;
@@ -767,15 +824,25 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
     input: EnqueuePlanRalphOrchestratorInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { idempotencyKey, planId, priority, ralph, taskId } = input;
+    const {
+      idempotencyKey,
+      planId,
+      priority,
+      ralph,
+      taskId,
+      workingDirectory,
+    } = input;
     const modeGraphql = input.mode;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
+      console.error('3 -> ♦️ ♦️ ♦️ ♦️ ♦️', { input, plan, planId });
       throw new Error(`Plan not found: ${planId}`);
     }
+
+    console.error('3 -> 🟠 🟠 🟠 🟠 ');
 
     const taskRepo = this.tasksService.getRepository();
 
@@ -786,10 +853,12 @@ export class PlansResolver {
           ? ('plan' as const)
           : null;
 
+    console.error('4 -> 🟠 🟠 🟠 🟠 ');
     if (mode === 'task' && (taskId === null || taskId === undefined)) {
       throw new BadRequestException('taskId is required when mode is task');
     }
 
+    console.error('5 -> 🟠 🟠 🟠 🟠 ');
     if (mode === 'task' && taskId != null) {
       const task = await taskRepo.findOne({
         where: { id: taskId.trim(), planId },
@@ -808,7 +877,9 @@ export class PlansResolver {
         planId,
         ralph,
         taskId,
+        workingDirectory,
       });
+      console.error('6 -> 🟠 🟠 🟠 🟠 ', jobData);
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -829,6 +900,14 @@ export class PlansResolver {
     if ('error' in enqueueResult) {
       throw new BadRequestException(enqueueResult.error);
     }
+
+    await this.planRunsService.recordQueuedRun({
+      bullmqJobId: enqueueResult.jobId,
+      executionBackend: jobData.executionBackend ?? 'cursor',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      runKind: 'orchestrator',
+    });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
@@ -863,6 +942,7 @@ export class PlansResolver {
     });
 
     const result = new EnqueuePlanRunResultObject();
+    result.executionBackend = jobData.executionBackend ?? 'cursor';
     result.jobId = enqueueResult.jobId;
     result.planId = planId;
     result.queuePosition = queuePosition;

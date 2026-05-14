@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '@openthrottle/nestjs-auth';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
 import { getJwtPayloadFromRequest } from './jwt-payload-from-request';
+// import { LoggerService } from '@openthrottle/nestjs-modules';
 
 /**
  * @description Global JWT guard that enforces auth on all resolvers/controllers unless marked @Public().
@@ -22,7 +22,6 @@ export class GlobalJwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtAuthGuard: GqlJwtAuthGuard,
     private readonly globalClsAuthHook: GlobalClsAuthHook,
-    private readonly logger: LoggerService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -40,7 +39,7 @@ export class GlobalJwtAuthGuard implements CanActivate {
     }
 
     const allowed = await this.jwtAuthGuard.canActivate(context);
-    if (!allowed && !isAuthEnabled) {
+    if (!allowed) {
       return false;
     }
 
@@ -49,13 +48,6 @@ export class GlobalJwtAuthGuard implements CanActivate {
 
     if (user != null) {
       await this.globalClsAuthHook.populateFromJwtPayload(user);
-    }
-
-    // FIXME: We'll need to handle the env and re-authentication workflows
-    if (!isAuthEnabled) {
-      const message = `🔒 GlobalJwtAuthGuard: not public and authentication is disabled, allowing access for right now...`;
-
-      this.logger.debug(message);
     }
 
     return true;

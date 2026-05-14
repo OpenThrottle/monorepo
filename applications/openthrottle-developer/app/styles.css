@@ -14,5 +14,12 @@
   animation: gradient 4s ease infinite;
   background-size: 250% 250%;
 
-  @apply bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent;
+  @apply bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent;
+}
+
+@utility text-highlight-red {
+  animation: gradient 4s ease infinite;
+  background-size: 250% 250%;
+
+  @apply bg-linear-to-r from-red-600 to-red-700 bg-clip-text text-transparent;
 }

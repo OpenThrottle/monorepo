@@ -1,11 +1,28 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { BotIcon } from 'lucide-react';
+import {
+  GENERATOR_DOCS_AGENT_USAGE,
+  GENERATOR_DOCS_TOOLS_PACKAGE_README,
+} from '~/routing/generators/constants/generator-nx-docs';
 import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
 import { GetGeneratorsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/generators._index';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Generators',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { generators } = await executeGraphqlWithAuth(
@@ -16,9 +33,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { generators };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Generators | ${SITE_TITLE}` }];
@@ -43,20 +60,49 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <h1 className="text-xl my-4 text-highlight">Generators</h1>
+    <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={BotIcon}
+          title="Generators"
+        />
+        <p className="text-sm text-muted-foreground">
+          Nx commands run in your monorepo clone (see{' '}
+          <a
+            className="text-primary underline-offset-4 hover:underline"
+            href={GENERATOR_DOCS_AGENT_USAGE}
+            rel="noreferrer"
+            target="_blank"
+          >
+            AGENT_USAGE
+          </a>{' '}
+          and the{' '}
+          <a
+            className="text-primary underline-offset-4 hover:underline"
+            href={GENERATOR_DOCS_TOOLS_PACKAGE_README}
+            rel="noreferrer"
+            target="_blank"
+          >
+            @tools/generators README
+          </a>
+          ). Open a card for doc links, command presets, and support-bundle CLI
+          capture.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
         {generators.map((generator) => (
           <GeneratorCard generator={generator} key={generator.name} />
         ))}
       </div>
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

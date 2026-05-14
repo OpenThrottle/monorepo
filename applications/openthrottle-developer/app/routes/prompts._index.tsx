@@ -11,10 +11,11 @@ import {
 } from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GetPromptsDocument,
-  type CustomPromptType,
-} from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
 import { PromptCard } from '~/routing/prompts/components/PromptCard';
@@ -23,6 +24,15 @@ import {
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
 import type { Route } from '@/app/routes/+types/prompts._index';
+import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
+import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Prompts',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
@@ -66,12 +76,20 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const total = prompts.length;
+  const countAgents = prompts.filter(
+    (p) => p.promptType === CustomPromptType.Agents,
+  ).length;
+  const countSkills = prompts.filter(
+    (p) => p.promptType === CustomPromptType.Skills,
+  ).length;
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedPrompts = prompts.slice(startIndex, endIndex);
   const totalPages = Math.ceil(total / limit);
 
   return {
+    countAgents,
+    countSkills,
     limit,
     page,
     prompts: paginatedPrompts,
@@ -89,17 +107,22 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { limit, page, prompts, total, totalPages, types } = loaderData;
+  const {
+    countAgents,
+    countSkills,
+    limit,
+    page,
+    prompts,
+    total,
+    // totalPages,
+    types,
+  } = loaderData;
 
   // Hooks
   const [searchParams] = useSearchParams();
 
   // Setup
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
-
-  const v1 = 11;
-  const v2 = 21;
-  const v3 = v1 + v2;
 
   // Handlers
 
@@ -110,12 +133,15 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
-      <div className="mt-4 grid md:grid-cols-3 gap-4 lg:gap-8">
-        <OpenThrottleStatCard title="Custom prompts" value={v1} />
-        <OpenThrottleStatCard title="System prompts" value={v2} />
-        <OpenThrottleStatCard title="Total prompts" value={v3} />
+    <GlobalScreen>
+      <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
+        <OpenThrottleStatCard title="Agents-type prompts" value={countAgents} />
+        <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
+        <OpenThrottleStatCard title="Total (this list)" value={total} />
       </div>
+
+      <PromptsIntroduction />
+      {/* <AgentsSectionQuickLinks /> */}
 
       <PromptToolbar
         limit={limit}
@@ -125,7 +151,9 @@ export default function Component(
         types={types}
       />
 
-      {prompts.length > 0 ? (
+      {prompts.length === 0 ? (
+        <PromptsEmpty />
+      ) : (
         <>
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
@@ -135,28 +163,15 @@ export default function Component(
               <PromptCard key={prompt.id} prompt={prompt} />
             ))}
           </div>
-
-          {totalPages > 1 ? (
-            <OpenThrottlePagination limit={limit} page={page} total={total} />
-          ) : null}
+          <OpenThrottlePagination limit={limit} page={page} total={total} />
         </>
-      ) : (
-        <div className="flex flex-col flex-1 justify-center">
-          <div
-            className="text-center py-12 text-muted-foreground"
-            data-testid="prompts-empty"
-          >
-            <p className="text-lg">No prompts found.</p>
-            <p className="mt-2">Create your first prompt to get started.</p>
-          </div>
-        </div>
       )}
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

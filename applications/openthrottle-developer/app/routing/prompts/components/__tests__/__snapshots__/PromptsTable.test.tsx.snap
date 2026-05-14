@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PromptsTable Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="PromptsTable"
+    >
+      <h2>
+        PromptsTable
+      </h2>
+    </div>
+  </div>
+</body>
+`;

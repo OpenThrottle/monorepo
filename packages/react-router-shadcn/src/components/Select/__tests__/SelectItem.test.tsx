@@ -10,7 +10,7 @@ describe('SelectItem Component', () => {
   let props: SelectItemProps;
 
   beforeEach(() => {
-    props = {};
+    props = { value: 'item' };
 
     const Component = () => <SelectItem {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

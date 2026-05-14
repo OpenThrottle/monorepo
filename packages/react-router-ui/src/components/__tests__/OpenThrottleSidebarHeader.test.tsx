@@ -10,7 +10,7 @@ describe('OpenThrottleSidebarHeader Component', () => {
   let props: OpenThrottleSidebarHeaderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { name: '' };
 
     const Component = () => <OpenThrottleSidebarHeader {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

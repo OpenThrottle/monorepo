@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/contact._index';
 
@@ -8,9 +8,9 @@ import type { Route } from '@/app/routes/+types/contact._index';
 //   return {};
 // };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [{ href: stylesheet, rel: 'stylesheet' }];
+};
 
 // export const meta = (_args: Route.MetaArgs) => {
 //   return [{ title: `ContactIndex | ${SITE_TITLE}` }];
@@ -38,8 +38,8 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-12 relative h-full">
-      <h1 className="text-3xl my-4">ContactIndex</h1>
+    <main className="p-4 md:p-8 relative h-full">
+      <h1 className="text-xl my-4">ContactIndex</h1>
       <p>
         Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
         architecto ea?

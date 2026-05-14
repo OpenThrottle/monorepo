@@ -11,11 +11,12 @@
 
 :root {
   --brand: hsl(0, 100%, 50%);
+  --tw-ring-color: var(--brand);
 
-  --accent-foreground: hsl(0 0% 9%);
   --accent: var(--brand);
+  --accent-foreground: hsl(0 0% 9%);
   --background: hsl(0 0% 95%);
-  --border: hsl(0 0% 89.8%);
+  --border: hsl(0 0% 80%);
   --card-foreground: hsl(0 0% 3.9%);
   --card: hsl(0 0% 100%);
   --chart-1: hsl(12 76% 61%);
@@ -26,7 +27,7 @@
   --destructive-foreground: hsl(0 0% 98%);
   --destructive: hsl(0 84.2% 60.2%);
   --foreground: hsl(0 0% 3.9%);
-  --input: hsl(0 0% 89.8%);
+  --input: hsl(0 0% 80%);
   --muted-foreground: hsl(0 0% 45.1%);
   --muted: hsl(0 0% 96.1%);
   --popover-foreground: hsl(0 0% 3.9%);
@@ -38,7 +39,7 @@
   --secondary-foreground: hsl(0 0% 9%);
   --secondary: hsl(0 0% 96.1%);
   --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent: hsl(240 4.8% 94%);
   --sidebar-background: hsl(0 0% 98%);
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
@@ -148,7 +149,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-mono;
   }
 }
 

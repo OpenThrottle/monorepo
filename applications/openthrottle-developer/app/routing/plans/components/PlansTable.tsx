@@ -1,31 +1,22 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import {
   Badge,
   Button,
-  Card,
   DataTable,
   Input,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import { formatDate } from 'date-fns';
-import {
-  PlanStatusBadge,
-  isPlanStatusKey,
-} from '~/routing/plans/components/PlanStatusBadge';
-import type { PlanCardFragment } from '~/__generated__/graphql';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
+import { ArrowRightIcon } from 'lucide-react';
+import { formatDate } from 'date-fns';
+import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
-import {
-  getPlanStatusLabel,
-  getPlanIsCancelable,
-} from '~/routing/plans/utils/utils.plans';
-import { DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH } from '~/routing/plans/config/defaults';
+import { Link, useFetcher, useSearchParams } from 'react-router';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanStatusKey } from '~/routing/plans/types';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { PlanCardFragment } from '~/__generated__/graphql';
+import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
 export interface PlansTableProps {
   className?: string;
@@ -34,56 +25,83 @@ export interface PlansTableProps {
   statusFilterUrls?: Record<string, string>;
 }
 
-function buildPlanTableColumns(
+export const PlansTable = (props: PlansTableProps) => {
+  const { className, plans, statusFilterUrls } = props;
+
+  // Hooks
+  const runPlanFetcher = useFetcher<typeof planDetailAction>();
+  const [searchParams] = useSearchParams();
+
+  // Setup
+  const search = searchParams.get('q') ?? '';
+
+  const columns = React.useMemo(
+    () => PlansTable.buildTable(statusFilterUrls, runPlanFetcher),
+    [statusFilterUrls, runPlanFetcher],
+  );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (plans.length === 0) {
+    return <PlanTasksEmpty search={search} />;
+  }
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PlansTable"
+    >
+      <DataTable<PlanCardFragment, string | number | null | undefined>
+        columns={columns}
+        data={plans}
+      />
+    </div>
+  );
+};
+
+PlansTable.buildTable = (
   statusFilterUrls: PlansTableProps['statusFilterUrls'],
   runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
-): ColumnDef<PlanCardFragment, string | number | null | undefined>[] {
+): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [
-    {
-      accessorKey: 'status',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const statusRaw = status ?? '';
-        const statusKey: PlanStatusKey = isPlanStatusKey(statusRaw)
-          ? statusRaw
-          : 'PENDING';
+    // {
+    //   accessorKey: 'status',
+    //   cell: ({ row }) => {
+    //     const status = row.original.status;
+    //     const statusRaw = status ?? '';
+    //     const statusKey: PlanStatusKey = isPlanStatusKey(statusRaw)
+    //       ? statusRaw
+    //       : 'PENDING';
 
-        const isNull = status === null;
-        const url = !isNull ? statusFilterUrls?.[status] : undefined;
-        const badge = <PlanStatusBadge status={statusKey} />;
+    //     const isNull = status === null;
+    //     const url = !isNull ? statusFilterUrls?.[status] : undefined;
+    //     const badge = <PlanStatusBadge status={statusKey} />;
 
-        if (!url) {
-          return badge;
-        }
+    //     if (!url) {
+    //       return badge;
+    //     }
 
-        return (
-          <Link
-            aria-label={`Filter by ${getPlanStatusLabel(status)}`}
-            to={url}
-            viewTransition={true}
-          >
-            {badge}
-          </Link>
-        );
-      },
-      header: () => (
-        <span className="inline-block w-full text-center">Status</span>
-      ),
-    },
-    {
-      accessorKey: 'taskCount',
-      cell: ({ row }) => {
-        const count = row.original.taskCount ?? 0;
-        return (
-          <span aria-label={`${count} tasks`} className="tabular-nums">
-            {count}
-          </span>
-        );
-      },
-      header: () => (
-        <span className="inline-block w-full text-center">Tasks</span>
-      ),
-    },
+    //     return (
+    //       <div className="text-center">
+    //         <Link
+    //           aria-label={`Filter by ${getPlanStatusLabel(status)}`}
+    //           to={url}
+    //           viewTransition={true}
+    //         >
+    //           {badge}
+    //         </Link>
+    //       </div>
+    //     );
+    //   },
+    //   header: () => (
+    //     <span className="inline-block w-full text-center">Status</span>
+    //   ),
+    // },
     {
       accessorKey: 'title',
       cell: ({ row }) => {
@@ -92,8 +110,8 @@ function buildPlanTableColumns(
         const title = plan.title ?? 'Untitled';
 
         return (
-          <div className="overflow-hidden">
-            <h2 className="text-sm line-clamp-1 text-ellipsis font-medium">
+          <div className="overflow-hidden p-2">
+            <h2 className="text-sm line-clamp-1 text-ellipsis font-medium mb-2">
               <Link
                 aria-label={`View plan: ${title}`}
                 className="underline underline-offset-2 hover:text-primary"
@@ -125,6 +143,10 @@ function buildPlanTableColumns(
                   Assignee: {plan.assignee}
                 </span>
               ) : null}
+              <span>
+                Updated:{' '}
+                {formatDate(plan.updatedAt ?? plan.createdAt, 'MM/dd/yyyy')}
+              </span>
               {plan.category ? (
                 <Badge
                   aria-label={`Category: ${plan.category}`}
@@ -134,12 +156,8 @@ function buildPlanTableColumns(
                   {plan.category}
                 </Badge>
               ) : null}
-              <span>
-                Updated:{' '}
-                {formatDate(plan.updatedAt ?? plan.createdAt, 'MM/dd/yyyy')}
-              </span>
             </div>
-            {plan.summary ? (
+            {/* {plan.summary ? (
               <Tooltip>
                 <TooltipTrigger asChild={true}>
                   <p
@@ -153,11 +171,33 @@ function buildPlanTableColumns(
                 </TooltipTrigger>
                 <TooltipContent side="top">{plan.summary}</TooltipContent>
               </Tooltip>
-            ) : null}
+            ) : null} */}
           </div>
         );
       },
-      header: () => 'Plan',
+      header: () => <div className="p-2">Plan</div>,
+    },
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => (
+        <PlanStatusBadge status={row.original.status as PlanStatusKey} />
+      ),
+      header: () => <div className="p-2">Status</div>,
+    },
+    {
+      accessorKey: 'taskCount',
+      cell: ({ row }) => {
+        const count = row.original.taskCount ?? 0;
+        return (
+          <div
+            aria-label={`${count} tasks`}
+            className="tabular-nums text-center"
+          >
+            {count}
+          </div>
+        );
+      },
+      header: () => <span className="inline-block w-full">Tasks</span>,
     },
     {
       cell: ({ row }) => {
@@ -174,7 +214,8 @@ function buildPlanTableColumns(
               variant="outline"
             >
               <Link to={`/plans/${planId}`} viewTransition={true}>
-                Plan Details
+                {/* Plan Details */}
+                <ArrowRightIcon className="size-4" />
               </Link>
             </Button>
             <KillPlanRunButton
@@ -203,36 +244,4 @@ function buildPlanTableColumns(
       id: 'actions',
     },
   ];
-}
-
-export const PlansTable = (props: PlansTableProps) => {
-  const { className, plans, statusFilterUrls } = props;
-
-  // Hooks
-  const runPlanFetcher = useFetcher<typeof planDetailAction>();
-
-  // Setup
-  const columns = React.useMemo(
-    () => buildPlanTableColumns(statusFilterUrls, runPlanFetcher),
-    [statusFilterUrls, runPlanFetcher],
-  );
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <Card className={className} data-testid="PlansTable">
-      <TooltipProvider>
-        <DataTable<PlanCardFragment, string | number | null | undefined>
-          columns={columns}
-          data={plans}
-        />
-      </TooltipProvider>
-    </Card>
-  );
 };

@@ -50,6 +50,20 @@ describe('parseRalphArgs (execution backend)', () => {
     expect(args.backend).toBe('cursor');
   });
 
+  it('parses --backend claude (case-insensitive)', async () => {
+    process.argv = [
+      'node',
+      'ralph.js',
+      '--plan',
+      PLAN_UUID,
+      '--backend',
+      'Claude',
+    ];
+    const { parseRalphArgs } = await import('../parsers');
+    const args = parseRalphArgs();
+    expect(args.backend).toBe('claude');
+  });
+
   it('throws on unknown --backend', async () => {
     process.argv = [
       'node',

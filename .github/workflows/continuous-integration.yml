@@ -104,7 +104,7 @@ jobs:
       #   run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router,codegen-supabase-expo,codegen-supabase-web --parallel --verbose || echo "No codegen tasks required"
 
       - name: '🧠 NX ${{ matrix.target }} affected'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck --parallel --verbose
+        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel --verbose
 
       - name: '🔒 Agentic Ralph GraphQL codegen drift guard'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen

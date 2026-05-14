@@ -20,6 +20,29 @@
     0 4px 6px -4px rgb(0 0 0 / 0.2);
 }
 
+[cmdk-empty] {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 0.875rem;
+  height: 3rem;
+  justify-content: center;
+  white-space: pre-wrap;
+}
+
+[cmdk-group-heading] {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  /* padding: 1rem 1rem 0.5rem; */
+  padding: 0.5rem 1rem;
+  user-select: none;
+}
+
 [cmdk-input] {
   background: var(--background);
   border-bottom: 1px solid var(--border);
@@ -34,21 +57,7 @@
 
 [cmdk-input]::placeholder {
   color: var(--muted-foreground);
-}
-
-[cmdk-vercel-badge] {
-  align-items: center;
-  background: var(--muted);
-  border-radius: calc(var(--radius) - 4px);
-  color: var(--muted-foreground);
-  display: inline-flex;
-  font-size: 0.75rem;
-  font-weight: 500;
-  height: 1.25rem;
-  margin: 0.25rem 0 0.25rem 0.25rem;
-  padding: 0 0.5rem;
-  text-transform: capitalize;
-  user-select: none;
+  opacity: 0.5;
 }
 
 [cmdk-item] {
@@ -105,6 +114,33 @@
   transition: height 100ms ease;
 }
 
+[cmdk-separator] {
+  background: var(--border);
+  height: 1px;
+  width: 100%;
+}
+
+[cmdk-overlay] {
+  background: rgba(0, 0, 0, 0.5);
+  filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+[cmdk-vercel-badge] {
+  align-items: center;
+  background: var(--muted);
+  border-radius: calc(var(--radius) - 4px);
+  color: var(--muted-foreground);
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 500;
+  height: 1.25rem;
+  margin: 0.25rem 0 0.25rem 0.25rem;
+  padding: 0 0.5rem;
+  text-transform: capitalize;
+  user-select: none;
+}
+
 [cmdk-vercel-shortcuts] {
   display: flex;
   gap: 0.5rem;
@@ -126,36 +162,6 @@
   text-transform: uppercase;
 }
 
-[cmdk-separator] {
-  background: var(--border);
-  height: 1px;
-  /* margin: 0.25rem 0; */
-  width: 100%;
-}
-
 *:not([hidden]) + [cmdk-group] {
   margin-top: 0.5rem;
-}
-
-[cmdk-group-heading] {
-  align-items: center;
-  color: var(--muted-foreground);
-  display: flex;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  /* padding: 1rem 1rem 0.5rem; */
-  padding: 0.5rem 1rem;
-  user-select: none;
-}
-
-[cmdk-empty] {
-  align-items: center;
-  color: var(--muted-foreground);
-  display: flex;
-  font-size: 0.875rem;
-  height: 3rem;
-  justify-content: center;
-  white-space: pre-wrap;
 }

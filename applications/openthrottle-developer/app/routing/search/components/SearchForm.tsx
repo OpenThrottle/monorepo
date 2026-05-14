@@ -6,10 +6,16 @@ export interface SearchFormProps {
   readonly className?: string;
   /** Pre-fill value for the query input (e.g. from current URL search params). */
   readonly defaultQuery?: string;
+  /** Keep `details=ranking` on new searches when power-user mode is on. */
+  readonly preserveRankingDetails?: boolean;
 }
 
 export const SearchForm = (props: SearchFormProps) => {
-  const { className, defaultQuery = '' } = props;
+  const {
+    className,
+    defaultQuery = '',
+    preserveRankingDetails = false,
+  } = props;
 
   // Hooks
   const [query, setQuery] = React.useState(defaultQuery);
@@ -35,6 +41,9 @@ export const SearchForm = (props: SearchFormProps) => {
       method="get"
       role="search"
     >
+      {preserveRankingDetails ? (
+        <input name="details" type="hidden" value="ranking" />
+      ) : null}
       <Label className="sr-only" htmlFor="search-query">
         Search query
       </Label>

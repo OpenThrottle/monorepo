@@ -10,7 +10,7 @@ describe('OpenThrottleBreadcrumbs Component', () => {
   let props: OpenThrottleBreadcrumbsProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: null, links: [] };
 
     const Component = () => <OpenThrottleBreadcrumbs {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

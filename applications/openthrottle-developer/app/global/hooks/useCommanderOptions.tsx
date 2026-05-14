@@ -1,10 +1,13 @@
 import type { CommanderGroup } from '@openthrottle/react-router-ui';
 import { useCallback } from 'react';
 import {
+  BotIcon,
+  ChartLineIcon,
   FolderIcon,
   FolderPlusIcon,
   HomeIcon,
   MapIcon,
+  NotebookIcon,
   PlusCircleIcon,
   SettingsIcon,
   SpeechIcon,
@@ -65,24 +68,24 @@ export function useCommanderOptions(): CommanderGroup[] {
           label: 'Prompts',
           onSelect: nav('/prompts'),
         },
-        // {
-        //   icon: <ChartLineIcon className="w-3! h-3!" />,
-        //   id: 'nav-queues',
-        //   label: 'Queues',
-        //   onSelect: nav('/queues'),
-        // },
-        // {
-        //   icon: <NotebookIcon className="w-3! h-3!" />,
-        //   id: 'nav-notes',
-        //   label: 'Notes',
-        //   onSelect: nav('/notes'),
-        // },
-        // {
-        //   icon: <BotIcon className="w-3! h-3!" />,
-        //   id: 'nav-generators',
-        //   label: 'Generators',
-        //   onSelect: nav('/generators'),
-        // },
+        {
+          icon: <ChartLineIcon className="w-3! h-3!" />,
+          id: 'nav-queues',
+          label: 'Queues',
+          onSelect: nav('/queues'),
+        },
+        {
+          icon: <NotebookIcon className="w-3! h-3!" />,
+          id: 'nav-notes',
+          label: 'Notes',
+          onSelect: nav('/notes'),
+        },
+        {
+          icon: <BotIcon className="w-3! h-3!" />,
+          id: 'nav-generators',
+          label: 'Generators',
+          onSelect: nav('/generators'),
+        },
         {
           icon: <SettingsIcon className="w-3! h-3!" />,
           id: 'nav-settings',

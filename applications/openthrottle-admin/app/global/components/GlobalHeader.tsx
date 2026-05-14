@@ -5,10 +5,7 @@ import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { Form, NavLink } from 'react-router';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
-import {
-  FEATURE_BETA_PREVIEW,
-  OPEN_THROTTLE_GITHUB_URL,
-} from '@openthrottle/react-router-utils';
+import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { dataNavigation } from '~/global/data/data.navigation';
 import { SITE_SUBDOMAIN } from '~/global/config/settings';
 
@@ -26,24 +23,6 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
   // Handlers
 
   // Markup
-  const renderNavItems = () => {
-    if (!FEATURE_BETA_PREVIEW) return null;
-
-    return (
-      <>
-        {dataNavigation.map((item) => (
-          <NavLink
-            className="text-sm h-full hover:text-accent p-4 transition"
-            key={item.to.toString()}
-            to={item.to}
-            viewTransition={true}
-          >
-            {item.children}
-          </NavLink>
-        ))}
-      </>
-    );
-  };
 
   // Life Cycle
 
@@ -67,7 +46,18 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
             '[&__.active]:text-accent [&__.active]:font-bold',
           )}
         >
-          <div className="flex gap-1 mr-8 h-full">{renderNavItems()}</div>
+          <div className="flex gap-1 mr-8 h-full">
+            {dataNavigation.map((item) => (
+              <NavLink
+                className="text-sm h-full hover:text-accent p-4 transition"
+                key={item.to.toString()}
+                to={item.to}
+                viewTransition={true}
+              >
+                {item.children}
+              </NavLink>
+            ))}
+          </div>
 
           <Form action="/" method="post">
             <input name="intent" type="hidden" value="signout" />

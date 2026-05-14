@@ -4,12 +4,18 @@
  * `RunPlanOrchestratorJobData` and are built elsewhere when the enqueue API supports them.
  */
 
+import { existsSync, statSync } from 'fs';
+import { isAbsolute } from 'path';
 import type {
   ChildJobInput,
+  RalphExecutionBackendId,
   RalphNestedDebugCli,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
-import { parseRalphExecutionBackendId } from '@tools/workflows';
+import {
+  DEFAULT_RALPH_RUNNER,
+  parseRalphExecutionBackendId,
+} from '@tools/workflows';
 import type {
   RunPlanOrchestratorJobData,
   RunPlanSpawnJobData,
@@ -33,6 +39,78 @@ const MAX_ITERATIONS = 1_000_000;
 const MAX_ITERATION_TIMEOUT_SECONDS = 7 * 24 * 3600;
 
 const MAX_TUNING_STRING_LEN = 8192;
+
+/** @description Max path length for workingDirectory (prevents abuse). */
+const MAX_WORKING_DIRECTORY_LEN = 4096;
+
+/**
+ * @description Optional allowlist of directory prefixes from `OPENTHROTTLE_ALLOWED_WORKING_DIRS`.
+ * Comma-separated absolute paths; when set, workingDirectory must start with one of them.
+ * When unset (default), any existing directory is accepted (local-only trust boundary).
+ */
+const getAllowedWorkingDirPrefixes = (): readonly string[] => {
+  const raw = process.env.OPENTHROTTLE_ALLOWED_WORKING_DIRS;
+  if (!raw || raw.trim() === '') return [];
+  return raw
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0 && isAbsolute(p));
+};
+
+/**
+ * @description Validates and normalizes an optional workingDirectory from GraphQL input.
+ * Returns the trimmed path or `undefined` when omitted. Throws on invalid input.
+ */
+export const validateWorkingDirectory = (
+  raw: string | null | undefined,
+): string | undefined => {
+  if (raw === undefined || raw === null) return undefined;
+  const trimmed = raw.trim();
+  if (trimmed === '') return undefined;
+
+  if (trimmed.length > MAX_WORKING_DIRECTORY_LEN) {
+    throw new Error(
+      `workingDirectory must be at most ${MAX_WORKING_DIRECTORY_LEN} characters`,
+    );
+  }
+
+  if (!isAbsolute(trimmed)) {
+    throw new Error('workingDirectory must be an absolute path');
+  }
+
+  if (!existsSync(trimmed)) {
+    throw new Error(`workingDirectory does not exist: ${trimmed}`);
+  }
+
+  try {
+    const stat = statSync(trimmed);
+    if (!stat.isDirectory()) {
+      throw new Error(`workingDirectory is not a directory: ${trimmed}`);
+    }
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.startsWith('workingDirectory')
+    ) {
+      throw error;
+    }
+    throw new Error(`workingDirectory is not accessible: ${trimmed}`);
+  }
+
+  const prefixes = getAllowedWorkingDirPrefixes();
+  if (prefixes.length > 0) {
+    const allowed = prefixes.some(
+      (prefix) => trimmed === prefix || trimmed.startsWith(prefix + '/'),
+    );
+    if (!allowed) {
+      throw new Error(
+        `workingDirectory is not within allowed paths (OPENTHROTTLE_ALLOWED_WORKING_DIRS)`,
+      );
+    }
+  }
+
+  return trimmed;
+};
 
 /**
  * @description Trims and caps string tuning fields; returns undefined if empty after trim.
@@ -160,17 +238,30 @@ export const parseEnqueueRalphTuning = (
 };
 
 /**
+ * @description Resolves the execution backend persisted for the plan run. GraphQL omission falls back to the workflow-ralph default.
+ */
+export const resolvePlanRunExecutionBackend = (
+  ralph: RalphNestedRunTuningInput | undefined,
+): RalphExecutionBackendId => ralph?.backend ?? DEFAULT_RALPH_RUNNER;
+
+/**
  * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
  */
 export const buildRunPlanJobData = (input: {
   readonly planId: string;
   readonly ralph: RalphPlanRunTuningInput | null | undefined;
+  readonly workingDirectory?: string | null;
 }): RunPlanSpawnJobData => {
   const ralph = parseEnqueueRalphTuning(input.ralph);
-  if (ralph === undefined) {
-    return { planId: input.planId };
-  }
-  return { planId: input.planId, ralph };
+  const executionBackend = resolvePlanRunExecutionBackend(ralph);
+  const workingDirectory = validateWorkingDirectory(input.workingDirectory);
+
+  return {
+    executionBackend,
+    planId: input.planId,
+    ...(ralph !== undefined ? { ralph } : {}),
+    ...(workingDirectory !== undefined ? { workingDirectory } : {}),
+  };
 };
 
 /**
@@ -182,6 +273,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
   readonly mode?: 'plan' | 'task' | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
   readonly taskId?: string | null;
+  readonly workingDirectory?: string | null;
 }): RunPlanOrchestratorJobData => {
   const planId = input.planId.trim();
   if (!isCortexPlanTaskUuid(planId)) {
@@ -193,6 +285,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
     input.taskId !== undefined && input.taskId !== null
       ? input.taskId.trim()
       : '';
+  const workingDirectory = validateWorkingDirectory(input.workingDirectory);
 
   if (mode === 'task') {
     if (taskRaw === '') {
@@ -202,12 +295,15 @@ export const buildRunPlanOrchestratorJobData = (input: {
       throw new Error('taskId must be a valid Cortex UUID');
     }
     const ralph = parseEnqueueRalphTuning(input.ralph);
+    const executionBackend = resolvePlanRunExecutionBackend(ralph);
     return {
+      executionBackend,
       mode: 'task',
       planId,
       ...(ralph !== undefined ? { ralph } : {}),
       runKind: 'orchestrator',
       taskId: taskRaw,
+      ...(workingDirectory !== undefined ? { workingDirectory } : {}),
     };
   }
 
@@ -216,11 +312,14 @@ export const buildRunPlanOrchestratorJobData = (input: {
   }
 
   const ralph = parseEnqueueRalphTuning(input.ralph);
+  const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const data: RunPlanOrchestratorJobData = {
+    executionBackend,
     planId,
     runKind: 'orchestrator',
     ...(mode === 'plan' ? { mode: 'plan' } : {}),
     ...(ralph !== undefined ? { ralph } : {}),
+    ...(workingDirectory !== undefined ? { workingDirectory } : {}),
   };
   return data;
 };

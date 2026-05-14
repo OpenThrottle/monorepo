@@ -64,6 +64,9 @@
       },
       "start": {
         "continuous": true,
+        "dependsOn": [
+          "^build"
+        ],
         "executor": "nx:run-commands",
         "options": {
           "command": "nest start --path {projectRoot}/tsconfig.app.json"

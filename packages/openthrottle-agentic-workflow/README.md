@@ -17,9 +17,3 @@ pnpm add @openthrottle/openthrottle-agentic-workflow
 ```bash
 npm install @openthrottle/openthrottle-agentic-workflow
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/openthrottle-agentic-workflow
-```

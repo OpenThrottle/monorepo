@@ -92,7 +92,9 @@ describe('Ralph main (max-iterations cleanup)', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+    exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation((() => {}) as typeof process.exit);
     updateTaskStatusMock.mockClear();
     runIterationMock.mockReturnValue('agent output');
     process.stdin.isTTY = true;

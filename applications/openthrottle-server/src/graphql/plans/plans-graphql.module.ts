@@ -6,13 +6,17 @@ import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { PlansQueueModule } from '../../queues/plans/plans-queue.module';
+import { CortexDocumentParseModule } from '../../services/cortex-document-parse/cortex-document-parse.module';
+import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
 import { PlansResolver } from './plans.resolver';
 
 @Module({
   imports: [
+    CortexDocumentParseModule,
     NestjsRepositoriesModule,
     NotificationsModule,
+    PlanCreationModule,
     PlansQueueModule,
     QueuesGraphqlModule,
   ],

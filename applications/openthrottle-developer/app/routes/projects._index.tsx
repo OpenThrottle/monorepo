@@ -1,107 +1,42 @@
 import * as React from 'react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { FoldersIcon } from 'lucide-react';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetProjectsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  isSortBy,
+  isSortOrder,
+  isView,
+} from '~/routing/projects/utils/projects';
 import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
+import {
+  parseProjectsBySearch,
+  parseProjectWithStats,
+} from '~/routing/projects/utils/parsers';
 import { ProjectEmpty } from '~/routing/projects/components/ProjectEmpty';
 import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { ProjectsCardGrid } from '~/routing/projects/components/ProjectsCardGrid';
-import { ProjectsStatsCards } from '~/routing/projects/components/ProjectsStatsCards';
+import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { GetProjectsQuery } from '~/__generated__/graphql';
+import { SortBy, SortOrder, View } from '~/routing/projects/config';
+import { sortProjects } from '~/routing/projects/utils/sorting';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import type { Route } from '@/app/routes/+types/projects._index';
 
-const SORT_BY_VALUES = ['name', 'createdAt', 'updatedAt'] as const;
-const SORT_ORDER_VALUES = ['asc', 'desc'] as const;
-const VIEW_VALUES = ['table', 'card'] as const;
+type HandleData = Route.ComponentProps['loaderData'];
 
-type SortBy = (typeof SORT_BY_VALUES)[number];
-type SortOrder = (typeof SORT_ORDER_VALUES)[number];
-type View = (typeof VIEW_VALUES)[number];
-
-function isSortBy(v: string): v is SortBy {
-  return SORT_BY_VALUES.includes(v as SortBy);
-}
-
-function isSortOrder(v: string): v is SortOrder {
-  return SORT_ORDER_VALUES.includes(v as SortOrder);
-}
-
-function isView(v: string): v is View {
-  return VIEW_VALUES.includes(v as View);
-}
-
-/** Maps API project to ProjectWithStats so loader always returns the same shape; when API adds planCount/lastActivityAt, use them here. */
-function toProjectWithStats(
-  p: GetProjectsQuery['projects'][number],
-): ProjectWithStats {
-  return {
-    ...p,
-    lastActivityAt: null,
-    planCount: null,
-  };
-}
-
-function filterProjectsBySearch(
-  projects: ProjectWithStats[],
-  search: string,
-): ProjectWithStats[] {
-  const q = search.trim().toLowerCase();
-  if (!q) return projects;
-
-  return projects.filter((p) => {
-    const name = (p.name ?? '').toLowerCase();
-    const desc = (p.description ?? '').toLowerCase();
-    const nx = (p.nxProjectName ?? '').toLowerCase();
-
-    return name.includes(q) || desc.includes(q) || nx.includes(q);
-  });
-}
-
-function sortProjects(
-  projects: ProjectWithStats[],
-  sortBy: SortBy,
-  sortOrder: SortOrder,
-): ProjectWithStats[] {
-  const copy = [...projects];
-  const mult = sortOrder === 'asc' ? 1 : -1;
-
-  copy.sort((a, b) => {
-    let aVal: string | undefined;
-    let bVal: string | undefined;
-
-    switch (sortBy) {
-      case 'name':
-        aVal = a.name ?? '';
-        bVal = b.name ?? '';
-
-        return (
-          mult *
-          (aVal.localeCompare(bVal, undefined, { sensitivity: 'base' }) || 0)
-        );
-
-      case 'createdAt':
-        aVal = a.createdAt ?? '';
-        bVal = b.createdAt ?? '';
-        return mult * (aVal?.localeCompare(bVal ?? '') || 0);
-
-      case 'updatedAt':
-        aVal = a.updatedAt ?? '';
-        bVal = b.updatedAt ?? '';
-        return mult * (aVal?.localeCompare(bVal ?? '') || 0);
-
-      default:
-        return 0;
-    }
-  });
-
-  return copy;
-}
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Projects',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { projects } = await executeGraphqlWithAuth(
@@ -109,8 +44,11 @@ export const loader = async (args: Route.LoaderArgs) => {
     GetProjectsDocument,
   );
 
-  const projectsToShow: ProjectWithStats[] =
-    projects.length === 0 ? MOCK_PROJECTS : projects.map(toProjectWithStats);
+  const isEmpty = projects.length === 0;
+  const projectsToShow: ProjectWithStats[] = isEmpty
+    ? MOCK_PROJECTS
+    : projects.map(parseProjectWithStats);
+
   const url = new URL(args.request.url);
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
   const limit = Math.max(
@@ -136,7 +74,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     : 'asc';
   const view: View = isView(viewParam) ? viewParam : 'table';
 
-  const filtered = filterProjectsBySearch(projectsToShow, search);
+  const filtered = parseProjectsBySearch(projectsToShow, search);
   const sorted = sortProjects(filtered, sortBy, sortOrder);
   const totalCount = sorted.length;
   const start = (page - 1) * limit;
@@ -161,9 +99,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Projects | ${SITE_TITLE}` }];
@@ -189,7 +127,6 @@ export default function Component(
 
   // Setup
   const isEmpty = totalCount === 0;
-  const ProjectLayout = view === 'table' ? ProjectsTable : ProjectsCardGrid;
 
   // Handlers
 
@@ -200,27 +137,44 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="gap-8 p-4 md:px-8 relative flex flex-col max-w-7xl mx-auto w-full">
-      <ProjectsStatsCards
-        className="mt-4"
+    <GlobalScreen>
+      <ProjectsStats
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />
-
-      <ProjectsToolbar
-        limit={limit}
-        page={page}
-        search={search}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        view={view}
+      {/*
+      <WorkspaceEntityCrossLinks
+        className="mb-4"
+        label="Workspace shortcuts from projects"
       />
+      */}
+
+      <div className="flex flex-col gap-4">
+        <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects">
+          {/*
+          <Button asChild={true} className="shrink-0" variant="outline">
+            <Link to="/projects/create">
+              <PlusIcon className="w-4 h-4" /> Create project
+            </Link>
+          </Button>
+          */}
+        </GlobalHeading>
+
+        <ProjectsToolbar
+          limit={limit}
+          page={page}
+          search={search}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          view={view}
+        />
+      </div>
 
       {isEmpty ? (
         <ProjectEmpty search={search} />
       ) : (
         <>
-          <ProjectLayout projects={projects} />
+          <ProjectsTable projects={projects} />
           <OpenThrottlePagination
             className="mt-8"
             limit={limit}
@@ -233,12 +187,12 @@ export default function Component(
           />
         </>
       )}
-    </main>
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

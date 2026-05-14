@@ -25,10 +25,15 @@ import {
   getDefaultWorkflowRalphRunOptionsInput,
   isUuid,
   parseWorkflowRunIterationTimeoutSeconds,
+  WORKFLOW_RALPH_DEFAULTS_FILE_NAME,
+  WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
+  WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphDebugCli,
+  type WorkflowRalphExecutionBackendUi,
   type WorkflowRalphRunOptionsInput,
   type WorkflowRalphTargetMode,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 
 /**
  * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags)
@@ -166,16 +171,60 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             >
               Workflow options
             </h2>
-            <CardDescription>
-              Compose flags aligned with{' '}
-              <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
-              and{' '}
-              <span className="text-xs">
-                docs/workflows/ralph-workflow-runtime-config.md
-              </span>
-              . The toolbar action that enqueues a run sends the same tuning
-              (iterations, model, prompt profile, project, debug CLI, iteration
-              timeout) to the worker; unchanged fields use CLI defaults.
+            <CardDescription className="space-y-2">
+              <p>
+                Compose flags aligned with{' '}
+                <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
+                and <span className="text-xs">tools/workflows</span>. Blank
+                fields here defer to {WORKFLOW_RALPH_DEFAULT_PRECEDENCE}.
+                Enqueue passes the same tuning to the worker.
+              </p>
+              <p className="text-xs">
+                Env keys:{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.backend}
+                </code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.iterations}
+                </code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.iterationTimeout}
+                </code>
+                ,{' '}
+                <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.model}</code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.project}
+                </code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.prompt}
+                </code>
+                ,{' '}
+                <code className="text-xs">
+                  {WORKFLOW_RALPH_ENV_VARS.promptFile}
+                </code>
+                ,{' '}
+                <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.debug}</code>
+                .
+              </p>
+              <p className="text-xs">
+                Optional{' '}
+                <code className="text-xs">
+                  ./{WORKFLOW_RALPH_DEFAULTS_FILE_NAME}
+                </code>
+                : <code className="text-xs">backend</code>,{' '}
+                <code className="text-xs">iterations</code>,{' '}
+                <code className="text-xs">iterationTimeout</code> (seconds),{' '}
+                <code className="text-xs">model</code>,{' '}
+                <code className="text-xs">project</code>,{' '}
+                <code className="text-xs">prompt</code> |{' '}
+                <code className="text-xs">promptFile</code> (exclusive). Same
+                semantics as <code className="text-xs">parseRalphArgs</code> +
+                defaults merge.
+              </p>
             </CardDescription>
           </div>
 
@@ -307,48 +356,34 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
           ) : null}
         </fieldset>
 
-        <fieldset
-          aria-labelledby="workflow-run-layer1-legend"
-          className="space-y-3 rounded-md border border-border p-4"
-        >
-          <legend
-            className="px-1 text-sm font-medium text-foreground"
-            id="workflow-run-layer1-legend"
-          >
-            Layer 1 — Prompt profile
-          </legend>
-          <p className="text-muted-foreground text-xs">
-            How the model should approach the work (Cursor command or prompt
-            path). Default matches CLI:{' '}
-            <code className="text-xs">{DEFAULT_RALPH_PROMPT}</code>.
-          </p>
-          <div className="space-y-2">
-            <Label htmlFor="workflow-run-prompt">--prompt</Label>
-            <Input
-              aria-describedby="workflow-run-prompt-hint"
-              aria-label="Prompt profile for --prompt"
-              autoComplete="off"
-              id="workflow-run-prompt"
-              onChange={(e) =>
-                setInput((prev) => ({ ...prev, prompt: e.target.value }))
+        <PlanWorkflowConfigPrompt
+          onPromptChange={(next) =>
+            setInput((prev) => ({ ...prev, prompt: next }))
+          }
+          onPromptFileChange={(next) =>
+            setInput((prev) => ({ ...prev, promptFile: next }))
+          }
+          onPromptLayerChange={(next) => {
+            setInput((prev) => {
+              if (next === 'named') {
+                return { ...prev, promptFile: '', promptLayer: 'named' };
               }
-              placeholder={DEFAULT_RALPH_PROMPT}
-              spellCheck={false}
-              value={input.prompt}
-            />
-            <p
-              className="text-muted-foreground text-xs"
-              id="workflow-run-prompt-hint"
-            >
-              Omitted from the command when equal to the default.
-            </p>
-          </div>
-        </fieldset>
+
+              return {
+                ...prev,
+                prompt: DEFAULT_RALPH_PROMPT,
+                promptLayer: 'file',
+              };
+            });
+          }}
+          prompt={input.prompt}
+          promptFile={input.promptFile}
+          promptLayer={input.promptLayer}
+        />
 
         <fieldset
           aria-labelledby="workflow-run-layer2-legend"
           className="space-y-3 rounded-md border border-border p-4"
-          disabled={true} // FIXME: When we have runners remove this
         >
           <legend
             className="px-1 text-sm font-medium text-foreground"
@@ -357,22 +392,42 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
             Layer 2 — Execution backend
           </legend>
           <p className="text-muted-foreground text-xs">
-            Which runner executes each iteration (UI-only stub; no CLI flag
-            yet). Phase 2 will add runner selection when the workflow exposes
-            it.
+            One runner for the entire plan run—serialized as{' '}
+            <code className="text-[0.65rem]">--backend</code> on{' '}
+            <code className="text-[0.65rem]">workflow-ralph</code> and stored on
+            the queued job for auditing.
           </p>
           <div className="space-y-2">
             <Label htmlFor="workflow-run-backend">Runner</Label>
-            <Select disabled={true} value="cursor">
+            <Select
+              onValueChange={(next) =>
+                setInput((prev) => ({
+                  ...prev,
+                  executionBackend: next as WorkflowRalphExecutionBackendUi,
+                }))
+              }
+              value={input.executionBackend}
+            >
               <SelectTrigger
-                aria-label="Execution backend (stub)"
+                aria-label="Execution backend for this plan run"
                 className="max-w-md"
                 id="workflow-run-backend"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cursor">Cursor (current)</SelectItem>
+                {(
+                  [
+                    'cursor',
+                    'claude',
+                  ] as const satisfies readonly WorkflowRalphExecutionBackendUi[]
+                ).map((id) => (
+                  <SelectItem key={id} value={id}>
+                    {id === 'cursor'
+                      ? 'Cursor (cursor-agent)'
+                      : 'Claude Code CLI'}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -511,8 +566,11 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
               className="text-muted-foreground text-xs"
               id="workflow-run-debug-hint"
             >
-              CLI flags override WORKFLOW_RALPH_DEBUG / RALPH_DEBUG for this
-              run.
+              CLI flags override {WORKFLOW_RALPH_ENV_VARS.debug},{' '}
+              {WORKFLOW_RALPH_ENV_VARS.debugAlias}, and{' '}
+              {WORKFLOW_RALPH_ENV_VARS.verbose}.{' '}
+              <code className="text-xs">--debug=verbose</code> matches{' '}
+              <code className="text-xs">--verbose</code>.
             </p>
           </div>
         </fieldset>

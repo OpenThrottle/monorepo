@@ -1,8 +1,8 @@
 /**
  * @description In-process Ralph orchestrator wiring for the plans queue: server-side GraphQL
- * (`executeGraphqlV2` + workflow env) and the same Cursor iteration runner as `workflow-ralph`
- * (`createCursorWorkflowRalphIterationRunner` from `@tools/workflows`). Used when {@link RunPlanOrchestratorJobData.runKind}
- * is `orchestrator`.
+ * (`executeGraphqlV2` + workflow env) and the same iteration runner stack as `workflow-ralph`
+ * (`createCursorWorkflowRalphIterationRunner` from `@tools/workflows`; dispatches by `context.runner`).
+ * Used when {@link RunPlanOrchestratorJobData.runKind} is `orchestrator`.
  */
 import {
   buildRalphFlowContextFromPlanRunTuning,
@@ -67,6 +67,7 @@ export const runPlanOrchestratorJob = async (params: {
   );
 
   const baseContext = buildRalphFlowContextFromPlanRunTuning({
+    executionBackend: jobData.executionBackend,
     mode: jobData.mode ?? 'plan',
     planId: jobData.planId,
     ralph: jobData.ralph as PlanRunTuningInput | undefined,

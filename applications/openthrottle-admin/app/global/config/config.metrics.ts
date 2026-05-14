@@ -1,5 +1,7 @@
+import { APP_NAME } from '@openthrottle/react-router-utils';
+
 export const METRICS_MAX_SAMPLES = 25;
-export const METRICS_STORAGE_KEY = 'openthrottle-developer:metricsPollInterval';
+export const METRICS_STORAGE_KEY = `${APP_NAME}:metricsPollInterval`;
 
 export const METRICS_POLLING_INTERVAL_DEFAULT = 60_000;
 export const METRICS_POLLING_INTERVALS: readonly {

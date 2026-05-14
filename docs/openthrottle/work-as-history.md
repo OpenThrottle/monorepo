@@ -55,6 +55,6 @@ Positioning line: _Replace traditional issue trackers with a single history of w
 
 ## References in this repo
 
-- **Cortex (plans, tasks, embeddings):** `databases/cortex/README.md` — schema, migrations, commit links, activity.
+- **Cortex (plans, tasks, embeddings):** `databases/README.md` — schema, migrations, commit links, activity.
 - **Ralph / workflow CLI:** `tools/workflows/README.md` — run plans and tasks; link commits after PR merge (`workflow-link-merge`).
-- **Commit linking:** `databases/cortex/README.md` § Commit links — link the squash commit after merge; include `Plan-Id` and `Task-Id` in commit messages for traceability.
+- **Commit linking:** `databases/README.md` § Commit links — link the squash commit after merge; include `Plan-Id` and `Task-Id` in commit messages for traceability.
