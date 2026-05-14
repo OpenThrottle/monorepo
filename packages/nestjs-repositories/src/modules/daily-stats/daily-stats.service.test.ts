@@ -31,20 +31,21 @@ describe('DailyStatsService', () => {
             }),
             findOne: async ({ where }) => {
               return (
-                // FIXME: Tighten this up
+                saved.find(
+                  // FIXME: Tighten this up
 
-                saved.find((r) => r.date === (where as { date: Date }).date) ??
-                null
+                  (r) => r.date === (where as unknown as { date: Date }).date,
+                ) ?? null
               );
             },
             save: async (e: DeepPartial<DailyStat>) => {
               // FIXME: Tighten this up
 
-              saved.push(e as DailyStat);
+              saved.push(e as unknown as DailyStat);
 
               // FIXME: Tighten this up
 
-              return e as DailyStat;
+              return e as unknown as DailyStat;
             },
           }),
         },

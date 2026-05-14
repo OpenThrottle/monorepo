@@ -27,14 +27,14 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: createMock<GetRepository>({
-            create: (data: DeepPartial<User>) => data as User,
+            create: (data: DeepPartial<User>) => data as unknown as User,
             find: () => Promise.resolve(usersFactory.buildList(2)),
             findOne: () => Promise.resolve(usersFactory.build()),
             merge: () => ({}),
             save: async (entity: DeepPartial<User>) => {
               // FIXME: Tighten this up
 
-              return entity as User;
+              return entity as unknown as User;
             },
           }),
         },

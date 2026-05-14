@@ -102,7 +102,7 @@ describe('NestjsAgenticWorkflowModule', () => {
           imports: [WorkerGraphqlUrlStubModule],
           inject: [WORKER_GRAPHQL_URL],
           useFactory: (...args: unknown[]) => {
-            const url = args[0] as string;
+            const url = args[0] as unknown as string;
 
             return {
               executeGraphqlV2,

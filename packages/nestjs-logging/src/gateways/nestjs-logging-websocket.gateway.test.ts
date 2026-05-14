@@ -156,7 +156,9 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
       ],
     }).compile();
 
-    return moduleRef.get(GatewayClass) as CompiledNestjsLoggingWebsocketGateway;
+    return moduleRef.get(
+      GatewayClass,
+    ) as unknown as CompiledNestjsLoggingWebsocketGateway;
   };
 
   it('disconnects the socket when websocket is disabled on connection', async () => {
@@ -274,7 +276,6 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     const disconnectSockets = vi.fn();
 
     gateway.server = { disconnectSockets } as unknown as typeof gateway.server;
-
     gateway.onModuleDestroy();
 
     expect(disconnectSockets).toHaveBeenCalledWith(true);
@@ -705,8 +706,8 @@ describe('NestjsLoggingWebsocketGateway (handlers)', () => {
     const call0 = hubSubscribe.mock.calls[0] as unknown as
       | [(record: StructuredLogRecord) => void]
       | undefined;
-    const listener = call0?.[0];
 
+    const listener = call0?.[0];
     if (listener === undefined) {
       throw new Error('expected hub listener');
     }

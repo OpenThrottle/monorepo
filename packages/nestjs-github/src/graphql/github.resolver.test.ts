@@ -7,7 +7,7 @@ import { GitHubService } from '../github/github.service';
 import { GithubResolver } from './github.resolver';
 import { GitHubStatsService } from './github-stats.service';
 
-const gqlInfo = {} as GraphQLResolveInfo;
+const gqlInfo = {} as unknown as GraphQLResolveInfo;
 
 describe('GithubResolver', () => {
   let resolver: GithubResolver;

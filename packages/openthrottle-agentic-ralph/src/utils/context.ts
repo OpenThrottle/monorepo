@@ -27,8 +27,9 @@ const resolveExecutionBackend = (
   }
 
   const n = raw.trim().toLowerCase();
+
   if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
-    return n as WorkflowRunner;
+    return n as unknown as WorkflowRunner;
   }
 
   return DEFAULT_RUNNER;

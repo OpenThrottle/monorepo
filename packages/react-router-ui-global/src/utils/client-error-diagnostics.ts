@@ -250,7 +250,7 @@ export const getLooseErrorStack = (error: unknown): string | undefined => {
     return undefined;
   }
 
-  const stack = (error as { readonly stack?: unknown }).stack;
+  const stack = (error as unknown as { readonly stack?: unknown }).stack;
 
   return typeof stack === 'string' ? stack : undefined;
 };

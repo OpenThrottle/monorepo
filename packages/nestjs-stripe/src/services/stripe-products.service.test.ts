@@ -49,15 +49,9 @@ vi.mock('stripe', async (importOriginal) => {
 
 describe('partitionPricesByDefault', () => {
   it('puts matching default_price id in defaultPrice and others in additionalPrices', () => {
-    const priceDefault = {
-      id: 'price_def',
-    } as Stripe.Price;
-    const priceOther = {
-      id: 'price_other',
-    } as Stripe.Price;
-    const product = {
-      default_price: 'price_def',
-    } as Stripe.Product;
+    const priceDefault = { id: 'price_def' } as Stripe.Price;
+    const priceOther = { id: 'price_other' } as Stripe.Price;
+    const product = { default_price: 'price_def' } as Stripe.Product;
 
     const result = partitionPricesByDefault(product, [
       priceDefault,
@@ -69,8 +63,9 @@ describe('partitionPricesByDefault', () => {
   });
 
   it('returns null default and all prices as additional when product has no default_price', () => {
-    const prices = [{ id: 'p1' }, { id: 'p2' }] as Stripe.Price[];
-    const product = { default_price: null } as Stripe.Product;
+    const prices = [{ id: 'p1' }, { id: 'p2' }] as unknown as Stripe.Price[];
+
+    const product = { default_price: null } as unknown as Stripe.Product;
 
     const result = partitionPricesByDefault(product, prices);
 
@@ -89,7 +84,8 @@ describe('StripeProductsService', () => {
       active: true,
       id: 'prod_1',
       name: 'Pro',
-    } as Stripe.Product;
+    } as unknown as Stripe.Product;
+
     mockProductsList.mockResolvedValue({ data: [p] });
 
     const moduleRef = await Test.createTestingModule({
@@ -108,7 +104,7 @@ describe('StripeProductsService', () => {
       active: true,
       id: 'price_1',
       product: 'prod_1',
-    } as Stripe.Price;
+    } as unknown as Stripe.Price;
     mockPricesList.mockResolvedValue({ data: [price] });
 
     const moduleRef = await Test.createTestingModule({

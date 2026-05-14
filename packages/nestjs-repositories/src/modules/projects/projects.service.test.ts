@@ -18,12 +18,15 @@ describe('ProjectsService', () => {
     mockRepo = createMock<GetRepository>({
       create: (data: DeepPartial<Project>) =>
         projectsFactory.build(
-          data as Parameters<typeof projectsFactory.build>[0],
+          data as unknown as Parameters<typeof projectsFactory.build>[0],
         ),
       delete: () => Promise.resolve({ affected: 1, raw: [] }),
-      find: () => Promise.resolve(projectsFactory.buildList(2) as Project[]),
-      findOne: () => Promise.resolve(projectsFactory.build() as Project),
-      merge: (mergeIntoEntity: Project) => mergeIntoEntity,
+      find: () =>
+        Promise.resolve(projectsFactory.buildList(2) as unknown as Project[]),
+      findOne: () =>
+        Promise.resolve(projectsFactory.build() as unknown as Project),
+      merge: (mergeIntoEntity: Project) =>
+        mergeIntoEntity as unknown as Project,
       save: (entity: DeepPartial<Project>) =>
         Promise.resolve(entity as Project),
     });
