@@ -139,10 +139,6 @@ We use **Option A:** link only the **squash commit after a PR is merged**. The r
     (optional: `--message`, `--task`).
     This keeps `commit_links` in sync with main and powers activity-by-date and last-activity for the plan/task.
 
-### Documentation tables (docs watch)
-
-The **documentation** and **documentation_embeddings** tables support the "docs folder watch and re-index on main" flow: when changes to `docs/` land on main (single squash commit), ingest parses and vectorizes content into these tables. Metadata (repo, sha, PR number, authors, message) mirrors the commit/PR context, similar to how **commit_links** stores plan/task ↔ repo/sha. Search is exposed via a dedicated MCP server (e.g. `@openthrottle/docs-mcp`), separate from mcp-developer (plans/tasks). Idempotency: one row per (repo, sha, path); ingest can replace-by-sha for a given path.
-
 ### Plan and task attributes (PRD mapping)
 
 When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/cortex/planning-mode`), use this mapping. Timestamps are always handled by the DB; the agent infers author (GitHub handle) when missing and always evaluates category (infer when missing, or confirm/adjust when provided so it fits the plan).

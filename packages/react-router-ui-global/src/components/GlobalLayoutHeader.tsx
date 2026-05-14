@@ -40,7 +40,7 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
     className,
     onSearchChromeEvent,
     onSearchValueChange,
-    searchPlaceholder = 'Search',
+    searchPlaceholder = 'Search "cmd + k"',
     searchValue,
   } = props;
 

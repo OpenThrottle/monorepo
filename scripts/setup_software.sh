@@ -33,15 +33,18 @@ installMaestro () {
 }
 
 installSoftware () {
+  corepack enable pnpm
+  corepack prepare "pnpm@${PNPM_VERSION}" --activate
+
   # 📦 First we'll need our package manager PNPM
   # npm install -g pnpm@9.15.4 --stream=false --silent --quiet
 
   # FIXME: tbd...
-  npm install --global pnpm@${PNPM_VERSION}
-  npm install --global yarn
+  # npm install --global pnpm@${PNPM_VERSION}
+  # npm install --global yarn
 
   # Install the correct NX version
-  pnpm add --global nx@${NX_VERSION}
+  pnpm add --global "nx@${NX_VERSION}"
 
   # Install the following tools via pnpm
   pnpm add --global nest

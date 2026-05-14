@@ -60,10 +60,6 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 - **Plans and tasks MUST be created in OpenThrottle** via the OT MCP (`create_plan`, `create_task`). Do **not** create plans in Markdown files or under `docs/`.
 - **If the OT MCP is unavailable or plan creation fails:** Report the error clearly to the user. Do **not** silently fall back to writing a plan to a `.md` file or skipping. Fail loudly so the user can fix the environment or connectivity.
 
-## Docs MCP (documentation search)
-
-- **docs-mcp** is a separate MCP server for semantic search over the repo’s documentation (`docs/` ingested into OpenThrottle `documentation` + `documentation_embeddings`). Use docs-mcp tools when the question is about documentation content (e.g. “how does NX caching work?”). Use the **mcp-developer** MCP for plans, tasks, and OT knowledge-base queries.
-
 ## Local embeddings (Ollama)
 
 - For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import` / `pnpm run database:import-docs` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.

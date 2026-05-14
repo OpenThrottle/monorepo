@@ -143,9 +143,6 @@
       "path": "./packages/nestjs-rbac"
     },
     {
-      "path": "./packages/docs-mcp"
-    },
-    {
       "path": "./packages/ai-mcp"
     },
     {

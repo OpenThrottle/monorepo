@@ -12,7 +12,7 @@
 ### Scope and format
 
 - **Scope:** `@openthrottle`. One scope for all OpenThrottle npm packages; aligns with GitHub org (OpenThrottle), domain (openthrottle.ai), and naming criteria (same root everywhere).
-- **Package names:** Lowercase, hyphenated (kebab-case). Examples: `@openthrottle/core`, `@openthrottle/api-client`, `@openthrottle/docs-mcp`.
+- **Package names:** Lowercase, hyphenated (kebab-case). Examples: `@openthrottle/core`, `@openthrottle/api-client`.
 - **Conventions:**
   - Prefer **short, clear names** that match the surface (e.g. `vscode` for the VS Code extension, `api-client` for the API SDK).
   - Avoid redundant scope in the name (e.g. `@openthrottle/openthrottle-core` is redundant; use `@openthrottle/core`).
@@ -34,7 +34,6 @@ The following table lists the **initial set** of `@openthrottle/*` packages to r
 | ---------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ |
 | **@openthrottle/core**       | Shared types, config, or utilities used by other OpenThrottle packages. Optional minimal core layer. | New or extract from existing Cortex/OpenThrottle libs.                   | Yes                      |
 | **@openthrottle/mcp**        | Plans/tasks MCP server (Cortex knowledge base: plans, tasks, semantic search, activity).             | `@openthrottle/ai-mcp` (`packages/ai-mcp`).                              | Yes                      |
-| **@openthrottle/docs-mcp**   | Documentation search MCP server.                                                                     | `@openthrottle/docs-mcp` (`packages/docs-mcp`).                          | Yes                      |
 | **@openthrottle/vscode**     | VS Code (and compatible hosts) extension.                                                            | `vscode-openthrottle` (`packages/vscode-openthrottle`).                  | Yes                      |
 | **@openthrottle/api-client** | Official SDK for the OpenThrottle API (api.openthrottle.ai).                                         | New; referenced in [developer-api-naming.md](./developer-api-naming.md). | Yes                      |
 | **@openthrottle/cli**        | CLI tooling (e.g. plan/task workflows, link-merge).                                                  | Potential extraction from tools/workflows or new CLI.                    | Yes (reserve for future) |
