@@ -1,3 +1,4 @@
+import './load-env';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import {

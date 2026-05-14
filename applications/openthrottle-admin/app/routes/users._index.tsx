@@ -12,8 +12,9 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { UsersTable } from '~/routing/users/components/UsersTable';
 import type { Route } from '@/app/routes/+types/users._index';
@@ -71,7 +72,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+    <GlobalScreen>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl text-highlight">Users</h1>
         <Sheet onOpenChange={setOpen} open={open}>
@@ -134,7 +135,7 @@ export default function Component(
         </Sheet>
       </div>
       <UsersTable users={users} />
-    </main>
+    </GlobalScreen>
   );
 }
 

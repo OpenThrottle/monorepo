@@ -1,0 +1,59 @@
+import * as React from 'react';
+import classnames from 'classnames';
+import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import { DataTable } from '@openthrottle/react-router-shadcn';
+import {
+  createPullRequestsTableColumns,
+  getPullRequestsTableRowId,
+} from '~/routing/pull-requests/config/pull-requests-table-columns';
+import type { PullRequestsTableColumnValue } from '~/routing/pull-requests/config/pull-requests-table-columns';
+import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
+
+export interface PullRequestsTableProps {
+  readonly className?: string;
+  readonly filters: PullRequestsListFilters;
+  readonly listQuery: string;
+  readonly pulls: readonly PullRequestCardFragment[];
+}
+
+export const PullRequestsTable = (props: PullRequestsTableProps) => {
+  const { className, filters, listQuery, pulls } = props;
+
+  // Hooks
+
+  // Setup
+  const columnsContext = React.useMemo(
+    () => ({ filters, listQuery }),
+    [filters, listQuery],
+  );
+
+  const columns = React.useMemo(
+    () => createPullRequestsTableColumns(columnsContext),
+    [columnsContext],
+  );
+
+  const data = React.useMemo(() => [...pulls], [pulls]);
+
+  const getRowId = React.useCallback(getPullRequestsTableRowId, []);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PullRequestsTable"
+    >
+      <DataTable<PullRequestCardFragment, PullRequestsTableColumnValue>
+        columns={columns}
+        data={data}
+        getRowId={getRowId}
+      />
+    </div>
+  );
+};

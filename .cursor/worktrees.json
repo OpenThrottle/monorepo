@@ -2,10 +2,5 @@
 {
   "cursor.worktreeCleanupIntervalHours": 72,
   "cursor.worktreeMaxCount": 20,
-  "setup-worktree": [
-    // 1. Take the node_modules we have as thats most the setup costs
-    "cp -R \"$ROOT_WORKTREE_PATH/node_modules\" node_modules",
-    // 2. Now run our standard setup script
-    "./scripts/setup.sh"
-  ]
+  "setup-worktree": ["cwd=$WORKTREE_PATH", "./scripts/setup_worktree.sh"]
 }

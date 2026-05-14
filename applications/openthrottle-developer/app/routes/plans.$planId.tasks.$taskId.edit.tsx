@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Empty,
   EmptyDescription,
@@ -11,7 +10,11 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { redirect } from 'react-router';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetTaskByIdDocument,
   UpdateTaskDocument,
@@ -19,6 +22,16 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskForm } from '~/routing/plans/components/TaskForm';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.edit';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [
+    { children: 'Plans', to: '/plans' },
+    { children: 'Tasks', to: '/plans/tasks' },
+  ],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { planId, taskId } = args.params;
@@ -40,9 +53,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   return { task };
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const task = args.loaderData?.task;
@@ -74,12 +87,7 @@ export default function Component(
   // 🔌 Short Circuit
   if (task == null) {
     return (
-      <main
-        className={classnames(
-          'h-full max-w-7xl w-full mx-auto',
-          'flex flex-1 items-center justify-center',
-        )}
-      >
+      <GlobalScreen>
         <Empty>
           <EmptyMedia variant="icon">
             <PuzzlePieceIcon size={48} />
@@ -89,13 +97,13 @@ export default function Component(
             The task you are looking for does not exist.
           </EmptyDescription>
         </Empty>
-      </main>
+      </GlobalScreen>
     );
   }
 
   return (
     <>
-      <main className="p-4 md:p-8 relative h-full max-w-7xl mx-auto w-full">
+      <GlobalScreen>
         <OpenThrottleBreadcrumbs
           children="Edit Task"
           className="mb-4"
@@ -105,7 +113,7 @@ export default function Component(
           ]}
         />
         <TaskForm actionData={actionData} planId={planId} task={task} />
-      </main>
+      </GlobalScreen>
     </>
   );
 }

@@ -2,8 +2,6 @@
  * @description Tests for child job: Ralph loop in worktree, branch/SHA, plan completion.
  */
 
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- spawn mocks use explicit casts to ChildProcess shape */
-
 import { spawn, spawnSync } from 'child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,6 +13,7 @@ import { runChildJob } from '../child-job';
 const mockConfig = { connectionString: 'postgres://localhost/cortex' };
 
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
+  buildWorkflowRalphSpawnEnv: vi.fn((env: NodeJS.ProcessEnv) => env),
   getPostgresConfig: vi.fn(() => mockConfig),
 }));
 
@@ -248,7 +247,11 @@ describe('runChildJob', () => {
 
   it('returns ok: false when Cortex config is missing', async () => {
     const cortexServer = await import('@openthrottle/ai-mcp/src/cortex-server');
-    vi.mocked(cortexServer.getPostgresConfig).mockReturnValueOnce(undefined);
+    vi.mocked(cortexServer.getPostgresConfig).mockImplementationOnce(
+      (() => undefined) as unknown as () => ReturnType<
+        typeof cortexServer.getPostgresConfig
+      >,
+    );
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -259,7 +262,7 @@ describe('runChildJob', () => {
       const result = await runChildJob(input);
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.reason).toMatch(/Cortex is required/);
+        expect(result.reason).toMatch(/Postgres is not configured/);
       }
     } finally {
       rmSync(dir, { force: true, recursive: true });

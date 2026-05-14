@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import type { DeepPartial } from 'typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { User } from './user.entity';
 import { usersFactory } from './users.factory';
@@ -26,14 +27,14 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: createMock<GetRepository>({
-            create: (data) => data,
+            create: (data: DeepPartial<User>) => data as unknown as User,
             find: () => Promise.resolve(usersFactory.buildList(2)),
             findOne: () => Promise.resolve(usersFactory.build()),
             merge: () => ({}),
-            save: async (entity) => {
+            save: async (entity: DeepPartial<User>) => {
               // FIXME: Tighten this up
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              return entity as User;
+
+              return entity as unknown as User;
             },
           }),
         },

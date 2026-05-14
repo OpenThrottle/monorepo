@@ -20,19 +20,25 @@
       "path": "../../packages/react-router-editor"
     },
     {
+      "path": "../../packages/openthrottle-notifications"
+    },
+    {
+      "path": "../../packages/react-router-notifications"
+    },
+    {
       "path": "../../packages/react-router-auth"
     },
     {
       "path": "../../packages/react-router-graphql"
     },
     {
-      "path": "../../packages/openthrottle-notifications"
+      "path": "../../packages/openthrottle-developer-codegen"
     },
     {
       "path": "../../packages/react-router-ui"
     },
     {
-      "path": "../../packages/react-router-notifications"
+      "path": "../../packages/react-router-ui-global"
     },
     {
       "path": "../../packages/react-router-shadcn"

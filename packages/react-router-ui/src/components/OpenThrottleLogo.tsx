@@ -16,7 +16,7 @@ export const OpenThrottleLogo = (props: OpenThrottleLogoProps) => {
 
   // Setup
   const containerClasses = classnames(
-    'flex items-center gap-2 px-2 py-2 text-sidebar-foreground',
+    'flex items-center gap-2 px-2 py-2 text-sidebar-foreground h-10',
     className,
   );
 
@@ -50,14 +50,11 @@ export const OpenThrottleLogo = (props: OpenThrottleLogoProps) => {
   }
 
   return (
-    <div className={containerClasses}>
+    <Link className={containerClasses} to={to}>
       <SpeedometerIcon className="shrink-0 text-accent" />
-      <Link
-        className="truncate tracking-wide group-data-[collapsible=icon]:hidden flex gap-2"
-        to={to}
-      >
+      <div className="truncate tracking-wide group-data-[collapsible=icon]:hidden flex gap-2">
         {logoText}
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 };

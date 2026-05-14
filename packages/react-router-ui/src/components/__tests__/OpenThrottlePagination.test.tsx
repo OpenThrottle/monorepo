@@ -10,7 +10,7 @@ describe('OpenThrottlePagination Component', () => {
   let props: OpenThrottlePaginationProps;
 
   beforeEach(() => {
-    props = {};
+    props = { limit: 10, page: 1, total: 0 };
 
     const Component = () => <OpenThrottlePagination {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

@@ -17,7 +17,7 @@ describe('CommitLinksResolver', () => {
     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     message: 'feat(openthrottle): add GraphQL for tasks',
     // FIXME: Swap out eventually
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     plan: null as unknown as any,
     planId: 'c70fc1ea-c7de-4fe8-9722-44781ad80415',
     repo: 'owner/repo',

@@ -1,0 +1,50 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`UsageDailyActivity Component > should render 1`] = `
+<body>
+  <div>
+    <h2>
+      Unexpected Application Error!
+    </h2>
+    <h3
+      style="font-style: italic;"
+    >
+      Cannot read properties of undefined (reading 'map')
+    </h3>
+    <pre
+      style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
+    >
+      TypeError: Cannot read properties of undefined (reading 'map')
+    at mapToChartData (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/dashboard/components/DashboardDailyStatsCard.tsx:48:16)
+    at /Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/dashboard/components/DashboardDailyStatsCard.tsx:75:11
+    at mountMemo (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:8777:23)
+    at Object.useMemo (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:26216:18)
+    at Proxy.process.env.NODE_ENV.exports.useMemo (/Users/matt/Development/openthrottle/node_modules/react/cjs/react.development.js:1251:34)
+    at DashboardDailyStatsCard (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/dashboard/components/DashboardDailyStatsCard.tsx:74:27)
+    at Object.react_stack_bottom_frame (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+    at renderWithHooks (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+    at updateFunctionComponent (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+    at beginWork (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+    </pre>
+    <p>
+      💿 Hey developer 👋
+    </p>
+    <p>
+      You can provide a way better UX than this when your app throws errors by providing your own 
+      <code
+        style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
+      >
+        ErrorBoundary
+      </code>
+       or
+       
+      <code
+        style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
+      >
+        errorElement
+      </code>
+       prop on your route.
+    </p>
+  </div>
+</body>
+`;

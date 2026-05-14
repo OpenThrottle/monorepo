@@ -13,7 +13,7 @@ import { registerViews } from './views/index.js';
  * @description Called when the extension is activated (e.g. when the user opens the OpenThrottle Plans view).
  */
 export function activate(context: vscode.ExtensionContext): void {
-  console.log('🟢 🟢 🟢 Activating OpenThrottle extension 🟢 🟢 🟢');
+  // console.log('🟢 🟢 🟢 Activating OpenThrottle extension 🟢 🟢 🟢');
 
   const baseUrl = getApiBaseUrl();
   const getToken = (): Promise<string | undefined> =>

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
 import { PlusIcon } from 'lucide-react';
@@ -27,8 +28,17 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get('q') ?? '';
-  const [searchInput, setSearchInput] = React.useState(() => searchQuery);
+  const {
+    committedValue: searchQuery,
+    commitNow,
+    onSearchInputChange,
+    searchInputValue: searchInput,
+  } = useDebouncedSearchParam({
+    transformCommittedParams: (next) => {
+      next.set('limit', String(limit));
+      next.set('page', '1');
+    },
+  });
 
   // Setup
   const hasActiveFilters =
@@ -83,38 +93,20 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
   const handleSearchSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-
-      const next = new URLSearchParams(searchParams);
-      const q = searchInput.trim();
-
-      if (q) {
-        next.set('q', q);
-      } else {
-        next.delete('q');
-      }
-
-      next.set('page', '1');
-      next.set('limit', String(limit));
-
-      setSearchParams(next, { replace: true });
+      commitNow();
     },
 
-    [limit, searchParams, searchInput, setSearchParams],
+    [commitNow],
   );
 
   const handleClearFilters = React.useCallback(() => {
     const next = new URLSearchParams();
 
-    next.set('page', '1');
     next.set('limit', String(limit));
+    next.set('page', '1');
 
     setSearchParams(next, { replace: true });
-    setSearchInput('');
   }, [limit, setSearchParams]);
-
-  React.useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
 
   // Markup
 
@@ -137,7 +129,7 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
           className="min-w-[100px] w-[180px] shrink-0 rounded-md border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           data-testid="PromptToolbar-search-input"
           name="q"
-          onChange={(e) => setSearchInput(e.target.value)}
+          onChange={onSearchInputChange}
           placeholder="Search by title…"
           type="search"
           value={searchInput}

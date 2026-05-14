@@ -29,12 +29,23 @@ export const MoveToFolderDropdown = (props: MoveToFolderDropdownProps) => {
     triggerLabel = 'Move to folder',
   } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
   const handleSelect = React.useCallback(
     (folderId: MailFolderId) => {
       onSelect(folderId);
     },
     [onSelect],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <DropdownMenuSub>

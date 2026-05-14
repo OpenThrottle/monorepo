@@ -2,7 +2,6 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { format } from 'date-fns';
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -10,6 +9,8 @@ import {
   CardHeader,
   CardTitle,
   Separator,
+  // Badge,
+  // Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -70,16 +71,17 @@ export const TaskDetails = (props: TaskDetailsProps) => {
       <Card className="mb-6">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
-            <CardTitle className="flex items-center gap-2 justify-between">
-              <h1 className="text-2xl text-highlight">{task.title}</h1>
-              <Badge variant="secondary">Task</Badge>
-            </CardTitle>
-
-            <div className="flex flex-wrap items-center gap-2 text-sm mb-6">
+            <CardTitle className="flex items-center gap-4">
               <PlanStatusBadge
                 status={task.status as keyof typeof PlanStatusBadge}
               />
-            </div>
+              <h1 className="text-lg text-accent line-clamp-1">{task.title}</h1>
+
+              <div className="flex-1" />
+              {/* <Badge variant="secondary">Task</Badge> */}
+            </CardTitle>
+
+            <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
 
             <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
               {task.assignee != null && task.assignee !== '' && (
@@ -134,6 +136,13 @@ export const TaskDetails = (props: TaskDetailsProps) => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
+                {/* <Markdown
+                  className={classnames(
+                    'text-sm text-muted-foreground whitespace-normal',
+                    showDescriptionPreview && 'line-clamp-4',
+                  )}
+                  content={task.description ?? ''}
+                /> */}
                 <p
                   className={classnames(
                     'text-sm text-muted-foreground',

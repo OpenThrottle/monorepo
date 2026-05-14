@@ -1,25 +1,69 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { BotIcon, BadgeCheckIcon, BookIcon, ListIcon } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
+import { GeneratorNxBridge } from '~/routing/generators/components/GeneratorNxBridge';
+import { GeneratorTabDebug } from '~/routing/generators/components/GeneratorTabDebug';
+import { GeneratorTabDocumentation } from '~/routing/generators/components/GeneratorTabDocumentation';
+import { GeneratorTabPresets } from '~/routing/generators/components/GeneratorTabPresets';
+import { GetGeneratorByNameDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/generators.$generatorId';
+import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
+import { GeneratorTabSchema } from '~/routing/generators/components/GeneratorTabSchema';
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (match) =>
+    match.loaderData?.generator?.name ?? 'Generator Details',
+  links: (_match) => [{ children: 'Generators', to: '/generators' }],
 };
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const loader = async (args: Route.LoaderArgs) => {
+  const rawName = args.params.generatorId;
+  if (rawName == null || rawName === '') {
+    throw new Response('Generator name required', { status: 400 });
+  }
 
-export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Generator Details | ${SITE_TITLE}` }];
+  const name = decodeURIComponent(rawName);
+
+  const { generator } = await executeGraphqlWithAuth(
+    args.request,
+    GetGeneratorByNameDocument,
+    { name },
+  );
+
+  if (generator == null) {
+    throw new Response(`Generator "${name}" not found`, { status: 404 });
+  }
+
+  return { generator };
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
+export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
+  const raw = args.params.generatorId ?? 'Generator';
+  const name = decodeURIComponent(raw);
+
+  return [{ title: `${name} | Generators | ${SITE_TITLE}` }];
 });
 
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { generator } = loaderData;
 
   // Hooks
 
@@ -34,18 +78,55 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <h1 className="text-xl my-4 text-highlight">Generator Details</h1>
-      <p>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-        architecto ea?
-      </p>
-    </main>
+    <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={BotIcon}
+          title={generator.name}
+        />
+
+        {generator.description !== '' ? (
+          <p className="text-sm text-muted-foreground">
+            {generator.description}
+          </p>
+        ) : null}
+      </div>
+
+      <Tabs className="w-full" defaultValue="documentation">
+        <TabsList className="mb-8 gap-4 w-full justify-start" variant="line">
+          <TabsTrigger className="flex-0 cursor-pointer" value="documentation">
+            <BookIcon />
+            Documentation
+          </TabsTrigger>
+          <TabsTrigger className="flex-0 cursor-pointer" value="presets">
+            <ListIcon />
+            Presets
+          </TabsTrigger>
+          <TabsTrigger className="flex-0 cursor-pointer" value="schema">
+            <PuzzlePieceIcon />
+            Schema
+          </TabsTrigger>
+          <TabsTrigger className="flex-0 cursor-pointer" value="debug">
+            <BadgeCheckIcon />
+            Debug
+          </TabsTrigger>
+        </TabsList>
+
+        <GeneratorTabDocumentation />
+        <GeneratorTabPresets generator={generator} />
+        <GeneratorTabSchema generator={generator} />
+        <GeneratorTabDebug generator={generator} />
+      </Tabs>
+
+      <GeneratorNxBridge generator={generator} />
+    </GlobalScreen>
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

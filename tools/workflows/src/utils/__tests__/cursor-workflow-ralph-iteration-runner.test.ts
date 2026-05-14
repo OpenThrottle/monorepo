@@ -52,6 +52,32 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
     });
   });
 
+  it('maps runner claude to runIterationAsync backend claude', async () => {
+    const { createCursorWorkflowRalphIterationRunner } =
+      await import('../cursor-workflow-ralph-iteration-runner');
+
+    const runner = createCursorWorkflowRalphIterationRunner();
+
+    await runner.run({
+      agentPrompt: 'p',
+      iteration: 1,
+      model: 'sonnet',
+      runner: 'claude',
+      signal: undefined,
+      timeoutMs: 60_000,
+    });
+
+    expect(runIterationAsyncMock).toHaveBeenCalledWith({
+      agentPrompt: 'p',
+      backend: 'claude',
+      iteration: 1,
+      model: 'sonnet',
+      onChunk: undefined,
+      signal: undefined,
+      timeoutMs: 60_000,
+    });
+  });
+
   it('merges onChunk and appendPlanOutput into a single runIterationAsync onChunk', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
       await import('../cursor-workflow-ralph-iteration-runner');

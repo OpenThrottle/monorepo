@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import type { StoredNotification } from '../../data/notifications-store.context';
+import type { NotificationInstance } from '../../types';
 import { NotificationItem } from '../NotificationItem';
 import type { NotificationItemProps } from '../NotificationItem';
 
@@ -16,7 +16,7 @@ describe('NotificationItem Component', () => {
   let props: NotificationItemProps;
 
   beforeEach(() => {
-    const notification: StoredNotification = {
+    const notification: NotificationInstance = {
       createdAt: new Date().toISOString(),
       dismissed: false,
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,

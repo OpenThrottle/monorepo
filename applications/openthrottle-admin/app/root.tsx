@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 // import { Analytics } from '@vercel/analytics/react';
 import {
   APP_URL,
@@ -15,7 +15,6 @@ import {
   redirect,
   Scripts,
   ScrollRestoration,
-  useFetcher,
   useLocation,
   useRouteLoaderData,
 } from 'react-router';
@@ -25,13 +24,15 @@ import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
 } from '@openthrottle/react-router-auth';
-import {
-  CommanderGroup,
-  OpenThrottleCommander,
-} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Toaster } from '@openthrottle/react-router-shadcn';
-import { AdminLayout } from '~/global/components/AdminLayout';
+import {
+  GlobalProviders,
+  GlobalLayout,
+  GlobalMetrics,
+  GlobalLayoutHeader,
+} from '@openthrottle/react-router-ui-global';
+import { GaugeIcon } from 'lucide-react';
 import {
   GetMeDocument,
   LoginDocument,
@@ -42,13 +43,7 @@ import { SITE_TITLE } from '#/app/global/config/settings';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 
-function useIsAdminRoute(): boolean {
-  const location = useLocation();
-
-  return location.pathname !== '/';
-}
-
-export const links: LinksFunction = () => {
+export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
 
@@ -112,6 +107,8 @@ export const meta = (_args: Route.MetaArgs) => {
 
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
+ * @description Document shell only: html/head/body, Links/Meta/Scripts, env bootstrap,
+ * and a thin flex region / Layout for the Application.
  */
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
@@ -130,21 +127,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const _valueCSP = isProduction
     ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
     : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
-
-  // Handlers
-  const groups: CommanderGroup[] = [];
-  const commanderSearchFetcher = useFetcher();
-
-  // Handlers
-  const handleCommanderEmptyStateSearch = React.useCallback(
-    (query: string) => {
-      commanderSearchFetcher.submit(
-        { intent: 'commander-search', q: query.trim() },
-        { method: 'post' },
-      );
-    },
-    [commanderSearchFetcher],
-  );
 
   // Markup
 
@@ -175,17 +157,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="min-h-screen flex flex-col relative">
-        {/* <GlobalHeader /> */}
-        <main className="flex flex-1 flex-col h-full">{children}</main>
-        {/* <GlobalFooter /> */}
+        <div className="flex flex-1 flex-col">{children}</div>
 
-        <OpenThrottleCommander
-          groups={groups}
-          onEmptyStateSearch={handleCommanderEmptyStateSearch}
-        />
         <Toaster />
-
         <ScrollRestoration />
+
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
@@ -200,14 +176,49 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App(): React.ReactElement {
-  const isAdminRoute = useIsAdminRoute();
+  // Hooks
+  const { pathname } = useLocation();
 
-  return isAdminRoute ? (
-    <AdminLayout>
-      <Outlet />
-    </AdminLayout>
-  ) : (
-    <Outlet />
+  // Setup
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isPromptsRoute = pathname.startsWith('/prompts/');
+
+  const isProfileRoute = pathname.startsWith('/profile');
+  const isSettingsRoute = pathname.startsWith('/settings');
+  const isCreateRoute = pathname.endsWith('/create');
+
+  const isFooterHidden = isAuthRoute || isPromptsRoute;
+  const isHeaderHidden = isAuthRoute || isPromptsRoute;
+  const isMetricsHidden =
+    isAuthRoute ||
+    isProfileRoute ||
+    isPromptsRoute ||
+    isSettingsRoute ||
+    isCreateRoute;
+
+  // Handlers
+
+  return (
+    <>
+      <GlobalProviders>
+        <GlobalLayout
+          data={{
+            items: [
+              {
+                children: 'Dashboard',
+                icon: GaugeIcon,
+                to: '/dashboard',
+              },
+            ],
+          }}
+          overrides={{ footer: isFooterHidden }}
+        >
+          {!isHeaderHidden ? <GlobalLayoutHeader /> : null}
+          <Outlet />
+          {!isMetricsHidden ? <GlobalMetrics /> : null}
+        </GlobalLayout>
+      </GlobalProviders>
+    </>
   );
 }
 
@@ -250,7 +261,7 @@ export const action = async (args: Route.ActionArgs) => {
 
       const cookie = buildAuthCookie(token);
 
-      console.log('🟢  login success', cookie);
+      // console.log('🟢  login success', cookie);
 
       return redirect('/dashboard', {
         headers: { 'Set-Cookie': cookie },

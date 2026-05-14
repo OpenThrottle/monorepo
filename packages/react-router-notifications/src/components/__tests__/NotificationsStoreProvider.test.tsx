@@ -10,7 +10,7 @@ describe('NotificationsStoreProvider Component', () => {
   let props: NotificationsStoreProviderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: null };
 
     const Component = () => <NotificationsStoreProvider {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

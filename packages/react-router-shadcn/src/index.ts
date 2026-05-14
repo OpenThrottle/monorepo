@@ -14,7 +14,7 @@ export * from './components/Calendar';
 export * from './components/Card';
 export * from './components/Chart/index';
 export * from './components/Combobox';
-export * from './components/Command';
+export * from './components/Command/index';
 export * from './components/Collapsible';
 export * from './components/ContextMenu';
 export * from './components/DataTable';

@@ -31,6 +31,7 @@ function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
     name: 'run-plan',
     processedOn: 1234567890,
     progress: 100,
+    queueName: PLANS_QUEUE_NAME,
     returnvalue: undefined,
     timestamp: 1234567800,
     ...overrides,
@@ -272,6 +273,7 @@ describe('QueuesService', () => {
       expect(result.hasNext).toBe(false);
       expect(result.jobs).toHaveLength(1);
       expect(result.jobs[0]).toMatchObject({
+        executionBackend: 'cursor',
         id: 'j1',
         name: 'run-plan',
         state: 'completed',
@@ -327,6 +329,7 @@ describe('QueuesService', () => {
 
       expect(result).not.toBeNull();
       expect(result).toMatchObject({
+        executionBackend: 'cursor',
         id: 'job-99',
         name: 'run-plan',
         state: 'completed',
@@ -390,7 +393,21 @@ describe('QueuesService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe('j1');
       expect(result[1].id).toBe('j3');
+      expect(result[0].executionBackend).toBe('cursor');
       expect(result[0].data).toBe(JSON.stringify({ planId: 'plan-a' }));
+    });
+
+    test('reads execution backend from completed plan run job data', async () => {
+      const job = createMockJob({
+        data: { executionBackend: 'claude', planId: 'plan-a' },
+        id: 'j1',
+      });
+      mockGetJobs.mockResolvedValueOnce([job]);
+
+      const result = await service.getCompletedJobsByPlanId('plan-a', 10);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].executionBackend).toBe('claude');
     });
 
     test('caps limit at 500', async () => {

@@ -11,9 +11,11 @@ import {
   PlansService,
 } from '@openthrottle/nestjs-repositories';
 import 'reflect-metadata';
+import { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types';
 import {
   PLANS_QUEUE_NAME,
@@ -164,6 +166,12 @@ describe('PlansProcessor', () => {
           provide: getQueueToken(PLANS_QUEUE_NAME),
           useValue: mockPlansQueue,
         },
+        {
+          provide: BullMqRunOutputRetentionService,
+          useValue: createMock<BullMqRunOutputRetentionService>({
+            maybePruneAfterJobClose: vi.fn(),
+          }),
+        },
       ],
     }).compile();
 
@@ -210,6 +218,142 @@ describe('PlansProcessor', () => {
     );
   });
 
+  it('should pass --backend claude when job executionBackend is claude and ralph omits backend', async () => {
+    mockJob = {
+      data: {
+        executionBackend: 'claude',
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'pnpm',
+      [
+        'exec',
+        'workflow-ralph',
+        '--plan',
+        mockJob.data.planId,
+        '--backend',
+        'claude',
+      ],
+      expect.objectContaining({
+        cwd: process.cwd(),
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
+  });
+
+  it('should inject canonical Cortex Postgres URL into nested workflow-ralph env when POSTGRES_URL is set', async () => {
+    const prevUrl = process.env.POSTGRES_URL;
+    process.env.POSTGRES_URL = 'postgresql://u:p@localhost:5432/cortex_test';
+
+    try {
+      await processor.process(mockJob);
+
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'pnpm',
+        ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
+        expect.objectContaining({
+          cwd: process.cwd(),
+          env: expect.objectContaining({
+            [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+              'postgresql://u:p@localhost:5432/cortex_test',
+            POSTGRES_URL: 'postgresql://u:p@localhost:5432/cortex_test',
+          }),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }),
+      );
+    } finally {
+      process.env.POSTGRES_URL = prevUrl;
+    }
+  });
+
+  it('should use workingDirectory as cwd when provided in job data', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        workingDirectory: '/Users/matt/Development/some-project',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'pnpm',
+      ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
+      expect.objectContaining({
+        cwd: '/Users/matt/Development/some-project',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
+  });
+
+  it('should inject canonical Cortex Postgres into nested env when workingDirectory is a foreign cwd (regression: Plan not found)', async () => {
+    const prevUrl = process.env.POSTGRES_URL;
+    process.env.POSTGRES_URL =
+      'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
+
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        workingDirectory: '/Users/matt/Development/other-monorepo',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    try {
+      await processor.process(mockJob);
+
+      expect(mockRepoFindOne.mock.calls[0]?.[0]).toEqual({
+        where: { id: mockJob.data.planId },
+      });
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'pnpm',
+        ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
+        expect.objectContaining({
+          cwd: '/Users/matt/Development/other-monorepo',
+          env: expect.objectContaining({
+            [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+              'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
+            POSTGRES_URL:
+              'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
+          }),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }),
+      );
+    } finally {
+      process.env.POSTGRES_URL = prevUrl;
+    }
+  });
+
+  it('should fall back to process.cwd() when workingDirectory is not set', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'pnpm',
+      expect.any(Array),
+      expect.objectContaining({
+        cwd: process.cwd(),
+      }),
+    );
+  });
+
   it('should call runPlanOrchestratorJob and not spawn when runKind is orchestrator', async () => {
     mockJob = {
       data: {
@@ -222,15 +366,16 @@ describe('PlansProcessor', () => {
     const result = await processor.process(mockJob);
 
     expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
-    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledWith({
+    const orchestratorCall = mockRunPlanOrchestratorJob.mock.calls[0]?.[0];
+    expect(orchestratorCall).toMatchObject({
       correlation: {
         correlationId: 'job-1',
         queueJobId: 'job-1',
-        queueName: 'plans',
+        queueName: PLANS_QUEUE_NAME,
       },
       jobData: mockJob.data,
-      signal: expect.any(AbortSignal),
     });
+    expect(orchestratorCall?.signal).toBeInstanceOf(AbortSignal);
     expect(mockSpawn).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       taskRunMetrics: {
@@ -637,6 +782,12 @@ describe('PlansProcessor', () => {
           {
             provide: getQueueToken(PLANS_QUEUE_NAME),
             useValue: mockPlansQueue,
+          },
+          {
+            provide: BullMqRunOutputRetentionService,
+            useValue: createMock<BullMqRunOutputRetentionService>({
+              maybePruneAfterJobClose: vi.fn(),
+            }),
           },
         ],
       }).compile();

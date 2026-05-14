@@ -4,16 +4,16 @@ MCP server for plans knowledge base (semantic search over Cortex Postgres).
 
 ## Deprecation (direct Postgres)
 
-**Direct Cortex Postgres access from this package is deprecated.** Prefer **@openthrottle/mcp-developer** for all Cortex MCP tools (see `packages/openthrottle/mcp-developer/README.md`). mcp-developer talks to Cortex **via GraphQL only** (openthrottle-server); it does not connect to Postgres. It has feature parity with ai-mcp (notes, plans, tasks, commit links, activity, output stream, search, health). See [DEPRECATION.md](./DEPRECATION.md) for migration. This package remains available for legacy or transition; new usage should use mcp-developer.
+**Direct Cortex Postgres access from this package is deprecated.** Prefer **@openthrottle/mcp-developer** for all Cortex MCP tools (see `packages/mcp-developer/README.md`). mcp-developer talks to Cortex **via GraphQL only** (openthrottle-server); it does not connect to Postgres. It has feature parity with ai-mcp (notes, plans, tasks, commit links, activity, output stream, search, health). See [DEPRECATION.md](./DEPRECATION.md) for migration. This package remains available for legacy or transition; new usage should use mcp-developer.
 
 ## Environment
 
 - **Cortex Postgres** — connection uses either:
   - **`POSTGRES_URL`** — full connection string (e.g. `postgresql://user:pass@host:port/db`), or
-  - **`POSTGRES_*`** — `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (see `.env.default` and `databases/cortex/README.md`).
+  - **`POSTGRES_*`** — `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (see `.env.default` and `databases/README.md`).
 - **Embeddings** — either:
   - **OpenAI** — set **`OPENAI_API_KEY`** so the server can embed queries with `text-embedding-3-small` (1536 dimensions); or
-  - **Ollama (local)** — set **`OLLAMA_BASE_URL`** (default `http://localhost:11434`) and/or **`OLLAMA_EMBEDDING_MODEL`** (e.g. `nomic-embed-text`). When either is set, Ollama is used for embeddings; when neither is set, OpenAI is used. See root `.env.default` and `databases/cortex/README.md` § Embedding dimension strategy.
+  - **Ollama (local)** — set **`OLLAMA_BASE_URL`** (default `http://localhost:11434`) and/or **`OLLAMA_EMBEDDING_MODEL`** (e.g. `nomic-embed-text`). When either is set, Ollama is used for embeddings; when neither is set, OpenAI is used. See root `.env.default` and `databases/README.md` § Embedding dimension strategy.
 
 No raw SQL or credentials are exposed to the MCP client.
 
@@ -23,7 +23,7 @@ No raw SQL or credentials are exposed to the MCP client.
 
 Steps:
 
-1. **Start Cortex** (if needed): from repo root, `docker compose -f docker-compose-databases.yml up -d cortex`. See `databases/cortex/README.md` for env and migrations.
+1. **Start Cortex** (if needed): from repo root, `docker compose -f docker-compose-databases.yml up -d cortex`. See `databases/README.md` for env and migrations.
 2. **From Cursor:** In the MCP Tools panel, call the **`health`** tool (no arguments). You get `server: ok` and either `cortex: not_configured`, `cortex: reachable`, or `cortex: unreachable`.
 3. **Server-only ping (default):** Calling **`health`** with no arguments only verifies the MCP server is responding. Pass `checkDb: true` to also verify Cortex Postgres.
 4. **From the terminal:** Run `pnpm nx run @openthrottle/ai-mcp:serve` and connect with MCP Inspector, then call the `health` tool.

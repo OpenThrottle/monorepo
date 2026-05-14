@@ -101,13 +101,17 @@ describe('NestjsAgenticWorkflowModule', () => {
         NestjsAgenticWorkflowModule.registerAsync({
           imports: [WorkerGraphqlUrlStubModule],
           inject: [WORKER_GRAPHQL_URL],
-          useFactory: (url: string) => ({
-            executeGraphqlV2,
-            workerGraphqlAuth: {
-              token: 'injected-worker-token',
-              url,
-            },
-          }),
+          useFactory: (...args: unknown[]) => {
+            const url = args[0] as unknown as string;
+
+            return {
+              executeGraphqlV2,
+              workerGraphqlAuth: {
+                token: 'injected-worker-token',
+                url,
+              },
+            };
+          },
         }),
       ]);
 

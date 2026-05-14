@@ -32,6 +32,7 @@ import {
 import { Link, useFetcher } from 'react-router';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import {
   AddPermissionToRoleDocument,
   DeleteRoleDocument,
@@ -40,7 +41,7 @@ import {
   RemovePermissionFromRoleDocument,
   UpdateRoleDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
 
@@ -187,7 +188,7 @@ export default function Component(
   }
 
   return (
-    <main className="mx-auto max-w-7xl w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+    <GlobalScreen>
       <p className="text-sm text-muted-foreground">
         <Link
           className="underline underline-offset-2 hover:text-primary"
@@ -339,7 +340,7 @@ export default function Component(
           )}
         </CardContent>
       </Card>
-    </main>
+    </GlobalScreen>
   );
 }
 

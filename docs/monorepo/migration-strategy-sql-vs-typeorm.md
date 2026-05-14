@@ -1,6 +1,6 @@
 # Migration strategy: SQL-as-source vs TypeORM migrations
 
-This document compares two approaches for managing Postgres schema changes in a stack that uses TypeORM for runtime (connection pooling, entities, raw SQL). It is written for **greenfield** evaluation: assume no existing migration history. For the current Cortex setup (SQL files + `cortex:migrate`), see `databases/cortex/README.md` § Migrations.
+This document compares two approaches for managing Postgres schema changes in a stack that uses TypeORM for runtime (connection pooling, entities, raw SQL). It is written for **greenfield** evaluation: assume no existing migration history. For the current Cortex setup (SQL files + `cortex:migrate`), see `databases/README.md` § Migrations.
 
 ## Approach 1: SQL files as source of truth + custom script
 
@@ -21,7 +21,7 @@ This document compares two approaches for managing Postgres schema changes in a 
 
 - **Manual sync:** After adding or changing a migration, entities (and any NestJS/TypeORM repositories) must be updated by hand to match the schema. Easy to forget and cause runtime mismatches.
 - **No auto-generation from entities:** Schema changes start from SQL, not from entity edits. Teams that prefer “change entity → generate migration” need discipline to instead “write SQL → update entity.”
-- **Applied state (optional):** If the script does *not* use a “migrations run” table, every run re-executes all files, so migrations must be idempotent. If it *does* track applied migrations, the script and table become part of the contract to maintain.
+- **Applied state (optional):** If the script does _not_ use a “migrations run” table, every run re-executes all files, so migrations must be idempotent. If it _does_ track applied migrations, the script and table become part of the contract to maintain.
 - **Duplicate effort:** Two places to touch for one logical change: migration file and entity (and possibly repository types).
 
 ---
@@ -52,16 +52,16 @@ This document compares two approaches for managing Postgres schema changes in a 
 
 ## Comparison summary
 
-| Dimension            | SQL-as-source + custom script     | TypeORM migrations                    |
-|---------------------|------------------------------------|----------------------------------------|
-| **Maintainability** | One clear history (SQL only)      | Can be one (generate) or two (entity + migration) |
-| **Tooling**         | Any runner; simple script         | TypeORM CLI; framework-coupled         |
-| **Rollback**        | New migration that reverses       | `migration:revert` (per migration)     |
-| **Team ergonomics** | “Write SQL → update entity”       | “Change entity → generate” or hand-write |
-| **Long-term**       | Portable; not tied to TypeORM     | Tied to TypeORM; generator limits      |
-| **Postgres features** | Full (raw SQL)                  | Generator limited; raw SQL possible   |
+| Dimension             | SQL-as-source + custom script | TypeORM migrations                                |
+| --------------------- | ----------------------------- | ------------------------------------------------- |
+| **Maintainability**   | One clear history (SQL only)  | Can be one (generate) or two (entity + migration) |
+| **Tooling**           | Any runner; simple script     | TypeORM CLI; framework-coupled                    |
+| **Rollback**          | New migration that reverses   | `migration:revert` (per migration)                |
+| **Team ergonomics**   | “Write SQL → update entity”   | “Change entity → generate” or hand-write          |
+| **Long-term**         | Portable; not tied to TypeORM | Tied to TypeORM; generator limits                 |
+| **Postgres features** | Full (raw SQL)                | Generator limited; raw SQL possible               |
 
-For **greenfield** Postgres + TypeORM projects where you need **full SQL** (e.g. pgvector, triggers, exotic indexes), **SQL-as-source with a small runner** is the more flexible long-term choice. For projects that stay within TypeORM’s generator and prefer **entity-first** workflow, **TypeORM migrations** are convenient. A concrete recommendation for this repo (Cortex and similar) is in `databases/cortex/README.md` § Migration strategy (TypeORM vs SQL).
+For **greenfield** Postgres + TypeORM projects where you need **full SQL** (e.g. pgvector, triggers, exotic indexes), **SQL-as-source with a small runner** is the more flexible long-term choice. For projects that stay within TypeORM’s generator and prefer **entity-first** workflow, **TypeORM migrations** are convenient. A concrete recommendation for this repo (Cortex and similar) is in `databases/README.md` § Migration strategy (TypeORM vs SQL).
 
 ---
 
@@ -76,4 +76,4 @@ For **greenfield** Postgres + TypeORM projects where you need **full SQL** (e.g.
 3. **Single history:** One ordered list of `.sql` files. No “generated vs hand-written” split; no conversion if we ever change ORMs.
 4. **Trade-off we accept:** Entities must be updated manually after schema changes. We mitigate with JSDoc that references migration numbers (e.g. “Matches databases/cortex/migrations (002, 012)”) and review in PRs.
 
-**Where this is documented:** This doc (`docs/monorepo/migration-strategy-sql-vs-typeorm.md`) holds the full pros/cons and recommendation. `databases/cortex/README.md` § Migration strategy (TypeORM vs SQL) states the choice for Cortex and points here.
+**Where this is documented:** This doc (`docs/monorepo/migration-strategy-sql-vs-typeorm.md`) holds the full pros/cons and recommendation. `databases/README.md` § Migration strategy (TypeORM vs SQL) states the choice for Cortex and points here.

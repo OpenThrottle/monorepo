@@ -9,7 +9,31 @@ import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,
   DEFAULT_PROMPT,
+  DEFAULT_RUNNER,
+  type WorkflowRunner,
 } from '../config/index.js';
+
+/** @description Known backend ids; aligned with tools/workflows / GraphQL. */
+const WORKFLOW_RUNNER_IDS = ['claude', 'cursor'] as const;
+
+/**
+ * @description Maps GraphQL / queue job backend strings to {@link WorkflowRunner}.
+ */
+const resolveExecutionBackend = (
+  raw: string | null | undefined,
+): WorkflowRunner => {
+  if (raw == null || raw === '') {
+    return DEFAULT_RUNNER;
+  }
+
+  const n = raw.trim().toLowerCase();
+
+  if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
+    return n as unknown as WorkflowRunner;
+  }
+
+  return DEFAULT_RUNNER;
+};
 
 const resolveIterations = (raw: number | null | undefined): number => {
   if (raw == null) {
@@ -83,6 +107,7 @@ const resolveProject = (raw: string | null | undefined): string => {
  * {@link WorkflowContext}. Ignores `promptFile` — layer-1 argv only; not on {@link WorkflowContext}.
  */
 export function resolveWorkflowRunOptions(params: {
+  readonly executionBackend?: string | null;
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
   readonly mode?: WorkflowContext['mode'];
@@ -108,8 +133,7 @@ export function resolveWorkflowRunOptions(params: {
     planId,
     project: resolveProject(r.project),
     prompt: resolvePrompt(r.prompt),
-    // runner: resolveExecutionBackend(r.backend),
-    runner: 'RALPH',
+    runner: resolveExecutionBackend(r.backend ?? params.executionBackend),
     taskId,
     timeout: iterationTimeout,
   };
@@ -139,6 +163,7 @@ export function buildRalphFlowContextFromRunOptionsShape(
  * (see `openthrottle-ralph-parity.ts` queue vs CLI notes).
  */
 export function buildRalphFlowContextFromPlanRunTuning(params: {
+  readonly executionBackend?: string | null;
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
   readonly mode?: WorkflowContext['mode'];

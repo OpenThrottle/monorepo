@@ -1,0 +1,17 @@
+fragment UsageDailyStatsRow on DailyStatsObject {
+  date
+  plansCompleted
+  plansCreated
+  plansUpdated
+  tasksCompleted
+  tasksCreated
+  tasksUpdated
+}
+
+query getUsageDailyStats($start: String!, $end: String!) {
+  dailyStatsRange(start: $start, end: $end) {
+    items {
+      ...UsageDailyStatsRow
+    }
+  }
+}

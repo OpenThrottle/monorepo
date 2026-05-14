@@ -17,9 +17,3 @@ pnpm add <%= org %>/<%= name %>
 ```bash
 npm install <%= org %>/<%= name %>
 ```
-
-**yarn:**
-
-```bash
-yarn add <%= org %>/<%= name %>
-```

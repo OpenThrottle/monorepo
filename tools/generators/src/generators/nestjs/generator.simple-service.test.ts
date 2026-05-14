@@ -6,7 +6,7 @@ import { generatorNestJSSimpleService } from './generator.simple-service';
 describe('nestjs-simple-service generator', () => {
   let tree: Tree;
 
-  const application = 'accounts-central-api';
+  const application = 'nestjs-api';
   const name = 'test-logs';
 
   beforeEach(() => {

@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { SpeedometerIcon } from '@phosphor-icons/react/dist/ssr/Speedometer';
 import {
-  FEATURE_BETA_PREVIEW,
   OPEN_THROTTLE_GITHUB_URL,
   OPEN_THROTTLE_GITHUB_URL_DISCUSSIONS,
 } from '@openthrottle/react-router-utils';
@@ -52,33 +51,29 @@ export const GlobalFooter = (_props: GlobalFooterProps) => {
                   Features
                 </Link>
               </li>
-              {FEATURE_BETA_PREVIEW && (
-                <>
-                  <li>
-                    <Link
-                      className="hover:text-accent transition"
-                      to="/pricing"
-                      viewTransition={true}
-                    >
-                      Pricing
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      className="hover:text-accent transition"
-                      to="/case-studies"
-                      viewTransition={true}
-                    >
-                      Case Studies
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="hover:text-accent transition" to="#">
-                      Docs
-                    </Link>
-                  </li>
-                </>
-              )}
+              <li>
+                <Link
+                  className="hover:text-accent transition"
+                  to="/pricing"
+                  viewTransition={true}
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="hover:text-accent transition"
+                  to="/case-studies"
+                  viewTransition={true}
+                >
+                  Case Studies
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-accent transition" to="#">
+                  Docs
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

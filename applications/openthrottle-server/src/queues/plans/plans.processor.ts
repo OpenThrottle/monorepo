@@ -5,7 +5,13 @@ import {
   Processor,
   WorkerHost,
 } from '@nestjs/bullmq';
-import { Inject, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Optional,
+  OnApplicationShutdown,
+  OnModuleInit,
+} from '@nestjs/common';
+import { buildWorkflowRalphSpawnEnv } from '@openthrottle/ai-mcp/src/cortex-server';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getWorktreeTargetsFromEnv,
@@ -13,12 +19,19 @@ import {
   WORKTREE_TRACKER_TOKEN,
 } from '@openthrottle/nestjs-worktrees';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
-import { buildWorkflowRalphRunTuningArgv, runChildJob } from '@tools/workflows';
+import {
+  buildWorkflowRalphRunTuningArgv,
+  formatPlansProcessorSpawnOtDiagnosticsMessage,
+  mergeRalphNestedRunTuningWithExecutionBackend,
+  runChildJob,
+} from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
 import {
+  getCortexPostgresUrl,
   PlanOutputStreamService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
+import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
 import {
@@ -34,6 +47,13 @@ import type {
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
+import {
+  appendChildJobChunkToRunOutput,
+  closeRunOutputForJob,
+  createSpawnRunOutputHandlers,
+} from '../bullmq-keyed-run-logging';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -88,7 +108,7 @@ interface SpawnAndWaitResult {
 function spawnAndWait(
   command: string,
   args: string[],
-  options: { cwd: string },
+  options: { cwd: string; env?: NodeJS.ProcessEnv },
   onStdout: (chunk: string) => void,
   onStderr: (chunk: string) => void,
   signal?: AbortSignal,
@@ -183,6 +203,10 @@ export class PlansProcessor
     private readonly worktreeTracker: IWorktreeTargetsTracker,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
+    @Optional()
+    @Inject(BULLMQ_RUN_OUTPUT_WRITER)
+    private readonly bullMqRunOutputWriter: KeyedJsonlWriter | undefined,
+    private readonly bullMqRunOutputRetention: BullMqRunOutputRetentionService,
   ) {
     super();
   }
@@ -391,15 +415,27 @@ export class PlansProcessor
       PlansProcessor.name,
     );
 
+    try {
+      await this.bullMqRunOutputWriter?.closeAll();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      this.logger.warn(
+        `BullMQ run output: KeyedJsonlWriter.closeAll failed during shutdown: ${message}`,
+        PlansProcessor.name,
+      );
+    }
+
     await this.worker.close();
   }
 
   async process(job: RunPlanJob): Promise<PlanRunJobResult> {
     const { planId } = job.data;
     const cancelSignal = this.planRunCancellation.attach(planId);
+    const jobId = String(job.id);
+    const queueName = PLANS_QUEUE_NAME;
 
     try {
-      const jobId = String(job.id);
       const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
 
       const metricsAtStart = this.processMetrics.getCurrentSnapshot();
@@ -411,6 +447,9 @@ export class PlansProcessor
 
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
+
+      this.logger.info('🟡 ♦️ 🟡 ♦️ 🟡 ♦️ 🟡 ♦️ ', plan);
+
       const planTitle = plan?.title ?? undefined;
 
       await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
@@ -426,9 +465,16 @@ export class PlansProcessor
         status: 'IN_PROGRESS',
       });
 
-      const useWorktree = this.worktreeTracker.listTargets().length > 0;
+      const worktrees = this.worktreeTracker.listTargets();
+      const useWorktree = worktrees.length > 0;
 
-      const result = isRunPlanOrchestratorJobData(job.data)
+      const isPlanOrchestrator = isRunPlanOrchestratorJobData(job.data);
+      this.logger.info('🟡 ♦️ 🟡 ♦️ 🟡 ♦️ 🟡 ♦️ ', {
+        isPlanOrchestrator,
+        worktrees,
+      });
+
+      const result = isPlanOrchestrator
         ? await this.processOrchestrator(
             job,
             jobId,
@@ -462,6 +508,14 @@ export class PlansProcessor
 
       return result;
     } finally {
+      await closeRunOutputForJob({
+        jobId,
+        logLabel: PlansProcessor.name,
+        logger: this.logger,
+        queueName,
+        writer: this.bullMqRunOutputWriter,
+      });
+      this.bullMqRunOutputRetention.maybePruneAfterJobClose();
       this.planRunCancellation.detach(planId);
     }
   }
@@ -574,7 +628,7 @@ export class PlansProcessor
   /**
    * @description In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
    * `@openthrottle/openthrottle-agentic-ralph`. Does not use worktrees or `workflow-ralph` spawn;
-   * iteration uses `runIterationAsync` (Cursor) in the server process.
+   * iteration uses `runIterationAsync` (Cursor or Claude per job `executionBackend`) in the server process.
    */
   private async processOrchestrator(
     job: RunPlanJob,
@@ -733,9 +787,23 @@ export class PlansProcessor
       ensureCommit: { runChecks: true },
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
+          canonicalCortexPostgresUrl: getCortexPostgresUrl(),
           handoff,
+          onChunk: (chunk) => {
+            appendChildJobChunkToRunOutput(
+              this.bullMqRunOutputWriter,
+              PLANS_QUEUE_NAME,
+              jobId,
+              chunk,
+            );
+          },
           planId,
-          ...ralphTuningForChildJob(job.data.ralph),
+          ...ralphTuningForChildJob(
+            mergeRalphNestedRunTuningWithExecutionBackend(
+              job.data.ralph,
+              job.data.executionBackend,
+            ),
+          ),
           signal: cancelSignal,
         });
 
@@ -924,27 +992,50 @@ export class PlansProcessor
     metricsAtStart: ProcessMetricsSnapshot,
     cancelSignal: AbortSignal,
   ): Promise<PlanRunJobResult> {
-    const workspaceRoot = getWorkspaceRoot();
+    const workspaceRoot = job.data.workingDirectory ?? getWorkspaceRoot();
     const args = [
       'exec',
       RALPH_CMD,
       '--plan',
       planId,
-      ...buildWorkflowRalphRunTuningArgv(job.data.ralph ?? {}),
+      ...buildWorkflowRalphRunTuningArgv(
+        mergeRalphNestedRunTuningWithExecutionBackend(
+          job.data.ralph,
+          job.data.executionBackend,
+        ),
+      ),
     ];
 
-    const onStdout = (chunk: string): void => {
-      this.logger.info(chunk.trimEnd(), logContext);
-    };
-    const onStderr = (chunk: string): void => {
-      this.logger.warn(chunk.trimEnd(), logContext);
-    };
+    const { onStderr, onStdout } = createSpawnRunOutputHandlers({
+      jobId,
+      logContext,
+      logger: this.logger,
+      queueName: PLANS_QUEUE_NAME,
+      writer: this.bullMqRunOutputWriter,
+    });
+
+    const spawnOtDiag = formatPlansProcessorSpawnOtDiagnosticsMessage({
+      jobId,
+      planId,
+      queueLabel: PLANS_QUEUE_NAME,
+      spawnCwd: workspaceRoot,
+      workerEnv: process.env,
+    });
+
+    if (spawnOtDiag) {
+      this.logger.log(spawnOtDiag, PlansProcessor.name);
+    }
 
     try {
       const { cancelled, exitCode } = await spawnAndWait(
         'pnpm',
         args,
-        { cwd: workspaceRoot },
+        {
+          cwd: workspaceRoot,
+          env: buildWorkflowRalphSpawnEnv(process.env, {
+            canonicalCortexPostgresUrl: getCortexPostgresUrl(),
+          }),
+        },
         onStdout,
         onStderr,
         cancelSignal,

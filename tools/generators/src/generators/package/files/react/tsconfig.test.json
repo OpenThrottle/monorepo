@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": [
+    "./tsconfig.json",
+    "../../tsconfig.vitest-react.json"
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "tests/**/*.spec.ts",
+    "tests/**/*.spec.tsx",
+    "tests/**/*.test.ts",
+    "tests/**/*.test.tsx",
+    "vitest.setup.ts",
+    "vitest.setup.tsx"
+  ]
+}

@@ -49,7 +49,9 @@ export const GeneratorCard = (props: GeneratorCardProps) => {
           size="default"
           variant="outline"
         >
-          <Link to={`/generators/${generator.name}`}>View</Link>
+          <Link to={`/generators/${encodeURIComponent(generator.name)}`}>
+            View
+          </Link>
         </Button>
       </CardFooter>
     </Card>

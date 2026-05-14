@@ -17,9 +17,3 @@ pnpm add @openthrottle/nestjs-express
 ```bash
 npm install @openthrottle/nestjs-express
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-express
-```

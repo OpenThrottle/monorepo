@@ -27,7 +27,7 @@ export const PlanWorkflowConfigCollapsed = (
 
   return (
     <Card
-      className={classnames('mb-6', className)}
+      className={classnames(className)}
       data-testid="workflow-run-options-collapsed"
     >
       <CardHeader className="flex flex-row w-full gap-4">

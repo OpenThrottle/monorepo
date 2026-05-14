@@ -6,7 +6,7 @@ import { generatorNestJSAIAgent } from './generator.ai-agent';
 describe('nestjs "ai-agent" generator', () => {
   let tree: Tree;
 
-  const application = 'accounts-central-api';
+  const application = 'nestjs-api';
   const name = 'example-ai-agent';
 
   beforeEach(() => {

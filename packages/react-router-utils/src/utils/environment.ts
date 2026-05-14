@@ -6,7 +6,7 @@ export const getEnvironment = (): OpenThrottleEnv => {
   const appName = ENV_SOURCE['APP_NAME'];
   const appUrl = ENV_SOURCE['APP_URL'];
   const apiUrlExternal = ENV_SOURCE['API_URL_EXTERNAL'];
-  const apiUrlInternal = ENV_SOURCE['API_URL_EXTERNAL'];
+  const apiUrlInternal = ENV_SOURCE['API_URL_INTERNAL'];
   const appUrlAdmin = ENV_SOURCE['APP_URL_ADMIN'];
   const appUrlCms = ENV_SOURCE['APP_URL_CMS'];
   const appUrlDeveloper = ENV_SOURCE['APP_URL_DEVELOPER'];

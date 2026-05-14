@@ -1,5 +1,4 @@
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { HomeBuiltBy } from '~/routing/home/components/HomeBuiltBy';
 import { HomeContext } from '~/routing/home/components/HomeContext';
 import { HomeHeroV1 } from '~/routing/home/components/HomeHeroV1';
@@ -43,16 +42,11 @@ export default function Component(
   return (
     <>
       <HomeHeroV1 />
-      {/* <HomeHeroV2 /> */}
-      {/* <HomeHeroV3 /> */}
-      {/* <HomeHeroV4 /> */}
-      {/* <HomeHeroV5 /> */}
-
-      {FEATURE_BETA_PREVIEW && <HomeContext />}
-      {FEATURE_BETA_PREVIEW && <HomeWorkflows />}
-      {FEATURE_BETA_PREVIEW && <HomeBuiltBy />}
-      {FEATURE_BETA_PREVIEW && <HomeVelocity />}
-      {FEATURE_BETA_PREVIEW && <HomeMoveFaster />}
+      <HomeContext />
+      <HomeWorkflows />
+      <HomeBuiltBy />
+      <HomeMoveFaster />
+      <HomeVelocity />
     </>
   );
 }

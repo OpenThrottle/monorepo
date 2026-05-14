@@ -8,28 +8,21 @@ import {
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
+import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 
 export interface SearchDocumentationCardProps {
   className?: string;
+  readonly defaultOpenWhy?: boolean;
+  readonly rankMeta?: SearchRankMeta;
   result: SearchChunk;
-}
-
-/**
- * @description Builds GitHub blob URL for documentation source (e.g. owner/repo, path, optional sha).
- */
-function githubBlobHref(
-  repo: string,
-  path: string,
-  sha?: string | null,
-): string {
-  const ref = sha != null && sha !== '' ? sha : 'main';
-  return `https://github.com/${repo}/blob/${ref}/${path}`;
 }
 
 export const SearchDocumentationCard = (
   props: SearchDocumentationCardProps,
 ) => {
-  const { className, result } = props;
+  const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks
 
@@ -105,6 +98,11 @@ export const SearchDocumentationCard = (
           </p>
         </pre>
         {similarityBlock}
+        <SearchWhyThisResult
+          defaultOpen={defaultOpenWhy}
+          rankMeta={rankMeta}
+          result={result}
+        />
       </CardContent>
     </Card>
   );

@@ -1,24 +1,31 @@
 import * as React from 'react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
-import { SITE_TITLE } from '~/global/config/settings';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
 
-// export const loader = async (args: Route.LoaderArgs) => {
-//   return {}
-// };
+type HandleData = Route.ComponentProps['loaderData'];
 
-// export const links: LinksFunction = () => {
-//   return [{ href: stylesheet, rel: 'stylesheet' }];
-// };
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Create Note',
+  links: (_match) => [{ children: 'All Notes', to: '/notes' }],
+};
 
-// export const meta = (_args: Route.MetaArgs) => {
-//   return [{ title: `NoteCreate | ${SITE_TITLE}` }];
-// };
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Create note | ${SITE_TITLE}` }];
@@ -42,12 +49,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="p-4 md:p-8 lg:p-12 relative h-full max-w-7xl mx-auto w-full">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-xl my-4 text-highlight">Create Note</h1>
-        <NoteForm action="create" />
-      </div>
-    </main>
+    <GlobalScreen>
+      <NoteForm action="create" />
+    </GlobalScreen>
   );
 }
 

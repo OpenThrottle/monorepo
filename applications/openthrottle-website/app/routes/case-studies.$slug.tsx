@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '~/global/components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { MOCK_CASE_STUDIES } from '~/routing/case-studies/data/mock.case-studies';
 import type { Route } from '@/app/routes/+types/case-studies.$slug';

@@ -6,7 +6,7 @@ import { generatorNestJSGraphQLService } from './generator.graphql-service';
 describe('nestjs-graphql-service generator', () => {
   let tree: Tree;
 
-  const application = 'accounts-central-api';
+  const application = 'nestjs-api';
   const name = 'test-logs';
 
   beforeEach(() => {

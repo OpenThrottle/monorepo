@@ -26,9 +26,3 @@ pnpm add @openthrottle/nestjs-graphql
 ```bash
 npm install @openthrottle/nestjs-graphql
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-graphql
-```

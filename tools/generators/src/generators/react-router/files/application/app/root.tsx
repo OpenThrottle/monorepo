@@ -1,4 +1,4 @@
-import type { LinksFunction, ShouldRevalidateFunction } from 'react-router';
+import type { ShouldRevalidateFunction } from 'react-router';
 // import { Analytics } from '@vercel/analytics/react';
 import { APP_URL } from '@openthrottle/react-router-utils';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, } from 'react-router';
@@ -7,7 +7,7 @@ import { SITE_TITLE } from '#/app/global/config/settings';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 
-export const links: LinksFunction = () => {
+export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
 };
 

@@ -2,7 +2,6 @@
  * @description GraphQL resolver for GitHub pulls and stats. Wraps GitHubService and GitHubStatsService.
  */
 
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- Coerce nullable GraphQL inputs to service option unions */
 import { cacheControlFromInfo } from '@apollo/cache-control-types';
 import { Args, Info, Query, Resolver } from '@nestjs/graphql';
 import type { GraphQLResolveInfo } from 'graphql';
@@ -11,6 +10,7 @@ import { GitHubService } from '../github/github.service';
 import { GitHubStatsService } from './github-stats.service';
 import {
   CommitsPerPrInput,
+  GetPullInput,
   GitHubRepoInput,
   LinesAddedDeletedInput,
   ListPullsInput,
@@ -72,6 +72,23 @@ export class GithubResolver {
     return results;
   }
 
+  @Query(() => PullListItemObject, {
+    description: `Get one pull request by repository and PR number (GitHub API)`,
+    nullable: true,
+  })
+  async pull(
+    @Args('input') input: GetPullInput,
+    @Info() info: GraphQLResolveInfo,
+  ): Promise<PullListItemObject | null> {
+    setCacheHint(info, this.CACHE_MAX_AGE);
+
+    return this.githubService.getPullListItem(
+      input.owner,
+      input.repo,
+      input.number,
+    );
+  }
+
   @Query(() => [OpenPrCountByAuthorObject], {
     description: `Open PR count per author for a repository (GitHub stats).`,
   })
@@ -117,7 +134,7 @@ export class GithubResolver {
       input.repo,
       {
         maxPrs: input.maxPrs ?? undefined,
-        period: (input.period ?? 'month') as 'month' | 'week',
+        period: input.period ?? 'month',
       },
     );
   }
@@ -136,7 +153,7 @@ export class GithubResolver {
       input.owner,
       input.repo,
       {
-        period: (input.period ?? undefined) as 'month' | 'week' | undefined,
+        period: input.period ?? undefined,
       },
     );
   }
@@ -152,7 +169,7 @@ export class GithubResolver {
     setCacheHint(info, this.CACHE_MAX_AGE);
 
     return this.githubStatsService.getPrCountByLabel(input.owner, input.repo, {
-      state: (input.state ?? 'all') as 'all' | 'closed' | 'open',
+      state: input.state ?? 'all',
     });
   }
 
@@ -170,7 +187,7 @@ export class GithubResolver {
       input.owner,
       input.repo,
       {
-        period: input.period as 'month' | 'week',
+        period: input.period,
       },
     );
   }
@@ -187,7 +204,7 @@ export class GithubResolver {
 
     return this.githubStatsService.getReviewCycleTime(input.owner, input.repo, {
       maxPrs: input.maxPrs ?? undefined,
-      period: (input.period ?? undefined) as 'month' | 'week' | undefined,
+      period: input.period ?? undefined,
     });
   }
 
@@ -203,7 +220,7 @@ export class GithubResolver {
 
     return this.githubStatsService.getCommitsPerPr(input.owner, input.repo, {
       maxPrs: input.maxPrs ?? undefined,
-      period: (input.period ?? undefined) as 'month' | 'week' | undefined,
+      period: input.period ?? undefined,
     });
   }
 }

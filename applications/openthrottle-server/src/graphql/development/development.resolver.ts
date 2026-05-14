@@ -31,4 +31,15 @@ export class DevelopmentResolver {
     this.developmentService.triggerWebsocketNotification();
     return true;
   }
+
+  /**
+   * @description When dev JSONL logging is enabled, writes one sample line to the JSONL sink
+   * (and hub / Socket.IO namespace `/ot-logging` if configured). Validates nestjs-logging wiring.
+   */
+  @Mutation(() => Boolean, {
+    description: `Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README.`,
+  })
+  async triggerDevJsonlLogSample(): Promise<boolean> {
+    return this.developmentService.triggerDevJsonlLogSample();
+  }
 }

@@ -44,13 +44,7 @@
       "type:package"
     ],
     "targets": {
-      "build": {
-        "dependsOn": [
-          "^build",
-          "codegen-graphql"
-        ],
-        "executor": "@nx/js:tsc"
-      },
+      "__codegen-graphql-watch": {},
       "__dev": {
         "continuous": true,
         "dependsOn": [
@@ -62,8 +56,14 @@
           "watch": true
         }
       },
+      "build": {
+        "dependsOn": [
+          "^build",
+          "codegen-graphql"
+        ],
+        "executor": "@nx/js:tsc"
+      },
       "codegen-graphql": {},
-      "__codegen-graphql-watch": {},
       "lint": {},
       "serve": {
         "cache": false,
@@ -77,7 +77,8 @@
         }
       },
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "typecheck-tests": {}
     }
   },
   "peerDependencies": {},
@@ -85,7 +86,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "repository": "git://github.com/OpenThrottle/OpenThrottle.git",
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

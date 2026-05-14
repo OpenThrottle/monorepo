@@ -17,9 +17,3 @@ pnpm add @openthrottle/nestjs-redis
 ```bash
 npm install @openthrottle/nestjs-redis
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-redis
-```

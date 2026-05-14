@@ -17,9 +17,3 @@ pnpm add @openthrottle/nestjs-bullmq
 ```bash
 npm install @openthrottle/nestjs-bullmq
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/nestjs-bullmq
-```

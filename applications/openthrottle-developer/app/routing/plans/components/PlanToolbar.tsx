@@ -10,7 +10,6 @@ import {
   toast,
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import {
@@ -23,7 +22,12 @@ import {
 import { Link, useFetcher } from 'react-router';
 import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import {
+  PLAN_RUN_BULLMQ_QUEUE_NAME,
+  planRunJobDetailPath,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
+import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanToolbarProps {
   readonly className?: string;
@@ -37,6 +41,19 @@ export interface PlanToolbarProps {
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
    */
   readonly ralphTuningJson?: string;
+  /**
+   * @description Optional absolute path to a local project directory for multi-workspace runs.
+   * Passed through to the enqueuePlanRun mutation as workingDirectory.
+   */
+  readonly workingDirectory?: string;
+  /**
+   * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
+   */
+  readonly workflowRunBlocked?: boolean;
+  /**
+   * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
+   */
+  readonly workflowRunBlockedReason?: string;
 }
 
 /**
@@ -50,6 +67,9 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     planTitle = 'Untitled',
     planStatus,
     ralphTuningJson = '',
+    workingDirectory,
+    workflowRunBlocked = false,
+    workflowRunBlockedReason,
   } = props;
 
   // Hooks
@@ -108,8 +128,28 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
       if (data != null && typeof data === 'object') {
         if ('runPlan' in data && data.runPlan != null) {
-          const message = `Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).`;
-          toast.success(message);
+          const run = data.runPlan;
+          const jobId =
+            run != null &&
+            typeof run === 'object' &&
+            'jobId' in run &&
+            typeof run.jobId === 'string'
+              ? run.jobId
+              : null;
+
+          if (workingDirectory != null && workingDirectory.trim() !== '') {
+            addRecentWorkspacePath(workingDirectory.trim());
+          }
+
+          if (jobId != null && jobId !== '') {
+            toast.success('Plan run queued', {
+              description: `Job ${jobId}. Queue ${PLAN_RUN_BULLMQ_QUEUE_NAME}: ${planRunJobDetailPath(jobId)}`,
+            });
+          } else {
+            toast.success(
+              'Plan run queued. The worker uses tuning from Workflow run options (defaults apply when the panel is collapsed).',
+            );
+          }
         }
       }
     }
@@ -122,129 +162,138 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <TooltipProvider>
-      <div
-        className={classnames(
-          'flex flex-1 flex-wrap items-center gap-2',
-          className,
-        )}
-        data-testid="PlanToolbar"
-      >
-        {/* Status / run group */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <fetcherSetPlanStatus.Form method="post">
-                <Input name="intent" type="hidden" value="setPlanStatus" />
-                <Input name="planId" type="hidden" value={planId} />
-                <Input name="status" type="hidden" value="COMPLETED" />
-                <Button
-                  disabled={
-                    fetcherSetPlanStatus.state !== 'idle' || isCompleted
-                  }
-                  size="sm"
-                  type="submit"
-                  variant="ghost"
-                >
-                  <CheckCircle />
-                  {fetcherSetPlanStatus.state !== 'idle'
-                    ? 'Marking…'
-                    : 'Mark Complete'}
-                </Button>
-              </fetcherSetPlanStatus.Form>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {isCompleted
-                ? 'Plan is already completed'
-                : 'Mark this plan as completed'}
-            </TooltipContent>
-          </Tooltip>
+    <div
+      className={classnames(
+        'flex flex-1 flex-wrap items-center gap-2',
+        className,
+      )}
+      data-testid="PlanToolbar"
+    >
+      {/* Status / run group */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild={true}>
+            <fetcherSetPlanStatus.Form method="post">
+              <Input name="intent" type="hidden" value="setPlanStatus" />
+              <Input name="planId" type="hidden" value={planId} />
+              <Input name="status" type="hidden" value="COMPLETED" />
+              <Button
+                disabled={fetcherSetPlanStatus.state !== 'idle' || isCompleted}
+                size="sm"
+                type="submit"
+                variant="ghost"
+              >
+                <CheckCircle />
+                {fetcherSetPlanStatus.state !== 'idle'
+                  ? 'Marking…'
+                  : 'Mark Complete'}
+              </Button>
+            </fetcherSetPlanStatus.Form>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {isCompleted
+              ? 'Plan is already completed'
+              : 'Mark this plan as completed'}
+          </TooltipContent>
+        </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <fetcherRunPlan.Form method="post">
-                <Input name="intent" type="hidden" value="runPlan" />
+        <Tooltip>
+          <TooltipTrigger asChild={true}>
+            <fetcherRunPlan.Form method="post">
+              <Input name="intent" type="hidden" value="runPlan" />
+              <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
+              {workingDirectory != null && workingDirectory !== '' && (
                 <Input
-                  name="ralphTuning"
+                  name="workingDirectory"
                   type="hidden"
-                  value={ralphTuningJson}
+                  value={workingDirectory}
                 />
-                <Button
-                  disabled={fetcherRunPlan.state !== 'idle'}
-                  size="sm"
-                  type="submit"
-                  variant="outline"
-                >
-                  <PlayCircle />
-                  {getRunButtonLabel()}
-                </Button>
-              </fetcherRunPlan.Form>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs" side="top">
-              {fetcherRunPlan.state !== 'idle'
-                ? 'Submitting…'
+              )}
+              <Button
+                disabled={fetcherRunPlan.state !== 'idle' || workflowRunBlocked}
+                size="sm"
+                type="submit"
+                variant="outline"
+              >
+                <PlayCircle />
+                {getRunButtonLabel()}
+              </Button>
+            </fetcherRunPlan.Form>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs" side="top">
+            {fetcherRunPlan.state !== 'idle'
+              ? 'Submitting…'
+              : workflowRunBlocked
+                ? (workflowRunBlockedReason ??
+                  'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
                 : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
-            </TooltipContent>
-          </Tooltip>
+          </TooltipContent>
+        </Tooltip>
 
-          <KillPlanRunButton
-            planId={planId}
-            planTitle={planTitle}
-            show={getPlanIsCancelable(planStatus)}
-            // show={true}
-            size="sm"
-          />
-        </div>
-
-        {setPlanStatusError != null && (
-          <span className="text-destructive text-xs" role="alert">
-            {setPlanStatusError}
-          </span>
-        )}
-
-        {runPlanError != null && (
-          <span className="text-destructive text-xs" role="alert">
-            {runPlanError}
-          </span>
-        )}
-
-        <div className="flex-1" />
-
-        {/* Add / edit group: DropdownMenu for secondary actions */}
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild={true}>
-              <DropdownMenuTrigger asChild={true}>
-                <Button size="sm" variant="outline">
-                  Actions
-                  <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">Add task or edit plan</TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/tasks/create`}
-              >
-                <PlusCircle size={14} />
-                Add Task
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/edit`}
-              >
-                <PencilIcon size={14} />
-                Edit Plan
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <KillPlanRunButton
+          planId={planId}
+          planTitle={planTitle}
+          show={getPlanIsCancelable(planStatus)}
+          // show={true}
+          size="sm"
+        />
       </div>
-    </TooltipProvider>
+
+      {setPlanStatusError != null && (
+        <span className="text-destructive text-xs" role="alert">
+          {setPlanStatusError}
+        </span>
+      )}
+
+      {runPlanError != null && (
+        <span className="text-destructive text-xs" role="alert">
+          {runPlanError}
+        </span>
+      )}
+
+      <div className="flex-1" />
+
+      <Link
+        className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
+        to="#plan-workflow-run-transparency"
+      >
+        CLI preview and history
+      </Link>
+
+      {/* Add / edit group: DropdownMenu for secondary actions */}
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild={true}>
+            <DropdownMenuTrigger asChild={true}>
+              <Button size="sm" variant="outline">
+                Actions
+                <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top">Add task or edit plan</TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild={true}>
+            <Link
+              className="flex items-center gap-2"
+              to={`/plans/${planId}/tasks/create`}
+            >
+              <PlusCircle size={14} />
+              Add Task
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild={true}>
+            <Link
+              className="flex items-center gap-2"
+              to={`/plans/${planId}/edit`}
+            >
+              <PencilIcon size={14} />
+              Edit Plan
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };

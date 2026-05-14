@@ -17,9 +17,3 @@ pnpm add @openthrottle/graphql-codegen
 ```bash
 npm install @openthrottle/graphql-codegen
 ```
-
-**yarn:**
-
-```bash
-yarn add @openthrottle/graphql-codegen
-```

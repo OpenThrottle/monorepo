@@ -13,7 +13,7 @@ Using this repo with custom MCPs (mcp-developer, docs-mcp) across git worktrees 
 - **Scripts:** `scripts/run-mcp-developer.sh` and `scripts/run-docs-mcp.sh` set `WORKTREE_ID` to the basename of the git worktree root (e.g. `monorepo-worktree-one`) when run inside a git repo. If not in a git repo, `WORKTREE_ID` is unset.
 - **Server name:** Both packages read `getServerName()` from their config/constants:
   - If `MCP_SERVER_NAME` is set, that value is used.
-  - Else if `WORKTREE_ID` is set, the server advertises a worktree-specific name (e.g. `@openthrottle/mcp-developer-{WORKTREE_ID}` or `@openthrottle/docs-mcp-{WORKTREE_ID}`).
+  - Else if `WORKTREE_ID` is set, the server advertises a worktree-specific name (e.g. `@openthrottle/mcp-developer-{WORKTREE_ID}`
   - Otherwise the default name is used.
 - **Override:** Set `MCP_SERVER_NAME` before running the script to force a specific name (e.g. in tests or when not using worktrees).
 

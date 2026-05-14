@@ -9,21 +9,31 @@ import {
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
+import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
+import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
 
 export interface SearchPlanCardProps {
   className?: string;
+  readonly defaultOpenWhy?: boolean;
+  readonly rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
 const TITLE_CLASS = 'text-lg font-semibold leading-tight tracking-tight';
 
 export const SearchPlanCard = (props: SearchPlanCardProps) => {
-  const { className, result } = props;
+  const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks
 
   // Setup
   const hasPlanLink = result.planId != null && result.planId !== '';
+  const hasTaskOnPlan =
+    hasPlanLink &&
+    result.taskId != null &&
+    result.taskId !== '' &&
+    result.source === 'plan';
 
   // Handlers
 
@@ -53,7 +63,7 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
         <CardTitle
-          className={`flex flex-wrap items-center gap-2 ${TITLE_CLASS}`}
+          className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${TITLE_CLASS}`}
         >
           {hasPlanLink ? (
             <Link
@@ -66,6 +76,19 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
           ) : (
             <h3 className={TITLE_CLASS}>{result.planTitle ?? 'Plan'}</h3>
           )}
+          {hasTaskOnPlan && result.planId != null ? (
+            <span className="text-sm font-normal text-muted-foreground">
+              <Link
+                className="underline-offset-4 hover:underline"
+                data-testid="SearchPlanCard-taskLink"
+                to={planOrTaskDetailHref(result.planId, result.taskId)}
+              >
+                {result.taskTitle != null && result.taskTitle !== ''
+                  ? `Task: ${result.taskTitle}`
+                  : 'View related task'}
+              </Link>
+            </span>
+          ) : null}
         </CardTitle>
       </CardHeader>
       <Separator />
@@ -74,6 +97,11 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
           {result.content}
         </p>
         {similarityBlock}
+        <SearchWhyThisResult
+          defaultOpen={defaultOpenWhy}
+          rankMeta={rankMeta}
+          result={result}
+        />
       </CardContent>
     </Card>
   );

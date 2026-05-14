@@ -1,8 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
-import { PlusIcon } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
 import {
   ProjectsSortBy,
@@ -29,26 +28,15 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = React.useState(() => search);
 
-  const baseSearchParams = React.useMemo(() => {
-    const p = new URLSearchParams(searchParams);
-    p.set('page', String(page));
-    p.set('limit', String(limit));
-    p.set('sortBy', sortBy);
-    p.set('sortOrder', sortOrder);
-    return p;
-  }, [limit, page, searchParams, sortBy, sortOrder]);
+  // const baseSearchParams = React.useMemo(() => {
+  //   const p = new URLSearchParams(searchParams);
+  //   p.set('page', String(page));
+  //   p.set('limit', String(limit));
+  //   p.set('sortBy', sortBy);
+  //   p.set('sortOrder', sortOrder);
 
-  const tableUrl = React.useMemo(() => {
-    const p = new URLSearchParams(baseSearchParams);
-    p.set('view', 'table');
-    return `/projects?${p.toString()}`;
-  }, [baseSearchParams]);
-
-  const cardUrl = React.useMemo(() => {
-    const p = new URLSearchParams(baseSearchParams);
-    p.set('view', 'card');
-    return `/projects?${p.toString()}`;
-  }, [baseSearchParams]);
+  //   return p;
+  // }, [limit, page, searchParams, sortBy, sortOrder]);
 
   const applyParams = React.useCallback(
     (updates: {
@@ -62,8 +50,10 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
         next.set('sortOrder', updates.sortOrder);
       }
       if (updates.view !== undefined) next.set('view', updates.view);
+
       next.set('page', String(page));
       next.set('limit', String(limit));
+
       setSearchParams(next, { replace: true });
     },
     [limit, page, searchParams, setSearchParams],
@@ -81,16 +71,19 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
       e.preventDefault();
       const next = new URLSearchParams(searchParams);
       const q = searchInput.trim();
+
       if (q) {
         next.set('q', q);
       } else {
         next.delete('q');
       }
+
       next.set('page', '1');
       next.set('limit', String(limit));
       next.set('sortBy', sortBy);
       next.set('sortOrder', sortOrder);
       next.set('view', view);
+
       setSearchParams(next, { replace: true });
     },
     [
@@ -135,27 +128,6 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
           </Button>
         </div>
 
-        <div
-          aria-label="View mode"
-          className="flex shrink-0 items-center gap-2"
-          role="group"
-        >
-          <Button
-            asChild={true}
-            size="sm"
-            variant={view === 'table' ? 'default' : 'outline'}
-          >
-            <Link to={tableUrl}>Table</Link>
-          </Button>
-          <Button
-            asChild={true}
-            size="sm"
-            variant={view === 'card' ? 'default' : 'outline'}
-          >
-            <Link to={cardUrl}>Card</Link>
-          </Button>
-        </div>
-
         <ProjectsSortDropdown
           onChange={handleSortChange}
           sortBy={sortBy as ProjectsSortBy}
@@ -164,11 +136,11 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
 
         <div className="flex-1 min-w-0" />
 
-        <Button asChild={true} className="shrink-0" variant="outline">
+        {/* <Button asChild={true} className="shrink-0" variant="outline">
           <Link to="/projects/create">
             <PlusIcon className="w-4 h-4" /> Create project
           </Link>
-        </Button>
+        </Button> */}
       </form>
     </div>
   );

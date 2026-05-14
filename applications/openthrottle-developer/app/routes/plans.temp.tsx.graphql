@@ -1,5 +1,6 @@
 mutation TestWorkflow($input: EnqueuePlanRunInput!) {
   enqueuePlanRun(input: $input) {
+    executionBackend
     jobId
     planId
   }

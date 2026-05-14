@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SkillsListItem Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="SkillsListItem"
+    >
+      <h2>
+        SkillsListItem
+      </h2>
+    </div>
+  </div>
+</body>
+`;

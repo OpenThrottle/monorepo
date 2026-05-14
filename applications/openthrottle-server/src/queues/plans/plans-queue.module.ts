@@ -20,6 +20,7 @@ import { PlansProcessor } from './plans.processor';
  * In-process Ralph orchestrator jobs share this queue with spawn jobs (see `plans.types.ts`); there is no
  * separate Ralph queue. Agentic Ralph Nest wiring (`NestjsAgenticWorkflowModule`, orchestrator service) lives in
  * {@link AgenticRalphModule}. Bull Board lists this queue via {@link NestjsBullmqBoardModule.forFeature}.
+ * Optional per-job run JSONL is wired in {@link PlansProcessor} when `OT_BULLMQ_RUN_OUTPUT_DIR` is set (`BullMqRunOutputModule` in `AppModule`).
  */
 @Module({
   exports: [BullModule, PlanRunCancellationService],

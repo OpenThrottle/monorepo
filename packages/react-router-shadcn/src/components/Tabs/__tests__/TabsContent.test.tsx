@@ -1,24 +1,25 @@
+import * as React from 'react';
 import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import { Tabs } from '../Tabs';
 import { TabsContent } from '../TabsContent';
 import type { TabsContentProps } from '../TabsContent';
+import { TabsList } from '../TabsList';
+import { TabsTrigger } from '../TabsTrigger';
 
 describe('TabsContent Component', () => {
-  let component: RenderResult;
-  let props: TabsContentProps;
+  test('should render inside Tabs', () => {
+    const props: TabsContentProps = { value: 'a' };
 
-  beforeEach(() => {
-    props = {};
+    const { baseElement } = render(
+      <Tabs defaultValue="a">
+        <TabsList>
+          <TabsTrigger value="a">Tab</TabsTrigger>
+        </TabsList>
+        <TabsContent {...props}>Panel</TabsContent>
+      </Tabs>,
+    );
 
-    const Component = () => <TabsContent {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(baseElement).toMatchSnapshot();
   });
 });

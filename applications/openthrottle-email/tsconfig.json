@@ -24,6 +24,9 @@
     },
     {
       "path": "../../packages/react-router-utils"
+    },
+    {
+      "path": "../../packages/react-router-ui-global"
     }
   ]
 }

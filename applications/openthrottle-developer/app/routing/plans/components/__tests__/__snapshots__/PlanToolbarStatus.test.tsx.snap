@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PlanToolbarStatus Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="PlanToolbarStatus"
+    >
+      <h2>
+        PlanToolbarStatus
+      </h2>
+    </div>
+  </div>
+</body>
+`;

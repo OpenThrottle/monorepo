@@ -10,7 +10,7 @@ describe('NotificationsSocketProvider Component', () => {
   let props: NotificationsSocketProviderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: null, webSocketUrl: 'ws://localhost' };
 
     const Component = () => <NotificationsSocketProvider {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

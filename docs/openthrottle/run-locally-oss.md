@@ -33,7 +33,7 @@ All of the above are Open Source and can run on your machine or your own infrast
 
 - **Postgres** (OpenThrottle + Cortex).
 - **Redis** (queues).
-- **Ollama** (if you want semantic search / embeddings without any cloud API): set `OLLAMA_BASE_URL` (default `http://localhost:11434`) and optionally `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). The MCP server and Cortex ingest then use Ollama for embeddings; no API key needed. Note: Cortex currently stores 1536-dim vectors; if the Ollama model returns a different dimension, embeddings are skipped (see `databases/cortex/README.md` § Embedding dimension strategy). See also `docs/monorepo/Ollama.md`.
+- **Ollama** (if you want semantic search / embeddings without any cloud API): set `OLLAMA_BASE_URL` (default `http://localhost:11434`) and optionally `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). The MCP server and Cortex ingest then use Ollama for embeddings; no API key needed. Note: Cortex currently stores 1536-dim vectors; if the Ollama model returns a different dimension, embeddings are skipped (see `databases/README.md` § Embedding dimension strategy). See also `docs/monorepo/Ollama.md`.
 
 ### Optional (not required for local-only)
 
@@ -43,8 +43,9 @@ All of the above are Open Source and can run on your machine or your own infrast
 
 ## References in this repo
 
-- **Cortex (plans, embeddings):** `databases/cortex/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
-- **mcp-developer (MCP server):** `packages/openthrottle/mcp-developer/README.md` — Cortex via GraphQL; auth token and API URL.
+- **Run server + developer (minimal native path):** `docs/openthrottle/run-openthrottle-server-developer.md` — env, ports, `pnpm nx` targets, Postgres/Redis via `pnpm run database:start`.
+- **Cortex (plans, embeddings):** `databases/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
+- **mcp-developer (MCP server):** `packages/mcp-developer/README.md` — Cortex via GraphQL; auth token and API URL.
 - **Ollama setup:** `docs/monorepo/Ollama.md`, `scripts/ollama.sh`, root `.env.default`.
 - **Local services and ports:** `docs/monorepo/local-services-and-ports.md`.
-- **OpenThrottle app env:** `applications/openthrottle/.env.default` (Postgres, Redis).
+- **Server / DB env:** Root `.env.default` (copy to `.env` for `pnpm run database:*`) and `applications/openthrottle-server/.env.default` (copy to `applications/openthrottle-server/.env` when running the API on the host).

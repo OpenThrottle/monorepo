@@ -102,7 +102,11 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
 };
 
 export interface RalphArgs {
-  /** @description Layer 2: which runner invokes each iteration (default: Cursor `cursor-agent`). */
+  /**
+   * @description Layer 2: which runner invokes every iteration of this plan run. One of
+   * {@link RalphExecutionBackendId} (`cursor` | `claude`); the same id applies to the whole run
+   * (no per-iteration switching). Default: Cursor `cursor-agent`.
+   */
   backend: RalphExecutionBackendId;
   /** Optional per-iteration timeout in ms (non-interactive only). When set, the runner process is killed after this duration. */
   iterationTimeoutMs: number | undefined;

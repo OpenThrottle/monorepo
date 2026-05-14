@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NOTIFICATION_EVENT_NAMES } from '../events';
+import { NOTIFICATION_EVENT_NAMES } from '../events.js';
 
 describe('events', () => {
   describe('NOTIFICATION_EVENT_NAMES', () => {

@@ -5,13 +5,20 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanWorkflowConfigExecution } from '../PlanWorkflowConfigExecution';
 import type { PlanWorkflowConfigExecutionProps } from '../PlanWorkflowConfigExecution';
+import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 describe('PlanWorkflowConfigExecution Component', () => {
   let component: RenderResult;
   let props: PlanWorkflowConfigExecutionProps;
 
   beforeEach(() => {
-    props = {};
+    const input = getDefaultWorkflowRalphRunOptionsInput({
+      planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+    });
+    props = {
+      input,
+      setInput: () => {},
+    };
 
     const Component = () => <PlanWorkflowConfigExecution {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,17 +26,19 @@ describe('PlanWorkflowConfigExecution Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render Layer 2 execution backend stub (disabled fieldset and runner)', () => {
+  test('should render Layer 2 execution backend runner select', () => {
     expect(
       component.getByTestId('PlanWorkflowConfigExecution'),
     ).toBeInTheDocument();
     const group = component.getByRole('group', {
       name: 'Layer 2 — Execution backend',
     });
-    expect(group).toBeDisabled();
-    expect(group).toHaveTextContent('Which runner executes each iteration');
+    expect(group).not.toBeDisabled();
+    expect(group).toHaveTextContent('workflow-ralph');
     expect(
-      component.getByRole('combobox', { name: 'Execution backend (stub)' }),
-    ).toBeDisabled();
+      component.getByRole('combobox', {
+        name: 'Execution backend for this plan run',
+      }),
+    ).not.toBeDisabled();
   });
 });

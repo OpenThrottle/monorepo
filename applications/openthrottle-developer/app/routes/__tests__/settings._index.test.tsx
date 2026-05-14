@@ -1,4 +1,4 @@
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 // import { default as Route } from '../settings._index';
 
 describe('routes/settings._index.tsx', () => {
@@ -15,7 +15,11 @@ describe('routes/settings._index.tsx', () => {
   //   );
   // });
 
-  test.skip('should render', () => {
-    // Deferred: route integration render test (openthrottle-developer test hardening plan).
+  // test('should render', () => {
+  //   expect(component.baseElement).toMatchSnapshot();
+  // });
+
+  test('should render', async () => {
+    expect(true).toStrictEqual(false);
   });
 });

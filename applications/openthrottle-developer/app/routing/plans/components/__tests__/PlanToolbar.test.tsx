@@ -1,16 +1,17 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanToolbar } from '../PlanToolbar';
 import type { PlanToolbarProps } from '../PlanToolbar';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
-const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult => {
-  const Component = () => <PlanToolbar {...toolbarProps} />;
-  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  return render(<RoutesStub />);
-};
+const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
+  renderRoutesStub(
+    <TooltipProvider>
+      <PlanToolbar {...toolbarProps} />
+    </TooltipProvider>,
+  );
 
 describe('PlanToolbar Component', () => {
   let component: RenderResult;
@@ -30,11 +31,6 @@ describe('PlanToolbar Component', () => {
     expect(
       component.getByRole('button', { name: /^actions$/i }),
     ).toBeInTheDocument();
-  });
-
-  test('should link to workflow run options anchor on the plan page', () => {
-    const link = component.getByRole('link', { name: 'Workflow run options' });
-    expect(link).toHaveAttribute('href', '#workflow-run-options');
   });
 
   test('submits empty ralphTuning when ralphTuningJson is omitted', () => {
@@ -87,5 +83,16 @@ describe('PlanToolbar Component', () => {
     expect(
       r.queryByRole('button', { name: /Kill plan run/i }),
     ).not.toBeInTheDocument();
+  });
+
+  test('disables enqueue when workflowRunBlocked is true', () => {
+    const r = renderToolbar({
+      planId: 'p1',
+      planStatus: 'PENDING',
+      planTitle: 'My Plan',
+      workflowRunBlocked: true,
+      workflowRunBlockedReason: 'Fix CLI options',
+    });
+    expect(r.getByRole('button', { name: /^Add to Queue$/i })).toBeDisabled();
   });
 });

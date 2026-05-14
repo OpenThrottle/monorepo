@@ -13,7 +13,7 @@ OpenThrottle is context-driven AI for developers: plans, tasks, and knowledge st
 OpenThrottle can run **entirely locally** with Open Source models and software—no required SaaS or proprietary APIs for core flows.
 
 - **Local / OSS stack:** Postgres (with pgvector), Redis, Node, and the OpenThrottle server, developer app, and MCP (Cortex/mcp-developer) are all OSS and run on your machine or your infra.
-- **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and Cortex ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/cortex/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
+- **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and Cortex ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
 - **Optional — OpenAI:** If you prefer cloud embeddings, set `OPENAI_API_KEY` and leave Ollama unset; the stack uses OpenAI (e.g. `text-embedding-3-small`) for embeddings. Not required for local-only.
 
 Details and copy for website or docs: `docs/openthrottle/run-locally-oss.md`.
@@ -53,7 +53,7 @@ Compose reads **`applications/openthrottle/.env`** (path is relative to the comp
 
 - **Postgres (for server and Postgres service):** `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_VERSION`. When running in Compose, the server and developer run inside the same Docker network, so set **`POSTGRES_HOST=openthrottle-postgres`** and **`REDIS_HOST=openthrottle-redis`** (and use `POSTGRES_DB=cortex` if you use the default Cortex schema).
 - **Redis:** `REDIS_HOST=openthrottle-redis`, `REDIS_PORT=6379`, `REDIS_VERSION` (e.g. `8.6-rc1`).
-- **openthrottle-server:** `JWT_SECRET`, `CORS_ORIGINS` (include the developer app origin, e.g. `http://localhost:5173`). Optional: `PORT` (default in container is 3000), `OPENAI_API_KEY` or Ollama vars for embeddings (see root `.env.default` and `databases/cortex/README.md`).
+- **openthrottle-server:** `JWT_SECRET`, `CORS_ORIGINS` (include the developer app origin, e.g. `http://localhost:5173`). Optional: `PORT` (default in container is 3000), `OPENAI_API_KEY` or Ollama vars for embeddings (see root `.env.default` and `databases/README.md`).
 - **openthrottle-developer:** `API_URL` must be the URL the **browser** uses to reach the server (e.g. `http://localhost:3000` when using the default host port). Optional: `API_URL_EXTERNAL`, `PORT` (default 5173 in container).
 
 Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (default 3000) and **`OPENTHROTTLE_DEVELOPER_PORT`** (default 5173). Build args **`OPENTHROTTLE_SERVER_VERSION`**, **`OPENTHROTTLE_DEVELOPER_VERSION`**, and **`NX_VERSION`** are optional (see compose file and [docker-image-build-strategy.md](../../docs/openthrottle/docker-image-build-strategy.md)).
@@ -75,7 +75,7 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
 - **Prerequisites:** Node.js ≥22, pnpm, and (for full stack) Postgres with pgvector and Redis. The monorepo uses pnpm and Nx; run all commands from the **monorepo root** unless noted.
 - **Clone and install:** From the monorepo root run `pnpm install` to install workspace dependencies.
 - **Environment:** Copy `applications/openthrottle/.env.default` to `applications/openthrottle/.env` and set Postgres/Redis (and optional JWT, CORS, Ollama/OpenAI) as needed. For Docker Compose, use the same `.env`; see [Required `.env`](#required-env) above.
-- **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. Cortex schema and migrations: `databases/cortex/README.md`.
+- **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. Cortex schema and migrations: `databases/README.md`.
 - **Optional — embeddings:** For semantic search (plans knowledge base) use Ollama (set `OLLAMA_BASE_URL`) or OpenAI (set `OPENAI_API_KEY`). See root `.env.default` and `docs/openthrottle/run-locally-oss.md`.
 
 ## Development
@@ -85,12 +85,12 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
   - **Developer app:** `pnpm nx run openthrottle-developer:dev` (connects to the server via `API_URL`; default dev port often 5173 or as in `.env`).
   - Ensure `CORS_ORIGINS` on the server includes the developer app origin (e.g. `http://localhost:5173`).
 - **Ports and env:** See `applications/openthrottle/.env.default` for `OPENTHROTTLE_SERVER_PORT`, `OPENTHROTTLE_DEVELOPER_PORT`, and Postgres/Redis. For a single entry point (e.g. Caddy), see `docs/monorepo/local-services-and-ports.md`.
-- **MCP / Cortex:** The plans knowledge base and MCP (mcp-developer) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/openthrottle/mcp-developer/README.md` and `databases/cortex/README.md`.
+- **MCP / Cortex:** The plans knowledge base and MCP (mcp-developer) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/mcp-developer/README.md` and `databases/README.md`.
 - **Tests and lint:** From repo root use Nx: `pnpm nx run openthrottle:test`, `pnpm nx run openthrottle:lint`, etc. Individual apps: `pnpm nx run openthrottle-server:test`, `pnpm nx run openthrottle-developer:test`, and so on.
 
 ## Suggestions
 
-- **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/openthrottle/run-locally-oss.md` and `databases/cortex/README.md` (embedding dimension strategy).
+- **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/openthrottle/run-locally-oss.md` and `databases/README.md` (embedding dimension strategy).
 - **Docker Compose:** For a single-command stack (Postgres, Redis, server, developer app), run Compose from the monorepo root as in [Run from monorepo root](#run-from-monorepo-root); ensure `.env` is populated per [Required `.env`](#required-env).
 - **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against plans; see `tools/workflows/README.md` and `AGENTS.md`.
 - **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `run-locally-oss.md`, `work-as-history.md`, `docker-image-build-strategy.md`).

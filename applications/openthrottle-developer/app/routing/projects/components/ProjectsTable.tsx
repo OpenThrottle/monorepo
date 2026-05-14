@@ -1,27 +1,23 @@
 import * as React from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  DataTable,
-} from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
+import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { format } from 'date-fns';
+import { Link } from 'react-router';
+import classnames from 'classnames';
+import type { ColumnDef } from '@tanstack/react-table';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 
-function formatPlansTasksSummary(project: ProjectCardFragment): string {
-  const planCount = project.plans?.length ?? 0;
-  const taskCount = project.tasks?.length ?? 0;
-  const parts: string[] = [];
-  if (planCount !== 0) {
-    parts.push(`${planCount} plan${planCount === 1 ? '' : 's'}`);
-  }
-  if (taskCount !== 0) {
-    parts.push(`${taskCount} task${taskCount === 1 ? '' : 's'}`);
-  }
-  return parts.length > 0 ? parts.join(' · ') : '—';
-}
+// function formatPlansTasksSummary(project: ProjectCardFragment): string {
+//   const planCount = project.plans?.length ?? 0;
+//   const taskCount = project.tasks?.length ?? 0;
+//   const parts: string[] = [];
+//   if (planCount !== 0) {
+//     parts.push(`${planCount} plan${planCount === 1 ? '' : 's'}`);
+//   }
+//   if (taskCount !== 0) {
+//     parts.push(`${taskCount} task${taskCount === 1 ? '' : 's'}`);
+//   }
+//   return parts.length > 0 ? parts.join(' · ') : '—';
+// }
 
 function formatUpdatedAt(project: ProjectCardFragment): string {
   const raw = project.updatedAt ?? project.createdAt;
@@ -34,36 +30,6 @@ function formatUpdatedAt(project: ProjectCardFragment): string {
   }
 }
 
-export interface ProjectsTableProps {
-  className?: string;
-  projects: ProjectCardFragment[];
-}
-
-export const ProjectsTable = (props: ProjectsTableProps) => {
-  const { className, projects } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <Card className={className} data-testid="ProjectsTable">
-      <DataTable<ProjectCardFragment, string | null | undefined>
-        columns={projectTableColumns}
-        data={projects}
-      />
-    </Card>
-  );
-};
-
 const projectTableColumns: ColumnDef<
   ProjectCardFragment,
   string | null | undefined
@@ -74,8 +40,9 @@ const projectTableColumns: ColumnDef<
       const project = row.original;
       const projectHref = `/projects/${project.id}`;
       const name = project.name ?? 'Untitled';
+
       return (
-        <div className="w-full flex-1 overflow-hidden">
+        <div className="p-4 py-2 w-full flex-1 overflow-hidden">
           <h2 className="text-xs line-clamp-1 text-ellipsis font-medium mb-1">
             <Link
               aria-label={`View project: ${name}`}
@@ -92,30 +59,31 @@ const projectTableColumns: ColumnDef<
         </div>
       );
     },
-    header: () => 'Context',
+    header: () => <div className="p-4 py-2">Context</div>,
   },
-  {
-    accessorKey: 'nxProjectName',
-    cell: ({ row }) => {
-      const nx = row.original.nxProjectName;
-      return nx ? (
-        <Badge size="xs" variant="secondary">
-          {nx}
-        </Badge>
-      ) : (
-        <span className="text-muted-foreground text-xs">—</span>
-      );
-    },
-    header: () => 'Project',
-  },
+  // {
+  //   accessorKey: 'nxProjectName',
+  //   cell: ({ row }) => {
+  //     const nx = row.original.nxProjectName;
+  //     return nx ? (
+  //       <Badge size="xs" variant="secondary">
+  //         {nx}
+  //       </Badge>
+  //     ) : (
+  //       <span className="text-muted-foreground text-xs">—</span>
+  //     );
+  //   },
+  //   header: () => 'Project',
+  // },
   {
     accessorKey: 'plans',
-    cell: ({ row }) => (
-      <span className="tabular-nums text-xs">
-        {formatPlansTasksSummary(row.original)}
-      </span>
-    ),
-    header: () => 'Plans · Tasks',
+    cell: ({ row }) => row.original.plans?.length ?? 0,
+    header: () => 'Plans',
+  },
+  {
+    accessorKey: 'tasks',
+    cell: ({ row }) => row.original.tasks?.length ?? 0,
+    header: () => 'Tasks',
   },
   {
     accessorKey: 'updatedAt',
@@ -141,3 +109,36 @@ const projectTableColumns: ColumnDef<
     id: 'view',
   },
 ];
+
+export interface ProjectsTableProps {
+  className?: string;
+  projects: ProjectCardFragment[];
+}
+
+export const ProjectsTable = (props: ProjectsTableProps) => {
+  const { className, projects } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="ProjectsTable"
+    >
+      <DataTable<ProjectCardFragment, string | null | undefined>
+        columns={projectTableColumns}
+        data={projects}
+      />
+    </div>
+  );
+};

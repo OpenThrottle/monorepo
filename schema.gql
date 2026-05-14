@@ -115,7 +115,14 @@ type ReviewCycleTimeObject {
 
 type PullListItemObject {
   author: String!
+  baseRef: String
   createdAt: String!
+  headRef: String
+
+  """
+  Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).
+  """
+  headSha: String
   htmlUrl: String!
   mergedAt: String
   number: Int!
@@ -178,12 +185,32 @@ type PlanStatusCountObject {
   status: String!
 }
 
+type PlanRunObject {
+  """BullMQ job id for this run."""
+  bullmqJobId: String!
+  createdAt: DateTime!
+
+  """Execution backend selected once for the whole run: cursor or claude."""
+  executionBackend: String!
+  id: String!
+  planId: String!
+  queueName: String!
+
+  """Ralph run implementation: spawn or orchestrator."""
+  runKind: String!
+  status: String!
+  updatedAt: DateTime!
+}
+
 type ListPlansByStatusResultObject {
   plans: [PlanObject!]!
   totalCount: Int!
 }
 
 type EnqueuePlanRunResultObject {
+  """Execution backend selected once for the whole run: cursor or claude."""
+  executionBackend: String!
+
   """BullMQ job id"""
   jobId: String!
 
@@ -387,6 +414,42 @@ type CommitLinkObject {
   """Resolved task entity when taskId is set"""
   task: TaskObject
   taskId: String
+}
+
+type PreviewCortexDocumentIngestResultObject {
+  """True when the document parsed successfully."""
+  success: Boolean!
+
+  """Parse error code when success is false."""
+  errorCode: String
+
+  """Human-readable error when success is false."""
+  errorMessage: String
+
+  """Detected upload format when parsing ran (e.g. markdown)."""
+  detectedFormat: String
+
+  """Suggested plan title from the document structure."""
+  planTitleSuggested: String
+
+  """JSON array of proposed tasks: { title, description, requirements[] }."""
+  proposedTasksJson: String
+}
+
+type CommitCortexDocumentIngestResultObject {
+  """True when the plan and all tasks were created."""
+  success: Boolean!
+
+  """
+  Error message when success is false (parse failure or rollback after partial task create).
+  """
+  error: String
+
+  """Created plan when success is true."""
+  plan: PlanObject
+
+  """Created tasks when success is true."""
+  tasks: [TaskObject!]!
 }
 
 """A custom prompt document for AI workflow customization"""
@@ -747,6 +810,11 @@ type JobObject {
   data: String
 
   """
+  Execution backend selected once for this plan run. Present for plans queue jobs.
+  """
+  executionBackend: String
+
+  """
   Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.
   """
   name: String
@@ -883,6 +951,9 @@ type PlanRunMetricsEntry {
 
   """Unix timestamp when the job finished."""
   finishedOn: Float
+
+  """Execution backend selected once for the whole run: cursor or claude."""
+  executionBackend: String
 
   """
   Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.
@@ -1117,6 +1188,9 @@ type Query {
   """List pull requests for a repository (GitHub API)"""
   pulls(input: ListPullsInput!): [PullListItemObject!]!
 
+  """Get one pull request by repository and PR number (GitHub API)"""
+  pull(input: GetPullInput!): PullListItemObject
+
   """Open PR count per author for a repository (GitHub stats)."""
   openPrCountByAuthor(input: GitHubRepoInput!): [OpenPrCountByAuthorObject!]!
 
@@ -1197,6 +1271,11 @@ type Query {
   List plan output stream chunks by plan ID, ordered by createdAt ascending
   """
   planOutputStreamChunks(input: ListPlanOutputStreamChunksInput!): [PlanOutputStreamChunkObject!]!
+
+  """
+  Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.
+  """
+  planRunsByPlanId(input: PlanRunsByPlanIdInput!): [PlanRunObject!]!
 
   """Get a plan by ID"""
   plan(id: ID!): PlanObject
@@ -1370,6 +1449,17 @@ input ListPullsInput {
   state: String
 }
 
+input GetPullInput {
+  """Pull request number"""
+  number: Int!
+
+  """Repository owner (e.g. GitHub username or org)"""
+  owner: String!
+
+  """Repository name"""
+  repo: String!
+}
+
 input GitHubRepoInput {
   """Repository owner (e.g. GitHub username or org)"""
   owner: String!
@@ -1515,6 +1605,14 @@ input ListPlanOutputStreamChunksInput {
   planId: ID!
 }
 
+input PlanRunsByPlanIdInput {
+  """Max plan-run audit rows to return, newest first."""
+  limit: Int
+
+  """Plan id whose run audit rows should be returned"""
+  planId: ID!
+}
+
 input ListPlansByStatusInput {
   """
   Filter by author or assignee (any match). Empty means no assignee filter.
@@ -1597,6 +1695,11 @@ type Mutation {
   triggerWebsocketNotification: Boolean!
 
   """
+  Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README.
+  """
+  triggerDevJsonlLogSample: Boolean!
+
+  """
   Sign in with email and password. Returns JWT access token for Authorization header or cookie.
   """
   login(input: LoginInput!): LoginResultObject!
@@ -1613,6 +1716,16 @@ type Mutation {
   Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA.
   """
   linkCommit(input: LinkCommitInput!): CommitLinkObject!
+
+  """
+  Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting.
+  """
+  previewCortexDocumentIngest(input: PreviewCortexDocumentIngestInput!): PreviewCortexDocumentIngestResultObject!
+
+  """
+  Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails.
+  """
+  commitCortexDocumentIngest(input: CommitCortexDocumentIngestInput!): CommitCortexDocumentIngestResultObject!
 
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
@@ -1772,6 +1885,49 @@ input LinkCommitInput {
   message: String
 }
 
+input PreviewCortexDocumentIngestInput {
+  """File bytes encoded as standard base64 (no data: URL prefix)."""
+  fileBase64: String!
+
+  """MIME type from the upload when known (e.g. text/markdown)."""
+  mimeType: String
+
+  """Original filename for format detection fallback."""
+  originalFilename: String
+}
+
+input CommitCortexDocumentIngestInput {
+  """File bytes encoded as standard base64 (no data: URL prefix)."""
+  fileBase64: String!
+
+  """MIME type from the upload when known (e.g. text/markdown)."""
+  mimeType: String
+
+  """Original filename for format detection fallback."""
+  originalFilename: String
+
+  """
+  Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used.
+  """
+  plan: CreatePlanInput!
+}
+
+input CreatePlanInput {
+  assignee: String
+  author: String!
+  category: String!
+  description: String
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
+  """
+  projectId: ID
+  status: String
+  summary: String
+  title: String!
+}
+
 """Input for creating a new custom prompt"""
 input CreateCustomPromptInput {
   title: String!
@@ -1882,22 +2038,6 @@ input AppendPlanOutputInput {
   planId: ID!
 }
 
-input CreatePlanInput {
-  assignee: String
-  author: String!
-  category: String!
-  description: String
-  project: String
-
-  """
-  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
-  """
-  projectId: ID
-  status: String
-  summary: String
-  title: String!
-}
-
 input UpdatePlanInput {
   assignee: String
   author: String
@@ -1945,6 +2085,11 @@ input EnqueuePlanRunInput {
   Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
   """
   ralph: RalphPlanRunTuningInput
+
+  """
+  Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
+  """
+  workingDirectory: String
 }
 
 input RalphPlanRunTuningInput {
@@ -2008,6 +2153,11 @@ input EnqueuePlanRalphOrchestratorInput {
 
   """Required when mode is task; must belong to the plan."""
   taskId: ID
+
+  """
+  Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
+  """
+  workingDirectory: String
 }
 
 """
