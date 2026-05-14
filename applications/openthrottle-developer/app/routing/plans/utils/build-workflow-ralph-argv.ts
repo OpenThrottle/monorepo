@@ -2,8 +2,8 @@
  * @description Builds `workflow-ralph` CLI segments aligned with `tools/workflows/src/utils/parsers.ts` (`parseRalphArgs`) and `pnpm exec workflow-ralph --help`. Omits flags when values match CLI defaults so invocations stay minimal.
  */
 
+import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
-import { RalphNestedDebugCli } from '~/__generated__/graphql';
 import { RalphPlanRunTuningInputSchema } from '~/__generated__/schemas';
 
 /** RFC 4122 UUID v4 — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */

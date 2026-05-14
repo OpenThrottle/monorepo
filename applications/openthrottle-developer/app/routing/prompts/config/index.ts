@@ -9,7 +9,7 @@ import {
 } from '~/routing/prompts/config/types';
 
 export const PROMPTS_BASE_PATH = '/prompts';
-export const PROMPTS_DEFAULT_TYPE = CustomPromptType.Agents;
+export const PROMPTS_DEFAULT_TYPE: CustomPromptType = CustomPromptType.Agents;
 export const PROMPTS_DEFAULT_CONTENT = `# New Prompt
 
 Add your prompt content here...

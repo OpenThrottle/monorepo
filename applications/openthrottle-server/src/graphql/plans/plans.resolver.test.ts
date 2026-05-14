@@ -12,7 +12,7 @@ import type { Plan } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
 import type { Queue } from 'bullmq';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
@@ -235,7 +235,7 @@ describe('PlansResolver', () => {
       const qbMock = createQueryBuilderMock([entities, count]);
       const repo = plansService.getRepository();
       vi.mocked(repo.createQueryBuilder).mockReturnValue(
-        qbMock.chain as ReturnType<typeof repo.createQueryBuilder>,
+        qbMock.chain as unknown as ReturnType<typeof repo.createQueryBuilder>,
       );
 
       const input: ListPlansByStatusInput = {
@@ -266,7 +266,7 @@ describe('PlansResolver', () => {
       const repo = plansService.getRepository();
 
       vi.mocked(repo.createQueryBuilder).mockReturnValue(
-        qbMock.chain as ReturnType<typeof repo.createQueryBuilder>,
+        qbMock.chain as unknown as ReturnType<typeof repo.createQueryBuilder>,
       );
 
       const input: ListPlansByStatusInput = {
@@ -296,7 +296,7 @@ describe('PlansResolver', () => {
       const qbMock = createQueryBuilderMock([[], 0]);
       const repo = plansService.getRepository();
       vi.mocked(repo.createQueryBuilder).mockReturnValue(
-        qbMock.chain as ReturnType<typeof repo.createQueryBuilder>,
+        qbMock.chain as unknown as ReturnType<typeof repo.createQueryBuilder>,
       );
 
       const input: ListPlansByStatusInput = {
@@ -323,7 +323,7 @@ describe('PlansResolver', () => {
       const qbMock = createQueryBuilderMock([[], 0]);
       const repo = plansService.getRepository();
       vi.mocked(repo.createQueryBuilder).mockReturnValue(
-        qbMock.chain as ReturnType<typeof repo.createQueryBuilder>,
+        qbMock.chain as unknown as ReturnType<typeof repo.createQueryBuilder>,
       );
 
       const input: ListPlansByStatusInput = {
@@ -354,9 +354,15 @@ describe('PlansResolver', () => {
     test('returns empty result when Cortex config is not set', async () => {
       const { getPostgresConfig } =
         await import('@openthrottle/ai-mcp/src/cortex-server');
-      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
 
-      const result = await resolver.searchPlans({ query: 'some query' });
+      vi.mocked(getPostgresConfig).mockReturnValue({
+        connectionString: 'postgresql://localhost/cortex',
+      });
+
+      const result = await resolver.searchPlans({
+        limit: 10,
+        query: 'some query',
+      });
 
       expect(result.plans).toEqual([]);
       expect(result.totalCount).toBe(0);
@@ -408,6 +414,7 @@ describe('PlansResolver', () => {
       const result = await resolver.enqueuePlanRun({
         planId: mockPlan.id,
         priority: null,
+        workingDirectory: null,
       });
 
       expect(result).not.toBeNull();
@@ -432,6 +439,7 @@ describe('PlansResolver', () => {
       const input: EnqueuePlanRunInput = {
         planId: 'non-existent-id',
         priority: null,
+        workingDirectory: null,
       };
       await expect(resolver.enqueuePlanRun(input)).rejects.toThrow(
         'Plan not found: non-existent-id',
@@ -443,7 +451,11 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       taskRepo.update.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      });
 
       expect(taskRepo.update).toHaveBeenCalledTimes(1);
       const [criteria, set] = taskRepo.update.mock.calls[0] as [
@@ -468,7 +480,11 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       taskRepo.update.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      });
 
       const [criteria] = taskRepo.update.mock.calls[0] as [
         { planId: string; status: { value: readonly string[] } },
@@ -482,8 +498,16 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       taskRepo.update.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      });
 
       expect(taskRepo.update).toHaveBeenCalledTimes(2);
       expect(taskRepo.update).toHaveBeenNthCalledWith(
@@ -503,7 +527,11 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       mockAdd.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: 1 });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: 1,
+        workingDirectory: null,
+      });
 
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
@@ -517,7 +545,11 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       mockAdd.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      });
 
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
@@ -531,7 +563,11 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       mockAdd.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: null });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      });
 
       const jobData = mockAdd.mock.calls[0]?.[1];
       expect(jobData).toEqual({
@@ -546,7 +582,11 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       mockAdd.mockClear();
 
-      await resolver.enqueuePlanRun({ planId: mockPlan.id, priority: 100 });
+      await resolver.enqueuePlanRun({
+        planId: mockPlan.id,
+        priority: 100,
+        workingDirectory: null,
+      });
 
       expect(mockAdd).toHaveBeenCalledWith(
         'run-plan',
@@ -576,6 +616,7 @@ describe('PlansResolver', () => {
           worktree: 'target-one',
           worktreeBase: null,
         },
+        workingDirectory: null,
       });
 
       expect(mockAdd).toHaveBeenCalledWith(
@@ -648,6 +689,7 @@ describe('PlansResolver', () => {
             promptFile: null,
             ralphDebugCli: null,
           },
+          workingDirectory: null,
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
@@ -687,6 +729,7 @@ describe('PlansResolver', () => {
       const enqueueResult = await resolver.enqueuePlanRun({
         planId: mockPlan.id,
         priority: null,
+        workingDirectory: null,
       });
 
       expect(enqueueResult.planId).toBe(mockPlan.id);
@@ -713,6 +756,7 @@ describe('PlansResolver', () => {
         priority: null,
         ralph: null,
         taskId: null,
+        workingDirectory: null,
       });
 
       expect(result.executionBackend).toBe('cursor');
@@ -752,6 +796,7 @@ describe('PlansResolver', () => {
         priority: null,
         ralph: null,
         taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+        workingDirectory: null,
       });
 
       expect(taskRepo.findOne).toHaveBeenCalledWith({
@@ -784,6 +829,7 @@ describe('PlansResolver', () => {
           priority: null,
           ralph: null,
           taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+          workingDirectory: null,
         }),
       ).rejects.toThrow(/Task not found for this plan/);
     });
@@ -1135,8 +1181,16 @@ describe('PlansResolver', () => {
       vi.mocked(repo.save).mockResolvedValue(saved as Plan);
 
       const input: UpdatePlanInput = {
+        assignee: null,
+        author: null,
+        category: null,
+        description: null,
         id: planWithProject.id,
+        project: null,
         projectId: null,
+        status: null,
+        summary: null,
+        title: null,
       };
 
       const result = await resolver.updatePlan(input);
