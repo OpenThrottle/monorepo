@@ -135,6 +135,10 @@ RUN pnpm store prune && \
   /app/node_modules/.pnpm/@react \
   /app/node_modules/.pnpm/react*
 
+# App-only runtime tree: pruned package dir with build/ + isolated production node_modules
+# (same pattern as Dockerfile.ReactRouter — avoids copying full monorepo node_modules, packages/, tools/).
+RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
+
 ################################################################################
 #
 #   PRODUCTION - Finally, build the production image with a "minimal" footprint
@@ -145,13 +149,8 @@ FROM base AS production
 # Set the environment explicitly
 ENV NODE_ENV="production"
 
-# Take what we need from the appropriate stage(s)
-COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/applications/${APP_NAME}/build /app/applications/${APP_NAME}/build
-COPY --from=build /app/applications/${APP_NAME}/i18n /app/applications/${APP_NAME}/i18n
-COPY --from=build /app/applications/${APP_NAME}/package.json /app/applications/${APP_NAME}/package.json
-COPY --from=build /app/packages /app/packages
-COPY --from=build /app/tools /app/tools
+# Only the pruned app (no full /app/node_modules, /app/packages, or /app/tools from the monorepo build).
+COPY --from=build /app/pruned/. /app/
 
 # 🚧 MOVE TO DEVELOPMENT ONLY - Used for docker compose healthchecks
 RUN apk --update --no-cache add curl
@@ -159,7 +158,5 @@ RUN apk --update --no-cache add curl
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# And our startup command
-# CMD ["node", "/app/build/src/main.js"]
-
-CMD node /app/applications/${APP_NAME}/build/src/main.js
+# Matches applications/${APP_NAME}/package.json start:docker; paths are relative to pruned layout (WORKDIR /app).
+CMD ["node", "-r", "dotenv/config", "build/src/main.js"]
