@@ -103,6 +103,23 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type AgentsChatTurnResult = {
+  __typename?: 'AgentsChatTurnResult';
+  /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
+  assistantText?: Maybe<Scalars['String']['output']>;
+  /** Validation or business-rule error for this turn (no throw). Null when the turn succeeded. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Optional JSON-encoded structured tool metadata from the MCP developer surface (e.g. tool names and arguments). Null when absent. */
+  toolMetadataJson?: Maybe<Scalars['String']['output']>;
+};
+
+export type AgentsRunChatTurnInput = {
+  /** Opaque client conversation id for future multi-turn wiring; omit for stateless turns. */
+  conversationId?: InputMaybe<Scalars['String']['input']>;
+  /** User message text for this turn. */
+  message: Scalars['String']['input'];
+};
+
 export type AppendPlanOutputInput = {
   /** Content of the output chunk */
   content: Scalars['String']['input'];
@@ -753,6 +770,8 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text and optional tool metadata JSON; uses errorMessage instead of throws for expected validation failures. */
+  agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
@@ -835,6 +854,10 @@ export type Mutation = {
   workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
+};
+
+export type MutationAgentsRunChatTurnArgs = {
+  input: AgentsRunChatTurnInput;
 };
 
 export type MutationAppendPlanOutputArgs = {
@@ -2144,6 +2167,20 @@ export type GetMyUserQuery = {
     id: string;
     updatedAt: any;
   } | null;
+};
+
+export type SendAgentMessageMutationVariables = Exact<{
+  input: AgentsRunChatTurnInput;
+}>;
+
+export type SendAgentMessageMutation = {
+  __typename?: 'Mutation';
+  agentsRunChatTurn: {
+    __typename?: 'AgentsChatTurnResult';
+    assistantText?: string | null;
+    errorMessage?: string | null;
+    toolMetadataJson?: string | null;
+  };
 };
 
 export type DashboardActivityCardFragment = {
@@ -4227,6 +4264,71 @@ export const GetMyUserDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
+export const SendAgentMessageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'sendAgentMessage' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AgentsRunChatTurnInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentsRunChatTurn' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'assistantText' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'toolMetadataJson' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SendAgentMessageMutation,
+  SendAgentMessageMutationVariables
+>;
 export const GetDashboardDocument = {
   kind: 'Document',
   definitions: [

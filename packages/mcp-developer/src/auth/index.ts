@@ -1,1 +1,6 @@
-export { getAuthToken, setAuthTokenOverride } from './get-auth-token.js';
+export {
+  getAuthToken,
+  setAuthTokenOverride,
+  withMcpDeveloperAuthToken,
+  withMcpDeveloperAuthTokenAsync,
+} from './get-auth-token.js';

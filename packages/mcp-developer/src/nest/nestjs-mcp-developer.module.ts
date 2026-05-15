@@ -9,6 +9,7 @@ import { NestjsMcpDeveloperService } from './nestjs-mcp-developer.service.js';
 const buildMcpRootOptions = (
   options: NestjsMcpDeveloperBootstrapOptions,
 ): McpOptions => ({
+  apiPrefix: options.apiPrefix,
   capabilities: options.capabilities,
   description: options.description,
   instructions: options.instructions,

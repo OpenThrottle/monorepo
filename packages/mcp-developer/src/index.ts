@@ -3,4 +3,4 @@
  */
 
 export { registerKnowledgeBaseResource } from './resources/index.js';
-export { runServer } from './run-server.js';
+export { runServer, runServerLocal } from './run-server.js';

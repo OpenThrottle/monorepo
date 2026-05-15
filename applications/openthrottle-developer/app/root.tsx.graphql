@@ -59,3 +59,11 @@ query getMyUser {
     updatedAt
   }
 }
+
+mutation sendAgentMessage($input: AgentsRunChatTurnInput!) {
+  agentsRunChatTurn(input: $input) {
+    assistantText
+    errorMessage
+    toolMetadataJson
+  }
+}

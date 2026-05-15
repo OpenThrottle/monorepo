@@ -377,6 +377,23 @@ type LastActivityResultObject {
   taskUpdate: LastActivityTaskUpdatePartObject
 }
 
+type AgentsChatTurnResult {
+  """
+  Assistant-visible reply text. Null when the turn failed (see errorMessage).
+  """
+  assistantText: String
+
+  """
+  Validation or business-rule error for this turn (no throw). Null when the turn succeeded.
+  """
+  errorMessage: String
+
+  """
+  Optional JSON-encoded structured tool metadata from the MCP developer surface (e.g. tool names and arguments). Null when absent.
+  """
+  toolMetadataJson: String
+}
+
 type LoginResultObject {
   """JWT access token to send in Authorization header or cookie"""
   accessToken: String!
@@ -1700,6 +1717,11 @@ type Mutation {
   triggerDevJsonlLogSample: Boolean!
 
   """
+  Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text and optional tool metadata JSON; uses errorMessage instead of throws for expected validation failures.
+  """
+  agentsRunChatTurn(input: AgentsRunChatTurnInput!): AgentsChatTurnResult!
+
+  """
   Sign in with email and password. Returns JWT access token for Authorization header or cookie.
   """
   login(input: LoginInput!): LoginResultObject!
@@ -1847,6 +1869,16 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
+}
+
+input AgentsRunChatTurnInput {
+  """
+  Opaque client conversation id for future multi-turn wiring; omit for stateless turns.
+  """
+  conversationId: String
+
+  """User message text for this turn."""
+  message: String!
 }
 
 input LoginInput {

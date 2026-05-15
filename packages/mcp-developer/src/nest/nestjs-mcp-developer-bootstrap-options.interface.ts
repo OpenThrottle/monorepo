@@ -2,7 +2,13 @@ import type { McpOptions, McpTransportType } from '@rekog/mcp-nest';
 
 type McpBootstrapBase = Pick<
   McpOptions,
-  'capabilities' | 'description' | 'instructions' | 'name' | 'title' | 'version'
+  | 'apiPrefix'
+  | 'capabilities'
+  | 'description'
+  | 'instructions'
+  | 'name'
+  | 'title'
+  | 'version'
 >;
 
 /**

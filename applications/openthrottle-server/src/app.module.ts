@@ -22,6 +22,7 @@ import {
   isOpenthrottleServerDevJsonlLoggingEnabled,
 } from './config/openthrottle-server-dev-jsonl-logging';
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
+import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
 import { CortexDocumentIngestGraphqlModule } from './graphql/cortex-document-ingest/cortex-document-ingest-graphql.module';
@@ -37,6 +38,7 @@ import { GlobalJwtAuthGuard } from './guards/global-jwt-auth.guard';
 import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module';
 import { HealthModule } from './modules/health/health.module';
+import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module';
 import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
@@ -106,11 +108,13 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     DevelopmentModule,
     DocIngestionQueueModule,
     GeneratorsModule,
+    McpDeveloperModule,
     PlansQueueModule,
     WorkflowModule,
 
     // 🧩 GraphQL Modules
     ActivityGraphqlModule,
+    AgentsGraphqlModule,
     AuthGraphqlModule,
     CommitLinksGraphqlModule,
     CortexDocumentIngestGraphqlModule,

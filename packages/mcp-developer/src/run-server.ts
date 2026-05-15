@@ -1,5 +1,19 @@
-import { getServerName, SERVER_VERSION } from './config/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { bootstrapMcpDeveloperApp, McpTransportType } from './nest/index.js';
+import { getServerName, SERVER_VERSION } from './config/index.js';
+import {
+  registerActivityTools,
+  registerCommitTools,
+  registerHealthTool,
+  registerKnowledgeBaseResource,
+  registerNoteTools,
+  registerOutputTools,
+  registerPlanTools,
+  registerProjectTools,
+  registerSearchTools,
+  registerTaskTools,
+} from './nest-tool-handlers.js';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.js';
 
 /**
@@ -12,5 +26,27 @@ export async function runServer(): Promise<void> {
     transport: McpTransportType.STDIO,
     version: SERVER_VERSION,
   };
+
   await bootstrapMcpDeveloperApp(options);
+}
+
+export async function runServerLocal(): Promise<void> {
+  const server = new McpServer(
+    { name: getServerName(), version: SERVER_VERSION },
+    { capabilities: { resources: {}, tools: {} } },
+  );
+
+  registerActivityTools(server);
+  registerCommitTools(server);
+  registerHealthTool(server);
+  registerKnowledgeBaseResource(server);
+  registerNoteTools(server);
+  registerOutputTools(server);
+  registerPlanTools(server);
+  registerProjectTools(server);
+  registerSearchTools(server);
+  registerTaskTools(server);
+
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
 }

@@ -26,6 +26,11 @@
       "require": "./dist/src/index.js",
       "types": "./dist/src/index.d.ts"
     },
+    "./auth": {
+      "import": "./dist/src/auth/index.js",
+      "require": "./dist/src/auth/index.js",
+      "types": "./dist/src/auth/index.d.ts"
+    },
     "./nest": {
       "import": "./dist/src/nest/index.js",
       "require": "./dist/src/nest/index.js",

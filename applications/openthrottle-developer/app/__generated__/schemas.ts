@@ -2,6 +2,7 @@ import { z } from 'zod/v3';
 import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
+  AgentsRunChatTurnInput,
   AppendPlanOutputInput,
   CancelPlanRunInput,
   CommitCortexDocumentIngestInput,
@@ -114,6 +115,15 @@ export function ActivityByDateRangeInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     offset: z.number().nullish(),
     startIso: z.string(),
+  });
+}
+
+export function AgentsRunChatTurnInputSchema(): z.ZodObject<
+  Properties<AgentsRunChatTurnInput>
+> {
+  return z.object({
+    conversationId: z.string().nullish(),
+    message: z.string(),
   });
 }
 
