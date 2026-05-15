@@ -8,7 +8,17 @@
     "rootDirs": ["./src"]
   },
   "include": ["src/**/*.json", "src/**/*"],
-  "references": [{ "path": "../mcp-developer/tsconfig.lib.json" }],
+  "references": [
+    {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../mcp-developer/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",

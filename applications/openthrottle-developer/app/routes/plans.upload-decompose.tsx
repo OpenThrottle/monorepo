@@ -110,21 +110,13 @@ export default function Component(
 ): React.ReactElement {
   const { loaderData: _l, matches: _m, params: _p } = props;
 
+  // Hooks
   const fetcher = useFetcher<typeof action>();
   const [proposal, setProposal] = React.useState<
     ProposedPlanDecomposition | undefined
   >(undefined);
 
-  React.useEffect(() => {
-    const data = fetcher.data;
-    if (!data) {
-      return;
-    }
-    if (data.error === undefined && data.proposal !== undefined) {
-      setProposal(data.proposal);
-    }
-  }, [fetcher.data]);
-
+  // Setup
   const isBusy = fetcher.state === 'submitting' || fetcher.state === 'loading';
   const intentRaw = fetcher.formData?.get('intent');
   const busyMessage =
@@ -144,6 +136,24 @@ export default function Component(
     fetcher.data !== undefined && fetcher.data.error !== undefined
       ? fetcher.data.error
       : undefined;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    const data = fetcher.data;
+    if (!data) {
+      return;
+    }
+
+    if (data.error === undefined && data.proposal !== undefined) {
+      setProposal(data.proposal);
+    }
+  }, [fetcher.data]);
+
+  // 🔌 Short Circuit
 
   return (
     <GlobalScreen>

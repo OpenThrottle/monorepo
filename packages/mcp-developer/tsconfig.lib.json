@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
+    {
       "path": "../nodejs-graphql/tsconfig.lib.json"
     },
     {
