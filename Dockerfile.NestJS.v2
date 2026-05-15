@@ -10,7 +10,7 @@
 #     👀 https://pnpm.io/docker using NX for the monorepo build
 #
 ###########################################################################
-ARG NODE_VERSION="22"
+ARG NODE_VERSION="24"
 FROM node:${NODE_VERSION}-bookworm-slim AS base
 
 WORKDIR /app
@@ -144,16 +144,24 @@ RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 #   PRODUCTION - Finally, build the production image with a "minimal" footprint
 #
 ################################################################################
-# Distroless: no shell, package manager, or curl — smaller attack surface. Healthchecks from the host
-# or a sidecar should target HTTP; compose maps PORT from OPENTHROTTLE_SERVER_PORT (see docker-nestjs-v2-stage-audit.md).
+# Distroless: no shell, package manager, curl, or wget. Baseline Dockerfile.NestJS installs curl only for
+# compose probes; here we use Node's built-in HTTP client (no extra packages). Compose maps PORT from
+# OPENTHROTTLE_SERVER_PORT (see docker-nestjs-v2-stage-audit.md). If you override healthcheck in compose,
+# use exec form with /nodejs/bin/node (CMD-SHELL + wget will not run on distroless).
 FROM gcr.io/distroless/nodejs22-debian12:nonroot AS production
 
 WORKDIR /app
 
 ENV NODE_ENV="production"
 
-# Only the pruned app (no full /app/node_modules, /app/packages, or /app/tools from the monorepo build).
+# Production ships only `pnpm deploy` output: the app package, its `build/`, and prod `node_modules`.
+# We never COPY monorepo roots `/app/packages` or `/app/tools` into this stage; workspace libraries
+# the server needs at runtime are already resolved into the pruned tree (built artifacts + linked deps).
 COPY --from=build --chown=65532:65532 /app/pruned/. /app/
+
+# In-image probe only — no curl. Matches root compose intent (GET /health on PORT).
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD ["/nodejs/bin/node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
 
 # ENTRYPOINT is Node; CMD is argv only (see distroless/nodejs README).
 CMD ["-r", "dotenv/config", "build/src/main.js"]
