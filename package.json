@@ -55,6 +55,7 @@
     "@openthrottle/nestjs-graphql": "workspace:*",
     "@openthrottle/nestjs-langchain": "workspace:*",
     "@openthrottle/nestjs-logging": "workspace:*",
+    "@openthrottle/nestjs-mcp-developer": "workspace:*",
     "@openthrottle/nestjs-modules": "workspace:*",
     "@openthrottle/nestjs-postgres": "workspace:*",
     "@openthrottle/nestjs-profiling": "workspace:*",

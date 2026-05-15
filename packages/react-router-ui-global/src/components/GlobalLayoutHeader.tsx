@@ -4,6 +4,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  CommandShortcut,
   Input,
   SidebarTrigger,
   Tooltip,
@@ -40,7 +41,7 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
     className,
     onSearchChromeEvent,
     onSearchValueChange,
-    searchPlaceholder = 'Search "cmd + k"',
+    searchPlaceholder = 'Search',
     searchValue,
   } = props;
 
@@ -91,10 +92,15 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
 
   const searchField = onSearchChromeEvent ? (
     <form
-      className="max-w-52"
+      className="max-w-52 relative"
       data-testid="GlobalLayoutHeaderSearch"
       onSubmit={handleSearchSubmit}
     >
+      <CommandShortcut className="flex text-sm p-2 items-center justify-center absolute opacity-100 top-1/2 right-4 transform -translate-y-1/2 gap-0.5 w-auto z-10">
+        <span>⌘</span>
+        <span>+</span>
+        <span>k</span>
+      </CommandShortcut>
       <Input
         aria-label={searchPlaceholder}
         className="w-full"
@@ -106,7 +112,14 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
       />
     </form>
   ) : (
-    <Input className="max-w-52" placeholder={searchPlaceholder} type="search" />
+    <>
+      <CommandShortcut>⌘K</CommandShortcut>
+      <Input
+        className="max-w-52"
+        placeholder={searchPlaceholder}
+        type="search"
+      />
+    </>
   );
 
   return (
