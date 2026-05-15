@@ -1,19 +1,14 @@
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Injectable } from '@nestjs/common';
 
+/**
+ * @description Placeholder service for future Nest-only MCP wiring; tools live on {@link McpDeveloperMcpSurface}.
+ */
 @Injectable()
 export class NestjsMcpDeveloperService {
-  private name = 'nestjs-mcp-developer';
+  private readonly name = 'nestjs-mcp-developer';
 
-  // Inject and initialize as needed
   constructor(private readonly logger: LoggerService) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
-
-    // TODO: If we need to do anything in here
-  }
-
-  // TODO: Fill in the actual tool calls
-  exampleMethod() {
-    return `${this.name} says Hello API`;
   }
 }

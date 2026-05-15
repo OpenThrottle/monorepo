@@ -68,12 +68,13 @@ type UpdateTaskResult = GenericResult<{
   task: UpdateTaskMutation['updateTask'];
 }>;
 
-const createTaskSchema = CreateTaskInputSchema();
-const deleteTaskSchema = DeleteTaskInputSchema();
-const getRemainingTasksForPlanSchema = RemainingTasksByPlanIdInputSchema();
-const getTasksByPlanIdSchema = TasksByPlanIdInputSchema();
-const getTaskSchema = z.object({ id: z.string().min(1) });
-const updateTaskSchema = UpdateTaskInputSchema();
+export const createTaskToolParameters = CreateTaskInputSchema();
+export const deleteTaskToolParameters = DeleteTaskInputSchema();
+export const getRemainingTasksForPlanToolParameters =
+  RemainingTasksByPlanIdInputSchema();
+export const getTasksByPlanIdToolParameters = TasksByPlanIdInputSchema();
+export const getTaskToolParameters = z.object({ id: z.string().min(1) });
+export const updateTaskToolParameters = UpdateTaskInputSchema();
 
 const createTasksItemSchema = z.object({
   assignee: z.string().nullish(),
@@ -87,22 +88,46 @@ const createTasksItemSchema = z.object({
   title: z.string().min(1),
 });
 
-const createTasksSchema = z.object({
+export const createTasksToolParameters = z.object({
   planId: z.string().uuid(),
   tasks: z.array(createTasksItemSchema).min(1),
 });
 
-const listTasksByCategorySchema = z.object({
+export const listTasksByCategoryToolParameters = z.object({
   category: z.string().min(1),
   limit: z.number().int().min(1).max(200).optional(),
   planId: z.string().uuid().optional(),
   status: z.string().min(1).optional(),
 });
 
-async function createTaskHandler(
-  args: z.infer<typeof createTaskSchema>,
+export const createTaskToolDescription =
+  'Create a new task in Cortex. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId.';
+
+export const createTasksToolDescription =
+  'Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId). Returns created task ids and titles.';
+
+export const deleteTaskToolDescription =
+  'Delete a task by id. Returns whether a row was deleted.';
+
+export const getTaskToolDescription =
+  'Fetch a task by id (UUID). Returns the task row or not found.';
+
+export const getTasksByPlanIdToolDescription =
+  'Fetch all tasks for a plan by plan id (UUID). Ordered by createdAt.';
+
+export const getRemainingTasksForPlanToolDescription =
+  'Fetch remaining tasks for a plan (status PENDING, IN_PROGRESS, BLOCKED). Use for "What tasks remain for this plan?".';
+
+export const listTasksByCategoryToolDescription =
+  'List tasks filtered by category (e.g. infra, documentation). Optional: planId (UUID), status, limit (1–200). Returns tasks ordered by createdAt.';
+
+export const updateTaskToolDescription =
+  'Update a task by id. Pass id and any of: title, description, status, category, assignee, planId, project, projectId, requirements, summary.';
+
+export async function createTaskToolHandler(
+  args: z.infer<typeof createTaskToolParameters>,
 ): Promise<CreateTaskResult> {
-  const parsed = createTaskSchema.safeParse(args);
+  const parsed = createTaskToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -125,10 +150,10 @@ async function createTaskHandler(
   );
 }
 
-async function createTasksHandler(
-  args: z.infer<typeof createTasksSchema>,
+export async function createTasksToolHandler(
+  args: z.infer<typeof createTasksToolParameters>,
 ): Promise<CreateTasksResult> {
-  const parsed = createTasksSchema.safeParse(args);
+  const parsed = createTasksToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -177,10 +202,10 @@ async function createTasksHandler(
   );
 }
 
-async function deleteTaskHandler(
-  args: z.infer<typeof deleteTaskSchema>,
+export async function deleteTaskToolHandler(
+  args: z.infer<typeof deleteTaskToolParameters>,
 ): Promise<DeleteTaskResult> {
-  const parsed = deleteTaskSchema.safeParse(args);
+  const parsed = deleteTaskToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -199,10 +224,10 @@ async function deleteTaskHandler(
   });
 }
 
-async function getTaskHandler(
-  args: z.infer<typeof getTaskSchema>,
+export async function getTaskToolHandler(
+  args: z.infer<typeof getTaskToolParameters>,
 ): Promise<GetTaskResult> {
-  const parsed = getTaskSchema.safeParse(args);
+  const parsed = getTaskToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -222,10 +247,10 @@ async function getTaskHandler(
   });
 }
 
-async function getTasksByPlanIdHandler(
-  args: z.infer<typeof getTasksByPlanIdSchema>,
+export async function getTasksByPlanIdToolHandler(
+  args: z.infer<typeof getTasksByPlanIdToolParameters>,
 ): Promise<GetTasksByPlanIdResult> {
-  const parsed = getTasksByPlanIdSchema.safeParse(args);
+  const parsed = getTasksByPlanIdToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -250,10 +275,10 @@ async function getTasksByPlanIdHandler(
   });
 }
 
-async function getRemainingTasksForPlanHandler(
-  args: z.infer<typeof getRemainingTasksForPlanSchema>,
+export async function getRemainingTasksForPlanToolHandler(
+  args: z.infer<typeof getRemainingTasksForPlanToolParameters>,
 ): Promise<GetRemainingTasksForPlanResult> {
-  const parsed = getRemainingTasksForPlanSchema.safeParse(args);
+  const parsed = getRemainingTasksForPlanToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -278,10 +303,10 @@ async function getRemainingTasksForPlanHandler(
   });
 }
 
-async function listTasksByCategoryHandler(
-  args: z.infer<typeof listTasksByCategorySchema>,
+export async function listTasksByCategoryToolHandler(
+  args: z.infer<typeof listTasksByCategoryToolParameters>,
 ): Promise<ListTasksByCategoryResult> {
-  const parsed = listTasksByCategorySchema.safeParse(args);
+  const parsed = listTasksByCategoryToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -313,10 +338,10 @@ async function listTasksByCategoryHandler(
   );
 }
 
-async function updateTaskHandler(
-  args: z.infer<typeof updateTaskSchema>,
+export async function updateTaskToolHandler(
+  args: z.infer<typeof updateTaskToolParameters>,
 ): Promise<UpdateTaskResult> {
-  const parsed = updateTaskSchema.safeParse(args);
+  const parsed = updateTaskToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -342,72 +367,72 @@ export function registerTaskTools(server: McpServer): void {
   server.registerTool(
     'create_task',
     {
-      description: `Create a new task in Cortex. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId.`,
-      inputSchema: createTaskSchema,
+      description: createTaskToolDescription,
+      inputSchema: createTaskToolParameters,
     },
-    createTaskHandler,
+    createTaskToolHandler,
   );
 
   server.registerTool(
     'create_tasks',
     {
-      description: `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId). Returns created task ids and titles.`,
-      inputSchema: createTasksSchema,
+      description: createTasksToolDescription,
+      inputSchema: createTasksToolParameters,
     },
-    createTasksHandler,
+    createTasksToolHandler,
   );
 
   server.registerTool(
     'delete_task',
     {
-      description: `Delete a task by id. Returns whether a row was deleted.`,
-      inputSchema: deleteTaskSchema,
+      description: deleteTaskToolDescription,
+      inputSchema: deleteTaskToolParameters,
     },
-    deleteTaskHandler,
+    deleteTaskToolHandler,
   );
 
   server.registerTool(
     'get_task',
     {
-      description: `Fetch a task by id (UUID). Returns the task row or not found.`,
-      inputSchema: getTaskSchema,
+      description: getTaskToolDescription,
+      inputSchema: getTaskToolParameters,
     },
-    getTaskHandler,
+    getTaskToolHandler,
   );
 
   server.registerTool(
     'get_tasks_by_plan_id',
     {
-      description: `Fetch all tasks for a plan by plan id (UUID). Ordered by createdAt.`,
-      inputSchema: getTasksByPlanIdSchema,
+      description: getTasksByPlanIdToolDescription,
+      inputSchema: getTasksByPlanIdToolParameters,
     },
-    getTasksByPlanIdHandler,
+    getTasksByPlanIdToolHandler,
   );
 
   server.registerTool(
     'get_remaining_tasks_for_plan',
     {
-      description: `Fetch remaining tasks for a plan (status PENDING, IN_PROGRESS, BLOCKED). Use for "What tasks remain for this plan?".`,
-      inputSchema: getRemainingTasksForPlanSchema,
+      description: getRemainingTasksForPlanToolDescription,
+      inputSchema: getRemainingTasksForPlanToolParameters,
     },
-    getRemainingTasksForPlanHandler,
+    getRemainingTasksForPlanToolHandler,
   );
 
   server.registerTool(
     'list_tasks_by_category',
     {
-      description: `List tasks filtered by category (e.g. infra, documentation). Optional: planId (UUID), status, limit (1–200). Returns tasks ordered by createdAt.`,
-      inputSchema: listTasksByCategorySchema,
+      description: listTasksByCategoryToolDescription,
+      inputSchema: listTasksByCategoryToolParameters,
     },
-    listTasksByCategoryHandler,
+    listTasksByCategoryToolHandler,
   );
 
   server.registerTool(
     'update_task',
     {
-      description: `Update a task by id. Pass id and any of: title, description, status, category, assignee, planId, project, projectId, requirements, summary.`,
-      inputSchema: updateTaskSchema,
+      description: updateTaskToolDescription,
+      inputSchema: updateTaskToolParameters,
     },
-    updateTaskHandler,
+    updateTaskToolHandler,
   );
 }

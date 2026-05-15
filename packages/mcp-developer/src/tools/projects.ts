@@ -16,12 +16,15 @@ type DeleteProjectResult = GenericResult<{
   deleted: boolean;
 }>;
 
-const deleteProjectSchema = DeleteProjectInputSchema();
+export const deleteProjectToolParameters = DeleteProjectInputSchema();
 
-async function deleteProjectHandler(
-  args: z.infer<typeof deleteProjectSchema>,
+export const deleteProjectToolDescription =
+  'Delete a Cortex project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.';
+
+export async function deleteProjectToolHandler(
+  args: z.infer<typeof deleteProjectToolParameters>,
 ): Promise<DeleteProjectResult> {
-  const parsed = deleteProjectSchema.safeParse(args);
+  const parsed = deleteProjectToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -45,9 +48,9 @@ export function registerProjectTools(server: McpServer): void {
   server.registerTool(
     'delete_project',
     {
-      description: `Delete a Cortex project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.`,
-      inputSchema: deleteProjectSchema,
+      description: deleteProjectToolDescription,
+      inputSchema: deleteProjectToolParameters,
     },
-    deleteProjectHandler,
+    deleteProjectToolHandler,
   );
 }

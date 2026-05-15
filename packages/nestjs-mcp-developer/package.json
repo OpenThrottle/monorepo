@@ -1,14 +1,15 @@
 {
   "name": "@openthrottle/nestjs-mcp-developer",
-  "description": "TODO: Add a description",
+  "description": "Nest-facing entry for the OpenThrottle developer MCP surface; implementation lives in `@openthrottle/mcp-developer/nest`.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@openthrottle/mcp-developer": "workspace:*"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -37,6 +38,9 @@
     ],
     "targets": {
       "build": {
+        "dependsOn": [
+          "^build"
+        ],
         "executor": "@nx/js:tsc"
       },
       "__build-package": {
@@ -56,7 +60,10 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted",
@@ -78,6 +85,6 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
-  "type": "commonjs",
+  "type": "module",
   "types": "./src/index.ts"
 }

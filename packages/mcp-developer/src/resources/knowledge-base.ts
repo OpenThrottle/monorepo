@@ -14,10 +14,19 @@ type ChunkResult = {
   contents: Array<{ type: 'text'; text: string; uri: string }>;
 };
 
+export const knowledgeBaseChunkUriTemplate = 'knowledge-base://chunk/{id}';
+
+export const knowledgeBaseChunkResourceName = 'knowledge-base-chunk';
+
+export const knowledgeBaseChunkResourceDescription =
+  'Read a single chunk by id (UUID). URI format: knowledge-base://chunk/{id}. Uses GraphQL getDocument only.';
+
+export const knowledgeBaseChunkMimeType = 'text/plain';
+
 /**
  * @description Reads a single chunk by id from the knowledge base via GraphQL getDocument query.
  */
-async function readKnowledgeBaseChunk(
+export async function readKnowledgeBaseChunk(
   resourceUri: URL,
   variables: { id?: string | string[] },
 ): Promise<ChunkResult> {
@@ -90,16 +99,16 @@ async function readKnowledgeBaseChunk(
  */
 export function registerKnowledgeBaseResource(server: McpServer): void {
   const knowledgeBaseChunkTemplate = new ResourceTemplate(
-    'knowledge-base://chunk/{id}',
+    knowledgeBaseChunkUriTemplate,
     { list: undefined },
   );
 
   server.registerResource(
-    'knowledge-base-chunk',
+    knowledgeBaseChunkResourceName,
     knowledgeBaseChunkTemplate,
     {
-      description: `Read a single chunk by id (UUID). URI format: knowledge-base://chunk/{id}. Uses GraphQL getDocument only.`,
-      mimeType: 'text/plain',
+      description: knowledgeBaseChunkResourceDescription,
+      mimeType: knowledgeBaseChunkMimeType,
     },
     (uri, variables, _extra) => readKnowledgeBaseChunk(uri, variables),
   );

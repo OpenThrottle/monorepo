@@ -9,13 +9,12 @@ import {
   FoldersIcon,
   GaugeIcon,
   GitPullRequest,
-  ListChevronsUpDownIcon,
   ListOrderedIcon,
   NotebookTextIcon,
+  NotebookTabsIcon,
   Search,
   SwatchBookIcon,
   TerminalSquareIcon,
-  UserCircle,
 } from 'lucide-react';
 
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
@@ -28,7 +27,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
     },
     {
       children: 'Plans',
-      icon: ListChevronsUpDownIcon,
+      icon: NotebookTextIcon,
       to: '/plans',
     },
     {
@@ -112,22 +111,22 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
     {
       children: 'About',
       end: true,
-      icon: NotebookTextIcon,
+      icon: NotebookTabsIcon,
       to: '/legal',
     },
     {
       children: 'License',
-      icon: NotebookTextIcon,
+      icon: NotebookTabsIcon,
       to: '/legal/license',
     },
     {
       children: 'Privacy Policy',
-      icon: NotebookTextIcon,
+      icon: NotebookTabsIcon,
       to: '/legal/privacy-policy',
     },
     {
       children: 'Terms of Use',
-      icon: UserCircle,
+      icon: NotebookTabsIcon,
       to: '/legal/terms-of-use',
     },
   ],

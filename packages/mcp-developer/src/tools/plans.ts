@@ -50,16 +50,31 @@ type UpdatePlanResult = GenericResult<{
   plan: UpdatePlanMutation['updatePlan'];
 }>;
 
-const createPlanSchema = CreatePlanInputSchema();
-const deletePlanSchema = DeletePlanInputSchema();
-const getPlanSchema = z.object({ id: z.string().min(1) });
-const listPlansByStatusSchema = ListPlansByStatusInputSchema();
-const updatePlanSchema = UpdatePlanInputSchema();
+export const createPlanToolParameters = CreatePlanInputSchema();
+export const deletePlanToolParameters = DeletePlanInputSchema();
+export const getPlanToolParameters = z.object({ id: z.string().min(1) });
+export const listPlansByStatusToolParameters = ListPlansByStatusInputSchema();
+export const updatePlanToolParameters = UpdatePlanInputSchema();
 
-async function listPlansByStatusHandler(
-  args: z.infer<typeof listPlansByStatusSchema>,
+export const createPlanToolDescription =
+  'Create a plan in Cortex. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.';
+
+export const deletePlanToolDescription =
+  'Delete a plan by id. Returns whether a row was deleted.';
+
+export const getPlanToolDescription =
+  'Fetch a plan by id (UUID). Returns the plan row or not found.';
+
+export const listPlansByStatusToolDescription =
+  'List plans in Cortex by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /cortex/pending or list by status.';
+
+export const updatePlanToolDescription =
+  'Update a plan by id. Pass id and any of: title, description, status, author, assignee, category, project, projectId, summary.';
+
+export async function listPlansByStatusToolHandler(
+  args: z.infer<typeof listPlansByStatusToolParameters>,
 ): Promise<ListPlansByStatusResult> {
-  const parsed = listPlansByStatusSchema.safeParse(args);
+  const parsed = listPlansByStatusToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -88,10 +103,10 @@ async function listPlansByStatusHandler(
   });
 }
 
-async function createPlanHandler(
-  args: z.infer<typeof createPlanSchema>,
+export async function createPlanToolHandler(
+  args: z.infer<typeof createPlanToolParameters>,
 ): Promise<CreatePlanResult> {
-  const parsed = createPlanSchema.safeParse(args);
+  const parsed = createPlanToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -113,10 +128,10 @@ async function createPlanHandler(
   );
 }
 
-async function getPlanHandler(
-  args: z.infer<typeof getPlanSchema>,
+export async function getPlanToolHandler(
+  args: z.infer<typeof getPlanToolParameters>,
 ): Promise<GetPlanResult> {
-  const parsed = getPlanSchema.safeParse(args);
+  const parsed = getPlanToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -135,10 +150,10 @@ async function getPlanHandler(
   });
 }
 
-async function updatePlanHandler(
-  args: z.infer<typeof updatePlanSchema>,
+export async function updatePlanToolHandler(
+  args: z.infer<typeof updatePlanToolParameters>,
 ): Promise<UpdatePlanResult> {
-  const parsed = updatePlanSchema.safeParse(args);
+  const parsed = updatePlanToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -160,10 +175,10 @@ async function updatePlanHandler(
   );
 }
 
-async function deletePlanHandler(
-  args: z.infer<typeof deletePlanSchema>,
+export async function deletePlanToolHandler(
+  args: z.infer<typeof deletePlanToolParameters>,
 ): Promise<DeletePlanResult> {
-  const parsed = deletePlanSchema.safeParse(args);
+  const parsed = deletePlanToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -187,45 +202,45 @@ export function registerPlanTools(server: McpServer): void {
   server.registerTool(
     'create_plan',
     {
-      description: `Create a plan in Cortex. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.`,
-      inputSchema: createPlanSchema,
+      description: createPlanToolDescription,
+      inputSchema: createPlanToolParameters,
     },
-    createPlanHandler,
+    createPlanToolHandler,
   );
 
   server.registerTool(
     'delete_plan',
     {
-      description: `Delete a plan by id. Returns whether a row was deleted.`,
-      inputSchema: deletePlanSchema,
+      description: deletePlanToolDescription,
+      inputSchema: deletePlanToolParameters,
     },
-    deletePlanHandler,
+    deletePlanToolHandler,
   );
 
   server.registerTool(
     'get_plan',
     {
-      description: `Fetch a plan by id (UUID). Returns the plan row or not found.`,
-      inputSchema: getPlanSchema,
+      description: getPlanToolDescription,
+      inputSchema: getPlanToolParameters,
     },
-    getPlanHandler,
+    getPlanToolHandler,
   );
 
   server.registerTool(
     'list_plans_by_status',
     {
-      description: `List plans in Cortex by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /cortex/pending or list by status.`,
-      inputSchema: listPlansByStatusSchema,
+      description: listPlansByStatusToolDescription,
+      inputSchema: listPlansByStatusToolParameters,
     },
-    listPlansByStatusHandler,
+    listPlansByStatusToolHandler,
   );
 
   server.registerTool(
     'update_plan',
     {
-      description: `Update a plan by id. Pass id and any of: title, description, status, author, assignee, category, project, projectId, summary.`,
-      inputSchema: updatePlanSchema,
+      description: updatePlanToolDescription,
+      inputSchema: updatePlanToolParameters,
     },
-    updatePlanHandler,
+    updatePlanToolHandler,
   );
 }

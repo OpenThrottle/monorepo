@@ -1,8 +1,11 @@
-import { describe, it, expect, beforeAll } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { NestjsMcpDeveloperService } from './nestjs-mcp-developer.service';
+import { describe, it, expect, beforeAll } from 'vitest';
+import {
+  McpDeveloperMcpSurface,
+  NestjsMcpDeveloperService,
+} from '@openthrottle/nestjs-mcp-developer';
 
 describe('NestjsMcpDeveloperService', () => {
   let service: NestjsMcpDeveloperService;
@@ -13,6 +16,7 @@ describe('NestjsMcpDeveloperService', () => {
       exports: [],
       imports: [],
       providers: [
+        McpDeveloperMcpSurface,
         NestjsMcpDeveloperService,
         {
           provide: LoggerService,
@@ -24,11 +28,27 @@ describe('NestjsMcpDeveloperService', () => {
     service = app.get<NestjsMcpDeveloperService>(NestjsMcpDeveloperService);
   });
 
-  describe('exampleMethod', () => {
-    it('should return a simple string', () => {
-      expect(service.exampleMethod()).toEqual(
-        'nestjs-mcp-developer says Hello API',
-      );
+  describe('constructor', () => {
+    it('should resolve the service', () => {
+      expect(service).toBeDefined();
+    });
+  });
+
+  describe('re-export surface', () => {
+    it('exposes the shared MCP tool surface from mcp-developer/nest', async () => {
+      const app = await Test.createTestingModule({
+        imports: [],
+        providers: [
+          McpDeveloperMcpSurface,
+          {
+            provide: LoggerService,
+            useValue: createMock<LoggerService>(),
+          },
+        ],
+      }).compile();
+
+      const surface = app.get(McpDeveloperMcpSurface);
+      expect(surface.health).toEqual(expect.any(Function));
     });
   });
 });

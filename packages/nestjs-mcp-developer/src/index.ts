@@ -1,7 +1,5 @@
-// export * from './components';
-// export * from './config';
-// export * from './data';
-// export * from './hooks';
-// export * from './utils';
+/**
+ * @description Re-exports the OpenThrottle developer Nest MCP module and bootstrap helpers from `@openthrottle/mcp-developer/nest`.
+ */
 
-export const REMOVE_ME = `We can remove this when we actually have some code to export.`;
+export * from '@openthrottle/mcp-developer/nest';

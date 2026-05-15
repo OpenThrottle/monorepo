@@ -22,12 +22,12 @@ const mockTaskRunMetrics = {
   },
 };
 
-vi.mock('../../hooks/use-job-task-run-metrics', () => ({
+vi.mock('../../hooks/useJobTaskRunMetrics', () => ({
   useJobTaskRunMetrics: vi.fn(),
 }));
 
 const { useJobTaskRunMetrics } =
-  await import('../../hooks/use-job-task-run-metrics');
+  await import('../../hooks/useJobTaskRunMetrics');
 
 describe('TaskRunMetricsCard', () => {
   beforeEach(() => {

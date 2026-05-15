@@ -77,6 +77,7 @@ import {
   OpenThrottleClipboard,
   OpenThrottleEmptyState,
 } from '@openthrottle/react-router-ui';
+import { formatPlanDate } from '~/routing/plans/utils/formatters';
 // import { formatPlanDate } from '~/routing/plans/utils/formatters';
 // import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 // import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
@@ -344,7 +345,7 @@ export default function Component(
           </GlobalHeading>
           <div className="text-sm text-muted-foreground line-clamp-3">
             <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
-            {/* {formatPlanDate(plan.updatedAt)} */}
+            {formatPlanDate(plan.updatedAt)}
             {/* {plan.description ?? 'No description'} */}
           </div>
         </div>

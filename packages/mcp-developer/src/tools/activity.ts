@@ -30,21 +30,28 @@ type GetLastActivityResult = GenericResult<{
 }>;
 
 /** Exactly one of date (YYYY-MM-DD) or daysBack (1–365). */
-const getActivityByDateSchema = ActivityByDateInputSchema().refine(
-  (data) => {
-    const hasDate = data.date != null && data.date !== '';
-    const hasDaysBack = data.daysBack != null;
-    return hasDate !== hasDaysBack;
-  },
-  { message: 'Provide exactly one of date (YYYY-MM-DD) or daysBack (1–365)' },
-);
+export const getActivityByDateToolParameters =
+  ActivityByDateInputSchema().refine(
+    (data) => {
+      const hasDate = data.date != null && data.date !== '';
+      const hasDaysBack = data.daysBack != null;
+      return hasDate !== hasDaysBack;
+    },
+    { message: 'Provide exactly one of date (YYYY-MM-DD) or daysBack (1–365)' },
+  );
 
-const getLastActivitySchema = LastActivityInputSchema();
+export const getLastActivityToolParameters = LastActivityInputSchema();
 
-async function getActivityByDateHandler(
-  args: z.infer<typeof getActivityByDateSchema>,
+export const getActivityByDateToolDescription =
+  'Fetch activity (commits, plan output chunks, tasks updated) for "worked on / shipped on X date or X days ago" answers. Provide either date (YYYY-MM-DD) for that day, or daysBack (1–365) for the last N days. Uses commit_links, plan_output_stream, and task updated_at.';
+
+export const getLastActivityToolDescription =
+  'Answer "What was the last thing we did for <plan> or <task>?" Returns the single most recent activity: last commit (commit_links), last plan output chunk, or last task update. Provide planId; optionally taskId to scope to that task.';
+
+export async function getActivityByDateToolHandler(
+  args: z.infer<typeof getActivityByDateToolParameters>,
 ): Promise<GetActivityByDateResult> {
-  const parsed = getActivityByDateSchema.safeParse(args);
+  const parsed = getActivityByDateToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -97,10 +104,10 @@ async function getActivityByDateHandler(
   );
 }
 
-async function getLastActivityHandler(
-  args: z.infer<typeof getLastActivitySchema>,
+export async function getLastActivityToolHandler(
+  args: z.infer<typeof getLastActivityToolParameters>,
 ): Promise<GetLastActivityResult> {
-  const parsed = getLastActivitySchema.safeParse(args);
+  const parsed = getLastActivityToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -134,18 +141,18 @@ export function registerActivityTools(server: McpServer): void {
   server.registerTool(
     'get_activity_by_date',
     {
-      description: `Fetch activity (commits, plan output chunks, tasks updated) for "worked on / shipped on X date or X days ago" answers. Provide either date (YYYY-MM-DD) for that day, or daysBack (1–365) for the last N days. Uses commit_links, plan_output_stream, and task updated_at.`,
-      inputSchema: getActivityByDateSchema,
+      description: getActivityByDateToolDescription,
+      inputSchema: getActivityByDateToolParameters,
     },
-    getActivityByDateHandler,
+    getActivityByDateToolHandler,
   );
 
   server.registerTool(
     'get_last_activity',
     {
-      description: `Answer "What was the last thing we did for <plan> or <task>?" Returns the single most recent activity: last commit (commit_links), last plan output chunk, or last task update. Provide planId; optionally taskId to scope to that task.`,
-      inputSchema: getLastActivitySchema,
+      description: getLastActivityToolDescription,
+      inputSchema: getLastActivityToolParameters,
     },
-    getLastActivityHandler,
+    getLastActivityToolHandler,
   );
 }
