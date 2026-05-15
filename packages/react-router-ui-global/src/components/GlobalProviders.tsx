@@ -1,4 +1,8 @@
 import * as React from 'react';
+import {
+  ChatProvider,
+  useChatTurnFetcher,
+} from '@openthrottle/react-router-chat';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import {
@@ -14,6 +18,9 @@ export const GlobalProviders = (
   const { children } = props;
 
   // Hooks
+  const { composerDisabled, messages, sendUserMessage } = useChatTurnFetcher({
+    action: '/',
+  });
 
   // Setup
 
@@ -28,7 +35,15 @@ export const GlobalProviders = (
   return (
     <DndProvider backend={HTML5Backend}>
       <SidebarProvider>
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          <ChatProvider
+            composerDisabled={composerDisabled}
+            messages={messages}
+            onSendMessage={sendUserMessage}
+          >
+            {children}
+          </ChatProvider>
+        </TooltipProvider>
       </SidebarProvider>
     </DndProvider>
   );

@@ -34,8 +34,6 @@ export default function Component(
 ): React.ReactElement {
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
-  // Hooks
-
   // Setup
 
   // Handlers

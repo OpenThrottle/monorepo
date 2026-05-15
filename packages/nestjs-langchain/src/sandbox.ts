@@ -60,14 +60,14 @@ async function main() {
 
 const getConnectionString = () => {
   const config = {
-    database: `vector_db`,
+    database: process.env.POSTGRES_DB,
     host: `localhost`,
-    password: `vector_db_password`,
-    port: 5555,
-    username: 'vector_db_user',
+    password: process.env.POSTGRES_PASSWORD,
+    port: process.env.POSTGRES_PORT,
+    username: process.env.POSTGRES_USER,
   };
 
-  const password = encodeURIComponent(config.password);
+  const password = encodeURIComponent(config.password!);
   const connectionString = `postgresql://${config.username}:${password}@${config.host}:${config.port}/${config.database}`;
 
   return connectionString;

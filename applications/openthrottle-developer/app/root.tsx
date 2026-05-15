@@ -75,6 +75,7 @@ import {
   callLoginMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
+import { handleSendAgentMessageIntent } from '~/global/utils/utils.agents-chat';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 
@@ -225,7 +226,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Setup
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
-
   const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;
 
@@ -603,6 +603,10 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { error: message };
     }
+  }
+
+  if (intent === 'send-agent-message') {
+    return handleSendAgentMessageIntent(args.request, formData);
   }
 
   return null;
