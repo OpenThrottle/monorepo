@@ -36,6 +36,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   const end = new Date();
   const endIso = end.toISOString();
 
+  const searchParams = new URLSearchParams(args.request.url);
+  const owner = searchParams.get('owner') ?? 'openthrottle';
+  const repo = searchParams.get('repo') ?? 'monorepo';
+
   const start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();
 
@@ -56,7 +60,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     const githubStats = await executeGraphqlWithAuth(
       args.request,
       GetDashboardGithubStatsDocument,
-      { owner: 'shiftsmartinc', repo: 'native-apps' },
+      { owner, repo },
     );
 
     return { activityByDate, dailyStatsRange, githubStats, queues };

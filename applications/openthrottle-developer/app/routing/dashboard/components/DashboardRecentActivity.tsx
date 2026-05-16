@@ -1,7 +1,5 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { formatDistanceToNow } from 'date-fns';
-import { FileText, GitCommit, ListTodo } from 'lucide-react';
 import { Link } from 'react-router';
 import {
   Table,
@@ -83,43 +81,6 @@ function toActivityRows(data: DashboardActivityCardFragment): ActivityRow[] {
   rows.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return rows.slice(0, 20);
-}
-
-const TYPE_ICON_MAP: Record<
-  ActivityRow['type'],
-  {
-    ariaLabel: string;
-    Icon: React.ComponentType<{ 'aria-hidden'?: boolean; className?: string }>;
-  }
-> = {
-  commit: { Icon: GitCommit, ariaLabel: 'Commit' },
-  output: { Icon: FileText, ariaLabel: 'Output' },
-  task: { Icon: ListTodo, ariaLabel: 'Task' },
-};
-
-/**
- * @description Renders the activity type icon with accessible label.
- */
-function TypeIcon({ type }: { type: ActivityRow['type'] }): React.ReactElement {
-  const { Icon, ariaLabel } = TYPE_ICON_MAP[type];
-
-  return (
-    <Icon
-      aria-label={ariaLabel}
-      className="h-4 w-4 shrink-0 text-muted-foreground"
-      // role="img"
-    />
-  );
-}
-
-/**
- * @description Formats activity date as short date plus relative time (e.g. "2/12/25 · 2 hours ago").
- */
-function _formatActivityDate(dateStr: string): string {
-  const date = new Date(dateStr);
-
-  // return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
-  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 /**
@@ -248,11 +209,8 @@ export const DashboardRecentActivity = (
           <TableHeader>
             <TableRow>
               <TableHead align="left" className="pb-2" scope="col">
-                Type
+                Status
               </TableHead>
-              {/* <TableHead align="left" className="pb-2" scope="col">
-                Date
-              </TableHead> */}
               <TableHead align="left" className="pb-2" scope="col">
                 Plan
               </TableHead>
@@ -306,20 +264,10 @@ export const DashboardRecentActivity = (
 
               return (
                 <TableRow key={row.id}>
-                  <TableCell className="align-top">
-                    <span className="flex items-center gap-4">
-                      <TypeIcon type={row.type} />
-                      {statusBadge}
-                    </span>
-                  </TableCell>
-                  {/* <TableCell className="text-muted-foreground align-top text-xs"></TableCell> */}
+                  <TableCell className="align-top">{statusBadge}</TableCell>
                   <TableCell className="overflow-hidden text-xs">
                     {planCell}
-                    {/*
-                    <p className="text-muted-foreground mt-2">
-                      {formatActivityDate(row.date)}
-                    </p>
-                    */}
+                    {/* {formatActivityDate(row.date)} */}
                   </TableCell>
                 </TableRow>
               );
