@@ -1,8 +1,8 @@
 import { DEFAULT_PAGINATION_LIMIT } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { loader } from '../queues.$queueId';
-import type { Route } from '@/app/routes/+types/queues.$queueId';
+import { loader } from '../queues.$queueId._index';
+import type { Route } from '@/app/routes/+types/queues.$queueId._index';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

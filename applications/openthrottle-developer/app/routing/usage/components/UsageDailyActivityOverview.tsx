@@ -38,7 +38,10 @@ export function UsageDailyActivityOverview(
 
       <dl className="grid gap-4 md:gap-8 text-sm md:grid-cols-2 lg:grid-cols-3">
         {USAGE_DAILY_STATS_SERIES.map((row) => (
-          <div className="min-w-0" key={row.seriesKey}>
+          <div
+            className="min-w-0 opacity-50 hover:opacity-100 transition-opacity"
+            key={row.seriesKey}
+          >
             <dt className="font-medium text-foreground text-sm mb-2">
               {row.label}
             </dt>

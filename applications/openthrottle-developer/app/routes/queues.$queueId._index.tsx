@@ -20,7 +20,7 @@ import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/queues.$queueId';
+import type { Route } from '@/app/routes/+types/queues.$queueId._index';
 
 const QUEUE_JOBS_LIMIT_MIN = 10;
 const QUEUE_JOBS_LIMIT_MAX = 100;

@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -19,6 +19,7 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
+import { ListOrderedIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -28,8 +29,10 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
     if (id == null || id === '') {
       return 'Job';
     }
+
     return id.length > 28 ? `${id.slice(0, 14)}…${id.slice(-8)}` : id;
   },
+
   links: (match) => {
     const q = match?.params?.queueId;
     if (q == null || q === '') {
@@ -44,23 +47,20 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const queueName = args.params.queueId;
-  const jobIdParam = args.params.jobId;
   if (queueName == null || queueName === '') {
     throw new Response('Queue name required', { status: 400 });
   }
+
+  const jobIdParam = args.params.jobId;
   if (jobIdParam == null || jobIdParam === '') {
     throw new Response('Job id required', { status: 400 });
   }
 
   const jobId = decodeURIComponent(jobIdParam);
-
   const result = await executeGraphqlWithAuth(
     args.request,
     GetQueueJobDetailsDocument,
-    {
-      jobId,
-      queueName,
-    },
+    { jobId, queueName },
   );
 
   if (!result.job) {
@@ -103,26 +103,24 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <nav className="mb-4 text-sm text-muted-foreground">
-        <Link className="hover:text-foreground" to="/queues">
-          Queues
-        </Link>
-        <span className="mx-2">/</span>
-        <Link
-          className="hover:text-foreground"
-          to={`/queues/${encodeURIComponent(queueName)}`}
-        >
-          {queueName}
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground font-mono text-xs break-all">
-          {job.id}
-        </span>
-      </nav>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ListOrderedIcon}
+          title={`Job: ${job.name}`}
+        />
+        <p className="text-muted-foreground text-sm">
+          Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab ducimus,
+          vero nostrum voluptates consectetur ipsum possimus aliquid odio nulla
+          pariatur quaerat debitis alias perferendis inventore voluptatum illum
+          fuga fugiat reprehenderit!
+        </p>
+      </div>
 
-      <h1 className="text-xl font-semibold mb-6 text-accent">
+      {/* <h1 className="text-xl font-semibold mb-6 text-accent">
         Queue job <span className="font-mono text-base">{job.id}</span>
-      </h1>
+      </h1> */}
 
       <QueueJobDetail job={job} queueName={queueName} />
     </GlobalScreen>

@@ -30,10 +30,11 @@ export const PlansIntroduction = (_props: PlansIntroductionProps) => {
         title="Plans"
       />
       <p className="text-muted-foreground text-sm">
-        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Deserunt sequi
-        doloremque consectetur repellat porro provident nesciunt nisi deleniti
-        laborum distinctio, quod magni nemo quidem tenetur aliquid ut, sit
-        repellendus perspiciatis?
+        Plans are OpenThrottle&apos;s record of intended work—what you decided
+        to build, broken into tasks with status, assignee, and optional
+        summaries. Browse and filter here, open a plan for tasks and iteration
+        output, queue a run for agentic execution (Ralph), and follow linked
+        commits that tie shipped work on main back to each plan.
       </p>
     </div>
   );
