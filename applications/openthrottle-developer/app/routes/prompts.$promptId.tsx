@@ -141,7 +141,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-col flex-1">
+    <GlobalScreen className="flex flex-col flex-1 h-full">
       {/* Header with prompt info and actions */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
         <div className="flex items-center gap-4">
@@ -151,7 +151,7 @@ export default function Component(
           >
             ← Back to prompts
           </a>
-          <h1 className="text-lg font-semibold">{prompt.title}</h1>
+          <h1 className="text-lg">{prompt.title}</h1>
           <span className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-300">
             {prompt.promptType}
           </span>

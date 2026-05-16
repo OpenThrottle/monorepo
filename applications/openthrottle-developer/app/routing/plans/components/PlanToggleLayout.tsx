@@ -28,7 +28,7 @@ export const PlanToggleLayout = (props: PlanToggleLayoutProps) => {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h2 className="text-lg font-semibold">Tasks</h2>
+      <h2 className="text-lg">Tasks</h2>
       <ToggleGroup
         aria-label="Choose how to display plan tasks"
         className="shrink-0"

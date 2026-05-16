@@ -26,7 +26,7 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
   // Hooks
 
   // Setup
-  const titleClass = 'text-lg font-semibold leading-tight tracking-tight';
+  const titleClass = 'text-lg leading-tight tracking-tight';
   const hasPlanLink = result.planId != null && result.planId !== '';
   const hasTaskLink =
     hasPlanLink && result.taskId != null && result.taskId !== '';

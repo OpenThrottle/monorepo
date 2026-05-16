@@ -48,7 +48,7 @@ export const EditorToolbar = (props: EditorToolbarProps) => {
 
   const handleTypeChange = (value: string): void => {
     // FIXME: Tighten this up
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
     const type = value as PromptType | '';
 
     setSelectedType(type || undefined);
@@ -97,7 +97,7 @@ export const EditorToolbar = (props: EditorToolbarProps) => {
         )}
         data-testid="EditorToolbar"
       >
-        <h1 className="text-lg font-semibold">{title}</h1>
+        <h1 className="text-lg">{title}</h1>
 
         <div className="flex items-center gap-4">
           <Input

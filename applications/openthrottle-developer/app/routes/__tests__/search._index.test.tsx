@@ -76,6 +76,6 @@ describe('routes/search._index.tsx', () => {
     );
 
     expect(view.getByText(/Enter a query below/i)).toBeInTheDocument();
-    expect(view.getByTestId('WorkspaceEntityCrossLinks')).toBeInTheDocument();
+    expect(view.getByTestId('SearchIntroduction')).toBeInTheDocument();
   });
 });

@@ -26,7 +26,7 @@ export const AlertDialogTitle = React.forwardRef<
 
   return (
     <AlertDialogPrimitive.Title
-      className={cn('text-lg font-semibold', className)}
+      className={cn('text-lg', className)}
       ref={ref}
       {...rest}
     />

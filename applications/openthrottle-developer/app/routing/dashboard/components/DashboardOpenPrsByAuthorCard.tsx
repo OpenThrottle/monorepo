@@ -75,8 +75,7 @@ export const DashboardOpenPrsByAuthorCard = (
         <BarChart
           data={chartData}
           height={240}
-          layout="vertical"
-          margin={{ bottom: 8, left: 4, right: 12, top: 4 }}
+          margin={{ bottom: 0, left: 0, right: 12, top: 4 }}
           style={{ minHeight: 240 }}
         >
           <CartesianGrid
@@ -84,14 +83,14 @@ export const DashboardOpenPrsByAuthorCard = (
             strokeDasharray="3 3"
             vertical={false}
           />
-          <XAxis axisLine={false} tickLine={false} type="auto" />
-          <YAxis
-            axisLine={false}
+          <XAxis
+            axisLine={true}
             dataKey="author"
+            label={{ children: null, height: 100 }}
             tickLine={false}
-            type="auto"
-            width={120}
+            visibility="hidden"
           />
+          <YAxis axisLine={false} tickLine={false} type="auto" width={30} />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
           {PRS_BY_AUTHOR_CHART_SERIES.map((seriesKey) => (

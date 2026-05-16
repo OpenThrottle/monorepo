@@ -82,6 +82,7 @@ export const DashboardPrTimeInStateCard = (
         <BarChart
           data={chartData}
           margin={{ bottom: 8, left: 0, right: 12, top: 4 }}
+          style={{ minHeight: 240 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis

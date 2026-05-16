@@ -18,7 +18,7 @@ import {
 import { ListOrderedIcon } from 'lucide-react';
 import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { QueueJobCard } from '~/routing/queues/components/QueueJobCard';
+import { QueueJobsTable } from '~/routing/queues/components/QueueJobsTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId._index';
 
@@ -140,7 +140,8 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={ListOrderedIcon}
-          title="Jobs"
+          // title="Jobs"
+          title={`Queue: ${queue.name}`}
         />
         <p
           className="mb-6 text-sm text-muted-foreground"
@@ -168,13 +169,7 @@ export default function Component(
       ) : (
         // <p className="text-muted-foreground"></p>
         <>
-          <ul className="space-y-3 mb-4">
-            {jobs.map((job) => (
-              <li key={job.id}>
-                <QueueJobCard job={job} queueName={queue.name} />
-              </li>
-            ))}
-          </ul>
+          <QueueJobsTable className="mb-4" jobs={jobs} queueName={queue.name} />
 
           {(jobs.length > 0 || page > 1 || hasNext) && (
             <div

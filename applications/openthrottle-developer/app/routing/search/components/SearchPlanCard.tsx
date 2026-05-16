@@ -20,7 +20,7 @@ export interface SearchPlanCardProps {
   result: SearchChunk;
 }
 
-const TITLE_CLASS = 'text-lg font-semibold leading-tight tracking-tight';
+const TITLE_CLASS = 'text-lg leading-tight tracking-tight';
 
 export const SearchPlanCard = (props: SearchPlanCardProps) => {
   const { className, defaultOpenWhy, rankMeta, result } = props;

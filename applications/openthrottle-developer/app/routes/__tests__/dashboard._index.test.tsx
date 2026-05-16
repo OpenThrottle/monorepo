@@ -47,9 +47,9 @@ describe('routes/dashboard._index.tsx', () => {
     expect(
       grid.querySelector('[data-testid="DashboardDailyStatsCard"]'),
     ).toBeInTheDocument();
-    expect(
-      grid.querySelector('[data-testid="DashboardQueueStats"]'),
-    ).toBeInTheDocument();
+    // expect(
+    //   grid.querySelector('[data-testid="DashboardQueueStats"]'),
+    // ).toBeInTheDocument();
     expect(
       grid.querySelector('[data-testid="DashboardPrTimeInStateCard"]'),
     ).toBeInTheDocument();

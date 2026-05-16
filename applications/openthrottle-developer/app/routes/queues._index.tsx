@@ -58,8 +58,8 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesIntroduction />
-      <QueuesStats queues={queues} />
       <QueuesTable queues={queues} />
+      <QueuesStats queues={queues} />
     </GlobalScreen>
   );
 }

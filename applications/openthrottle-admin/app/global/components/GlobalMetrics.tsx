@@ -154,7 +154,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
     <div className={classnames('p-4', className)} data-testid="GlobalMetrics">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">Server metrics</h2>
+          <h2 className="text-lg">Server metrics</h2>
           <Tooltip>
             <TooltipTrigger asChild={true}>
               <button

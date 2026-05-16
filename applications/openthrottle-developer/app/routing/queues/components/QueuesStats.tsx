@@ -58,10 +58,7 @@ export const QueuesStats = (props: QueuesStatsProps) => {
         )}
         data-testid="QueuesStats"
       >
-        <h2
-          className="text-lg font-semibold tracking-tight"
-          id="queues-stats-heading"
-        >
+        <h2 className="text-lg tracking-tight" id="queues-stats-heading">
           Job counts by queue
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -81,10 +78,7 @@ export const QueuesStats = (props: QueuesStatsProps) => {
       )}
       data-testid="QueuesStats"
     >
-      <h2
-        className="text-lg font-semibold tracking-tight"
-        id="queues-stats-heading"
-      >
+      <h2 className="text-lg tracking-tight" id="queues-stats-heading">
         Job counts by queue
       </h2>
       <p className="text-sm text-muted-foreground">

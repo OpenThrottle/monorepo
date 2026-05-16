@@ -85,7 +85,7 @@ export const SearchDocumentationCard = (
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
         {blobLink != null ? (
-          <CardTitle className="text-lg font-semibold leading-tight tracking-tight">
+          <CardTitle className="text-lg leading-tight tracking-tight">
             {blobLink}
           </CardTitle>
         ) : null}

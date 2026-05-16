@@ -143,7 +143,7 @@ export default function Component(
           >
             ← Back to prompts
           </a>
-          <h1 className="text-lg font-semibold">Create New Prompt</h1>
+          <h1 className="text-lg">Create New Prompt</h1>
         </div>
 
         <div className="flex items-center gap-4">

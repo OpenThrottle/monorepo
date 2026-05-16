@@ -115,7 +115,7 @@ function TypeIcon({ type }: { type: ActivityRow['type'] }): React.ReactElement {
 /**
  * @description Formats activity date as short date plus relative time (e.g. "2/12/25 · 2 hours ago").
  */
-function formatActivityDate(dateStr: string): string {
+function _formatActivityDate(dateStr: string): string {
   const date = new Date(dateStr);
 
   // return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
@@ -250,9 +250,9 @@ export const DashboardRecentActivity = (
               <TableHead align="left" className="pb-2" scope="col">
                 Type
               </TableHead>
-              <TableHead align="left" className="pb-2" scope="col">
+              {/* <TableHead align="left" className="pb-2" scope="col">
                 Date
-              </TableHead>
+              </TableHead> */}
               <TableHead align="left" className="pb-2" scope="col">
                 Plan
               </TableHead>
@@ -297,12 +297,6 @@ export const DashboardRecentActivity = (
                 content
               );
 
-              const typeBadge = null;
-              // const typeBadge = (
-              //   <Badge size="sm" variant="secondary">
-              //     {row.type}
-              //   </Badge>
-              // );
               const statusBadge =
                 row.type === 'task' &&
                 row.status != null &&
@@ -313,17 +307,19 @@ export const DashboardRecentActivity = (
               return (
                 <TableRow key={row.id}>
                   <TableCell className="align-top">
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4">
                       <TypeIcon type={row.type} />
-                      {typeBadge}
                       {statusBadge}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground align-top text-sm">
-                    {formatActivityDate(row.date)}
-                  </TableCell>
-                  <TableCell className="overflow-hidden text-sm">
+                  {/* <TableCell className="text-muted-foreground align-top text-xs"></TableCell> */}
+                  <TableCell className="overflow-hidden text-xs">
                     {planCell}
+                    {/*
+                    <p className="text-muted-foreground mt-2">
+                      {formatActivityDate(row.date)}
+                    </p>
+                    */}
                   </TableCell>
                 </TableRow>
               );

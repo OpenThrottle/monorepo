@@ -73,9 +73,7 @@ export const PullRequestPreviewSheet = (
                 #{prPreviewPull.number}
               </span>
             </div>
-            <h3 className="text-lg font-semibold leading-snug">
-              {prPreviewPull.title}
-            </h3>
+            <h3 className="text-lg leading-snug">{prPreviewPull.title}</h3>
             <p className="text-muted-foreground text-sm">
               <span className="font-medium text-foreground">
                 {prPreviewPull.author}

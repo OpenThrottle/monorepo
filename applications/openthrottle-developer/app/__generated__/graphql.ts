@@ -3305,6 +3305,47 @@ export type QueueJobDetailCancelPlanRunMutation = {
   };
 };
 
+export type QueueJobDetailsFragment = {
+  __typename?: 'JobObject';
+  data?: string | null;
+  failedReason?: string | null;
+  finishedOn?: number | null;
+  id: string;
+  name?: string | null;
+  processedOn?: number | null;
+  progress?: number | null;
+  returnvalue?: string | null;
+  state: string;
+  timestamp?: number | null;
+};
+
+export type QueueDetailsFragment = {
+  __typename?: 'QueueDetailsObject';
+  activeCount: number;
+  completedCount: number;
+  delayedCount: number;
+  failedCount: number;
+  name: string;
+  waitingCount: number;
+  jobs?: {
+    __typename?: 'JobsResultObject';
+    hasNext: boolean;
+    jobs: Array<{
+      __typename?: 'JobObject';
+      data?: string | null;
+      failedReason?: string | null;
+      finishedOn?: number | null;
+      id: string;
+      name?: string | null;
+      processedOn?: number | null;
+      progress?: number | null;
+      returnvalue?: string | null;
+      state: string;
+      timestamp?: number | null;
+    }>;
+  } | null;
+};
+
 export type GetQueueQueryVariables = Exact<{
   input: QueueDetailsInput;
 }>;
@@ -4010,6 +4051,104 @@ export const JobDetailsCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<JobDetailsCardFragment, unknown>;
+export const QueueJobDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'JobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'processedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<QueueJobDetailsFragment, unknown>;
+export const QueueDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueDetailsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'delayedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'jobs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'jobs' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'QueueJobDetails' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'waitingCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'JobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'processedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<QueueDetailsFragment, unknown>;
 export const QueueCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -7685,16 +7824,60 @@ export const GetQueueDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'completedCount' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'QueueDetails' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'delayedCount' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'JobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'processedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueDetailsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'delayedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'jobs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'jobs' },
@@ -7702,69 +7885,17 @@ export const GetQueueDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'hasNext' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'jobs' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'data' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'failedReason' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'finishedOn' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'processedOn' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'progress' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'returnvalue' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'state' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'timestamp' },
-                            },
-                          ],
-                        },
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'QueueJobDetails' },
                       },
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'waitingCount' },
-                },
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'waitingCount' } },
         ],
       },
     },

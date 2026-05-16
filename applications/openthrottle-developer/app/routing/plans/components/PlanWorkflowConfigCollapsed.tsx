@@ -32,7 +32,7 @@ export const PlanWorkflowConfigCollapsed = (
     >
       <CardHeader className="flex flex-row w-full gap-4">
         <div className="min-w-0 space-y-1.5 flex-1">
-          <h2 className="text-lg font-semibold leading-none tracking-tight">
+          <h2 className="text-lg leading-none tracking-tight">
             Workflow Configuration
           </h2>
           <p className="text-muted-foreground text-sm">

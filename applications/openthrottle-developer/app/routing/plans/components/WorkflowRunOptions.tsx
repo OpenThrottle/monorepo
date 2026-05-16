@@ -166,7 +166,7 @@ export const WorkflowRunOptions = (props: WorkflowRunOptionsProps) => {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1.5">
             <h2
-              className="text-lg font-semibold leading-none tracking-tight"
+              className="text-lg leading-none tracking-tight"
               id="workflow-run-options-title"
             >
               Workflow options

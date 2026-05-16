@@ -120,10 +120,7 @@ export const EmptyTitle = React.forwardRef<HTMLHeadingElement, EmptyTitleProps>(
 
     return (
       <h3
-        className={cn(
-          'text-lg font-semibold leading-none tracking-tight',
-          className,
-        )}
+        className={cn('text-lg leading-none tracking-tight', className)}
         ref={ref}
         {...props}
       />
