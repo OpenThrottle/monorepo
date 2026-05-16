@@ -2326,12 +2326,18 @@ export type GetDashboardQuery = {
 };
 
 export type GetDashboardGithubStatsQueryVariables = Exact<{
-  input: GitHubRepoInput;
+  owner: Scalars['String']['input'];
+  repo: Scalars['String']['input'];
 }>;
 
 export type GetDashboardGithubStatsQuery = {
   __typename?: 'Query';
   openPrCountByAuthor: Array<{
+    __typename?: 'OpenPrCountByAuthorObject';
+    author: string;
+    openCount: number;
+  }>;
+  closedPrCountByAuthor: Array<{
     __typename?: 'OpenPrCountByAuthorObject';
     author: string;
     openCount: number;
@@ -4617,13 +4623,24 @@ export const GetDashboardGithubStatsDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
+            name: { kind: 'Name', value: 'owner' },
           },
           type: {
             kind: 'NonNullType',
             type: {
               kind: 'NamedType',
-              name: { kind: 'Name', value: 'GitHubRepoInput' },
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'repo' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
             },
           },
         },
@@ -4633,14 +4650,89 @@ export const GetDashboardGithubStatsDocument = {
         selections: [
           {
             kind: 'Field',
+            alias: { kind: 'Name', value: 'openPrCountByAuthor' },
             name: { kind: 'Name', value: 'openPrCountByAuthor' },
             arguments: [
               {
                 kind: 'Argument',
                 name: { kind: 'Name', value: 'input' },
                 value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'open',
+                        block: false,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'openCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            alias: { kind: 'Name', value: 'closedPrCountByAuthor' },
+            name: { kind: 'Name', value: 'openPrCountByAuthor' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'closed',
+                        block: false,
+                      },
+                    },
+                  ],
                 },
               },
             ],
@@ -4660,8 +4752,34 @@ export const GetDashboardGithubStatsDocument = {
                 kind: 'Argument',
                 name: { kind: 'Name', value: 'input' },
                 value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'open',
+                        block: false,
+                      },
+                    },
+                  ],
                 },
               },
             ],

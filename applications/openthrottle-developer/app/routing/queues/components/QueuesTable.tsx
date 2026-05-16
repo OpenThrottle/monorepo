@@ -10,7 +10,7 @@ import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import classnames from 'classnames';
 import type { QueueCardFragment } from '~/__generated__/graphql';
-import { backlogForQueue } from '~/routing/queues/utils/queue-backlog-chart';
+import { backlogForQueue } from '~/routing/queues/utils/queue-stats-chart';
 
 export interface QueuesTableProps {
   readonly className?: string;
