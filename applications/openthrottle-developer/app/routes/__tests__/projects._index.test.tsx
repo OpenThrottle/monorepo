@@ -13,6 +13,8 @@ const mockProjects: ProjectWithStats[] = [
     id: 'proj-1',
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
+    plans: [{ __typename: 'PlanObject', title: 'Plan A' }],
+    tasks: [{ __typename: 'TaskObject', title: 'Task 1' }],
     updatedAt: '2025-01-02T00:00:00Z',
   },
 ];
@@ -53,10 +55,10 @@ describe('routes/projects._index.tsx', () => {
         />
       </MemoryRouter>,
     );
-    expect(component.getByRole('main')).toBeInTheDocument();
-    // expect(
-    //   component.getByRole('heading', { name: 'Projects' }),
-    // ).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'Projects' }),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('ProjectsTable')).toBeInTheDocument();
     expect(component.getByText('First Project')).toBeInTheDocument();
   });
 
@@ -71,12 +73,14 @@ describe('routes/projects._index.tsx', () => {
         />
       </MemoryRouter>,
     );
-    expect(component.getByRole('main')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'Projects' }),
+    ).toBeInTheDocument();
     expect(component.getByText('No projects yet')).toBeInTheDocument();
     const newProjectLinks = component.getAllByRole('link', {
       name: /new project/i,
     });
     expect(newProjectLinks.length).toBeGreaterThanOrEqual(1);
-    expect(newProjectLinks[0]).toHaveAttribute('href', '/projects/new');
+    expect(newProjectLinks[0]).toHaveAttribute('href', '/projects/create');
   });
 });
