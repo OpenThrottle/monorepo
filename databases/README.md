@@ -40,6 +40,8 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:migrate
    ```
 
+   **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON` — see [docs/openthrottle/database-backup-scheduled-job-spec.md](../docs/openthrottle/database-backup-scheduled-job-spec.md).
+
 4. **Reset the database (optional, before a fresh ingest)**
 
    Truncates all cortex tables so a re-run of ingest does not create duplicate plans. Use when switching from test data to real data or when re-ingesting after changing source files:
