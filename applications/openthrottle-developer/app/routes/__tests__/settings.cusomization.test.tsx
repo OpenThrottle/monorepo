@@ -1,25 +1,29 @@
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../settings.cusomization';
+import SettingsAppearance from '../settings.appearance';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 
-describe('routes/settings.cusomization.tsx', () => {
-  // let component: RenderResult;
+/**
+ * @description Legacy `settings.cusomization` route was consolidated into `settings.appearance`.
+ */
+describe('routes/settings.appearance.tsx (customization)', () => {
+  test('should render', () => {
+    render(
+      <MemoryRouter>
+        <SettingsAppearance
+          actionData={undefined}
+          loaderData={getSettingsDiagnosticsLoaderData()}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
+    );
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
-
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(
+      screen.getByRole('heading', { name: 'Appearance' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Accent color')).toBeInTheDocument();
   });
 });

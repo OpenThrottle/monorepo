@@ -1,25 +1,25 @@
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../skill._index';
+import SkillsIndex from '../skills._index';
 
-describe('routes/skill._index.tsx', () => {
-  // let component: RenderResult;
+/**
+ * @description Route module is `skills._index`; this spec file name is historical.
+ */
+describe('routes/skills._index.tsx', () => {
+  test('should render', () => {
+    render(
+      <MemoryRouter>
+        <SkillsIndex
+          actionData={undefined}
+          loaderData={{}}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
+    );
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
-
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(screen.getByTestId('SkillsTable')).toBeInTheDocument();
   });
 });

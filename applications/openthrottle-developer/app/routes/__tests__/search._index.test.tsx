@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+import { MemoryRouter } from 'react-router';
+import { render } from '@testing-library/react';
 import SearchIndex from '../search._index';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import {
@@ -9,20 +11,22 @@ import {
 } from '~/testing/search-route-fixtures';
 
 describe('routes/search._index.tsx', () => {
-  test('should render main, SearchForm, SearchFilters, and pagination', () => {
-    const view = renderRoutesStub(
-      <SearchIndex
-        actionData={undefined}
-        loaderData={searchIndexLoaderFixture}
-        matches={[] as any}
-        params={{}}
-      />,
+  test('should render search shell, SearchForm, and SearchFilters', () => {
+    const view = render(
+      <MemoryRouter initialEntries={['/search?q=test']}>
+        <SearchIndex
+          actionData={undefined}
+          loaderData={searchIndexLoaderFixture}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
 
-    expect(view.getByRole('main')).toBeInTheDocument();
+    expect(view.getByRole('heading', { name: 'Search' })).toBeInTheDocument();
     expect(view.getByTestId('SearchForm')).toBeInTheDocument();
     expect(view.getByTestId('SearchFilters')).toBeInTheDocument();
-    expect(view.getByText(/Showing 1-1 of 1 results/i)).toBeInTheDocument();
+    expect(view.getByTestId('SearchPlanCard')).toBeInTheDocument();
   });
 
   test('should render OpenThrottlePagination with basePath /search when multiple pages', () => {
