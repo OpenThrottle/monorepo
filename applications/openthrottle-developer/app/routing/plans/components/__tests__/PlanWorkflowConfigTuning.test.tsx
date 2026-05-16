@@ -30,9 +30,7 @@ describe('PlanWorkflowConfigTuning Component', () => {
     expect(
       component.getByTestId('PlanWorkflowConfigTuning'),
     ).toBeInTheDocument();
-    expect(
-      component.getByRole('group', { name: 'Layer 3 — Run tuning' }),
-    ).toBeInTheDocument();
+    expect(component.getByText('Layer 3 — Run tuning')).toBeInTheDocument();
     expect(
       component.getByLabelText('Iteration count for --iterations'),
     ).toBeInTheDocument();
