@@ -389,16 +389,19 @@ export const SidebarInset = React.forwardRef<HTMLDivElement, SidebarInsetProps>(
     // 🔌 Short Circuit
 
     return (
-      <main
-        className={cn(
-          'bg-background relative',
-          'flex w-full flex-1 flex-col',
-          'md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow',
-          className,
-        )}
-        ref={ref}
-        {...rest}
-      />
+      <>
+        <main
+          className={cn(
+            'bg-background relative',
+            // 'flex w-full flex-1 flex-col',
+            'flex-1',
+            'md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow',
+            className,
+          )}
+          ref={ref}
+          {...rest}
+        />
+      </>
     );
   },
 );

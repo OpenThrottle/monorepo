@@ -67,8 +67,9 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
-
-      <SidebarInset>{children}</SidebarInset>
+      <div className="max-w-full w-full overflow-hidden relative">
+        <SidebarInset>{children}</SidebarInset>
+      </div>
     </>
   );
 };
