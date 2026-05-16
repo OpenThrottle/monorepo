@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { useSearchParams } from 'react-router';
 import {
   Select,
   SelectContent,
@@ -10,9 +11,10 @@ import {
 import {
   GITHUB_ORGS,
   GITHUB_REPOSITORIES,
-  GithubOrg,
-  GithubRepo,
+  type GithubOrg,
+  type GithubRepo,
 } from '~/routing/dashboard/config/config.dashboard';
+import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 
 export interface DashboardToolbarProps {
   readonly className?: string;
@@ -21,29 +23,29 @@ export interface DashboardToolbarProps {
 export const DashboardToolbar = (props: DashboardToolbarProps) => {
   const { className } = props;
 
-  const defaultOrg: GithubOrg = 'openthrottle';
-  const defaultRepos: GithubRepo[] = GITHUB_REPOSITORIES[defaultOrg];
-  const defaultRepo: GithubRepo = defaultRepos[0];
-
   // Hooks
-  const [orgs, setOrgs] = React.useState<GithubOrg>(defaultOrg);
-  const [repo, setRepo] = React.useState<string>(defaultRepo);
-  const [repos, setRepos] = React.useState<string[]>(defaultRepos);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { owner, repo } = parseDashboardGithubParams(searchParams);
+  const repos = GITHUB_REPOSITORIES[owner];
 
   // Setup
 
   // Handlers
-  const onChangeOrg = (value: GithubOrg) => {
-    setOrgs(value);
-    setRepos(GITHUB_REPOSITORIES[value]);
-    setRepo(GITHUB_REPOSITORIES[value][0]);
+  const onChangeOrg = (value: GithubOrg): void => {
+    const next = new URLSearchParams(searchParams);
+    const nextRepos = GITHUB_REPOSITORIES[value];
+    const nextRepo = nextRepos[0] as GithubRepo;
+
+    next.set('owner', value);
+    next.set('repo', nextRepo);
+    setSearchParams(next, { replace: true });
   };
 
-  const onChangeRepo = (value: GithubOrg) => {
-    // setOrgs(value);
-    setRepo(value);
-    // setRepos(GITHUB_REPOSITORIES[value]);
-    // setRepo(GITHUB_REPOSITORIES[value][0]);
+  const onChangeRepo = (value: GithubRepo): void => {
+    const next = new URLSearchParams(searchParams);
+
+    next.set('repo', value);
+    setSearchParams(next, { replace: true });
   };
 
   // Markup
@@ -57,7 +59,7 @@ export const DashboardToolbar = (props: DashboardToolbarProps) => {
       className={classnames('p-4 flex gap-4', className)}
       data-testid="DashboardToolbar"
     >
-      <Select onValueChange={onChangeOrg} value={orgs}>
+      <Select onValueChange={onChangeOrg} value={owner}>
         <SelectTrigger>
           <SelectValue placeholder="Organization" />
         </SelectTrigger>
