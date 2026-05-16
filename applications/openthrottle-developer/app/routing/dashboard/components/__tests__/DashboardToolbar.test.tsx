@@ -19,10 +19,10 @@ describe('DashboardToolbar Component', () => {
     component = renderWithProps({});
   });
 
-  test('renders toolbar region and title', () => {
+  test('renders toolbar region and org/repo selectors', () => {
     expect(component.getByTestId('DashboardToolbar')).toBeInTheDocument();
-    expect(
-      component.getByRole('heading', { level: 2, name: 'DashboardToolbar' }),
-    ).toBeInTheDocument();
+    expect(component.getAllByRole('combobox')).toHaveLength(2);
+    expect(component.getByText('openthrottle')).toBeInTheDocument();
+    expect(component.getByText('monorepo')).toBeInTheDocument();
   });
 });
