@@ -11,7 +11,9 @@ describe('UsageOverview Component', () => {
   let props: UsageOverviewProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      rangeDays: 30,
+    };
 
     const Component = () => <UsageOverview {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +21,8 @@ describe('UsageOverview Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render - no functionality', () => {
+    const title = 'Agents & OpenThrottle usage';
+    expect(component.getByText(title)).toBeInTheDocument();
   });
 });

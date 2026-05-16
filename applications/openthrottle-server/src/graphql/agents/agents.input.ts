@@ -10,7 +10,7 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class AgentsRunChatTurnInput {
   @Field(() => String, {
-    description: `Opaque client conversation id for future multi-turn wiring; omit for stateless turns.`,
+    description: `Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns.`,
     nullable: true,
   })
   conversationId!: string | null;

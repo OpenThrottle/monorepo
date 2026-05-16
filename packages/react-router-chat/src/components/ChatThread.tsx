@@ -95,6 +95,11 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
               })}
             >
               <ChatMessageBody body={message.body} role={message.role} />
+              {message.footer != null && message.footer.trim() !== '' ? (
+                <p className="text-muted-foreground mt-2 border-t border-border/60 pt-2 font-mono text-xs">
+                  {message.footer}
+                </p>
+              ) : null}
             </div>
           </article>
         ))

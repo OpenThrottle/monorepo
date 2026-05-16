@@ -8,9 +8,19 @@ export interface CallSendAgentMessageParams {
   readonly message: string;
 }
 
-/**
- * @description Call `agentsRunChatTurn` on openthrottle-server with auth from the request cookie.
- */
+const emptyTurn = (overrides: Partial<ChatTurnResult>): ChatTurnResult => ({
+  assistantText: null,
+  conversationId: null,
+  errorMessage: null,
+  mcpTool: null,
+  readOnlyAgentsChat: true,
+  routingConfidence: null,
+  routingReason: null,
+  structuredPayloadJson: null,
+  toolMetadataJson: null,
+  ...overrides,
+});
+
 /**
  * @description Root action handler for `intent: send-agent-message` — validates FormData and returns JSON for fetchers.
  */
@@ -21,19 +31,21 @@ export async function handleSendAgentMessageIntent(
   const messageRaw = formData.get('message');
   const message = typeof messageRaw === 'string' ? messageRaw.trim() : '';
 
-  if (message.length === 0) {
-    return {
-      assistantText: null,
-      errorMessage: 'Message is required',
-      toolMetadataJson: null,
-    };
-  }
-
   const conversationIdRaw = formData.get('conversationId');
-  const conversationId =
+  const conversationIdFromForm =
     typeof conversationIdRaw === 'string' && conversationIdRaw.trim().length > 0
       ? conversationIdRaw.trim()
-      : undefined;
+      : null;
+
+  if (message.length === 0) {
+    return emptyTurn({
+      conversationId: conversationIdFromForm,
+      errorMessage: 'Message is required',
+    });
+  }
+
+  const conversationId =
+    conversationIdFromForm != null ? conversationIdFromForm : undefined;
 
   try {
     return await callSendAgentMessage(request, { conversationId, message });
@@ -41,14 +53,16 @@ export async function handleSendAgentMessageIntent(
     const errorMessage =
       error instanceof Error ? error.message : 'Failed to send message';
 
-    return {
-      assistantText: null,
+    return emptyTurn({
+      conversationId: conversationIdFromForm,
       errorMessage,
-      toolMetadataJson: null,
-    };
+    });
   }
 }
 
+/**
+ * @description Call `agentsRunChatTurn` on openthrottle-server with auth from the request cookie.
+ */
 export async function callSendAgentMessage(
   request: Request,
   params: CallSendAgentMessageParams,
@@ -66,7 +80,13 @@ export async function callSendAgentMessage(
 
   return {
     assistantText: turn.assistantText ?? null,
+    conversationId: turn.conversationId ?? null,
     errorMessage: turn.errorMessage ?? null,
+    mcpTool: turn.mcpTool ?? null,
+    readOnlyAgentsChat: turn.readOnlyAgentsChat ?? true,
+    routingConfidence: turn.routingConfidence ?? null,
+    routingReason: turn.routingReason ?? null,
+    structuredPayloadJson: turn.structuredPayloadJson ?? null,
     toolMetadataJson: turn.toolMetadataJson ?? null,
   };
 }

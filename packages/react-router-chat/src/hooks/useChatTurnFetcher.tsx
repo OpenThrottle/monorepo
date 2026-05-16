@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
+import { buildAgentsChatAssistantFooter } from '../agents-chat-footer';
 import type { ChatTurnResult } from '../types';
 import { useChatMessages } from './use-chat-messages';
 import type {
@@ -66,16 +67,37 @@ const writeConversationIdToStorage = (key: string, id: string): void => {
   }
 };
 
-const isChatTurnResult = (data: unknown): data is ChatTurnResult => {
+const parseChatTurnResult = (data: unknown): ChatTurnResult | null => {
   if (data === null || typeof data !== 'object') {
-    return false;
+    return null;
   }
 
-  return (
-    'assistantText' in data &&
-    'errorMessage' in data &&
-    'toolMetadataJson' in data
-  );
+  const d = data as Record<string, unknown>;
+
+  if (
+    !('assistantText' in d) ||
+    !('errorMessage' in d) ||
+    !('mcpTool' in d) ||
+    !('structuredPayloadJson' in d) ||
+    !('toolMetadataJson' in d)
+  ) {
+    return null;
+  }
+
+  return {
+    assistantText: (d.assistantText as string | null | undefined) ?? null,
+    conversationId: (d.conversationId as string | null | undefined) ?? null,
+    errorMessage: (d.errorMessage as string | null | undefined) ?? null,
+    mcpTool: (d.mcpTool as string | null | undefined) ?? null,
+    readOnlyAgentsChat:
+      typeof d.readOnlyAgentsChat === 'boolean' ? d.readOnlyAgentsChat : true,
+    routingConfidence:
+      typeof d.routingConfidence === 'number' ? d.routingConfidence : null,
+    routingReason: (d.routingReason as string | null | undefined) ?? null,
+    structuredPayloadJson:
+      (d.structuredPayloadJson as string | null | undefined) ?? null,
+    toolMetadataJson: (d.toolMetadataJson as string | null | undefined) ?? null,
+  };
 };
 
 /**
@@ -158,7 +180,7 @@ export const useChatTurnFetcher = (
 
     wasSubmittingRef.current = false;
 
-    const turn = isChatTurnResult(fetcher.data) ? fetcher.data : null;
+    const turn = parseChatTurnResult(fetcher.data);
     if (!turn) {
       return;
     }
@@ -176,6 +198,7 @@ export const useChatTurnFetcher = (
     if (turn.assistantText) {
       appendMessage({
         body: turn.assistantText,
+        footer: buildAgentsChatAssistantFooter(turn),
         role: 'assistant',
       });
     }

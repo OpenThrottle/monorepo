@@ -19,7 +19,10 @@ describe('SkillsToolbar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render search input with placeholder and search button', () => {
+    const placeholder = `Filter by slug, path, or summary`;
+
+    expect(component.getByPlaceholderText(placeholder)).toBeInTheDocument();
+    expect(component.getByText('Search')).toBeInTheDocument();
   });
 });

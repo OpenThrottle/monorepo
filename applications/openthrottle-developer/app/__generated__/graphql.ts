@@ -107,14 +107,26 @@ export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
   assistantText?: Maybe<Scalars['String']['output']>;
+  /** Echo of the client conversation id from the request input when provided; null when omitted. */
+  conversationId?: Maybe<Scalars['String']['output']>;
   /** Validation or business-rule error for this turn (no throw). Null when the turn succeeded. */
   errorMessage?: Maybe<Scalars['String']['output']>;
-  /** Optional JSON-encoded structured tool metadata from the MCP developer surface (e.g. tool names and arguments). Null when absent. */
+  /** MCP developer tool name selected for this turn (e.g. semantic_search, health). Null when the turn failed before routing (e.g. empty message). */
+  mcpTool?: Maybe<Scalars['String']['output']>;
+  /** True when routed write tools are not permitted unless AGENTS_CHAT_ALLOW_MUTATIONS is enabled on the server (default read-only policy). */
+  readOnlyAgentsChat: Scalars['Boolean']['output'];
+  /** Router confidence in [0, 1] for the selected tool; null when the turn failed before routing. */
+  routingConfidence?: Maybe<Scalars['Float']['output']>;
+  /** Router reason label (e.g. heuristic name or llm_fallback:…); null when the turn failed before routing. */
+  routingReason?: Maybe<Scalars['String']['output']>;
+  /** JSON-encoded MCP structuredContent from the tool result when present on a successful tool call; null otherwise. */
+  structuredPayloadJson?: Maybe<Scalars['String']['output']>;
+  /** JSON-encoded tool envelope: tool name, arguments, optional confidence and routeReason, optional structuredContent, and isError when the MCP tool reported failure. */
   toolMetadataJson?: Maybe<Scalars['String']['output']>;
 };
 
 export type AgentsRunChatTurnInput = {
-  /** Opaque client conversation id for future multi-turn wiring; omit for stateless turns. */
+  /** Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns. */
   conversationId?: InputMaybe<Scalars['String']['input']>;
   /** User message text for this turn. */
   message: Scalars['String']['input'];
@@ -770,7 +782,7 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text and optional tool metadata JSON; uses errorMessage instead of throws for expected validation failures. */
+  /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
   appendPlanOutput: PlanOutputStreamChunkObject;
@@ -2178,7 +2190,13 @@ export type SendAgentMessageMutation = {
   agentsRunChatTurn: {
     __typename?: 'AgentsChatTurnResult';
     assistantText?: string | null;
+    conversationId?: string | null;
     errorMessage?: string | null;
+    mcpTool?: string | null;
+    readOnlyAgentsChat: boolean;
+    routingConfidence?: number | null;
+    routingReason?: string | null;
+    structuredPayloadJson?: string | null;
     toolMetadataJson?: string | null;
   };
 };
@@ -4312,7 +4330,28 @@ export const SendAgentMessageDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'errorMessage' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpTool' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'readOnlyAgentsChat' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'routingConfidence' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'routingReason' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'structuredPayloadJson' },
                 },
                 {
                   kind: 'Field',

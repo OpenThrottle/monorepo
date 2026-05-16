@@ -34,7 +34,7 @@ type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => `#${match.params.prId}`,
-  links: (_match) => [{ children: 'Pull requests', to: '/pull-requests' }],
+  links: (_match) => [{ children: 'Pull Requests', to: '/pull-requests' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
@@ -173,7 +173,11 @@ export default function Component(
                 <>
                   <Button asChild={true} size="sm" variant="secondary">
                     <a
-                      href={githubCommitChecksUrl(owner, repo, pull.headSha)}
+                      href={githubCommitChecksUrl(
+                        owner,
+                        repo,
+                        pull.headSha ?? '',
+                      )}
                       rel="noopener noreferrer"
                       target="_blank"
                     >
@@ -182,13 +186,13 @@ export default function Component(
                   </Button>
                   <Button asChild={true} size="sm" variant="outline">
                     <a
-                      href={githubCommitUrl(owner, repo, pull.headSha)}
+                      href={githubCommitUrl(owner, repo, pull.headSha ?? '')}
                       rel="noopener noreferrer"
                       target="_blank"
                     >
                       Head commit{' '}
                       <span className="font-mono">
-                        {pull.headSha.slice(0, 7)}
+                        {pull.headSha?.slice(0, 7)}
                       </span>
                     </a>
                   </Button>
@@ -206,7 +210,7 @@ export default function Component(
                     href={githubRepoActionsForBranchUrl(
                       owner,
                       repo,
-                      pull.headRef,
+                      pull.headRef ?? '',
                     )}
                     rel="noopener noreferrer"
                     target="_blank"
@@ -271,8 +275,8 @@ export default function Component(
                     href={githubPullCompareUrl(
                       owner,
                       repo,
-                      pull.baseRef,
-                      pull.headRef,
+                      pull.baseRef ?? '',
+                      pull.headRef ?? '',
                     )}
                     rel="noopener noreferrer"
                     target="_blank"

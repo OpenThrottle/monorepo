@@ -15,7 +15,7 @@ exports[`GeneratorTabDebug Component > should render 1`] = `
       style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
     >
       TypeError: Cannot read properties of undefined (reading 'name')
-    at GeneratorTabDebug (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/generators/components/GeneratorTabDebug.tsx:44:27)
+    at GeneratorTabDebug (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/generators/components/GeneratorTabDebug.tsx:42:27)
     at Object.react_stack_bottom_frame (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
     at renderWithHooks (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
     at updateFunctionComponent (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)

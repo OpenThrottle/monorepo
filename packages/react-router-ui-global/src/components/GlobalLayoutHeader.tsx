@@ -152,7 +152,7 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
       <ChatDialog
         title="OpenThrottle Assistant"
         triggerLabel="Chat"
-        // variant="dialog"
+        variant="dialog"
       />
 
       {searchField}

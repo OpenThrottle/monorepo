@@ -63,7 +63,13 @@ query getMyUser {
 mutation sendAgentMessage($input: AgentsRunChatTurnInput!) {
   agentsRunChatTurn(input: $input) {
     assistantText
+    conversationId
     errorMessage
+    mcpTool
+    readOnlyAgentsChat
+    routingConfidence
+    routingReason
+    structuredPayloadJson
     toolMetadataJson
   }
 }

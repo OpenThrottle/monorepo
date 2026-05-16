@@ -61,6 +61,18 @@ describe('useChatMessages', () => {
       expect(result.current.messages[0]?.body).toBe('Reply');
       expect(result.current.messages[0]?.role).toBe('assistant');
     });
+
+    test('should preserve optional footer on appended messages', () => {
+      const { result } = renderHook(() => useChatMessages());
+      act(() => {
+        result.current.appendMessage({
+          body: 'Reply',
+          footer: 'Tool: health',
+          role: 'assistant',
+        });
+      });
+      expect(result.current.messages[0]?.footer).toBe('Tool: health');
+    });
   });
 
   describe('when setMessages is called', () => {

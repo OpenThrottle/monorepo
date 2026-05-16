@@ -35,7 +35,7 @@ exports[`UsageIntroduction Component > should render 1`] = `
         </h3>
       </div>
       <p
-        class="max-w-2xl text-sm text-muted-foreground"
+        class="text-sm text-muted-foreground"
       >
         Usage metrics for this portal over the last 
          days.

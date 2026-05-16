@@ -4,10 +4,18 @@
 
 import { AgentsChatTurnResult } from './agents.object';
 
-interface McpTextResult {
-  readonly content: readonly { readonly text: string }[];
-  readonly isError?: boolean;
-}
+/**
+ * @description MCP tool outcome from {@link McpDeveloperMcpSurface} handlers for agents chat mapping.
+ */
+export type AgentsMcpToolHandlerResult =
+  | {
+      readonly content: readonly { readonly text: string }[];
+      readonly isError: true;
+    }
+  | {
+      readonly content: readonly { readonly text: string }[];
+      readonly structuredContent?: unknown;
+    };
 
 /**
  * @description Extracts raw JWT from `Authorization: Bearer <token>` when present.
@@ -31,45 +39,84 @@ export const parseBearerJwt = (
   return match?.[1]?.trim();
 };
 
-const SEMANTIC_SEARCH_TOOL = 'semantic_search';
+export interface AgentsChatTurnMcpMetadata {
+  readonly arguments: Readonly<Record<string, unknown>>;
+  readonly confidence?: number;
+  readonly conversationId?: string | null;
+  readonly readOnlyAgentsChat: boolean;
+  readonly routeReason?: string;
+  readonly tool: string;
+}
 
 /**
- * @description Builds a {@link AgentsChatTurnResult} from a semantic_search MCP tool result (content + optional structured payload).
+ * @description Builds a {@link AgentsChatTurnResult} from any MCP tool result (content + optional structured payload).
  */
-export const agentsChatTurnFromSemanticSearchMcp = (
-  mcpResult: McpTextResult & { readonly structuredContent?: unknown },
-  metadata: {
-    readonly arguments: {
-      readonly conversationId?: string | null;
-      readonly limit?: number;
-      readonly query: string;
-    };
-  },
+export const agentsChatTurnFromMcpToolResult = (
+  mcpResult: AgentsMcpToolHandlerResult,
+  metadata: AgentsChatTurnMcpMetadata,
 ): AgentsChatTurnResult => {
   const out = new AgentsChatTurnResult();
+  const { tool } = metadata;
 
-  if (mcpResult.isError === true) {
+  out.conversationId = metadata.conversationId ?? null;
+  out.readOnlyAgentsChat = metadata.readOnlyAgentsChat;
+  out.routingConfidence =
+    metadata.confidence === undefined ? null : metadata.confidence;
+  out.routingReason = metadata.routeReason ?? null;
+
+  if ('isError' in mcpResult && mcpResult.isError === true) {
     out.assistantText = null;
-    out.errorMessage =
-      mcpResult.content[0]?.text ?? `${SEMANTIC_SEARCH_TOOL} failed.`;
+    out.errorMessage = mcpResult.content[0]?.text ?? `${tool} failed.`;
+    out.mcpTool = tool;
+    out.structuredPayloadJson = null;
     out.toolMetadataJson = JSON.stringify({
       arguments: metadata.arguments,
+      confidence: metadata.confidence,
       isError: true,
-      tool: SEMANTIC_SEARCH_TOOL,
+      routeReason: metadata.routeReason,
+      tool,
     });
 
     return out;
   }
 
   const assistantText = mcpResult.content[0]?.text ?? '';
+  const structuredContent =
+    'structuredContent' in mcpResult ? mcpResult.structuredContent : undefined;
 
   out.assistantText = assistantText;
   out.errorMessage = null;
+  out.mcpTool = tool;
+  out.structuredPayloadJson =
+    structuredContent === undefined ? null : JSON.stringify(structuredContent);
   out.toolMetadataJson = JSON.stringify({
     arguments: metadata.arguments,
-    structuredContent: mcpResult.structuredContent,
-    tool: SEMANTIC_SEARCH_TOOL,
+    confidence: metadata.confidence,
+    routeReason: metadata.routeReason,
+    structuredContent,
+    tool,
   });
 
   return out;
 };
+
+/**
+ * @description Builds a {@link AgentsChatTurnResult} from a semantic_search MCP tool result (content + optional structured payload).
+ */
+export const agentsChatTurnFromSemanticSearchMcp = (
+  mcpResult: AgentsMcpToolHandlerResult,
+  metadata: {
+    readonly arguments: {
+      readonly conversationId?: string | null;
+      readonly limit?: number;
+      readonly query: string;
+    };
+    readonly readOnlyAgentsChat: boolean;
+  },
+): AgentsChatTurnResult =>
+  agentsChatTurnFromMcpToolResult(mcpResult, {
+    arguments: metadata.arguments,
+    conversationId: metadata.arguments.conversationId,
+    readOnlyAgentsChat: metadata.readOnlyAgentsChat,
+    tool: 'semantic_search',
+  });

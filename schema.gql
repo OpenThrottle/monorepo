@@ -384,12 +384,42 @@ type AgentsChatTurnResult {
   assistantText: String
 
   """
+  Echo of the client conversation id from the request input when provided; null when omitted.
+  """
+  conversationId: String
+
+  """
   Validation or business-rule error for this turn (no throw). Null when the turn succeeded.
   """
   errorMessage: String
 
   """
-  Optional JSON-encoded structured tool metadata from the MCP developer surface (e.g. tool names and arguments). Null when absent.
+  MCP developer tool name selected for this turn (e.g. semantic_search, health). Null when the turn failed before routing (e.g. empty message).
+  """
+  mcpTool: String
+
+  """
+  True when routed write tools are not permitted unless AGENTS_CHAT_ALLOW_MUTATIONS is enabled on the server (default read-only policy).
+  """
+  readOnlyAgentsChat: Boolean!
+
+  """
+  Router confidence in [0, 1] for the selected tool; null when the turn failed before routing.
+  """
+  routingConfidence: Float
+
+  """
+  Router reason label (e.g. heuristic name or llm_fallback:…); null when the turn failed before routing.
+  """
+  routingReason: String
+
+  """
+  JSON-encoded MCP structuredContent from the tool result when present on a successful tool call; null otherwise.
+  """
+  structuredPayloadJson: String
+
+  """
+  JSON-encoded tool envelope: tool name, arguments, optional confidence and routeReason, optional structuredContent, and isError when the MCP tool reported failure.
   """
   toolMetadataJson: String
 }
@@ -1717,7 +1747,7 @@ type Mutation {
   triggerDevJsonlLogSample: Boolean!
 
   """
-  Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text and optional tool metadata JSON; uses errorMessage instead of throws for expected validation failures.
+  Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
   """
   agentsRunChatTurn(input: AgentsRunChatTurnInput!): AgentsChatTurnResult!
 
@@ -1873,7 +1903,7 @@ type Mutation {
 
 input AgentsRunChatTurnInput {
   """
-  Opaque client conversation id for future multi-turn wiring; omit for stateless turns.
+  Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns.
   """
   conversationId: String
 

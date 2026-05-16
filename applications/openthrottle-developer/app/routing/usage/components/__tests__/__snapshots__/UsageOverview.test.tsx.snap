@@ -1,5 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`UsageOverview Component > should render - no functionality 1`] = `
+<h2
+  class="flex flex-1 items-center gap-4 mb-4 text-xl"
+  data-testid="GlobalHeading"
+>
+  Agents & OpenThrottle usage
+</h2>
+`;
+
 exports[`UsageOverview Component > should render 1`] = `
 <body>
   <div>
@@ -17,11 +26,12 @@ exports[`UsageOverview Component > should render 1`] = `
         </h2>
       </div>
       <div
-        class="text-sm text-muted-foreground space-y-4"
+        class="text-sm text-muted-foreground space-y-4 md:space-y-8"
       >
         <p>
           Plan and task counts come from OpenThrottle daily stats (last
            
+          30
            days). They approximate automation load from Ralph, workflows, and manual work in the portal—they do not include model token usage or per-prompt billing. For prompt-level debugging, use
            
           <a
@@ -34,25 +44,9 @@ exports[`UsageOverview Component > should render 1`] = `
            
           and the versioning panel on a prompt detail page.
         </p>
-        <p>
-          <span
-            class="font-medium text-foreground"
-          >
-            Not in this chart:
-             
-          </span>
-          per-skill or per-prompt invocations, IDE-only runs, token or cost usage, and skill picks from user-local
-           
-          <code
-            class="text-xs"
-          >
-            ~/.cursor/skills-cursor
-          </code>
-          .
-        </p>
       </div>
       <div
-        class="flex flex-wrap gap-x-4 gap-y-2 mt-4"
+        class="flex flex-wrap gap-x-4 gap-y-2 mt-4 md:mt-8"
       >
         <a
           class="text-primary underline"

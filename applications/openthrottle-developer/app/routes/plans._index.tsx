@@ -6,11 +6,7 @@ import {
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  GlobalHeading,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
-import { ListChevronsUpDownIcon } from 'lucide-react';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
@@ -28,6 +24,7 @@ import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans._index';
+import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
 
 /** Parse multiple assignee values from URL (repeated params or comma-separated). */
 function parseAssigneesFromSearchParams(
@@ -189,25 +186,17 @@ export default function Component(
         totalCountAll={totalCountAll}
         totalCountQueued={totalCountQueued}
       />
-
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={ListChevronsUpDownIcon}
-          title="Plans"
-        />
-        <PlansToolbar
-          assigneeOptions={assigneeOptions}
-          assignees={assignees}
-          limit={limit}
-          page={page}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          statuses={statuses}
-          view={view}
-        />
-      </div>
+      <PlansIntroduction />
+      <PlansToolbar
+        assigneeOptions={assigneeOptions}
+        assignees={assignees}
+        limit={limit}
+        page={page}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        statuses={statuses}
+        view={view}
+      />
       <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
       <OpenThrottlePagination
         assignees={assignees}

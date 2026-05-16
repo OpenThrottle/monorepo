@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  agentsChatTurnFromMcpToolResult,
   agentsChatTurnFromSemanticSearchMcp,
   parseBearerJwt,
 } from './agents-mcp-chat.mapper';
@@ -32,6 +33,59 @@ describe('parseBearerJwt', () => {
   });
 });
 
+describe('agentsChatTurnFromMcpToolResult', () => {
+  test('maps success with routing metadata', () => {
+    const result = agentsChatTurnFromMcpToolResult(
+      {
+        content: [{ text: 'Plans listed' }],
+        structuredContent: { plans: [] },
+      },
+      {
+        arguments: { conversationId: 'x', statuses: ['PENDING'] },
+        confidence: 0.88,
+        conversationId: 'x',
+        readOnlyAgentsChat: true,
+        routeReason: 'list_plans_by_status_heuristic',
+        tool: 'list_plans_by_status',
+      },
+    );
+
+    expect(result.errorMessage).toBeNull();
+    expect(result.conversationId).toBe('x');
+    expect(result.readOnlyAgentsChat).toBe(true);
+    expect(result.routingConfidence).toBe(0.88);
+    expect(result.routingReason).toBe('list_plans_by_status_heuristic');
+    expect(result.assistantText).toBe('Plans listed');
+    expect(result.mcpTool).toBe('list_plans_by_status');
+    expect(result.structuredPayloadJson).toBe(JSON.stringify({ plans: [] }));
+    expect(JSON.parse(result.toolMetadataJson ?? '{}')).toEqual({
+      arguments: { conversationId: 'x', statuses: ['PENDING'] },
+      confidence: 0.88,
+      routeReason: 'list_plans_by_status_heuristic',
+      structuredContent: { plans: [] },
+      tool: 'list_plans_by_status',
+    });
+  });
+
+  test('maps MCP error with tool-specific fallback message', () => {
+    const result = agentsChatTurnFromMcpToolResult(
+      { content: [], isError: true },
+      {
+        arguments: {},
+        readOnlyAgentsChat: true,
+        tool: 'health',
+      },
+    );
+
+    expect(result.errorMessage).toBe('health failed.');
+    expect(result.mcpTool).toBe('health');
+    expect(result.readOnlyAgentsChat).toBe(true);
+    expect(result.routingConfidence).toBeNull();
+    expect(result.routingReason).toBeNull();
+    expect(result.conversationId).toBeNull();
+  });
+});
+
 describe('agentsChatTurnFromSemanticSearchMcp', () => {
   test('maps success result with text and structured content', () => {
     const result = agentsChatTurnFromSemanticSearchMcp(
@@ -44,11 +98,18 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
           conversationId: 'conv-1',
           query: 'plans',
         },
+        readOnlyAgentsChat: true,
       },
     );
 
     expect(result.errorMessage).toBeNull();
+    expect(result.conversationId).toBe('conv-1');
+    expect(result.readOnlyAgentsChat).toBe(true);
+    expect(result.routingConfidence).toBeNull();
+    expect(result.routingReason).toBeNull();
     expect(result.assistantText).toBe('Hello from OT');
+    expect(result.mcpTool).toBe('semantic_search');
+    expect(result.structuredPayloadJson).toBe(JSON.stringify({ hits: 2 }));
     expect(JSON.parse(result.toolMetadataJson ?? '{}')).toEqual({
       arguments: { conversationId: 'conv-1', query: 'plans' },
       structuredContent: { hits: 2 },
@@ -62,11 +123,13 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
         content: [],
         isError: true,
       },
-      { arguments: { query: 'q' } },
+      { arguments: { query: 'q' }, readOnlyAgentsChat: false },
     );
 
     expect(result.assistantText).toBeNull();
     expect(result.errorMessage).toBe('semantic_search failed.');
+    expect(result.mcpTool).toBe('semantic_search');
+    expect(result.structuredPayloadJson).toBeNull();
     expect(JSON.parse(result.toolMetadataJson ?? '{}').isError).toBe(true);
   });
 
@@ -76,19 +139,23 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
         content: [{ text: 'Tool validation failed' }],
         isError: true,
       },
-      { arguments: { query: 'q' } },
+      { arguments: { query: 'q' }, readOnlyAgentsChat: true },
     );
 
     expect(result.errorMessage).toBe('Tool validation failed');
+    expect(result.mcpTool).toBe('semantic_search');
+    expect(result.structuredPayloadJson).toBeNull();
   });
 
   test('uses empty assistant text when success payload has no content entries', () => {
     const result = agentsChatTurnFromSemanticSearchMcp(
       { content: [] },
-      { arguments: { query: 'q' } },
+      { arguments: { query: 'q' }, readOnlyAgentsChat: true },
     );
 
     expect(result.errorMessage).toBeNull();
     expect(result.assistantText).toBe('');
+    expect(result.mcpTool).toBe('semantic_search');
+    expect(result.structuredPayloadJson).toBeNull();
   });
 });

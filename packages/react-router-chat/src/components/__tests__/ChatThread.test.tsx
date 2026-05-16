@@ -87,6 +87,24 @@ describe('ChatThread Component', () => {
     });
   });
 
+  describe('when assistant message has a footer', () => {
+    test('should render the footer line', () => {
+      component = renderThread({
+        messages: [
+          {
+            body: 'Hi',
+            footer: 'Tool: health · confidence 0.95',
+            id: 'f1',
+            role: 'assistant',
+          },
+        ],
+      });
+      expect(
+        component.getByText('Tool: health · confidence 0.95'),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('when message body is empty', () => {
     test('should show empty content fallback', () => {
       component = renderThread({

@@ -1,5 +1,6 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { SendAgentMessageDocument } from '@openthrottle/openthrottle-developer-codegen';
+import type { ChatTurnResult } from '@openthrottle/react-router-chat';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   callSendAgentMessage,
@@ -11,6 +12,19 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 }));
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
+
+const baseTurn = (overrides: Partial<ChatTurnResult> = {}): ChatTurnResult => ({
+  assistantText: null,
+  conversationId: null,
+  errorMessage: null,
+  mcpTool: null,
+  readOnlyAgentsChat: true,
+  routingConfidence: null,
+  routingReason: null,
+  structuredPayloadJson: null,
+  toolMetadataJson: null,
+  ...overrides,
+});
 
 describe('callSendAgentMessage', () => {
   const request = new Request('http://localhost/', {
@@ -25,7 +39,13 @@ describe('callSendAgentMessage', () => {
     mockExecute.mockResolvedValueOnce({
       agentsRunChatTurn: {
         assistantText: 'Hello from the agent',
+        conversationId: 'conv-1',
         errorMessage: null,
+        mcpTool: 'semantic_search',
+        readOnlyAgentsChat: true,
+        routingConfidence: 0.33,
+        routingReason: 'default_semantic_search',
+        structuredPayloadJson: '{"hits":[]}',
         toolMetadataJson: '{"tool":"semantic_search"}',
       },
     });
@@ -45,11 +65,17 @@ describe('callSendAgentMessage', () => {
         },
       },
     );
-    expect(result).toEqual({
-      assistantText: 'Hello from the agent',
-      errorMessage: null,
-      toolMetadataJson: '{"tool":"semantic_search"}',
-    });
+    expect(result).toEqual(
+      baseTurn({
+        assistantText: 'Hello from the agent',
+        conversationId: 'conv-1',
+        mcpTool: 'semantic_search',
+        routingConfidence: 0.33,
+        routingReason: 'default_semantic_search',
+        structuredPayloadJson: '{"hits":[]}',
+        toolMetadataJson: '{"tool":"semantic_search"}',
+      }),
+    );
   });
 
   test('omits conversationId when not provided', async () => {
@@ -57,6 +83,9 @@ describe('callSendAgentMessage', () => {
       agentsRunChatTurn: {
         assistantText: 'ok',
         errorMessage: null,
+        mcpTool: null,
+        readOnlyAgentsChat: true,
+        structuredPayloadJson: null,
         toolMetadataJson: null,
       },
     });
@@ -79,11 +108,7 @@ describe('callSendAgentMessage', () => {
 
     const result = await callSendAgentMessage(request, { message: 'Hi' });
 
-    expect(result).toEqual({
-      assistantText: null,
-      errorMessage: null,
-      toolMetadataJson: null,
-    });
+    expect(result).toEqual(baseTurn());
   });
 
   test('surfaces server turn errors in errorMessage', async () => {
@@ -91,6 +116,9 @@ describe('callSendAgentMessage', () => {
       agentsRunChatTurn: {
         assistantText: null,
         errorMessage: 'Agent unavailable',
+        mcpTool: null,
+        readOnlyAgentsChat: true,
+        structuredPayloadJson: null,
         toolMetadataJson: null,
       },
     });
@@ -118,19 +146,37 @@ describe('handleSendAgentMessageIntent', () => {
 
     const result = await handleSendAgentMessageIntent(request, formData);
 
-    expect(result).toEqual({
-      assistantText: null,
-      errorMessage: 'Message is required',
-      toolMetadataJson: null,
-    });
+    expect(result).toEqual(baseTurn({ errorMessage: 'Message is required' }));
     expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('echoes conversationId on validation failure when provided', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'send-agent-message');
+    formData.set('message', '   ');
+    formData.set('conversationId', 'thread-x');
+
+    const result = await handleSendAgentMessageIntent(request, formData);
+
+    expect(result).toEqual(
+      baseTurn({
+        conversationId: 'thread-x',
+        errorMessage: 'Message is required',
+      }),
+    );
   });
 
   test('calls agentsRunChatTurn and returns ChatTurnResult JSON', async () => {
     mockExecute.mockResolvedValueOnce({
       agentsRunChatTurn: {
         assistantText: 'Done',
+        conversationId: 'thread-1',
         errorMessage: null,
+        mcpTool: 'list_plans_by_status',
+        readOnlyAgentsChat: true,
+        routingConfidence: 0.9,
+        routingReason: 'list_plans_by_status_heuristic',
+        structuredPayloadJson: null,
         toolMetadataJson: null,
       },
     });
@@ -151,11 +197,15 @@ describe('handleSendAgentMessageIntent', () => {
         },
       },
     );
-    expect(result).toEqual({
-      assistantText: 'Done',
-      errorMessage: null,
-      toolMetadataJson: null,
-    });
+    expect(result).toEqual(
+      baseTurn({
+        assistantText: 'Done',
+        conversationId: 'thread-1',
+        mcpTool: 'list_plans_by_status',
+        routingConfidence: 0.9,
+        routingReason: 'list_plans_by_status_heuristic',
+      }),
+    );
   });
 
   test('maps GraphQL failures to errorMessage without throwing', async () => {
@@ -166,10 +216,6 @@ describe('handleSendAgentMessageIntent', () => {
 
     const result = await handleSendAgentMessageIntent(request, formData);
 
-    expect(result).toEqual({
-      assistantText: null,
-      errorMessage: 'Unauthorized',
-      toolMetadataJson: null,
-    });
+    expect(result).toEqual(baseTurn({ errorMessage: 'Unauthorized' }));
   });
 });

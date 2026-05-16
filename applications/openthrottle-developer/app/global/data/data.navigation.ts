@@ -36,7 +36,7 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/projects',
     },
     {
-      children: 'Pull requests',
+      children: 'Pull Requests',
       icon: GitPullRequest,
       to: '/pull-requests',
     },

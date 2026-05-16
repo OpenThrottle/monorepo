@@ -1,19 +1,22 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { GetUsageDailyStatsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { SITE_TITLE } from '~/global/config/settings';
-import { UsageDailyActivity } from '~/routing/usage/components/UsageDailyActivity';
+import { UsageDailyActivityOverview } from '~/routing/usage/components/UsageDailyActivityOverview';
 import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction';
 import { UsageOverview } from '~/routing/usage/components/UsageOverview';
 import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
+import { UsageAnalyticsGaps } from '~/routing/usage/components/UsageAnalyticsGaps';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -75,7 +78,12 @@ export default function Component(
     <GlobalScreen>
       <UsageIntroduction rangeDays={rangeDays} />
       <UsageOverview rangeDays={rangeDays} />
-      <UsageDailyActivity dailyStats={dailyStats} rangeDays={rangeDays} />
+      <div data-testid="UsageDailyActivity">
+        <GlobalHeading className="text-xl" title="Daily activity" />
+        <DashboardDailyStatsCard className="mt-8" dailyStats={dailyStats} />
+      </div>
+      <UsageDailyActivityOverview rangeDays={rangeDays} />
+      <UsageAnalyticsGaps />
       <UsageSnapshot
         dailyStats={dailyStats}
         rangeDays={rangeDays}

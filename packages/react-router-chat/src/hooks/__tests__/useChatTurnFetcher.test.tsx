@@ -11,6 +11,21 @@ const mockSubmit = vi.fn();
 let fetcherState: 'idle' | 'loading' | 'submitting' = 'idle';
 let fetcherData: ChatTurnResult | undefined;
 
+const sampleTurn = (
+  overrides: Partial<ChatTurnResult> = {},
+): ChatTurnResult => ({
+  assistantText: null,
+  conversationId: null,
+  errorMessage: null,
+  mcpTool: null,
+  readOnlyAgentsChat: true,
+  routingConfidence: null,
+  routingReason: null,
+  structuredPayloadJson: null,
+  toolMetadataJson: null,
+  ...overrides,
+});
+
 vi.mock('react-router', () => ({
   useFetcher: () => ({
     data: fetcherData,
@@ -64,11 +79,9 @@ describe('useChatTurnFetcher', () => {
     fetcherState = 'submitting';
     rerender();
 
-    fetcherData = {
+    fetcherData = sampleTurn({
       assistantText: 'Hi there',
-      errorMessage: null,
-      toolMetadataJson: null,
-    };
+    });
     fetcherState = 'idle';
     rerender();
 
@@ -92,11 +105,10 @@ describe('useChatTurnFetcher', () => {
     fetcherState = 'submitting';
     rerender();
 
-    fetcherData = {
+    fetcherData = sampleTurn({
       assistantText: null,
       errorMessage: 'Agent unavailable',
-      toolMetadataJson: null,
-    };
+    });
     fetcherState = 'idle';
     rerender();
 
@@ -106,6 +118,34 @@ describe('useChatTurnFetcher', () => {
 
     expect(result.current.messages[1]?.role).toBe('system');
     expect(result.current.messages[1]?.body).toBe('Agent unavailable');
+  });
+
+  test('should append assistant footer when routing metadata is present', async () => {
+    const { result, rerender } = renderHook(() => useChatTurnFetcher({}));
+
+    act(() => {
+      result.current.sendUserMessage('Hello');
+    });
+
+    fetcherState = 'submitting';
+    rerender();
+
+    fetcherData = sampleTurn({
+      assistantText: 'Reply',
+      mcpTool: 'health',
+      routingConfidence: 0.4,
+      routingReason: 'exact_health_ping',
+    });
+    fetcherState = 'idle';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.messages).toHaveLength(2);
+    });
+
+    expect(result.current.messages[1]?.footer).toContain(
+      'Low-confidence route',
+    );
   });
 
   test('should reuse conversationId from sessionStorage', () => {

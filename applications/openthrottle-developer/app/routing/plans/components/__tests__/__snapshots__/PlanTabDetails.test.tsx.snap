@@ -15,12 +15,12 @@ exports[`PlanTabDetails Component > should render 1`] = `
       style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
     >
       TypeError: Cannot read properties of undefined (reading 'trim')
-    at parseWorkflowRunIterationTimeoutSeconds (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/plans/utils/build-workflow-ralph-argv.ts:309:17)
-    at /Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/plans/components/PlanTabDetails.tsx:62:9
+    at parseWorkflowRunIterationTimeoutSeconds (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/plans/utils/build-workflow-ralph-argv.ts:328:17)
+    at /Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/plans/components/PlanTabDetails.tsx:60:9
     at mountMemo (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:8777:23)
     at Object.useMemo (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:26216:18)
     at Proxy.process.env.NODE_ENV.exports.useMemo (/Users/matt/Development/openthrottle/node_modules/react/cjs/react.development.js:1251:34)
-    at PlanTabDetails (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/plans/components/PlanTabDetails.tsx:58:42)
+    at PlanTabDetails (/Users/matt/Development/openthrottle/applications/openthrottle-developer/app/routing/plans/components/PlanTabDetails.tsx:56:42)
     at Object.react_stack_bottom_frame (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
     at renderWithHooks (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
     at updateFunctionComponent (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)

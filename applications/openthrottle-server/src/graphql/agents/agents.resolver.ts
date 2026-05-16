@@ -1,16 +1,24 @@
 /**
- * @description GraphQL resolver for the agents chat namespace. Runs one turn by delegating to the in-process MCP developer semantic_search tool (OpenThrottle knowledge base).
+ * @description GraphQL resolver for the agents chat namespace. Runs one turn by routing to the in-process {@link McpDeveloperMcpSurface} tools (OpenThrottle / MCP developer).
  */
 
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { ConfigService } from '@nestjs/config';
 import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
 } from '@openthrottle/nestjs-mcp-developer';
 import {
-  agentsChatTurnFromSemanticSearchMcp,
+  isAgentsChatMutationRoutedTool,
+  readAgentsChatMutationsEnabledFromConfig,
+} from './agents-chat-mutation-policy';
+import {
+  agentsChatTurnFromMcpToolResult,
   parseBearerJwt,
 } from './agents-mcp-chat.mapper';
+import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
+import { AgentsMcpRouter } from './agents-mcp-router';
 import { AgentsRunChatTurnInput } from './agents.input';
 import { AgentsChatTurnResult } from './agents.object';
 
@@ -20,13 +28,18 @@ interface AgentsGqlContext {
 
 @Resolver()
 export class AgentsResolver {
-  constructor(private readonly mcpSurface: McpDeveloperMcpSurface) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly mcpRouter: AgentsMcpRouter,
+    private readonly mcpRouterLlm: AgentsMcpRouterLlmService,
+    private readonly mcpSurface: McpDeveloperMcpSurface,
+  ) {}
 
   /**
-   * @description Runs one agents chat turn: validates input, forwards the user message to MCP `semantic_search`, and returns assistant-facing text plus optional tool metadata JSON.
+   * @description Runs one agents chat turn: validates input, routes to an MCP developer tool, dispatches on {@link McpDeveloperMcpSurface}, and returns assistant-facing text plus optional tool metadata JSON.
    */
   @Mutation(() => AgentsChatTurnResult, {
-    description: `Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text and optional tool metadata JSON; uses errorMessage instead of throws for expected validation failures.`,
+    description: `Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.`,
     name: 'agentsRunChatTurn',
   })
   async agentsRunChatTurn(
@@ -35,12 +48,22 @@ export class AgentsResolver {
     input: AgentsRunChatTurnInput,
   ): Promise<AgentsChatTurnResult> {
     const message = input.message?.trim() ?? '';
+    const readOnlyAgentsChat = !readAgentsChatMutationsEnabledFromConfig(
+      this.config,
+    );
+    const conversationEcho = input.conversationId ?? null;
 
     if (!message) {
       const failed = new AgentsChatTurnResult();
 
       failed.assistantText = null;
+      failed.conversationId = conversationEcho;
       failed.errorMessage = 'Message is required.';
+      failed.mcpTool = null;
+      failed.readOnlyAgentsChat = readOnlyAgentsChat;
+      failed.routingConfidence = null;
+      failed.routingReason = null;
+      failed.structuredPayloadJson = null;
       failed.toolMetadataJson = null;
 
       return failed;
@@ -51,15 +74,64 @@ export class AgentsResolver {
 
     try {
       return await withMcpDeveloperAuthTokenAsync(bearer, async () => {
-        const mcpResult = await this.mcpSurface.semanticSearch({
-          query: message,
+        let route = this.mcpRouter.route({
+          conversationId: input.conversationId ?? undefined,
+          message,
         });
 
-        return agentsChatTurnFromSemanticSearchMcp(mcpResult, {
-          arguments: {
-            conversationId: input.conversationId ?? undefined,
-            query: message,
-          },
+        if (this.mcpRouterLlm.shouldAttemptLlmRefinement(route)) {
+          const refined = await this.mcpRouterLlm.refineRoute({ message });
+
+          if (refined != null) {
+            route = {
+              ...refined,
+              reason: `llm_fallback:${refined.reason}`,
+            };
+          }
+        }
+
+        if (
+          isAgentsChatMutationRoutedTool(route.tool) &&
+          !readAgentsChatMutationsEnabledFromConfig(this.config)
+        ) {
+          const blocked = new AgentsChatTurnResult();
+
+          blocked.assistantText = null;
+          blocked.conversationId = conversationEcho;
+          blocked.errorMessage = `This agents chat path is read-only. Enable AGENTS_CHAT_ALLOW_MUTATIONS on the server to allow routed write tools.`;
+          blocked.mcpTool = route.tool;
+          blocked.readOnlyAgentsChat = true;
+          blocked.routingConfidence = route.confidence;
+          blocked.routingReason = route.reason;
+          blocked.structuredPayloadJson = null;
+          blocked.toolMetadataJson = JSON.stringify({
+            arguments: route.args,
+            confidence: route.confidence,
+            readOnlyAgentsChat: true,
+            routeReason: route.reason,
+            tool: route.tool,
+          });
+
+          return blocked;
+        }
+
+        const mcpResult = await dispatchAgentsMcpRoutedTool(
+          this.mcpSurface,
+          route,
+        );
+
+        const argumentsWithConversation: Record<string, unknown> = {
+          ...route.args,
+          conversationId: input.conversationId ?? undefined,
+        };
+
+        return agentsChatTurnFromMcpToolResult(mcpResult, {
+          arguments: argumentsWithConversation,
+          confidence: route.confidence,
+          conversationId: conversationEcho,
+          readOnlyAgentsChat,
+          routeReason: route.reason,
+          tool: route.tool,
         });
       });
     } catch (error: unknown) {
@@ -67,11 +139,16 @@ export class AgentsResolver {
       const failed = new AgentsChatTurnResult();
 
       failed.assistantText = null;
+      failed.conversationId = conversationEcho;
+      failed.mcpTool = null;
+      failed.readOnlyAgentsChat = readOnlyAgentsChat;
+      failed.routingConfidence = null;
+      failed.routingReason = null;
+      failed.structuredPayloadJson = null;
       failed.toolMetadataJson = null;
 
       if (msg.includes('Auth token required')) {
-        failed.errorMessage =
-          'OpenThrottle tools need a Bearer token on this request or MCP_DEVELOPER_AUTH_TOKEN in the server environment.';
+        failed.errorMessage = `OpenThrottle tools need a Bearer token on this request or MCP_DEVELOPER_AUTH_TOKEN in the server environment.`;
 
         return failed;
       }

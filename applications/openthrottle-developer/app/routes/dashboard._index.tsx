@@ -22,7 +22,6 @@ import { DashboardQueueStats } from '~/routing/dashboard/components/DashboardQue
 import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
 import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
-import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
@@ -102,12 +101,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen
-    // className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12"
-    >
+    <GlobalScreen>
       <DashboardStats />
       <DashboardIntroduction />
-      <DashboardToolbar />
+      {/* <DashboardToolbar /> */}
 
       <div
         className="gap-4 md:gap-8 lg:gap-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"

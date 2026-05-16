@@ -12,6 +12,7 @@ export interface UseChatMessagesOptions {
 export interface AppendChatMessageInput {
   readonly body: string;
   readonly createdAt?: string;
+  readonly footer?: string | null;
   readonly id?: string;
   readonly role: ChatMessageRole;
 }
@@ -49,6 +50,7 @@ export const useChatMessages = (
     const next: ChatMessage = {
       body: message.body,
       createdAt: message.createdAt ?? new Date().toISOString(),
+      footer: message.footer,
       id: message.id ?? createMessageId(),
       role: message.role,
     };

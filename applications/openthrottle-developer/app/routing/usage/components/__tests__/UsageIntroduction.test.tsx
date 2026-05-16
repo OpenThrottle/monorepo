@@ -11,7 +11,9 @@ describe('UsageIntroduction Component', () => {
   let props: UsageIntroductionProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      rangeDays: 30,
+    };
 
     const Component = () => <UsageIntroduction {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
