@@ -1,25 +1,43 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { UsageDailyActivity } from '../UsageDailyActivity';
-import type { UsageDailyActivityProps } from '../UsageDailyActivity';
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+const sampleDailyStats: ReadonlyArray<DashboardDailyStatsCardFragment> = [
+  {
+    date: '2026-01-01',
+    plansCompleted: 1,
+    plansCreated: 0,
+    plansUpdated: 0,
+    tasksCompleted: 2,
+    tasksCreated: 0,
+    tasksUpdated: 1,
+  },
+];
 
 describe('UsageDailyActivity Component', () => {
-  let component: RenderResult;
-  let props: UsageDailyActivityProps;
+  test('renders daily activity section and chart card', () => {
+    renderRoutesStub(
+      <UsageDailyActivity dailyStats={sampleDailyStats} rangeDays={30} />,
+    );
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <UsageDailyActivity {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    expect(screen.getByTestId('UsageDailyActivity')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Daily activity' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('DashboardDailyStatsCard')).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders series overview for the same rangeDays', () => {
+    renderRoutesStub(
+      <UsageDailyActivity dailyStats={sampleDailyStats} rangeDays={30} />,
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'What this chart includes' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/last 30 days/i)).toBeInTheDocument();
   });
 });

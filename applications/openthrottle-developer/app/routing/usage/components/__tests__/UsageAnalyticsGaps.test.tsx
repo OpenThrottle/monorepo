@@ -1,25 +1,41 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { UsageAnalyticsGaps } from '../UsageAnalyticsGaps';
-import type { UsageAnalyticsGapsProps } from '../UsageAnalyticsGaps';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('UsageAnalyticsGaps Component', () => {
-  let component: RenderResult;
-  let props: UsageAnalyticsGapsProps;
+  test('renders analytics gaps heading and limitation bullets', () => {
+    renderRoutesStub(<UsageAnalyticsGaps />);
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <UsageAnalyticsGaps {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    expect(
+      screen.getByRole('heading', {
+        name: 'Analytics gaps (by design today)',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/coarse workload signal only/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /No per-prompt, per-skill, or per-command invocation counts/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No model token, cost, or latency metrics/i),
+    ).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('links to Prompts and Skills for deeper debugging', () => {
+    renderRoutesStub(<UsageAnalyticsGaps />);
+
+    expect(screen.getByRole('link', { name: 'Prompts' })).toHaveAttribute(
+      'href',
+      '/prompts',
+    );
+    expect(screen.getByRole('link', { name: 'Skills' })).toHaveAttribute(
+      'href',
+      '/skills',
+    );
   });
 });
