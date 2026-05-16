@@ -11,7 +11,7 @@ describe('QueuesStats Component', () => {
   let props: QueuesStatsProps;
 
   beforeEach(() => {
-    props = {};
+    props = { queues: [] };
 
     const Component = () => <QueuesStats {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -22,7 +22,7 @@ describe('QueuesStats Component', () => {
   test('renders stats region with title', () => {
     expect(component.getByTestId('QueuesStats')).toBeInTheDocument();
     expect(
-      component.getByRole('heading', { level: 2, name: 'QueuesStats' }),
+      component.getByRole('heading', { level: 2, name: 'Backlog by queue' }),
     ).toBeInTheDocument();
   });
 });
