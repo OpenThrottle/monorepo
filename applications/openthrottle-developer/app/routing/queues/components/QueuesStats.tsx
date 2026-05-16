@@ -52,10 +52,7 @@ export const QueuesStats = (props: QueuesStatsProps) => {
     return (
       <section
         aria-labelledby="queues-stats-heading"
-        className={classnames(
-          'flex flex-col gap-4 md:gap-8 lg:gap-12',
-          className,
-        )}
+        className={classnames(className)}
         data-testid="QueuesStats"
       >
         <h2 className="text-lg tracking-tight" id="queues-stats-heading">
@@ -72,10 +69,7 @@ export const QueuesStats = (props: QueuesStatsProps) => {
   return (
     <section
       aria-labelledby="queues-stats-heading"
-      className={classnames(
-        'flex flex-col gap-4 md:gap-8 lg:gap-12',
-        className,
-      )}
+      className={classnames(className)}
       data-testid="QueuesStats"
     >
       <h2 className="text-lg tracking-tight" id="queues-stats-heading">

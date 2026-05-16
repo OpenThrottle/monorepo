@@ -140,8 +140,7 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={ListOrderedIcon}
-          // title="Jobs"
-          title={`Queue: ${queue.name}`}
+          title={`Queues: ${queue.name}`}
         />
         <p
           className="mb-6 text-sm text-muted-foreground"

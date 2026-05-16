@@ -120,10 +120,11 @@
   width: 100%;
 }
 
-[cmdk-overlay] {
+[cmdk-overlay],
+[data-overlay] {
   background: rgba(0, 0, 0, 0.5);
-  filter: blur(4px);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  filter: blur(8px);
 }
 
 [cmdk-vercel-badge] {
