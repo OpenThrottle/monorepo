@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { render, within } from '@testing-library/react';
+import { within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanTasksTable } from '../PlanTasksTable';
 import type { PlanTasksTableProps } from '../PlanTasksTable';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 const mockTask: PlanTasksTableProps['tasks'][number] = {
   __typename: 'TaskObject',
@@ -23,46 +24,44 @@ const mockTask: PlanTasksTableProps['tasks'][number] = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
+const renderPlanTasksTable = (tableProps: PlanTasksTableProps): RenderResult =>
+  renderRoutesStub(
+    <TooltipProvider>
+      <PlanTasksTable {...tableProps} />
+    </TooltipProvider>,
+  );
+
 describe('PlanTasksTable Component', () => {
   let component: RenderResult;
-  let props: PlanTasksTableProps;
 
   beforeEach(() => {
-    props = {
-      tasks: [],
-    };
-
-    const Component = () => <PlanTasksTable {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderPlanTasksTable({ tasks: [] });
   });
 
-  test('should render empty table shell', () => {
-    expect(component.getByTestId('PlanTasksTable')).toBeInTheDocument();
-    expect(component.getByText('No results.')).toBeInTheDocument();
+  test('shows empty state when tasks is empty', () => {
+    expect(component.getByText('No plans yet')).toBeInTheDocument();
+    expect(component.getByRole('link', { name: 'New plan' })).toHaveAttribute(
+      'href',
+      '/plans/create',
+    );
   });
 
-  test('renders column headers: Status, Title / Context, Category, Project, Requirements, Updated, Actions', () => {
-    expect(component.getByText('Status')).toBeInTheDocument();
-    expect(component.getByText('Title / Context')).toBeInTheDocument();
-    expect(component.getByText('Category')).toBeInTheDocument();
-    expect(component.getByText('Project')).toBeInTheDocument();
-    expect(component.getByText('Requirements')).toBeInTheDocument();
-    expect(component.getByText('Updated')).toBeInTheDocument();
-    expect(component.getByText('Actions')).toBeInTheDocument();
-  });
+  test('renders column headers when tasks exist', () => {
+    const withTasks = renderPlanTasksTable({ tasks: [mockTask] });
 
-  test('shows No results when tasks is empty', () => {
-    expect(component.getByText('No results.')).toBeInTheDocument();
+    expect(withTasks.getByTestId('PlanTasksTable')).toBeInTheDocument();
+    expect(withTasks.getByText('Status')).toBeInTheDocument();
+    expect(withTasks.getByText('Title / Context')).toBeInTheDocument();
+    expect(withTasks.getByText('Category')).toBeInTheDocument();
+    expect(withTasks.getByText('Project')).toBeInTheDocument();
+    expect(withTasks.getByText('Requirements')).toBeInTheDocument();
+    expect(withTasks.getByText('Updated')).toBeInTheDocument();
+    expect(withTasks.getByText('Actions')).toBeInTheDocument();
   });
 
   describe('when tasks are provided', () => {
     beforeEach(() => {
-      props = { tasks: [mockTask] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [mockTask] });
     });
 
     test('renders task title as link to plan task route', () => {
@@ -112,10 +111,7 @@ describe('PlanTasksTable Component', () => {
     };
 
     beforeEach(() => {
-      props = { tasks: [taskWithAssignee] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [taskWithAssignee] });
     });
 
     test('shows assignee under title', () => {
@@ -136,10 +132,7 @@ describe('PlanTasksTable Component', () => {
     };
 
     beforeEach(() => {
-      props = { tasks: [taskWithProject] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [taskWithProject] });
     });
 
     test('shows project name as link to project', () => {
@@ -159,10 +152,7 @@ describe('PlanTasksTable Component', () => {
     };
 
     beforeEach(() => {
-      props = { tasks: [taskWithRequirements] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [taskWithRequirements] });
     });
 
     test('shows requirements count in table', () => {
@@ -195,10 +185,7 @@ describe('PlanTasksTable Component', () => {
     };
 
     beforeEach(() => {
-      props = { tasks: [taskOnlyRequirements] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [taskOnlyRequirements] });
     });
 
     test('shows Details trigger', () => {
@@ -225,10 +212,7 @@ describe('PlanTasksTable Component', () => {
 
   describe('Details popover for full description and summary', () => {
     beforeEach(() => {
-      props = { tasks: [mockTask] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [mockTask] });
     });
 
     test('shows Details trigger when task has description or summary', () => {
@@ -268,10 +252,7 @@ describe('PlanTasksTable Component', () => {
     };
 
     beforeEach(() => {
-      props = { tasks: [taskNoDetails] };
-      const Component = () => <PlanTasksTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderPlanTasksTable({ tasks: [taskNoDetails] });
     });
 
     test('does not show Details trigger', () => {

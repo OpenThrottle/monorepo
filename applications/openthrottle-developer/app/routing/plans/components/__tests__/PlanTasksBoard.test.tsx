@@ -13,6 +13,8 @@
 import * as React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import { PlanTasksBoard } from '../PlanTasksBoard';
@@ -39,7 +41,11 @@ const mockTask = (
 });
 
 const renderBoard = (props: PlanTasksBoardProps) => {
-  const Component = () => <PlanTasksBoard {...props} />;
+  const Component = () => (
+    <DndProvider backend={HTML5Backend}>
+      <PlanTasksBoard {...props} />
+    </DndProvider>
+  );
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

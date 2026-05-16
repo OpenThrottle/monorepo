@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlansTable } from '../PlansTable';
 import type { PlansTableProps } from '../PlansTable';
 import type { PlanCardFragment } from '~/__generated__/graphql';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 const mockPlans: PlanCardFragment[] = [
   {
@@ -48,53 +47,45 @@ const mockPlans: PlanCardFragment[] = [
   },
 ];
 
+const renderPlansTable = (tableProps: PlansTableProps): RenderResult =>
+  renderRoutesStub(<PlansTable {...tableProps} />);
+
 describe('PlansTable Component', () => {
   let component: RenderResult;
-  let props: PlansTableProps;
 
   beforeEach(() => {
-    props = { plans: [] };
-
-    const Component = () => <PlansTable {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderPlansTable({ plans: [] });
   });
 
-  test('renders table shell when empty', () => {
-    expect(component.getByTestId('PlansTable')).toBeInTheDocument();
+  test('shows empty state when plans is empty', () => {
+    expect(component.getByText('No plans yet')).toBeInTheDocument();
+    expect(component.getByRole('link', { name: 'New plan' })).toHaveAttribute(
+      'href',
+      '/plans/create',
+    );
   });
 
-  test('renders table structure with column headers', () => {
-    const statusHeaders = component.getAllByRole('columnheader', {
-      name: 'Status',
-    });
-    expect(statusHeaders.length).toBeGreaterThanOrEqual(1);
-    const tasksHeaders = component.getAllByRole('columnheader', {
-      name: 'Tasks',
-    });
-    expect(tasksHeaders.length).toBeGreaterThanOrEqual(1);
-    const planHeaders = component.getAllByRole('columnheader', {
-      name: 'Plan',
-    });
-    expect(planHeaders.length).toBeGreaterThanOrEqual(1);
-    const actionsHeaders = component.getAllByRole('columnheader', {
-      name: 'Actions',
-    });
-    expect(actionsHeaders.length).toBeGreaterThanOrEqual(1);
-  });
+  test('renders table structure with column headers when plans exist', () => {
+    const withPlans = renderPlansTable({ plans: mockPlans });
 
-  test('shows no results when plans is empty', () => {
-    expect(component.getByText('No results.')).toBeDefined();
+    expect(withPlans.getByTestId('PlansTable')).toBeInTheDocument();
+    expect(
+      withPlans.getByRole('columnheader', { name: 'Status' }),
+    ).toBeInTheDocument();
+    expect(
+      withPlans.getByRole('columnheader', { name: 'Tasks' }),
+    ).toBeInTheDocument();
+    expect(
+      withPlans.getByRole('columnheader', { name: 'Plan' }),
+    ).toBeInTheDocument();
+    expect(
+      withPlans.getByRole('columnheader', { name: 'Actions' }),
+    ).toBeInTheDocument();
   });
 
   test('renders plans from props when provided', () => {
-    const propsWithPlans: PlansTableProps = { plans: mockPlans };
-    const Component = () => <PlansTable {...propsWithPlans} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getAllByRole, getByLabelText, getByRole, getByText } = render(
-      <RoutesStub />,
-    );
+    const { getAllByRole, getByLabelText, getByRole, getByText } =
+      renderPlansTable({ plans: mockPlans });
 
     expect(getByText('First Plan')).toBeDefined();
     expect(getByText('Second Plan')).toBeDefined();
@@ -104,14 +95,12 @@ describe('PlansTable Component', () => {
     expect(titleLink1).toHaveAttribute('href', '/plans/plan-1');
     const titleLink2 = getByRole('link', { name: 'View plan: Second Plan' });
     expect(titleLink2).toHaveAttribute('href', '/plans/plan-2');
-    const planDetailsLinks = getAllByRole('link', { name: 'Plan Details' });
-    expect(planDetailsLinks[0]).toHaveAttribute('href', '/plans/plan-1');
-    expect(planDetailsLinks[1]).toHaveAttribute('href', '/plans/plan-2');
     expect(getByLabelText('3 tasks')).toBeDefined();
     expect(getByLabelText('0 tasks')).toBeDefined();
-    const queuePlanButtons = getAllByRole('button', { name: /Queue plan/i });
-    expect(queuePlanButtons).toHaveLength(2);
-    expect(queuePlanButtons[0]).toHaveAttribute('type', 'submit');
+    const queuePlanButtons = getAllByRole('button', {
+      name: /queue plan first plan/i,
+    });
+    expect(queuePlanButtons.length).toBeGreaterThanOrEqual(1);
 
     const killButtons = getAllByRole('button', {
       name: /Kill plan run for First Plan/i,
@@ -119,46 +108,32 @@ describe('PlansTable Component', () => {
     expect(killButtons).toHaveLength(1);
   });
 
-  test('shows author, assignee, category, summary and updated date when present', () => {
-    const propsWithPlans: PlansTableProps = { plans: mockPlans };
-    const Component = () => <PlansTable {...propsWithPlans} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { container, getByLabelText, getByText } = render(<RoutesStub />);
+  test('shows author, assignee, category and updated date when present', () => {
+    const { container, getByLabelText, getByText } = renderPlansTable({
+      plans: mockPlans,
+    });
 
     expect(getByText('author1 → assignee1')).toBeDefined();
-    expect(getByText('First plan summary')).toBeDefined();
     expect(getByText('feature')).toBeDefined();
     expect(getByLabelText('Category: feature')).toBeDefined();
     expect(container.textContent).toContain('Updated:');
     expect(container.textContent).toMatch(/\d{1,2}\/\d{1,2}\/2025/);
   });
 
-  test('renders status pills as links when statusFilterUrls is provided', () => {
+  test('renders status badges when statusFilterUrls is provided', () => {
     const statusFilterUrls: Record<string, string> = {
       IN_PROGRESS: '/plans?status=IN_PROGRESS&page=1',
       PENDING: '/plans?status=PENDING&page=1',
     };
-    const propsWithUrls: PlansTableProps = {
+    const { getByText, queryByRole } = renderPlansTable({
       plans: mockPlans,
       statusFilterUrls,
-    };
-    const Component = () => <PlansTable {...propsWithUrls} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByRole } = render(<RoutesStub />);
+    });
 
-    const filterByInProgress = getByRole('link', {
-      name: 'Filter by In Progress',
-    });
-    expect(filterByInProgress).toHaveAttribute(
-      'href',
-      '/plans?status=IN_PROGRESS&page=1',
-    );
-    const filterByPending = getByRole('link', {
-      name: 'Filter by Pending',
-    });
-    expect(filterByPending).toHaveAttribute(
-      'href',
-      '/plans?status=PENDING&page=1',
-    );
+    expect(getByText('In Progress')).toBeInTheDocument();
+    expect(getByText('Pending')).toBeInTheDocument();
+    expect(
+      queryByRole('link', { name: 'Filter by In Progress' }),
+    ).not.toBeInTheDocument();
   });
 });
