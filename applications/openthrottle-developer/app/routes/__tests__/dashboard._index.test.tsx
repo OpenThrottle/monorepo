@@ -1,8 +1,16 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
-import Index from '../dashboard._index';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import Index, { loader } from '../dashboard._index';
+import type { Route } from '@/app/routes/+types/dashboard._index';
+
+vi.mock('@openthrottle/react-router-graphql', () => ({
+  executeGraphqlWithAuth: vi.fn(),
+}));
+
+const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
 const mockGithubStats = {
   closedPrCountByAuthor: [
@@ -29,7 +37,70 @@ const mockLoaderData = {
   queues: [],
 };
 
+const mockDashboardQuery = {
+  activityByDate: mockLoaderData.activityByDate,
+  dailyStatsRange: mockLoaderData.dailyStatsRange,
+  queues: mockLoaderData.queues,
+};
+
 describe('routes/dashboard._index.tsx', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  describe('loader', () => {
+    test('should parse owner and repo from search params for GitHub stats', async () => {
+      mockExecute
+        .mockResolvedValueOnce(mockDashboardQuery)
+        .mockResolvedValueOnce(mockGithubStats);
+
+      const request = new Request(
+        'http://localhost/dashboard?owner=shiftsmartinc&repo=native-apps',
+      );
+      const args: Route.LoaderArgs = {
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/dashboard',
+      };
+
+      const result = await loader(args);
+
+      expect(result.githubStats).toEqual(mockGithubStats);
+      expect(mockExecute).toHaveBeenNthCalledWith(
+        2,
+        request,
+        expect.any(Object),
+        { owner: 'shiftsmartinc', repo: 'native-apps' },
+      );
+    });
+
+    test('should default owner and repo when search params are missing or invalid', async () => {
+      mockExecute
+        .mockResolvedValueOnce(mockDashboardQuery)
+        .mockResolvedValueOnce(mockGithubStats);
+
+      const request = new Request(
+        'http://localhost/dashboard?owner=unknown&repo=bad',
+      );
+      const args: Route.LoaderArgs = {
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/dashboard',
+      };
+
+      await loader(args);
+
+      expect(mockExecute).toHaveBeenNthCalledWith(
+        2,
+        request,
+        expect.any(Object),
+        { owner: 'openthrottle', repo: 'monorepo' },
+      );
+    });
+  });
+
   test('should render dashboard content grid with chart cards', () => {
     const Component = () => (
       <Index

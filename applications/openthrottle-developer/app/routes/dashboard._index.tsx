@@ -21,6 +21,7 @@ import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/Dashb
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
 import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
 import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
+import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
@@ -36,9 +37,12 @@ export const loader = async (args: Route.LoaderArgs) => {
   const end = new Date();
   const endIso = end.toISOString();
 
-  const searchParams = new URLSearchParams(args.request.url);
-  const owner = searchParams.get('owner') ?? 'openthrottle';
-  const repo = searchParams.get('repo') ?? 'monorepo';
+  const { owner, repo } = parseDashboardGithubParams(
+    new URL(args.request.url).searchParams,
+  );
+
+  console.log('🔍 owner:', owner);
+  console.log('🔍 repo:', repo);
 
   const start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();
