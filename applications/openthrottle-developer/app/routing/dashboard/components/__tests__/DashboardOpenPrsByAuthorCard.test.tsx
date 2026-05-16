@@ -6,10 +6,16 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardOpenPrsByAuthorCard } from '../DashboardOpenPrsByAuthorCard';
 import type { DashboardOpenPrsByAuthorCardProps } from '../DashboardOpenPrsByAuthorCard';
 
-const mockOpenPrCountByAuthor = [
-  { author: 'visormatt', openCount: 5 },
-  { author: 'other-user', openCount: 2 },
-] as const;
+const mockGithubStats = {
+  closedPrCountByAuthor: [
+    { author: 'visormatt', openCount: 1 },
+    { author: 'other-user', openCount: 3 },
+  ],
+  openPrCountByAuthor: [
+    { author: 'visormatt', openCount: 5 },
+    { author: 'other-user', openCount: 2 },
+  ],
+} as const;
 
 describe('DashboardOpenPrsByAuthorCard Component', () => {
   let component: RenderResult;
@@ -17,7 +23,7 @@ describe('DashboardOpenPrsByAuthorCard Component', () => {
 
   beforeEach(() => {
     props = {
-      openPrCountByAuthor: mockOpenPrCountByAuthor,
+      githubStats: mockGithubStats,
     };
 
     const Component = () => <DashboardOpenPrsByAuthorCard {...props} />;
@@ -41,7 +47,7 @@ describe('DashboardOpenPrsByAuthorCard Component', () => {
   test('should apply custom className to wrapper', () => {
     const customProps: DashboardOpenPrsByAuthorCardProps = {
       className: 'custom-class',
-      openPrCountByAuthor: mockOpenPrCountByAuthor,
+      githubStats: mockGithubStats,
     };
     const CustomComponent = () => (
       <DashboardOpenPrsByAuthorCard {...customProps} />
@@ -62,7 +68,10 @@ describe('DashboardOpenPrsByAuthorCard Component', () => {
 describe('DashboardOpenPrsByAuthorCard Component empty state', () => {
   test('should render empty message when openPrCountByAuthor is empty', () => {
     const props: DashboardOpenPrsByAuthorCardProps = {
-      openPrCountByAuthor: [],
+      githubStats: {
+        closedPrCountByAuthor: [],
+        openPrCountByAuthor: [],
+      },
     };
     const Component = () => <DashboardOpenPrsByAuthorCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -70,6 +79,6 @@ describe('DashboardOpenPrsByAuthorCard Component empty state', () => {
     expect(
       result.getByTestId('DashboardOpenPrsByAuthorCard'),
     ).toBeInTheDocument();
-    expect(result.getByText(/No open PRs by author/)).toBeInTheDocument();
+    expect(result.getByText(/No PRs by author/)).toBeInTheDocument();
   });
 });

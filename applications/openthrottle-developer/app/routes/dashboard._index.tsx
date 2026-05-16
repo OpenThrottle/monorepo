@@ -22,6 +22,7 @@ import { DashboardQueueStats } from '~/routing/dashboard/components/DashboardQue
 import { DashboardQuickNavigation } from '~/routing/dashboard/components/DashboardQuickNavigation';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
 import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
+import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
@@ -57,7 +58,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     const githubStats = await executeGraphqlWithAuth(
       args.request,
       GetDashboardGithubStatsDocument,
-      { input: { owner: 'visormatt', repo: 'monorepo', state: 'draft' } },
+      { owner: 'shiftsmartinc', repo: 'native-apps' },
     );
 
     return { activityByDate, dailyStatsRange, githubStats, queues };
@@ -96,8 +97,6 @@ export default function Component(
 
   // Markup
 
-  console.log('githubStats', githubStats);
-
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -106,7 +105,7 @@ export default function Component(
     <GlobalScreen>
       <DashboardStats />
       <DashboardIntroduction />
-      {/* <DashboardToolbar /> */}
+      <DashboardToolbar />
 
       <DashboardRecentActivity data={activityByDate} />
 
@@ -146,10 +145,8 @@ export default function Component(
         <DashboardQueueStats data={queues} />
 
         <div>
-          <h3>Open PRs by Author</h3>
-          <DashboardOpenPrsByAuthorCard
-            openPrCountByAuthor={githubStats.openPrCountByAuthor}
-          />
+          <h3>PRs by author</h3>
+          <DashboardOpenPrsByAuthorCard githubStats={githubStats} />
         </div>
 
         <div>
