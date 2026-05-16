@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { CurveType, DataKey } from 'recharts';
+import type { CurveProps, DataKey } from 'recharts';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
@@ -19,7 +19,8 @@ export interface SimpleLineChartProps<
   /** Line stroke color. Defaults to var(--chart-1). */
   readonly color?: string;
   /** Interpolation curve for the line series. */
-  readonly curveType?: CurveType;
+  readonly curveType?: CurveProps['type'];
+  // readonly curveType?: CurveType;
   /** Data rows; each must include the keys given by categoryKey and valueKey. */
   readonly data: ReadonlyArray<T>;
   readonly margin?: {

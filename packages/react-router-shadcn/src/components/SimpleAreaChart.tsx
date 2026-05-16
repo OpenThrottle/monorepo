@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { CurveType, DataKey } from 'recharts';
+import type { CurveProps, DataKey } from 'recharts';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
@@ -19,7 +19,8 @@ export interface SimpleAreaChartProps<
   /** Area fill color. Defaults to var(--chart-1). */
   readonly color?: string;
   /** Interpolation curve for the area series. */
-  readonly curveType?: CurveType;
+  readonly curveType?: CurveProps['type'];
+  // readonly curveType?: CurveType;
   /** Data rows; each must include the keys given by categoryKey and valueKey. */
   readonly data: ReadonlyArray<T>;
   /** Opacity of the filled area (0–1). */
