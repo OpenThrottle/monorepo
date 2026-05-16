@@ -48,7 +48,7 @@ describe('ChatComposer Component', () => {
       mountComposer();
       const input = component!.getByLabelText('Message');
       await user.type(input, '  Hello world  ');
-      await user.click(component.getByRole('button', { name: 'Send' }));
+      await user.click(component!.getByRole('button', { name: 'Send' }));
       expect(onSubmit).toHaveBeenCalledTimes(1);
       expect(onSubmit).toHaveBeenCalledWith('Hello world');
       expect(input).toHaveValue('');
