@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CommandGroup Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="CommandGroup"
+    >
+      <h2>
+        CommandGroup
+      </h2>
+    </div>
+  </div>
+</body>
+`;

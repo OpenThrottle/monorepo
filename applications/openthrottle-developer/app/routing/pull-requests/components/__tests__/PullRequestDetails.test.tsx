@@ -19,7 +19,10 @@ describe('PullRequestDetails Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders placeholder details region', () => {
+    expect(component.getByTestId('PullRequestDetails')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 2, name: 'PullRequestDetails' }),
+    ).toBeInTheDocument();
   });
 });

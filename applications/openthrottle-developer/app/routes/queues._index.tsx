@@ -11,6 +11,7 @@ import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroducti
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues._index';
+import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -57,6 +58,7 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesIntroduction />
+      <QueuesStats queues={queues} />
       <QueuesTable queues={queues} />
     </GlobalScreen>
   );

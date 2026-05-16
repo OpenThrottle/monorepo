@@ -1,25 +1,89 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { Tabs } from '@openthrottle/react-router-shadcn';
+import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import { GeneratorTabDebug } from '../GeneratorTabDebug';
-import type { GeneratorTabDebugProps } from '../GeneratorTabDebug';
 
-describe('GeneratorTabDebug Component', () => {
-  let component: RenderResult;
-  let props: GeneratorTabDebugProps;
+const mockGenerator: GeneratorDetailCardFragment = {
+  __typename: 'GeneratorDetailObject',
+  description: 'Test generator',
+  name: 'nestjs',
+  schemaJson: null,
+};
 
+function renderTab(
+  generator: GeneratorDetailCardFragment = mockGenerator,
+): RenderResult {
+  const Component = () => (
+    <Tabs defaultValue="debug">
+      <GeneratorTabDebug generator={generator} />
+    </Tabs>
+  );
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+}
+
+describe('GeneratorTabDebug', () => {
   beforeEach(() => {
-    props = {};
-
-    const Component = () => <GeneratorTabDebug {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    localStorage.clear();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders triage instructions and the CLI output textarea', () => {
+    const view = renderTab();
+
+    expect(
+      view.getByText(/Paste stdout\/stderr from your last/, {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      view.getByPlaceholderText(
+        /Paste terminal output after running a generator command/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      view.getByRole('button', { name: 'Copy support bundle' }),
+    ).toBeInTheDocument();
+    expect(
+      view.getByRole('button', { name: 'Clear saved output' }),
+    ).toBeInTheDocument();
+    expect(
+      view.getByText(/Support bundle includes generator name/),
+    ).toBeInTheDocument();
+  });
+
+  test('persists typed CLI output to localStorage for this generator', async () => {
+    const user = userEvent.setup();
+    const view = renderTab();
+    const key = 'openthrottle-developer:generator-cli-last-run:nestjs';
+    const box = view.getByPlaceholderText(
+      /Paste terminal output after running a generator command/,
+    );
+
+    await user.type(box, 'ERR');
+
+    expect(localStorage.getItem(key)).toBe('ERR');
+  });
+
+  test('clear removes saved output and empties the textarea', async () => {
+    const user = userEvent.setup();
+    const key = 'openthrottle-developer:generator-cli-last-run:nestjs';
+
+    const view = renderTab();
+    const box = view.getByPlaceholderText(
+      /Paste terminal output after running a generator command/,
+    ) as HTMLTextAreaElement;
+
+    await user.type(box, 'x');
+    expect(localStorage.getItem(key)).toBe('x');
+
+    await user.click(view.getByRole('button', { name: 'Clear saved output' }));
+
+    expect(box.value).toBe('');
+    expect(localStorage.getItem(key)).toBeNull();
   });
 });

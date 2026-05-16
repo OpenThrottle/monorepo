@@ -27,7 +27,10 @@ npm install @openthrottle/react-router-shadcn
 - **Chart** - Chart primitives (ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent) for building charts with Recharts; supports metrics visualization (CPU, memory, etc.)
 - **Input** - Styled text input component
 - **Progress** - Progress bar for loading or value indicators
+- **SimpleAreaChart** - Single-series area chart preset (category + value keys); useful for trends over time
 - **SimpleBarChart** - Single-series bar chart preset (category + value keys); useful for metrics dashboards
+- **SimpleLineChart** - Single-series line chart preset (category + value keys); useful for time-series metrics
+- **SimplePieChart** - Part-to-whole pie/donut preset (name + value keys); useful for share or composition breakdowns
 
 ### Coming Soon
 

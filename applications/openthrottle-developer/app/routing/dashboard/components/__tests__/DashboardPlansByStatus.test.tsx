@@ -6,20 +6,26 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardPlansByStatus } from '../DashboardPlansByStatus';
 import type { DashboardPlansByStatusProps } from '../DashboardPlansByStatus';
 
+function renderWithProps(props: DashboardPlansByStatusProps): RenderResult {
+  const Component = () => <DashboardPlansByStatus {...props} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+}
+
 describe('DashboardPlansByStatus Component', () => {
   let component: RenderResult;
-  let props: DashboardPlansByStatusProps;
 
   beforeEach(() => {
-    props = {};
-
-    const Component = () => <DashboardPlansByStatus {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderWithProps({});
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders section and title', () => {
+    expect(component.getByTestId('DashboardPlansByStatus')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', {
+        level: 2,
+        name: 'DashboardPlansByStatus',
+      }),
+    ).toBeInTheDocument();
   });
 });

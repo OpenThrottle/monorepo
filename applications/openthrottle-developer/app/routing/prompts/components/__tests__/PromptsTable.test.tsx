@@ -1,25 +1,18 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { PromptsTable } from '../PromptsTable';
-import type { PromptsTableProps } from '../PromptsTable';
 
 describe('PromptsTable Component', () => {
-  let component: RenderResult;
-  let props: PromptsTableProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <PromptsTable {...props} />;
+  test('renders placeholder table region', () => {
+    const Component = () => <PromptsTable />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByTestId('PromptsTable')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'PromptsTable' }),
+    ).toBeInTheDocument();
   });
 });

@@ -35,6 +35,8 @@ export const DashboardOpenPrsByAuthorCard = (
 
   const isEmpty = chartData.length === 0;
 
+  console.log('🤖 🤖 🤖 chartData', chartData);
+
   // Handlers
 
   // Markup

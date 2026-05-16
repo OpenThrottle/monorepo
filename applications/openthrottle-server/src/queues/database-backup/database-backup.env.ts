@@ -16,14 +16,14 @@ export const DATABASE_BACKUP_DEFAULT_CRON_PATTERN = '0 0 0 * * *';
 export const DATABASE_BACKUP_DEFAULT_JOB_TIMEOUT_MS = 1_800_000;
 
 export interface DatabaseBackupRepeatableConfig {
-  readonly enabled: true;
   readonly cronPattern: string;
-  readonly tz: string | undefined;
-  readonly repeatJobId: typeof DATABASE_BACKUP_REPEATABLE_JOB_ID;
+  readonly enabled: true;
   readonly jobName: typeof DATABASE_BACKUP_JOB_NAME;
-  readonly pnpmScript: typeof DATABASE_BACKUP_PNPM_SCRIPT;
-  readonly workspaceRoot: string;
   readonly jobTimeoutMs: number;
+  readonly pnpmScript: typeof DATABASE_BACKUP_PNPM_SCRIPT;
+  readonly repeatJobId: typeof DATABASE_BACKUP_REPEATABLE_JOB_ID;
+  readonly tz: string | undefined;
+  readonly workspaceRoot: string;
 }
 
 export type DatabaseBackupScheduleResolution =
@@ -34,7 +34,9 @@ function parseTruthyEnv(value: string | undefined): boolean {
   if (value === undefined || value.trim() === '') {
     return true;
   }
+
   const normalized = value.trim().toLowerCase();
+
   return !['0', 'false', 'no', 'off'].includes(normalized);
 }
 
@@ -45,10 +47,12 @@ function parsePositiveIntEnv(
   if (value === undefined || value.trim() === '') {
     return fallback;
   }
+
   const parsed = Number.parseInt(value.trim(), 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return fallback;
   }
+
   return parsed;
 }
 
@@ -57,6 +61,7 @@ function parsePositiveIntEnv(
  */
 export function getDatabaseBackupWorkspaceRoot(): string {
   const root = process.env.WORKSPACE_ROOT?.trim();
+
   return root && root.length > 0 ? root : process.cwd();
 }
 
@@ -70,16 +75,14 @@ export function resolveDatabaseBackupSchedule(): DatabaseBackupScheduleResolutio
   if (!parseTruthyEnv(process.env.DATABASE_BACKUP_ENABLED)) {
     return {
       enabled: false,
-      reason:
-        'DATABASE_BACKUP_ENABLED is false; skipping repeatable database-backup registration.',
+      reason: `DATABASE_BACKUP_ENABLED is false; skipping repeatable database-backup registration.`,
     };
   }
 
   if (cronTrimmed === '') {
     return {
       enabled: false,
-      reason:
-        'DATABASE_BACKUP_CRON not set; skipping repeatable database-backup registration.',
+      reason: `DATABASE_BACKUP_CRON not set; skipping repeatable database-backup registration.`,
     };
   }
 

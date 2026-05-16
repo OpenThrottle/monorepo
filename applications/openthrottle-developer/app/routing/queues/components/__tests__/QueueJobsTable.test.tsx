@@ -19,7 +19,10 @@ describe('QueueJobsTable Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders placeholder table region', () => {
+    expect(component.getByTestId('QueueJobsTable')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 2, name: 'QueueJobsTable' }),
+    ).toBeInTheDocument();
   });
 });

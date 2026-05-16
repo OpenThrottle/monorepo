@@ -19,7 +19,10 @@ describe('PlanToolbarAssignee Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toolbar assignee region', () => {
+    expect(component.getByTestId('PlanToolbarAssignee')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'PlanToolbarAssignee' }),
+    ).toBeInTheDocument();
   });
 });

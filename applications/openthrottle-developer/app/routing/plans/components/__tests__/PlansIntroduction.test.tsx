@@ -19,7 +19,10 @@ describe('PlansIntroduction Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders plans page title', () => {
+    expect(
+      component.getByRole('heading', { level: 1, name: 'Plans' }),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
   });
 });

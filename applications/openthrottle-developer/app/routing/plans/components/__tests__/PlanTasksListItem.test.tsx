@@ -19,7 +19,10 @@ describe('PlanTasksListItem Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders list item placeholder', () => {
+    expect(component.getByTestId('PlanTasksListItem')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'PlanTasksListItem' }),
+    ).toBeInTheDocument();
   });
 });

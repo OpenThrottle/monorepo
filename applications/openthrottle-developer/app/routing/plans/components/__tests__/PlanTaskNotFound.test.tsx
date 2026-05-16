@@ -19,7 +19,12 @@ describe('PlanTaskNotFound Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders empty state for missing task', () => {
+    expect(
+      component.getByRole('heading', { name: 'Task not found' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText('The task you are looking for does not exist.'),
+    ).toBeInTheDocument();
   });
 });

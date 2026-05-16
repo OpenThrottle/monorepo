@@ -1,8 +1,10 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { QueueCardFragment } from '~/__generated__/graphql';
 
 export interface QueuesStatsProps {
   readonly className?: string;
+  readonly queues: QueueCardFragment[];
 }
 
 export const QueuesStats = (props: QueuesStatsProps) => {

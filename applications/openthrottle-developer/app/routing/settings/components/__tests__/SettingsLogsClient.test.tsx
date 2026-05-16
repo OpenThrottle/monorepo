@@ -1,25 +1,16 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { SettingsLogsClient } from '../SettingsLogsClient';
-import type { SettingsLogsClientProps } from '../SettingsLogsClient';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('SettingsLogsClient Component', () => {
-  let component: RenderResult;
-  let props: SettingsLogsClientProps;
+  test('renders client logs placeholder', () => {
+    renderRoutesStub(<SettingsLogsClient />);
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <SettingsLogsClient {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByTestId('SettingsLogsClient')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'SettingsLogsClient' }),
+    ).toBeInTheDocument();
   });
 });

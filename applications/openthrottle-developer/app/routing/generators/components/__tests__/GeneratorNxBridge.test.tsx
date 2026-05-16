@@ -2,83 +2,52 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import { GeneratorNxBridge } from '../GeneratorNxBridge';
-import type { GeneratorNxBridgeProps } from '../GeneratorNxBridge';
+
+const baseGenerator: GeneratorDetailCardFragment = {
+  __typename: 'GeneratorDetailObject',
+  description: 'Desc',
+  name: 'remix',
+  schemaJson: '{"a":1}',
+};
+
+function renderBridge(
+  generator: GeneratorDetailCardFragment = baseGenerator,
+): RenderResult {
+  return render(<GeneratorNxBridge generator={generator} />);
+}
 
 describe('GeneratorNxBridge', () => {
-  let component: RenderResult;
-  let props: GeneratorNxBridgeProps;
+  test('exposes the bridge region for layout and tooling', () => {
+    const view = renderBridge();
 
-  beforeEach(() => {
-    localStorage.clear();
-
-    props = {
-      generator: {
-        description: 'Desc',
-        name: 'remix',
-        schemaJson: '{"a":1}',
-      },
-    };
-
-    component = render(<GeneratorNxBridge {...props} />);
+    expect(view.getByTestId('GeneratorNxBridge')).toBeInTheDocument();
   });
 
-  test('renders monorepo doc links and command presets', () => {
-    expect(component.getByTestId('GeneratorNxBridge')).toBeInTheDocument();
-
-    const agentUsage = component.getByRole('link', {
-      name: /AGENT_USAGE\.md/,
+  test('when schemaJson is missing, renders only the shell with no schema card', () => {
+    const view = renderBridge({
+      __typename: 'GeneratorDetailObject',
+      description: 'd',
+      name: 'empty',
+      schemaJson: null,
     });
-    expect(agentUsage).toHaveAttribute(
-      'href',
-      expect.stringContaining('docs/tools/templates/AGENT_USAGE.md'),
-    );
 
-    expect(
-      component.getByText(
-        /NX_ISOLATE_PLUGINS=false nx g @tools\/generators:remix --describe/,
-      ),
-    ).toBeInTheDocument();
-
-    expect(
-      component.getByText(
-        /NX_ISOLATE_PLUGINS=false pnpm nx g @tools\/generators:remix --describe/,
-      ),
-    ).toBeInTheDocument();
-
-    expect(
-      component.getByText(
-        /NX_ISOLATE_PLUGINS=false nx g @tools\/generators:remix --dry-run/,
-      ),
-    ).toBeInTheDocument();
-
-    const toolsReadme = component.getByRole('link', {
-      name: /@tools\/generators package/,
-    });
-    expect(toolsReadme).toHaveAttribute(
-      'href',
-      expect.stringContaining('tools/generators/README.md'),
-    );
-
-    const nxDev = component.getByRole('link', {
-      name: /Nx — local generators/,
-    });
-    expect(nxDev).toHaveAttribute(
-      'href',
-      expect.stringContaining('nx.dev/extending-nx/local-generators'),
-    );
+    expect(view.getByTestId('GeneratorNxBridge')).toBeInTheDocument();
+    expect(view.queryByText('Generator schema (JSON)')).not.toBeInTheDocument();
   });
 
-  test('persists last CLI output to localStorage for support bundles', async () => {
+  test('when schemaJson is present, shows collapsible pretty-printed JSON', async () => {
     const user = userEvent.setup();
-    const key = 'openthrottle-developer:generator-cli-last-run:remix';
-    const box = component.getByPlaceholderText(
-      /Paste terminal output after running a generator command/,
-    );
+    const view = renderBridge();
 
-    await user.type(box, 'error: missing flag');
+    expect(view.getByText('Generator schema (JSON)')).toBeInTheDocument();
 
-    expect(localStorage.getItem(key)).toBe('error: missing flag');
+    await user.click(view.getByRole('button', { name: 'Show schema' }));
+
+    const block = view.container.querySelector('pre code');
+    expect(block?.textContent).toContain('"a"');
+    expect(block?.textContent).toContain('1');
   });
 });

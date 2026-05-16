@@ -19,7 +19,10 @@ describe('PlanTasksToolbar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders tasks toolbar region', () => {
+    expect(component.getByTestId('PlanTasksToolbar')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'PlanTasksToolbar' }),
+    ).toBeInTheDocument();
   });
 });

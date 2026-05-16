@@ -19,7 +19,10 @@ describe('PlanStats Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders plan stats placeholder', () => {
+    expect(component.getByTestId('PlanStats')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'PlanStats' }),
+    ).toBeInTheDocument();
   });
 });

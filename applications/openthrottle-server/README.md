@@ -35,6 +35,7 @@ Copy `.env.default` to `.env` and adjust. Key variables:
 | `DATABASE_BACKUP_CRON`             | Optional; enables daily BullMQ backup (`pnpm run database:backup`). See [database-backup-scheduled-job-spec.md](../../docs/openthrottle/database-backup-scheduled-job-spec.md) |
 | `DATABASE_BACKUP_TZ`               | Optional IANA timezone for backup cron (default UTC)                                                                                                                           |
 | `DATABASE_BACKUP_ENABLED`          | Optional kill switch when cron is set (default true)                                                                                                                           |
+| `DATABASE_BACKUP_JOB_TIMEOUT_MS`   | Optional BullMQ job timeout for one backup run (default `1800000`, 30 min)                                                                                                     |
 | `STRIPE_SECRET_KEY`                | Stripe API secret (`sk_…`); required for checkout and webhook verification                                                                                                     |
 | `STRIPE_WEBHOOK_SECRET`            | Stripe webhook signing secret (`whsec_…`); set when webhooks are enabled                                                                                                       |
 

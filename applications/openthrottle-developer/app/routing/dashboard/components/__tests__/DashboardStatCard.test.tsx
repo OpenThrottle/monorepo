@@ -6,6 +6,12 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardStatCard } from '../DashboardStatCard';
 import type { DashboardStatCardProps } from '../DashboardStatCard';
 
+function renderWithProps(props: DashboardStatCardProps): RenderResult {
+  const Component = () => <DashboardStatCard {...props} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+}
+
 describe('DashboardStatCard Component', () => {
   let component: RenderResult;
   let props: DashboardStatCardProps;
@@ -15,14 +21,14 @@ describe('DashboardStatCard Component', () => {
       description: 'A test description',
       heading: 'A test heading',
     };
-
-    const Component = () => <DashboardStatCard {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderWithProps(props);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders heading and description', () => {
+    expect(component.getByTestId('DashboardStatCard')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 2, name: 'A test heading' }),
+    ).toBeInTheDocument();
+    expect(component.getByText('A test description')).toBeInTheDocument();
   });
 });

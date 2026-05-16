@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import classnames from 'classnames';
 import type { QueueCardFragment } from '~/__generated__/graphql';
+import { backlogForQueue } from '~/routing/queues/utils/queue-backlog-chart';
 
 export interface QueuesTableProps {
   readonly className?: string;
@@ -20,9 +21,49 @@ function queueDetailHref(name: string): string {
   return `/queues/${encodeURIComponent(name)}`;
 }
 
-function backlogForQueue(queue: QueueCardFragment): number {
-  return queue.waitingCount + queue.delayedCount;
-}
+const queueRowId = (queue: QueueCardFragment, _index: number): string =>
+  queue.name;
+
+export const QueuesTable = (props: QueuesTableProps) => {
+  const { className, queues } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (queues.length === 0) {
+    return (
+      <Card className={classnames(className)} data-testid="QueuesTable">
+        <div className="flex flex-col items-center justify-center gap-2 p-8 text-center sm:p-10">
+          <OpenThrottleEmptyState
+            description="When workers register Bull queues with the API, they appear here with live backlog, in-flight, and outcome counts."
+            title="No queues"
+          />
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="QueuesTable"
+    >
+      <DataTable<QueueCardFragment, string | number | undefined>
+        columns={queuesTableColumns}
+        data={queues}
+        getRowId={queueRowId}
+      />
+    </div>
+  );
+};
 
 const queuesTableColumns: ColumnDef<
   QueueCardFragment,
@@ -204,47 +245,3 @@ const queuesTableColumns: ColumnDef<
     id: 'actions',
   },
 ];
-
-const queueRowId = (queue: QueueCardFragment, _index: number): string =>
-  queue.name;
-
-export const QueuesTable = (props: QueuesTableProps) => {
-  const { className, queues } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-  if (queues.length === 0) {
-    return (
-      <Card className={classnames(className)} data-testid="QueuesTable">
-        <div className="flex flex-col items-center justify-center gap-2 p-8 text-center sm:p-10">
-          <OpenThrottleEmptyState
-            description="When workers register Bull queues with the API, they appear here with live backlog, in-flight, and outcome counts."
-            title="No queues"
-          />
-        </div>
-      </Card>
-    );
-  }
-
-  return (
-    <div
-      className={classnames('border ui-border rounded-lg', className)}
-      data-testid="QueuesTable"
-    >
-      <DataTable<QueueCardFragment, string | number | undefined>
-        columns={queuesTableColumns}
-        data={queues}
-        getRowId={queueRowId}
-      />
-    </div>
-  );
-};

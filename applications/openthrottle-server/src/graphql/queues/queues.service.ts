@@ -23,6 +23,11 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types';
+import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
+import type {
+  DatabaseBackupJobPayload,
+  DatabaseBackupJobResult,
+} from '../../queues/database-backup/database-backup.types';
 
 const DEFAULT_PLAN_RUN_EXECUTION_BACKEND = 'cursor';
 
@@ -115,6 +120,7 @@ const VALID_JOB_STATES = [
 //
 
 const REGISTERED_QUEUES = [
+  DATABASE_BACKUP_QUEUE_NAME,
   DAILY_STATS_QUEUE_NAME,
   DOC_INGESTION_QUEUE_NAME,
   PLANS_QUEUE_NAME,
@@ -131,6 +137,11 @@ export class QueuesService implements OnModuleDestroy {
     private readonly configService: ConfigService,
     @InjectQueue(DAILY_STATS_QUEUE_NAME)
     private readonly dailyStatsQueue: Queue<AggregateDailyStatsJobData, void>,
+    @InjectQueue(DATABASE_BACKUP_QUEUE_NAME)
+    private readonly databaseBackupQueue: Queue<
+      DatabaseBackupJobPayload,
+      DatabaseBackupJobResult
+    >,
     @InjectQueue(DOC_INGESTION_QUEUE_NAME)
     private readonly docIngestionQueue: Queue<
       DocIngestionJobPayload,
@@ -213,6 +224,14 @@ export class QueuesService implements OnModuleDestroy {
   getQueueByName(name: string): Queue<AnyJobData, void> | null {
     if (name === DAILY_STATS_QUEUE_NAME) {
       return this.dailyStatsQueue as Queue<AnyJobData, void>;
+    }
+
+    if (name === DATABASE_BACKUP_QUEUE_NAME) {
+      return this.databaseBackupQueue as unknown as Queue<AnyJobData, void>;
+    }
+
+    if (name === DOC_INGESTION_QUEUE_NAME) {
+      return this.docIngestionQueue as unknown as Queue<AnyJobData, void>;
     }
 
     if (name === DOC_INGESTION_QUEUE_NAME) {
@@ -559,6 +578,7 @@ export class QueuesService implements OnModuleDestroy {
       REGISTERED_QUEUES.map(async (queueName) => {
         const queue = this.getQueueByName(queueName);
         if (!queue) return null;
+
         const counts = await queue.getJobCounts();
         const stats: QueueStats = {
           activeCount: counts['active'] ?? 0,
@@ -571,6 +591,7 @@ export class QueuesService implements OnModuleDestroy {
         return stats;
       }),
     );
+
     const dynamicNames = Array.from(this.dynamicQueues.keys());
     const dynamicResults = await Promise.all(
       dynamicNames.map(async (queueName) => {
@@ -588,10 +609,12 @@ export class QueuesService implements OnModuleDestroy {
         return stats;
       }),
     );
+
     const all = [
       ...staticResults.filter((s): s is QueueStats => s != null),
       ...dynamicResults.filter((s): s is QueueStats => s != null),
     ];
+
     return all;
   }
 

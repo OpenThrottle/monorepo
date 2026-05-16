@@ -19,7 +19,10 @@ describe('QueuesToolbar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toolbar region with title', () => {
+    expect(component.getByTestId('QueuesToolbar')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 2, name: 'QueuesToolbar' }),
+    ).toBeInTheDocument();
   });
 });

@@ -96,6 +96,8 @@ export default function Component(
 
   // Markup
 
+  console.log('githubStats', githubStats);
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -106,86 +108,79 @@ export default function Component(
       <DashboardIntroduction />
       {/* <DashboardToolbar /> */}
 
+      <DashboardRecentActivity data={activityByDate} />
+
       <div
         className="gap-4 md:gap-8 lg:gap-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
         data-testid="dashboard-content-grid"
       >
-        <div
+        {/* <div
           className="gap-4 md:gap-8 lg:gap-12 col-span-1 flex min-w-0 flex-col"
           data-testid="dashboard-charts-column"
-        >
-          <DashboardQuickNavigation />
+        > */}
+        <DashboardQuickNavigation />
 
-          <div>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2>Daily Stats</h2>
-              <Button asChild={true} size="sm" variant="outline">
-                <Link
-                  preventScrollReset={true}
-                  to="/dashboard?modal=daily-stats"
-                  viewTransition={true}
-                >
-                  Expand chart details
-                </Link>
-              </Button>
-            </div>
-            <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
-          </div>
-
-          <div>
-            <h3>PR Time in State</h3>
-            <DashboardPrTimeInStateCard
-              prTimeInStateSummary={githubStats.prTimeInStateSummary}
-            />
-          </div>
-
-          <DashboardQueueStats data={queues} />
-
-          <div>
-            <h3>Open PRs by Author</h3>
-            <DashboardOpenPrsByAuthorCard
-              openPrCountByAuthor={githubStats.openPrCountByAuthor}
-            />
-          </div>
-
-          <div>
-            <h3 className="text-lg mb-4">Development</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Trigger a test websocket notification to verify the notification
-              flow end-to-end. Check the notification bell for the alert.
-            </p>
-            <fetcher.Form method="post">
-              <Input
-                name="intent"
-                type="hidden"
-                value="triggerWebsocketNotification"
-              />
-              <Button disabled={isIdle} type="submit" variant="secondary">
-                {isIdle ? 'Triggering…' : 'Trigger websocket notification'}
-              </Button>
-            </fetcher.Form>
-            {devMessage != null && (
-              <p
-                className={
-                  devMessage.success
-                    ? 'text-green-600 text-sm mt-2'
-                    : 'text-destructive text-sm mt-2'
-                }
+        <div>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2>Daily Stats</h2>
+            <Button asChild={true} size="sm" variant="outline">
+              <Link
+                preventScrollReset={true}
+                to="/dashboard?modal=daily-stats"
+                viewTransition={true}
               >
-                {devMessage.success
-                  ? 'Notification triggered. Check the bell.'
-                  : devMessage.error}
-              </p>
-            )}
+                Expand chart details
+              </Link>
+            </Button>
           </div>
-          <div className="flex-1" />
+          <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
         </div>
 
-        <div
-          className="col-span-2 min-w-0"
-          data-testid="dashboard-activity-column"
-        >
-          <DashboardRecentActivity data={activityByDate} />
+        <div>
+          <h3>PR Time in State</h3>
+          <DashboardPrTimeInStateCard
+            prTimeInStateSummary={githubStats.prTimeInStateSummary}
+          />
+        </div>
+
+        <DashboardQueueStats data={queues} />
+
+        <div>
+          <h3>Open PRs by Author</h3>
+          <DashboardOpenPrsByAuthorCard
+            openPrCountByAuthor={githubStats.openPrCountByAuthor}
+          />
+        </div>
+
+        <div>
+          <h3 className="text-lg mb-4">Development</h3>
+          <p className="text-muted-foreground text-sm mb-4">
+            Trigger a test websocket notification to verify the notification
+            flow end-to-end. Check the notification bell for the alert.
+          </p>
+          <fetcher.Form method="post">
+            <Input
+              name="intent"
+              type="hidden"
+              value="triggerWebsocketNotification"
+            />
+            <Button disabled={isIdle} type="submit" variant="secondary">
+              {isIdle ? 'Triggering…' : 'Trigger websocket notification'}
+            </Button>
+          </fetcher.Form>
+          {devMessage != null && (
+            <p
+              className={
+                devMessage.success
+                  ? 'text-green-600 text-sm mt-2'
+                  : 'text-destructive text-sm mt-2'
+              }
+            >
+              {devMessage.success
+                ? 'Notification triggered. Check the bell.'
+                : devMessage.error}
+            </p>
+          )}
         </div>
       </div>
 

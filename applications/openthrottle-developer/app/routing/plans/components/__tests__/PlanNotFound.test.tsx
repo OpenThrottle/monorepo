@@ -15,7 +15,12 @@ describe('PlanNotFound Component', () => {
     component = renderRoutesStub(<PlanNotFound {...props} />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders empty state copy for missing plan', () => {
+    expect(
+      component.getByRole('heading', { name: 'Plan not found' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText('The plan you are looking for does not exist.'),
+    ).toBeInTheDocument();
   });
 });

@@ -19,7 +19,10 @@ describe('PlanToolbarSortBy Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toolbar sort region', () => {
+    expect(component.getByTestId('PlanToolbarSortBy')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'PlanToolbarSortBy' }),
+    ).toBeInTheDocument();
   });
 });

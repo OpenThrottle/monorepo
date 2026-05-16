@@ -29,6 +29,7 @@ import { CortexDocumentIngestGraphqlModule } from './graphql/cortex-document-ing
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
+import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module';
 import { DevelopmentModule } from './modules/development/development.module';
 import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-queue.module';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module';
@@ -105,6 +106,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
 
     // 🧩 Application Modules
     DailyStatsQueueModule,
+    DatabaseBackupQueueModule,
     DevelopmentModule,
     DocIngestionQueueModule,
     GeneratorsModule,

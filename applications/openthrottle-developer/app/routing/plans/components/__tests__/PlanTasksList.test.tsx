@@ -19,7 +19,8 @@ describe('PlanTasksList Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders list shell with placeholder items', () => {
+    expect(component.getByTestId('PlanTasksList')).toBeInTheDocument();
+    expect(component.getAllByTestId('PlanTasksListItem')).toHaveLength(5);
   });
 });

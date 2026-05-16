@@ -350,63 +350,71 @@ export default function Component(
           </div>
         </div>
 
-        <Tabs
-          className="w-full"
-          onValueChange={onPlanDetailTabChange}
-          value={planDetailTab}
-        >
-          <TabsList className="mb-8 gap-4 w-full" variant="line">
-            <TabsTrigger className="flex-0 cursor-pointer" value="overview">
-              <BoltIcon />
-              Details
-            </TabsTrigger>
-            <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
-              <LayoutListIcon />
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger className="flex-0 cursor-pointer" value="requirements">
-              <BadgeCheckIcon />
-              Requirements
-            </TabsTrigger>
-            <div className="flex-1" />
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              value="configuration"
+        <div className="">
+          <Tabs
+            className="w-full"
+            onValueChange={onPlanDetailTabChange}
+            value={planDetailTab}
+          >
+            <TabsList
+              className="mb-8 gap-4 justify-start max-w-full overflow-x-auto overflow-y-hidden w-full"
+              variant="line"
             >
-              <CogIcon />
-              Configuration
-            </TabsTrigger>
-            <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
-              <FileIcon />
-              Metadata
-            </TabsTrigger>
-          </TabsList>
+              <TabsTrigger className="flex-0 cursor-pointer" value="overview">
+                <BoltIcon />
+                Details
+              </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
+                <LayoutListIcon />
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                value="requirements"
+              >
+                <BadgeCheckIcon />
+                Requirements
+              </TabsTrigger>
+              <div className="flex-1" />
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                value="configuration"
+              >
+                <CogIcon />
+                Configuration
+              </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
+                <FileIcon />
+                Metadata
+              </TabsTrigger>
+            </TabsList>
 
-          <PlanTabDetails
-            fullscreen={fullscreen}
-            plan={plan}
-            ralphTuningJson={ralphTuningJson}
-            recentPlanRuns={recentPlanRuns}
-            setFullscreen={setFullscreen}
-            workflowInput={workflowInput}
-            workflowTimeout={workflowTimeout}
-            workingDirectory={workingDirectory}
-          />
-          <PlanTabTasks tasks={tasks} />
-          <PlanTabConfiguration
-            iterationTimeoutText={workflowTimeout}
-            onCollapse={() => onToggleExpanded(false)}
-            onIterationTimeoutTextChange={setWorkflowTimeout}
-            onResetToDefaults={onResetToDefaults}
-            onValueChange={setWorkflowInput}
-            onWorkingDirectoryChange={setWorkingDirectory}
-            planId={plan.id}
-            value={workflowInput}
-            workingDirectory={workingDirectory}
-          />
-          <PlanTabRequirements plan={plan} tasks={tasks} />
-          <PlanTabsMetadata plan={plan} />
-        </Tabs>
+            <PlanTabDetails
+              fullscreen={fullscreen}
+              plan={plan}
+              ralphTuningJson={ralphTuningJson}
+              recentPlanRuns={recentPlanRuns}
+              setFullscreen={setFullscreen}
+              workflowInput={workflowInput}
+              workflowTimeout={workflowTimeout}
+              workingDirectory={workingDirectory}
+            />
+            <PlanTabTasks tasks={tasks} />
+            <PlanTabConfiguration
+              iterationTimeoutText={workflowTimeout}
+              onCollapse={() => onToggleExpanded(false)}
+              onIterationTimeoutTextChange={setWorkflowTimeout}
+              onResetToDefaults={onResetToDefaults}
+              onValueChange={setWorkflowInput}
+              onWorkingDirectoryChange={setWorkingDirectory}
+              planId={plan.id}
+              value={workflowInput}
+              workingDirectory={workingDirectory}
+            />
+            <PlanTabRequirements plan={plan} tasks={tasks} />
+            <PlanTabsMetadata plan={plan} />
+          </Tabs>
+        </div>
 
         {items.map((item) => {
           return (

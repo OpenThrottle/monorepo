@@ -19,7 +19,10 @@ describe('PlanToolbarSearch Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toolbar search region', () => {
+    expect(component.getByTestId('PlanToolbarSearch')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'PlanToolbarSearch' }),
+    ).toBeInTheDocument();
   });
 });

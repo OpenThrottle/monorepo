@@ -19,7 +19,10 @@ describe('QueuesStats Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders stats region with title', () => {
+    expect(component.getByTestId('QueuesStats')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 2, name: 'QueuesStats' }),
+    ).toBeInTheDocument();
   });
 });
