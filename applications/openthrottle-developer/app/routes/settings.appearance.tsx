@@ -44,7 +44,7 @@ export default function Component(
 
   // Handlers
   const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig({ ...config, accentColor: event.target.value });
+    setConfig({ ...config, brand: event.target.value });
   };
 
   // Markup
@@ -82,7 +82,7 @@ export default function Component(
               <Input
                 onInput={handleColorChange}
                 type="color"
-                value={config.accentColor}
+                value={config.brand}
               />
             </div>
           </div>
