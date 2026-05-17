@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   APPEARANCE_BRAND_OVERRIDE_KEYS,
   APPEARANCE_CSS_VARIABLE_KEYS,
+  APPEARANCE_THEME_COLOR_TOKEN_KEYS,
   buildAppearanceRootCssBlock,
   CONFIG_STORAGE_KEY,
   cssColorToHex,
@@ -31,6 +32,22 @@ describe('appearance config constants', () => {
   test('APPEARANCE_BRAND_OVERRIDE_KEYS is a subset of APPEARANCE_CSS_VARIABLE_KEYS', () => {
     for (const key of APPEARANCE_BRAND_OVERRIDE_KEYS) {
       expect(APPEARANCE_CSS_VARIABLE_KEYS).toContain(key);
+    }
+  });
+
+  test('APPEARANCE_THEME_COLOR_TOKEN_KEYS lists @theme aliases fed by brand overrides', () => {
+    expect(APPEARANCE_THEME_COLOR_TOKEN_KEYS).toEqual([
+      '--color-accent',
+      '--color-chart-1',
+      '--color-ring',
+      '--color-sidebar-primary',
+      '--color-sidebar-ring',
+    ]);
+  });
+
+  test('APPEARANCE_BRAND_OVERRIDE_KEYS targets :root sources not @theme tokens', () => {
+    for (const key of APPEARANCE_BRAND_OVERRIDE_KEYS) {
+      expect(key.startsWith('--color-')).toBe(false);
     }
   });
 });
