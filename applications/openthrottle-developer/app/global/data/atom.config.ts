@@ -22,6 +22,31 @@ export const APPEARANCE_CSS_VARIABLE_KEYS = [
 export type AppearanceCssVariableKey =
   (typeof APPEARANCE_CSS_VARIABLE_KEYS)[number];
 
+/**
+ * Subset of {@link APPEARANCE_CSS_VARIABLE_KEYS} applied on `:root` when the user
+ * sets a brand color. Omits `--accent` and `--tw-ring-color` (already `var(--brand)` in theme.css).
+ */
+export const APPEARANCE_BRAND_OVERRIDE_KEYS = [
+  '--brand',
+  '--color-ring',
+  '--color-sidebar-ring',
+] as const satisfies readonly AppearanceCssVariableKey[];
+
+/**
+ * @description Build `:root` declarations for a stored brand color (empty when unset).
+ */
+export const buildAppearanceRootCssBlock = (
+  brand: string | undefined,
+): string => {
+  if (!brand) {
+    return '';
+  }
+
+  return APPEARANCE_BRAND_OVERRIDE_KEYS.map((key) => `${key}: ${brand};`).join(
+    '\n              ',
+  );
+};
+
 export type ThemeMode = 'light' | 'dark';
 
 export interface ConfigObject {

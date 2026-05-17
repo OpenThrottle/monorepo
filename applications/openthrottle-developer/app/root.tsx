@@ -62,7 +62,10 @@ import { userAtom } from '~/global/data/atom.user';
 import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
-import { configAtom } from '~/global/data/atom.config';
+import {
+  buildAppearanceRootCssBlock,
+  configAtom,
+} from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   CORTEX_UUID_PATTERN,
@@ -222,6 +225,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
   const [_user, setUser] = useAtom(userAtom);
+  const [config] = useAtom(configAtom);
 
   // Setup
   const env = data?.env ?? {};
@@ -252,10 +256,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [data?.user, data?.userLoadOk, setUser]);
 
+  const isDarkTheme = config.theme === 'dark';
+  const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
+
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkTheme);
+  }, [isDarkTheme]);
+
   // 🔌 Short Circuit
 
   return (
-    <html lang="en">
+    <html
+      className={isDarkTheme ? 'dark' : undefined}
+      lang="en"
+      suppressHydrationWarning={true}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
@@ -273,6 +288,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />
         <link href={manifest} rel="manifest" />
         <Links />
+
+        {appearanceRootCss ? (
+          <style type="text/css">{`
+            :root {
+              ${appearanceRootCss}
+            }
+          `}</style>
+        ) : null}
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
@@ -303,7 +326,6 @@ export default function App(): React.ReactElement {
   const fetcher = useFetcher();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
-  const [config, _setConfig] = useAtom(configAtom);
   const [commanderOpen, setCommanderOpen] = React.useState(false);
 
   // Setup
@@ -463,16 +485,6 @@ export default function App(): React.ReactElement {
               />
             </GlobalLayout>
           </GlobalProviders>
-
-          {/* We can allow for more customization here as well... */}
-          <style type="text/css">{`
-            :root {
-              ${config.brand ? `--accent: ${config.brand}` : ``};
-              ${config.brand ? `--color-ring: ${config.brand}` : ``};
-              ${config.brand ? `--color-sidebar-ring: ${config.brand}` : ``};
-              ${config.brand ? `--tw-ring-color: ${config.brand}` : ``};
-            }
-          `}</style>
         </NotificationsSocketBridge>
       </NotificationsStoreProvider>
     </>
