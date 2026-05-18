@@ -6,15 +6,15 @@
 @source "../../../packages/**/*.{css,ts,tsx}";
 
 :root {
-  /* --brand: hsl(0, 100%, 50%); */
-  --brand: hsl(208 100% 50%);
+  --brand: hsl(0, 100%, 50%);
+  /* --brand: hsl(208 100% 50%); */
 }
 
 @utility text-highlight {
   animation: gradient 4s ease infinite;
   background-size: 250% 250%;
 
-  @apply bg-linear-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent;
+  @apply bg-linear-to-r from-red-500 to-red-600 bg-clip-text text-transparent;
 }
 
 @utility text-highlight-red {

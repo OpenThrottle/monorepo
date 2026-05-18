@@ -41,9 +41,6 @@ export const loader = async (args: Route.LoaderArgs) => {
     new URL(args.request.url).searchParams,
   );
 
-  console.log('🔍 owner:', owner);
-  console.log('🔍 repo:', repo);
-
   const start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);
   const startIso = start.toISOString();
 
@@ -117,7 +114,6 @@ export default function Component(
       <DashboardStats />
       <DashboardIntroduction />
 
-      <DashboardToolbar />
       <div
         className="gap-4 md:gap-8 lg:gap-12 grid grid-cols-1 md:grid-cols-2 --lg:grid-cols-3"
         data-testid="dashboard-content-grid"
@@ -142,6 +138,8 @@ export default function Component(
           </div>
           <DashboardDailyStatsCard dailyStats={dailyStatsRange.items} />
         </div>
+
+        <DashboardToolbar className="col-span-2" />
 
         <div>
           <h3 className="mb-4">PR Time in State</h3>

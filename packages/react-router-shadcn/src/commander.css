@@ -81,7 +81,7 @@
 
 [cmdk-item][data-selected='true'] {
   background: var(--muted);
-  color: var(--color-white);
+  color: var(--color-foreground);
 }
 
 [cmdk-item][data-selected='true'] svg {
@@ -122,9 +122,9 @@
 
 [cmdk-overlay],
 [data-overlay] {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  filter: blur(8px);
+  background: var(--overlay-background);
+  backdrop-filter: blur(3px);
+  filter: blur(3px);
 }
 
 [cmdk-vercel-badge] {

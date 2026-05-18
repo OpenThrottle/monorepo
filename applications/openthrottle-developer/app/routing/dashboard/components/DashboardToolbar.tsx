@@ -38,14 +38,14 @@ export const DashboardToolbar = (props: DashboardToolbarProps) => {
 
     next.set('owner', value);
     next.set('repo', nextRepo);
-    setSearchParams(next, { replace: true });
+    setSearchParams(next, { replace: false });
   };
 
   const onChangeRepo = (value: GithubRepo): void => {
     const next = new URLSearchParams(searchParams);
 
     next.set('repo', value);
-    setSearchParams(next, { replace: true });
+    setSearchParams(next, { replace: false });
   };
 
   // Markup

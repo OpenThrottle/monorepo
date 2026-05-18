@@ -25,6 +25,7 @@ import {
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 import { EditorWindow } from '@openthrottle/react-router-editor';
+
 export interface PlanTabDetailsProps {
   readonly fullscreen: boolean;
   readonly plan: PlanDetailsFragment;

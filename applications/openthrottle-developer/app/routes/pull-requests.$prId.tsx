@@ -27,8 +27,8 @@ import {
   githubRepoActionsUrl,
   githubRepoWorkflowsDirUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
-import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 import { PullRequestNotFound } from '~/routing/pull-requests/components/PullRequestNotFound';
+import type { Route } from '@/app/routes/+types/pull-requests.$prId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

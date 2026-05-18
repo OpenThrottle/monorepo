@@ -67,7 +67,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
-      <div className="max-w-full w-full overflow-auto h-screen relative">
+      <div className="flex flex-col max-w-full w-full overflow-auto max-h-screen relative">
         <SidebarInset>{children}</SidebarInset>
       </div>
     </>
