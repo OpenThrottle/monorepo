@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenThrottleClipboard Component > should render 1`] = `
+<body>
+  <div>
+    <button
+      aria-label="Copy to clipboard"
+      class="cursor-pointer"
+      type="button"
+    >
+      Copy to clipboard
+    </button>
+  </div>
+</body>
+`;

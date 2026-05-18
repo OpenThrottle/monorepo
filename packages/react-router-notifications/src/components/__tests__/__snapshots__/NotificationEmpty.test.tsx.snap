@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NotificationEmpty Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="py-6 text-center text-sm text-muted-foreground"
+      data-testid="NotificationEmpty"
+    >
+      No notifications
+    </div>
+  </div>
+</body>
+`;

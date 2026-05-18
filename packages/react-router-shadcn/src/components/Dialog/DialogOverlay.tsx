@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
 export interface DialogOverlayProps extends React.ComponentPropsWithoutRef<
@@ -28,7 +28,7 @@ export const DialogOverlay = React.forwardRef<
     <DialogPrimitive.Overlay
       className={cn(
         'fixed inset-0 z-50',
-        'data-[state=opsen]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         className,
       )}
       data-overlay="true"

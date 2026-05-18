@@ -31,6 +31,7 @@ describe('GlobalErrorBoundary Component', () => {
   test('renders route error details, support reference, and markdown content', () => {
     const routeError: ErrorResponse = {
       data: 'Not found content',
+      internal: false,
       status: 404,
       statusText: 'Not Found',
     };
@@ -51,6 +52,7 @@ describe('GlobalErrorBoundary Component', () => {
   test('uses homePath for back link', () => {
     const routeError: ErrorResponse = {
       data: 'x',
+      internal: false,
       status: 500,
       statusText: 'Error',
     };

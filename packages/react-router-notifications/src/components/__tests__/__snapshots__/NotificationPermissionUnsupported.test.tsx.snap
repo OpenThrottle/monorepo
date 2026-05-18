@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NotificationPermissionUnsupported Component > should render 1`] = `
+<body>
+  <div>
+    <p
+      class="text-xs text-muted-foreground"
+      data-testid="NotificationPermissionUnsupported"
+    >
+      Desktop notifications require HTTPS or a supported browser.
+    </p>
+  </div>
+</body>
+`;

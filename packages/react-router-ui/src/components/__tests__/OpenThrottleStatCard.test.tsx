@@ -27,7 +27,9 @@ describe('OpenThrottleStatCard Component', () => {
     const Component = () => <OpenThrottleStatCard {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
-    expect(component.getByText('450.2 / 512')).toBeInTheDocument();
+    expect(component.getByText('450.2')).toBeInTheDocument();
+    expect(component.getByText('512')).toBeInTheDocument();
+    expect(component.getByText('/')).toBeInTheDocument();
     expect(component.getByText('Heap (MB)')).toBeInTheDocument();
   });
 });

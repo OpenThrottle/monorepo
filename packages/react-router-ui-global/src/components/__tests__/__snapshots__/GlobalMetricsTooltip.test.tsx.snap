@@ -5,11 +5,13 @@ exports[`GlobalMetricsTooltip Component > should render 1`] = `
   <div>
     <div
       class="group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar"
+      data-slot="sidebar-wrapper"
       style="--sidebar-width: 16rem; --sidebar-width-icon: 3rem;"
     >
       <button
         aria-label="Metrics interpretation help"
         class="text-muted-foreground hover:text-foreground transition-colors"
+        data-slot="tooltip-trigger"
         data-state="closed"
         data-testid="GlobalMetrics-info-trigger"
         type="button"

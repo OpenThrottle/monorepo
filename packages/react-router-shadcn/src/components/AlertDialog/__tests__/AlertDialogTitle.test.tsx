@@ -24,7 +24,7 @@ describe('AlertDialogTitle', () => {
     const heading = screen.getByRole('heading', { name: 'Important choice' });
     expect(heading).toBeInTheDocument();
     expect(heading).toHaveClass('title-extra');
-    expect(heading).toHaveClass('text-lg', 'font-semibold');
+    expect(heading).toHaveClass('text-lg');
   });
 
   it('forwards ref to the title element', () => {

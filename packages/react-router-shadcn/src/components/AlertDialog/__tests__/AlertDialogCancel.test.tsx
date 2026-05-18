@@ -28,7 +28,7 @@ describe('AlertDialogCancel', () => {
     const button = screen.getByRole('button', { name: 'Go back' });
     expect(button).toBeInTheDocument();
     expect(button).toHaveClass('custom-cancel');
-    expect(button).toHaveClass('border-input');
+    expect(button).toHaveClass('border', 'bg-background', 'shadow-xs');
     expect(button).toHaveClass('mt-2', 'sm:mt-0');
   });
 

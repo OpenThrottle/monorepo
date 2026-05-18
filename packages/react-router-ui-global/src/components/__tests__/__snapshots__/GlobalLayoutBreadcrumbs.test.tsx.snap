@@ -15,7 +15,7 @@ exports[`GlobalLayoutBreadcrumbs Component > should render 1`] = `
           class="inline-flex items-center gap-1.5"
         >
           <a
-            class="transition-colors hover:text-foreground hover:text-accent transition-colors"
+            class="transition-colors hover:text-foreground hover:text-accent transition-colors hidden lg:block font-semibold!"
             data-discover="true"
             href="/"
           >

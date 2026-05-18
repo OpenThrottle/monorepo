@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenThrottleCalendar Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="OpenThrottleCalendar"
+    >
+      <h2>
+        OpenThrottle Calendar
+      </h2>
+    </div>
+  </div>
+</body>
+`;

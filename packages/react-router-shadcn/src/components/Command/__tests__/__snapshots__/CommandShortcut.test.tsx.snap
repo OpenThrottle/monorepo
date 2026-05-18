@@ -4,7 +4,8 @@ exports[`CommandShortcut Component > should render 1`] = `
 <body>
   <div>
     <kbd
-      class="pointer-events-none inline-flex select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground ml-auto size-3.5 shrink-0 opacity-50"
+      class="pointer-events-none inline-flex min-w-5 items-center justify-center gap-1 rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none [&_svg:not([class*='size-'])]:size-3 [[data-slot=tooltip-content]_&]:bg-background/20 [[data-slot=tooltip-content]_&]:text-background dark:[[data-slot=tooltip-content]_&]:bg-background/10 ml-auto size-3.5 shrink-0 opacity-50"
+      data-slot="kbd"
     />
   </div>
 </body>

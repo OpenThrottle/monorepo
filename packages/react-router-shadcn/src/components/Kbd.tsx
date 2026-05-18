@@ -1,71 +1,28 @@
-import * as React from 'react';
 import { cn } from '../utils/cn';
 
-export interface KbdProps extends React.HTMLAttributes<HTMLElement> {}
+function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
+  return (
+    <kbd
+      className={cn(
+        'pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none',
+        "[&_svg:not([class*='size-'])]:size-3",
+        '[[data-slot=tooltip-content]_&]:bg-background/20 [[data-slot=tooltip-content]_&]:text-background dark:[[data-slot=tooltip-content]_&]:bg-background/10',
+        className,
+      )}
+      data-slot="kbd"
+      {...props}
+    />
+  );
+}
 
-/**
- * @description Displays a keyboard key with standard kbd styling. Use for shortcuts (e.g. Ctrl, ⌘).
- */
-export const Kbd = React.forwardRef<HTMLElement, KbdProps>(
-  (props, ref): React.ReactElement => {
-    const { className, ...rest } = props;
+function KbdGroup({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <kbd
+      className={cn('inline-flex items-center gap-1', className)}
+      data-slot="kbd-group"
+      {...props}
+    />
+  );
+}
 
-    // Hooks
-
-    // Setup
-
-    // Handlers
-
-    // Markup
-
-    // Life Cycle
-
-    // 🔌 Short Circuit
-
-    return (
-      <kbd
-        className={cn(
-          'pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100',
-          className,
-        )}
-        ref={ref as React.Ref<HTMLUnknownElement>}
-        {...rest}
-      />
-    );
-  },
-);
-
-Kbd.displayName = 'Kbd';
-
-export interface KbdGroupProps extends React.HTMLAttributes<HTMLSpanElement> {}
-
-/**
- * @description Groups multiple Kbd components with a separator (e.g. "Ctrl + B").
- */
-export const KbdGroup = React.forwardRef<HTMLSpanElement, KbdGroupProps>(
-  (props, ref): React.ReactElement => {
-    const { className, ...rest } = props;
-
-    // Hooks
-
-    // Setup
-
-    // Handlers
-
-    // Markup
-
-    // Life Cycle
-
-    // 🔌 Short Circuit
-
-    return (
-      <span
-        className={cn('inline-flex items-center gap-1', className)}
-        ref={ref}
-        {...rest}
-      />
-    );
-  },
-);
-
-KbdGroup.displayName = 'KbdGroup';
+export { Kbd, KbdGroup };

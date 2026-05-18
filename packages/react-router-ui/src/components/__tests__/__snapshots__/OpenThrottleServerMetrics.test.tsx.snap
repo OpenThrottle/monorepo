@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenThrottleServerMetrics Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="OpenThrottleServerMetrics"
+    >
+      <h2>
+        OpenThrottleServerMetrics
+      </h2>
+    </div>
+  </div>
+</body>
+`;
