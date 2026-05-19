@@ -164,4 +164,47 @@ describe('discoverRepoSkills', () => {
       },
     ]);
   });
+
+  test('skips skill folders that do not contain SKILL.md', () => {
+    const root = makeTempDir();
+    const emptyFolder = join(root, '.agents/skills', 'no-skill-file');
+    mkdirSync(emptyFolder, { recursive: true });
+    writeSkill(
+      root,
+      '.agents/skills',
+      'has-skill',
+      'name: has-skill\ndescription: Present.',
+    );
+
+    expect(discoverRepoSkills(root)).toEqual([
+      {
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/has-skill/SKILL.md',
+        slug: 'has-skill',
+        summary: 'Present.',
+      },
+    ]);
+  });
+
+  test('ignores non-directory entries under the skills root', () => {
+    const root = makeTempDir();
+    const skillsRoot = join(root, '.cursor/skills');
+    mkdirSync(skillsRoot, { recursive: true });
+    writeFileSync(join(skillsRoot, 'README.md'), '# not a skill folder\n');
+    writeSkill(
+      root,
+      '.cursor/skills',
+      'real-skill',
+      'name: real-skill\ndescription: Cursor skill.',
+    );
+
+    expect(discoverRepoSkills(root)).toEqual([
+      {
+        layout: 'cursor',
+        repoRelativePath: '.cursor/skills/real-skill/SKILL.md',
+        slug: 'real-skill',
+        summary: 'Cursor skill.',
+      },
+    ]);
+  });
 });
