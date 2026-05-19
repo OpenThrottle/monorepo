@@ -55,6 +55,7 @@ import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
+import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { WorkflowModule } from './queues/workflow/workflow.module';
 
 // import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
@@ -137,6 +138,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     TaskEmbeddingsGraphqlModule,
     TasksGraphqlModule,
     UsersGraphqlModule,
+    WorkspaceSettingsGraphqlModule,
   ],
   providers: [
     GlobalClsAuthHook,
