@@ -69,6 +69,10 @@
     "applications/openthrottle-website/app/routing/home/components/HomeHeroV4.tsx",
     "applications/openthrottle-website/app/routing/home/components/HomeHeroV5.tsx",
     "applications/openthrottle-website/app/routing/home/components/HomeOpenSource.tsx",
+    // @openthrottle/react-router-shadcn: CSS entrypoints (app @import) and vitest setup (vitest.config.ts; knip vitest: false)
+    "packages/react-router-shadcn/src/theme.css",
+    "packages/react-router-shadcn/src/commander.css",
+    "packages/react-router-shadcn/vitest.setup.ts",
   ],
   "ignoreDependencies": [
     // Internal
