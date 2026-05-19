@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 
+/** @deprecated Home section kept for intentional rollback; wire from `app/routes/_index.tsx` when needed. */
 export interface HomeOpenSourceProps {
   className?: string;
 }

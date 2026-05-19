@@ -62,6 +62,13 @@
     "applications/openthrottle-email/app/global/components/GlobalFooter.tsx",
     "applications/openthrottle-email/app/global/components/GlobalHeader.tsx",
     "applications/openthrottle-email/tests/setup.ts",
+    // openthrottle-website: vitest setup + alternate home sections (commented in _index; see @deprecated)
+    "applications/openthrottle-website/tests/setup.ts",
+    "applications/openthrottle-website/app/routing/home/components/HomeHeroV2.tsx",
+    "applications/openthrottle-website/app/routing/home/components/HomeHeroV3.tsx",
+    "applications/openthrottle-website/app/routing/home/components/HomeHeroV4.tsx",
+    "applications/openthrottle-website/app/routing/home/components/HomeHeroV5.tsx",
+    "applications/openthrottle-website/app/routing/home/components/HomeOpenSource.tsx",
   ],
   "ignoreDependencies": [
     // Internal
