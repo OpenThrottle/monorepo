@@ -13,7 +13,7 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { ProjectsService } from '../projects/projects.service';
 import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 
-export interface CreateWorkspaceLocalRepositoryData {
+interface CreateWorkspaceLocalRepositoryData {
   readonly displayName: string;
   readonly filesystemPath: string;
   readonly gitDefaultBranch: string | null;
@@ -21,7 +21,7 @@ export interface CreateWorkspaceLocalRepositoryData {
   readonly projectId: string | null;
 }
 
-export interface UpdateWorkspaceLocalRepositoryData {
+interface UpdateWorkspaceLocalRepositoryData {
   readonly displayName?: string;
   readonly gitDefaultBranch?: string | null;
   readonly gitRemoteUrl?: string | null;

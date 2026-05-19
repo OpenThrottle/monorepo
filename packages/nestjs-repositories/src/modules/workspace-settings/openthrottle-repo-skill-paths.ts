@@ -5,7 +5,7 @@
 
 export type RepoSkillPathLayout = 'agents' | 'cursor';
 
-export interface RepoSkillPathEntry {
+interface RepoSkillPathEntry {
   readonly layout: RepoSkillPathLayout;
   readonly repoRelativePath: string;
   readonly slug: string;

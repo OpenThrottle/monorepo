@@ -4,7 +4,7 @@
 
 import type { WorkspaceEditorId } from './workspace-editor-id';
 
-export interface WorkspaceEditorConfigPaths {
+interface WorkspaceEditorConfigPaths {
   readonly mcpConfigRelativePath: string;
   readonly rulesDirectoryRelativePath: string;
 }

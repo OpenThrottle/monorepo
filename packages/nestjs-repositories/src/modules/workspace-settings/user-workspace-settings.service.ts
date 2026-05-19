@@ -9,15 +9,11 @@ import { Repository } from 'typeorm';
 import type { WorkspaceEditorId } from './workspace-editor-id';
 import { UserWorkspaceSettings } from './user-workspace-settings.entity';
 
-export interface UpdateUserWorkspaceProfileData {
+interface UpdateUserWorkspaceProfileData {
   readonly contactDisplayName?: string | null;
   readonly contactEmail?: string | null;
   readonly enabledEditors?: readonly WorkspaceEditorId[];
 }
-
-/** @deprecated Use {@link UpdateUserWorkspaceProfileData} */
-export type UpdateUserWorkspaceContactProfileData =
-  UpdateUserWorkspaceProfileData;
 
 @Injectable()
 export class UserWorkspaceSettingsService {

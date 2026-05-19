@@ -5,10 +5,6 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-export const MANAGED_MCP_SERVER_IDS = ['mcp-developer'] as const;
-
-export type ManagedMcpServerId = (typeof MANAGED_MCP_SERVER_IDS)[number];
-
 export interface McpServersJson {
   readonly mcpServers?: Record<string, Record<string, unknown>>;
 }
