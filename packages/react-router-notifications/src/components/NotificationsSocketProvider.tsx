@@ -12,7 +12,7 @@ import {
 import { NOTIFICATIONS_SOCKET_EVENTS } from '../config/index';
 import { NotificationSocketStatus } from '../types';
 
-export interface NotificationsSocketProviderProps {
+interface NotificationsSocketProviderProps {
   readonly children: React.ReactNode;
   /** Optional: called when any notification event is received (for store/UI). */
   readonly onNotification?: (

@@ -2,7 +2,7 @@
  * @description Human-readable definitions for OpenThrottle daily aggregated stats (plans/tasks).
  * Mirrors the series shown in the developer dashboard daily stats chart; wording stays conservative because rollups are server-defined.
  */
-export interface UsageDailyStatsSeries {
+interface UsageDailyStatsSeries {
   readonly description: string;
   readonly label: string;
   readonly seriesKey:

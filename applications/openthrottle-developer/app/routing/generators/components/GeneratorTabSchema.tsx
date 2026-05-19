@@ -11,7 +11,7 @@ import {
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 
-export interface GeneratorTabSchemaProps {
+interface GeneratorTabSchemaProps {
   readonly generator: GeneratorDetailCardFragment;
 }
 

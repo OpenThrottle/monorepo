@@ -10,11 +10,8 @@ export const QUEUE_STATS_CHART_SERIES = [
   'failed',
 ] as const;
 
-export type QueueStatsChartSeriesKey =
-  (typeof QUEUE_STATS_CHART_SERIES)[number];
-
 /** One row per queue: name plus all five count series for grouped bar charts. */
-export interface QueueStatsChartDatum {
+interface QueueStatsChartDatum {
   readonly active: number;
   readonly completed: number;
   readonly delayed: number;

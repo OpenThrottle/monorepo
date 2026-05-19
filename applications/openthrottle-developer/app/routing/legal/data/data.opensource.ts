@@ -1,4 +1,4 @@
-export interface OpenSource {
+interface OpenSource {
   name: string;
   image: string;
   url: string;

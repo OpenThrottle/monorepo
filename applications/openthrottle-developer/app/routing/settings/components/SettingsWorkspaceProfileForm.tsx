@@ -15,7 +15,7 @@ import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 
-export interface SettingsWorkspaceProfileFormProps {
+interface SettingsWorkspaceProfileFormProps {
   readonly actionError?: string | null;
   readonly className?: string;
   readonly profile: UserWorkspaceProfileFieldsFragment;

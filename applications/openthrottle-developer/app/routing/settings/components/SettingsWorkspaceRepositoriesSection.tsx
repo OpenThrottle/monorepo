@@ -17,7 +17,7 @@ import type {
 
 type ProjectOption = GetWorkspaceSettingsQuery['projects'][number];
 
-export interface SettingsWorkspaceRepositoriesSectionProps {
+interface SettingsWorkspaceRepositoriesSectionProps {
   readonly actionError?: string | null;
   readonly className?: string;
   readonly localRepositories: readonly WorkspaceLocalRepositoryFieldsFragment[];

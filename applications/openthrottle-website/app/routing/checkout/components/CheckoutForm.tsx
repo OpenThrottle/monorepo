@@ -10,7 +10,7 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 
-export interface CheckoutFormProps {
+interface CheckoutFormProps {
   readonly actionData?: { error?: string } | null;
   readonly className?: string;
   /** When true, form is disabled (e.g. creating session). */

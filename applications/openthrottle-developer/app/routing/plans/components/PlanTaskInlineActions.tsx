@@ -8,7 +8,7 @@ import {
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { parseRequirementsList } from '~/routing/plans/utils/formatters';
 
-export interface PlanTaskInlineActionsProps {
+interface PlanTaskInlineActionsProps {
   readonly task: PlanTaskRowFragment;
 }
 

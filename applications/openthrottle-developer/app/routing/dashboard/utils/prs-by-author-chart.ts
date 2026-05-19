@@ -3,11 +3,8 @@ import type { ChartConfig } from '@openthrottle/react-router-shadcn';
 /** Recharts data keys for open vs closed PR counts per author. */
 export const PRS_BY_AUTHOR_CHART_SERIES = ['closed', 'open'] as const;
 
-export type PrsByAuthorChartSeriesKey =
-  (typeof PRS_BY_AUTHOR_CHART_SERIES)[number];
-
 /** One row per author: name plus open and closed counts for grouped bar charts. */
-export interface PrsByAuthorChartDatum {
+interface PrsByAuthorChartDatum {
   readonly author: string;
   readonly closed: number;
   readonly open: number;

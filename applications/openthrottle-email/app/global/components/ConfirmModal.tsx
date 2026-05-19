@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from '@openthrottle/react-router-shadcn';
 
-export interface ConfirmModalProps {
+interface ConfirmModalProps {
   /** When true, the modal is open. */
   readonly open: boolean;
   /** Callback when the user confirms (primary action). */

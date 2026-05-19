@@ -40,7 +40,7 @@ const PROMPTS_VALID_TYPES = new Set(
   PROMPTS_TYPE_FILTER_OPTIONS.map((opt) => opt.value),
 );
 
-export type PromptTypeFilterValue =
+type PromptTypeFilterValue =
   (typeof PROMPTS_TYPE_FILTER_OPTIONS)[number]['value'];
 
 export const TYPE_OPTIONS: readonly string[] = PROMPTS_TYPE_FILTER_OPTIONS.map(

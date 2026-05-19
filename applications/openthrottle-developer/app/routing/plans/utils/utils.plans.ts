@@ -1,5 +1,4 @@
 import { BadgeProps } from '@openthrottle/react-router-shadcn';
-import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-options';
 import { PlanStatusKey } from '~/routing/plans/types';
 
 /**
@@ -11,20 +10,6 @@ export const getPlanIsCancelable = (
 ): boolean => {
   return status === 'QUEUED' || status === 'IN_PROGRESS';
 };
-
-/**
- * Returns a human-readable label for a plan status
- * (e.g. IN_PROGRESS → "In progress"). Falls back to the raw value if unknown.
- */
-export function getPlanStatusLabel(status: string | null | undefined): string {
-  if (status == null) return 'Unknown';
-
-  const option = PLAN_STATUS_FILTER_OPTIONS.find(
-    (option) => option.value === status,
-  );
-
-  return option?.label ?? status;
-}
 
 /**
  * Returns the color for a plan status badge

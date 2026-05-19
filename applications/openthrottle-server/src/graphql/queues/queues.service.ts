@@ -51,7 +51,7 @@ type AnyJobData =
   | DynamicJobData
   | RunPlanJobData;
 
-export interface QueueStats {
+interface QueueStats {
   readonly activeCount: number;
   readonly completedCount: number;
   readonly delayedCount: number;
@@ -61,7 +61,7 @@ export interface QueueStats {
 }
 
 /** @description Shape of a job returned by getJobs for GraphQL mapping. */
-export interface JobDto {
+interface JobDto {
   readonly data: string | null;
   readonly executionBackend: string | null;
   readonly failedReason: string | null;
@@ -82,20 +82,20 @@ interface PlanRunExecutionBackendJobData {
   };
 }
 
-export interface GetJobsResult {
+interface GetJobsResult {
   readonly hasNext: boolean;
   readonly jobs: JobDto[];
 }
 
 /** @description Payload for {@link QueuesService.enqueuePlanRalphOrchestrator}. */
-export interface EnqueuePlanRalphOrchestratorQueuePayload {
+interface EnqueuePlanRalphOrchestratorQueuePayload {
   readonly idempotencyKey?: string;
   readonly jobData: RunPlanOrchestratorJobData;
   readonly priority?: number;
 }
 
 /** @description Shape of a repeatable job returned by getRepeatableJobs for GraphQL mapping. */
-export interface RepeatableJobDto {
+interface RepeatableJobDto {
   readonly key: string;
   readonly name: string;
   readonly id: string | null;

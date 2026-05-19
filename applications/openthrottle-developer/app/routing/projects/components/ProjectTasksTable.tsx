@@ -6,10 +6,10 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { GetProjectByIdQuery } from '~/__generated__/graphql';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 
-export type ProjectTaskRow =
+type ProjectTaskRow =
   GetProjectByIdQuery['projectTasksResult']['tasks'][number];
 
-export interface ProjectTasksTableProps {
+interface ProjectTasksTableProps {
   className?: string;
   tasks: ProjectTaskRow[];
 }

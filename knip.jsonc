@@ -417,6 +417,42 @@
     "tools/dotfiles/src/index.ts": ["exports"],
     "tools/dotfiles/src/config.ts": ["exports"],
     // openthrottle-developer: SITE_DEVELOPER_PORTAL_URL kept for commented home hero CTA rollback.
-    "applications/openthrottle-developer/app/global/config/settings.ts": ["exports"],
+    "applications/openthrottle-developer/app/global/config/settings.ts": [
+      "exports",
+    ],
+    // Vitest-only exports (knip excludes **/__tests__/** and *.test.ts).
+    "applications/openthrottle-developer/app/routing/home/data/index.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/plans/config/status-options.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/plans/data/atom.plan.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/plans/utils/workflow-run-options-search-param.ts":
+      ["exports"],
+    "applications/openthrottle-developer/app/routing/projects/config/index.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/projects/utils/parsers.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/prompts/config/index.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/prompts/utils/parsers.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/pull-requests/utils/parsers.ts":
+      ["exports"],
+    "applications/openthrottle-developer/app/routing/search/utils/parsers.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-developer/app/routing/settings/client-log-sink.ts": [
+      "exports",
+    ],
+    "applications/openthrottle-server/src/queues/database-backup/database-backup.env.ts":
+      ["exports"],
   },
 }

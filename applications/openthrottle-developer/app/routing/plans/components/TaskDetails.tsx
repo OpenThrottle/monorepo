@@ -14,7 +14,7 @@ import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 
-export interface TaskDetailsProps {
+interface TaskDetailsProps {
   readonly className?: string;
   readonly planId: string;
   readonly task: PlanTaskRowFragment;

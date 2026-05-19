@@ -9,7 +9,7 @@ import {
   OPEN_THROTTLE_GITHUB_URL,
 } from '@openthrottle/react-router-utils';
 
-export interface HomeHeroV1Props {
+interface HomeHeroV1Props {
   className?: string;
 }
 

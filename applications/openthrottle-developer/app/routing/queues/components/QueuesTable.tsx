@@ -12,7 +12,7 @@ import classnames from 'classnames';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { backlogForQueue } from '~/routing/queues/utils/queue-stats-chart';
 
-export interface QueuesTableProps {
+interface QueuesTableProps {
   readonly className?: string;
   readonly queues: QueueCardFragment[];
 }

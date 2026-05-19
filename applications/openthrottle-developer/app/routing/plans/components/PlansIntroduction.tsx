@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ListChevronsUpDownIcon } from 'lucide-react';
 
-export interface PlansIntroductionProps {
+interface PlansIntroductionProps {
   readonly className?: string;
 }
 

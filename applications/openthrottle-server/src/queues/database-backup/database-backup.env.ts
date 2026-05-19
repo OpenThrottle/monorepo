@@ -15,7 +15,7 @@ export const DATABASE_BACKUP_DEFAULT_CRON_PATTERN = '0 0 0 * * *';
 /** @description Default BullMQ job timeout (30 minutes). */
 export const DATABASE_BACKUP_DEFAULT_JOB_TIMEOUT_MS = 1_800_000;
 
-export interface DatabaseBackupRepeatableConfig {
+interface DatabaseBackupRepeatableConfig {
   readonly cronPattern: string;
   readonly enabled: true;
   readonly jobName: typeof DATABASE_BACKUP_JOB_NAME;
@@ -26,7 +26,7 @@ export interface DatabaseBackupRepeatableConfig {
   readonly workspaceRoot: string;
 }
 
-export type DatabaseBackupScheduleResolution =
+type DatabaseBackupScheduleResolution =
   | { readonly enabled: false; readonly reason: string }
   | DatabaseBackupRepeatableConfig;
 

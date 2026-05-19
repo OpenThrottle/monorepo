@@ -4,7 +4,7 @@
 
 import { spawn } from 'node:child_process';
 
-export interface SpawnDatabaseBackupOptions {
+interface SpawnDatabaseBackupOptions {
   readonly cwd: string;
   readonly onStderr: (chunk: string) => void;
   readonly onStdout: (chunk: string) => void;

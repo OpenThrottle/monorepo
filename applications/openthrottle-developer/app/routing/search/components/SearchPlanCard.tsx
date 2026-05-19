@@ -13,7 +13,7 @@ import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisRe
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
 
-export interface SearchPlanCardProps {
+interface SearchPlanCardProps {
   className?: string;
   readonly defaultOpenWhy?: boolean;
   readonly rankMeta?: SearchRankMeta;

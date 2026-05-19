@@ -7,7 +7,7 @@ import {
 } from '~/routing/search/config';
 import { parseSearchParams } from '~/routing/search/utils/parsers';
 
-export interface SearchFiltersProps {
+interface SearchFiltersProps {
   readonly className?: string;
 }
 

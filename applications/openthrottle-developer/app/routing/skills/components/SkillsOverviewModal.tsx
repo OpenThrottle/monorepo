@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { OpenThrottleModal } from '@openthrottle/react-router-ui';
 
-export interface SkillsOverviewModalProps {
+interface SkillsOverviewModalProps {
   readonly className?: string;
 }
 

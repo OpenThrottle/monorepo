@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export interface NotificationPermissionUnsupportedProps {
+interface NotificationPermissionUnsupportedProps {
   readonly className?: string;
 }
 

@@ -11,7 +11,7 @@ import {
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 
-export interface ContactFormProps {
+interface ContactFormProps {
   readonly actionData?: { error?: string } | null;
   readonly className?: string;
 }

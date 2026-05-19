@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 
-export interface NotificationActionsProps {
+interface NotificationActionsProps {
   readonly dismissAll: () => void;
   readonly markAllAsRead: () => void;
   readonly setOpen: (open: boolean) => void;

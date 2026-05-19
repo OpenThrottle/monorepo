@@ -2,7 +2,7 @@
  * @description Parses `name` and `description` from SKILL.md YAML frontmatter.
  * Supports inline scalars and folded (`>-`) / literal (`|-`) multiline blocks.
  */
-export interface SkillFrontmatter {
+interface SkillFrontmatter {
   readonly name: string | undefined;
   readonly description: string | undefined;
 }

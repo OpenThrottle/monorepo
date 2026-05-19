@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { Form, useNavigation } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 
-export interface SettingsWorkspaceApplyEditorsProps {
+interface SettingsWorkspaceApplyEditorsProps {
   readonly actionError?: string | null;
   readonly actionMessage?: string | null;
   readonly className?: string;

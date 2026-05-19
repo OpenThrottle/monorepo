@@ -20,7 +20,7 @@ import { useLocation } from 'react-router';
 //   getPathFromTo,
 // } from '~/global/utils/utils.global';
 
-export interface MailSidebarProps {}
+interface MailSidebarProps {}
 
 export const MailSidebar = (_props: MailSidebarProps) => {
   // const { className } = props;

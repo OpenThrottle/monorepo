@@ -30,7 +30,7 @@ import {
 } from '~/routing/settings/utils/settings.support';
 import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
 
-export interface SettingsLogsPanelProps {}
+interface SettingsLogsPanelProps {}
 
 export function SettingsLogsPanel(
   _props: SettingsLogsPanelProps,

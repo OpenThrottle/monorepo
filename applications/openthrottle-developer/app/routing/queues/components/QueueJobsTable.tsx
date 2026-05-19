@@ -22,11 +22,11 @@ const JOB_STATE_BADGE_VARIANT: Record<
   waiting: 'outline',
 };
 
-export type QueueJobsTableJob = NonNullable<
+type QueueJobsTableJob = NonNullable<
   NonNullable<GetQueueQuery['queue']>['jobs']
 >['jobs'][number];
 
-export interface QueueJobsTableProps {
+interface QueueJobsTableProps {
   readonly className?: string;
   readonly jobs: readonly QueueJobsTableJob[];
   readonly queueName: string;

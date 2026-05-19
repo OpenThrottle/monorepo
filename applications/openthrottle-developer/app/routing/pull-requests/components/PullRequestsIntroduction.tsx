@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GitPullRequestIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-export interface PullRequestsIntroductionProps {}
+interface PullRequestsIntroductionProps {}
 
 export const PullRequestsIntroduction = (
   _props: PullRequestsIntroductionProps,

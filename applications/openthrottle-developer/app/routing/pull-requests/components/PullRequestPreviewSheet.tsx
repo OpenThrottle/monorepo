@@ -19,7 +19,7 @@ import {
   githubPullConversationUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 
-export interface PullRequestPreviewSheetProps {
+interface PullRequestPreviewSheetProps {
   readonly filters: PullRequestsListFilters;
   readonly listQuery: string;
   readonly prPreviewNumber: number | null;

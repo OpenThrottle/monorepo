@@ -10,7 +10,7 @@ import type { BillingInterval } from '~/routing/pricing/types';
 
 export type { BillingInterval };
 
-export interface PricingToggleProps {
+interface PricingToggleProps {
   // FIXME: We should remove the string typing here
   readonly onValueChange: (value: BillingInterval | string) => void;
   readonly value: BillingInterval;

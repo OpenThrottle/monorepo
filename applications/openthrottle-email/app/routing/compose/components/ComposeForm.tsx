@@ -13,7 +13,7 @@ import {
   type FormSchema,
 } from '~/routing/compose/config/form.compose';
 
-export interface ComposeFormProps extends FormProps {
+interface ComposeFormProps extends FormProps {
   className?: string;
   debug?: boolean;
   initialValues?: FormSchema;

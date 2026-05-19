@@ -1,7 +1,7 @@
 /**
  * @description Shared destinations for dashboard “Jump to” and compact cross-entity bars on list routes.
  */
-export interface WorkspaceJumpLink {
+interface WorkspaceJumpLink {
   readonly label: string;
   readonly to: string;
 }

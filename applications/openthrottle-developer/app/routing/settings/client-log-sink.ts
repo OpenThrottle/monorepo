@@ -33,12 +33,12 @@ export const CLIENT_LOG_BUFFER_MAX_ENTRIES = 1000;
 /**
  * @description Soft ceiling on total characters of stored `message` strings; oldest entries removed first.
  */
-export const CLIENT_LOG_BUFFER_MAX_APPROX_CHARS = 512 * 1024;
+const CLIENT_LOG_BUFFER_MAX_APPROX_CHARS = 512 * 1024;
 
 /**
  * @description Max characters stored for a single log line; remainder replaced with a truncation suffix.
  */
-export const CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS = 50_000;
+const CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS = 50_000;
 
 const LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const;
 
@@ -71,7 +71,7 @@ const notify = (): void => {
 /**
  * @description Best-effort removal of common credential substrings from one captured line.
  */
-export const redactSensitiveLogText = (text: string): string => {
+const redactSensitiveLogText = (text: string): string => {
   let out = text;
   // Whole header segment first so we do not leave `Authorization: Bearer` after standalone Bearer redaction.
   out = out.replace(
@@ -94,7 +94,7 @@ export const redactSensitiveLogText = (text: string): string => {
 /**
  * @description Stringifies console argument list for a single line.
  */
-export const formatLogArgs = (args: readonly unknown[]): string => {
+const formatLogArgs = (args: readonly unknown[]): string => {
   return args
     .map((arg) => {
       if (typeof arg === 'string') {

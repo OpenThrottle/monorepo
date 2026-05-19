@@ -4,7 +4,7 @@ import { BrainCircuitIcon } from 'lucide-react';
 import { SkillsOverviewDialog } from '~/routing/skills/components/SkillsOverviewDialog';
 import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
-export interface SkillsIntroductionProps {
+interface SkillsIntroductionProps {
   readonly entries?: ReadonlyArray<RepoSkillEntry>;
 }
 

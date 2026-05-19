@@ -16,7 +16,7 @@ import {
 } from '~/routing/dashboard/config/config.dashboard';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 
-export interface DashboardToolbarProps {
+interface DashboardToolbarProps {
   readonly className?: string;
 }
 

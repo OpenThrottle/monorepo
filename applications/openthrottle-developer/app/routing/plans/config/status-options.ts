@@ -2,10 +2,10 @@
  * @description Status filter options for the plans list (PlansToolbar).
  * Aligns with PlanStatusBadge / format-status.
  */
-export const DEFAULT_PLAN_STATUS = 'PENDING' as const;
+const DEFAULT_PLAN_STATUS = 'PENDING' as const;
 
 /** Default statuses when none are in the URL (aligns with API PlansListFilters). */
-export const DEFAULT_STATUSES: readonly string[] = [
+const DEFAULT_STATUSES: readonly string[] = [
   'BACKLOG',
   // 'COMPLETED',
   'IN_PROGRESS',
@@ -24,7 +24,7 @@ export const PLAN_STATUS_FILTER_OPTIONS = [
   { label: 'Skipped', value: 'SKIPPED' },
 ] as const;
 
-export type PlanStatusFilterValue =
+type PlanStatusFilterValue =
   (typeof PLAN_STATUS_FILTER_OPTIONS)[number]['value'];
 
 /** All valid status values as a string array (for multi-select options). */

@@ -1,6 +1,6 @@
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 
-export interface WorkspaceEditorOption {
+interface WorkspaceEditorOption {
   readonly label: string;
   readonly value: WorkspaceEditorId;
 }

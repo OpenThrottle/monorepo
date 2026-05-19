@@ -19,7 +19,7 @@ import {
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-export interface PlanWorkflowConfigTuningProps {
+interface PlanWorkflowConfigTuningProps {
   readonly input: WorkflowRalphRunOptionsInput;
   readonly iterationTimeoutText: string;
   readonly setInput: (

@@ -16,12 +16,12 @@ import {
 } from '~/routing/dashboard/utils/prs-by-author-chart';
 
 /** Open and closed PR counts by author from {@link getDashboardGithubStats}. */
-export type DashboardPrsByAuthorGithubStats = Pick<
+type DashboardPrsByAuthorGithubStats = Pick<
   GetDashboardGithubStatsQuery,
   'closedPrCountByAuthor' | 'openPrCountByAuthor'
 >;
 
-export interface DashboardOpenPrsByAuthorCardProps {
+interface DashboardOpenPrsByAuthorCardProps {
   readonly className?: string;
   readonly githubStats: DashboardPrsByAuthorGithubStats;
 }

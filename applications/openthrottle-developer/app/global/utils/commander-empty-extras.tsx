@@ -33,7 +33,7 @@ export type CommanderSearchFields = {
 /**
  * @description Handlers for rows built when the palette filter matches no static commands.
  */
-export interface CommanderEmptyStateExtrasHandlers {
+interface CommanderEmptyStateExtrasHandlers {
   /**
    * @description Submit debug navigation via root action — same redirect rules as the loader-tested action map.
    */

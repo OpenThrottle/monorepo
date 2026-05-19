@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SearchIcon } from 'lucide-react';
 
-export interface SearchIntroductionProps {
+interface SearchIntroductionProps {
   readonly className?: string;
   readonly expandRankingDetails?: boolean;
   readonly hasQuery?: boolean;

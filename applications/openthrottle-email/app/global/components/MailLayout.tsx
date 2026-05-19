@@ -9,7 +9,7 @@ import classnames from 'classnames';
 import { MailSidebar } from '~/global/components/MailSidebar';
 import { MailToolbar } from '~/global/components/MailToolbar';
 
-export interface MailLayoutProps {
+interface MailLayoutProps {
   readonly children: React.ReactNode;
   readonly className?: string;
   /** Initial sidebar open state; when omitted, defaults to true. Pass from loader using cookie for persistence. */

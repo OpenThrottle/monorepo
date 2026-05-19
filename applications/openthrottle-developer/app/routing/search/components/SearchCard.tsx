@@ -5,9 +5,7 @@ import { SearchTaskCard } from '~/routing/search/components/SearchTaskCard';
 import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 
-export type { SearchRankMeta };
-
-export interface SearchCardProps {
+interface SearchCardProps {
   className?: string;
   readonly defaultOpenWhy?: boolean;
   readonly rankMeta?: SearchRankMeta;

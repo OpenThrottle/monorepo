@@ -15,7 +15,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { PROMPTS_TYPE_FILTER_OPTIONS } from '~/routing/prompts/utils/parsers';
 
-export interface TypeMultiSelectProps {
+interface TypeMultiSelectProps {
   readonly compact?: boolean;
   readonly 'data-testid'?: string;
   readonly onChange: (value: string[]) => void;

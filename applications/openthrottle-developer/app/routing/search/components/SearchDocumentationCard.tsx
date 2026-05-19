@@ -12,7 +12,7 @@ import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisRe
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 
-export interface SearchDocumentationCardProps {
+interface SearchDocumentationCardProps {
   className?: string;
   readonly defaultOpenWhy?: boolean;
   readonly rankMeta?: SearchRankMeta;

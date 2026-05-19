@@ -9,7 +9,7 @@ const DEFAULT_OWNER: GithubOrg = 'openthrottle';
 const DEFAULT_REPO: GithubRepo = 'monorepo';
 
 /** Parsed dashboard GitHub owner and repository from URL search params. */
-export interface ParsedDashboardGithubParams {
+interface ParsedDashboardGithubParams {
   readonly owner: GithubOrg;
   readonly repo: GithubRepo;
 }

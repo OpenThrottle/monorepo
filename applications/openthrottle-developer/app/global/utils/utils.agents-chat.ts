@@ -3,7 +3,7 @@ import { SendAgentMessageDocument } from '@openthrottle/openthrottle-developer-c
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';
 
-export interface CallSendAgentMessageParams {
+interface CallSendAgentMessageParams {
   readonly conversationId?: string | null;
   readonly message: string;
 }
@@ -63,7 +63,7 @@ export async function handleSendAgentMessageIntent(
 /**
  * @description Call `agentsRunChatTurn` on openthrottle-server with auth from the request cookie.
  */
-export async function callSendAgentMessage(
+async function callSendAgentMessage(
   request: Request,
   params: CallSendAgentMessageParams,
 ): Promise<ChatTurnResult> {

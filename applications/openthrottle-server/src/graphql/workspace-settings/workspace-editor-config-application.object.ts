@@ -8,7 +8,7 @@ import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 @ObjectType({
   description: `Result of applying editor configuration for one linked repository and editor.`,
 })
-export class WorkspaceEditorConfigApplicationObject {
+class WorkspaceEditorConfigApplicationObject {
   @Field(() => ID)
   repositoryId!: string;
 

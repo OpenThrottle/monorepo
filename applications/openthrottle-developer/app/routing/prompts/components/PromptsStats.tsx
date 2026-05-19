@@ -2,7 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
-export interface PromptsStatsProps {
+interface PromptsStatsProps {
   readonly className?: string;
   readonly countAgents: number;
   readonly countSkills: number;

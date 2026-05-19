@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { PlusIcon } from 'lucide-react';
 
-export interface SkillsToolbarProps {
+interface SkillsToolbarProps {
   readonly className?: string;
 }
 

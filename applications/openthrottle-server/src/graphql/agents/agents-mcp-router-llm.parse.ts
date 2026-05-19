@@ -21,7 +21,7 @@ const LlmRoutingSchema = z.object({
 /**
  * @description Strips optional ```json fences``` from model output before JSON.parse.
  */
-export const stripMarkdownJsonFence = (raw: string): string => {
+const stripMarkdownJsonFence = (raw: string): string => {
   const t = raw.trim();
   const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```$/im.exec(t);
 

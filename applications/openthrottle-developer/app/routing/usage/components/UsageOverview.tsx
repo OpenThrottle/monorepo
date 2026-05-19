@@ -4,7 +4,7 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { Link } from 'react-router';
 
-export interface UsageOverviewProps {
+interface UsageOverviewProps {
   readonly className?: string;
   readonly rangeDays: number;
 }

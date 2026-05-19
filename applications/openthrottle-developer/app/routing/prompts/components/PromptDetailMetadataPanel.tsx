@@ -16,7 +16,7 @@ import {
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
 import type { GetPromptQuery } from '~/__generated__/graphql';
 
-export interface PromptDetailMetadataPanelProps {
+interface PromptDetailMetadataPanelProps {
   readonly contentLength: number;
   /** Current editor buffer (use for fingerprint; may differ from API until save). */
   readonly debugContent: string;

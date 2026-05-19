@@ -12,7 +12,7 @@ import {
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
-export interface PromptSortDropdownProps {
+interface PromptSortDropdownProps {
   readonly onChange: (
     sortBy: PromptsSortBy,
     sortOrder: PromptsSortOrder,

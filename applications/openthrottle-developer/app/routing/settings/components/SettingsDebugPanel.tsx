@@ -24,7 +24,7 @@ import { SettingsBuildTools } from '~/routing/settings/components/SettingsBuildT
 import { SettingsStorage } from '~/routing/settings/components/SettingsStorage';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 
-export type SettingsDebugGraphQLResult =
+type SettingsDebugGraphQLResult =
   | {
       readonly latencyMs: number;
       readonly serverHealth: ServerHealthObject;

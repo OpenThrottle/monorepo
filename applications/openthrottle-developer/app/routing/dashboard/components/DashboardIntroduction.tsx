@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ChartBarIcon } from 'lucide-react';
 
-export interface DashboardIntroductionProps {
+interface DashboardIntroductionProps {
   readonly className?: string;
 }
 

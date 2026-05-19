@@ -4,7 +4,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FlagIcon } from 'lucide-react';
 import { Card } from '@openthrottle/react-router-shadcn';
 
-export interface SettingsFeatureFlagsProps {
+interface SettingsFeatureFlagsProps {
   readonly className?: string;
 }
 

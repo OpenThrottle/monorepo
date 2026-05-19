@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { USAGE_DAILY_STATS_SERIES } from '~/routing/usage/data/daily-stats-series-glossary';
 
-export interface UsageDailyActivityOverviewProps {
+interface UsageDailyActivityOverviewProps {
   readonly rangeDays: number;
 }
 

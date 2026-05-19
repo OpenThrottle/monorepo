@@ -34,7 +34,7 @@ export type PullRequestsTableColumnValue =
 /**
  * @description Context for PR table columns that build portal routes and GitHub URLs (aligned with pull-requests cards).
  */
-export interface PullRequestsTableColumnsContext {
+interface PullRequestsTableColumnsContext {
   readonly filters: PullRequestsListFilters;
   readonly listQuery: string;
 }

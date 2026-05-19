@@ -26,7 +26,7 @@ import {
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 import { EditorWindow } from '@openthrottle/react-router-editor';
 
-export interface PlanTabDetailsProps {
+interface PlanTabDetailsProps {
   readonly fullscreen: boolean;
   readonly plan: PlanDetailsFragment;
   readonly ralphTuningJson: string;

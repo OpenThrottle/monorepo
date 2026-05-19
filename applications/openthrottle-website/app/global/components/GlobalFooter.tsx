@@ -6,7 +6,7 @@ import {
   OPEN_THROTTLE_GITHUB_URL_DISCUSSIONS,
 } from '@openthrottle/react-router-utils';
 
-export interface GlobalFooterProps {}
+interface GlobalFooterProps {}
 
 export const GlobalFooter = (_props: GlobalFooterProps) => {
   // const { className } = props;

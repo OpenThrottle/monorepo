@@ -4,7 +4,7 @@ import {
 } from '~/routing/search/config';
 
 /** Parsed search URL parameters. */
-export interface ParsedSearchParams {
+interface ParsedSearchParams {
   /** When true, power-user mode: expand ranking details on each result (`details=ranking`). */
   readonly expandRankingDetails: boolean;
   readonly limit: number;

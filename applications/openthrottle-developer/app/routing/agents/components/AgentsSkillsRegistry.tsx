@@ -16,7 +16,7 @@ import {
   type RepoSkillEntry,
 } from '~/routing/agents/data/repo-skills-registry';
 
-export interface AgentsSkillsRegistryProps {
+interface AgentsSkillsRegistryProps {
   readonly className?: string;
   readonly entries?: ReadonlyArray<RepoSkillEntry>;
 }

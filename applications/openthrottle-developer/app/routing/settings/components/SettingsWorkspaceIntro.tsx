@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { MonitorCogIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-export interface SettingsWorkspaceIntroProps {
+interface SettingsWorkspaceIntroProps {
   readonly className?: string;
 }
 

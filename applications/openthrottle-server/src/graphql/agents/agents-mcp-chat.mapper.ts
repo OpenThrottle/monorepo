@@ -39,7 +39,7 @@ export const parseBearerJwt = (
   return match?.[1]?.trim();
 };
 
-export interface AgentsChatTurnMcpMetadata {
+interface AgentsChatTurnMcpMetadata {
   readonly arguments: Readonly<Record<string, unknown>>;
   readonly confidence?: number;
   readonly conversationId?: string | null;

@@ -13,7 +13,7 @@ import {
 import { DashboardActivityCardFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 
-export interface DashboardRecentActivityProps {
+interface DashboardRecentActivityProps {
   className?: string;
   data: DashboardActivityCardFragment;
 }

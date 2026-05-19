@@ -17,7 +17,7 @@ import { formatPlanTaskStatus } from '~/routing/plans/utils/format-status';
 
 const TASK_CARD_CONTEXT_TRUNCATE = 120;
 
-export interface PlanTaskCardProps {
+interface PlanTaskCardProps {
   readonly className?: string;
   readonly task: PlanTaskRowFragment;
 }

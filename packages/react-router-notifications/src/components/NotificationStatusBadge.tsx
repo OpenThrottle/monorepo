@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { useNotificationsSocket } from '../hooks/useNotificationsSocket';
 import { formatStatusToColor } from '../utils/formatters';
 
-export interface NotificationStatusBadgeProps {}
+interface NotificationStatusBadgeProps {}
 
 export const NotificationStatusBadge = (
   _props: NotificationStatusBadgeProps,

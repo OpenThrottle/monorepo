@@ -12,7 +12,7 @@ import {
   saveToStorage,
 } from '../data';
 
-export interface NotificationsStoreProviderProps {
+interface NotificationsStoreProviderProps {
   readonly children: React.ReactNode;
   /** If true, persist notifications to localStorage and rehydrate on mount. */
   readonly persist?: boolean;

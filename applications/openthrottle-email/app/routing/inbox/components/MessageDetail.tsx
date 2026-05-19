@@ -36,7 +36,7 @@ import type { MailFolderId } from '~/types/mail';
 type ConfirmAction = 'archive' | 'delete' | null;
 
 /** Callbacks for reading pane actions; wire to compose route and API when backend is ready. */
-export interface MessageDetailActionCallbacks {
+interface MessageDetailActionCallbacks {
   readonly onArchive?: (message: MailMessageDetail) => void;
   readonly onDelete?: (message: MailMessageDetail) => void;
   readonly onForward?: (message: MailMessageDetail) => void;
@@ -49,7 +49,7 @@ export interface MessageDetailActionCallbacks {
   readonly onReplyAll?: (message: MailMessageDetail) => void;
 }
 
-export interface MessageDetailProps extends MessageDetailActionCallbacks {
+interface MessageDetailProps extends MessageDetailActionCallbacks {
   readonly className?: string;
   /** When true, show skeleton for header and body; used when loader defers or fetches async. */
   readonly loading?: boolean;

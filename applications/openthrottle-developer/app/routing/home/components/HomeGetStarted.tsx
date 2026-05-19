@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-export interface HomeGetStartedProps {
+interface HomeGetStartedProps {
   readonly className?: string;
 }
 

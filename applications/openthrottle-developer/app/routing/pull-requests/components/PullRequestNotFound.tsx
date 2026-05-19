@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 
-export interface PullRequestNotFoundProps {
+interface PullRequestNotFoundProps {
   readonly className?: string;
   readonly listQuery: string;
   readonly owner: string;

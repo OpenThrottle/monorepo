@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 
-export interface SettingsBuildToolsProps {}
+interface SettingsBuildToolsProps {}
 
 export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
   // const { className } = props;

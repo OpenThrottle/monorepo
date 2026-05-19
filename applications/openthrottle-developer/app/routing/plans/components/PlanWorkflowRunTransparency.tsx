@@ -21,7 +21,7 @@ import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-w
 type RecentRun =
   PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
 
-export interface PlanWorkflowRunTransparencyProps {
+interface PlanWorkflowRunTransparencyProps {
   readonly canonicalWorkflowCommand: string;
   readonly className?: string;
   readonly planId: string;

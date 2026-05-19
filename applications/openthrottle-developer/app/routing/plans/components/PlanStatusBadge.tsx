@@ -10,7 +10,7 @@ export const isPlanStatusKey = (value: string): value is PlanStatusKey => {
   return Object.prototype.hasOwnProperty.call(planStatusValues, value);
 };
 
-export interface PlanStatusBadgeProps {
+interface PlanStatusBadgeProps {
   readonly className?: string;
   readonly status: PlanStatusKey;
 }

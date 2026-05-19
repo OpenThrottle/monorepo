@@ -50,7 +50,7 @@ const EMPTY_COPY: Record<
   },
 };
 
-export interface MessageListProps {
+interface MessageListProps {
   /** Current folder for empty-state copy and future behavior (e.g. bulk actions). */
   readonly folderId?: MailFolderId;
   readonly className?: string;
