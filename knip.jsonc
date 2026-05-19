@@ -73,6 +73,14 @@
     "packages/react-router-shadcn/src/theme.css",
     "packages/react-router-shadcn/src/commander.css",
     "packages/react-router-shadcn/vitest.setup.ts",
+    // @openthrottle/react-router-*: vitest setup referenced from vitest.config.ts (knip vitest: false)
+    "packages/react-router-chat/vitest.setup.ts",
+    "packages/react-router-notifications/vitest.setup.ts",
+    "packages/react-router-profiling/vitest.setup.ts",
+    "packages/react-router-ui/vitest.setup.ts",
+    "packages/react-router-ui-global/vitest.setup.ts",
+    // Ambient window.env merge (consumed via TypeScript program, not import graph)
+    "packages/react-router-ui-global/src/types/window-env.d.ts",
   ],
   "ignoreDependencies": [
     // Internal

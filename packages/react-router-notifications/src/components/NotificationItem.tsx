@@ -2,11 +2,15 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router';
 import { Check, X } from 'lucide-react';
-import { Button, cn, DropdownMenuItem } from '@openthrottle/react-router-shadcn';
+import {
+  Button,
+  cn,
+  DropdownMenuItem,
+} from '@openthrottle/react-router-shadcn';
 import type { NotificationInstance } from '../types';
 import { formatRelativeTime, formatSeverityToColor } from '../utils/formatters';
 
-export interface NotificationItemProps {
+interface NotificationItemProps {
   readonly notification: NotificationInstance;
   readonly onMarkRead: () => void;
   readonly onDismiss: () => void;

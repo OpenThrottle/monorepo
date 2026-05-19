@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export interface NotificationEmptyProps {}
+interface NotificationEmptyProps {}
 
 export const NotificationEmpty = (_props: NotificationEmptyProps) => {
   // const { className } = props;

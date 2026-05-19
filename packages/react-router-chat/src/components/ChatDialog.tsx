@@ -19,7 +19,7 @@ import { ChatThread } from './ChatThread';
 import type { ChatMessage } from '../types';
 import { BotIcon } from 'lucide-react';
 
-export type ChatDialogVariant = 'dialog' | 'sheet';
+type ChatDialogVariant = 'dialog' | 'sheet';
 
 export interface ChatDialogProps {
   readonly className?: string;
