@@ -24,7 +24,7 @@ import type { Route } from '@/app/routes/+types/prompts.$promptId';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match.loaderData?.prompt?.title ?? 'Prompt Details',
+  breadcrumb: (match) => match.loaderData?.prompt.title ?? 'Prompt Details',
   links: (_match) => [{ children: 'Prompts', to: '/prompts' }],
 };
 
@@ -120,6 +120,7 @@ export default function Component(
     if (actionData?.error) return actionData.error;
     if (actionData?.success) return 'Saved';
     if (isDirty) return 'Unsaved changes';
+
     return '';
   }, [actionData, isDirty, isSubmitting]);
 
@@ -143,7 +144,7 @@ export default function Component(
   return (
     <GlobalScreen className="flex flex-col flex-1 h-full">
       {/* Header with prompt info and actions */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
+      <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-4">
           <a
             className="text-sm text-gray-400 hover:text-white transition-colors"
@@ -196,11 +197,13 @@ export default function Component(
         </div>
       </div>
 
+      {/* <div className="p-4"> */}
       <PromptDetailMetadataPanel
         contentLength={content.length}
         debugContent={content}
         prompt={prompt}
       />
+      {/* </div> */}
 
       {/* Editor */}
       <Editor

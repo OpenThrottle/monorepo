@@ -68,7 +68,7 @@ import {
 } from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
-  CORTEX_UUID_PATTERN,
+  REGEX_UUID,
   buildCommanderEmptyStateExtras,
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
@@ -84,7 +84,7 @@ import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate
- * @description We only need to revalidate when we login or logout which
+ * We only need to revalidate when we login or logout which
  * is already taken care of by the auth routes. So we don't need to revalidate
  * (refetch) to data at this level.
  */
@@ -217,7 +217,7 @@ export const meta = (_args: Route.MetaArgs) => {
 
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
- * @description Document shell only: {@link Meta}, {@link Links}, {@link Scripts}, env bootstrap,
+ * Document shell only: {@link Meta}, {@link Links}, {@link Scripts}, env bootstrap,
  * body wrapper for providers that must wrap the full document, {@link Toaster}, and {@link ScrollRestoration}.
  * App-level chrome lives in the default {@link App} export (canonical split for openthrottle-cms / openthrottle-admin).
  */
@@ -316,7 +316,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * @description App-level composition: providers, route chrome ({@link GlobalLayout}, header/footer toggles),
+ * App-level composition: providers, route chrome ({@link GlobalLayout}, header/footer toggles),
  * {@link Outlet}, and overlays ({@link OpenThrottleCommander}). Nested routes render through {@link Outlet}, not duplicated shell markup.
  */
 export default function App(): React.ReactElement {
@@ -336,7 +336,7 @@ export default function App(): React.ReactElement {
   const isCreateRoute = pathname.endsWith('/create');
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
-  const isHeaderHidden = isAuthRoute || isPromptsRoute;
+  const _isHeaderHidden = isAuthRoute || isPromptsRoute;
   const isMetricsHidden =
     isAuthRoute ||
     isProfileRoute ||
@@ -350,7 +350,7 @@ export default function App(): React.ReactElement {
   }, [revalidator]);
 
   /**
-   * @description Root action `commander-search`: default redirects to `/search?q=…`.
+   * Root action `commander-search`: default redirects to `/search?q=…`.
    * Optional `jump` + `id` / `id2` supports POST-driven debug navigation (see action handler).
    */
   const submitCommanderSearch = React.useCallback(
@@ -379,7 +379,8 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * @description Chrome search in {@link GlobalLayoutHeader}: focus opens the single commander; Enter with text uses the same POST as palette empty-state search.
+   * Chrome search in {@link GlobalLayoutHeader}: focus opens the single commander;
+   * Enter with text uses the same POST as palette empty-state search.
    */
   const handleSearchChromeEvent = React.useCallback(
     (event: GlobalLayoutHeaderSearchEvent) => {
@@ -392,7 +393,8 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * @description When the palette query matches no static commands, offer POST-backed jumps (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
+   * When the palette query matches no static commands, offer POST-backed jumps
+   * (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
    */
   const commanderEmptyExtras = React.useCallback(
     (query: string) =>
@@ -433,12 +435,14 @@ export default function App(): React.ReactElement {
                 suppress={data?.rootLoaderFailure?.step === 'health'}
               />
 
-              {!isHeaderHidden ? (
-                <GlobalLayoutHeader
-                  onSearchChromeEvent={handleSearchChromeEvent}
-                />
-              ) : null}
+              {/* {!_isHeaderHidden ? ( */}
+              <GlobalLayoutHeader
+                onSearchChromeEvent={handleSearchChromeEvent}
+              />
+              {/* ) : null} */}
+
               <Outlet />
+
               {!isMetricsHidden ? (
                 <GlobalMetrics
                   definitionsHref="/settings/debug#server-metrics-definitions"
@@ -500,17 +504,9 @@ export const action = async (args: Route.ActionArgs) => {
 
   if (intent === 'commander-search') {
     const jump = formData.get('jump');
-    if (jump === 'plans-index') {
-      return redirect('/plans');
-    }
-
-    if (jump === 'queues-index') {
-      return redirect('/queues');
-    }
-
-    if (jump === 'generators-index') {
-      return redirect('/generators');
-    }
+    if (jump === 'plans-index') return redirect('/plans');
+    if (jump === 'queues-index') return redirect('/queues');
+    if (jump === 'generators-index') return redirect('/generators');
 
     const idRaw = formData.get('id');
     const id2Raw = formData.get('id2');
@@ -521,27 +517,19 @@ export const action = async (args: Route.ActionArgs) => {
         ? id2Raw.trim()
         : '';
 
-    if (jump === 'plan-detail' && CORTEX_UUID_PATTERN.test(id)) {
+    if (jump === 'plan-detail' && REGEX_UUID.test(id)) {
       return redirect(`/plans/${id}`);
     }
-    if (jump === 'queue-detail' && CORTEX_UUID_PATTERN.test(id)) {
+    if (jump === 'queue-detail' && REGEX_UUID.test(id)) {
       return redirect(`/queues/${id}`);
     }
-    if (jump === 'generator-detail' && CORTEX_UUID_PATTERN.test(id)) {
+    if (jump === 'generator-detail' && REGEX_UUID.test(id)) {
       return redirect(`/generators/${id}`);
     }
-    if (
-      jump === 'queue-job' &&
-      CORTEX_UUID_PATTERN.test(id) &&
-      CORTEX_UUID_PATTERN.test(id2)
-    ) {
+    if (jump === 'queue-job' && REGEX_UUID.test(id) && REGEX_UUID.test(id2)) {
       return redirect(queueJobDetailPath(id, id2));
     }
-    if (
-      jump === 'plan-task' &&
-      CORTEX_UUID_PATTERN.test(id) &&
-      CORTEX_UUID_PATTERN.test(id2)
-    ) {
+    if (jump === 'plan-task' && REGEX_UUID.test(id) && REGEX_UUID.test(id2)) {
       return redirect(`/plans/${id}/tasks/${id2}`);
     }
 

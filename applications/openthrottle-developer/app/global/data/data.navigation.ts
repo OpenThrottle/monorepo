@@ -15,6 +15,7 @@ import {
   Search,
   SwatchBookIcon,
   TerminalSquareIcon,
+  MonitorCogIcon,
 } from 'lucide-react';
 
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
@@ -88,6 +89,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Logs',
       icon: TerminalSquareIcon,
       to: '/settings/logs',
+    },
+    {
+      children: 'Workspace',
+      icon: MonitorCogIcon,
+      to: '/settings/workspace',
     },
   ],
   User: [

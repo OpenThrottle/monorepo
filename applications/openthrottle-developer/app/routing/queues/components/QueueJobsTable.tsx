@@ -82,7 +82,7 @@ function buildQueueJobsTableColumns(
           <div className="px-3 py-2">
             <Badge
               data-testid={`job-state-${job.id}`}
-              size="sm"
+              // size="sm"
               variant={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}
             >
               {job.state}

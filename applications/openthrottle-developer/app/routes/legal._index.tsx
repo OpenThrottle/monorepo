@@ -82,7 +82,7 @@ export default function Component(
               <Link key={url} target="_blank" to={url}>
                 <img
                   alt={name}
-                  className="size-10 grayscale hover:grayscale-0 hover:scale-125 cursor-pointer transition-all duration-300 bg-muted rounded-full p-1"
+                  className="size-10 grayscale hover:grayscale-0 hover:rotate-12 hover:scale-125 cursor-pointer transition-all duration-300 bg-muted rounded-full p-1"
                   src={image}
                 />
               </Link>

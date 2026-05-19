@@ -1,5 +1,4 @@
 // 🧩 React Components
-export * from './components/ComingSoon';
 export * from './components/OpenThrottleAuthForm';
 export * from './components/OpenThrottleBreadcrumbs';
 export * from './components/OpenThrottleCalendar';

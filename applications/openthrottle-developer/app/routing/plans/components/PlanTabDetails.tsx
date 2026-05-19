@@ -111,13 +111,6 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
             'border-transparent hover:border-transparent': fullscreen,
           })}
         >
-          <Button
-            onClick={() => {
-              setFullscreen((prev) => !prev);
-            }}
-          >
-            Full Screen
-          </Button>
           <PlanToolbar
             // className="bg-card rounded-lg border border-card-border p-4"
             className="p-4"
@@ -129,6 +122,15 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
             workflowRunBlockedReason={workflowRunBlockedReason}
             workingDirectory={workingDirectory}
           />
+          <div>
+            <Button
+              onClick={() => {
+                setFullscreen((prev) => !prev);
+              }}
+            >
+              Full Screen
+            </Button>
+          </div>
           {/* <CardContent> */}
 
           {fullscreen ? (
