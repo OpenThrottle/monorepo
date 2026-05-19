@@ -1,17 +1,8 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import swc from 'unplugin-swc';
 import type { UserConfig } from 'vite';
-
-/**
- * @description Gets the directory path in ESM modules (replacement for __dirname)
- */
-export const getDirname = (importMetaUrl: string): string => {
-  return dirname(fileURLToPath(importMetaUrl));
-};
 
 /**
  * @description Test environment type
@@ -202,8 +193,6 @@ export const createVitestConfigNode = (
     setupFiles,
     ...rest
   } = options;
-
-  console.log('🟡 🟡 createVitestConfigNode', options);
 
   return createBaseVitestConfig({
     ...rest,

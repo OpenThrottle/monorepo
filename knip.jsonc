@@ -135,6 +135,9 @@
       "entry": ["src/server.ts", "scripts/e2e.mjs"],
       "project": ["src/**/*.ts", "scripts/**/*.{js,mjs}"],
     },
+    "tools/dotfiles": {
+      "project": ["src/**/*.ts"],
+    },
     "tools/workflows": {
       "entry": [
         "src/index.ts",
@@ -166,5 +169,9 @@
     "tools/generators/src/generators/package/generator.ts": ["duplicates"],
     "tools/generators/src/generators/react/generator.ts": ["duplicates"],
     "tools/generators/src/generators/react-router/generator.ts": ["duplicates"],
+    // @tools/dotfiles: documented public API for React Native / generic vitest factories.
+    "tools/dotfiles/src/vitest-config.ts": ["exports"],
+    "tools/dotfiles/src/index.ts": ["exports"],
+    "tools/dotfiles/src/config.ts": ["exports"],
   },
 }

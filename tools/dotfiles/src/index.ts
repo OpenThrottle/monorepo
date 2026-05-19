@@ -1,8 +1,3 @@
-// Global type declarations - imported only for type checking, not at runtime
-// import type {} from './global';
-//// @ts-expect-error - This is a type-only import that doesn't need to resolve at runtime
-
-// import pluginTypescript from '@typescript-eslint/eslint-plugin';
 import { getDirname } from './vite-config.js';
 import js from '@eslint/js';
 import pluginComments from 'eslint-plugin-eslint-comments';
@@ -33,19 +28,6 @@ export {
   type CreateVitestConfigOptions,
   type TestEnvironment,
 } from './vitest-config.js';
-
-// Re-export getDirname from vite-config (both files export it, but we only need one)
-
-// import pluginReactCompiler from 'eslint-plugin-react-compiler';
-
-// import globals from 'globals';
-// import jsdoc from 'eslint-plugin-jsdoc';
-// import plugin from 'eslint-plugin-jsx-a11y';
-// import plugin from 'eslint-plugin-mocha';
-// import plugin from 'eslint-plugin-module-resolver';
-// import plugin from 'eslint-plugin-promise';
-// import plugin from 'eslint-plugin-testing-library';
-// import pluginPrettier from 'eslint-plugin-prettier/recommended';
 
 /**
  * ESLint and the new "flat config" system
