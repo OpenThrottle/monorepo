@@ -28,7 +28,7 @@ describe('GlobalFooter Component', () => {
     ).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: /openthrottle/i }),
-    ).toHaveAttribute('href', ENV_SOURCE.APP_URL_DEVELOPER);
+    ).toHaveAttribute('href', ENV_SOURCE.APP_URL_WEBSITE);
     expect(component.getByRole('link', { name: /github/i })).toHaveAttribute(
       'href',
       OPEN_THROTTLE_GITHUB_URL,
