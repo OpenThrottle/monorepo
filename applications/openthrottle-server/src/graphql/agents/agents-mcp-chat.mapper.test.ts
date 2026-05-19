@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
   agentsChatTurnFromMcpToolResult,
-  agentsChatTurnFromSemanticSearchMcp,
   parseBearerJwt,
 } from './agents-mcp-chat.mapper';
 
@@ -86,9 +85,9 @@ describe('agentsChatTurnFromMcpToolResult', () => {
   });
 });
 
-describe('agentsChatTurnFromSemanticSearchMcp', () => {
+describe('agentsChatTurnFromMcpToolResult (semantic_search)', () => {
   test('maps success result with text and structured content', () => {
-    const result = agentsChatTurnFromSemanticSearchMcp(
+    const result = agentsChatTurnFromMcpToolResult(
       {
         content: [{ text: 'Hello from OT' }],
         structuredContent: { hits: 2 },
@@ -98,7 +97,9 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
           conversationId: 'conv-1',
           query: 'plans',
         },
+        conversationId: 'conv-1',
         readOnlyAgentsChat: true,
+        tool: 'semantic_search',
       },
     );
 
@@ -118,12 +119,16 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
   });
 
   test('maps MCP error result with fallback message when content empty', () => {
-    const result = agentsChatTurnFromSemanticSearchMcp(
+    const result = agentsChatTurnFromMcpToolResult(
       {
         content: [],
         isError: true,
       },
-      { arguments: { query: 'q' }, readOnlyAgentsChat: false },
+      {
+        arguments: { query: 'q' },
+        readOnlyAgentsChat: false,
+        tool: 'semantic_search',
+      },
     );
 
     expect(result.assistantText).toBeNull();
@@ -134,12 +139,16 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
   });
 
   test('maps MCP error using first content text when present', () => {
-    const result = agentsChatTurnFromSemanticSearchMcp(
+    const result = agentsChatTurnFromMcpToolResult(
       {
         content: [{ text: 'Tool validation failed' }],
         isError: true,
       },
-      { arguments: { query: 'q' }, readOnlyAgentsChat: true },
+      {
+        arguments: { query: 'q' },
+        readOnlyAgentsChat: true,
+        tool: 'semantic_search',
+      },
     );
 
     expect(result.errorMessage).toBe('Tool validation failed');
@@ -148,9 +157,13 @@ describe('agentsChatTurnFromSemanticSearchMcp', () => {
   });
 
   test('uses empty assistant text when success payload has no content entries', () => {
-    const result = agentsChatTurnFromSemanticSearchMcp(
+    const result = agentsChatTurnFromMcpToolResult(
       { content: [] },
-      { arguments: { query: 'q' }, readOnlyAgentsChat: true },
+      {
+        arguments: { query: 'q' },
+        readOnlyAgentsChat: true,
+        tool: 'semantic_search',
+      },
     );
 
     expect(result.errorMessage).toBeNull();

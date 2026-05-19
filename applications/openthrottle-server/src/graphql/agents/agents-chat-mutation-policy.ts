@@ -8,7 +8,7 @@ import type { AgentsMcpRoutedToolName } from './agents-mcp-router';
 /**
  * @description Routed MCP tools that mutate Cortex data; blocked in agents chat unless {@link readAgentsChatMutationsEnabledFromConfig} is true. Extend when write routes are added to {@link AgentsMcpRouter}.
  */
-export const AGENTS_CHAT_MUTATION_ROUTED_TOOLS: readonly AgentsMcpRoutedToolName[] =
+const AGENTS_CHAT_MUTATION_ROUTED_TOOLS: readonly AgentsMcpRoutedToolName[] =
   [];
 
 /**

@@ -3,11 +3,6 @@
  * See tools/workflows/docs/server-and-task-metrics.md.
  */
 
-import {
-  formatChildProcessMetrics,
-  formatSystemCpuMetrics,
-  formatWallClockMetrics,
-} from '@tools/workflows';
 import type {
   EnhancedTaskRunMetrics,
   TaskRunMetrics,
@@ -96,31 +91,4 @@ export function formatEnhancedTaskRunMetricsSummary(
   }
 
   return `Metrics: ${parts.join(', ')}`;
-}
-
-/**
- * @description Returns a detailed multi-line metrics report suitable for logs or debugging.
- * Unlike formatEnhancedTaskRunMetricsSummary, this includes full details of each metric type.
- */
-export function formatEnhancedTaskRunMetricsDetailed(
-  metrics: EnhancedTaskRunMetrics,
-): string {
-  const { childProcessMetrics, wallClockMetrics, systemCpuMetrics } = metrics;
-  const lines: string[] = ['Task Run Metrics:'];
-
-  lines.push(`  ${formatTaskRunMetricsSummary(metrics)}`);
-
-  if (wallClockMetrics) {
-    lines.push(`  ${formatWallClockMetrics(wallClockMetrics)}`);
-  }
-
-  if (childProcessMetrics && childProcessMetrics.sampleCount > 0) {
-    lines.push(`  ${formatChildProcessMetrics(childProcessMetrics)}`);
-  }
-
-  if (systemCpuMetrics) {
-    lines.push(`  ${formatSystemCpuMetrics(systemCpuMetrics)}`);
-  }
-
-  return lines.join('\n');
 }

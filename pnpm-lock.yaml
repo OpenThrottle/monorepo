@@ -41,6 +41,9 @@ importers:
       '@golevelup/ts-vitest':
         specifier: ^4.0.0
         version: 4.0.0
+      '@graphql-typed-document-node/core':
+        specifier: ^3.2.0
+        version: 3.2.0(graphql@16.14.0)
       '@headlessui/react':
         specifier: ^2.2.9
         version: 2.2.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1879,14 +1882,6 @@ packages:
         npm: ^6.11.0 || ^7.5.6 || >=8.0.0,
         yarn: '>= 1.13.0',
       }
-
-  '@antfu/ni@30.1.0':
-    resolution:
-      {
-        integrity: sha512-3VuAbPjgY52rQNn4wABaXMhBU2Oq91uy6L8nX49eJ35OLI68CyckGU+HZxcaHix4ymuGM2nFL1D6sLpgODK5xw==,
-      }
-    engines: { node: '>=20.19.0' }
-    hasBin: true
 
   '@anthropic-ai/sdk@0.27.3':
     resolution:
@@ -10223,10 +10218,10 @@ packages:
         integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==,
       }
 
-  '@react-grab/cli@0.1.33':
+  '@react-grab/cli@0.1.34':
     resolution:
       {
-        integrity: sha512-UOc3PwN11Osw0NzaxRLK8trP4X+5iW1Dst3gvHRCafe3wXHyadzHYH8H1hdkcXdlIx3gsoD9ASJ+G/JH+A/jqA==,
+        integrity: sha512-L2eAxN46Vq2Ss3nDegrH7wQVMeWH03ahawp+OdzUtQWqL3cq6Bt149q9XhY3cWc9fJsxuWjLfCn+3T9uApIlBA==,
       }
     hasBin: true
 
@@ -14515,6 +14510,14 @@ packages:
     peerDependencies:
       react: 19.2.4
 
+  bippy@0.5.40:
+    resolution:
+      {
+        integrity: sha512-3QPSDG5tgd7FCIkcKsUqmbGdlHxBxP7II5drXPNp1I0rpA9+4+/VjQOigDTbzeqTi6Xkaf1Dq7x4E8vbOuwOkA==,
+      }
+    peerDependencies:
+      react: 19.2.4
+
   bl@4.1.0:
     resolution:
       {
@@ -18121,12 +18124,6 @@ packages:
     resolution:
       {
         integrity: sha512-sR9BNCjBg6LNgwvxlBd0sBABvQitkLzoVY9MYYROQVX/FvfJ4Mai9LsGhDgd8qYdds0bY77VzYd5iuB+v5rwQQ==,
-      }
-
-  fzf@0.5.2:
-    resolution:
-      {
-        integrity: sha512-Tt4kuxLXFKHy8KT40zwsUPUkg1CrsgY25FxA2U/j/0WgEDCk3ddc/zLTCCcbSHX9FcKtLuVaDGtGE/STWC+j3Q==,
       }
 
   gaxios@6.7.1:
@@ -24398,10 +24395,10 @@ packages:
         integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==,
       }
 
-  react-grab@0.1.33:
+  react-grab@0.1.34:
     resolution:
       {
-        integrity: sha512-ER919JMsE4TTrb2CpEivqsIjNMSycD4HtS8v7mS3pq67U7WL1K3+C8m9AYOwW4dpuYh+EanC2eJBmfuczHJZ0A==,
+        integrity: sha512-jtdOdv0kb90oqL+pMszSh9DOLgVRaX4ZE6XN4GkDEpNNUqveQfZT014+EeJraljpqQfuWKW+96NrrRqUD93D2g==,
       }
     hasBin: true
     peerDependencies:
@@ -29025,13 +29022,6 @@ snapshots:
       rxjs: 7.8.1
     transitivePeerDependencies:
       - chokidar
-
-  '@antfu/ni@30.1.0':
-    dependencies:
-      fzf: 0.5.2
-      package-manager-detector: 1.6.0
-      tinyexec: 1.1.2
-      tinyglobby: 0.2.16
 
   '@anthropic-ai/sdk@0.27.3(encoding@0.1.13)':
     dependencies:
@@ -35624,16 +35614,17 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.33':
+  '@react-grab/cli@0.1.34':
     dependencies:
-      '@antfu/ni': 30.1.0
       commander: 14.0.3
       ignore: 7.0.5
       jsonc-parser: 3.3.1
       ora: 9.4.0
+      package-manager-detector: 1.6.0
       picocolors: 1.1.1
       prompts: 2.4.2
       smol-toml: 1.6.1
+      tinyexec: 1.1.2
 
   '@react-router/dev@7.15.0(@react-router/serve@7.15.0(react-router@7.15.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(jiti@2.7.0)(less@4.5.1)(lightningcss@1.32.0)(react-router@7.15.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.11(@types/node@24.12.2)(esbuild@0.27.7)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))(yaml@2.8.4)':
     dependencies:
@@ -38385,6 +38376,10 @@ snapshots:
     dependencies:
       react: 19.2.4
 
+  bippy@0.5.40(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+
   bl@4.1.0:
     dependencies:
       buffer: 5.7.1
@@ -40849,8 +40844,6 @@ snapshots:
   functions-have-names@1.2.3: {}
 
   fuzzysort@3.1.0: {}
-
-  fzf@0.5.2: {}
 
   gaxios@6.7.1(encoding@0.1.13):
     dependencies:
@@ -45125,10 +45118,10 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.33(react@19.2.4):
+  react-grab@0.1.34(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.33
-      bippy: 0.5.39(react@19.2.4)
+      '@react-grab/cli': 0.1.34
+      bippy: 0.5.40(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
 
@@ -45280,7 +45273,7 @@ snapshots:
       prompts: 2.4.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.33(react@19.2.4)
+      react-grab: 0.1.34(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 2.1.0

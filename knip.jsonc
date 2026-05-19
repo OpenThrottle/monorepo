@@ -24,7 +24,7 @@
     "**/.expo/**",
     "**/.nx/**",
     "**/.venv/**",
-    "**/*.config.{ts,js,mjs}",
+    "**/*.config.{ts,js,mjs,mts}",
     "**/public/worker.js",
     "**/apollo.config.mjs",
     "**/*.spec.{ts,tsx,js,jsx}",
@@ -48,6 +48,14 @@
     "applications/openthrottle-developer/tests/setup.ts",
     "applications/openthrottle-developer/app/testing/route-fixtures.tsx",
     "applications/openthrottle-developer/app/testing/search-route-fixtures.ts",
+    // openthrottle-server: Stripe payments / RBAC roles disabled in app.module (intentional rollback; see @deprecated)
+    "applications/openthrottle-server/src/graphql/payments/**",
+    "applications/openthrottle-server/src/graphql/roles/**",
+    "applications/openthrottle-server/src/modules/payments/**",
+    // Golden prompts consumed by agents-mcp-router.golden-prompts.test.ts (knip excludes *.test.ts)
+    "applications/openthrottle-server/src/graphql/agents/agents-mcp-router.golden-prompts.ts",
+    // Vitest setup referenced from vitest.config.ts
+    "applications/openthrottle-server/tests/setup.ts",
   ],
   "ignoreDependencies": [
     // Internal

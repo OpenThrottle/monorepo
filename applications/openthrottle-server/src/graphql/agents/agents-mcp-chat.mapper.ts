@@ -99,24 +99,3 @@ export const agentsChatTurnFromMcpToolResult = (
 
   return out;
 };
-
-/**
- * @description Builds a {@link AgentsChatTurnResult} from a semantic_search MCP tool result (content + optional structured payload).
- */
-export const agentsChatTurnFromSemanticSearchMcp = (
-  mcpResult: AgentsMcpToolHandlerResult,
-  metadata: {
-    readonly arguments: {
-      readonly conversationId?: string | null;
-      readonly limit?: number;
-      readonly query: string;
-    };
-    readonly readOnlyAgentsChat: boolean;
-  },
-): AgentsChatTurnResult =>
-  agentsChatTurnFromMcpToolResult(mcpResult, {
-    arguments: metadata.arguments,
-    conversationId: metadata.arguments.conversationId,
-    readOnlyAgentsChat: metadata.readOnlyAgentsChat,
-    tool: 'semantic_search',
-  });

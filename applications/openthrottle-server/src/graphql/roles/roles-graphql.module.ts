@@ -1,4 +1,5 @@
 /**
+ * @deprecated Disabled in `app.module.ts` (RolesGraphqlModule import commented). Kept for intentional rollback; do not delete without re-enabling the module.
  * @description GraphQL module for roles and permissions. Registers RolesResolver and GqlPermissionsGuard.
  */
 
