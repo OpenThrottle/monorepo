@@ -1151,29 +1151,35 @@ type UserObject {
   updatedAt: DateTime!
 }
 
-"""Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode."""
-enum WorkspaceEditorId {
-  CURSOR
-  VSCODE
-}
-
 """Per-user workspace profile: contact fields and enabled editors."""
 type UserWorkspaceProfileObject {
-  userId: ID!
-
   """Display name for notifications and workspace attribution."""
   contactDisplayName: String
 
   """Contact email for workspace profile (distinct from auth email)."""
   contactEmail: String
+  createdAt: DateTime!
 
   """Editors the user wants OpenThrottle to configure in linked repos."""
   enabledEditors: [WorkspaceEditorId!]!
-  createdAt: DateTime!
   updatedAt: DateTime!
+  userId: ID!
 }
 
-"""A local filesystem checkout registered under the user's workspace settings."""
+"""
+Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode.
+"""
+enum WorkspaceEditorId {
+  """Cursor IDE"""
+  CURSOR
+
+  """Visual Studio Code"""
+  VSCODE
+}
+
+"""
+A local filesystem checkout registered under the user's workspace settings.
+"""
 type WorkspaceLocalRepositoryObject {
   id: ID!
   userId: ID!
@@ -1194,14 +1200,16 @@ type WorkspaceLocalRepositoryObject {
 }
 
 """
-Aggregate for Settings → Workspace loader.
+Workspace settings for the authenticated user: profile and local repositories.
 """
 type WorkspaceSettingsObject {
   profile: UserWorkspaceProfileObject!
   localRepositories: [WorkspaceLocalRepositoryObject!]!
 }
 
-"""Result of applying editor configuration for one linked repository and editor."""
+"""
+Result of applying editor configuration for one linked repository and editor.
+"""
 type WorkspaceEditorConfigApplicationObject {
   repositoryId: ID!
   filesystemPath: String!
@@ -1424,15 +1432,6 @@ type Query {
   """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
 
-  """Workspace settings for the authenticated user (profile and local repositories)."""
-  workspaceSettings: WorkspaceSettingsObject!
-
-  """Get a local repository by id for the authenticated user."""
-  workspaceLocalRepository(id: ID!): WorkspaceLocalRepositoryObject
-
-  """List local repositories for the authenticated user."""
-  workspaceLocalRepositories: [WorkspaceLocalRepositoryObject!]!
-
   """
   Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
   """
@@ -1481,6 +1480,17 @@ type Query {
 
   """List all users, ordered by createdAt descending"""
   users: [UserObject!]!
+
+  """
+  Workspace settings for the authenticated user (profile and local repositories).
+  """
+  workspaceSettings: WorkspaceSettingsObject!
+
+  """Get a local repository by id for the authenticated user."""
+  workspaceLocalRepository(id: ID!): WorkspaceLocalRepositoryObject
+
+  """List local repositories for the authenticated user."""
+  workspaceLocalRepositories: [WorkspaceLocalRepositoryObject!]!
 }
 
 input ActivityByDateInput {
@@ -1973,27 +1983,31 @@ type Mutation {
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
 
-  """Update contact fields and/or enabled editors on the authenticated user's workspace profile."""
+  """
+  Update contact fields and/or enabled editors on the authenticated user's workspace profile.
+  """
   updateWorkspaceProfile(input: UpdateWorkspaceProfileInput!): UserWorkspaceProfileObject!
 
   """Register a local filesystem repository for the authenticated user."""
   createWorkspaceLocalRepository(input: CreateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
 
-  """Update metadata for a local repository owned by the authenticated user."""
+  """
+  Update metadata for a local repository owned by the authenticated user.
+  """
   updateWorkspaceLocalRepository(input: UpdateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
 
-  """Assign, change, or clear the Cortex project link for a local repository."""
+  """
+  Assign, change, or clear the Cortex project link for a local repository.
+  """
   setWorkspaceLocalRepositoryProject(input: SetWorkspaceLocalRepositoryProjectInput!): WorkspaceLocalRepositoryObject!
-
-  """Remove a local repository owned by the authenticated user."""
-  deleteWorkspaceLocalRepository(id: ID!): Boolean!
 
   """
   Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories.
   """
-  applyWorkspaceEditorConfiguration(
-    input: ApplyWorkspaceEditorConfigurationInput
-  ): ApplyWorkspaceEditorConfigurationResultObject!
+  applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigurationInput): ApplyWorkspaceEditorConfigurationResultObject!
+
+  """Remove a local repository owned by the authenticated user."""
+  deleteWorkspaceLocalRepository(id: ID!): Boolean!
 }
 
 input AgentsRunChatTurnInput {
@@ -2023,43 +2037,6 @@ input RegisterInput {
 
   """GitHub username for display; defaults to email local part if omitted"""
   githubUsername: String
-}
-
-input UpdateWorkspaceProfileInput {
-  contactDisplayName: String
-  contactEmail: String
-  enabledEditors: [WorkspaceEditorId!]
-}
-
-input CreateWorkspaceLocalRepositoryInput {
-  """Absolute path to an existing directory on the server host."""
-  filesystemPath: String!
-  displayName: String!
-  gitRemoteUrl: String
-  gitDefaultBranch: String
-  projectId: ID
-}
-
-input UpdateWorkspaceLocalRepositoryInput {
-  id: ID!
-  displayName: String
-  gitRemoteUrl: String
-  gitDefaultBranch: String
-  projectId: ID
-}
-
-input ApplyWorkspaceEditorConfigurationInput {
-  """
-  When set, only these repositories receive editor configuration. Omit to apply to all linked repos.
-  """
-  repositoryIds: [ID!]
-}
-
-input SetWorkspaceLocalRepositoryProjectInput {
-  id: ID!
-
-  """Cortex project id, or null to clear the link."""
-  projectId: ID
 }
 
 input LinkCommitInput {
@@ -2454,4 +2431,42 @@ input UpdateUserInput {
 
   """User id to update"""
   id: ID!
+}
+
+input UpdateWorkspaceProfileInput {
+  contactDisplayName: String
+  contactEmail: String
+  enabledEditors: [WorkspaceEditorId!]
+}
+
+input CreateWorkspaceLocalRepositoryInput {
+  """Absolute path to an existing directory on the server host."""
+  filesystemPath: String!
+  displayName: String!
+  gitRemoteUrl: String
+  gitDefaultBranch: String
+  projectId: ID
+}
+
+input UpdateWorkspaceLocalRepositoryInput {
+  id: ID!
+  displayName: String
+  gitRemoteUrl: String
+  gitDefaultBranch: String
+  projectId: ID
+}
+
+input SetWorkspaceLocalRepositoryProjectInput {
+  id: ID!
+
+  """Cortex project id, or null to clear the link."""
+  projectId: ID
+}
+
+"""
+Optional filter: apply only to these local repository ids. Omit to apply to all linked repos.
+"""
+input ApplyWorkspaceEditorConfigurationInput {
+  """When set, only these repositories receive editor configuration."""
+  repositoryIds: [ID!]
 }

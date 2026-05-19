@@ -7,7 +7,6 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalCollapsible,
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -26,8 +25,8 @@ import {
   CogIcon,
   FileIcon,
   LayoutListIcon,
-  LucideIcon,
   NotebookTextIcon,
+  TerminalSquareIcon,
 } from 'lucide-react';
 import {
   EnqueuePlanRunInputSchema,
@@ -78,12 +77,7 @@ import {
   OpenThrottleEmptyState,
 } from '@openthrottle/react-router-ui';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
-import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
-// import { formatPlanDate } from '~/routing/plans/utils/formatters';
-// import { PlanDetails } from '~/routing/plans/components/PlanDetails';
-// import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
-// import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
-// import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
+import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -302,20 +296,6 @@ export default function Component(
     );
   }
 
-  interface Item {
-    content: React.ReactNode;
-    icon: LucideIcon;
-    title: string;
-  }
-
-  const items: Item[] = [
-    // {
-    //   content: <PlanLoggerOutput chunks={planOutputChunks} />,
-    //   icon: TerminalSquareIcon,
-    //   title: 'Output',
-    // },
-  ];
-
   return (
     <>
       <GlobalScreen>
@@ -333,8 +313,6 @@ export default function Component(
             {/* {plan.description ?? 'No description'} */}
           </div>
         </div>
-
-        <PlanLoggerOutput chunks={loaderData.planOutputChunks} />
 
         <div className="">
           <Tabs
@@ -361,6 +339,12 @@ export default function Component(
                 <BadgeCheckIcon />
                 Requirements
               </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="output">
+                <TerminalSquareIcon />
+                Output
+              </TabsTrigger>
+              {/* {loaderData.planOutputChunks.length > 0 ? (
+              ) : null} */}
               <div className="flex-1" />
               <TabsTrigger
                 className="flex-0 cursor-pointer"
@@ -386,6 +370,8 @@ export default function Component(
               workingDirectory={workingDirectory}
             />
             <PlanTabTasks tasks={tasks} />
+            <PlanTabRequirements plan={plan} tasks={tasks} />
+            <PlanTabOutput chunks={loaderData.planOutputChunks} />
             <PlanTabConfiguration
               iterationTimeoutText={workflowTimeout}
               onCollapse={() => onToggleExpanded(false)}
@@ -397,23 +383,9 @@ export default function Component(
               value={workflowInput}
               workingDirectory={workingDirectory}
             />
-            <PlanTabRequirements plan={plan} tasks={tasks} />
             <PlanTabsMetadata plan={plan} />
           </Tabs>
         </div>
-
-        {items.map((item) => {
-          return (
-            <GlobalCollapsible
-              icon={item.icon}
-              key={item.title}
-              open={true}
-              title={item.title}
-            >
-              {item.content}
-            </GlobalCollapsible>
-          );
-        })}
       </GlobalScreen>
 
       {isBoardView ? (

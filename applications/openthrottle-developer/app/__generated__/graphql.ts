@@ -141,8 +141,9 @@ export type AppendPlanOutputInput = {
   planId: Scalars['ID']['input'];
 };
 
+/** Optional filter: apply only to these local repository ids. Omit to apply to all linked repos. */
 export type ApplyWorkspaceEditorConfigurationInput = {
-  /** When set, only these repositories receive editor configuration. Omit to apply to all linked repos. */
+  /** When set, only these repositories receive editor configuration. */
   repositoryIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
@@ -2209,7 +2210,9 @@ export type WorkspaceEditorConfigApplicationObject = {
 
 /** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode. */
 export enum WorkspaceEditorId {
+  /** Cursor IDE */
   Cursor = 'CURSOR',
+  /** Visual Studio Code */
   Vscode = 'VSCODE',
 }
 
@@ -2231,7 +2234,7 @@ export type WorkspaceLocalRepositoryObject = {
   userId: Scalars['ID']['output'];
 };
 
-/** Aggregate for Settings → Workspace loader. */
+/** Workspace settings for the authenticated user: profile and local repositories. */
 export type WorkspaceSettingsObject = {
   __typename?: 'WorkspaceSettingsObject';
   localRepositories: Array<WorkspaceLocalRepositoryObject>;
