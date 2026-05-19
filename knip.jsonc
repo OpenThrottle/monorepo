@@ -131,6 +131,10 @@
       "project": ["src/**/*.ts"],
       "ignore": ["src/generators/*/files/**"],
     },
+    "tools/ollama-proxy": {
+      "entry": ["src/server.ts", "scripts/e2e.mjs"],
+      "project": ["src/**/*.ts", "scripts/**/*.{js,mjs}"],
+    },
     "tools/workflows": {
       "entry": [
         "src/index.ts",
