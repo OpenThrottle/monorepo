@@ -16,8 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  toast,
 } from '@openthrottle/react-router-shadcn';
-import { toast } from 'sonner';
 import classnames from 'classnames';
 import { Link } from 'react-router';
 import { ConfirmModal } from '~/global/components/ConfirmModal';

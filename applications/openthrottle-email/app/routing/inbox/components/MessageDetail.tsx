@@ -16,8 +16,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  toast,
 } from '@openthrottle/react-router-shadcn';
-import { toast } from 'sonner';
 import classnames from 'classnames';
 import { ArrowBendUpLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowBendUpLeft';
 import { ArrowBendDoubleUpLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowBendDoubleUpLeft';
@@ -156,7 +156,7 @@ export const MessageDetail = (props: MessageDetailProps) => {
   // Message is non-null here after short circuits
 
   // FIXME: Swap out eventually
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const msg = message as MailMessageDetail;
 
   const attachments = msg.attachments ?? [];

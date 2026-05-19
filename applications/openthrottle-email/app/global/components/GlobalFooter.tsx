@@ -1,5 +1,9 @@
 import * as React from 'react';
 
+/**
+ * @deprecated Commented out in root layout; kept for intentional rollback. See root.tsx.
+ */
+
 export interface GlobalFooterProps {}
 
 export const GlobalFooter = (_props: GlobalFooterProps) => {

@@ -13,7 +13,7 @@ import { useLocation } from 'react-router';
 // import { Form, NavLink, useLocation } from 'react-router';
 // import { OpenThrottleSidebarHeader } from '@openthrottle/react-router-ui';
 // import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
-// import { ADMIN_PATHS, dataNavigation } from '~/global/data/data.navigation';
+// import { ADMIN_PATHS, MAIL_PATHS } from '~/global/data/data.navigation';
 // import {
 //   getNavIcon,
 //   getPath,
@@ -47,7 +47,7 @@ export const MailSidebar = (_props: MailSidebarProps) => {
   //       <SidebarGroup className="h-full">
   //         <SidebarGroupContent className="h-full">
   //           <SidebarMenu className="h-full flex flex-col gap-2">
-  //             {dataNavigation.map((item) => {
+  //             {mailNavigationLinks.map((item) => {
   //               const toPath = getPathFromTo(item.to);
 
   //               const isActive =

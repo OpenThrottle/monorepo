@@ -58,6 +58,10 @@
     "applications/openthrottle-admin/tests/setup.ts",
     "applications/openthrottle-cms/tests/setup.ts",
     "applications/openthrottle-server/tests/setup.ts",
+    // openthrottle-email: commented layout chrome + vitest setup (see @deprecated / vitest.config)
+    "applications/openthrottle-email/app/global/components/GlobalFooter.tsx",
+    "applications/openthrottle-email/app/global/components/GlobalHeader.tsx",
+    "applications/openthrottle-email/tests/setup.ts",
   ],
   "ignoreDependencies": [
     // Internal
