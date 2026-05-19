@@ -103,4 +103,31 @@
     "config": "nx.json",
   },
   "vitest": false,
+  "workspaces": {
+    "tools/workflows": {
+      "entry": [
+        "src/index.ts",
+        "src/bin/ralph.ts",
+        "src/bin/link-merge.ts",
+        "src/bin/lighthouse.ts",
+        "src/bin/nx-validate.ts",
+        "src/bin/run-iteration.ts",
+        "src/doc-ingestion/index.ts",
+        "src/utils/cortex-ralph.ts",
+        "src/utils/ralph-debug-logger.ts",
+        "scripts/*.{ts,js}",
+      ],
+      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,js}"],
+      "ignore": [
+        // PSI collector implementation; covered by unit tests; production metrics use types/system-cpu-metrics until child-job wiring.
+        "src/utils/system-cpu-metrics.ts",
+      ],
+    },
+  },
+  "ignoreIssues": {
+    // @tools/workflows: public ./ralph-debug subpath and unit tests.
+    "tools/workflows/src/utils/ralph-debug-logger.ts": ["exports"],
+    // Parser helpers are covered by unit tests; mirrored in @openthrottle/openthrottle-workflows.
+    "tools/workflows/src/utils/parsers.ts": ["exports"],
+  },
 }
