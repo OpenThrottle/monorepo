@@ -78,6 +78,7 @@ import {
   OpenThrottleEmptyState,
 } from '@openthrottle/react-router-ui';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
+import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
 // import { formatPlanDate } from '~/routing/plans/utils/formatters';
 // import { PlanDetails } from '~/routing/plans/components/PlanDetails';
 // import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
@@ -144,8 +145,8 @@ export default function Component(
 
   // Hooks
   const revalidator = useRevalidator();
-  const [searchParams, setSearchParams] = useSearchParams();
   const socketContext = useNotificationsSocket();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [workflowTimeout, setWorkflowTimeout] = React.useState('');
   const [workingDirectory, setWorkingDirectory] = React.useState('');
   const [workflowInput, setWorkflowInput] =
@@ -309,23 +310,6 @@ export default function Component(
 
   const items: Item[] = [
     // {
-    //   content: (
-    //     <PlanWorkflowConfig
-    //       iterationTimeoutText={workflowTimeout}
-    //       onCollapse={() => onToggleExpanded(false)}
-    //       onIterationTimeoutTextChange={setWorkflowTimeout}
-    //       onResetToDefaults={onResetToDefaults}
-    //       onValueChange={setWorkflowInput}
-    //       onWorkingDirectoryChange={setWorkingDirectory}
-    //       planId={plan.id}
-    //       value={workflowInput}
-    //       workingDirectory={workingDirectory}
-    //     />
-    //   ),
-    //   icon: CogIcon,
-    //   title: 'Configuration',
-    // },
-    // {
     //   content: <PlanLoggerOutput chunks={planOutputChunks} />,
     //   icon: TerminalSquareIcon,
     //   title: 'Output',
@@ -349,6 +333,8 @@ export default function Component(
             {/* {plan.description ?? 'No description'} */}
           </div>
         </div>
+
+        <PlanLoggerOutput chunks={loaderData.planOutputChunks} />
 
         <div className="">
           <Tabs

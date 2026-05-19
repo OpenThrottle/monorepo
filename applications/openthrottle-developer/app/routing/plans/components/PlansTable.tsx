@@ -175,7 +175,9 @@ PlansTable.buildTable = (
     {
       accessorKey: 'status',
       cell: ({ row }) => (
-        <PlanStatusBadge status={row.original.status as PlanStatusKey} />
+        <Link to={`/plans?status=${row.original.status}`} viewTransition={true}>
+          <PlanStatusBadge status={row.original.status as PlanStatusKey} />
+        </Link>
       ),
       header: () => <div className="p-2">Status</div>,
     },

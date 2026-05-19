@@ -9,9 +9,6 @@ import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
   description: `Per-user workspace profile: contact fields and enabled editors.`,
 })
 export class UserWorkspaceProfileObject {
-  @Field(() => ID)
-  userId!: string;
-
   @Field(() => String, {
     description: `Display name for notifications and workspace attribution.`,
     nullable: true,
@@ -24,14 +21,17 @@ export class UserWorkspaceProfileObject {
   })
   contactEmail!: string | null;
 
+  @Field(() => Date)
+  createdAt!: Date;
+
   @Field(() => [WorkspaceEditorIdEnum], {
     description: `Editors the user wants OpenThrottle to configure in linked repos.`,
   })
   enabledEditors!: WorkspaceEditorIdEnum[];
 
   @Field(() => Date)
-  createdAt!: Date;
-
-  @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => ID)
+  userId!: string;
 }

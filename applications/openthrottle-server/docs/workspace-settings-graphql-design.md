@@ -221,18 +221,42 @@ GraphQL document: `settings.workspace.tsx.graphql` (to be filled in UI task).
 
 ## Implementation map (plan tasks)
 
-| Task                                     | Delivers                                                                         |
-| ---------------------------------------- | -------------------------------------------------------------------------------- |
-| Design (this doc) + migration + entities | ✅                                                                               |
-| Backend: CRUD local repos                | `WorkspaceLocalRepositoriesService`, create/list/update/delete mutations         |
-| Backend: project link                    | `setWorkspaceLocalRepositoryProject`, FK checks                                  |
-| Backend: profile                         | ✅ `UserWorkspaceSettingsService`, `updateWorkspaceProfile`, `workspaceSettings` |
-| Backend: editors                         | Validation + persist `enabled_editors`                                           |
-| Developer UI                             | Forms, loader/action, tests                                                      |
-| Apply editor config                      | Repo artifacts (VS Code, Cursor) from preferences                                |
+| Task                                     | Delivers                                                                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Design (this doc) + migration + entities | ✅                                                                                            |
+| Backend: CRUD local repos                | `WorkspaceLocalRepositoriesService`, create/list/update/delete mutations                      |
+| Backend: project link                    | `setWorkspaceLocalRepositoryProject`, FK checks                                               |
+| Backend: profile                         | ✅ `UserWorkspaceSettingsService`, `updateWorkspaceProfile`, `workspaceSettings`              |
+| Backend: editors                         | ✅ `validateEnabledEditors`, `updateProfile` / `enabled_editors` via `updateWorkspaceProfile` |
+| Developer UI                             | Forms, loader/action, tests                                                                   |
+| Apply editor config                      | ✅ `applyWorkspaceEditorConfiguration`, `WorkspaceEditorConfigService`                        |
+
+## Apply editor configuration
+
+Mutation: `applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigurationInput): ApplyWorkspaceEditorConfigurationResultObject!`
+
+- Loads the user’s `enabled_editors` and linked `workspace_local_repositories`.
+- Optional `repositoryIds` limits which repos are updated; omit to apply to all.
+- For each enabled editor and target repo:
+  - **MCP:** merges `mcp-developer` into `.cursor/mcp.json` or `.vscode/mcp.json` when `scripts/run-mcp-developer.sh` exists (OpenThrottle monorepo checkout). Uses `API_URL_INTERNAL` for `API_URL` / `API_URL_INTERNAL` env vars. Does **not** write auth tokens; set `MCP_DEVELOPER_AUTH_TOKEN` in the editor MCP env separately.
+  - **Skills paths:** ensures parent directories exist for skill paths from `OPENTHROTTLE_REPO_SKILL_PATHS` (keep aligned with `repo-skills-registry.ts`).
+  - **Rules:** ensures `.cursor/rules` or `.vscode` directory exists.
+  - **Manifest:** writes `.openthrottle/workspace-editors.json` with applied paths and timestamp.
+
+Service: `packages/nestjs-repositories/src/modules/workspace-settings/workspace-editor-config.service.ts`
+
+Developer UI: Settings → Workspace → **Apply editor configuration** (after enabling editors and linking repos).
+
+### Adding a new editor
+
+1. Add id to `WORKSPACE_EDITOR_IDS` / `WorkspaceEditorId` enum (DB JSON + GraphQL).
+2. Add paths in `workspace-editor-config-paths.ts` (`mcpConfigRelativePath`, `rulesDirectoryRelativePath`).
+3. Map layout in `layoutForEditor` if skills use a new directory convention.
+4. Add option to `WORKSPACE_EDITOR_OPTIONS` in the developer app.
 
 ## Related code
 
 - Path validation (Ralph): `applications/openthrottle-server/src/graphql/plans/enqueue-plan-ralph-tuning.ts` — `validateWorkingDirectory`
 - Client path validation: `applications/openthrottle-developer/app/routing/plans/utils/workspace-path.ts`
-- Editor registry (future apply step): `applications/openthrottle-developer/app/routing/agents/data/repo-skills-registry.ts`
+- Skill registry (UI): `applications/openthrottle-developer/app/routing/agents/data/repo-skills-registry.ts`
+- Skill paths (apply): `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts`

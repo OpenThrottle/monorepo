@@ -71,3 +71,17 @@ mutation setWorkspaceLocalRepositoryProject(
 mutation deleteWorkspaceLocalRepository($id: ID!) {
   deleteWorkspaceLocalRepository(id: $id)
 }
+
+mutation applyWorkspaceEditorConfiguration(
+  $input: ApplyWorkspaceEditorConfigurationInput
+) {
+  applyWorkspaceEditorConfiguration(input: $input) {
+    applications {
+      editor
+      filesWritten
+      filesystemPath
+      repositoryId
+      warnings
+    }
+  }
+}

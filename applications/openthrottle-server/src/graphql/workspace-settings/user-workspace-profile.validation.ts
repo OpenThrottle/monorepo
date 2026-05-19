@@ -1,6 +1,11 @@
 /**
- * @description Validates workspace profile contact fields per workspace-settings-graphql-design.md.
+ * @description Validates workspace profile contact fields and editor preferences per
+ * workspace-settings-graphql-design.md.
  */
+
+import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories';
+import { isWorkspaceEditorId } from '@openthrottle/nestjs-repositories';
+import type { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 
 const MAX_CONTACT_DISPLAY_NAME_LEN = 256;
 const MAX_CONTACT_EMAIL_LEN = 320;
@@ -41,4 +46,31 @@ export const validateContactEmail = (
     throw new Error('contactEmail must be a valid email address');
   }
   return trimmed;
+};
+
+/**
+ * @description Validates enabled editor list for update; returns undefined when omitted.
+ * Deduplicates while preserving first-seen order.
+ */
+export const validateEnabledEditors = (
+  raw: readonly WorkspaceEditorIdEnum[] | null | undefined,
+): WorkspaceEditorId[] | undefined => {
+  if (raw === undefined || raw === null) return undefined;
+
+  const seen = new Set<WorkspaceEditorId>();
+  const normalized: WorkspaceEditorId[] = [];
+
+  for (const entry of raw) {
+    const value = String(entry);
+    if (!isWorkspaceEditorId(value)) {
+      throw new Error(
+        `enabledEditors contains unknown editor id "${value}"; supported: cursor, vscode`,
+      );
+    }
+    if (seen.has(value)) continue;
+    seen.add(value);
+    normalized.push(value);
+  }
+
+  return normalized;
 };

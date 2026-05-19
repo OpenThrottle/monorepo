@@ -9,8 +9,6 @@ import {
   CardHeader,
   CardTitle,
   Separator,
-  // Badge,
-  // Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -184,6 +182,17 @@ export const TaskDetails = (props: TaskDetailsProps) => {
                 )}
               </div>
             )}
+
+            <div className="mt-8">
+              <h3 className="text-lg mb-4">Requirements</h3>
+              <ul className="text-muted-foreground text-sm">
+                {JSON.parse(task.requirementsJson).map(
+                  (requirement: string) => (
+                    <li key={requirement}>{requirement}</li>
+                  ),
+                )}
+              </ul>
+            </div>
           </CardContent>
         )}
 

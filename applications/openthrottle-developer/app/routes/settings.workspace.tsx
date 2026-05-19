@@ -8,15 +8,18 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
+  ApplyWorkspaceEditorConfigurationDocument,
   CreateWorkspaceLocalRepositoryDocument,
   DeleteWorkspaceLocalRepositoryDocument,
   GetWorkspaceSettingsDocument,
   UpdateWorkspaceLocalRepositoryDocument,
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
+import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
 import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
 import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
 import { SettingsWorkspaceRepositoriesSection } from '~/routing/settings/components/SettingsWorkspaceRepositoriesSection';
+import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
 import {
   optionalTrimmedString,
   parseEnabledEditorsFromFormData,
@@ -59,6 +62,9 @@ export default function Component(
   const { localRepositories, profile, projects } = loaderData;
   const actionError =
     actionData && 'error' in actionData ? actionData.error : null;
+  const actionMessage =
+    actionData && 'message' in actionData ? actionData.message : null;
+  const canApplyEditors = profile.enabledEditors.length > 0;
 
   return (
     <GlobalScreen>
@@ -68,6 +74,11 @@ export default function Component(
         <SettingsWorkspaceProfileForm
           actionError={actionError}
           profile={profile}
+        />
+        <SettingsWorkspaceApplyEditors
+          actionError={actionError}
+          actionMessage={actionMessage}
+          disabled={!canApplyEditors}
         />
         <SettingsWorkspaceRepositoriesSection
           actionError={actionError}
@@ -173,6 +184,23 @@ export const action = async (args: Route.ActionArgs) => {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to update repository.';
+      return { error: message };
+    }
+  }
+
+  if (intent === 'applyEditorConfig') {
+    try {
+      const data = await executeGraphqlWithAuth(
+        args.request,
+        ApplyWorkspaceEditorConfigurationDocument,
+        { input: {} },
+      );
+      return { message: formatEditorConfigApplyMessage(data) };
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to apply editor configuration.';
       return { error: message };
     }
   }

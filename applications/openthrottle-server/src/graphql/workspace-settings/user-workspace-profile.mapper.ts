@@ -13,6 +13,13 @@ const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdEnum> = {
 };
 
 /**
+ * @description Converts a stored editor id to the GraphQL enum.
+ */
+export const toWorkspaceEditorIdEnum = (
+  editorId: WorkspaceEditorId,
+): WorkspaceEditorIdEnum => EDITOR_ID_TO_ENUM[editorId];
+
+/**
  * @description Converts stored editor ids to GraphQL enum values.
  */
 export const toUserWorkspaceProfileObject = (

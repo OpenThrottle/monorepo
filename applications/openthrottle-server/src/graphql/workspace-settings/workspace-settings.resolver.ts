@@ -10,9 +10,11 @@ import type {
 import {
   ProjectsService,
   UserWorkspaceSettingsService,
+  WorkspaceEditorConfigService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { ConfigService } from '@nestjs/config';
 import { UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -26,6 +28,8 @@ import {
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ProjectObject } from '../projects/project.object';
+import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input';
+import { ApplyWorkspaceEditorConfigurationResultObject } from './workspace-editor-config-application.object';
 import {
   CreateWorkspaceLocalRepositoryInput,
   SetWorkspaceLocalRepositoryProjectInput,
@@ -33,7 +37,10 @@ import {
   UpdateWorkspaceProfileInput,
 } from './workspace-settings.input';
 import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
-import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
+import {
+  toUserWorkspaceProfileObject,
+  toWorkspaceEditorIdEnum,
+} from './user-workspace-profile.mapper';
 import {
   validateContactDisplayName,
   validateContactEmail,
@@ -54,7 +61,9 @@ export class WorkspaceSettingsResolver {
   constructor(
     private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
     private readonly workspaceLocalRepositoriesService: WorkspaceLocalRepositoriesService,
+    private readonly workspaceEditorConfigService: WorkspaceEditorConfigService,
     private readonly projectsService: ProjectsService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Query(() => WorkspaceSettingsObject, {
@@ -211,6 +220,41 @@ export class WorkspaceSettingsResolver {
       input.id,
       input.projectId,
     );
+  }
+
+  @Mutation(() => ApplyWorkspaceEditorConfigurationResultObject, {
+    description: `Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async applyWorkspaceEditorConfiguration(
+    @CurrentUser('sub') userId: string,
+    @Args('input', {
+      nullable: true,
+      type: () => ApplyWorkspaceEditorConfigurationInput,
+    })
+    input?: ApplyWorkspaceEditorConfigurationInput | null,
+  ): Promise<ApplyWorkspaceEditorConfigurationResultObject> {
+    const apiBaseUrl =
+      this.configService.get<string>('API_URL_INTERNAL') ??
+      `http://localhost:${this.configService.get<string>('PORT') ?? '6021'}`;
+
+    const applications = await this.workspaceEditorConfigService.applyForUser(
+      userId,
+      {
+        apiBaseUrl,
+        repositoryIds: input?.repositoryIds ?? undefined,
+      },
+    );
+
+    return {
+      applications: applications.map((application) => ({
+        editor: toWorkspaceEditorIdEnum(application.editor),
+        filesWritten: [...application.filesWritten],
+        filesystemPath: application.filesystemPath,
+        repositoryId: application.repositoryId,
+        warnings: [...application.warnings],
+      })),
+    };
   }
 
   @Mutation(() => Boolean, {

@@ -14,6 +14,6 @@ describe('SkillsIntroduction Component', () => {
       screen.getByRole('heading', { level: 3, name: 'Skills' }),
     ).toBeInTheDocument();
     expect(screen.getByText('SKILL.md')).toBeInTheDocument();
-    expect(screen.getByText(/Static registry of/i)).toBeInTheDocument();
+    expect(screen.getByText(/Discovered/i)).toBeInTheDocument();
   });
 });

@@ -1201,6 +1201,20 @@ type WorkspaceSettingsObject {
   localRepositories: [WorkspaceLocalRepositoryObject!]!
 }
 
+"""Result of applying editor configuration for one linked repository and editor."""
+type WorkspaceEditorConfigApplicationObject {
+  repositoryId: ID!
+  filesystemPath: String!
+  editor: WorkspaceEditorId!
+  filesWritten: [String!]!
+  warnings: [String!]!
+}
+
+"""Aggregate result of applying workspace editor configuration."""
+type ApplyWorkspaceEditorConfigurationResultObject {
+  applications: [WorkspaceEditorConfigApplicationObject!]!
+}
+
 type Query {
   """
   Database health: ok | unconfigured | unreachable. Used by app status page.
@@ -1973,6 +1987,13 @@ type Mutation {
 
   """Remove a local repository owned by the authenticated user."""
   deleteWorkspaceLocalRepository(id: ID!): Boolean!
+
+  """
+  Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories.
+  """
+  applyWorkspaceEditorConfiguration(
+    input: ApplyWorkspaceEditorConfigurationInput
+  ): ApplyWorkspaceEditorConfigurationResultObject!
 }
 
 input AgentsRunChatTurnInput {
@@ -2025,6 +2046,13 @@ input UpdateWorkspaceLocalRepositoryInput {
   gitRemoteUrl: String
   gitDefaultBranch: String
   projectId: ID
+}
+
+input ApplyWorkspaceEditorConfigurationInput {
+  """
+  When set, only these repositories receive editor configuration. Omit to apply to all linked repos.
+  """
+  repositoryIds: [ID!]
 }
 
 input SetWorkspaceLocalRepositoryProjectInput {

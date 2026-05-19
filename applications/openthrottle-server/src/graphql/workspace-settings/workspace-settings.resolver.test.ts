@@ -7,8 +7,10 @@ import {
   ProjectsService,
   RolesService,
   UserWorkspaceSettingsService,
+  WorkspaceEditorConfigService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
+import { ConfigService } from '@nestjs/config';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { mkdtempSync } from 'fs';
@@ -68,6 +70,19 @@ describe('WorkspaceSettingsResolver', () => {
     findById: vi.fn(),
   });
 
+  const mockWorkspaceEditorConfigService =
+    createMock<WorkspaceEditorConfigService>({
+      applyForUser: vi.fn(),
+    });
+
+  const mockConfigService = createMock<ConfigService>({
+    get: vi.fn((key: string) => {
+      if (key === 'API_URL_INTERNAL') return 'http://localhost:6021';
+      if (key === 'PORT') return '6021';
+      return undefined;
+    }),
+  });
+
   let resolver: WorkspaceSettingsResolver;
 
   beforeAll(async () => {
@@ -86,6 +101,14 @@ describe('WorkspaceSettingsResolver', () => {
         {
           provide: ProjectsService,
           useValue: mockProjectsService,
+        },
+        {
+          provide: WorkspaceEditorConfigService,
+          useValue: mockWorkspaceEditorConfigService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
         {
           provide: RolesService,

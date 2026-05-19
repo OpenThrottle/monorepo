@@ -6,15 +6,24 @@ import { UserWorkspaceSettings } from './user-workspace-settings.entity';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
 import { WorkspaceLocalRepository } from './workspace-local-repository.entity';
 import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
+import { WorkspaceEditorConfigService } from './workspace-editor-config.service';
 
 @Module({
   controllers: [],
-  exports: [UserWorkspaceSettingsService, WorkspaceLocalRepositoriesService],
+  exports: [
+    UserWorkspaceSettingsService,
+    WorkspaceLocalRepositoriesService,
+    WorkspaceEditorConfigService,
+  ],
   imports: [
     LoggerModule,
     ProjectsModule,
     TypeOrmModule.forFeature([UserWorkspaceSettings, WorkspaceLocalRepository]),
   ],
-  providers: [UserWorkspaceSettingsService, WorkspaceLocalRepositoriesService],
+  providers: [
+    UserWorkspaceSettingsService,
+    WorkspaceLocalRepositoriesService,
+    WorkspaceEditorConfigService,
+  ],
 })
 export class WorkspaceSettingsModule {}

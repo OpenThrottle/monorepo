@@ -10,6 +10,8 @@ import './user-workspace-profile.object';
 import './workspace-local-repository.object';
 import './workspace-settings.object';
 import './workspace-settings.input';
+import './apply-workspace-editor-configuration.input';
+import './workspace-editor-config-application.object';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
 
 @Module({

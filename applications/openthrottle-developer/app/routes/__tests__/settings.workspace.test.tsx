@@ -140,6 +140,36 @@ describe('routes/settings.workspace.tsx', () => {
       );
     });
 
+    test('applyEditorConfig calls applyWorkspaceEditorConfiguration mutation', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        applyWorkspaceEditorConfiguration: {
+          applications: [
+            {
+              editor: WorkspaceEditorId.Cursor,
+              filesWritten: ['.cursor/mcp.json'],
+              filesystemPath: '/Users/dev/openthrottle',
+              repositoryId: 'repo-1',
+              warnings: [],
+            },
+          ],
+        },
+      });
+
+      const formData = new FormData();
+      formData.set('intent', 'applyEditorConfig');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toMatchObject({
+        message: expect.stringContaining('1 editor/repo pairing'),
+      });
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        expect.any(Request),
+        expect.any(Object),
+        { input: {} },
+      );
+    });
+
     test('deleteRepo calls deleteWorkspaceLocalRepository mutation', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({
         deleteWorkspaceLocalRepository: true,

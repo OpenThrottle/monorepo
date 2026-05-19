@@ -4,6 +4,7 @@ import {
   ActivityByDateRangeInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
+  ApplyWorkspaceEditorConfigurationInput,
   CancelPlanRunInput,
   CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
@@ -141,6 +142,14 @@ export function AppendPlanOutputInputSchema(): z.ZodObject<
     content: z.string(),
     iteration: z.number().nullish(),
     planId: z.string(),
+  });
+}
+
+export function ApplyWorkspaceEditorConfigurationInputSchema(): z.ZodObject<
+  Properties<ApplyWorkspaceEditorConfigurationInput>
+> {
+  return z.object({
+    repositoryIds: z.array(z.string()).nullish(),
   });
 }
 

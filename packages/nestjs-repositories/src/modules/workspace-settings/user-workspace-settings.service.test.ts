@@ -75,12 +75,12 @@ describe('UserWorkspaceSettingsService', () => {
     });
   });
 
-  describe('updateContactProfile', () => {
+  describe('updateProfile', () => {
     it('updates contact fields on an existing row', async () => {
       const existing = { ...mockSettings };
       vi.mocked(mockRepository.findOne).mockResolvedValue(existing);
 
-      const result = await service.updateContactProfile(userId, {
+      const result = await service.updateProfile(userId, {
         contactDisplayName: 'Matt',
         contactEmail: 'matt@example.com',
       });
@@ -90,13 +90,25 @@ describe('UserWorkspaceSettingsService', () => {
       expect(mockRepository.save).toHaveBeenCalledWith(existing);
     });
 
+    it('updates enabled editors on an existing row', async () => {
+      const existing = { ...mockSettings };
+      vi.mocked(mockRepository.findOne).mockResolvedValue(existing);
+
+      const result = await service.updateProfile(userId, {
+        enabledEditors: ['cursor', 'vscode'],
+      });
+
+      expect(result.enabledEditors).toEqual(['cursor', 'vscode']);
+      expect(mockRepository.save).toHaveBeenCalledWith(existing);
+    });
+
     it('creates settings before updating when missing', async () => {
       vi.mocked(mockRepository.findOne).mockResolvedValue(null);
       vi.mocked(mockRepository.save).mockImplementation(
         async (entity) => entity,
       );
 
-      await service.updateContactProfile(userId, {
+      await service.updateProfile(userId, {
         contactDisplayName: 'Matt',
       });
 

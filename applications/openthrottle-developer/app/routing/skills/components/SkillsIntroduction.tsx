@@ -34,9 +34,9 @@ export const SkillsIntroduction = (props: SkillsIntroductionProps) => {
         />
       </SkillsOverviewDialog>
       <p className="text-sm text-muted-foreground">
-        Static registry of <code className="text-xs">SKILL.md</code> paths in
-        this monorepo — compare with disk and Cursor routing when debugging
-        skill picks.
+        Discovered <code className="text-xs">SKILL.md</code> paths in this
+        monorepo — compare with disk and Cursor routing when debugging skill
+        picks.
       </p>
     </div>
   );

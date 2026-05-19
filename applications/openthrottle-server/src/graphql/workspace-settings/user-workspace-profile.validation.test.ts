@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 import {
   validateContactDisplayName,
   validateContactEmail,
+  validateEnabledEditors,
 } from './user-workspace-profile.validation';
 
 describe('validateContactDisplayName', () => {
@@ -42,5 +44,32 @@ describe('validateContactEmail', () => {
     expect(() => validateContactEmail(local)).toThrow(
       /contactEmail must be at most 320/,
     );
+  });
+});
+
+describe('validateEnabledEditors', () => {
+  test('returns undefined when omitted', () => {
+    expect(validateEnabledEditors(undefined)).toBeUndefined();
+    expect(validateEnabledEditors(null)).toBeUndefined();
+  });
+
+  test('deduplicates while preserving order', () => {
+    expect(
+      validateEnabledEditors([
+        WorkspaceEditorIdEnum.VSCODE,
+        WorkspaceEditorIdEnum.CURSOR,
+        WorkspaceEditorIdEnum.VSCODE,
+      ]),
+    ).toEqual(['vscode', 'cursor']);
+  });
+
+  test('returns empty array when clearing editors', () => {
+    expect(validateEnabledEditors([])).toEqual([]);
+  });
+
+  test('throws for unknown editor ids', () => {
+    expect(() =>
+      validateEnabledEditors(['unknown' as WorkspaceEditorIdEnum]),
+    ).toThrow(/unknown editor id/);
   });
 });

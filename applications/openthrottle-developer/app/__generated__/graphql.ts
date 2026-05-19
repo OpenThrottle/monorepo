@@ -141,6 +141,17 @@ export type AppendPlanOutputInput = {
   planId: Scalars['ID']['input'];
 };
 
+export type ApplyWorkspaceEditorConfigurationInput = {
+  /** When set, only these repositories receive editor configuration. Omit to apply to all linked repos. */
+  repositoryIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/** Aggregate result of applying workspace editor configuration. */
+export type ApplyWorkspaceEditorConfigurationResultObject = {
+  __typename?: 'ApplyWorkspaceEditorConfigurationResultObject';
+  applications: Array<WorkspaceEditorConfigApplicationObject>;
+};
+
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
@@ -795,6 +806,8 @@ export type Mutation = {
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
   appendPlanOutput: PlanOutputStreamChunkObject;
+  /** Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories. */
+  applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
@@ -893,6 +906,10 @@ export type MutationAgentsRunChatTurnArgs = {
 
 export type MutationAppendPlanOutputArgs = {
   input: AppendPlanOutputInput;
+};
+
+export type MutationApplyWorkspaceEditorConfigurationArgs = {
+  input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
 };
 
 export type MutationCancelPlanRunArgs = {
@@ -2178,6 +2195,16 @@ export type WallClockMetrics = {
   wallClockMs: Scalars['Float']['output'];
   /** Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound. */
   wallClockToCpuRatio: Scalars['Float']['output'];
+};
+
+/** Result of applying editor configuration for one linked repository and editor. */
+export type WorkspaceEditorConfigApplicationObject = {
+  __typename?: 'WorkspaceEditorConfigApplicationObject';
+  editor: WorkspaceEditorId;
+  filesWritten: Array<Scalars['String']['output']>;
+  filesystemPath: Scalars['String']['output'];
+  repositoryId: Scalars['ID']['output'];
+  warnings: Array<Scalars['String']['output']>;
 };
 
 /** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode. */
@@ -3707,6 +3734,25 @@ export type DeleteWorkspaceLocalRepositoryMutationVariables = Exact<{
 export type DeleteWorkspaceLocalRepositoryMutation = {
   __typename?: 'Mutation';
   deleteWorkspaceLocalRepository: boolean;
+};
+
+export type ApplyWorkspaceEditorConfigurationMutationVariables = Exact<{
+  input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
+}>;
+
+export type ApplyWorkspaceEditorConfigurationMutation = {
+  __typename?: 'Mutation';
+  applyWorkspaceEditorConfiguration: {
+    __typename?: 'ApplyWorkspaceEditorConfigurationResultObject';
+    applications: Array<{
+      __typename?: 'WorkspaceEditorConfigApplicationObject';
+      editor: WorkspaceEditorId;
+      filesWritten: Array<string>;
+      filesystemPath: string;
+      repositoryId: string;
+      warnings: Array<string>;
+    }>;
+  };
 };
 
 export type UsageDailyStatsRowFragment = {
@@ -8967,6 +9013,88 @@ export const DeleteWorkspaceLocalRepositoryDocument = {
 } as unknown as DocumentNode<
   DeleteWorkspaceLocalRepositoryMutation,
   DeleteWorkspaceLocalRepositoryMutationVariables
+>;
+export const ApplyWorkspaceEditorConfigurationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'applyWorkspaceEditorConfiguration' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: {
+              kind: 'Name',
+              value: 'ApplyWorkspaceEditorConfigurationInput',
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'applyWorkspaceEditorConfiguration' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'applications' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'editor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filesWritten' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filesystemPath' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'repositoryId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'warnings' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ApplyWorkspaceEditorConfigurationMutation,
+  ApplyWorkspaceEditorConfigurationMutationVariables
 >;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',

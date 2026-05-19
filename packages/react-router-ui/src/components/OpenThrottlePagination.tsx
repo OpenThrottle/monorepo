@@ -39,6 +39,7 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
     total,
     view,
   } = props;
+
   const extras =
     (assignees !== undefined && assignees.length > 0) ||
     details !== undefined ||

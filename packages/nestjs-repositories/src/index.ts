@@ -53,6 +53,11 @@ export { UserWorkspaceSettings } from './modules/workspace-settings/user-workspa
 export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings.service';
 export { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 export { WorkspaceLocalRepositoriesService } from './modules/workspace-settings/workspace-local-repositories.service';
+export { WorkspaceEditorConfigService } from './modules/workspace-settings/workspace-editor-config.service';
+export type {
+  ApplyWorkspaceEditorConfigOptions,
+  WorkspaceEditorConfigApplication,
+} from './modules/workspace-settings/workspace-editor-config.service';
 export { User } from './modules/users/user.entity';
 export { usersFactory } from './modules/users/users.factory';
 export { UsersService } from './modules/users/users.service';

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
@@ -30,17 +29,10 @@ export const skillsTableColumns: ColumnDef<
     accessorKey: 'owner',
     cell: ({ row }) => {
       const isAgent = row.original.layout === 'agents';
-      const color = isAgent
-        ? 'bg-blue-500/40 border-blue-500'
-        : 'bg-green-500/40 border-green-500 ';
 
       return (
         <div className="p-2">
-          <Badge
-            className={classnames('text-xs font-normal border', color)}
-            size="xs"
-            variant="outline"
-          >
+          <Badge color={isAgent ? 'blue' : 'green'} size="xs">
             {row.original.layout}
           </Badge>
         </div>

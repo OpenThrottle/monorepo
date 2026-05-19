@@ -6,12 +6,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
+import type { WorkspaceEditorId } from './workspace-editor-id';
 import { UserWorkspaceSettings } from './user-workspace-settings.entity';
 
-export interface UpdateUserWorkspaceContactProfileData {
+export interface UpdateUserWorkspaceProfileData {
   readonly contactDisplayName?: string | null;
   readonly contactEmail?: string | null;
+  readonly enabledEditors?: readonly WorkspaceEditorId[];
 }
+
+/** @deprecated Use {@link UpdateUserWorkspaceProfileData} */
+export type UpdateUserWorkspaceContactProfileData =
+  UpdateUserWorkspaceProfileData;
 
 @Injectable()
 export class UserWorkspaceSettingsService {
@@ -48,11 +54,11 @@ export class UserWorkspaceSettingsService {
   }
 
   /**
-   * @description Updates contact display name and/or email on the user's workspace profile.
+   * @description Updates workspace profile fields (contact and/or enabled editors).
    */
-  async updateContactProfile(
+  async updateProfile(
     userId: string,
-    data: UpdateUserWorkspaceContactProfileData,
+    data: UpdateUserWorkspaceProfileData,
   ): Promise<UserWorkspaceSettings> {
     const settings = await this.getOrCreateForUser(userId);
 
@@ -62,7 +68,20 @@ export class UserWorkspaceSettingsService {
     if (data.contactEmail !== undefined) {
       settings.contactEmail = data.contactEmail;
     }
+    if (data.enabledEditors !== undefined) {
+      settings.enabledEditors = [...data.enabledEditors];
+    }
 
     return this.repository.save(settings);
+  }
+
+  /**
+   * @description @deprecated Use {@link updateProfile} instead.
+   */
+  async updateContactProfile(
+    userId: string,
+    data: UpdateUserWorkspaceProfileData,
+  ): Promise<UserWorkspaceSettings> {
+    return this.updateProfile(userId, data);
   }
 }
