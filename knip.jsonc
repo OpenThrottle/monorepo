@@ -156,6 +156,14 @@
       ],
       "project": ["src/**/*.ts"],
     },
+    "packages/graphql-codegen": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        "@graphql-codegen/client-preset",
+        "graphql-codegen-typescript-validation-schema",
+      ],
+    },
     "tools/workflows": {
       "entry": [
         "src/index.ts",
