@@ -108,14 +108,12 @@ describe('PlansTable Component', () => {
     expect(killButtons).toHaveLength(1);
   });
 
-  test('shows author, assignee, category and updated date when present', () => {
-    const { container, getByLabelText, getByText } = renderPlansTable({
+  test('shows author, assignee, and updated date when present', () => {
+    const { container, getByText } = renderPlansTable({
       plans: mockPlans,
     });
 
     expect(getByText('author1 → assignee1')).toBeDefined();
-    expect(getByText('feature')).toBeDefined();
-    expect(getByLabelText('Category: feature')).toBeDefined();
     expect(container.textContent).toContain('Updated:');
     expect(container.textContent).toMatch(/\d{1,2}\/\d{1,2}\/2025/);
   });

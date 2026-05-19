@@ -1,13 +1,16 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    // "applications/**/*.{ts,tsx,js,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           jsx}", // Uncomment this to include all applications
+    // "applications/**/*.{ts,tsx,js,jsx}", // Uncomment this to include all applications
     // NestJS applications
     "applications/**/main.ts",
     // React Router applications
     "applications/**/entry.client.tsx",
     "applications/**/entry.server.tsx",
     "applications/**/root.tsx",
+    "applications/**/app/routes/**/*.{ts,tsx}",
+    "applications/**/tests/setup.ts",
+    "applications/**/app/testing/**/*.{ts,tsx}",
     // Packages
     "packages/**/src/index.{ts,tsx,js,jsx}",
     "packages/**/src/bin.{ts,js}",
@@ -21,7 +24,9 @@
     "**/.expo/**",
     "**/.nx/**",
     "**/.venv/**",
-    "**/*.config.{ts,js}",
+    "**/*.config.{ts,js,mjs}",
+    "**/public/worker.js",
+    "**/apollo.config.mjs",
     "**/*.spec.{ts,tsx,js,jsx}",
     "**/*.test.{ts,tsx,js,jsx}",
     "**/*.workspace.{ts,js}",
@@ -32,6 +37,17 @@
     "**/node_modules/**",
     "tools/generators/src/generators/*/files/**",
     "vitest.workspace.ts",
+    // openthrottle-developer: kept for commented JSX / intentional rollback (see @deprecated)
+    "applications/openthrottle-developer/app/routing/agents/components/AgentsSectionQuickLinks.tsx",
+    "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQueueStats.tsx",
+    "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQuickNavigation.tsx",
+    "applications/openthrottle-developer/app/routing/home/components/HomeBuiltWith.tsx",
+    "applications/openthrottle-developer/app/routing/home/data/technology.ts",
+    "applications/openthrottle-developer/app/routing/queues/components/QueuesToolbar.tsx",
+    // Vitest / route test harness (entry globs do not satisfy knip file graph yet)
+    "applications/openthrottle-developer/tests/setup.ts",
+    "applications/openthrottle-developer/app/testing/route-fixtures.tsx",
+    "applications/openthrottle-developer/app/testing/search-route-fixtures.ts",
   ],
   "ignoreDependencies": [
     // Internal
