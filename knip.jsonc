@@ -160,6 +160,8 @@
         "@apollo/server-plugin-response-cache",
         "@apollo/utils.keyvadapter",
         "@apollo/utils.keyvaluecache",
+        // Peer of @nestjs/apollo (Express 5 middleware); hoisted at root, not imported directly
+        "@as-integrations/express5",
         "@commitlint/config-conventional",
         "@commitlint/config-nx-scopes",
         "@golevelup/ts-vitest",

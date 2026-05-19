@@ -65,5 +65,5 @@
   "scripts": {},
   "style": "./src/index.css",
   "type": "module",
-  "types": "./src/index.d.ts"
+  "types": "./src/index.ts"
 }
