@@ -29,7 +29,7 @@ export async function ensureCortexReachable(
   }
 }
 
-export interface TaskRow {
+interface TaskRow {
   readonly category: string | null;
   readonly createdAt: string;
   readonly description: string | null;
@@ -84,7 +84,7 @@ export async function getTasksByPlanId(
   }
 }
 
-export interface PlanRow {
+interface PlanRow {
   readonly author: string;
   readonly category: string;
   readonly createdAt: string;

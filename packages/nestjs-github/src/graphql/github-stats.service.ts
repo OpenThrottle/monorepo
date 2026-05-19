@@ -10,7 +10,7 @@ import { GitHubService } from '../github/github.service';
  * @description Open PR count per author for a repo (mirrors queues stats
  * style: list of { author, openCount }).
  */
-export interface OpenPrCountByAuthor {
+interface OpenPrCountByAuthor {
   readonly author: string;
   readonly openCount: number;
 }
@@ -19,19 +19,19 @@ export interface OpenPrCountByAuthor {
  * @description PR time-in-state summary: state, count, and average days
  * in that state.
  */
-export interface PrTimeInStateSummary {
+interface PrTimeInStateSummary {
   readonly state: string;
   readonly count: number;
   readonly avgDaysInState: number | null;
 }
 
 /** Period bucket: week "YYYY-Www" or month "YYYY-MM" (UTC). */
-export type LinesAddedDeletedPeriod = 'month' | 'week';
+type LinesAddedDeletedPeriod = 'month' | 'week';
 
 /**
  * @description Options for open-to-merged cycle time aggregation. Optional period buckets results by week or month (UTC).
  */
-export interface OpenToMergedCycleTimeOptions {
+interface OpenToMergedCycleTimeOptions {
   /** Bucket by week (YYYY-Www) or month (YYYY-MM); omit for a single repo-wide summary. */
   readonly period?: LinesAddedDeletedPeriod;
 }
@@ -39,7 +39,7 @@ export interface OpenToMergedCycleTimeOptions {
 /**
  * @description One row of open-to-merged cycle time: median and P90 days, optionally per period.
  */
-export interface OpenToMergedCycleTimeRow {
+interface OpenToMergedCycleTimeRow {
   readonly medianDays: number | null;
   readonly p90Days: number | null;
   readonly period: string | null;
@@ -49,7 +49,7 @@ export interface OpenToMergedCycleTimeRow {
 /**
  * @description PR count per label (breakdown of work by type or priority). A PR with multiple labels is counted under each label.
  */
-export interface PrCountByLabelRow {
+interface PrCountByLabelRow {
   readonly count: number;
   readonly label: string;
 }
@@ -57,7 +57,7 @@ export interface PrCountByLabelRow {
 /**
  * @description One row of PRs merged per period (throughput trend by week or month).
  */
-export interface PrsMergedPerPeriodRow {
+interface PrsMergedPerPeriodRow {
   readonly count: number;
   readonly period: string;
 }
@@ -65,7 +65,7 @@ export interface PrsMergedPerPeriodRow {
 /**
  * @description Options for commits-per-PR aggregation. maxPrs caps API calls; optional period for bucketing.
  */
-export interface CommitsPerPrOptions {
+interface CommitsPerPrOptions {
   /** Max merged PRs to fetch commit count for (default 100). */
   readonly maxPrs?: number;
   /** Bucket by week (YYYY-Www) or month (YYYY-MM); omit for no period column. */
@@ -75,7 +75,7 @@ export interface CommitsPerPrOptions {
 /**
  * @description One row of commits-per-PR: PR number, commit count, merged_at, optional period bucket.
  */
-export interface CommitsPerPrRow {
+interface CommitsPerPrRow {
   readonly commits: number;
   readonly mergedAt: string | null;
   readonly period: string | null;
@@ -85,7 +85,7 @@ export interface CommitsPerPrRow {
 /**
  * @description Options for review cycle time aggregation. Optional period buckets by week or month (UTC); maxPrs caps API calls.
  */
-export interface ReviewCycleTimeOptions {
+interface ReviewCycleTimeOptions {
   /** Max merged PRs to fetch reviews for (default 100). */
   readonly maxPrs?: number;
   /** Bucket by week (YYYY-Www) or month (YYYY-MM); omit for repo-wide summary. */
@@ -95,7 +95,7 @@ export interface ReviewCycleTimeOptions {
 /**
  * @description One row of review cycle time: median and P90 days from last CHANGES_REQUESTED to first subsequent APPROVED or merge.
  */
-export interface ReviewCycleTimeRow {
+interface ReviewCycleTimeRow {
   readonly medianDays: number | null;
   readonly period: string | null;
   readonly prCount: number;
@@ -105,7 +105,7 @@ export interface ReviewCycleTimeRow {
 /**
  * @description Options for lines added/deleted aggregation. Limits PRs fetched to respect rate limits.
  */
-export interface LinesAddedDeletedOptions {
+interface LinesAddedDeletedOptions {
   /** Max number of merged PRs to fetch detail for (default 100). */
   readonly maxPrs?: number;
   /** Bucket by week (YYYY-Www) or month (YYYY-MM). */
@@ -115,7 +115,7 @@ export interface LinesAddedDeletedOptions {
 /**
  * @description One row of lines-added/deleted aggregation; grouped by period and author.
  */
-export interface LinesAddedDeletedRow {
+interface LinesAddedDeletedRow {
   readonly additions: number;
   readonly author: string;
   readonly changedFiles: number;

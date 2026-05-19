@@ -142,8 +142,17 @@
     "tools/dotfiles": {
       "project": ["src/**/*.ts"],
     },
+    "packages/nestjs-agentic-workflow": {
+      "entry": ["src/index.ts", "src/testing/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@golevelup/ts-vitest", "@nestjs/testing"],
+    },
     "packages/nestjs-repositories": {
       "entry": ["src/index.ts", "src/nestjs-repositories.module.ts"],
+      "project": ["src/**/*.ts"],
+    },
+    "packages/nestjs-typeorm": {
+      "entry": ["src/index.ts", "src/nestjs-typeorm.module.ts"],
       "project": ["src/**/*.ts"],
     },
     "packages/mcp-developer": {
