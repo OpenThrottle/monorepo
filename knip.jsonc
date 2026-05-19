@@ -55,6 +55,7 @@
     // Golden prompts consumed by agents-mcp-router.golden-prompts.test.ts (knip excludes *.test.ts)
     "applications/openthrottle-server/src/graphql/agents/agents-mcp-router.golden-prompts.ts",
     // Vitest setup referenced from vitest.config.ts
+    "applications/openthrottle-admin/tests/setup.ts",
     "applications/openthrottle-server/tests/setup.ts",
   ],
   "ignoreDependencies": [

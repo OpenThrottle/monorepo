@@ -75,7 +75,7 @@ function buildUserTableColumns(): ColumnDef<
   ];
 }
 
-export interface UsersTableProps {
+interface UsersTableProps {
   readonly className?: string;
   readonly users: UserRowFragment[];
 }

@@ -85,7 +85,7 @@ function buildRoleTableColumns(): ColumnDef<
   ];
 }
 
-export interface RolesTableProps {
+interface RolesTableProps {
   readonly className?: string;
   readonly roles: RoleRowFragment[];
 }
