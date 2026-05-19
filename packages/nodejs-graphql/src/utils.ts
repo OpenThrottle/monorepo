@@ -56,5 +56,5 @@ export function parseDateTimeInResponse(value: unknown): unknown {
  * @description Matches ISO 8601 date-time strings (e.g. from GraphQL
  * DateTime over the wire).
  */
-export const ISO_DATE_TIME =
+const ISO_DATE_TIME =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/;

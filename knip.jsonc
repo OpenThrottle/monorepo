@@ -173,6 +173,19 @@
       ],
       "project": ["src/**/*.ts"],
     },
+    "packages/ai-mcp": {
+      "entry": [
+        "src/bin.ts",
+        "src/cortex-server.ts",
+        "src/embedding.ts",
+        "src/config.ts",
+      ],
+      "project": ["src/**/*.ts"],
+    },
+    "packages/nodejs-graphql": {
+      "entry": ["src/index.ts", "src/index-v2.ts", "src/graphql-v2.ts"],
+      "project": ["src/**/*.ts"],
+    },
     "packages/graphql-codegen": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],

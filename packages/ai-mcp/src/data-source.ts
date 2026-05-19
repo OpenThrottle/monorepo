@@ -50,7 +50,7 @@ export async function getOrCreateDataSource(
   return ds;
 }
 
-export interface QueryResult<T = unknown> {
+interface QueryResult<T = unknown> {
   readonly rows: T[];
   readonly rowCount: number;
 }
