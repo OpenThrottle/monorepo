@@ -2,13 +2,7 @@
  * @description MCP server and tool constants.
  */
 
-export const DEFAULT_LIMIT = 10;
-export const DEFAULT_MAX_LIMIT = 50;
-
-/**
- * @description Default server name when no worktree or override is set.
- */
-export const DEFAULT_SERVER_NAME = '@openthrottle/mcp-developer';
+const DEFAULT_SERVER_NAME = '@openthrottle/mcp-developer';
 export const SERVER_VERSION = '1.0.0';
 
 /**

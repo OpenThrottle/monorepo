@@ -146,6 +146,16 @@
       "entry": ["src/index.ts", "src/nestjs-repositories.module.ts"],
       "project": ["src/**/*.ts"],
     },
+    "packages/mcp-developer": {
+      "entry": [
+        "src/index.ts",
+        "src/bin.ts",
+        "src/run-server.ts",
+        "src/nest-tool-handlers.ts",
+        "src/nest/bootstrap-mcp-developer-app.ts",
+      ],
+      "project": ["src/**/*.ts"],
+    },
     "tools/workflows": {
       "entry": [
         "src/index.ts",
@@ -177,6 +187,10 @@
     "tools/generators/src/generators/package/generator.ts": ["duplicates"],
     "tools/generators/src/generators/react/generator.ts": ["duplicates"],
     "tools/generators/src/generators/react-router/generator.ts": ["duplicates"],
+    // @openthrottle/mcp-developer: public ./auth and ./nest subpaths (consumed via @openthrottle/nestjs-mcp-developer).
+    "packages/mcp-developer/src/auth/index.ts": ["exports"],
+    "packages/mcp-developer/src/auth/get-auth-token.ts": ["exports"],
+    "packages/mcp-developer/src/nest/index.ts": ["exports"],
     // @tools/dotfiles: documented public API for React Native / generic vitest factories.
     "tools/dotfiles/src/vitest-config.ts": ["exports"],
     "tools/dotfiles/src/index.ts": ["exports"],
