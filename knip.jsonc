@@ -104,6 +104,33 @@
   },
   "vitest": false,
   "workspaces": {
+    "tools/generators": {
+      "entry": [
+        "src/index.ts",
+        "src/generators/folders/generator.ts",
+        "src/generators/nestjs/generator.ts",
+        "src/generators/nestjs/generator.ai-agent.ts",
+        "src/generators/nestjs/generator.application.ts",
+        "src/generators/nestjs/generator.graphql-service.ts",
+        "src/generators/nestjs/generator.module.ts",
+        "src/generators/nestjs/generator.queue.ts",
+        "src/generators/nestjs/generator.simple-service.ts",
+        "src/generators/package/generator.ts",
+        "src/generators/react/generator.ts",
+        "src/generators/react/generator.component.ts",
+        "src/generators/react/generator.hook.ts",
+        "src/generators/react/generator.util.ts",
+        "src/generators/react-router/generator.ts",
+        "src/generators/react-router/generator.application.ts",
+        "src/generators/react-router/generator.component.ts",
+        "src/generators/react-router/generator.form.ts",
+        "src/generators/react-router/generator.modal.ts",
+        "src/generators/react-router/generator.route.ts",
+        "src/generators/react-router/generator.table.ts",
+      ],
+      "project": ["src/**/*.ts"],
+      "ignore": ["src/generators/*/files/**"],
+    },
     "tools/workflows": {
       "entry": [
         "src/index.ts",
@@ -129,5 +156,11 @@
     "tools/workflows/src/utils/ralph-debug-logger.ts": ["exports"],
     // Parser helpers are covered by unit tests; mirrored in @openthrottle/openthrottle-workflows.
     "tools/workflows/src/utils/parsers.ts": ["exports"],
+    // Nx generator factories export both a named function and default (required by @nx/devkit).
+    "tools/generators/src/generators/folders/generator.ts": ["duplicates"],
+    "tools/generators/src/generators/nestjs/generator.ts": ["duplicates"],
+    "tools/generators/src/generators/package/generator.ts": ["duplicates"],
+    "tools/generators/src/generators/react/generator.ts": ["duplicates"],
+    "tools/generators/src/generators/react-router/generator.ts": ["duplicates"],
   },
 }
