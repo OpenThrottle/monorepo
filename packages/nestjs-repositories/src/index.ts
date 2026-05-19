@@ -50,6 +50,7 @@ export {
   isWorkspaceEditorId,
 } from './modules/workspace-settings/workspace-editor-id';
 export { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
+export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings.service';
 export { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 export { WorkspaceLocalRepositoriesService } from './modules/workspace-settings/workspace-local-repositories.service';
 export { User } from './modules/users/user.entity';

@@ -221,15 +221,15 @@ GraphQL document: `settings.workspace.tsx.graphql` (to be filled in UI task).
 
 ## Implementation map (plan tasks)
 
-| Task                                     | Delivers                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
-| Design (this doc) + migration + entities | ✅                                                                       |
-| Backend: CRUD local repos                | `WorkspaceLocalRepositoriesService`, create/list/update/delete mutations |
-| Backend: project link                    | `setWorkspaceLocalRepositoryProject`, FK checks                          |
-| Backend: profile                         | `UserWorkspaceSettingsService`, `updateWorkspaceProfile`                 |
-| Backend: editors                         | Validation + persist `enabled_editors`                                   |
-| Developer UI                             | Forms, loader/action, tests                                              |
-| Apply editor config                      | Repo artifacts (VS Code, Cursor) from preferences                        |
+| Task                                     | Delivers                                                                         |
+| ---------------------------------------- | -------------------------------------------------------------------------------- |
+| Design (this doc) + migration + entities | ✅                                                                               |
+| Backend: CRUD local repos                | `WorkspaceLocalRepositoriesService`, create/list/update/delete mutations         |
+| Backend: project link                    | `setWorkspaceLocalRepositoryProject`, FK checks                                  |
+| Backend: profile                         | ✅ `UserWorkspaceSettingsService`, `updateWorkspaceProfile`, `workspaceSettings` |
+| Backend: editors                         | Validation + persist `enabled_editors`                                           |
+| Developer UI                             | Forms, loader/action, tests                                                      |
+| Apply editor config                      | Repo artifacts (VS Code, Cursor) from preferences                                |
 
 ## Related code
 

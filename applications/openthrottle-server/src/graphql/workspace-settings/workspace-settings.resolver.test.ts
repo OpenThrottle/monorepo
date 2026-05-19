@@ -1,10 +1,12 @@
 import type {
   Project,
+  UserWorkspaceSettings,
   WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsService,
   RolesService,
+  UserWorkspaceSettingsService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
@@ -33,6 +35,15 @@ describe('WorkspaceSettingsResolver', () => {
 
   const projectId = '33333333-3333-4333-8333-333333333333';
 
+  const mockProfile: UserWorkspaceSettings = {
+    contactDisplayName: 'Matt',
+    contactEmail: 'matt@example.com',
+    createdAt: new Date('2026-05-18T12:00:00.000Z'),
+    enabledEditors: [],
+    updatedAt: new Date('2026-05-18T12:00:00.000Z'),
+    userId,
+  } as UserWorkspaceSettings;
+
   const mockWorkspaceLocalRepositoriesService =
     createMock<WorkspaceLocalRepositoriesService>({
       create: vi.fn(),
@@ -41,6 +52,12 @@ describe('WorkspaceSettingsResolver', () => {
       listByUserId: vi.fn(),
       setProject: vi.fn(),
       update: vi.fn(),
+    });
+
+  const mockUserWorkspaceSettingsService =
+    createMock<UserWorkspaceSettingsService>({
+      getOrCreateForUser: vi.fn(),
+      updateContactProfile: vi.fn(),
     });
 
   const mockProjectsService = createMock<ProjectsService>({
@@ -54,6 +71,10 @@ describe('WorkspaceSettingsResolver', () => {
       providers: [
         WorkspaceSettingsResolver,
         GqlPermissionsGuard,
+        {
+          provide: UserWorkspaceSettingsService,
+          useValue: mockUserWorkspaceSettingsService,
+        },
         {
           provide: WorkspaceLocalRepositoriesService,
           useValue: mockWorkspaceLocalRepositoriesService,
@@ -72,6 +93,56 @@ describe('WorkspaceSettingsResolver', () => {
     }).compile();
 
     resolver = app.get(WorkspaceSettingsResolver);
+  });
+
+  describe('workspaceSettings', () => {
+    test('returns profile and local repositories for the current user', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.getOrCreateForUser,
+      ).mockResolvedValue(mockProfile);
+      vi.mocked(
+        mockWorkspaceLocalRepositoriesService.listByUserId,
+      ).mockResolvedValue([mockRepo]);
+
+      const result = await resolver.workspaceSettings(userId);
+
+      expect(result).toEqual({
+        localRepositories: [mockRepo],
+        profile: mockProfile,
+      });
+    });
+  });
+
+  describe('updateWorkspaceProfile', () => {
+    test('validates contact fields and delegates to the service', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateContactProfile,
+      ).mockResolvedValue(mockProfile);
+
+      const result = await resolver.updateWorkspaceProfile(userId, {
+        contactDisplayName: '  Matt  ',
+        contactEmail: '  matt@example.com  ',
+        enabledEditors: null,
+      });
+
+      expect(result).toBe(mockProfile);
+      expect(
+        mockUserWorkspaceSettingsService.updateContactProfile,
+      ).toHaveBeenCalledWith(userId, {
+        contactDisplayName: 'Matt',
+        contactEmail: 'matt@example.com',
+      });
+    });
+
+    test('rejects invalid contact email', async () => {
+      await expect(
+        resolver.updateWorkspaceProfile(userId, {
+          contactDisplayName: null,
+          contactEmail: 'not-an-email',
+          enabledEditors: null,
+        }),
+      ).rejects.toThrow(/valid email address/);
+    });
   });
 
   describe('workspaceLocalRepositories', () => {

@@ -4,10 +4,12 @@
 
 import type {
   Project,
+  UserWorkspaceSettings,
   WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsService,
+  UserWorkspaceSettingsService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
@@ -28,8 +30,15 @@ import {
   CreateWorkspaceLocalRepositoryInput,
   SetWorkspaceLocalRepositoryProjectInput,
   UpdateWorkspaceLocalRepositoryInput,
+  UpdateWorkspaceProfileInput,
 } from './workspace-settings.input';
+import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
+import {
+  validateContactDisplayName,
+  validateContactEmail,
+} from './user-workspace-profile.validation';
 import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
+import { WorkspaceSettingsObject } from './workspace-settings.object';
 import {
   validateAndNormalizeFilesystemPath,
   validateDisplayName,
@@ -41,9 +50,54 @@ import {
 @UseGuards(GqlPermissionsGuard)
 export class WorkspaceSettingsResolver {
   constructor(
+    private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
     private readonly workspaceLocalRepositoriesService: WorkspaceLocalRepositoriesService,
     private readonly projectsService: ProjectsService,
   ) {}
+
+  @Query(() => WorkspaceSettingsObject, {
+    description: `Workspace settings for the authenticated user (profile and local repositories).`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async workspaceSettings(
+    @CurrentUser('sub') userId: string,
+  ): Promise<WorkspaceSettingsObject> {
+    const [profile, localRepositories] = await Promise.all([
+      this.userWorkspaceSettingsService.getOrCreateForUser(userId),
+      this.workspaceLocalRepositoriesService.listByUserId(userId),
+    ]);
+
+    return { localRepositories, profile };
+  }
+
+  @Mutation(() => UserWorkspaceProfileObject, {
+    description: `Update contact name and email on the authenticated user's workspace profile.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async updateWorkspaceProfile(
+    @CurrentUser('sub') userId: string,
+    @Args('input', { type: () => UpdateWorkspaceProfileInput })
+    input: UpdateWorkspaceProfileInput,
+  ): Promise<UserWorkspaceSettings> {
+    const patch: {
+      contactDisplayName?: string | null;
+      contactEmail?: string | null;
+    } = {};
+
+    if (input.contactDisplayName !== undefined) {
+      patch.contactDisplayName = validateContactDisplayName(
+        input.contactDisplayName,
+      );
+    }
+    if (input.contactEmail !== undefined) {
+      patch.contactEmail = validateContactEmail(input.contactEmail);
+    }
+
+    return this.userWorkspaceSettingsService.updateContactProfile(
+      userId,
+      patch,
+    );
+  }
 
   @ResolveField(() => ProjectObject, {
     description: `Cortex project linked to this checkout.`,
