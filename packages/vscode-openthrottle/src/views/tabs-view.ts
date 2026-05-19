@@ -9,7 +9,7 @@ import { LoginTreeDataProvider } from '../trees/login-tree.js';
 import { WelcomeTreeDataProvider } from '../trees/welcome-tree.js';
 
 /**
- * @description Register Welcome, Login, Docs, and Examples tree data providers. Call once from {@link registerViews}.
+ * @description Register Welcome, Login, and Docs tree data providers. Call once from {@link registerViews}.
  */
 export function registerTabsView(
   context: vscode.ExtensionContext,

@@ -85,6 +85,8 @@
     "prettier",
     "typescript",
     "vitest",
+    // vscode-openthrottle: used by nx `project:build` (`pnpm exec vsce package`)
+    "@vscode/vsce",
   ],
   "project": [
     "applications/**/*.{ts,tsx,js,jsx}",

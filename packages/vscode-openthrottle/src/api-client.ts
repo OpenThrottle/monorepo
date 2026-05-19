@@ -16,10 +16,7 @@ import {
 } from './__generated__/graphql.js';
 import { UnauthenticatedError } from './errors.js';
 
-/**
- * @description Callback to resolve auth token (e.g. from SecretStorage). Omit header when undefined.
- */
-export type GetToken = () => Promise<string | undefined>;
+type GetToken = () => Promise<string | undefined>;
 
 /**
  * @description Client for openthrottle-server GraphQL read operations (plans, tasks).
