@@ -329,6 +329,15 @@ export type CreateUserInput = {
   githubUsername: Scalars['String']['input'];
 };
 
+export type CreateWorkspaceLocalRepositoryInput = {
+  displayName: Scalars['String']['input'];
+  /** Absolute path to an existing directory on the server host. */
+  filesystemPath: Scalars['String']['input'];
+  gitDefaultBranch?: InputMaybe<Scalars['String']['input']>;
+  gitRemoteUrl?: InputMaybe<Scalars['String']['input']>;
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 /** A custom prompt document for AI workflow customization */
 export type CustomPromptObject = {
   __typename?: 'CustomPromptObject';
@@ -804,6 +813,8 @@ export type Mutation = {
   createTask: TaskObject;
   /** Create a user */
   createUser: UserObject;
+  /** Register a local filesystem repository for the authenticated user. */
+  createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Soft delete a custom prompt by ID */
   deleteCustomPrompt: Scalars['Boolean']['output'];
   /** Delete a note by ID */
@@ -814,6 +825,8 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
+  /** Remove a local repository owned by the authenticated user. */
+  deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
   /** Disable a user; they will not be able to log in. */
   disableUser?: Maybe<UserObject>;
   /** Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error. */
@@ -844,6 +857,8 @@ export type Mutation = {
   retryJob: RetryJobResultObject;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
+  /** Assign, change, or clear the Cortex project link for a local repository. */
+  setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
   /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
@@ -862,6 +877,10 @@ export type Mutation = {
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
+  /** Update metadata for a local repository owned by the authenticated user. */
+  updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
+  /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
+  updateWorkspaceProfile: UserWorkspaceProfileObject;
   /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
   workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
@@ -912,6 +931,10 @@ export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
 
+export type MutationCreateWorkspaceLocalRepositoryArgs = {
+  input: CreateWorkspaceLocalRepositoryInput;
+};
+
 export type MutationDeleteCustomPromptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -930,6 +953,10 @@ export type MutationDeleteProjectArgs = {
 
 export type MutationDeleteTaskArgs = {
   input: DeleteTaskInput;
+};
+
+export type MutationDeleteWorkspaceLocalRepositoryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationDisableUserArgs = {
@@ -992,6 +1019,10 @@ export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
 };
 
+export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
+  input: SetWorkspaceLocalRepositoryProjectInput;
+};
+
 export type MutationUpdateCustomPromptArgs = {
   input: UpdateCustomPromptInput;
 };
@@ -1014,6 +1045,14 @@ export type MutationUpdateTaskArgs = {
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
+};
+
+export type MutationUpdateWorkspaceLocalRepositoryArgs = {
+  input: UpdateWorkspaceLocalRepositoryInput;
+};
+
+export type MutationUpdateWorkspaceProfileArgs = {
+  input: UpdateWorkspaceProfileInput;
 };
 
 export type MutationWorkflowPlanRunArgs = {
@@ -1430,6 +1469,12 @@ export type Query = {
   user?: Maybe<UserObject>;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
+  /** List local repositories for the authenticated user. */
+  workspaceLocalRepositories: Array<WorkspaceLocalRepositoryObject>;
+  /** Get a local repository by id for the authenticated user. */
+  workspaceLocalRepository?: Maybe<WorkspaceLocalRepositoryObject>;
+  /** Workspace settings for the authenticated user (profile and local repositories). */
+  workspaceSettings: WorkspaceSettingsObject;
 };
 
 export type QueryActivityByDateArgs = {
@@ -1603,6 +1648,10 @@ export type QueryTasksByProjectIdArgs = {
 };
 
 export type QueryUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryWorkspaceLocalRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1871,6 +1920,12 @@ export type SetPlanStatusInput = {
   status: Scalars['String']['input'];
 };
 
+export type SetWorkspaceLocalRepositoryProjectInput = {
+  id: Scalars['ID']['input'];
+  /** Cortex project id, or null to clear the link. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
@@ -2056,6 +2111,20 @@ export type UpdateUserInput = {
   id: Scalars['ID']['input'];
 };
 
+export type UpdateWorkspaceLocalRepositoryInput = {
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  gitDefaultBranch?: InputMaybe<Scalars['String']['input']>;
+  gitRemoteUrl?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdateWorkspaceProfileInput = {
+  contactDisplayName?: InputMaybe<Scalars['String']['input']>;
+  contactEmail?: InputMaybe<Scalars['String']['input']>;
+  enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
+};
+
 export type UserObject = {
   __typename?: 'UserObject';
   createdAt: Scalars['DateTime']['output'];
@@ -2066,6 +2135,20 @@ export type UserObject = {
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Per-user workspace profile: contact fields and enabled editors. */
+export type UserWorkspaceProfileObject = {
+  __typename?: 'UserWorkspaceProfileObject';
+  /** Display name for notifications and workspace attribution. */
+  contactDisplayName?: Maybe<Scalars['String']['output']>;
+  /** Contact email for workspace profile (distinct from auth email). */
+  contactEmail?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Editors the user wants OpenThrottle to configure in linked repos. */
+  enabledEditors: Array<WorkspaceEditorId>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 /** Interpretation of wall-clock to CPU time ratio. */
@@ -2095,6 +2178,37 @@ export type WallClockMetrics = {
   wallClockMs: Scalars['Float']['output'];
   /** Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound. */
   wallClockToCpuRatio: Scalars['Float']['output'];
+};
+
+/** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode. */
+export enum WorkspaceEditorId {
+  Cursor = 'CURSOR',
+  Vscode = 'VSCODE',
+}
+
+/** A local filesystem checkout registered under the user's workspace settings. */
+export type WorkspaceLocalRepositoryObject = {
+  __typename?: 'WorkspaceLocalRepositoryObject';
+  createdAt: Scalars['DateTime']['output'];
+  displayName: Scalars['String']['output'];
+  /** Canonical absolute path on the server host. */
+  filesystemPath: Scalars['String']['output'];
+  gitDefaultBranch?: Maybe<Scalars['String']['output']>;
+  /** Optional git remote URL (origin). */
+  gitRemoteUrl?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  project?: Maybe<ProjectObject>;
+  /** Optional Cortex project linked to this checkout. */
+  projectId?: Maybe<Scalars['ID']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+/** Aggregate for Settings → Workspace loader. */
+export type WorkspaceSettingsObject = {
+  __typename?: 'WorkspaceSettingsObject';
+  localRepositories: Array<WorkspaceLocalRepositoryObject>;
+  profile: UserWorkspaceProfileObject;
 };
 
 export type HealthCardFragment = {
@@ -3444,6 +3558,157 @@ export type GetSearchResultsQuery = {
   };
 };
 
+export type WorkspaceLocalRepositoryFieldsFragment = {
+  __typename?: 'WorkspaceLocalRepositoryObject';
+  createdAt: any;
+  displayName: string;
+  filesystemPath: string;
+  gitDefaultBranch?: string | null;
+  gitRemoteUrl?: string | null;
+  id: string;
+  projectId?: string | null;
+  updatedAt: any;
+  userId: string;
+  project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+};
+
+export type UserWorkspaceProfileFieldsFragment = {
+  __typename?: 'UserWorkspaceProfileObject';
+  contactDisplayName?: string | null;
+  contactEmail?: string | null;
+  createdAt: any;
+  enabledEditors: Array<WorkspaceEditorId>;
+  updatedAt: any;
+  userId: string;
+};
+
+export type GetWorkspaceSettingsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetWorkspaceSettingsQuery = {
+  __typename?: 'Query';
+  workspaceSettings: {
+    __typename?: 'WorkspaceSettingsObject';
+    localRepositories: Array<{
+      __typename?: 'WorkspaceLocalRepositoryObject';
+      createdAt: any;
+      displayName: string;
+      filesystemPath: string;
+      gitDefaultBranch?: string | null;
+      gitRemoteUrl?: string | null;
+      id: string;
+      projectId?: string | null;
+      updatedAt: any;
+      userId: string;
+      project?: {
+        __typename?: 'ProjectObject';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    profile: {
+      __typename?: 'UserWorkspaceProfileObject';
+      contactDisplayName?: string | null;
+      contactEmail?: string | null;
+      createdAt: any;
+      enabledEditors: Array<WorkspaceEditorId>;
+      updatedAt: any;
+      userId: string;
+    };
+  };
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
+};
+
+export type UpdateWorkspaceProfileMutationVariables = Exact<{
+  input: UpdateWorkspaceProfileInput;
+}>;
+
+export type UpdateWorkspaceProfileMutation = {
+  __typename?: 'Mutation';
+  updateWorkspaceProfile: {
+    __typename?: 'UserWorkspaceProfileObject';
+    contactDisplayName?: string | null;
+    contactEmail?: string | null;
+    createdAt: any;
+    enabledEditors: Array<WorkspaceEditorId>;
+    updatedAt: any;
+    userId: string;
+  };
+};
+
+export type CreateWorkspaceLocalRepositoryMutationVariables = Exact<{
+  input: CreateWorkspaceLocalRepositoryInput;
+}>;
+
+export type CreateWorkspaceLocalRepositoryMutation = {
+  __typename?: 'Mutation';
+  createWorkspaceLocalRepository: {
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    projectId?: string | null;
+    updatedAt: any;
+    userId: string;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  };
+};
+
+export type UpdateWorkspaceLocalRepositoryMutationVariables = Exact<{
+  input: UpdateWorkspaceLocalRepositoryInput;
+}>;
+
+export type UpdateWorkspaceLocalRepositoryMutation = {
+  __typename?: 'Mutation';
+  updateWorkspaceLocalRepository: {
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    projectId?: string | null;
+    updatedAt: any;
+    userId: string;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  };
+};
+
+export type SetWorkspaceLocalRepositoryProjectMutationVariables = Exact<{
+  input: SetWorkspaceLocalRepositoryProjectInput;
+}>;
+
+export type SetWorkspaceLocalRepositoryProjectMutation = {
+  __typename?: 'Mutation';
+  setWorkspaceLocalRepositoryProject: {
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    projectId?: string | null;
+    updatedAt: any;
+    userId: string;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  };
+};
+
+export type DeleteWorkspaceLocalRepositoryMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type DeleteWorkspaceLocalRepositoryMutation = {
+  __typename?: 'Mutation';
+  deleteWorkspaceLocalRepository: boolean;
+};
+
 export type UsageDailyStatsRowFragment = {
   __typename?: 'DailyStatsObject';
   date: string;
@@ -4173,6 +4438,71 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const WorkspaceLocalRepositoryFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<WorkspaceLocalRepositoryFieldsFragment, unknown>;
+export const UserWorkspaceProfileFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserWorkspaceProfileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'contactDisplayName' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'contactEmail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserWorkspaceProfileFieldsFragment, unknown>;
 export const UsageDailyStatsRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -8103,6 +8433,540 @@ export const GetSearchResultsDocument = {
 } as unknown as DocumentNode<
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
+>;
+export const GetWorkspaceSettingsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getWorkspaceSettings' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceSettings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'localRepositories' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'WorkspaceLocalRepositoryFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'profile' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'UserWorkspaceProfileFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserWorkspaceProfileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'contactDisplayName' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'contactEmail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetWorkspaceSettingsQuery,
+  GetWorkspaceSettingsQueryVariables
+>;
+export const UpdateWorkspaceProfileDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateWorkspaceProfile' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateWorkspaceProfileInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateWorkspaceProfile' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserWorkspaceProfileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'contactDisplayName' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'contactEmail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateWorkspaceProfileMutation,
+  UpdateWorkspaceProfileMutationVariables
+>;
+export const CreateWorkspaceLocalRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createWorkspaceLocalRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'CreateWorkspaceLocalRepositoryInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createWorkspaceLocalRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'WorkspaceLocalRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateWorkspaceLocalRepositoryMutation,
+  CreateWorkspaceLocalRepositoryMutationVariables
+>;
+export const UpdateWorkspaceLocalRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateWorkspaceLocalRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'UpdateWorkspaceLocalRepositoryInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateWorkspaceLocalRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'WorkspaceLocalRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateWorkspaceLocalRepositoryMutation,
+  UpdateWorkspaceLocalRepositoryMutationVariables
+>;
+export const SetWorkspaceLocalRepositoryProjectDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'setWorkspaceLocalRepositoryProject' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'SetWorkspaceLocalRepositoryProjectInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setWorkspaceLocalRepositoryProject' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'WorkspaceLocalRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetWorkspaceLocalRepositoryProjectMutation,
+  SetWorkspaceLocalRepositoryProjectMutationVariables
+>;
+export const DeleteWorkspaceLocalRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteWorkspaceLocalRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteWorkspaceLocalRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteWorkspaceLocalRepositoryMutation,
+  DeleteWorkspaceLocalRepositoryMutationVariables
 >;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',

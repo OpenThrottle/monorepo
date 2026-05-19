@@ -33,9 +33,11 @@ import {
   UpdateWorkspaceProfileInput,
 } from './workspace-settings.input';
 import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
+import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
 import {
   validateContactDisplayName,
   validateContactEmail,
+  validateEnabledEditors,
 } from './user-workspace-profile.validation';
 import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
 import { WorkspaceSettingsObject } from './workspace-settings.object';
@@ -67,11 +69,14 @@ export class WorkspaceSettingsResolver {
       this.workspaceLocalRepositoriesService.listByUserId(userId),
     ]);
 
-    return { localRepositories, profile };
+    return {
+      localRepositories,
+      profile: toUserWorkspaceProfileObject(profile),
+    };
   }
 
   @Mutation(() => UserWorkspaceProfileObject, {
-    description: `Update contact name and email on the authenticated user's workspace profile.`,
+    description: `Update contact fields and/or enabled editors on the authenticated user's workspace profile.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async updateWorkspaceProfile(
@@ -82,6 +87,7 @@ export class WorkspaceSettingsResolver {
     const patch: {
       contactDisplayName?: string | null;
       contactEmail?: string | null;
+      enabledEditors?: UserWorkspaceSettings['enabledEditors'];
     } = {};
 
     if (input.contactDisplayName !== undefined) {
@@ -92,11 +98,16 @@ export class WorkspaceSettingsResolver {
     if (input.contactEmail !== undefined) {
       patch.contactEmail = validateContactEmail(input.contactEmail);
     }
+    const enabledEditors = validateEnabledEditors(input.enabledEditors);
+    if (enabledEditors !== undefined) {
+      patch.enabledEditors = enabledEditors;
+    }
 
-    return this.userWorkspaceSettingsService.updateContactProfile(
+    const updated = await this.userWorkspaceSettingsService.updateProfile(
       userId,
       patch,
     );
+    return toUserWorkspaceProfileObject(updated);
   }
 
   @ResolveField(() => ProjectObject, {

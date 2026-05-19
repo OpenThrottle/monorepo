@@ -16,6 +16,9 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import type { UpdateWorkspaceProfileInput } from './workspace-settings.input';
+import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
 
 describe('WorkspaceSettingsResolver', () => {
@@ -58,6 +61,7 @@ describe('WorkspaceSettingsResolver', () => {
     createMock<UserWorkspaceSettingsService>({
       getOrCreateForUser: vi.fn(),
       updateContactProfile: vi.fn(),
+      updateProfile: vi.fn(),
     });
 
   const mockProjectsService = createMock<ProjectsService>({
@@ -108,7 +112,7 @@ describe('WorkspaceSettingsResolver', () => {
 
       expect(result).toEqual({
         localRepositories: [mockRepo],
-        profile: mockProfile,
+        profile: toUserWorkspaceProfileObject(mockProfile),
       });
     });
   });
@@ -116,7 +120,7 @@ describe('WorkspaceSettingsResolver', () => {
   describe('updateWorkspaceProfile', () => {
     test('validates contact fields and delegates to the service', async () => {
       vi.mocked(
-        mockUserWorkspaceSettingsService.updateContactProfile,
+        mockUserWorkspaceSettingsService.updateProfile,
       ).mockResolvedValue(mockProfile);
 
       const result = await resolver.updateWorkspaceProfile(userId, {
@@ -125,12 +129,53 @@ describe('WorkspaceSettingsResolver', () => {
         enabledEditors: null,
       });
 
-      expect(result).toBe(mockProfile);
+      expect(result).toEqual(toUserWorkspaceProfileObject(mockProfile));
       expect(
-        mockUserWorkspaceSettingsService.updateContactProfile,
+        mockUserWorkspaceSettingsService.updateProfile,
       ).toHaveBeenCalledWith(userId, {
         contactDisplayName: 'Matt',
         contactEmail: 'matt@example.com',
+      });
+    });
+
+    test('validates and persists enabled editors', async () => {
+      const withEditors = {
+        ...mockProfile,
+        enabledEditors: ['cursor', 'vscode'],
+      } as UserWorkspaceSettings;
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(withEditors);
+
+      const result = await resolver.updateWorkspaceProfile(userId, {
+        enabledEditors: [
+          WorkspaceEditorIdEnum.CURSOR,
+          WorkspaceEditorIdEnum.VSCODE,
+          WorkspaceEditorIdEnum.CURSOR,
+        ],
+      } as UpdateWorkspaceProfileInput);
+
+      expect(result).toEqual(toUserWorkspaceProfileObject(withEditors));
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenLastCalledWith(userId, {
+        enabledEditors: ['cursor', 'vscode'],
+      });
+    });
+
+    test('allows clearing all enabled editors', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(mockProfile);
+
+      await resolver.updateWorkspaceProfile(userId, {
+        enabledEditors: [],
+      } as UpdateWorkspaceProfileInput);
+
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenLastCalledWith(userId, {
+        enabledEditors: [],
       });
     });
 
