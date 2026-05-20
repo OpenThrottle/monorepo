@@ -2,13 +2,9 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-interface UsageAnalyticsGapsProps {
-  readonly className?: string;
-}
+export interface UsageAnalyticsGapsProps {}
 
 export const UsageAnalyticsGaps = (_props: UsageAnalyticsGapsProps) => {
-  // const { className } = props;
-
   // Hooks
 
   // Setup

@@ -11,17 +11,17 @@ import {
 import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
-interface UsageSnapshotProps {
-  readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
-  readonly rangeDays: number;
-  readonly rangeEndIso: string;
-  readonly rangeStartIso: string;
+export interface UsageSnapshotProps {
+  dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
+  rangeDays: number;
+  rangeEndIso: string;
+  rangeStartIso: string;
 }
 
 /**
  * @description Lets operators attach the same coarse usage data to tickets without new analytics APIs.
  */
-export function UsageSnapshot(props: UsageSnapshotProps): React.ReactElement {
+export const UsageSnapshot = (props: UsageSnapshotProps) => {
   const { dailyStats, rangeDays, rangeEndIso, rangeStartIso } = props;
 
   // Hooks
@@ -68,4 +68,4 @@ export function UsageSnapshot(props: UsageSnapshotProps): React.ReactElement {
       </CardContent>
     </Card>
   );
-}
+};
