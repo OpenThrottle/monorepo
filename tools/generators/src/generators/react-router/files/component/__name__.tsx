@@ -2,7 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 
 export interface <%= name %>Props {
-  readonly  className?: string;
+  className?: string;
 }
 
 export const <%= name %> = (props: <%= name %>Props) => {

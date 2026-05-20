@@ -2,10 +2,10 @@ import * as React from 'react';
 import classnames from 'classnames';
 
 export interface <%= name %>Props {
-  readonly className?: string;
+  className?: string;
 }
 
-export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
+export const <%= name %> = (props: <%= name %>Props) => {
   const { className } = props;
 
   // Hooks
