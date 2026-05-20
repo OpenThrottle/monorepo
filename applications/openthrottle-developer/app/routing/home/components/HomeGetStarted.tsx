@@ -1,8 +1,8 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-interface HomeGetStartedProps {
-  readonly className?: string;
+export interface HomeGetStartedProps {
+  className?: string;
 }
 
 export const HomeGetStarted = (props: HomeGetStartedProps) => {

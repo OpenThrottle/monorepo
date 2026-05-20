@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-interface HomeHeroV1Props {
+export interface HomeHeroV1Props {
   className?: string;
 }
 
