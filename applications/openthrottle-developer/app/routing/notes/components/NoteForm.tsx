@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { NoteCardFragment } from '~/__generated__/graphql';
 
-interface NoteFormProps {
+export interface NoteFormProps {
   action: 'create' | 'update';
   className?: string;
   note?: NoteCardFragment;

@@ -10,7 +10,7 @@ import {
 import { Link } from 'react-router';
 import { NoteCardFragment } from '~/__generated__/graphql';
 
-interface NoteCardProps {
+export interface NoteCardProps {
   className?: string;
   note: NoteCardFragment;
 }
