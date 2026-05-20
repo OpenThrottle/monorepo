@@ -6,20 +6,25 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardStats } from '../DashboardStats';
 import type { DashboardStatsProps } from '../DashboardStats';
 
+function renderWithProps(props: DashboardStatsProps): RenderResult {
+  const Component = () => <DashboardStats {...props} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+}
+
 describe('DashboardStats Component', () => {
   let component: RenderResult;
-  let props: DashboardStatsProps;
 
   beforeEach(() => {
-    props = {};
-
-    const Component = () => <DashboardStats {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderWithProps({});
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders stat cards with titles and values', () => {
+    expect(component.getByText('Total plans')).toBeInTheDocument();
+    expect(component.getByText('12')).toBeInTheDocument();
+    expect(component.getByText('Active tasks')).toBeInTheDocument();
+    expect(component.getByText('3')).toBeInTheDocument();
+    expect(component.getByText('Scheduled tasks')).toBeInTheDocument();
+    expect(component.getByText('23')).toBeInTheDocument();
   });
 });

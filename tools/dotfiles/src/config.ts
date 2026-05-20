@@ -1,4 +1,6 @@
 // Separate export file for vite/vitest configs to avoid global.ts import issues
+
+/** @publicApi */
 export {
   createViteConfig,
   defineViteConfig,
@@ -7,6 +9,7 @@ export {
   type PackageType,
 } from './vite-config.js';
 
+/** @publicApi */
 export {
   createVitestConfig,
   createVitestConfigJsdom,

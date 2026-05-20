@@ -6,8 +6,6 @@ import {
 import { WORKFLOW_RALPH_ENV } from '../utils/ralph-runtime-config';
 import { ARTWORK_LINE, ARTWORK_THANK_YOU, COLORS } from './index';
 
-export const MESSAGE_ON_CANCEL = `${COLORS.yellow}🚫 Cancelled.${COLORS.reset}`;
-
 export const MESSAGE_TOOL_USAGE = `
 Usage: ${COLORS.cyan}pnpm exec workflow-ralph --plan <cortex-plan-uuid> ${COLORS.gray}[options]${COLORS.reset}
        ${COLORS.cyan}pnpm exec workflow-ralph --task <cortex-task-uuid> ${COLORS.gray}[options]${COLORS.reset}

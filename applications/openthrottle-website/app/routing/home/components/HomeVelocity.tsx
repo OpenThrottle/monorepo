@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Card } from '@openthrottle/react-router-shadcn';
 
-export interface HomeVelocityProps {}
+interface HomeVelocityProps {}
 
 export const HomeVelocity = (_props: HomeVelocityProps) => {
   // const { className } = props;

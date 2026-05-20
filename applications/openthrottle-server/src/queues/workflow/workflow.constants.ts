@@ -7,30 +7,7 @@ export const WORKER_LOCK_DURATION_MS = 300_000; // 5 min; renewal every 2.5 min
 export const WORKER_MAX_STALLED_COUNT = 1; // move back to waiting when stalled (retry)
 export const WORKER_STALLED_INTERVAL_MS = 60_000; // check for stalled jobs every 60s
 
-/**
- * @description Job priority levels for BullMQ. Lower numbers = higher priority (processed first).
- * BullMQ uses a priority queue where jobs with lower priority values are dequeued before higher values.
- */
-export const WORKFLOW_JOB_PRIORITY = {
-  BATCH: 100,
-  INTERACTIVE: 1,
-  NORMAL: 10,
-} as const;
-
 export const WORKFLOW_NAME = 'Workflow (v2)';
-
-/**
- * @description BullMQ **job name** for in-process Ralph via `createWorkflowRalphOrchestrator`
- * ({@link RunPlanOrchestratorJobData}). Same {@link PLANS_QUEUE_NAME} queue as spawn jobs; discriminated by
- * name + payload `runKind`.
- */
-export const WORKFLOW_ORCHESTRATOR_JOB_NAME = `${WORKFLOW_NAME}:orchestrator-job`;
-
-/**
- * @description BullMQ **job name** for spawn plan runs (nested `workflow-ralph`). Same string as historical
- * GraphQL enqueue; use this in `queue.add` for {@link RunPlanSpawnJobData}.
- */
-export const WORKFLOW_SPAWN_JOB_NAME = `${WORKFLOW_NAME}:spawn-job`;
 
 /**
  * @description Delay in milliseconds before retrying a job when all worktrees are locked.

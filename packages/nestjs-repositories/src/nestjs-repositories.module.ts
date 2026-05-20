@@ -16,6 +16,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
+import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module';
 
 @Module({
   controllers: [],
@@ -34,6 +35,7 @@ import { UsersModule } from './modules/users/users.module';
     TaskEmbeddingsModule,
     TasksModule,
     UsersModule,
+    WorkspaceSettingsModule,
   ],
   imports: [
     TypeOrmModule.forRootAsync({
@@ -55,6 +57,7 @@ import { UsersModule } from './modules/users/users.module';
     TaskEmbeddingsModule,
     TasksModule,
     UsersModule,
+    WorkspaceSettingsModule,
   ],
   providers: [],
 })

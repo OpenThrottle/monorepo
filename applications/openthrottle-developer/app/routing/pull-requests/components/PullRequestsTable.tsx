@@ -9,7 +9,7 @@ import {
 import type { PullRequestsTableColumnValue } from '~/routing/pull-requests/config/pull-requests-table-columns';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
-export interface PullRequestsTableProps {
+interface PullRequestsTableProps {
   readonly className?: string;
   readonly filters: PullRequestsListFilters;
   readonly listQuery: string;

@@ -10,7 +10,7 @@ import { ServerHealthObject } from './server-health.object';
 import { ServerMetricsObject } from './server-metrics.object';
 
 /** Database health status: ok, unconfigured, or unreachable. */
-export type HealthStatus = 'ok' | 'unconfigured' | 'unreachable';
+type HealthStatus = 'ok' | 'unconfigured' | 'unreachable';
 
 @Public()
 @Resolver()

@@ -35,15 +35,15 @@ const JOB_STATE_BADGE_VARIANT: Record<
 
 const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 
-export type QueueJobDetailJob = NonNullable<GetQueueJobDetailsQuery['job']>;
+type QueueJobDetailJob = NonNullable<GetQueueJobDetailsQuery['job']>;
 
-export interface QueueJobDetailProps {
+interface QueueJobDetailProps {
   readonly job: QueueJobDetailJob;
   readonly queueName: string;
 }
 
 /** Action payload from `queues.$queueId.$jobId` route for mutation feedback. */
-export type QueueJobDetailActionData =
+type QueueJobDetailActionData =
   | { cancelPlanRunError: string }
   | { retryJobError: string }
   | {

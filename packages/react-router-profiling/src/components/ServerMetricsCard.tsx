@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import type { ProcessMetricsSnapshot } from '../data/metrics-types';
-import { useServerMetrics } from '../hooks/use-server-metrics';
+import { useServerMetrics } from '../hooks/useServerMetrics';
 
 /** Format MB to 2 decimal places for display. */
 function formatMb(value: number): string {

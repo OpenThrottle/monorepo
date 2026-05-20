@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as SheetPrimitive from '@radix-ui/react-dialog';
+import { Dialog as SheetPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
 export interface SheetTitleProps extends React.ComponentPropsWithoutRef<
@@ -26,7 +26,7 @@ export const SheetTitle = React.forwardRef<
 
   return (
     <SheetPrimitive.Title
-      className={cn('text-lg font-semibold text-foreground', className)}
+      className={cn('text-lg text-foreground', className)}
       ref={ref}
       {...rest}
     />

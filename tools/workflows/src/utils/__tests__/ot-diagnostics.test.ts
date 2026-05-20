@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   formatPlansProcessorSpawnOtDiagnosticsMessage,
-  isOtDiagnosticsEnvTruthy,
-  sanitizePostgresConnectionForLogs,
 } from '../ot-diagnostics';
 
 describe('ot-diagnostics', () => {
@@ -16,6 +14,20 @@ describe('ot-diagnostics', () => {
         queueLabel: 'plans',
         spawnCwd: '/repo',
         workerEnv: {},
+      }),
+    ).toBeNull();
+  });
+
+  it('formatPlansProcessorSpawnOtDiagnosticsMessage returns null when diagnostics env is off', () => {
+    expect(
+      formatPlansProcessorSpawnOtDiagnosticsMessage({
+        jobId: 'j1',
+        planId: 'p1',
+        queueLabel: 'plans',
+        spawnCwd: '/repo',
+        workerEnv: {
+          [OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV]: '0',
+        },
       }),
     ).toBeNull();
   });
@@ -43,25 +55,14 @@ describe('ot-diagnostics', () => {
     const parsed = JSON.parse(line!.slice(brace)) as {
       envPresence: { anthropicApiKeySet: boolean };
       home: string;
+      postgresIdentity: string;
       unixUser: string;
     };
 
     expect(parsed.home).toBe('/home/w');
     expect(parsed.unixUser).toBe('wuser');
     expect(parsed.envPresence.anthropicApiKeySet).toBe(true);
-  });
-
-  it('sanitizePostgresConnectionForLogs strips password', () => {
-    expect(
-      sanitizePostgresConnectionForLogs(
-        'postgresql://alice:secret@db.example:5432/app',
-      ),
-    ).toBe('postgresql://alice@db.example:5432/app');
-  });
-
-  it('isOtDiagnosticsEnvTruthy accepts common toggles', () => {
-    expect(isOtDiagnosticsEnvTruthy('1')).toBe(true);
-    expect(isOtDiagnosticsEnvTruthy('0')).toBe(false);
-    expect(isOtDiagnosticsEnvTruthy(undefined)).toBe(false);
+    expect(parsed.postgresIdentity).toBe('postgresql://u@localhost:5432/db');
+    expect(parsed.postgresIdentity).not.toContain(':p@');
   });
 });

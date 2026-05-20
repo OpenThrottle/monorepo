@@ -1,21 +1,12 @@
 /**
- * @description Base URL for openthrottle-server. Use in loaders/actions (server).
- * PRs and other data are fetched via GraphQL (graphql-client.ts).
+ * @description Helpers for parsing GraphQL JSON responses in the extension client.
  */
-export function getGraphQLUrl(): string {
-  const url = process.env.API_URL_INTERNAL;
 
-  if (!url) {
-    throw new Error('API_URL_INTERNAL is not set');
-  }
-
-  const cleaned = url.replace(/\/$/, '');
-
-  return `${cleaned}/graphql`;
-}
+const ISO_DATE_TIME =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/;
 
 /**
- * @description Recursively walks JSON and parses string values that look like ISO date-time into Date so loaders receive Date (codegen keeps DateTime → Date).
+ * @description Recursively walks JSON and parses string values that look like ISO date-time into Date.
  */
 export function parseDateTimeInResponse(value: unknown): unknown {
   if (value === null || value === undefined) {
@@ -42,10 +33,3 @@ export function parseDateTimeInResponse(value: unknown): unknown {
 
   return value;
 }
-
-/**
- * @description Matches ISO 8601 date-time strings (e.g. from GraphQL
- * DateTime over the wire).
- */
-export const ISO_DATE_TIME =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/;

@@ -12,7 +12,7 @@ import type {
 } from '~/routing/prompts/config/types';
 import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
 
-export interface ProjectsSortDropdownProps {
+interface ProjectsSortDropdownProps {
   readonly onChange: (
     sortBy: ProjectsSortBy,
     sortOrder: ProjectsSortOrder,

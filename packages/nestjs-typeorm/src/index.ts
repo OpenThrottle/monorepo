@@ -7,7 +7,4 @@ export * from './modules/database/database.constants';
 export * from './modules/database/database.module';
 export * from './modules/database/database.providers';
 
-// Repositories
-// export * from './repositories/photo/photo.entity';
-// export * from './repositories/user.entity';
-// export * from './repositories/user.entity';
+// Repositories (sample user.entity retained for generator reference; not exported)

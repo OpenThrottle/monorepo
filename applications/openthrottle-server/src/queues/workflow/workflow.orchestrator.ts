@@ -47,7 +47,7 @@ const createPlansQueueWorkflowExecuteGraphqlV2 =
 /**
  * @description GraphQL executor + iteration runner for {@link createWorkflowRalphOrchestrator}.
  */
-export const createPlansQueueWorkflowRalphOrchestratorDeps =
+const createPlansQueueWorkflowRalphOrchestratorDeps =
   (): WorkflowRalphOrchestratorDeps => ({
     executeGraphqlV2: createPlansQueueWorkflowExecuteGraphqlV2(),
     iterationRunner: createCursorWorkflowRalphIterationRunner(),

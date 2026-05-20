@@ -35,6 +35,7 @@ installMaestro () {
 installSoftware () {
   corepack enable pnpm
   corepack prepare "pnpm@${PNPM_VERSION}" --activate
+  # corepack prepare "pnpm@10.33.4" --activate
 
   # 📦 First we'll need our package manager PNPM
   # npm install -g pnpm@9.15.4 --stream=false --silent --quiet

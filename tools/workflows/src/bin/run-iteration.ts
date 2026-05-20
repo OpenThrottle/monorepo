@@ -66,6 +66,7 @@ const buildCursorShellCommand = (config: RunIterationConfig): string => {
   const { agentPrompt, model } = config;
   const modelFlag = model ? ` --model ${model}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
+
   return `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
 };
 
@@ -81,6 +82,7 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
   const modelFlag =
     modelNorm !== '' && modelNorm !== 'auto' ? ` --model ${modelNorm}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
+
   return `claude --bare --permission-mode acceptEdits -p "${safePrompt}"${modelFlag}`;
 };
 
@@ -89,6 +91,7 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
  */
 const runCursorIterationSync = (config: RunIterationConfig): string => {
   const command = buildCursorShellCommand(config);
+
   return runShellIterationSync(command, 'cursor-agent', config.iteration);
 };
 
@@ -97,6 +100,7 @@ const runCursorIterationSync = (config: RunIterationConfig): string => {
  */
 const runClaudeIterationSync = (config: RunIterationConfig): string => {
   const command = buildClaudeShellCommand(config);
+
   return runShellIterationSync(command, 'claude-code', config.iteration);
 };
 
@@ -153,8 +157,7 @@ export const runIteration = (config: RunIterationConfig): string => {
       return runCursorIterationSync(config);
 
     default: {
-      const _exhaustive: never = backend;
-      throw new Error(`Unsupported execution backend: ${_exhaustive}`);
+      throw new Error(`Unsupported execution backend: ${backend}`);
     }
   }
 };
@@ -181,16 +184,21 @@ const runShellIterationAsync = (
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 
-    let stdout = '';
-    let stderr = '';
+    let chunkCount = 0;
     let killReason: 'timeout' | 'abort' | undefined;
     let resolved = false;
-    let chunkCount = 0;
+    let stderr = '';
+    let stdout = '';
 
     const push = (stream: 'stdout' | 'stderr', data: string): void => {
-      if (stream === 'stdout') stdout += data;
-      else stderr += data;
+      if (stream === 'stdout') {
+        stdout += data;
+      } else {
+        stderr += data;
+      }
+
       chunkCount += 1;
+
       ralphDebugLogger.verbose('runIterationAsync: chunk', {
         chunkIndex: chunkCount,
         chunkLen: data.length,
@@ -199,6 +207,7 @@ const runShellIterationAsync = (
         stdoutLen: stdout.length,
         stream,
       });
+
       onChunk?.({ data, stream });
     };
 
@@ -206,6 +215,7 @@ const runShellIterationAsync = (
       child.stdout.setEncoding('utf8');
       child.stdout.on('data', (chunk: string) => push('stdout', chunk));
     }
+
     if (child.stderr) {
       child.stderr.setEncoding('utf8');
       child.stderr.on('data', (chunk: string) => push('stderr', chunk));
@@ -344,6 +354,7 @@ const runClaudeIterationAsync = (
   config: RunIterationConfig,
 ): Promise<string> => {
   const command = buildClaudeShellCommand(config);
+
   return runShellIterationAsync(
     command,
     backendIterationLabel('claude'),
@@ -368,10 +379,10 @@ export const runIterationAsync = (
       return runClaudeIterationAsync(config);
     case 'cursor':
       return runCursorIterationAsync(config);
+
     default: {
-      const _exhaustive: never = backend;
       return Promise.reject(
-        new Error(`Unsupported execution backend: ${_exhaustive}`),
+        new Error(`Unsupported execution backend: ${backend}`),
       );
     }
   }

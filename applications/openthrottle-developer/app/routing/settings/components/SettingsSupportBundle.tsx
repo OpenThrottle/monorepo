@@ -7,7 +7,7 @@ import {
   downloadJson,
 } from '~/routing/settings/utils/settings.support';
 
-export interface SettingsSupportBundleProps {}
+interface SettingsSupportBundleProps {}
 
 export const SettingsSupportBundle = (_props: SettingsSupportBundleProps) => {
   // const { className } = props;

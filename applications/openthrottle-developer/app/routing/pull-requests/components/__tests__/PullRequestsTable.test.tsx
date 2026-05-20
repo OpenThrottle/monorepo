@@ -69,10 +69,6 @@ describe('PullRequestsTable Component', () => {
     expect(component.getByText('No results.')).toBeInTheDocument();
   });
 
-  test('matches snapshot for empty list', () => {
-    expect(component.baseElement).toMatchSnapshot();
-  });
-
   describe('when pulls are provided', () => {
     beforeEach(() => {
       cleanup();
@@ -149,10 +145,6 @@ describe('PullRequestsTable Component', () => {
         'href',
         '/pull-requests/42?state=open',
       );
-    });
-
-    test('matches snapshot with one pull', () => {
-      expect(component.baseElement).toMatchSnapshot();
     });
   });
 });

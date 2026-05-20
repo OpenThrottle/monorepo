@@ -135,7 +135,7 @@ export default function Component(
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 <h1
-                  className="text-lg font-semibold leading-none tracking-tight"
+                  className="text-lg leading-none tracking-tight"
                   id="project-overview-heading"
                 >
                   {project.name}
@@ -178,7 +178,7 @@ export default function Component(
             aria-labelledby="project-tasks-heading"
             className="space-y-3"
           >
-            <h2 className="text-lg font-semibold" id="project-tasks-heading">
+            <h2 className="text-lg" id="project-tasks-heading">
               Tasks
             </h2>
             {tasks.length > 0 ? (

@@ -6,7 +6,7 @@ import { Input } from '../Input';
 describe('Input', () => {
   it('should render with default props', () => {
     const { container } = render(<Input />);
-    const input = container.querySelector('input');
+    const input = container.querySelector('input[data-slot="input"]');
     expect(input).toBeInTheDocument();
     // When type is not specified, HTML defaults to "text" but the attribute may not be present
     expect(input?.getAttribute('type') || 'text').toBe('text');
@@ -14,28 +14,27 @@ describe('Input', () => {
 
   it('should apply default input classes', () => {
     const { container } = render(<Input />);
-    const input = container.querySelector('input');
+    const input = container.querySelector('input[data-slot="input"]');
     expect(input).toHaveClass(
-      'flex',
-      'h-10',
+      'h-9',
       'w-full',
+      'min-w-0',
       'rounded-md',
       'border',
       'border-input',
-      'bg-background',
+      'bg-transparent',
+      'px-3',
+      'py-1',
+      'text-base',
+      'shadow-xs',
+      'md:text-sm',
     );
   });
 
   it('should merge custom className', () => {
     const { container } = render(<Input className="custom-input" />);
-    const input = container.querySelector('input');
+    const input = container.querySelector('input[data-slot="input"]');
     expect(input).toHaveClass('custom-input');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLInputElement>();
-    render(<Input ref={ref} />);
-    expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
 
   it('should forward HTML input attributes', () => {
@@ -49,7 +48,7 @@ describe('Input', () => {
         type="email"
       />,
     );
-    const input = container.querySelector('input');
+    const input = container.querySelector('input[data-slot="input"]');
     expect(input).toHaveAttribute('type', 'email');
     expect(input).toHaveAttribute('placeholder', 'Enter email');
     expect(input).toBeDisabled();

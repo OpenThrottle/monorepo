@@ -2,7 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
-export interface SearchFormProps {
+interface SearchFormProps {
   readonly className?: string;
   /** Pre-fill value for the query input (e.g. from current URL search params). */
   readonly defaultQuery?: string;

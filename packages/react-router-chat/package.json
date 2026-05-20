@@ -1,14 +1,17 @@
 {
   "name": "@openthrottle/react-router-chat",
-  "description": "Library scaffold for React Router chat UI, loaders, and hooks in OpenThrottle applications.",
+  "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:*",
+    "@openthrottle/react-router-ui": "workspace:*",
+    "classnames": "^2.5.1"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {
@@ -33,13 +36,33 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "react-router": ">=7.0.0"
+  },
   "private": true,
   "publishConfig": {
-    "access": "restricted"
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "style": "./src/index.css",
   "type": "module",
   "types": "./src/index.ts"
 }

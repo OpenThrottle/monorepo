@@ -16,11 +16,11 @@ describe('roles', () => {
       expect(adminPerms).toContain(PERMISSIONS.USERS_WRITE);
     });
 
-    it('user has read-only permissions', () => {
+    it('user can read and edit workspace settings', () => {
       const userPerms = ROLE_PERMISSIONS[ROLES.USER];
       expect(userPerms).toContain(PERMISSIONS.SETTINGS_READ);
+      expect(userPerms).toContain(PERMISSIONS.SETTINGS_WRITE);
       expect(userPerms).toContain(PERMISSIONS.USERS_READ);
-      expect(userPerms).not.toContain(PERMISSIONS.SETTINGS_WRITE);
       expect(userPerms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
 
@@ -44,7 +44,12 @@ describe('roles', () => {
     });
 
     it('returns false when role does not have permission', () => {
-      expect(roleHasPermission(ROLES.USER, PERMISSIONS.USERS_WRITE)).toBe(false);
+      expect(roleHasPermission(ROLES.USER, PERMISSIONS.USERS_WRITE)).toBe(
+        false,
+      );
+      expect(roleHasPermission(ROLES.USER, PERMISSIONS.SETTINGS_WRITE)).toBe(
+        true,
+      );
       expect(roleHasPermission(ROLES.VIEWER, PERMISSIONS.SETTINGS_WRITE)).toBe(
         false,
       );

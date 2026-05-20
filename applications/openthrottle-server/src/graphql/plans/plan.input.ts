@@ -7,7 +7,7 @@ import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
 /**
  * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
  */
-export enum RalphNestedDebugCliGraphQL {
+enum RalphNestedDebugCliGraphQL {
   omit = 'omit',
   debug = 'debug',
   verbose = 'verbose',

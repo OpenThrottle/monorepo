@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PopoverTitle Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="font-medium"
+      data-slot="popover-title"
+    />
+  </div>
+</body>
+`;

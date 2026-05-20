@@ -1,24 +1,19 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import {
-  Badge,
-  Button,
-  DataTable,
-  Input,
-} from '@openthrottle/react-router-shadcn';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { ArrowRightIcon } from 'lucide-react';
+import { Button, DataTable, Input } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import { Link, useFetcher, useSearchParams } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanStatusKey } from '~/routing/plans/types';
+import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanCardFragment } from '~/__generated__/graphql';
-import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
-export interface PlansTableProps {
+interface PlansTableProps {
   className?: string;
   plans: PlanCardFragment[];
   /** When set, status pills link to filter by that status (e.g. ?status=PENDING). Key = status value. */
@@ -147,7 +142,7 @@ PlansTable.buildTable = (
                 Updated:{' '}
                 {formatDate(plan.updatedAt ?? plan.createdAt, 'MM/dd/yyyy')}
               </span>
-              {plan.category ? (
+              {/* {plan.category ? (
                 <Badge
                   aria-label={`Category: ${plan.category}`}
                   size="sm"
@@ -155,7 +150,7 @@ PlansTable.buildTable = (
                 >
                   {plan.category}
                 </Badge>
-              ) : null}
+              ) : null} */}
             </div>
             {/* {plan.summary ? (
               <Tooltip>
@@ -180,7 +175,9 @@ PlansTable.buildTable = (
     {
       accessorKey: 'status',
       cell: ({ row }) => (
-        <PlanStatusBadge status={row.original.status as PlanStatusKey} />
+        <Link to={`/plans?status=${row.original.status}`} viewTransition={true}>
+          <PlanStatusBadge status={row.original.status as PlanStatusKey} />
+        </Link>
       ),
       header: () => <div className="p-2">Status</div>,
     },

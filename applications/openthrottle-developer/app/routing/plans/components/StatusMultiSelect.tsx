@@ -14,7 +14,7 @@ import {
   cn,
 } from '@openthrottle/react-router-shadcn';
 
-export interface StatusMultiSelectProps {
+interface StatusMultiSelectProps {
   /** When true, trigger shows "Status (n)" and badges below are hidden for a compact toolbar row. */
   readonly compact?: boolean;
   readonly 'data-testid'?: string;

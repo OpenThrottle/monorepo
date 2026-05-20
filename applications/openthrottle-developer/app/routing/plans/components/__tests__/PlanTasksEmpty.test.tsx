@@ -6,16 +6,38 @@ import type { PlanTasksEmptyProps } from '../PlanTasksEmpty';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('PlanTasksEmpty Component', () => {
-  let component: RenderResult;
-  let props: PlanTasksEmptyProps;
+  describe('when no search filter is active', () => {
+    let component: RenderResult;
+    let props: PlanTasksEmptyProps;
 
-  beforeEach(() => {
-    props = {};
+    beforeEach(() => {
+      props = {};
+      component = renderRoutesStub(<PlanTasksEmpty {...props} />);
+    });
 
-    component = renderRoutesStub(<PlanTasksEmpty {...props} />);
+    test('renders onboarding empty state and link to create', () => {
+      expect(
+        component.getByRole('heading', { name: 'No plans yet' }),
+      ).toBeInTheDocument();
+      expect(component.getByRole('link', { name: 'New plan' })).toHaveAttribute(
+        'href',
+        '/plans/create',
+      );
+    });
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  describe('when search filter is active', () => {
+    test('renders filtered empty state and link to clear', () => {
+      const component = renderRoutesStub(<PlanTasksEmpty search="q=foo" />);
+
+      expect(
+        component.getByRole('heading', {
+          name: 'No plans match your filters',
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('link', { name: 'Clear filters' }),
+      ).toHaveAttribute('href', '/plans');
+    });
   });
 });

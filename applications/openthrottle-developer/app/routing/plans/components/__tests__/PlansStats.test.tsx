@@ -11,7 +11,13 @@ describe('PlansStats Component', () => {
   let props: PlansStatsProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      countCompleted: 12,
+      countInProgress: 3,
+      totalCount: 8,
+      totalCountAll: 40,
+      totalCountQueued: 2,
+    };
 
     const Component = () => <PlansStats {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +25,10 @@ describe('PlansStats Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders three stat cards with configured titles', () => {
+    expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(3);
+    expect(component.getByText('In progress / Queued')).toBeInTheDocument();
+    expect(component.getByText('Matching / Total plans')).toBeInTheDocument();
+    expect(component.getByText('Completed (all)')).toBeInTheDocument();
   });
 });

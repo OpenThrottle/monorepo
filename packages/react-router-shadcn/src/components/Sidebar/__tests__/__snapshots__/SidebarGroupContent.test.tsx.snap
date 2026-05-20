@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SidebarGroupContent Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="w-full text-sm"
+      data-sidebar="group-content"
+      data-slot="sidebar-group-content"
+    />
+  </div>
+</body>
+`;

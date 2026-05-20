@@ -47,7 +47,7 @@ function buildPermissionTableColumns(): ColumnDef<
   ];
 }
 
-export interface PermissionsTableProps {
+interface PermissionsTableProps {
   readonly className?: string;
   readonly permissions: PermissionRowFragment[];
 }

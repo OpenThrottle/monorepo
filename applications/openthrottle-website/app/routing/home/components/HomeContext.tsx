@@ -6,7 +6,7 @@ import { DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
 import { LockIcon } from '@phosphor-icons/react/dist/ssr/Lock';
 
-export interface HomeContextProps {
+interface HomeContextProps {
   className?: string;
 }
 

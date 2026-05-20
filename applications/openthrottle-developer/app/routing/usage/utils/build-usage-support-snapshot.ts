@@ -1,6 +1,6 @@
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
-export interface BuildUsageSupportSnapshotInput {
+interface BuildUsageSupportSnapshotInput {
   readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
   readonly rangeDays: number;
   readonly rangeEndIso: string;

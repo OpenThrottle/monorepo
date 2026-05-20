@@ -32,7 +32,7 @@ export const STATUS_OPTIONS: readonly string[] = PLAN_STATUS_FILTER_OPTIONS.map(
   (opt) => opt.value,
 );
 
-const VALID_STATUSES = new Set(
+export const VALID_STATUSES = new Set(
   PLAN_STATUS_FILTER_OPTIONS.map((opt) => opt.value),
 );
 

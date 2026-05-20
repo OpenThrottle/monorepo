@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { HOME_FEATURES } from '~/routing/home/data';
 
-export interface HomeFeaturesProps {
+interface HomeFeaturesProps {
   className?: string;
 }
 

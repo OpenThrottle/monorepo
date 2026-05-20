@@ -5,7 +5,7 @@ import {
 } from '~/routing/settings/client-log-sink';
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
 
-export interface SupportBundlePayload {
+interface SupportBundlePayload {
   readonly clientLog: readonly {
     readonly isoTime: string;
     readonly level: ClientLogEntry['level'];

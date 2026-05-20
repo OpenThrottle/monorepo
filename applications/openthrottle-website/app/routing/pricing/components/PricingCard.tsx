@@ -13,7 +13,7 @@ import {
 import { StripeProductObject } from '~/__generated__/graphql';
 import { formatPrice, getDisplayPrice } from '~/global/utils/formatters';
 
-export interface PricingCardProps {
+interface PricingCardProps {
   readonly className?: string;
   /** When set, CTA renders as a Link to this path (e.g. checkout or contact). */
   readonly ctaTo?: string;

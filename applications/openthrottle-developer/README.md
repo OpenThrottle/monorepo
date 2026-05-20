@@ -53,6 +53,22 @@ Vitest + [`app/testing/route-fixtures.tsx`](./app/testing/route-fixtures.tsx) re
 - Primary routes: `/prompts`, `/prompts/create`, `/prompts/:promptId`.
 - Legacy URLs under `/custom-prompts/*` redirect to the paths above; GraphQL operations still use the `customPrompt` / `customPrompts` fields and related types from the API.
 
+## Skills page (repo skills discovery)
+
+The **Skills** route (`/skills`) lists skills discovered from the monorepo checkout at request time—it does not use a hand-maintained registry in TypeScript.
+
+| Requirement       | Detail                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **On disk**       | `.agents/skills/<slug>/SKILL.md` and `.cursor/skills/<slug>/SKILL.md` under the repo root                                        |
+| **When it runs**  | Server-only in the `skills._index` route loader (not in the client bundle)                                                       |
+| **Monorepo root** | `WORKSPACE_ROOT` if set to an existing directory; otherwise walk up from `process.cwd()` for `nx.json` and `pnpm-workspace.yaml` |
+
+**Local dev:** Usually works without env when you run via Nx from the monorepo (walk-up finds the root). If the dev server cwd is only the app directory and walk-up fails, set `WORKSPACE_ROOT` in `.env` to the absolute repo path (see commented example in [`.env.default`](./.env.default)).
+
+**Deployed environments (Vercel, Docker without a full checkout):** The Skills table is empty unless the runtime can resolve a root that contains the skill directories—for example mount the repo (or `.agents` / `.cursor` trees) and set `WORKSPACE_ROOT` to that mount. The loader returns an empty list rather than failing the page.
+
+Design and behavior: [docs/repo-skills-discovery-design.md](./docs/repo-skills-discovery-design.md).
+
 ## Deployment
 
 The app is configured for [Vercel](https://vercel.com). Deployments are triggered from the connected Git repository.

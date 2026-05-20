@@ -38,22 +38,6 @@ export const ARTWORK_RALPH = `
     ⠀⠀⠀⠀⠀⠉⠛⠲⠤⠤⢤⣤⣄⣀⣀⣀⣀⡸⠇⠀⠀⠀⠉⠉⠉⠉⠉⠉⠁⠀
 `;
 
-export const ARTWORK_THANK_RALPH = `
-
-    ╻╻┏┳┓   ╻ ╻┏━╸╻  ┏━┓╻┏┓╻┏━╸╻
-    ┃ ┃┃┃   ┣━┫┣╸ ┃  ┣━┛┃┃┗┫┃╺┓╹
-    ╹ ╹ ╹   ╹ ╹┗━╸┗━╸╹  ╹╹ ╹┗━┛╹
-
-`;
-
-export const ARTWORK_HELP = `
-
-    ╻ ╻┏━╸╻  ┏━┓   ┏┳┓┏━╸╻
-    ┣━┫┣╸ ┃  ┣━┛   ┃┃┃┣╸ ╹
-    ╹ ╹┗━╸┗━╸╹     ╹ ╹┗━╸╹
-
-`;
-
 export const ARTWORK_THANK_YOU = `
 
     ╻ ╻┏━┓╻ ╻╻┏━┓┏━╸   ╻ ╻┏━╸╻  ┏━┓╻┏┓╻┏━╸╻

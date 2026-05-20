@@ -40,6 +40,8 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:migrate
    ```
 
+   **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON` — see [docs/openthrottle/database-backup-scheduled-job-spec.md](../docs/openthrottle/database-backup-scheduled-job-spec.md).
+
 4. **Reset the database (optional, before a fresh ingest)**
 
    Truncates all cortex tables so a re-run of ingest does not create duplicate plans. Use when switching from test data to real data or when re-ingesting after changing source files:
@@ -89,6 +91,8 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 - **subscriptions** – Stripe subscription state for OpenThrottle payments: `id`, `user_id` (FK), `stripe_customer_id`, `stripe_subscription_id`, `stripe_price_id`, `status`, `current_period_start`, `current_period_end`, `cancel_at_period_end`, `created_at`, `updated_at`. See migration `035_create_subscriptions_table.sql`.
 - **custom_prompts** – Custom prompt documents for AI workflow customization (Agents.md, skills, commands, prompts, rules): `id`, `title`, `content`, `description` (optional), `prompt_type` (enum-like: agents, skills, commands, prompts, rules), `labels` (JSONB array of strings), `file_path` (optional; path relative to workspace), `user_id` (optional FK to users), `project_id` (optional FK to projects), `deleted_at` (soft delete), `created_at`, `updated_at`. See migration `036_create_custom_prompts_table.sql`.
 - **custom_prompt_embeddings** – Vector embeddings for custom prompt content (semantic search): `id`, `custom_prompt_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`. Same pattern as plan_embeddings / documentation_embeddings. See migration `037_create_custom_prompt_embeddings_table.sql`.
+- **user_workspace_settings** – Per-user workspace profile (Settings → Workspace): `user_id` (PK, FK to users), `contact_display_name`, `contact_email`, `enabled_editors` (JSONB array of editor ids, e.g. `cursor`, `vscode`), `created_at`, `updated_at`. See migration `042_create_workspace_settings_tables.sql` and `applications/openthrottle-server/docs/workspace-settings-graphql-design.md`.
+- **workspace_local_repositories** – Local filesystem checkouts registered by a user: `id`, `user_id` (FK), `filesystem_path` (absolute; unique per user), `display_name`, `git_remote_url`, `git_default_branch`, `project_id` (optional FK to projects), `created_at`, `updated_at`. See migration 042 and workspace-settings GraphQL design doc.
 
 Indexes include HNSW vector indexes on embedding columns for similarity search.
 

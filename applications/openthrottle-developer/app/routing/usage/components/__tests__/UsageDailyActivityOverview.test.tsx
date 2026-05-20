@@ -1,25 +1,28 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { UsageDailyActivityOverview } from '../UsageDailyActivityOverview';
-import type { UsageDailyActivityOverviewProps } from '../UsageDailyActivityOverview';
+import { USAGE_DAILY_STATS_SERIES } from '~/routing/usage/data/daily-stats-series-glossary';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('UsageDailyActivityOverview Component', () => {
-  let component: RenderResult;
-  let props: UsageDailyActivityOverviewProps;
+  test('renders chart scope copy with rangeDays', () => {
+    renderRoutesStub(<UsageDailyActivityOverview rangeDays={7} />);
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <UsageDailyActivityOverview {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    expect(
+      screen.getByRole('heading', { name: 'What this chart includes' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/last 7 days/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cortex plan and task activity/i),
+    ).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('lists each daily stats series label from the glossary', () => {
+    renderRoutesStub(<UsageDailyActivityOverview rangeDays={30} />);
+
+    for (const row of USAGE_DAILY_STATS_SERIES) {
+      expect(screen.getByText(row.label)).toBeInTheDocument();
+    }
   });
 });

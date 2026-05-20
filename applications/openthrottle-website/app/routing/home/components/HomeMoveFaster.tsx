@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 
-export interface HomeMoveFasterProps {}
+interface HomeMoveFasterProps {}
 
 export const HomeMoveFaster = (_props: HomeMoveFasterProps) => {
   // const { className } = props;

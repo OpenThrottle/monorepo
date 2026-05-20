@@ -9,10 +9,10 @@ dotenv.config({
   path: path.join(__dirname, '.env'),
 });
 
-const url = process.env.API_URL;
+const url = process.env.API_URL_INTERNAL;
 
 if (!url) {
-  throw new Error('🚨 API_URL is required');
+  throw new Error('🚨 API_URL_INTERNAL is required');
 }
 
 /**

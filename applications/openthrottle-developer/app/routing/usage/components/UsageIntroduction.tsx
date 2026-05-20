@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ChartAreaIcon } from 'lucide-react';
 
-export interface UsageIntroductionProps {
+interface UsageIntroductionProps {
   readonly className?: string;
   readonly rangeDays: number;
 }

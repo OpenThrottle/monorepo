@@ -19,6 +19,8 @@ import { Subscription } from './modules/subscriptions/subscription.entity';
 import { Task } from './modules/tasks/task.entity';
 import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
 import { User } from './modules/users/user.entity';
+import { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
+import { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';
 
 // import { getPostgresUrl } from '@openthrottle/openthrottle-postgres';
 
@@ -71,6 +73,8 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Task,
       TaskEmbedding,
       User,
+      UserWorkspaceSettings,
+      WorkspaceLocalRepository,
     ],
     logging: process.env.NODE_ENV === 'development',
     type: 'postgres',

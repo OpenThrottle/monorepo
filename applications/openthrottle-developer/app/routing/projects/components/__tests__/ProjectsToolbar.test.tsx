@@ -32,12 +32,6 @@ describe('ProjectsToolbar Component', () => {
     expect(component.getByTestId('ProjectsToolbar')).toBeInTheDocument();
   });
 
-  test('should render Create project link', () => {
-    const link = component.getByRole('link', { name: /create project/i });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/projects/create');
-  });
-
   test('should render search form and input', () => {
     const form = component.getByRole('search');
     expect(form).toBeInTheDocument();

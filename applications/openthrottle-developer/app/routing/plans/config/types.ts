@@ -1,9 +1,4 @@
 export type PlansSortBy = 'createdAt' | 'name' | 'updatedAt';
-export const PLANS_SORT_BY: readonly PlansSortBy[] = [
-  'createdAt',
-  'name',
-  'updatedAt',
-];
 
 export const PLANS_SORT_BY_OPTIONS: readonly {
   readonly label: string;

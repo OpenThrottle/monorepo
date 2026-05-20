@@ -30,12 +30,14 @@ describe('PlanWorkflowConfigPrompt Component', () => {
       component.getByTestId('PlanWorkflowConfigPrompt'),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('group', { name: 'Layer 1 — Prompt profile' }),
+      component.getByText('Layer 1', { exact: false }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText('Prompt profile', { exact: false }),
     ).toBeInTheDocument();
     expect(
       component.getByLabelText('Prompt profile for --prompt'),
     ).toBeInTheDocument();
-    expect(component.getByText('Layer 1 — Prompt profile')).toBeInTheDocument();
     expect(
       component.getByText(
         'Omitted from the command when equal to the default.',

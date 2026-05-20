@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 
-export interface ProjectNotFoundProps {}
+interface ProjectNotFoundProps {}
 
 export const ProjectNotFound = (_props: ProjectNotFoundProps) => {
   // const { className } = props;

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { ChartBarIcon } from 'lucide-react';
+import { GaugeIcon } from 'lucide-react';
 
-export interface DashboardIntroductionProps {
+interface DashboardIntroductionProps {
   readonly className?: string;
 }
 
@@ -30,7 +30,7 @@ export const DashboardIntroduction = (props: DashboardIntroductionProps) => {
       <GlobalHeading
         className="mb-4"
         heading="h1"
-        icon={ChartBarIcon}
+        icon={GaugeIcon}
         title="Dashboard"
       />
       <p className="text-sm text-muted-foreground">

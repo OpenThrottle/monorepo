@@ -6,7 +6,7 @@ import {
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
 
-export interface PlanTasksColumnProps {
+interface PlanTasksColumnProps {
   readonly children: React.ReactNode;
   readonly className?: string;
   readonly columnId: string;

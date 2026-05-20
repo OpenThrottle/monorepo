@@ -2,7 +2,7 @@ import { maskSensitiveEnvValue } from '~/routing/settings/utils/sanitize-client-
 
 const STORAGE_PREVIEW_MAX = 140;
 
-export const summarizeStoragePair = (key: string, raw: string): string => {
+const summarizeStoragePair = (key: string, raw: string): string => {
   const lower = key.toLowerCase();
   if (
     lower.includes('token') ||

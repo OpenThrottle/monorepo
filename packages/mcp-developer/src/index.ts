@@ -3,42 +3,22 @@
  */
 
 export { registerKnowledgeBaseResource } from './resources/index.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { registerKnowledgeBaseResource } from './resources/knowledge-base.js';
-import { getServerName, SERVER_VERSION } from './config/index.js';
-import {
-  registerActivityTools,
-  registerCommitTools,
-  registerHealthTool,
-  registerNoteTools,
-  registerOutputTools,
-  registerPlanTools,
-  registerProjectTools,
-  registerSearchTools,
-  registerTaskTools,
-} from './tools/index.js';
+export { runServer, runServerLocal } from './run-server.js';
 
 /**
- * @description Starts the MCP server on stdio. Used by the CLI bin and by `nx run mattscholta-ai-mcp:serve`.
+ * @description Public `./auth` subpath — consumed via `@openthrottle/mcp-developer/auth` and `@openthrottle/nestjs-mcp-developer`.
+ * @publicApi
  */
-export async function runServer(): Promise<void> {
-  const server = new McpServer(
-    { name: getServerName(), version: SERVER_VERSION },
-    { capabilities: { resources: {}, tools: {} } },
-  );
-
-  registerActivityTools(server);
-  registerCommitTools(server);
-  registerHealthTool(server);
-  registerKnowledgeBaseResource(server);
-  registerNoteTools(server);
-  registerOutputTools(server);
-  registerPlanTools(server);
-  registerProjectTools(server);
-  registerSearchTools(server);
-  registerTaskTools(server);
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-}
+export {
+  getAuthToken,
+  withMcpDeveloperAuthTokenAsync,
+  withMcpDeveloperAuthToken,
+} from './auth/get-auth-token.js';
+// export { NestjsMcpDeveloperModule, NestjsMcpDeveloperService } from './nest/index.js';
+// export { NestjsMcpDeveloperBootstrapOptions } from './nest/nestjs-mcp-developer-bootstrap-options.interface.js';
+// export { NestjsMcpDeveloperService } from './nest/nestjs-mcp-developer.service.js';
+// export { NestjsMcpDeveloperModule } from './nest/nestjs-mcp-developer.module.js';
+// export { NestjsMcpDeveloperBootstrapOptions } from './nest/nestjs-mcp-developer-bootstrap-options.interface.js';
+// export { NestjsMcpDeveloperService } from './nest/nestjs-mcp-developer.service.js';
+// export { NestjsMcpDeveloperModule } from './nest/nestjs-mcp-developer.module.js';
+// export { NestjsMcpDeveloperBootstrapOptions } from './nest/nestjs-mcp-developer-bootstrap-options.interface.js';

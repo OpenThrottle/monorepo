@@ -5,8 +5,7 @@
 export const DEFAULT_LIMIT = 10;
 export const MAX_LIMIT = 50;
 
-/** Default server name when no worktree or override is set. */
-export const DEFAULT_SERVER_NAME = '@openthrottle/ai-mcp';
+const DEFAULT_SERVER_NAME = '@openthrottle/ai-mcp';
 
 export const SERVER_VERSION = '1.0.0';
 

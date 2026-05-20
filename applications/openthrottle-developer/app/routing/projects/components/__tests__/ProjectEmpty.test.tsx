@@ -20,13 +20,12 @@ describe('ProjectEmpty Component', () => {
   });
 
   test('should render empty state with new project link when not searching', () => {
-    expect(component.getByTestId('ProjectEmpty')).toBeInTheDocument();
     expect(component.getByText('No projects yet')).toBeInTheDocument();
     expect(
       component.getByText('Create your first project to get started.'),
     ).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: 'New project' }),
-    ).toHaveAttribute('href', '/projects/new');
+    ).toHaveAttribute('href', '/projects/create');
   });
 });

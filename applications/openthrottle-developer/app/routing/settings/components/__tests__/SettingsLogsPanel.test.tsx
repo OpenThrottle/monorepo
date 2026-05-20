@@ -1,9 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { screen } from '@testing-library/react';
-import {
-  buildSupportBundlePayload,
-  SettingsLogsPanel,
-} from '~/routing/settings/components/SettingsLogsPanel';
+import { SettingsLogsPanel } from '~/routing/settings/components/SettingsLogsPanel';
+import { buildSupportBundlePayload } from '~/routing/settings/utils/settings.support';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
 describe('SettingsLogsPanel', () => {
@@ -15,7 +13,10 @@ describe('SettingsLogsPanel', () => {
       },
     ]);
 
-    expect(screen.getByTestId('GlobalHeading')).toHaveTextContent('Logs');
+    const headings = screen.getAllByTestId('GlobalHeading');
+    expect(
+      headings.some((heading) => heading.textContent?.includes('Logs')),
+    ).toBe(true);
     expect(
       screen.getByText(/Capture browser console output/i),
     ).toBeInTheDocument();

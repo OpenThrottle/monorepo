@@ -32,7 +32,7 @@ export const formSchema: ObjectSchema<ComposeFormFields> = object({
     .required('To is required.'),
 });
 
-export const formDefaults: FormSchema = formSchema.getDefault();
+const formDefaults: FormSchema = formSchema.getDefault();
 
 export const formSetup = (
   initialValues: FormSchema = formDefaults,

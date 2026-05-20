@@ -177,6 +177,9 @@
     },
     {
       "path": "./packages/nestjs-logging"
+    },
+    {
+      "path": "./packages/nestjs-mcp-developer"
     }
   ]
 }

@@ -1,0 +1,33 @@
+fragment QueueJobDetails on JobObject {
+  data
+  failedReason
+  finishedOn
+  id
+  name
+  processedOn
+  progress
+  returnvalue
+  state
+  timestamp
+}
+
+fragment QueueDetails on QueueDetailsObject {
+  activeCount
+  completedCount
+  delayedCount
+  failedCount
+  jobs {
+    hasNext
+    jobs {
+      ...QueueJobDetails
+    }
+  }
+  name
+  waitingCount
+}
+
+query getQueue($input: QueueDetailsInput!) {
+  queue(input: $input) {
+    ...QueueDetails
+  }
+}

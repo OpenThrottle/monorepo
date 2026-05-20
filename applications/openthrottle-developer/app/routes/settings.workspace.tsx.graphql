@@ -1,0 +1,87 @@
+fragment WorkspaceLocalRepositoryFields on WorkspaceLocalRepositoryObject {
+  createdAt
+  displayName
+  filesystemPath
+  gitDefaultBranch
+  gitRemoteUrl
+  id
+  project {
+    id
+    name
+  }
+  projectId
+  updatedAt
+  userId
+}
+
+fragment UserWorkspaceProfileFields on UserWorkspaceProfileObject {
+  contactDisplayName
+  contactEmail
+  createdAt
+  enabledEditors
+  updatedAt
+  userId
+}
+
+query getWorkspaceSettings {
+  workspaceSettings {
+    localRepositories {
+      ...WorkspaceLocalRepositoryFields
+    }
+    profile {
+      ...UserWorkspaceProfileFields
+    }
+  }
+  projects {
+    id
+    name
+  }
+}
+
+mutation updateWorkspaceProfile($input: UpdateWorkspaceProfileInput!) {
+  updateWorkspaceProfile(input: $input) {
+    ...UserWorkspaceProfileFields
+  }
+}
+
+mutation createWorkspaceLocalRepository(
+  $input: CreateWorkspaceLocalRepositoryInput!
+) {
+  createWorkspaceLocalRepository(input: $input) {
+    ...WorkspaceLocalRepositoryFields
+  }
+}
+
+mutation updateWorkspaceLocalRepository(
+  $input: UpdateWorkspaceLocalRepositoryInput!
+) {
+  updateWorkspaceLocalRepository(input: $input) {
+    ...WorkspaceLocalRepositoryFields
+  }
+}
+
+mutation setWorkspaceLocalRepositoryProject(
+  $input: SetWorkspaceLocalRepositoryProjectInput!
+) {
+  setWorkspaceLocalRepositoryProject(input: $input) {
+    ...WorkspaceLocalRepositoryFields
+  }
+}
+
+mutation deleteWorkspaceLocalRepository($id: ID!) {
+  deleteWorkspaceLocalRepository(id: $id)
+}
+
+mutation applyWorkspaceEditorConfiguration(
+  $input: ApplyWorkspaceEditorConfigurationInput
+) {
+  applyWorkspaceEditorConfiguration(input: $input) {
+    applications {
+      editor
+      filesWritten
+      filesystemPath
+      repositoryId
+      warnings
+    }
+  }
+}

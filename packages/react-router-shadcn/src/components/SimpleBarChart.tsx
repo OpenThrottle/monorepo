@@ -117,7 +117,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
         )}
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar
-          // dataKey={valueKey}
+          dataKey={valueKey as DataKey<T>}
           fill={`var(--color-${valueKey})`}
           radius={isVertical ? [0, 4, 4, 0] : [4, 4, 0, 0]}
         />

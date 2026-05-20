@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SidebarFooter Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex flex-col gap-2 p-2"
+      data-sidebar="footer"
+      data-slot="sidebar-footer"
+    />
+  </div>
+</body>
+`;

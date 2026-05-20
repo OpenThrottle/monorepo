@@ -22,16 +22,6 @@ export const getGithubUsername = () => {
   return username;
 };
 
-export const getDirectoriesAtPath = (path: string) => {
-  const root = getMonorepoRoot();
-
-  const pathname = join(root, path);
-  const results = readdirSync(pathname, { withFileTypes: true });
-  const directories = filterDirectories(results);
-
-  return directories;
-};
-
 /**
  * @description A little helper to display the overview of a generator
  * in a nice format. We should use this for all generators to create a
@@ -53,7 +43,7 @@ export const getGeneratorOverview = async (name: string, overview: string) => {
 /**
  * Returns an array of all the "applications" in the monorepo.
  */
-export const getMonorepoRoot = () => {
+const getMonorepoRoot = () => {
   const dir = __dirname;
   const path = join(dir, '../../../../');
 

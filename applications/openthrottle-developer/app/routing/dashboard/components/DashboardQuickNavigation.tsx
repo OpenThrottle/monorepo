@@ -8,6 +8,7 @@ export interface DashboardQuickNavigationProps {
 }
 
 /**
+ * @deprecated Temporarily commented out on dashboard index; restore when re-enabling quick navigation block.
  * @description Compact cross-entity links from the dashboard for faster navigation and debugging paths.
  */
 export function DashboardQuickNavigation(props: DashboardQuickNavigationProps) {

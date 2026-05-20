@@ -1,7 +1,7 @@
 import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
 import type { CommanderSearchFields } from './commander-empty-extras';
 
-export interface HandleGlobalLayoutHeaderSearchChromeDeps {
+interface HandleGlobalLayoutHeaderSearchChromeDeps {
   readonly setCommanderOpen: (open: boolean) => void;
   readonly submitCommanderSearch: (fields: CommanderSearchFields) => void;
 }

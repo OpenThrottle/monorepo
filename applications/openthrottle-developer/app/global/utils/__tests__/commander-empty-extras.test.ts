@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { CommanderSearchFields } from '../commander-empty-extras';
 import {
-  CORTEX_UUID_PATTERN,
+  REGEX_UUID,
   buildCommanderEmptyStateExtras,
 } from '../commander-empty-extras';
 
@@ -108,9 +108,7 @@ describe('buildCommanderEmptyStateExtras', () => {
     } satisfies CommanderSearchFields);
   });
 
-  test('CORTEX_UUID_PATTERN accepts lowercase hex uuid', () => {
-    expect(
-      CORTEX_UUID_PATTERN.test('c65fb0f7-56ae-43bb-b516-dfd41fda7985'),
-    ).toBe(true);
+  test('REGEX_UUID accepts lowercase hex uuid', () => {
+    expect(REGEX_UUID.test('c65fb0f7-56ae-43bb-b516-dfd41fda7985')).toBe(true);
   });
 });

@@ -17,7 +17,7 @@ import { useFetcher, useRevalidator } from 'react-router';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { describeCancelPlanRunResult } from '~/routing/plans/utils/describe-cancel-plan-run-result';
 
-export interface KillPlanRunButtonProps {
+interface KillPlanRunButtonProps {
   readonly planId: string;
   readonly planTitle: string;
   /** When false, the control is not shown. */

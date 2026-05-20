@@ -612,10 +612,7 @@ export class PlansResolver {
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
 
-    console.error('1 -> 🟢 🟡 ♦️ 🟢 🟡 ♦️', { input, plan, planId });
-
     if (!plan) {
-      console.error('1 -> ♦️ ♦️ ♦️ ♦️ ♦️', { input, plan, planId });
       throw new Error(`Plan not found: ${planId}`);
     }
 
@@ -683,8 +680,6 @@ export class PlansResolver {
     result.queuePosition = queuePosition;
     result.queueTotal = queueTotal;
 
-    console.error('10 -> 👀 👀 👀 👀 ', Object.entries(result));
-
     return result;
   }
 
@@ -725,7 +720,6 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      console.error('2 -> ♦️ ♦️ ♦️ ♦️ ♦️', { input, plan, planId });
       throw new Error(`Plan not found: ${planId}`);
     }
 
@@ -838,11 +832,8 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      console.error('3 -> ♦️ ♦️ ♦️ ♦️ ♦️', { input, plan, planId });
       throw new Error(`Plan not found: ${planId}`);
     }
-
-    console.error('3 -> 🟠 🟠 🟠 🟠 ');
 
     const taskRepo = this.tasksService.getRepository();
 
@@ -853,12 +844,10 @@ export class PlansResolver {
           ? ('plan' as const)
           : null;
 
-    console.error('4 -> 🟠 🟠 🟠 🟠 ');
     if (mode === 'task' && (taskId === null || taskId === undefined)) {
       throw new BadRequestException('taskId is required when mode is task');
     }
 
-    console.error('5 -> 🟠 🟠 🟠 🟠 ');
     if (mode === 'task' && taskId != null) {
       const task = await taskRepo.findOne({
         where: { id: taskId.trim(), planId },
@@ -879,7 +868,6 @@ export class PlansResolver {
         taskId,
         workingDirectory,
       });
-      console.error('6 -> 🟠 🟠 🟠 🟠 ', jobData);
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);

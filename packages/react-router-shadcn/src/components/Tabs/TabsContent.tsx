@@ -1,9 +1,10 @@
-import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { Tabs as TabsPrimitive } from 'radix-ui';
 import * as React from 'react';
 import { cn } from '../../utils/cn';
 
-export interface TabsContentProps
-  extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content> {}
+export interface TabsContentProps extends React.ComponentPropsWithoutRef<
+  typeof TabsPrimitive.Content
+> {}
 
 export const TabsContent = React.forwardRef<
   React.ComponentRef<typeof TabsPrimitive.Content>,

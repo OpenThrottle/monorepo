@@ -103,6 +103,35 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type AgentsChatTurnResult = {
+  __typename?: 'AgentsChatTurnResult';
+  /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
+  assistantText?: Maybe<Scalars['String']['output']>;
+  /** Echo of the client conversation id from the request input when provided; null when omitted. */
+  conversationId?: Maybe<Scalars['String']['output']>;
+  /** Validation or business-rule error for this turn (no throw). Null when the turn succeeded. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** MCP developer tool name selected for this turn (e.g. semantic_search, health). Null when the turn failed before routing (e.g. empty message). */
+  mcpTool?: Maybe<Scalars['String']['output']>;
+  /** True when routed write tools are not permitted unless AGENTS_CHAT_ALLOW_MUTATIONS is enabled on the server (default read-only policy). */
+  readOnlyAgentsChat: Scalars['Boolean']['output'];
+  /** Router confidence in [0, 1] for the selected tool; null when the turn failed before routing. */
+  routingConfidence?: Maybe<Scalars['Float']['output']>;
+  /** Router reason label (e.g. heuristic name or llm_fallback:…); null when the turn failed before routing. */
+  routingReason?: Maybe<Scalars['String']['output']>;
+  /** JSON-encoded MCP structuredContent from the tool result when present on a successful tool call; null otherwise. */
+  structuredPayloadJson?: Maybe<Scalars['String']['output']>;
+  /** JSON-encoded tool envelope: tool name, arguments, optional confidence and routeReason, optional structuredContent, and isError when the MCP tool reported failure. */
+  toolMetadataJson?: Maybe<Scalars['String']['output']>;
+};
+
+export type AgentsRunChatTurnInput = {
+  /** Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns. */
+  conversationId?: InputMaybe<Scalars['String']['input']>;
+  /** User message text for this turn. */
+  message: Scalars['String']['input'];
+};
+
 export type AppendPlanOutputInput = {
   /** Content of the output chunk */
   content: Scalars['String']['input'];
@@ -110,6 +139,18 @@ export type AppendPlanOutputInput = {
   iteration?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to append output to */
   planId: Scalars['ID']['input'];
+};
+
+/** Optional filter: apply only to these local repository ids. Omit to apply to all linked repos. */
+export type ApplyWorkspaceEditorConfigurationInput = {
+  /** When set, only these repositories receive editor configuration. */
+  repositoryIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/** Aggregate result of applying workspace editor configuration. */
+export type ApplyWorkspaceEditorConfigurationResultObject = {
+  __typename?: 'ApplyWorkspaceEditorConfigurationResultObject';
+  applications: Array<WorkspaceEditorConfigApplicationObject>;
 };
 
 export type CancelPlanRunInput = {
@@ -298,6 +339,15 @@ export type CreateUserInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   /** GitHub user or Organization name (e.g. OpenThrottle) */
   githubUsername: Scalars['String']['input'];
+};
+
+export type CreateWorkspaceLocalRepositoryInput = {
+  displayName: Scalars['String']['input'];
+  /** Absolute path to an existing directory on the server host. */
+  filesystemPath: Scalars['String']['input'];
+  gitDefaultBranch?: InputMaybe<Scalars['String']['input']>;
+  gitRemoteUrl?: InputMaybe<Scalars['String']['input']>;
+  projectId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 /** A custom prompt document for AI workflow customization */
@@ -753,8 +803,12 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
+  agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
   appendPlanOutput: PlanOutputStreamChunkObject;
+  /** Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories. */
+  applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
@@ -773,6 +827,8 @@ export type Mutation = {
   createTask: TaskObject;
   /** Create a user */
   createUser: UserObject;
+  /** Register a local filesystem repository for the authenticated user. */
+  createWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Soft delete a custom prompt by ID */
   deleteCustomPrompt: Scalars['Boolean']['output'];
   /** Delete a note by ID */
@@ -783,6 +839,8 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
+  /** Remove a local repository owned by the authenticated user. */
+  deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
   /** Disable a user; they will not be able to log in. */
   disableUser?: Maybe<UserObject>;
   /** Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error. */
@@ -813,6 +871,8 @@ export type Mutation = {
   retryJob: RetryJobResultObject;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
+  /** Assign, change, or clear the Cortex project link for a local repository. */
+  setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
   /** Append a sample structured log line (JSONL + hub). Requires OT_SERVER_DEV_JSONL_LOGGING=true at startup. See packages/nestjs-logging README. */
@@ -831,14 +891,26 @@ export type Mutation = {
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
+  /** Update metadata for a local repository owned by the authenticated user. */
+  updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
+  /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
+  updateWorkspaceProfile: UserWorkspaceProfileObject;
   /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
   workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
 };
 
+export type MutationAgentsRunChatTurnArgs = {
+  input: AgentsRunChatTurnInput;
+};
+
 export type MutationAppendPlanOutputArgs = {
   input: AppendPlanOutputInput;
+};
+
+export type MutationApplyWorkspaceEditorConfigurationArgs = {
+  input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
 };
 
 export type MutationCancelPlanRunArgs = {
@@ -877,6 +949,10 @@ export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
 
+export type MutationCreateWorkspaceLocalRepositoryArgs = {
+  input: CreateWorkspaceLocalRepositoryInput;
+};
+
 export type MutationDeleteCustomPromptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -895,6 +971,10 @@ export type MutationDeleteProjectArgs = {
 
 export type MutationDeleteTaskArgs = {
   input: DeleteTaskInput;
+};
+
+export type MutationDeleteWorkspaceLocalRepositoryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationDisableUserArgs = {
@@ -957,6 +1037,10 @@ export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
 };
 
+export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
+  input: SetWorkspaceLocalRepositoryProjectInput;
+};
+
 export type MutationUpdateCustomPromptArgs = {
   input: UpdateCustomPromptInput;
 };
@@ -979,6 +1063,14 @@ export type MutationUpdateTaskArgs = {
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
+};
+
+export type MutationUpdateWorkspaceLocalRepositoryArgs = {
+  input: UpdateWorkspaceLocalRepositoryInput;
+};
+
+export type MutationUpdateWorkspaceProfileArgs = {
+  input: UpdateWorkspaceProfileInput;
 };
 
 export type MutationWorkflowPlanRunArgs = {
@@ -1395,6 +1487,12 @@ export type Query = {
   user?: Maybe<UserObject>;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
+  /** List local repositories for the authenticated user. */
+  workspaceLocalRepositories: Array<WorkspaceLocalRepositoryObject>;
+  /** Get a local repository by id for the authenticated user. */
+  workspaceLocalRepository?: Maybe<WorkspaceLocalRepositoryObject>;
+  /** Workspace settings for the authenticated user (profile and local repositories). */
+  workspaceSettings: WorkspaceSettingsObject;
 };
 
 export type QueryActivityByDateArgs = {
@@ -1568,6 +1666,10 @@ export type QueryTasksByProjectIdArgs = {
 };
 
 export type QueryUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryWorkspaceLocalRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1836,6 +1938,12 @@ export type SetPlanStatusInput = {
   status: Scalars['String']['input'];
 };
 
+export type SetWorkspaceLocalRepositoryProjectInput = {
+  id: Scalars['ID']['input'];
+  /** Cortex project id, or null to clear the link. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type SignoutResultObject = {
   __typename?: 'SignoutResultObject';
   /** Whether signout completed successfully */
@@ -2021,6 +2129,20 @@ export type UpdateUserInput = {
   id: Scalars['ID']['input'];
 };
 
+export type UpdateWorkspaceLocalRepositoryInput = {
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  gitDefaultBranch?: InputMaybe<Scalars['String']['input']>;
+  gitRemoteUrl?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdateWorkspaceProfileInput = {
+  contactDisplayName?: InputMaybe<Scalars['String']['input']>;
+  contactEmail?: InputMaybe<Scalars['String']['input']>;
+  enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
+};
+
 export type UserObject = {
   __typename?: 'UserObject';
   createdAt: Scalars['DateTime']['output'];
@@ -2031,6 +2153,20 @@ export type UserObject = {
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Per-user workspace profile: contact fields and enabled editors. */
+export type UserWorkspaceProfileObject = {
+  __typename?: 'UserWorkspaceProfileObject';
+  /** Display name for notifications and workspace attribution. */
+  contactDisplayName?: Maybe<Scalars['String']['output']>;
+  /** Contact email for workspace profile (distinct from auth email). */
+  contactEmail?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Editors the user wants OpenThrottle to configure in linked repos. */
+  enabledEditors: Array<WorkspaceEditorId>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 /** Interpretation of wall-clock to CPU time ratio. */
@@ -2060,6 +2196,49 @@ export type WallClockMetrics = {
   wallClockMs: Scalars['Float']['output'];
   /** Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound. */
   wallClockToCpuRatio: Scalars['Float']['output'];
+};
+
+/** Result of applying editor configuration for one linked repository and editor. */
+export type WorkspaceEditorConfigApplicationObject = {
+  __typename?: 'WorkspaceEditorConfigApplicationObject';
+  editor: WorkspaceEditorId;
+  filesWritten: Array<Scalars['String']['output']>;
+  filesystemPath: Scalars['String']['output'];
+  repositoryId: Scalars['ID']['output'];
+  warnings: Array<Scalars['String']['output']>;
+};
+
+/** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode. */
+export enum WorkspaceEditorId {
+  /** Cursor IDE */
+  Cursor = 'CURSOR',
+  /** Visual Studio Code */
+  Vscode = 'VSCODE',
+}
+
+/** A local filesystem checkout registered under the user's workspace settings. */
+export type WorkspaceLocalRepositoryObject = {
+  __typename?: 'WorkspaceLocalRepositoryObject';
+  createdAt: Scalars['DateTime']['output'];
+  displayName: Scalars['String']['output'];
+  /** Canonical absolute path on the server host. */
+  filesystemPath: Scalars['String']['output'];
+  gitDefaultBranch?: Maybe<Scalars['String']['output']>;
+  /** Optional git remote URL (origin). */
+  gitRemoteUrl?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  project?: Maybe<ProjectObject>;
+  /** Optional Cortex project linked to this checkout. */
+  projectId?: Maybe<Scalars['ID']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+/** Workspace settings for the authenticated user: profile and local repositories. */
+export type WorkspaceSettingsObject = {
+  __typename?: 'WorkspaceSettingsObject';
+  localRepositories: Array<WorkspaceLocalRepositoryObject>;
+  profile: UserWorkspaceProfileObject;
 };
 
 export type HealthCardFragment = {
@@ -2144,6 +2323,26 @@ export type GetMyUserQuery = {
     id: string;
     updatedAt: any;
   } | null;
+};
+
+export type SendAgentMessageMutationVariables = Exact<{
+  input: AgentsRunChatTurnInput;
+}>;
+
+export type SendAgentMessageMutation = {
+  __typename?: 'Mutation';
+  agentsRunChatTurn: {
+    __typename?: 'AgentsChatTurnResult';
+    assistantText?: string | null;
+    conversationId?: string | null;
+    errorMessage?: string | null;
+    mcpTool?: string | null;
+    readOnlyAgentsChat: boolean;
+    routingConfidence?: number | null;
+    routingReason?: string | null;
+    structuredPayloadJson?: string | null;
+    toolMetadataJson?: string | null;
+  };
 };
 
 export type DashboardActivityCardFragment = {
@@ -2271,12 +2470,18 @@ export type GetDashboardQuery = {
 };
 
 export type GetDashboardGithubStatsQueryVariables = Exact<{
-  input: GitHubRepoInput;
+  owner: Scalars['String']['input'];
+  repo: Scalars['String']['input'];
 }>;
 
 export type GetDashboardGithubStatsQuery = {
   __typename?: 'Query';
   openPrCountByAuthor: Array<{
+    __typename?: 'OpenPrCountByAuthorObject';
+    author: string;
+    openCount: number;
+  }>;
+  closedPrCountByAuthor: Array<{
     __typename?: 'OpenPrCountByAuthorObject';
     author: string;
     openCount: number;
@@ -3244,6 +3449,47 @@ export type QueueJobDetailCancelPlanRunMutation = {
   };
 };
 
+export type QueueJobDetailsFragment = {
+  __typename?: 'JobObject';
+  data?: string | null;
+  failedReason?: string | null;
+  finishedOn?: number | null;
+  id: string;
+  name?: string | null;
+  processedOn?: number | null;
+  progress?: number | null;
+  returnvalue?: string | null;
+  state: string;
+  timestamp?: number | null;
+};
+
+export type QueueDetailsFragment = {
+  __typename?: 'QueueDetailsObject';
+  activeCount: number;
+  completedCount: number;
+  delayedCount: number;
+  failedCount: number;
+  name: string;
+  waitingCount: number;
+  jobs?: {
+    __typename?: 'JobsResultObject';
+    hasNext: boolean;
+    jobs: Array<{
+      __typename?: 'JobObject';
+      data?: string | null;
+      failedReason?: string | null;
+      finishedOn?: number | null;
+      id: string;
+      name?: string | null;
+      processedOn?: number | null;
+      progress?: number | null;
+      returnvalue?: string | null;
+      state: string;
+      timestamp?: number | null;
+    }>;
+  } | null;
+};
+
 export type GetQueueQueryVariables = Exact<{
   input: QueueDetailsInput;
 }>;
@@ -3338,6 +3584,176 @@ export type GetSearchResultsQuery = {
       sourceSha?: string | null;
       taskId?: string | null;
       taskTitle?: string | null;
+    }>;
+  };
+};
+
+export type WorkspaceLocalRepositoryFieldsFragment = {
+  __typename?: 'WorkspaceLocalRepositoryObject';
+  createdAt: any;
+  displayName: string;
+  filesystemPath: string;
+  gitDefaultBranch?: string | null;
+  gitRemoteUrl?: string | null;
+  id: string;
+  projectId?: string | null;
+  updatedAt: any;
+  userId: string;
+  project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+};
+
+export type UserWorkspaceProfileFieldsFragment = {
+  __typename?: 'UserWorkspaceProfileObject';
+  contactDisplayName?: string | null;
+  contactEmail?: string | null;
+  createdAt: any;
+  enabledEditors: Array<WorkspaceEditorId>;
+  updatedAt: any;
+  userId: string;
+};
+
+export type GetWorkspaceSettingsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetWorkspaceSettingsQuery = {
+  __typename?: 'Query';
+  workspaceSettings: {
+    __typename?: 'WorkspaceSettingsObject';
+    localRepositories: Array<{
+      __typename?: 'WorkspaceLocalRepositoryObject';
+      createdAt: any;
+      displayName: string;
+      filesystemPath: string;
+      gitDefaultBranch?: string | null;
+      gitRemoteUrl?: string | null;
+      id: string;
+      projectId?: string | null;
+      updatedAt: any;
+      userId: string;
+      project?: {
+        __typename?: 'ProjectObject';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    profile: {
+      __typename?: 'UserWorkspaceProfileObject';
+      contactDisplayName?: string | null;
+      contactEmail?: string | null;
+      createdAt: any;
+      enabledEditors: Array<WorkspaceEditorId>;
+      updatedAt: any;
+      userId: string;
+    };
+  };
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
+};
+
+export type UpdateWorkspaceProfileMutationVariables = Exact<{
+  input: UpdateWorkspaceProfileInput;
+}>;
+
+export type UpdateWorkspaceProfileMutation = {
+  __typename?: 'Mutation';
+  updateWorkspaceProfile: {
+    __typename?: 'UserWorkspaceProfileObject';
+    contactDisplayName?: string | null;
+    contactEmail?: string | null;
+    createdAt: any;
+    enabledEditors: Array<WorkspaceEditorId>;
+    updatedAt: any;
+    userId: string;
+  };
+};
+
+export type CreateWorkspaceLocalRepositoryMutationVariables = Exact<{
+  input: CreateWorkspaceLocalRepositoryInput;
+}>;
+
+export type CreateWorkspaceLocalRepositoryMutation = {
+  __typename?: 'Mutation';
+  createWorkspaceLocalRepository: {
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    projectId?: string | null;
+    updatedAt: any;
+    userId: string;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  };
+};
+
+export type UpdateWorkspaceLocalRepositoryMutationVariables = Exact<{
+  input: UpdateWorkspaceLocalRepositoryInput;
+}>;
+
+export type UpdateWorkspaceLocalRepositoryMutation = {
+  __typename?: 'Mutation';
+  updateWorkspaceLocalRepository: {
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    projectId?: string | null;
+    updatedAt: any;
+    userId: string;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  };
+};
+
+export type SetWorkspaceLocalRepositoryProjectMutationVariables = Exact<{
+  input: SetWorkspaceLocalRepositoryProjectInput;
+}>;
+
+export type SetWorkspaceLocalRepositoryProjectMutation = {
+  __typename?: 'Mutation';
+  setWorkspaceLocalRepositoryProject: {
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    createdAt: any;
+    displayName: string;
+    filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    projectId?: string | null;
+    updatedAt: any;
+    userId: string;
+    project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
+  };
+};
+
+export type DeleteWorkspaceLocalRepositoryMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type DeleteWorkspaceLocalRepositoryMutation = {
+  __typename?: 'Mutation';
+  deleteWorkspaceLocalRepository: boolean;
+};
+
+export type ApplyWorkspaceEditorConfigurationMutationVariables = Exact<{
+  input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
+}>;
+
+export type ApplyWorkspaceEditorConfigurationMutation = {
+  __typename?: 'Mutation';
+  applyWorkspaceEditorConfiguration: {
+    __typename?: 'ApplyWorkspaceEditorConfigurationResultObject';
+    applications: Array<{
+      __typename?: 'WorkspaceEditorConfigApplicationObject';
+      editor: WorkspaceEditorId;
+      filesWritten: Array<string>;
+      filesystemPath: string;
+      repositoryId: string;
+      warnings: Array<string>;
     }>;
   };
 };
@@ -3949,6 +4365,104 @@ export const JobDetailsCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<JobDetailsCardFragment, unknown>;
+export const QueueJobDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'JobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'processedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<QueueJobDetailsFragment, unknown>;
+export const QueueDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueDetailsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'delayedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'jobs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'jobs' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'QueueJobDetails' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'waitingCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'JobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'processedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<QueueDetailsFragment, unknown>;
 export const QueueCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -3973,6 +4487,71 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const WorkspaceLocalRepositoryFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<WorkspaceLocalRepositoryFieldsFragment, unknown>;
+export const UserWorkspaceProfileFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserWorkspaceProfileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'contactDisplayName' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'contactEmail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserWorkspaceProfileFieldsFragment, unknown>;
 export const UsageDailyStatsRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -4227,6 +4806,92 @@ export const GetMyUserDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
+export const SendAgentMessageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'sendAgentMessage' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AgentsRunChatTurnInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentsRunChatTurn' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'assistantText' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errorMessage' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'mcpTool' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'readOnlyAgentsChat' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'routingConfidence' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'routingReason' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'structuredPayloadJson' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'toolMetadataJson' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SendAgentMessageMutation,
+  SendAgentMessageMutationVariables
+>;
 export const GetDashboardDocument = {
   kind: 'Document',
   definitions: [
@@ -4476,13 +5141,24 @@ export const GetDashboardGithubStatsDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
+            name: { kind: 'Name', value: 'owner' },
           },
           type: {
             kind: 'NonNullType',
             type: {
               kind: 'NamedType',
-              name: { kind: 'Name', value: 'GitHubRepoInput' },
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'repo' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
             },
           },
         },
@@ -4492,14 +5168,89 @@ export const GetDashboardGithubStatsDocument = {
         selections: [
           {
             kind: 'Field',
+            alias: { kind: 'Name', value: 'openPrCountByAuthor' },
             name: { kind: 'Name', value: 'openPrCountByAuthor' },
             arguments: [
               {
                 kind: 'Argument',
                 name: { kind: 'Name', value: 'input' },
                 value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'open',
+                        block: false,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'openCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            alias: { kind: 'Name', value: 'closedPrCountByAuthor' },
+            name: { kind: 'Name', value: 'openPrCountByAuthor' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'closed',
+                        block: false,
+                      },
+                    },
+                  ],
                 },
               },
             ],
@@ -4519,8 +5270,34 @@ export const GetDashboardGithubStatsDocument = {
                 kind: 'Argument',
                 name: { kind: 'Name', value: 'input' },
                 value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'owner' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'owner' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'repo' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'repo' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'state' },
+                      value: {
+                        kind: 'StringValue',
+                        value: 'open',
+                        block: false,
+                      },
+                    },
+                  ],
                 },
               },
             ],
@@ -7426,16 +8203,60 @@ export const GetQueueDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'completedCount' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'QueueDetails' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'delayedCount' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueJobDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'JobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'processedOn' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'returnvalue' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timestamp' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'QueueDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'QueueDetailsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'delayedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'jobs' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'jobs' },
@@ -7443,69 +8264,17 @@ export const GetQueueDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'hasNext' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'jobs' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'data' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'failedReason' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'finishedOn' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'processedOn' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'progress' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'returnvalue' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'state' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'timestamp' },
-                            },
-                          ],
-                        },
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'QueueJobDetails' },
                       },
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'waitingCount' },
-                },
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'waitingCount' } },
         ],
       },
     },
@@ -7713,6 +8482,622 @@ export const GetSearchResultsDocument = {
 } as unknown as DocumentNode<
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
+>;
+export const GetWorkspaceSettingsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getWorkspaceSettings' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceSettings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'localRepositories' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'WorkspaceLocalRepositoryFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'profile' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'UserWorkspaceProfileFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserWorkspaceProfileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'contactDisplayName' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'contactEmail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetWorkspaceSettingsQuery,
+  GetWorkspaceSettingsQueryVariables
+>;
+export const UpdateWorkspaceProfileDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateWorkspaceProfile' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateWorkspaceProfileInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateWorkspaceProfile' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserWorkspaceProfileFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserWorkspaceProfileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'contactDisplayName' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'contactEmail' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateWorkspaceProfileMutation,
+  UpdateWorkspaceProfileMutationVariables
+>;
+export const CreateWorkspaceLocalRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createWorkspaceLocalRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'CreateWorkspaceLocalRepositoryInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createWorkspaceLocalRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'WorkspaceLocalRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateWorkspaceLocalRepositoryMutation,
+  CreateWorkspaceLocalRepositoryMutationVariables
+>;
+export const UpdateWorkspaceLocalRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateWorkspaceLocalRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'UpdateWorkspaceLocalRepositoryInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateWorkspaceLocalRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'WorkspaceLocalRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateWorkspaceLocalRepositoryMutation,
+  UpdateWorkspaceLocalRepositoryMutationVariables
+>;
+export const SetWorkspaceLocalRepositoryProjectDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'setWorkspaceLocalRepositoryProject' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'SetWorkspaceLocalRepositoryProjectInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setWorkspaceLocalRepositoryProject' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'WorkspaceLocalRepositoryFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'WorkspaceLocalRepositoryFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetWorkspaceLocalRepositoryProjectMutation,
+  SetWorkspaceLocalRepositoryProjectMutationVariables
+>;
+export const DeleteWorkspaceLocalRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteWorkspaceLocalRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteWorkspaceLocalRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteWorkspaceLocalRepositoryMutation,
+  DeleteWorkspaceLocalRepositoryMutationVariables
+>;
+export const ApplyWorkspaceEditorConfigurationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'applyWorkspaceEditorConfiguration' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NamedType',
+            name: {
+              kind: 'Name',
+              value: 'ApplyWorkspaceEditorConfigurationInput',
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'applyWorkspaceEditorConfiguration' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'applications' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'editor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filesWritten' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filesystemPath' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'repositoryId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'warnings' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ApplyWorkspaceEditorConfigurationMutation,
+  ApplyWorkspaceEditorConfigurationMutationVariables
 >;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',

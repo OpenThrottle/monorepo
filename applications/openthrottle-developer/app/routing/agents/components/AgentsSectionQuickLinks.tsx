@@ -10,6 +10,7 @@ import {
 import { BrainCircuitIcon, BrainIcon, FileChartColumn } from 'lucide-react';
 
 /**
+ * @deprecated Temporarily removed from skills/prompts index routes; restore when re-enabling commented JSX.
  * @description Cross-links the Agents sidebar routes (Prompts, Skills, Usage) with one-line guidance for analytics gaps, prompt versioning, and repo skill paths.
  */
 export function AgentsSectionQuickLinks(): React.ReactElement {

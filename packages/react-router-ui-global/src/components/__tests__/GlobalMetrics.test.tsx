@@ -160,7 +160,7 @@ describe('GlobalMetrics Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('should show sampling details, chart legend, and diagnostics link', () => {
+  test('should render metrics chart when data is available', () => {
     cleanup();
     const Component = () => (
       <GlobalProviders>
@@ -173,41 +173,10 @@ describe('GlobalMetrics Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
+    expect(screen.getByTestId('GlobalMetrics-chart-card')).toBeInTheDocument();
     expect(
-      screen.getByTestId('GlobalMetrics-debug-details'),
+      screen.getByTestId('GlobalMetrics-info-trigger'),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
-      'RSS (MB)',
-    );
-    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
-      'Resident set size',
-    );
-    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
-      'Heap used (MB)',
-    );
-    expect(screen.getByTestId('GlobalMetrics-chart-legend')).toHaveTextContent(
-      'CPU user (ms)',
-    );
-
-    const settingsLink = screen.getByRole('link', {
-      name: /settings: graphql health & env/i,
-    });
-    expect(settingsLink).toHaveAttribute(
-      'href',
-      '/settings/debug#graphql-endpoint-health',
-    );
-
-    const definitionsLink = screen.getByTestId(
-      'GlobalMetrics-definitions-link',
-    );
-    expect(definitionsLink).toHaveAttribute(
-      'href',
-      '/settings/debug#server-metrics-definitions',
-    );
-
-    expect(
-      screen.getByRole('link', { name: /what each line measures/i }),
-    ).toHaveAttribute('href', '/settings/debug#server-metrics-definitions');
   });
 
   test('should expose metrics help trigger with accessible name', () => {

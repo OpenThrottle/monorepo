@@ -5,6 +5,7 @@ exports[`GlobalProviders Component > should render 1`] = `
   <div>
     <div
       class="group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar"
+      data-slot="sidebar-wrapper"
       style="--sidebar-width: 16rem; --sidebar-width-icon: 3rem;"
     />
   </div>

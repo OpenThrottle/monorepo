@@ -8,13 +8,13 @@
  */
 
 /** Lock TTL in Redis (ms). Worker renews every lockDuration/2. After process exit, lock expires and job can be detected as stalled. */
-export const DEFAULT_LOCK_DURATION_MS = 60_000;
+const DEFAULT_LOCK_DURATION_MS = 60_000;
 
 /** How often (ms) the worker checks for stalled jobs. */
-export const DEFAULT_STALLED_INTERVAL_MS = 30_000;
+const DEFAULT_STALLED_INTERVAL_MS = 30_000;
 
 /** When a job is detected stalled, move back to waiting (retry). After this many stalls it moves to failed. */
-export const DEFAULT_MAX_STALLED_COUNT = 1;
+const DEFAULT_MAX_STALLED_COUNT = 1;
 
 /**
  * @description Default Worker options for stalled-job recovery. Spread into @Processor options.

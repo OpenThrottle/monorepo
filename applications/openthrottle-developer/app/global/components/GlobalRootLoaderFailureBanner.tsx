@@ -14,7 +14,7 @@ import {
 
 const SNIPPET_MAX = 360;
 
-export interface GlobalRootLoaderFailureBannerProps {
+interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;
   readonly failure: RootLoaderFailure | null;
   readonly isRevalidating?: boolean;

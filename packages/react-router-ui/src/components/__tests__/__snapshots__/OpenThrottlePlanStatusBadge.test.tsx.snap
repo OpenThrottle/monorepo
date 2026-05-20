@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenThrottlePlanStatusBadge Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="p-4"
+      data-testid="OpenThrottlePlanStatusBadge"
+    >
+      <h2>
+        OpenThrottle Plan Status Badge
+      </h2>
+    </div>
+  </div>
+</body>
+`;

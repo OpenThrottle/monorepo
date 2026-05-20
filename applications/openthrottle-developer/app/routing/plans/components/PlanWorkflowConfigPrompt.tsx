@@ -17,7 +17,7 @@ import {
   type WorkflowRalphPromptLayer,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-export interface PlanWorkflowConfigPromptProps {
+interface PlanWorkflowConfigPromptProps {
   readonly className?: string;
   readonly onPromptChange: (next: string) => void;
   readonly onPromptFileChange: (next: string) => void;

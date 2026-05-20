@@ -8,7 +8,6 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/typeorm": "^11.0.1",
     "joi": "^18.1.2",
     "pg": "^8.17.1",
     "typeorm": "^0.3.28"

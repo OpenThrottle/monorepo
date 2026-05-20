@@ -1,0 +1,147 @@
+# React Router apps — multi-stage build from monorepo root.
+# v2: pruned production tree + distroless default; baseline stays in Dockerfile.ReactRouter.
+# Build: docker build -f Dockerfile.ReactRouter.v2 [--build-arg ...] .
+# See docs/openthrottle/docker-image-build-strategy.md and docs/openthrottle/docker-react-router-v2.md.
+#
+# Build stages use node:*-bookworm-slim (glibc) so native addons match distroless production.
+###########################################################################
+#
+#     👀 https://pnpm.io/docker using NX for the monorepo build
+#
+###########################################################################
+ARG NODE_VERSION="22"
+FROM node:${NODE_VERSION}-bookworm-slim AS base
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG APP_ENV="production"
+ARG APP_NAME="__REQUIRED_ARG__"
+ARG APP_VERSION="__REQUIRED_ARG__"
+ARG GITHUB_TOKEN="__REQUIRED_ARG__"
+ARG NX_VERSION="__REQUIRED_ARG__"
+ARG NX_KEY="__REQUIRED_ARG__"
+ARG PNPM_VERSION="__REQUIRED_ARG__"
+
+ENV APP_ENV="${APP_ENV}"
+ENV APP_NAME="${APP_NAME}"
+ENV APP_VERSION="${APP_VERSION}"
+ENV CI="true"
+ENV HUSKY="0"
+ENV NX_DAEMON="false"
+
+RUN npm install --global pnpm@${PNPM_VERSION}
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+
+RUN groupadd --system --gid 1001 appuser \
+  && useradd --system --uid 1001 --gid appuser appuser
+
+################################################################################
+#
+#   BUILDER ~ Everything needed to build the application(s)
+#
+################################################################################
+FROM base AS builder
+
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+ENV NODE_ENV="development"
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.json
+COPY ./packages ./packages
+COPY ./tools ./tools
+
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+################################################################################
+#
+#   DEPENDENCIES ~ Production dependency tree (intermediate; not copied wholesale to v2 production)
+#
+################################################################################
+FROM builder AS dependencies
+
+ENV NODE_ENV="production"
+
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile --prod
+
+RUN pnpm store prune
+
+RUN rm -rf /app/node_modules/.pnpm/@langchain \
+  /app/node_modules/.pnpm/@modelcontextprotocol \
+  /app/node_modules/.pnpm/@nestjs \
+  /app/node_modules/.pnpm/ajv* \
+  /app/node_modules/.pnpm/bullmq* \
+  /app/node_modules/.pnpm/jimp* \
+  /app/node_modules/.pnpm/nestjs* \
+  /app/node_modules/.pnpm/passport-local \
+  /app/node_modules/.pnpm/pdf-parse \
+  /app/node_modules/.pnpm/pg \
+  /app/node_modules/.pnpm/reflect-metadata \
+  /app/node_modules/.pnpm/rxjs \
+  /app/node_modules/.pnpm/stripe \
+  /app/node_modules/.pnpm/uuid \
+  /app/node_modules/.pnpm/youtubei.js \
+  /app/node_modules/.pnpm/@nestjs*
+
+################################################################################
+#
+#   BUILD - Nx build + pnpm deploy pruned runtime tree
+#
+################################################################################
+FROM builder AS build
+
+ENV NODE_ENV="production"
+ENV NX_DAEMON="false"
+ENV NX_KEY=${NX_KEY}
+ENV NX_SWC="true"
+
+COPY . .
+
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
+  export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json && \
+  pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build
+
+RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
+
+################################################################################
+#
+#   PRODUCTION-ALPINE ~ Debian slim + shell (compose-friendly name; not Alpine)
+#
+################################################################################
+# Use when you need a shell or optional curl for healthchecks:
+#   docker build -f Dockerfile.ReactRouter.v2 --target production-alpine ...
+FROM base AS production-alpine
+
+ENV NODE_ENV="production"
+
+COPY --from=build /app/pruned/. /app/
+
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+CMD ["node", "node_modules/@react-router/serve/bin.js", "build/server/index.js"]
+
+################################################################################
+#
+#   PRODUCTION ~ Distroless (default target)
+#
+################################################################################
+FROM gcr.io/distroless/nodejs22-debian12:nonroot AS production
+
+WORKDIR /app
+
+ENV NODE_ENV="production"
+
+COPY --from=build --chown=65532:65532 /app/pruned/. /app/
+
+CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]

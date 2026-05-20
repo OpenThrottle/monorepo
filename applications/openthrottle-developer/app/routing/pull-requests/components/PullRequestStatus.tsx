@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { CircleIcon } from 'lucide-react';
 
-export interface PullRequestStatusProps {
+interface PullRequestStatusProps {
   readonly state: PullRequestCardFragment['state'];
 }
 

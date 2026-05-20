@@ -10,23 +10,22 @@ type ServerMetricsSnapshot = GetRootMetricsQuery['serverMetrics'];
 /**
  * @description Namespaced storage key; bump suffix when the on-disk JSON shape changes.
  */
-export const GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY = `${APP_NAME}:global-metrics:v1`;
+const GLOBAL_METRICS_CHART_HISTORY_STORAGE_KEY = `${APP_NAME}:global-metrics:v1`;
 
 /**
  * @description Schema version stored inside the JSON payload (must match parsers).
  */
-export const GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION = 1 as const;
+const GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION = 1 as const;
 
 /**
  * @description Maximum samples kept in memory and mirrored to storage (trimmed tail).
  */
-export const GLOBAL_METRICS_CHART_MAX_SAMPLES = 25;
+const GLOBAL_METRICS_CHART_MAX_SAMPLES = 25;
 
 /**
  * @description Default TTL for restored history: older {@link StoredMetricsChartHistoryPayload.savedAt} values are ignored.
  */
-export const GLOBAL_METRICS_CHART_HISTORY_DEFAULT_MAX_AGE_MS =
-  1000 * 60 * 60 * 24;
+const GLOBAL_METRICS_CHART_HISTORY_DEFAULT_MAX_AGE_MS = 1000 * 60 * 60 * 24;
 
 /** One sample in the metrics history for the time-series chart. */
 export interface MetricsChartDatum extends ServerMetricsSnapshot {

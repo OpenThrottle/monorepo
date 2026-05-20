@@ -9,13 +9,13 @@ import { mapParseTreeToIngestDraft } from './cortex-document-ingest.mapper';
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 
-export interface PreviewCortexDocumentIngestParams {
+interface PreviewCortexDocumentIngestParams {
   readonly fileBase64: string;
   readonly mimeType: string | undefined;
   readonly originalFilename: string | undefined;
 }
 
-export interface PreviewCortexDocumentIngestResult {
+interface PreviewCortexDocumentIngestResult {
   readonly detectedFormat: string | undefined;
   readonly errorCode: string | undefined;
   readonly errorMessage: string | undefined;
@@ -24,11 +24,11 @@ export interface PreviewCortexDocumentIngestResult {
   readonly success: boolean;
 }
 
-export interface CommitCortexDocumentIngestParams extends PreviewCortexDocumentIngestParams {
+interface CommitCortexDocumentIngestParams extends PreviewCortexDocumentIngestParams {
   readonly plan: CreatePlanInput;
 }
 
-export interface CommitCortexDocumentIngestResult {
+interface CommitCortexDocumentIngestResult {
   readonly error: string | null;
   readonly plan: Plan | null;
   readonly success: boolean;

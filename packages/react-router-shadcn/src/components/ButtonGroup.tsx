@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot as SlotPrimitive } from 'radix-ui';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils/cn';
 import { Separator } from './Separator';
@@ -71,7 +71,7 @@ export const ButtonGroupText = React.forwardRef<
 
   // Setup
 
-  const Comp = asChild ? Slot : 'div';
+  const Comp = asChild ? SlotPrimitive.Slot : 'div';
 
   // Handlers
 

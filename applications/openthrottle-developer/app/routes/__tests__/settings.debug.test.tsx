@@ -39,9 +39,7 @@ describe('routes/settings.debug.tsx', () => {
     expect(
       screen.getByText(/Local dev: ports, hosts & API URLs/i),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/localStorage & sessionStorage/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Storage: local & session/i)).toBeInTheDocument();
     expect(screen.getByText(/GraphQL endpoint health/i)).toBeInTheDocument();
   });
 

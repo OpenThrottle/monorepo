@@ -30,7 +30,7 @@ const MAX_SLUG_LENGTH = 50;
  * - Trims hyphens from start/end
  * - Truncates to max 50 characters (leaving room for ralph/ prefix and uniqueness suffix)
  */
-export function slugifyForBranch(title: string): string {
+function slugifyForBranch(title: string): string {
   if (!title || title.trim().length === 0) {
     return '';
   }

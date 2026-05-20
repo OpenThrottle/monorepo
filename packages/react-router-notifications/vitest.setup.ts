@@ -10,6 +10,7 @@ if (typeof window !== 'undefined') {
     enumerable: true,
     value: {
       APP_ENV: 'test',
+      APP_URL: 'https://test.example',
       NODE_ENV: 'test',
     },
     writable: true,

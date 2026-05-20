@@ -1,6 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
+/** @deprecated Alternate home hero kept for intentional rollback; wire from `app/routes/_index.tsx` when needed. */
 export interface HomeHeroV4Props {
   className?: string;
 }

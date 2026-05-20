@@ -62,10 +62,13 @@ import { userAtom } from '~/global/data/atom.user';
 import { dataNavigationV2 } from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
-import { configAtom } from '~/global/data/atom.config';
+import {
+  buildAppearanceRootCssBlock,
+  configAtom,
+} from '~/global/data/atom.config';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
-  CORTEX_UUID_PATTERN,
+  REGEX_UUID,
   buildCommanderEmptyStateExtras,
   parseQueueAndJobIdsFromCommanderQuery,
 } from '~/global/utils/commander-empty-extras';
@@ -75,12 +78,13 @@ import {
   callLoginMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
+import { handleSendAgentMessageIntent } from '~/global/utils/utils.agents-chat';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate
- * @description We only need to revalidate when we login or logout which
+ * We only need to revalidate when we login or logout which
  * is already taken care of by the auth routes. So we don't need to revalidate
  * (refetch) to data at this level.
  */
@@ -213,7 +217,7 @@ export const meta = (_args: Route.MetaArgs) => {
 
 /**
  * @link https://reactrouter.com/explanation/special-files#layout-export
- * @description Document shell only: {@link Meta}, {@link Links}, {@link Scripts}, env bootstrap,
+ * Document shell only: {@link Meta}, {@link Links}, {@link Scripts}, env bootstrap,
  * body wrapper for providers that must wrap the full document, {@link Toaster}, and {@link ScrollRestoration}.
  * App-level chrome lives in the default {@link App} export (canonical split for openthrottle-cms / openthrottle-admin).
  */
@@ -221,17 +225,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
   const data = useRouteLoaderData<typeof loader>('root');
   const [_user, setUser] = useAtom(userAtom);
+  const [config] = useAtom(configAtom);
 
   // Setup
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
-
-  const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
+  const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
   const manifest = `/manifest.json`;
 
   const isProduction = process.env.NODE_ENV === 'production';
   const source = isProduction ? `https://*` : `http://*`;
-  const viewport = `initial-scale=1, viewport-fit=cover, width=device-width`;
+  const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
   const _valueCSP = isProduction
     ? `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`
     : `default-src 'self'; child-src 'none'; connect-src 'self' ${source}; img-src 'self' ${source}; script-src 'self' 'unsafe-inline' ${source}; style-src 'self' 'unsafe-inline'; worker-src 'self';`;
@@ -252,10 +256,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [data?.user, data?.userLoadOk, setUser]);
 
+  const isDarkTheme = config.theme === 'dark';
+  const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
+
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkTheme);
+  }, [isDarkTheme]);
+
   // 🔌 Short Circuit
 
   return (
-    <html lang="en">
+    <html
+      className={isDarkTheme ? 'dark' : undefined}
+      lang="en"
+      suppressHydrationWarning={true}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta content={viewport} name="viewport" />
@@ -274,9 +289,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href={manifest} rel="manifest" />
         <Links />
 
+        {appearanceRootCss ? (
+          <style type="text/css">{`
+            :root {
+              ${appearanceRootCss}
+            }
+          `}</style>
+        ) : null}
+
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
-      <body className="min-h-screen flex flex-col relative">
+      <body className="h-screen flex flex-col relative">
         <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />
@@ -293,7 +316,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * @description App-level composition: providers, route chrome ({@link GlobalLayout}, header/footer toggles),
+ * App-level composition: providers, route chrome ({@link GlobalLayout}, header/footer toggles),
  * {@link Outlet}, and overlays ({@link OpenThrottleCommander}). Nested routes render through {@link Outlet}, not duplicated shell markup.
  */
 export default function App(): React.ReactElement {
@@ -303,7 +326,6 @@ export default function App(): React.ReactElement {
   const fetcher = useFetcher();
   const groups = useCommanderOptions();
   const { pathname } = useLocation();
-  const [config, _setConfig] = useAtom(configAtom);
   const [commanderOpen, setCommanderOpen] = React.useState(false);
 
   // Setup
@@ -314,7 +336,7 @@ export default function App(): React.ReactElement {
   const isCreateRoute = pathname.endsWith('/create');
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
-  const isHeaderHidden = isAuthRoute || isPromptsRoute;
+  const _isHeaderHidden = isAuthRoute || isPromptsRoute;
   const isMetricsHidden =
     isAuthRoute ||
     isProfileRoute ||
@@ -328,7 +350,7 @@ export default function App(): React.ReactElement {
   }, [revalidator]);
 
   /**
-   * @description Root action `commander-search`: default redirects to `/search?q=…`.
+   * Root action `commander-search`: default redirects to `/search?q=…`.
    * Optional `jump` + `id` / `id2` supports POST-driven debug navigation (see action handler).
    */
   const submitCommanderSearch = React.useCallback(
@@ -357,7 +379,8 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * @description Chrome search in {@link GlobalLayoutHeader}: focus opens the single commander; Enter with text uses the same POST as palette empty-state search.
+   * Chrome search in {@link GlobalLayoutHeader}: focus opens the single commander;
+   * Enter with text uses the same POST as palette empty-state search.
    */
   const handleSearchChromeEvent = React.useCallback(
     (event: GlobalLayoutHeaderSearchEvent) => {
@@ -370,7 +393,8 @@ export default function App(): React.ReactElement {
   );
 
   /**
-   * @description When the palette query matches no static commands, offer POST-backed jumps (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
+   * When the palette query matches no static commands, offer POST-backed jumps
+   * (plan, queue, generator, queue/job, plan/task, indexes, workspace search).
    */
   const commanderEmptyExtras = React.useCallback(
     (query: string) =>
@@ -411,12 +435,14 @@ export default function App(): React.ReactElement {
                 suppress={data?.rootLoaderFailure?.step === 'health'}
               />
 
-              {!isHeaderHidden ? (
-                <GlobalLayoutHeader
-                  onSearchChromeEvent={handleSearchChromeEvent}
-                />
-              ) : null}
+              {/* {!_isHeaderHidden ? ( */}
+              <GlobalLayoutHeader
+                onSearchChromeEvent={handleSearchChromeEvent}
+              />
+              {/* ) : null} */}
+
               <Outlet />
+
               {!isMetricsHidden ? (
                 <GlobalMetrics
                   definitionsHref="/settings/debug#server-metrics-definitions"
@@ -463,16 +489,6 @@ export default function App(): React.ReactElement {
               />
             </GlobalLayout>
           </GlobalProviders>
-
-          {/* We can allow for more customization here as well... */}
-          <style type="text/css">{`
-            :root {
-              ${config.accentColor ? `--accent: ${config.accentColor}` : ``};
-              ${config.accentColor ? `--color-ring: ${config.accentColor}` : ``};
-              ${config.accentColor ? `--color-sidebar-ring: ${config.accentColor}` : ``};
-              ${config.accentColor ? `--tw-ring-color: ${config.accentColor}` : ``};
-            }
-          `}</style>
         </NotificationsSocketBridge>
       </NotificationsStoreProvider>
     </>
@@ -488,17 +504,9 @@ export const action = async (args: Route.ActionArgs) => {
 
   if (intent === 'commander-search') {
     const jump = formData.get('jump');
-    if (jump === 'plans-index') {
-      return redirect('/plans');
-    }
-
-    if (jump === 'queues-index') {
-      return redirect('/queues');
-    }
-
-    if (jump === 'generators-index') {
-      return redirect('/generators');
-    }
+    if (jump === 'plans-index') return redirect('/plans');
+    if (jump === 'queues-index') return redirect('/queues');
+    if (jump === 'generators-index') return redirect('/generators');
 
     const idRaw = formData.get('id');
     const id2Raw = formData.get('id2');
@@ -509,27 +517,19 @@ export const action = async (args: Route.ActionArgs) => {
         ? id2Raw.trim()
         : '';
 
-    if (jump === 'plan-detail' && CORTEX_UUID_PATTERN.test(id)) {
+    if (jump === 'plan-detail' && REGEX_UUID.test(id)) {
       return redirect(`/plans/${id}`);
     }
-    if (jump === 'queue-detail' && CORTEX_UUID_PATTERN.test(id)) {
+    if (jump === 'queue-detail' && REGEX_UUID.test(id)) {
       return redirect(`/queues/${id}`);
     }
-    if (jump === 'generator-detail' && CORTEX_UUID_PATTERN.test(id)) {
+    if (jump === 'generator-detail' && REGEX_UUID.test(id)) {
       return redirect(`/generators/${id}`);
     }
-    if (
-      jump === 'queue-job' &&
-      CORTEX_UUID_PATTERN.test(id) &&
-      CORTEX_UUID_PATTERN.test(id2)
-    ) {
+    if (jump === 'queue-job' && REGEX_UUID.test(id) && REGEX_UUID.test(id2)) {
       return redirect(queueJobDetailPath(id, id2));
     }
-    if (
-      jump === 'plan-task' &&
-      CORTEX_UUID_PATTERN.test(id) &&
-      CORTEX_UUID_PATTERN.test(id2)
-    ) {
+    if (jump === 'plan-task' && REGEX_UUID.test(id) && REGEX_UUID.test(id2)) {
       return redirect(`/plans/${id}/tasks/${id2}`);
     }
 
@@ -603,6 +603,10 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { error: message };
     }
+  }
+
+  if (intent === 'send-agent-message') {
+    return handleSendAgentMessageIntent(args.request, formData);
   }
 
   return null;

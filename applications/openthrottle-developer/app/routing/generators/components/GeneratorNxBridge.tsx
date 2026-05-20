@@ -13,7 +13,7 @@ import {
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 
-export interface GeneratorNxBridgeProps {
+interface GeneratorNxBridgeProps {
   readonly className?: string;
   readonly generator: GeneratorDetailCardFragment;
 }

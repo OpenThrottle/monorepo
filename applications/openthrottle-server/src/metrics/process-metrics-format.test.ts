@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  formatEnhancedTaskRunMetricsDetailed,
   formatEnhancedTaskRunMetricsSummary,
   formatTaskRunMetricsSummary,
 } from './process-metrics-format';
@@ -204,57 +203,5 @@ describe('formatEnhancedTaskRunMetricsSummary', () => {
     const summary = formatEnhancedTaskRunMetricsSummary(metrics);
 
     expect(summary).not.toContain('\n');
-  });
-});
-
-describe('formatEnhancedTaskRunMetricsDetailed', () => {
-  const baseMetrics: TaskRunMetrics = {
-    atEnd: {
-      cpuSystemMs: 80,
-      cpuUserMs: 450,
-      externalMb: 0.6,
-      heapTotalMb: 35,
-      heapUsedMb: 28.3,
-      rssMb: 52.1,
-    },
-    atStart: {
-      cpuSystemMs: 10,
-      cpuUserMs: 120,
-      externalMb: 0.5,
-      heapTotalMb: 30,
-      heapUsedMb: 22.1,
-      rssMb: 45.2,
-    },
-  };
-
-  it('returns a multi-line detailed report', () => {
-    const metrics: EnhancedTaskRunMetrics = {
-      ...baseMetrics,
-      childProcessMetrics: {
-        avgCpuPercent: 42,
-        avgRssMb: 256,
-        peakCpuPercent: 85,
-        peakRssMb: 512,
-        pid: 12345,
-        pollIntervalMs: 5000,
-        sampleCount: 10,
-      },
-      wallClockMetrics: {
-        cpuSystemMs: 500,
-        cpuTimeMs: 1500,
-        cpuUserMs: 1000,
-        endTimestamp: Date.now(),
-        interpretation: 'mixed',
-        startTimestamp: Date.now() - 45200,
-        wallClockMs: 45200,
-        wallClockToCpuRatio: 2.5,
-      },
-    };
-    const detailed = formatEnhancedTaskRunMetricsDetailed(metrics);
-
-    expect(detailed).toContain('Task Run Metrics:');
-    expect(detailed).toContain('\n');
-    expect(detailed).toContain('Wall clock:');
-    expect(detailed).toContain('Child:');
   });
 });

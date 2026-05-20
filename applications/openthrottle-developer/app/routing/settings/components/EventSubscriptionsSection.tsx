@@ -11,7 +11,7 @@ import {
   subscribeToEventSubscriptionsStorageEvents,
 } from '~/routing/settings/config/event-subscriptions-storage';
 
-export interface EventSubscriptionsSectionProps {
+interface EventSubscriptionsSectionProps {
   readonly className?: string;
 }
 

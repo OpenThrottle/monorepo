@@ -17,12 +17,9 @@ export const GlobalLayoutBreadcrumbs = (
 ): React.ReactElement => {
   const { className } = props;
 
-  // Hooks
-
   type Matches = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
 
-  //// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-
+  // Hooks
   const matches = useMatches() as Matches[];
 
   // Setup
@@ -37,14 +34,14 @@ export const GlobalLayoutBreadcrumbs = (
   if (links[0]) {
     links[0].unshift({
       children: 'OpenThrottle',
-      className: 'font-semibold!',
+      className: 'hidden lg:block font-semibold!',
       to: '/',
     });
   } else {
     links.unshift([
       {
         children: 'OpenThrottle',
-        className: 'font-semibold!',
+        className: 'hidden lg:block font-semibold!',
         to: '/',
       },
     ]);

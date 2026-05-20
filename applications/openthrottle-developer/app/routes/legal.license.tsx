@@ -8,6 +8,7 @@ import { BookOpenIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal.license';
+import { Link } from 'react-router';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -52,11 +53,44 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="License"
+          title="MIT License"
         />
-        <p className="text-sm text-muted-foreground">
-          Open source and third-party license notices will be published here.
-        </p>
+
+        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+          <p>
+            Copyright (c) 2026 Matthew Scholta -{' '}
+            <Link
+              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              target="_blank"
+              to="https://mattscholta.com?ref=openthrottle-developer"
+            >
+              https://mattscholta.com
+            </Link>
+          </p>
+          <p>
+            Permission is hereby granted, free of charge, to any person
+            obtaining a copy of this software and associated documentation files
+            (the "Software"), to deal in the Software without restriction,
+            including without limitation the rights to use, copy, modify, merge,
+            publish, distribute, sublicense, and/or sell copies of the Software,
+            and to permit persons to whom the Software is furnished to do so,
+            subject to the following conditions:
+          </p>
+          <p>
+            The above copyright notice and this permission notice shall be
+            included in all copies or substantial portions of the Software.
+          </p>
+          <p>
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+            EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+            MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+            NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+            BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+            ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+            CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            SOFTWARE.
+          </p>
+        </div>
       </div>
     </GlobalScreen>
   );
