@@ -4,9 +4,9 @@ import { Form } from 'react-router';
 import { Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
-interface QueueFormProps {
-  readonly actionData?: { error?: string } | null;
-  readonly className?: string;
+export interface QueueFormProps {
+  actionData?: { error?: string } | null;
+  className?: string;
 }
 
 export const QueueForm = (props: QueueFormProps) => {

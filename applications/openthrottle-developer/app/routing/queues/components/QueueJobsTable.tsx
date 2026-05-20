@@ -20,10 +20,10 @@ type QueueJobsTableJob = NonNullable<
   NonNullable<GetQueueQuery['queue']>['jobs']
 >['jobs'][number];
 
-interface QueueJobsTableProps {
-  readonly className?: string;
-  readonly jobs: readonly QueueJobsTableJob[];
-  readonly queueName: string;
+export interface QueueJobsTableProps {
+  className?: string;
+  jobs: readonly QueueJobsTableJob[];
+  queueName: string;
 }
 
 const truncateText = (text: string, max: number): string =>
@@ -44,10 +44,21 @@ export const QueueJobsTable = (
 ): React.ReactElement => {
   const { className, jobs, queueName } = props;
 
+  // Hooks
   const columns = React.useMemo(
     () => buildQueueJobsTableColumns(queueName),
     [queueName],
   );
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

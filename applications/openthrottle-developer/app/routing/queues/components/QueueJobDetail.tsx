@@ -37,9 +37,9 @@ const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 
 type QueueJobDetailJob = NonNullable<GetQueueJobDetailsQuery['job']>;
 
-interface QueueJobDetailProps {
-  readonly job: QueueJobDetailJob;
-  readonly queueName: string;
+export interface QueueJobDetailProps {
+  job: QueueJobDetailJob;
+  queueName: string;
 }
 
 /** Action payload from `queues.$queueId.$jobId` route for mutation feedback. */
@@ -56,10 +56,13 @@ type QueueJobDetailActionData =
  */
 export const QueueJobDetail = (props: QueueJobDetailProps) => {
   const { job, queueName } = props;
+
+  // Hooks
   const fetcher = useFetcher<QueueJobDetailActionData>();
   const revalidator = useRevalidator();
   const handledSubmissionRef = React.useRef(false);
 
+  // Setup
   const parsed = parseQueueJobDataString(job.data);
   const canRetry = job.state === 'failed';
   const canCancel =
@@ -95,6 +98,26 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
     queueName,
   ]);
 
+  const formatTs = (unix?: number | null): string | null => {
+    if (unix == null) return null;
+    return new Date(unix).toISOString();
+  };
+
+  const returnValuePretty = React.useMemo((): string | null => {
+    if (job.returnvalue == null || job.returnvalue === '') return null;
+    try {
+      const o = JSON.parse(job.returnvalue) as unknown;
+      return JSON.stringify(o, null, 2);
+    } catch {
+      return job.returnvalue;
+    }
+  }, [job.returnvalue]);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     if (fetcher.state === 'submitting' || fetcher.state === 'loading') {
       handledSubmissionRef.current = true;
@@ -149,20 +172,7 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
     }
   }, [fetcher.data, fetcher.state, revalidator]);
 
-  const formatTs = (unix?: number | null): string | null => {
-    if (unix == null) return null;
-    return new Date(unix).toISOString();
-  };
-
-  const returnValuePretty = React.useMemo((): string | null => {
-    if (job.returnvalue == null || job.returnvalue === '') return null;
-    try {
-      const o = JSON.parse(job.returnvalue) as unknown;
-      return JSON.stringify(o, null, 2);
-    } catch {
-      return job.returnvalue;
-    }
-  }, [job.returnvalue]);
+  // 🔌 Short Circuit
 
   return (
     <div className="space-y-6" data-testid="QueueJobDetail">

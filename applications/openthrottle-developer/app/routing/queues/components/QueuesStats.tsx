@@ -14,13 +14,14 @@ import { QueueStatsChartTooltip } from '~/routing/queues/components/QueueStatsCh
 import {
   formatQueueStatsChartTick,
   QUEUE_STATS_CHART_CONFIG,
+  queueStatsChartHeight,
   queuesToStatsChartData,
   seriesKeysForQueueStatsView,
 } from '~/routing/queues/utils/queue-stats-chart';
 
 export interface QueuesStatsProps {
-  readonly className?: string;
-  readonly queues: QueueCardFragment[];
+  className?: string;
+  queues: QueueCardFragment[];
 }
 
 export const QueuesStats = (props: QueuesStatsProps) => {
@@ -40,11 +41,10 @@ export const QueuesStats = (props: QueuesStatsProps) => {
     [showCompleted],
   );
 
-  const chartHeight = 500;
-  // const chartHeight = React.useMemo(
-  //   () => queueStatsChartHeight(chartData.length),
-  //   [chartData.length],
-  // );
+  const chartHeight = React.useMemo(
+    () => queueStatsChartHeight(chartData.length),
+    [chartData.length],
+  );
 
   const isEmpty = chartData.length === 0;
 
@@ -105,7 +105,11 @@ export const QueuesStats = (props: QueuesStatsProps) => {
         </div>
       </div>
 
-      <div className="mt-4 w-full" data-testid="queues-stats-chart">
+      <div
+        className="mt-4 w-full"
+        data-testid="queues-stats-chart"
+        style={{ minHeight: `${chartHeight}px` }}
+      >
         <ChartContainer
           className="min-h-[340px] mt-8 w-full"
           config={QUEUE_STATS_CHART_CONFIG}
