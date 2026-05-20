@@ -3,8 +3,8 @@ import { Row } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 
-interface PlanTasksTableCellTitleProps {
-  readonly row: Row<PlanTaskRowFragment>;
+export interface PlanTasksTableCellTitleProps {
+  row: Row<PlanTaskRowFragment>;
 }
 
 export const PlanTasksTableCellTitle = (

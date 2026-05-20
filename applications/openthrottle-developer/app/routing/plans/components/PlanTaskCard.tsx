@@ -17,18 +17,29 @@ import { formatPlanTaskStatus } from '~/routing/plans/utils/format-status';
 
 const TASK_CARD_CONTEXT_TRUNCATE = 120;
 
-interface PlanTaskCardProps {
-  readonly className?: string;
-  readonly task: PlanTaskRowFragment;
+export interface PlanTaskCardProps {
+  className?: string;
+  task: PlanTaskRowFragment;
 }
 
-export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
+export const PlanTaskCard = (props: PlanTaskCardProps) => {
   const { className, task } = props;
 
+  // Hooks
+
+  // Setup
   const title = task.title ?? 'Untitled';
   const taskHref = `/plans/${task.planId}/tasks/${task.id}`;
   const description = task.description?.trim() ?? '';
   const summary = task.summary?.trim() ?? '';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card

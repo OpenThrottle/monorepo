@@ -14,10 +14,10 @@ import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 
-interface TaskDetailsProps {
-  readonly className?: string;
-  readonly planId: string;
-  readonly task: PlanTaskRowFragment;
+export interface TaskDetailsProps {
+  className?: string;
+  planId: string;
+  task: PlanTaskRowFragment;
 }
 
 const DESCRIPTION_PREVIEW_LINES = 4;
@@ -37,6 +37,7 @@ function formatTaskDate(value: string | number | unknown): string {
 
 export const TaskDetails = (props: TaskDetailsProps) => {
   const { className, planId, task } = props;
+
   // Hooks
   const [descriptionExpanded, setDescriptionExpanded] = React.useState(false);
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
@@ -57,6 +58,13 @@ export const TaskDetails = (props: TaskDetailsProps) => {
   const showSummaryPreview = hasSummary && isLongSummary && !summaryExpanded;
 
   // Handlers
+  const handleToggleDescription = (): void => {
+    setDescriptionExpanded((expanded) => !expanded);
+  };
+
+  const handleToggleSummary = (): void => {
+    setSummaryExpanded((expanded) => !expanded);
+  };
 
   // Markup
 
@@ -76,7 +84,6 @@ export const TaskDetails = (props: TaskDetailsProps) => {
               <h1 className="text-lg text-accent line-clamp-1">{task.title}</h1>
 
               <div className="flex-1" />
-              {/* <Badge variant="secondary">Task</Badge> */}
             </CardTitle>
 
             <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
@@ -134,13 +141,6 @@ export const TaskDetails = (props: TaskDetailsProps) => {
           <CardContent className="space-y-4">
             {hasDescription && (
               <div className="space-y-1">
-                {/* <Markdown
-                  className={classnames(
-                    'text-sm text-muted-foreground whitespace-normal',
-                    showDescriptionPreview && 'line-clamp-4',
-                  )}
-                  content={task.description ?? ''}
-                /> */}
                 <p
                   className={classnames(
                     'text-sm text-muted-foreground',
@@ -152,7 +152,7 @@ export const TaskDetails = (props: TaskDetailsProps) => {
                 {isLongDescription && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={() => setDescriptionExpanded((e) => !e)}
+                    onClick={handleToggleDescription}
                     type="button"
                   >
                     {descriptionExpanded ? 'Show less' : 'Show more'}
@@ -174,7 +174,7 @@ export const TaskDetails = (props: TaskDetailsProps) => {
                 {isLongSummary && (
                   <button
                     className="text-muted-foreground hover:text-foreground text-xs underline"
-                    onClick={() => setSummaryExpanded((e) => !e)}
+                    onClick={handleToggleSummary}
                     type="button"
                   >
                     {summaryExpanded ? 'Show less' : 'Show more'}

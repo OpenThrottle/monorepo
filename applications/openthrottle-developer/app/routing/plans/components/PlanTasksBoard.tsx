@@ -20,16 +20,16 @@ import {
 const PLAN_TASK_DRAG_TYPE = 'plan-task-card' as const;
 
 interface PlanTaskDragItem {
-  readonly currentStatus: string;
-  readonly planId: string;
-  readonly taskId: string;
-  readonly type: typeof PLAN_TASK_DRAG_TYPE;
+  currentStatus: string;
+  planId: string;
+  taskId: string;
+  type: typeof PLAN_TASK_DRAG_TYPE;
 }
 
-interface PlanTasksBoardProps {
-  readonly className?: string;
-  readonly planId: string;
-  readonly tasks: readonly PlanTaskRowFragment[];
+export interface PlanTasksBoardProps {
+  className?: string;
+  planId: string;
+  tasks: PlanTaskRowFragment[];
 }
 
 type PlanDetailActionData =
@@ -37,15 +37,18 @@ type PlanDetailActionData =
   | { updateTaskError: string }
   | undefined;
 
+interface DraggablePlanTaskCardProps {
+  planId: string;
+  task: PlanTaskRowFragment;
+}
+
 /**
  * @description Draggable wrapper; whole card is a drag handle (links remain clickable without starting a drag).
  */
-const DraggablePlanTaskCard = (props: {
-  readonly planId: string;
-  readonly task: PlanTaskRowFragment;
-}) => {
+const DraggablePlanTaskCard = (props: DraggablePlanTaskCardProps) => {
   const { planId, task } = props;
 
+  // Hooks
   const [{ isDragging }, drag] = useDrag({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -59,9 +62,17 @@ const DraggablePlanTaskCard = (props: {
     type: PLAN_TASK_DRAG_TYPE,
   });
 
+  // Setup
   // react-dnd ConnectDragSource is not assignable to React.Ref (upstream typing gap).
-
   const dragRef = drag as unknown as React.Ref<HTMLDivElement>;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div
@@ -77,13 +88,13 @@ const DraggablePlanTaskCard = (props: {
 };
 
 interface PlanTasksColumnDropProps {
-  readonly acceptsDrop: boolean;
-  readonly children: React.ReactNode;
-  readonly columnId: string;
-  readonly columnKey: PlanTaskBoardGroupKey;
-  readonly emptyLabel?: string;
-  readonly onDropTask: (taskId: string, newStatus: string) => void;
-  readonly title: string;
+  acceptsDrop: boolean;
+  children: React.ReactNode;
+  columnId: string;
+  columnKey: PlanTaskBoardGroupKey;
+  emptyLabel?: string;
+  onDropTask: (taskId: string, newStatus: string) => void;
+  title: string;
 }
 
 /**
@@ -100,6 +111,7 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
     title,
   } = props;
 
+  // Hooks
   const [{ isOver, canDrop }, drop] = useDrop<
     PlanTaskDragItem,
     void,
@@ -119,6 +131,7 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
     },
   });
 
+  // Setup
   const highlight =
     acceptsDrop && canDrop && isOver ? 'ring-2 ring-primary ring-offset-2' : '';
 
@@ -126,6 +139,14 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
   if (acceptsDrop) {
     dropRef = drop as unknown as React.Ref<HTMLElement>;
   }
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <PlanTasksColumn
@@ -143,16 +164,15 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
 /**
  * @description Inner board: grouping, optimistic status updates, and react-dnd (must sit under {@link DndProvider}).
  */
-export const PlanTasksBoard = (
-  props: PlanTasksBoardProps,
-): React.ReactElement => {
+export const PlanTasksBoard = (props: PlanTasksBoardProps) => {
   const { className, planId, tasks } = props;
 
+  // Hooks
   const fetcher = useFetcher<PlanDetailActionData>();
   const revalidator = useRevalidator();
 
   const [displayTasks, setDisplayTasks] =
-    React.useState<readonly PlanTaskRowFragment[]>(tasks);
+    React.useState<PlanTaskRowFragment[]>(tasks);
   const [announcement, setAnnouncement] = React.useState('');
 
   const tasksRef = React.useRef(tasks);
@@ -181,12 +201,6 @@ export const PlanTasksBoard = (
     () => groupPlanTasksByStatus(displayTasks),
     [displayTasks],
   );
-
-  const unknownTasks = grouped.get('UNKNOWN') ?? [];
-  const columnKeys: PlanTaskBoardGroupKey[] =
-    unknownTasks.length > 0
-      ? [...PLAN_TASK_BOARD_COLUMN_ORDER, 'UNKNOWN']
-      : [...PLAN_TASK_BOARD_COLUMN_ORDER];
 
   const handleDropTask = React.useCallback(
     (taskId: string, newStatus: string): void => {
@@ -218,6 +232,21 @@ export const PlanTasksBoard = (
     },
     [planId, fetcher.submit],
   );
+
+  // Setup
+  const unknownTasks = grouped.get('UNKNOWN') ?? [];
+  const columnKeys: PlanTaskBoardGroupKey[] =
+    unknownTasks.length > 0
+      ? [...PLAN_TASK_BOARD_COLUMN_ORDER, 'UNKNOWN']
+      : [...PLAN_TASK_BOARD_COLUMN_ORDER];
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <>

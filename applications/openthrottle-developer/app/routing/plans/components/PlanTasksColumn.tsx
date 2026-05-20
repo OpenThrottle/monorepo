@@ -6,13 +6,13 @@ import {
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
 
-interface PlanTasksColumnProps {
-  readonly children: React.ReactNode;
-  readonly className?: string;
-  readonly columnId: string;
-  readonly droppableRef?: React.Ref<HTMLElement>;
-  readonly emptyLabel?: string;
-  readonly title: string;
+export interface PlanTasksColumnProps {
+  children: React.ReactNode;
+  className?: string;
+  columnId: string;
+  droppableRef?: React.Ref<HTMLElement>;
+  emptyLabel?: string;
+  title: string;
 }
 
 /**

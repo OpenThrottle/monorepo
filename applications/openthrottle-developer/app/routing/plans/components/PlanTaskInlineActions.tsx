@@ -8,16 +8,14 @@ import {
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { parseRequirementsList } from '~/routing/plans/utils/formatters';
 
-interface PlanTaskInlineActionsProps {
-  readonly task: PlanTaskRowFragment;
+export interface PlanTaskInlineActionsProps {
+  task: PlanTaskRowFragment;
 }
 
 /**
  * @description View + Details popover shared by the tasks table actions column and board cards.
  */
-export const PlanTaskInlineActions = (
-  props: PlanTaskInlineActionsProps,
-): React.ReactElement => {
+export const PlanTaskInlineActions = (props: PlanTaskInlineActionsProps) => {
   const { task } = props;
 
   // Hooks
