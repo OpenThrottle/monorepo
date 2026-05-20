@@ -1,30 +1,16 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarMenuItemProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarMenuItem = (
-  props: SidebarMenuItemProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarMenuItemProps = React.ComponentProps<'li'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarMenuItem({ className, ...props }: SidebarMenuItemProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarMenuItem">
-      <h2>SidebarMenuItem</h2>
-    </div>
+    <li
+      className={cn('group/menu-item relative', className)}
+      data-sidebar="menu-item"
+      data-slot="sidebar-menu-item"
+      {...props}
+    />
   );
-};
+}

@@ -1,30 +1,19 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarContentProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarContent = (
-  props: SidebarContentProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarContentProps = React.ComponentProps<'div'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarContent({ className, ...props }: SidebarContentProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarContent">
-      <h2>SidebarContent</h2>
-    </div>
+    <div
+      className={cn(
+        'flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+        className,
+      )}
+      data-sidebar="content"
+      data-slot="sidebar-content"
+      {...props}
+    />
   );
-};
+}

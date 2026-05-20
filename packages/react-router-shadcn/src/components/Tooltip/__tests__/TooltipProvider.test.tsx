@@ -10,7 +10,7 @@ describe('TooltipProvider Component', () => {
   let props: TooltipProviderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: null };
 
     const Component = () => <TooltipProvider {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

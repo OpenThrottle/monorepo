@@ -1,30 +1,109 @@
+'use client';
+
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarProviderProps {
-  readonly className?: string;
-}
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { cn } from '../../utils/cn';
+import { TooltipProvider } from '../Tooltip';
+import {
+  SIDEBAR_COOKIE_MAX_AGE,
+  SIDEBAR_COOKIE_NAME,
+  SIDEBAR_KEYBOARD_SHORTCUT,
+  SIDEBAR_WIDTH,
+  SIDEBAR_WIDTH_ICON,
+} from './sidebar-constants';
+import { SidebarContext } from './sidebar-context';
+import type { SidebarContextProps } from './sidebar-context';
 
-export const SidebarProvider = (
-  props: SidebarProviderProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarProviderProps = React.ComponentProps<'div'> & {
+  readonly defaultOpen?: boolean;
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
+};
 
-  // Hooks
+export function SidebarProvider({
+  defaultOpen = true,
+  open: openProp,
+  onOpenChange: setOpenProp,
+  className,
+  style,
+  children,
+  ...props
+}: SidebarProviderProps) {
+  const isMobile = useIsMobile();
+  const [openMobile, setOpenMobile] = React.useState(false);
 
-  // Setup
+  const [_open, _setOpen] = React.useState(defaultOpen);
+  const open = openProp ?? _open;
+  const setOpen = React.useCallback(
+    (value: boolean | ((value: boolean) => boolean)) => {
+      const openState = typeof value === 'function' ? value(open) : value;
+      if (setOpenProp) {
+        setOpenProp(openState);
+      } else {
+        _setOpen(openState);
+      }
 
-  // Handlers
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+    },
+    [setOpenProp, open],
+  );
 
-  // Markup
+  const toggleSidebar = React.useCallback(() => {
+    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
+  }, [isMobile, setOpen, setOpenMobile]);
 
-  // Life Cycle
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+        (event.metaKey || event.ctrlKey)
+      ) {
+        event.preventDefault();
+        toggleSidebar();
+      }
+    };
 
-  // 🔌 Short Circuit
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSidebar]);
+
+  const state = open ? 'expanded' : 'collapsed';
+
+  const contextValue = React.useMemo<SidebarContextProps>(
+    () => ({
+      isMobile,
+      open,
+      openMobile,
+      setOpen,
+      setOpenMobile,
+      state,
+      toggleSidebar,
+    }),
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+  );
 
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarProvider">
-      <h2>SidebarProvider</h2>
-    </div>
+    <SidebarContext.Provider value={contextValue}>
+      <TooltipProvider delayDuration={0}>
+        <div
+          className={cn(
+            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
+            className,
+          )}
+          data-slot="sidebar-wrapper"
+          style={
+            {
+              '--sidebar-width': SIDEBAR_WIDTH,
+              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+              ...style,
+            } as React.CSSProperties
+          }
+          {...props}
+        >
+          {children}
+        </div>
+      </TooltipProvider>
+    </SidebarContext.Provider>
   );
-};
+}

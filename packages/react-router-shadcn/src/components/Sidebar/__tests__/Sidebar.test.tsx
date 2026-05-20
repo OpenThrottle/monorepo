@@ -4,6 +4,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { Sidebar } from '../Sidebar';
 import type { SidebarProps } from '../Sidebar';
+import { SidebarProvider } from '../SidebarProvider';
 
 describe('Sidebar Component', () => {
   let component: RenderResult;
@@ -12,7 +13,11 @@ describe('Sidebar Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <Sidebar {...props} />;
+    const Component = () => (
+      <SidebarProvider>
+        <Sidebar {...props} />
+      </SidebarProvider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

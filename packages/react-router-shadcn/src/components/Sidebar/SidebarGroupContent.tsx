@@ -1,33 +1,19 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarGroupContentProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarGroupContent = (
-  props: SidebarGroupContentProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarGroupContentProps = React.ComponentProps<'div'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarGroupContent({
+  className,
+  ...props
+}: SidebarGroupContentProps) {
   return (
     <div
-      className={classnames('p-4', className)}
-      data-testid="SidebarGroupContent"
-    >
-      <h2>SidebarGroupContent</h2>
-    </div>
+      className={cn('w-full text-sm', className)}
+      data-sidebar="group-content"
+      data-slot="sidebar-group-content"
+      {...props}
+    />
   );
-};
+}

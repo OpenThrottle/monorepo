@@ -1,33 +1,20 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarSeparatorProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
+import { Separator } from '../Separator';
 
-export const SidebarSeparator = (
-  props: SidebarSeparatorProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarSeparatorProps = React.ComponentProps<typeof Separator>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarSeparator({
+  className,
+  ...props
+}: SidebarSeparatorProps) {
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="SidebarSeparator"
-    >
-      <h2>SidebarSeparator</h2>
-    </div>
+    <Separator
+      className={cn('mx-2 w-auto bg-sidebar-border', className)}
+      data-sidebar="separator"
+      data-slot="sidebar-separator"
+      {...props}
+    />
   );
-};
+}

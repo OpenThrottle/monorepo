@@ -1,33 +1,27 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarMenuBadgeProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarMenuBadge = (
-  props: SidebarMenuBadgeProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarMenuBadgeProps = React.ComponentProps<'div'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarMenuBadge({
+  className,
+  ...props
+}: SidebarMenuBadgeProps) {
   return (
     <div
-      className={classnames('p-4', className)}
-      data-testid="SidebarMenuBadge"
-    >
-      <h2>SidebarMenuBadge</h2>
-    </div>
+      className={cn(
+        'pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-medium text-sidebar-foreground tabular-nums select-none',
+        'peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[active=true]/menu-button:text-sidebar-accent-foreground',
+        'peer-data-[size=sm]/menu-button:top-1',
+        'peer-data-[size=default]/menu-button:top-1.5',
+        'peer-data-[size=lg]/menu-button:top-2.5',
+        'group-data-[collapsible=icon]:hidden',
+        className,
+      )}
+      data-sidebar="menu-badge"
+      data-slot="sidebar-menu-badge"
+      {...props}
+    />
   );
-};
+}

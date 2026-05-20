@@ -1,28 +1,12 @@
-import * as React from 'react';
-import classnames from 'classnames';
+'use client';
 
-export interface TooltipProps {
-  readonly className?: string;
+import type { ComponentPropsWithoutRef } from 'react';
+import { Tooltip as TooltipPrimitive } from 'radix-ui';
+
+export type TooltipProps = ComponentPropsWithoutRef<
+  typeof TooltipPrimitive.Root
+>;
+
+export function Tooltip(props: TooltipProps) {
+  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
-
-export const Tooltip = (props: TooltipProps): React.ReactElement => {
-  const { className } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <div className={classnames('p-4', className)} data-testid="Tooltip">
-      <h2>Tooltip</h2>
-    </div>
-  );
-};

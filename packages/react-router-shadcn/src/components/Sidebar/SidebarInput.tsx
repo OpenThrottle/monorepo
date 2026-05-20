@@ -1,28 +1,17 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarInputProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
+import { Input } from '../Input';
 
-export const SidebarInput = (props: SidebarInputProps): React.ReactElement => {
-  const { className } = props;
+export type SidebarInputProps = React.ComponentProps<typeof Input>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarInput({ className, ...props }: SidebarInputProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarInput">
-      <h2>SidebarInput</h2>
-    </div>
+    <Input
+      className={cn('h-8 w-full bg-background shadow-none', className)}
+      data-sidebar="input"
+      data-slot="sidebar-input"
+      {...props}
+    />
   );
-};
+}

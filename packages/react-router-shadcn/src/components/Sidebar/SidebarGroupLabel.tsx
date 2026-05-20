@@ -1,33 +1,29 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { Slot } from 'radix-ui';
 
-export interface SidebarGroupLabelProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarGroupLabel = (
-  props: SidebarGroupLabelProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarGroupLabelProps = React.ComponentProps<'div'> & {
+  readonly asChild?: boolean;
+};
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+export function SidebarGroupLabel({
+  className,
+  asChild = false,
+  ...props
+}: SidebarGroupLabelProps) {
+  const Comp = asChild ? Slot.Root : 'div';
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="SidebarGroupLabel"
-    >
-      <h2>SidebarGroupLabel</h2>
-    </div>
+    <Comp
+      className={cn(
+        'flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+        'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0',
+        className,
+      )}
+      data-sidebar="group-label"
+      data-slot="sidebar-group-label"
+      {...props}
+    />
   );
-};
+}

@@ -1,33 +1,63 @@
+'use client';
+
 import * as React from 'react';
-import classnames from 'classnames';
+import { Slot } from 'radix-ui';
+import type { VariantProps } from 'class-variance-authority';
 
-export interface SidebarMenuButtonProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';
+import { sidebarMenuButtonVariants } from './sidebarMenuButtonVariants';
+import { useSidebar } from './useSidebar';
 
-export const SidebarMenuButton = (
-  props: SidebarMenuButtonProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarMenuButtonProps = React.ComponentProps<'button'> & {
+  readonly asChild?: boolean;
+  readonly isActive?: boolean;
+  readonly tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+} & VariantProps<typeof sidebarMenuButtonVariants>;
 
-  // Hooks
+export function SidebarMenuButton({
+  asChild = false,
+  isActive = false,
+  variant = 'default',
+  size = 'default',
+  tooltip,
+  className,
+  ...props
+}: SidebarMenuButtonProps) {
+  const Comp = asChild ? Slot.Root : 'button';
+  const { isMobile, state } = useSidebar();
 
-  // Setup
+  const button = (
+    <Comp
+      className={cn(sidebarMenuButtonVariants({ size, variant }), className)}
+      data-active={isActive}
+      data-sidebar="menu-button"
+      data-size={size}
+      data-slot="sidebar-menu-button"
+      {...props}
+    />
+  );
 
-  // Handlers
+  if (!tooltip) {
+    return button;
+  }
 
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+  const tooltipProps =
+    typeof tooltip === 'string'
+      ? {
+          children: tooltip,
+        }
+      : tooltip;
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="SidebarMenuButton"
-    >
-      <h2>SidebarMenuButton</h2>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild={true}>{button}</TooltipTrigger>
+      <TooltipContent
+        align="center"
+        hidden={state !== 'collapsed' || isMobile}
+        side="right"
+        {...tooltipProps}
+      />
+    </Tooltip>
   );
-};
+}

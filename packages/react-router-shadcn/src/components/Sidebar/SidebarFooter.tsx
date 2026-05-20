@@ -1,30 +1,16 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarFooterProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarFooter = (
-  props: SidebarFooterProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarFooterProps = React.ComponentProps<'div'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarFooter({ className, ...props }: SidebarFooterProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarFooter">
-      <h2>SidebarFooter</h2>
-    </div>
+    <div
+      className={cn('flex flex-col gap-2 p-2', className)}
+      data-sidebar="footer"
+      data-slot="sidebar-footer"
+      {...props}
+    />
   );
-};
+}

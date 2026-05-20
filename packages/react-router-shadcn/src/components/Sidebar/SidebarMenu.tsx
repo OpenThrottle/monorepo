@@ -1,28 +1,16 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarMenuProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarMenu = (props: SidebarMenuProps): React.ReactElement => {
-  const { className } = props;
+export type SidebarMenuProps = React.ComponentProps<'ul'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarMenu({ className, ...props }: SidebarMenuProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarMenu">
-      <h2>SidebarMenu</h2>
-    </div>
+    <ul
+      className={cn('flex w-full min-w-0 flex-col gap-1', className)}
+      data-sidebar="menu"
+      data-slot="sidebar-menu"
+      {...props}
+    />
   );
-};
+}

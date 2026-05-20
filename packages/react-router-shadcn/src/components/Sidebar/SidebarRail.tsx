@@ -1,28 +1,33 @@
+'use client';
+
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarRailProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
+import { useSidebar } from './useSidebar';
 
-export const SidebarRail = (props: SidebarRailProps): React.ReactElement => {
-  const { className } = props;
+export type SidebarRailProps = React.ComponentProps<'button'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+export function SidebarRail({ className, ...props }: SidebarRailProps) {
+  const { toggleSidebar } = useSidebar();
 
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarRail">
-      <h2>SidebarRail</h2>
-    </div>
+    <button
+      aria-label="Toggle Sidebar"
+      className={cn(
+        'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex',
+        'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
+        '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
+        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar',
+        '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2',
+        '[[data-side=right][data-collapsible=offcanvas]_&]:-left-2',
+        className,
+      )}
+      data-sidebar="rail"
+      data-slot="sidebar-rail"
+      onClick={toggleSidebar}
+      tabIndex={-1}
+      title="Toggle Sidebar"
+      {...props}
+    />
   );
-};
+}

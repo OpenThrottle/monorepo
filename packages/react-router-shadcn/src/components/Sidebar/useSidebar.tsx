@@ -1,28 +1,15 @@
+'use client';
+
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface useSidebarProps {
-  readonly className?: string;
+import { SidebarContext } from './sidebar-context';
+import type { SidebarContextProps } from './sidebar-context';
+
+export function useSidebar(): SidebarContextProps {
+  const context = React.useContext(SidebarContext);
+  if (!context) {
+    throw new Error('useSidebar must be used within a SidebarProvider.');
+  }
+
+  return context;
 }
-
-export const useSidebar = (props: useSidebarProps): React.ReactElement => {
-  const { className } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <div className={classnames('p-4', className)} data-testid="useSidebar">
-      <h2>useSidebar</h2>
-    </div>
-  );
-};

@@ -1,33 +1,30 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { Slot } from 'radix-ui';
 
-export interface SidebarGroupActionProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarGroupAction = (
-  props: SidebarGroupActionProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarGroupActionProps = React.ComponentProps<'button'> & {
+  readonly asChild?: boolean;
+};
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+export function SidebarGroupAction({
+  className,
+  asChild = false,
+  ...props
+}: SidebarGroupActionProps) {
+  const Comp = asChild ? Slot.Root : 'button';
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="SidebarGroupAction"
-    >
-      <h2>SidebarGroupAction</h2>
-    </div>
+    <Comp
+      className={cn(
+        'absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+        'after:absolute after:-inset-2 md:after:hidden',
+        'group-data-[collapsible=icon]:hidden',
+        className,
+      )}
+      data-sidebar="group-action"
+      data-slot="sidebar-group-action"
+      {...props}
+    />
   );
-};
+}

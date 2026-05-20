@@ -1,28 +1,16 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarGroupProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarGroup = (props: SidebarGroupProps): React.ReactElement => {
-  const { className } = props;
+export type SidebarGroupProps = React.ComponentProps<'div'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarGroup({ className, ...props }: SidebarGroupProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarGroup">
-      <h2>SidebarGroup</h2>
-    </div>
+    <div
+      className={cn('relative flex w-full min-w-0 flex-col p-2', className)}
+      data-sidebar="group"
+      data-slot="sidebar-group"
+      {...props}
+    />
   );
-};
+}

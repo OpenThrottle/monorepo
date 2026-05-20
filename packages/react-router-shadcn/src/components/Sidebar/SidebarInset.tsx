@@ -1,28 +1,19 @@
 import * as React from 'react';
-import classnames from 'classnames';
 
-export interface SidebarInsetProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
 
-export const SidebarInset = (props: SidebarInsetProps): React.ReactElement => {
-  const { className } = props;
+export type SidebarInsetProps = React.ComponentProps<'main'>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function SidebarInset({ className, ...props }: SidebarInsetProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarInset">
-      <h2>SidebarInset</h2>
-    </div>
+    <main
+      className={cn(
+        'relative flex w-full flex-1 flex-col bg-background',
+        'md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
+        className,
+      )}
+      data-slot="sidebar-inset"
+      {...props}
+    />
   );
-};
+}

@@ -1,30 +1,21 @@
-import * as React from 'react';
-import classnames from 'classnames';
+'use client';
 
-export interface TooltipProviderProps {
-  readonly className?: string;
-}
+import type { ComponentPropsWithoutRef } from 'react';
+import { Tooltip as TooltipPrimitive } from 'radix-ui';
 
-export const TooltipProvider = (
-  props: TooltipProviderProps,
-): React.ReactElement => {
-  const { className } = props;
+export type TooltipProviderProps = ComponentPropsWithoutRef<
+  typeof TooltipPrimitive.Provider
+>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function TooltipProvider({
+  delayDuration = 0,
+  ...props
+}: TooltipProviderProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="TooltipProvider">
-      <h2>TooltipProvider</h2>
-    </div>
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delayDuration={delayDuration}
+      {...props}
+    />
   );
-};
+}

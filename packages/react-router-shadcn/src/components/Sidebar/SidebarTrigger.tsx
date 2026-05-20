@@ -1,30 +1,36 @@
+'use client';
+
 import * as React from 'react';
-import classnames from 'classnames';
+import { PanelLeftIcon } from 'lucide-react';
 
-export interface SidebarTriggerProps {
-  readonly className?: string;
-}
+import { cn } from '../../utils/cn';
+import { Button } from '../Button';
+import { useSidebar } from './useSidebar';
 
-export const SidebarTrigger = (
-  props: SidebarTriggerProps,
-): React.ReactElement => {
-  const { className } = props;
+export type SidebarTriggerProps = React.ComponentProps<typeof Button>;
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+export function SidebarTrigger({
+  className,
+  onClick,
+  ...props
+}: SidebarTriggerProps) {
+  const { toggleSidebar } = useSidebar();
 
   return (
-    <div className={classnames('p-4', className)} data-testid="SidebarTrigger">
-      <h2>SidebarTrigger</h2>
-    </div>
+    <Button
+      className={cn('size-7', className)}
+      data-sidebar="trigger"
+      data-slot="sidebar-trigger"
+      onClick={(event) => {
+        onClick?.(event);
+        toggleSidebar();
+      }}
+      size="icon"
+      variant="ghost"
+      {...props}
+    >
+      <PanelLeftIcon />
+      <span className="sr-only">Toggle Sidebar</span>
+    </Button>
   );
-};
+}
