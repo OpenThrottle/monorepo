@@ -13,7 +13,7 @@ import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 
-interface PlansTableProps {
+export interface PlansTableProps {
   className?: string;
   plans: PlanCardFragment[];
   /** When set, status pills link to filter by that status (e.g. ?status=PENDING). Key = status value. */

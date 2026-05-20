@@ -2,13 +2,13 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
-interface PlansStatsProps {
-  readonly className?: string;
-  readonly countInProgress: number;
-  readonly countCompleted: number;
-  readonly totalCount: number;
-  readonly totalCountAll: number;
-  readonly totalCountQueued: number;
+export interface PlansStatsProps {
+  className?: string;
+  countInProgress: number;
+  countCompleted: number;
+  totalCount: number;
+  totalCountAll: number;
+  totalCountQueued: number;
 }
 
 export const PlansStats = (props: PlansStatsProps) => {

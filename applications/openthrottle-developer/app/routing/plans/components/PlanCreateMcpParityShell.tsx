@@ -4,15 +4,27 @@ import classnames from 'classnames';
 /**
  * @description Layout wrapper for the developer-app plan create flow aligned with the MCP `create_plan` contract (server-side defaults and embeddings).
  */
-interface PlanCreateMcpParityShellProps {
-  readonly children?: React.ReactNode;
-  readonly className?: string;
+export interface PlanCreateMcpParityShellProps {
+  children?: React.ReactNode;
+  className?: string;
 }
 
 export const PlanCreateMcpParityShell = (
   props: PlanCreateMcpParityShellProps,
-): React.ReactElement => {
+) => {
   const { children, className } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

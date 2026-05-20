@@ -18,7 +18,7 @@ import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSel
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
 import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
-interface PlansToolbarProps {
+export interface PlansToolbarProps {
   assigneeOptions: string[];
   assignees: string[];
   className?: string;
@@ -44,34 +44,17 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     sortOrder,
     statuses,
   } = props;
+
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const searchQuery = searchParams.get('q') ?? '';
-  const searchModeSemantic =
-    searchParams.get('semantic') === '1' ||
-    searchParams.get('semantic') === 'true';
-
-  const [searchInput, setSearchInput] = React.useState(() => searchQuery);
-  const [semanticChecked, setSemanticChecked] = React.useState(
-    () => searchModeSemantic,
+  const [searchInput, setSearchInput] = React.useState(
+    () => searchParams.get('q') ?? '',
   );
-
-  const _baseSearchParams = React.useMemo(() => {
-    const p = new URLSearchParams(searchParams);
-    p.set('page', String(page));
-    p.set('limit', String(limit));
-    p.set('sortBy', sortBy);
-    p.set('sortOrder', sortOrder);
-    p.delete('assignee');
-    for (const a of assignees) {
-      p.append('assignee', a);
-    }
-    p.delete('status');
-    for (const s of statuses) {
-      p.append('status', s);
-    }
-    return p;
-  }, [assignees, limit, page, searchParams, sortBy, sortOrder, statuses]);
+  const [semanticChecked, setSemanticChecked] = React.useState(
+    () =>
+      searchParams.get('semantic') === '1' ||
+      searchParams.get('semantic') === 'true',
+  );
 
   const handleAssigneeChange = React.useCallback(
     (newAssignees: string[]) => {
@@ -127,14 +110,6 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     [applyParams],
   );
 
-  const _onClickStatus =
-    (value: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
-      const { altKey, metaKey, shiftKey } = event;
-      const _isSpecialKey = altKey || metaKey || shiftKey;
-
-      console.log('🧩 🧩 🧩 🧩 event 🧩 🧩', { value });
-    };
-
   const handleSearchSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -158,42 +133,30 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
     [limit, searchParams, searchInput, semanticChecked, setSearchParams],
   );
 
+  // Setup
+  const searchQuery = searchParams.get('q') ?? '';
+  const searchModeSemantic =
+    searchParams.get('semantic') === '1' ||
+    searchParams.get('semantic') === 'true';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     setSearchInput(searchQuery);
     setSemanticChecked(searchModeSemantic);
   }, [searchQuery, searchModeSemantic]);
 
+  // 🔌 Short Circuit
+
   return (
     <div className={classnames('w-full', className)} data-testid="PlansToolbar">
-      <form
-        // className={classnames(
-        //   'flex flex-wrap items-center w-full',
-        //   // 'gap-4',
-        //   '-space-x-px',
-        //   `[&__button]:rounded-none! [&__input]:rounded-none! [&__select]:rounded-none! [&__label]:rounded-none!`,
-        //   `[&__button]:focus:z-10! [&__input]:focus:z-10! [&__select]:focus:z-10! [&__label]:active:z-10!`,
-        // )}
-        onSubmit={handleSearchSubmit}
-        role="search"
-      >
+      <form onSubmit={handleSearchSubmit} role="search">
         <div
-          className={classnames(
-            'flex flex-wrap items-center w-full',
-            'gap-2',
-            // '-space-x-px',
-            // `[&__button]:rounded-none! [&__input]:rounded-none! [&__select]:rounded-none! [&__label]:rounded-none!`,
-            // `[&__button]:focus:z-10! [&__input]:focus:z-10! [&__select]:focus:z-10! [&__label]:active:z-10!`,
-          )}
+          className={classnames('flex flex-wrap items-center w-full', 'gap-2')}
         >
-          {/*
-          <Switch
-            aria-label="Semantic search"
-            checked={semanticChecked}
-            id="plans-toolbar-semantic"
-            onCheckedChange={setSemanticChecked}
-            title="Semantic search"
-          />
-          */}
           <Input
             aria-label="Search plans"
             className="min-w-[100px] w-[170px] border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -237,15 +200,12 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
           </Button>
         </div>
 
-        {/* Alternative to ToggleGroup: compact StatusMultiSelect popover; we may revert to the ToggleGroup below. */}
         <div className="mt-4 flex items-center gap-2">
           <Label>Status:</Label>
           <ToggleGroup
             aria-label="Filter by status"
             className="flex flex-wrap gap-1 items-center"
             data-testid="PlansToolbar-status-toggle"
-            // onClick={onClickStatus}
-            // onChange={(event) => console.log('🧩 🧩 event 🧩 🧩', event)}
             onValueChange={(value) => handleStatusChange(value ?? [])}
             size="xs"
             type="multiple"
@@ -257,7 +217,6 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
                 aria-label={opt.label}
                 data-value={opt.value}
                 key={opt.value}
-                // onClick={onClickStatus(opt.value)}
                 value={opt.value}
               >
                 {opt.label}

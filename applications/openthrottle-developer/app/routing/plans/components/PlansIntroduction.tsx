@@ -2,12 +2,12 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ListChevronsUpDownIcon } from 'lucide-react';
 
-interface PlansIntroductionProps {
-  readonly className?: string;
+export interface PlansIntroductionProps {
+  className?: string;
 }
 
-export const PlansIntroduction = (_props: PlansIntroductionProps) => {
-  // const { className } = props;
+export const PlansIntroduction = (props: PlansIntroductionProps) => {
+  const { className } = props;
 
   // Hooks
 
@@ -22,7 +22,7 @@ export const PlansIntroduction = (_props: PlansIntroductionProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div>
+    <div className={className}>
       <GlobalHeading
         className="mb-4"
         heading="h1"

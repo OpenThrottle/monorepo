@@ -29,38 +29,38 @@ import {
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
-interface PlanToolbarProps {
-  readonly className?: string;
-  readonly planId: string;
+export interface PlanToolbarProps {
+  className?: string;
+  planId: string;
   /**
    * @description Display title for Kill run confirmation (defaults when omitted).
    */
-  readonly planTitle?: string;
-  readonly planStatus?: string;
+  planTitle?: string;
+  planStatus?: string;
   /**
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
    */
-  readonly ralphTuningJson?: string;
+  ralphTuningJson?: string;
   /**
    * @description Optional absolute path to a local project directory for multi-workspace runs.
    * Passed through to the enqueuePlanRun mutation as workingDirectory.
    */
-  readonly workingDirectory?: string;
+  workingDirectory?: string;
   /**
    * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
    */
-  readonly workflowRunBlocked?: boolean;
+  workflowRunBlocked?: boolean;
   /**
    * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
    */
-  readonly workflowRunBlockedReason?: string;
+  workflowRunBlockedReason?: string;
 }
 
 /**
  * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group),
  * and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
  */
-export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
+export const PlanToolbar = (props: PlanToolbarProps) => {
   const {
     className,
     planId,

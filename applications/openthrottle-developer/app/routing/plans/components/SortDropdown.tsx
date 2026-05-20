@@ -12,17 +12,17 @@ import {
   PlansSortOrder,
 } from '~/routing/plans/config/types';
 
-interface SortDropdownProps {
-  readonly onChange: (sortBy: PlansSortBy, sortOrder: PlansSortOrder) => void;
-  readonly sortBy: PlansSortBy;
-  readonly sortOrder: PlansSortOrder;
+export interface SortDropdownProps {
+  onChange: (sortBy: PlansSortBy, sortOrder: PlansSortOrder) => void;
+  sortBy: PlansSortBy;
+  sortOrder: PlansSortOrder;
 }
 
 /**
  * @description Single dropdown to sort plans (combines sortBy and sortOrder). Matches OpenThrottle API SortDropdown: value (sortBy + sortOrder), onChange(sortBy, sortOrder).
  */
-export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
-  const { sortBy, sortOrder, onChange } = props;
+export const SortDropdown = (props: SortDropdownProps) => {
+  const { onChange, sortBy, sortOrder } = props;
 
   // Hooks
 
@@ -67,4 +67,4 @@ export function SortDropdown(props: SortDropdownProps): React.JSX.Element {
       </SelectContent>
     </Select>
   );
-}
+};
