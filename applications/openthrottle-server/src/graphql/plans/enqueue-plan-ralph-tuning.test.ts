@@ -2,10 +2,7 @@ import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
-import {
-  RalphNestedDebugCliGraphQL,
-  type RalphPlanRunTuningInput,
-} from './plan.input';
+import type { RalphPlanRunTuningInput } from './plan.input';
 import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
@@ -22,6 +19,9 @@ const emptyTuningInput = (): RalphPlanRunTuningInput => ({
   prompt: null,
   promptFile: null,
   ralphDebugCli: null,
+  skipWorktreeSetup: null,
+  worktree: null,
+  worktreeBase: null,
 });
 
 describe('parseEnqueueRalphTuning', () => {
@@ -76,13 +76,28 @@ describe('parseEnqueueRalphTuning', () => {
     ).toThrow(/ralph\.iterations/);
   });
 
-  test('maps ralphDebugCli from GraphQL enum', () => {
+  test('maps ralphDebugCli from GraphQL enum to nested debug', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
-        ralphDebugCli: RalphNestedDebugCliGraphQL.debug,
+        ralphDebugCli: 'debug',
       }),
-    ).toEqual({ ralphDebugCli: 'debug' });
+    ).toEqual({ debug: 'debug' });
+  });
+
+  test('parses worktree tuning for nested argv and orchestrator', () => {
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        skipWorktreeSetup: true,
+        worktree: 'target-one',
+        worktreeBase: 'main',
+      }),
+    ).toEqual({
+      skipWorktreeSetup: true,
+      worktree: 'target-one',
+      worktreeBase: 'main',
+    });
   });
 });
 
@@ -173,6 +188,24 @@ describe('buildRunPlanOrchestratorJobData', () => {
       planId: SAMPLE_PLAN_ID,
       runKind: 'orchestrator',
       taskId: SAMPLE_TASK_ID,
+    });
+  });
+
+  test('includes worktree tuning for orchestrator path', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: {
+          ...emptyTuningInput(),
+          worktree: 'target-two',
+          worktreeBase: 'develop',
+        },
+      }),
+    ).toEqual({
+      executionBackend: 'cursor',
+      planId: SAMPLE_PLAN_ID,
+      ralph: { worktree: 'target-two', worktreeBase: 'develop' },
+      runKind: 'orchestrator',
     });
   });
 

@@ -134,6 +134,22 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(ctx.debug).toBe('omit');
   });
 
+  it('maps worktree tuning into orchestrator context', () => {
+    const ctx = buildRalphFlowContextFromPlanRunTuning({
+      mode: 'plan',
+      planId,
+      ralph: {
+        skipWorktreeSetup: true,
+        worktree: 'target-one',
+        worktreeBase: 'main',
+      },
+    });
+
+    expect(ctx.worktree).toBe('target-one');
+    expect(ctx.worktreeBase).toBe('main');
+    expect(ctx.skipWorktreeSetup).toBe(true);
+  });
+
   it('ignores promptFile on tuning (layer-1 argv only; not on RalphFlowContext)', () => {
     const ctx = buildRalphFlowContextFromPlanRunTuning({
       mode: 'plan',

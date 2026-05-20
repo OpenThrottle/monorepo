@@ -25,7 +25,6 @@ import {
   EnqueuePlanRunInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
-  RalphNestedDebugCliGraphQL,
   SetPlanStatusInput,
   UpdatePlanInput,
 } from './plan.input';
@@ -571,7 +570,10 @@ describe('PlansResolver', () => {
           project: 'applications/openthrottle-server',
           prompt: null,
           promptFile: null,
-          ralphDebugCli: RalphNestedDebugCliGraphQL.verbose,
+          ralphDebugCli: 'verbose',
+          skipWorktreeSetup: null,
+          worktree: 'target-one',
+          worktreeBase: null,
         },
       });
 
@@ -582,10 +584,11 @@ describe('PlansResolver', () => {
           planId: mockPlan.id,
           ralph: expect.objectContaining({
             backend: 'cursor',
+            debug: 'verbose',
             iterationTimeoutSeconds: 120,
             iterations: 5,
             project: 'applications/openthrottle-server',
-            ralphDebugCli: 'verbose',
+            worktree: 'target-one',
           }),
         }),
         { priority: 10 },

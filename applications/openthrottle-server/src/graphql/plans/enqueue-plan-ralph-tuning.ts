@@ -172,7 +172,7 @@ export const ralphTuningForChildJob = (
  * @description Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
  * @throws Error when values are out of range or backend is unknown.
  */
-const parseEnqueueRalphTuning = (
+export const parseEnqueueRalphTuning = (
   input: RalphPlanRunTuningInput | null | undefined,
 ): RalphNestedRunTuningInput | undefined => {
   if (input == null) return undefined;
@@ -235,7 +235,7 @@ const parseEnqueueRalphTuning = (
     ...(project !== undefined ? { project } : {}),
     ...(prompt !== undefined ? { prompt } : {}),
     ...(promptFile !== undefined ? { promptFile } : {}),
-    ...(ralphDebugCli !== undefined ? { ralphDebugCli } : {}),
+    ...(ralphDebugCli !== undefined ? { debug: ralphDebugCli } : {}),
     ...(worktree !== undefined ? { worktree } : {}),
     ...(worktreeBase !== undefined ? { worktreeBase } : {}),
     ...(input.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),
