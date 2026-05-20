@@ -16,9 +16,9 @@ import {
   type RepoSkillEntry,
 } from '~/routing/agents/data/repo-skills-registry';
 
-interface AgentsSkillsRegistryProps {
-  readonly className?: string;
-  readonly entries?: ReadonlyArray<RepoSkillEntry>;
+export interface AgentsSkillsRegistryProps {
+  className?: string;
+  entries?: ReadonlyArray<RepoSkillEntry>;
 }
 
 function filterEntries(
@@ -38,8 +38,8 @@ function filterEntries(
 }
 
 function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
-  readonly agents: RepoSkillEntry[];
-  readonly cursor: RepoSkillEntry[];
+  agents: RepoSkillEntry[];
+  cursor: RepoSkillEntry[];
 } {
   const agents: RepoSkillEntry[] = [];
   const cursor: RepoSkillEntry[] = [];
@@ -58,10 +58,11 @@ function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
 /**
  * @description Maps repo `.agents/skills` and `.cursor/skills` layouts to GitHub links and copy-friendly paths for debugging misaligned skill picks.
  */
-export function AgentsSkillsRegistry(
-  props: AgentsSkillsRegistryProps,
-): React.ReactElement {
+export const AgentsSkillsRegistry = (props: AgentsSkillsRegistryProps) => {
   const { className, entries = [] } = props;
+
+  // Hooks
+
   const [filterQuery, setFilterQuery] = React.useState('');
 
   const filtered = React.useMemo(
@@ -69,12 +70,16 @@ export function AgentsSkillsRegistry(
     [entries, filterQuery],
   );
 
-  const { agents, cursor } = groupByLayout(filtered);
-
   const layoutCounts = React.useMemo(
     () => getRepoSkillsRegistryCounts(entries),
     [entries],
   );
+
+  // Setup
+
+  const { agents, cursor } = groupByLayout(filtered);
+
+  // Handlers
 
   const handleCopyPath = async (path: string): Promise<void> => {
     try {
@@ -126,6 +131,12 @@ export function AgentsSkillsRegistry(
       ))}
     </ul>
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div className={className ? `space-y-6 ${className}` : 'space-y-6'}>
@@ -214,4 +225,4 @@ export function AgentsSkillsRegistry(
       </section>
     </div>
   );
-}
+};

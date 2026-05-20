@@ -9,11 +9,27 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { BrainCircuitIcon, BrainIcon, FileChartColumn } from 'lucide-react';
 
+export interface AgentsSectionQuickLinksProps {}
+
 /**
  * @deprecated Temporarily removed from skills/prompts index routes; restore when re-enabling commented JSX.
  * @description Cross-links the Agents sidebar routes (Prompts, Skills, Usage) with one-line guidance for analytics gaps, prompt versioning, and repo skill paths.
  */
-export function AgentsSectionQuickLinks(): React.ReactElement {
+export const AgentsSectionQuickLinks = (
+  _props: AgentsSectionQuickLinksProps,
+) => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <Card className="mb-6 bg-transparent">
       <CardHeader className="pb-2">
@@ -80,4 +96,4 @@ export function AgentsSectionQuickLinks(): React.ReactElement {
       </CardContent>
     </Card>
   );
-}
+};
