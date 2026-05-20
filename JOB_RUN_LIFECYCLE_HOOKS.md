@@ -79,35 +79,64 @@ sequenceDiagram
   end
 ```
 
-## Proposed hook configuration (draft)
+## Hook configuration model (canonical)
 
-Discriminated union per hook entry (stored on plan, serialized into job data):
+**Source of truth:** `@tools/workflows` — `tools/workflows/src/types/job-run-lifecycle-hooks.ts` and `job-run-lifecycle-hooks-validation.ts` (exported from package root).
 
-```ts
-type JobRunHookPhase = 'before_run' | 'after_run';
+### Discriminated union (`JobRunHookEntry`)
 
-type JobRunHookKind = 'prompt_profile' | 'skill';
+| Variant | `kind`           | Target fields                                                                 |
+| ------- | ---------------- | ----------------------------------------------------------------------------- |
+| Named   | `prompt_profile` | `promptDelivery: 'named'`, `prompt` (e.g. `/agents/ralph`) — layer-1 `--prompt` |
+| File    | `prompt_profile` | `promptDelivery: 'file'`, `promptFile` (repo-relative path) — layer-1 `--prompt-file` |
+| Skill   | `skill`          | `skillPath` (repo-relative `SKILL.md` under `.agents/skills/` or `.cursor/skills/`) |
 
-type JobRunHookOnFailure = 'block' | 'warn' | 'ignore';
+Shared on every entry:
 
-interface JobRunHookEntry {
-  readonly phase: JobRunHookPhase;
-  readonly kind: JobRunHookKind;
-  /** Named profile e.g. `/agents/ralph` or repo-relative skill path e.g. `.agents/skills/foo/SKILL.md` */
-  readonly target: string;
-  readonly onFailure?: JobRunHookOnFailure; // default: block for before_run, warn for after_run
-  readonly timeoutSeconds?: number;
-  readonly order?: number; // stable sort within same phase
-}
-```
+| Field             | Type                                      | Notes                                                                 |
+| ----------------- | ----------------------------------------- | --------------------------------------------------------------------- |
+| `phase`           | `before_run` \| `after_run`               | Required                                                              |
+| `onFailure`       | `block` \| `warn` \| `ignore` (optional)  | Default: `block` (before_run), `warn` (after_run)                     |
+| `timeoutSeconds`  | positive int (optional)                   | Default **600**; max **604800** (7 days)                              |
+| `order`           | non-negative int (optional)               | Sort within phase; default **0**                                      |
+| `conditions`      | object (optional)                         | See below                                                             |
 
-**Open questions** (resolve in OT task _Define hook configuration model_):
+**Conditions** (`JobRunHookConditions`):
 
-- [ ] Single agent iteration per hook vs full multi-turn session?
-- [ ] Pass plan/task context into hook prompt (plan title, task list summary)?
-- [ ] Share execution backend (`cursor` / `claude`) with main run or independent per hook?
-- [ ] Max hooks per phase / max total wall time for all hooks?
-- [ ] Idempotency: skip after_run if job was cancelled before main run started?
+- `runKinds?: ('spawn' | 'orchestrator')[]` — omit = run on both job paths
+- `whenMainRunSucceeded?: boolean` — **after_run only**; omit = any terminal outcome; `true` = main run succeeded; `false` = failed or blocked before start
+
+**Limits:** max **10** hooks per phase, **20** total per plan.
+
+**Wire / legacy parsing:** `parseJobRunHookEntry` accepts canonical fields or draft `target` (named prompt or skill path). File prompts require `promptDelivery: 'file'` or `promptFile`.
+
+**Enqueue payload (next task):** add `jobRunHooks?: JobRunHooksConfig` sibling to `ralph` on `RunPlanJobData`, copied from plan at enqueue.
+
+### Alignment with `RalphNestedRunTuningInput`
+
+| Main run (layer 1–3)     | Hook `prompt_profile`                                      |
+| ------------------------ | ---------------------------------------------------------- |
+| `prompt` / `--prompt`    | `promptDelivery: 'named'` + `prompt`                       |
+| `promptFile` / `--prompt-file` | `promptDelivery: 'file'` + `promptFile`              |
+| `backend`, `model`, …    | Optional `JobRunHookRunOptions` per hook (phase 1: inherit main run unless set) |
+
+Hooks are **not** argv flags on nested `workflow-ralph`; the processor runs them in-process (see _Invoke prompt profile vs repo skill_).
+
+### Resolved decisions (this task)
+
+| Topic                         | Decision                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Max hooks                     | 10 / phase, 20 total                                                     |
+| Default timeout               | 600s per hook                                                            |
+| `after_run` when main blocked | `whenMainRunSucceeded: false` runs; hooks with no condition still run    |
+| `target` field                | Supported only in wire JSON for migration; canonical types use explicit fields |
+
+### Open questions (implementation tasks)
+
+- [ ] Single agent iteration per hook vs full multi-turn session? (_Invoke prompt profile vs repo skill_)
+- [ ] Inject plan/task summary into hook prompt? (default: yes — same injection as Ralph layer-1)
+- [ ] Per-hook `JobRunHookRunOptions.backend` vs always inherit main run?
+- [ ] Cap total wall time for all hooks in one job?
 
 ## Invocation (draft)
 
@@ -155,7 +184,7 @@ Reuse `JobRunHookEntry` with additional trigger types (not `before_run` / `after
 | Task                                 | ID                                     |
 | ------------------------------------ | -------------------------------------- |
 | Scaffold this doc                    | `f9220e7e-b418-4397-a6e1-9077f4462b74` |
-| Define hook configuration model      | `9b475ece-83c3-47c1-9688-f10c2fc76970` |
+| Define hook configuration model      | `9b475ece-83c3-47c1-9688-f10c2fc76970` ✓ |
 | Persist hooks on plan (GraphQL + DB) | `27531221-c6e9-4b5c-b0d0-f7a654a720de` |
 | Execute before_run hooks             | `1d469579-5412-4b35-85c8-97d44767aa95` |
 | Execute after_run hooks              | `4c05a32b-fe85-499e-a409-efe09f537524` |
@@ -177,3 +206,4 @@ Reuse `JobRunHookEntry` with additional trigger types (not `before_run` / `after
 | Date       | Change                                                         |
 | ---------- | -------------------------------------------------------------- |
 | 2026-05-20 | Initial scaffold (plan `0bd23aba-ace8-464c-ae77-363356451b3a`) |
+| 2026-05-20 | Canonical hook types + validation in `@tools/workflows` (task `9b475ece-83c3-47c1-9688-f10c2fc76970`) |
