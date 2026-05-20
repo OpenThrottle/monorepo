@@ -24,39 +24,38 @@ import { SettingsBuildTools } from '~/routing/settings/components/SettingsBuildT
 import { SettingsStorage } from '~/routing/settings/components/SettingsStorage';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 
-type SettingsDebugGraphQLResult =
+export type SettingsDebugGraphQLResult =
   | {
-      readonly latencyMs: number;
-      readonly serverHealth: ServerHealthObject;
-      readonly status: 'ok';
+      latencyMs: number;
+      serverHealth: ServerHealthObject;
+      status: 'ok';
     }
   | {
-      readonly error: string;
-      readonly latencyMs: number;
-      readonly status: 'error';
+      error: string;
+      latencyMs: number;
+      status: 'error';
     };
 
-interface SettingsDebugPanelProps {
-  readonly envSnapshot: Record<string, string>;
-  readonly graphQL: SettingsDebugGraphQLResult;
+export interface SettingsDebugPanelProps {
+  envSnapshot: Record<string, string>;
+  graphQL: SettingsDebugGraphQLResult;
 }
 
-export function SettingsDebugPanel({
-  envSnapshot,
-  graphQL,
-}: SettingsDebugPanelProps): React.ReactElement {
-  type TTemporary = {
-    readonly key: string;
-    readonly preview: string;
-  };
+type StorageEntryRow = {
+  key: string;
+  preview: string;
+};
+
+export const SettingsDebugPanel = (props: SettingsDebugPanelProps) => {
+  const { envSnapshot, graphQL } = props;
 
   // Hooks
   const { revalidate, state } = useRevalidator();
-  const [_localEntries, setLocalEntries] = React.useState<
-    readonly TTemporary[]
-  >([]);
+  const [_localEntries, setLocalEntries] = React.useState<StorageEntryRow[]>(
+    [],
+  );
   const [_sessionEntries, setSessionEntries] = React.useState<
-    readonly TTemporary[]
+    StorageEntryRow[]
   >([]);
 
   // Setup
@@ -65,6 +64,10 @@ export function SettingsDebugPanel({
   const _handleRefreshStorage = (): void => {
     setLocalEntries(readStorageEntries(globalThis.localStorage));
     setSessionEntries(readStorageEntries(globalThis.sessionStorage));
+  };
+
+  const handleRecheckGraphQL = (): void => {
+    revalidate();
   };
 
   // Markup
@@ -164,26 +167,34 @@ export function SettingsDebugPanel({
 
       <SettingsGraphQLHealthCard
         graphQL={graphQL}
-        onRecheck={() => {
-          revalidate();
-        }}
+        onRecheck={handleRecheckGraphQL}
         revalidateState={state}
       />
     </div>
   );
+};
+
+export interface SettingsGraphQLHealthCardProps {
+  graphQL: SettingsDebugGraphQLResult;
+  onRecheck: () => void;
+  revalidateState: 'idle' | 'loading';
 }
 
-interface SettingsGraphQLHealthCardProps {
-  readonly graphQL: SettingsDebugGraphQLResult;
-  readonly onRecheck: () => void;
-  readonly revalidateState: 'idle' | 'loading';
-}
+const SettingsGraphQLHealthCard = (props: SettingsGraphQLHealthCardProps) => {
+  const { graphQL, onRecheck, revalidateState } = props;
 
-function SettingsGraphQLHealthCard({
-  graphQL,
-  onRecheck,
-  revalidateState,
-}: SettingsGraphQLHealthCardProps): React.ReactElement {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <Card id="graphql-endpoint-health">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
@@ -230,4 +241,4 @@ function SettingsGraphQLHealthCard({
       </CardContent>
     </Card>
   );
-}
+};

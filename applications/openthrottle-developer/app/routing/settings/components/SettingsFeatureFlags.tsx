@@ -4,8 +4,8 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FlagIcon } from 'lucide-react';
 import { Card } from '@openthrottle/react-router-shadcn';
 
-interface SettingsFeatureFlagsProps {
-  readonly className?: string;
+export interface SettingsFeatureFlagsProps {
+  className?: string;
 }
 
 export const SettingsFeatureFlags = (props: SettingsFeatureFlagsProps) => {
@@ -41,15 +41,6 @@ export const SettingsFeatureFlags = (props: SettingsFeatureFlagsProps) => {
             </code>
           </p>
         ))}
-
-        {/* <p>
-          <span className="font-medium text-foreground">
-            FEATURE_BETA_PREVIEW
-          </span>{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-            {FEATURE_FLAGS.FEATURE_BETA_PREVIEW ? 'true' : 'false'}
-          </code>
-        </p> */}
 
         <p>
           <span className="font-medium">REACT_ROUTER_DEV_TOOLS</span> is read

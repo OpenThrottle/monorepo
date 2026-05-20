@@ -30,22 +30,17 @@ import {
 } from '~/routing/settings/utils/settings.support';
 import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
 
-interface SettingsLogsPanelProps {}
+export interface SettingsLogsPanelProps {}
 
-export function SettingsLogsPanel(
-  _props: SettingsLogsPanelProps,
-): React.ReactElement {
-  // const { className } = props;
-
+export const SettingsLogsPanel = (_props: SettingsLogsPanelProps) => {
   // Hooks
   const logPreRef = React.useRef<HTMLPreElement>(null);
   const searchFieldId = React.useId();
   const [isClient, setIsClient] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-
-  const [levelSelection, setLevelSelection] = React.useState<
-    readonly ClientLogLevel[]
-  >([...CLIENT_LOG_LEVELS]);
+  const [levelSelection, setLevelSelection] = React.useState<ClientLogLevel[]>([
+    ...CLIENT_LOG_LEVELS,
+  ]);
 
   const entries = React.useSyncExternalStore(
     subscribeClientLogSink,
@@ -85,20 +80,10 @@ export function SettingsLogsPanel(
           ? 'no-match'
           : 'none';
 
-  // Handlers
-
   const logText = React.useMemo(
     () => filteredEntries.map(formatEntryLine).join('\n'),
     [filteredEntries],
   );
-
-  React.useEffect(() => {
-    const el = logPreRef.current;
-    if (!el) {
-      return;
-    }
-    el.scrollTop = el.scrollHeight;
-  }, [filteredEntries]);
 
   // Handlers
   const handleCopyLines = async (): Promise<void> => {
@@ -152,9 +137,20 @@ export function SettingsLogsPanel(
     return logText;
   };
 
+  // Life Cycle
+  React.useEffect(() => {
+    const el = logPreRef.current;
+    if (!el) {
+      return;
+    }
+    el.scrollTop = el.scrollHeight;
+  }, [filteredEntries]);
+
   React.useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // 🔌 Short Circuit
 
   return (
     <>
@@ -316,4 +312,4 @@ export function SettingsLogsPanel(
       </Card>
     </>
   );
-}
+};

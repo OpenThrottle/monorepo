@@ -1,13 +1,11 @@
 import * as React from 'react';
 import { OpenThrottleModal } from '@openthrottle/react-router-ui';
 
-interface SkillsOverviewModalProps {
-  readonly className?: string;
+export interface SkillsOverviewModalProps {
+  className?: string;
 }
 
 export const SkillsOverviewModal = (_props: SkillsOverviewModalProps) => {
-  // const { className } = props;
-
   // Hooks
 
   // Setup

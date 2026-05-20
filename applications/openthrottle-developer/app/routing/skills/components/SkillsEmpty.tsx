@@ -10,7 +10,7 @@ import {
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
 
-interface SkillsEmptyProps {
+export interface SkillsEmptyProps {
   className?: string;
   search?: string;
 }

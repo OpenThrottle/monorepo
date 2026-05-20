@@ -17,21 +17,37 @@ import type {
 
 type ProjectOption = GetWorkspaceSettingsQuery['projects'][number];
 
-interface SettingsWorkspaceRepositoriesSectionProps {
-  readonly actionError?: string | null;
-  readonly className?: string;
-  readonly localRepositories: readonly WorkspaceLocalRepositoryFieldsFragment[];
-  readonly projects: readonly ProjectOption[];
+export interface SettingsWorkspaceRepositoriesSectionProps {
+  actionError?: string | null;
+  className?: string;
+  localRepositories: WorkspaceLocalRepositoryFieldsFragment[];
+  projects: ProjectOption[];
 }
 
 const NONE_PROJECT_VALUE = '__none__';
 
-const ProjectSelect = (props: {
-  readonly currentProjectId: string | null;
-  readonly name: string;
-  readonly projects: readonly ProjectOption[];
-}): React.ReactElement => {
+export interface WorkspaceRepositoriesProjectSelectProps {
+  currentProjectId: string | null;
+  name: string;
+  projects: ProjectOption[];
+}
+
+const WorkspaceRepositoriesProjectSelect = (
+  props: WorkspaceRepositoriesProjectSelectProps,
+) => {
   const { currentProjectId, name, projects } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <select
@@ -49,12 +65,18 @@ const ProjectSelect = (props: {
   );
 };
 
-const LocalRepositoryRow = (props: {
-  readonly actionError?: string | null;
-  readonly projects: readonly ProjectOption[];
-  readonly repo: WorkspaceLocalRepositoryFieldsFragment;
-}): React.ReactElement => {
+export interface WorkspaceRepositoriesLocalRepositoryRowProps {
+  actionError?: string | null;
+  projects: ProjectOption[];
+  repo: WorkspaceLocalRepositoryFieldsFragment;
+}
+
+const WorkspaceRepositoriesLocalRepositoryRow = (
+  props: WorkspaceRepositoriesLocalRepositoryRowProps,
+) => {
   const { actionError, projects, repo } = props;
+
+  // Hooks
   const navigation = useNavigation();
   const isUpdating =
     navigation.state === 'submitting' &&
@@ -64,6 +86,16 @@ const LocalRepositoryRow = (props: {
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'deleteRepo' &&
     navigation.formData?.get('id') === repo.id;
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className="border-dashed" data-testid={`workspace-repo-${repo.id}`}>
@@ -92,7 +124,7 @@ const LocalRepositoryRow = (props: {
 
           <div className="space-y-2">
             <Label htmlFor={`repo-project-${repo.id}`}>Linked project</Label>
-            <ProjectSelect
+            <WorkspaceRepositoriesProjectSelect
               currentProjectId={repo.projectId ?? null}
               name="projectId"
               projects={projects}
@@ -126,12 +158,24 @@ const LocalRepositoryRow = (props: {
 
 export const SettingsWorkspaceRepositoriesSection = (
   props: SettingsWorkspaceRepositoriesSectionProps,
-): React.ReactElement => {
+) => {
   const { actionError, className, localRepositories, projects } = props;
+
+  // Hooks
   const navigation = useNavigation();
   const isCreating =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'createRepo';
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <section
@@ -176,7 +220,7 @@ export const SettingsWorkspaceRepositoriesSection = (
               <Label htmlFor="new-repo-project">
                 Linked project (optional)
               </Label>
-              <ProjectSelect
+              <WorkspaceRepositoriesProjectSelect
                 currentProjectId={null}
                 name="projectId"
                 projects={projects}
@@ -204,7 +248,7 @@ export const SettingsWorkspaceRepositoriesSection = (
         <ul className="space-y-4">
           {localRepositories.map((repo) => (
             <li key={repo.id}>
-              <LocalRepositoryRow
+              <WorkspaceRepositoriesLocalRepositoryRow
                 actionError={actionError}
                 projects={projects}
                 repo={repo}

@@ -6,19 +6,6 @@ import classnames from 'classnames';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 
-// function formatPlansTasksSummary(project: ProjectCardFragment): string {
-//   const planCount = project.plans?.length ?? 0;
-//   const taskCount = project.tasks?.length ?? 0;
-//   const parts: string[] = [];
-//   if (planCount !== 0) {
-//     parts.push(`${planCount} plan${planCount === 1 ? '' : 's'}`);
-//   }
-//   if (taskCount !== 0) {
-//     parts.push(`${taskCount} task${taskCount === 1 ? '' : 's'}`);
-//   }
-//   return parts.length > 0 ? parts.join(' · ') : '—';
-// }
-
 function formatUpdatedAt(project: ProjectCardFragment): string {
   const raw = project.updatedAt ?? project.createdAt;
   if (raw == null) return '—';
@@ -61,20 +48,6 @@ const projectTableColumns: ColumnDef<
     },
     header: () => <div className="p-4 py-2">Context</div>,
   },
-  // {
-  //   accessorKey: 'nxProjectName',
-  //   cell: ({ row }) => {
-  //     const nx = row.original.nxProjectName;
-  //     return nx ? (
-  //       <Badge size="xs" variant="secondary">
-  //         {nx}
-  //       </Badge>
-  //     ) : (
-  //       <span className="text-muted-foreground text-xs">—</span>
-  //     );
-  //   },
-  //   header: () => 'Project',
-  // },
   {
     accessorKey: 'plans',
     cell: ({ row }) => row.original.plans?.length ?? 0,
@@ -110,7 +83,7 @@ const projectTableColumns: ColumnDef<
   },
 ];
 
-interface ProjectsTableProps {
+export interface ProjectsTableProps {
   className?: string;
   projects: ProjectCardFragment[];
 }

@@ -16,47 +16,52 @@ import {
 } from '../utils/settings-docs-links';
 import { SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID } from './SettingsPortsTroubleshootingCard';
 
-const URL_MATRIX_ROWS: readonly {
-  readonly key: keyof OpenThrottleEnv;
-  readonly label: string;
-}[] = [
-  { key: 'API_URL_EXTERNAL', label: 'API (external)' },
-  { key: 'API_URL_INTERNAL', label: 'API (internal)' },
-  { key: 'APP_URL', label: 'APP_URL' },
-  { key: 'APP_URL_ADMIN', label: 'Admin' },
-  { key: 'APP_URL_CMS', label: 'CMS' },
-  { key: 'APP_URL_DEVELOPER', label: 'Developer' },
-  { key: 'APP_URL_EMAIL', label: 'Email' },
-  { key: 'APP_URL_SERVER', label: 'Server' },
-  { key: 'APP_URL_WEBSITE', label: 'Website' },
-];
+const URL_MATRIX_ROWS = [
+  { key: 'API_URL_EXTERNAL' as const, label: 'API (external)' },
+  { key: 'API_URL_INTERNAL' as const, label: 'API (internal)' },
+  { key: 'APP_URL' as const, label: 'APP_URL' },
+  { key: 'APP_URL_ADMIN' as const, label: 'Admin' },
+  { key: 'APP_URL_CMS' as const, label: 'CMS' },
+  { key: 'APP_URL_DEVELOPER' as const, label: 'Developer' },
+  { key: 'APP_URL_EMAIL' as const, label: 'Email' },
+  { key: 'APP_URL_SERVER' as const, label: 'Server' },
+  { key: 'APP_URL_WEBSITE' as const, label: 'Website' },
+] satisfies {
+  key: keyof OpenThrottleEnv;
+  label: string;
+}[];
 
-function normalizeUrlBase(url: string): string {
+const normalizeUrlBase = (url: string): string => {
   return url.replace(/\/$/, '');
-}
+};
 
-interface SettingsEnvironmentDiagnosticsProps extends SettingsDiagnosticsLoaderData {
-  readonly className?: string;
-  readonly idPrefix?: string;
+export interface SettingsEnvironmentDiagnosticsProps extends SettingsDiagnosticsLoaderData {
+  className?: string;
+  idPrefix?: string;
 }
 
 /**
  * @description Build/version metadata and env-derived app URL matrix for support and misconfiguration triage.
  */
-export function SettingsEnvironmentDiagnostics({
-  className,
-  env,
-  idPrefix = 'settings-diagnostics',
-  supportBundle,
-}: SettingsEnvironmentDiagnosticsProps): React.ReactElement {
+export const SettingsEnvironmentDiagnostics = (
+  props: SettingsEnvironmentDiagnosticsProps,
+) => {
+  const {
+    className,
+    env,
+    idPrefix = 'settings-diagnostics',
+    supportBundle,
+  } = props;
+
+  // Hooks
   const [origin, setOrigin] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (globalThis.window !== undefined) {
-      setOrigin(globalThis.window.location.origin);
-    }
-  }, []);
+  // Setup
+  const devPortalExpected = normalizeUrlBase(env.APP_URL_DEVELOPER);
+  const originMatches =
+    origin === null ? null : normalizeUrlBase(origin) === devPortalExpected;
 
+  // Handlers
   const handleCopySupportBundle = async (): Promise<void> => {
     const text = JSON.stringify(supportBundle, null, 2);
     try {
@@ -66,9 +71,16 @@ export function SettingsEnvironmentDiagnostics({
     }
   };
 
-  const devPortalExpected = normalizeUrlBase(env.APP_URL_DEVELOPER);
-  const originMatches =
-    origin === null ? null : normalizeUrlBase(origin) === devPortalExpected;
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    if (globalThis.window !== undefined) {
+      setOrigin(globalThis.window.location.origin);
+    }
+  }, []);
+
+  // 🔌 Short Circuit
 
   return (
     <div className={className ? `space-y-4 ${className}` : 'space-y-4'}>
@@ -96,10 +108,6 @@ export function SettingsEnvironmentDiagnostics({
               <dt className="text-muted-foreground">NODE_ENV</dt>
               <dd className="font-mono text-xs">{env.NODE_ENV}</dd>
             </div>
-            {/* <div>
-              <dt className="text-muted-foreground">Vite mode</dt>
-              <dd className="font-mono text-xs">{import.meta.env.MODE}</dd>
-            </div> */}
           </dl>
         </CardContent>
       </Card>
@@ -246,4 +254,4 @@ export function SettingsEnvironmentDiagnostics({
       </Card>
     </div>
   );
-}
+};

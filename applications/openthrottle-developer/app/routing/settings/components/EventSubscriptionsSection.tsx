@@ -11,8 +11,8 @@ import {
   subscribeToEventSubscriptionsStorageEvents,
 } from '~/routing/settings/config/event-subscriptions-storage';
 
-interface EventSubscriptionsSectionProps {
-  readonly className?: string;
+export interface EventSubscriptionsSectionProps {
+  className?: string;
 }
 
 /**
@@ -50,8 +50,6 @@ export const EventSubscriptionsSection = (
     return subscribeToEventSubscriptionsStorageEvents(() => {
       setSubscribed(getEventSubscriptionsFromStorage());
     });
-
-    // 🪝 On mount we set up our subscription(s)
   }, []);
 
   // 🔌 Short Circuit
@@ -74,9 +72,6 @@ export const EventSubscriptionsSection = (
               <Label htmlFor={`event-subscription-${row.id}`}>
                 {row.label}
               </Label>
-              {/* <p className="font-mono text-xs text-muted-foreground">
-                  {row.id}
-                </p> */}
               <p className="text-sm text-muted-foreground">{row.description}</p>
             </div>
             <Switch

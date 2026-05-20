@@ -12,21 +12,16 @@ import type {
 } from '~/routing/prompts/config/types';
 import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
 
-interface ProjectsSortDropdownProps {
-  readonly onChange: (
-    sortBy: ProjectsSortBy,
-    sortOrder: ProjectsSortOrder,
-  ) => void;
-  readonly sortBy: ProjectsSortBy;
-  readonly sortOrder: ProjectsSortOrder;
+export interface ProjectsSortDropdownProps {
+  onChange: (sortBy: ProjectsSortBy, sortOrder: ProjectsSortOrder) => void;
+  sortBy: ProjectsSortBy;
+  sortOrder: ProjectsSortOrder;
 }
 
 /**
  * @description Single dropdown to sort projects (combines sortBy and sortOrder). Uses shadcn Select; matches plans SortDropdown API: onChange(sortBy, sortOrder).
  */
-export function ProjectsSortDropdown(
-  props: ProjectsSortDropdownProps,
-): React.ReactElement {
+export const ProjectsSortDropdown = (props: ProjectsSortDropdownProps) => {
   const { sortBy, sortOrder, onChange } = props;
 
   // Hooks
@@ -43,7 +38,6 @@ export function ProjectsSortDropdown(
       const [by, order] = val.split('-') as [ProjectsSortBy, ProjectsSortOrder];
       onChange(by, order);
     },
-
     [onChange],
   );
 
@@ -70,4 +64,4 @@ export function ProjectsSortDropdown(
       </SelectContent>
     </Select>
   );
-}
+};

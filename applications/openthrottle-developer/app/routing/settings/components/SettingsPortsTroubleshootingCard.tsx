@@ -17,10 +17,26 @@ import {
 export const SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID =
   'ports-hosts-api-troubleshooting' as const;
 
+export interface SettingsPortsTroubleshootingCardProps {}
+
 /**
  * @description Focused troubleshooting for local dev: ports, hostnames, internal vs external API bases, Docker, and Caddy — complements the URL matrix on Appearance.
  */
-export function SettingsPortsTroubleshootingCard(): React.ReactElement {
+export const SettingsPortsTroubleshootingCard = (
+  _props: SettingsPortsTroubleshootingCardProps,
+) => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <section id={SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID}>
       <Card>
@@ -172,4 +188,4 @@ export function SettingsPortsTroubleshootingCard(): React.ReactElement {
       </Card>
     </section>
   );
-}
+};

@@ -9,9 +9,9 @@ import {
 import type { SkillsTableColumnValue } from '~/routing/skills/config/skills-table-columns';
 import { SkillsEmpty } from '~/routing/skills/components/SkillsEmpty';
 
-interface SkillsTableProps {
-  readonly className?: string;
-  readonly entries?: readonly RepoSkillEntry[];
+export interface SkillsTableProps {
+  className?: string;
+  entries?: RepoSkillEntry[];
 }
 
 export const SkillsTable = (props: SkillsTableProps) => {

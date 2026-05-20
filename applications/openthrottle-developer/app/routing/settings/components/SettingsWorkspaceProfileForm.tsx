@@ -15,16 +15,18 @@ import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 
-interface SettingsWorkspaceProfileFormProps {
-  readonly actionError?: string | null;
-  readonly className?: string;
-  readonly profile: UserWorkspaceProfileFieldsFragment;
+export interface SettingsWorkspaceProfileFormProps {
+  actionError?: string | null;
+  className?: string;
+  profile: UserWorkspaceProfileFieldsFragment;
 }
 
 export const SettingsWorkspaceProfileForm = (
   props: SettingsWorkspaceProfileFormProps,
-): React.ReactElement => {
+) => {
   const { actionError, className, profile } = props;
+
+  // Hooks
   const navigation = useNavigation();
   const isSubmitting =
     navigation.state === 'submitting' &&
@@ -34,9 +36,18 @@ export const SettingsWorkspaceProfileForm = (
     WorkspaceEditorId[]
   >([...profile.enabledEditors]);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     setEnabledEditors([...profile.enabledEditors]);
   }, [profile.enabledEditors]);
+
+  // 🔌 Short Circuit
 
   return (
     <Card

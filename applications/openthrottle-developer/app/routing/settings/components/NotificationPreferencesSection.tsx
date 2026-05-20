@@ -10,8 +10,8 @@ import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notifica
 import type { NotificationPreferenceId } from '~/routing/settings/config/notification-preferences';
 import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
 
-interface NotificationPreferencesSectionProps {
-  readonly className?: string;
+export interface NotificationPreferencesSectionProps {
+  className?: string;
 }
 
 /**
@@ -23,11 +23,10 @@ export const NotificationPreferencesSection = (
 ) => {
   const { className } = props;
 
-  // Setup (for hooks)
-  const initialToggles = getDefaultNotificationSettings();
-
   // Hooks
-  const [toggles, setToggles] = React.useState(initialToggles);
+  const [toggles, setToggles] = React.useState(() =>
+    getDefaultNotificationSettings(),
+  );
 
   // Setup
 
@@ -36,14 +35,9 @@ export const NotificationPreferencesSection = (
     (id: NotificationPreferenceId) => (checked: boolean) => {
       setToggles((prev) => ({ ...prev, [id]: checked }));
 
-      // toast.success('Success');
-      // toast.error('Error');
-      // toast.warning('Warning');
-
       const value = toast.loading('Start a loader...');
 
       setTimeout(() => {
-        // Dismiss the loader by ID
         toast.dismiss(value);
       }, 1_500);
     };

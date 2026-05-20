@@ -8,21 +8,23 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 
-interface SettingsStorageProps {
-  readonly className?: string;
+export interface SettingsStorageProps {
+  className?: string;
 }
+
+type StorageEntryRow = {
+  key: string;
+  preview: string;
+};
 
 export const SettingsStorage = (props: SettingsStorageProps) => {
   const { className } = props;
 
-  type TTemporary = {
-    readonly key: string;
-    readonly preview: string;
-  };
-
   // Hooks
-  const [localEntries, setLocalEntries] = React.useState<readonly TTemporary[]>([]); // prettier-ignore
-  const [sessionEntries, setSessionEntries] = React.useState<readonly TTemporary[]>([]); // prettier-ignore
+  const [localEntries, setLocalEntries] = React.useState<StorageEntryRow[]>([]);
+  const [sessionEntries, setSessionEntries] = React.useState<StorageEntryRow[]>(
+    [],
+  );
 
   // Setup
 

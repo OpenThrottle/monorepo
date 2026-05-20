@@ -2,10 +2,10 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
 import { SkillsOverviewDialog } from '~/routing/skills/components/SkillsOverviewDialog';
-import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
-interface SkillsIntroductionProps {
-  readonly entries?: ReadonlyArray<RepoSkillEntry>;
+export interface SkillsIntroductionProps {
+  entries?: RepoSkillEntry[];
 }
 
 export const SkillsIntroduction = (props: SkillsIntroductionProps) => {

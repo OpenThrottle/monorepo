@@ -10,7 +10,7 @@ import {
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
 
-interface ProjectEmptyProps {
+export interface ProjectEmptyProps {
   className?: string;
   search?: string;
 }

@@ -10,7 +10,7 @@ import {
 
 type ViewMode = 'table' | 'card';
 
-interface ProjectsToolbarProps {
+export interface ProjectsToolbarProps {
   className?: string;
   limit: number;
   page: number;
@@ -25,19 +25,14 @@ interface ProjectsToolbarProps {
  */
 export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
   const { className, limit, page, search, sortBy, sortOrder, view } = props;
+
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = React.useState(() => search);
 
-  // const baseSearchParams = React.useMemo(() => {
-  //   const p = new URLSearchParams(searchParams);
-  //   p.set('page', String(page));
-  //   p.set('limit', String(limit));
-  //   p.set('sortBy', sortBy);
-  //   p.set('sortOrder', sortOrder);
+  // Setup
 
-  //   return p;
-  // }, [limit, page, searchParams, sortBy, sortOrder]);
-
+  // Handlers
   const applyParams = React.useCallback(
     (updates: {
       sortBy?: ProjectsSortBy;
@@ -97,9 +92,14 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
     ],
   );
 
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     setSearchInput(search);
   }, [search]);
+
+  // 🔌 Short Circuit
 
   return (
     <div
@@ -135,12 +135,6 @@ export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
         />
 
         <div className="flex-1 min-w-0" />
-
-        {/* <Button asChild={true} className="shrink-0" variant="outline">
-          <Link to="/projects/create">
-            <PlusIcon className="w-4 h-4" /> Create project
-          </Link>
-        </Button> */}
       </form>
     </div>
   );

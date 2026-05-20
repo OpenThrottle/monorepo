@@ -3,19 +3,31 @@ import { MultiSelect } from '@openthrottle/react-router-shadcn';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 
-interface WorkspaceEditorMultiSelectProps {
-  readonly name?: string;
-  readonly onChange: (value: WorkspaceEditorId[]) => void;
-  readonly value: readonly WorkspaceEditorId[];
+export interface WorkspaceEditorMultiSelectProps {
+  name?: string;
+  onChange: (value: WorkspaceEditorId[]) => void;
+  value: WorkspaceEditorId[];
 }
 
 /**
  * @description Multi-select for workspace editor preferences (Cursor, VS Code).
  */
-export function WorkspaceEditorMultiSelect(
+export const WorkspaceEditorMultiSelect = (
   props: WorkspaceEditorMultiSelectProps,
-): React.ReactElement {
+) => {
   const { name = 'enabledEditors', onChange, value } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <>
@@ -34,4 +46,4 @@ export function WorkspaceEditorMultiSelect(
       />
     </>
   );
-}
+};
