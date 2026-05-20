@@ -13,6 +13,8 @@ import {
   backlogForQueue,
   chartConfigForQueueStatsView,
   formatQueueStatsChartTick,
+  maxSingleSeriesForQueues,
+  maxSingleSeriesForView,
   queueStatsChartHeight,
   queuesToStatsChartData,
   seriesKeysForQueueStatsView,
@@ -170,6 +172,26 @@ describe('QUEUE_STATS_CHART_VIEW_OPTIONS', () => {
   test('recommends operational default toggle for spike', () => {
     expect(QUEUE_STATS_CHART_RECOMMENDED_FINALIST).toBe(
       'operational-default-with-completed-toggle',
+    );
+  });
+});
+
+describe('maxSingleSeriesForView', () => {
+  test('operational view caps axis far below completed history on skewed queues', () => {
+    const rows = queuesToStatsChartData([...REPRESENTATIVE_SKEWED_QUEUES]);
+
+    expect(maxSingleSeriesForView(rows, false)).toBe(22);
+    expect(maxSingleSeriesForView(rows, true)).toBe(48_200);
+  });
+
+  test('operational max is a small fraction of full-scale max on representative data', () => {
+    const rows = queuesToStatsChartData([...REPRESENTATIVE_SKEWED_QUEUES]);
+    const operationalMax = maxSingleSeriesForView(rows, false);
+    const fullMax = maxSingleSeriesForView(rows, true);
+
+    expect(operationalMax / fullMax).toBeLessThan(0.01);
+    expect(maxSingleSeriesForQueues(REPRESENTATIVE_SKEWED_QUEUES, false)).toBe(
+      operationalMax,
     );
   });
 });

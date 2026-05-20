@@ -7,6 +7,12 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { QueuesStats } from '../QueuesStats';
 import type { QueuesStatsProps } from '../QueuesStats';
 import type { QueueCardFragment } from '~/__generated__/graphql';
+import {
+  REPRESENTATIVE_SKEWED_QUEUES,
+  maxSingleSeriesForQueues,
+  queueStatsChartHeight,
+  queuesToStatsChartData,
+} from '~/routing/queues/utils/queue-stats-chart';
 
 const mockQueues: QueueCardFragment[] = [
   {
@@ -100,6 +106,66 @@ describe('QueuesStats Component', () => {
       expect(
         component.getByText(/including completed history/i),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('when queues include high-volume plans completed history', () => {
+    beforeEach(() => {
+      props = { queues: [...REPRESENTATIVE_SKEWED_QUEUES] };
+      const StatsComponent = () => <QueuesStats {...props} />;
+      const RoutesStub = createRoutesStub([
+        { Component: StatsComponent, path: '/' },
+      ]);
+      component.rerender(<RoutesStub />);
+    });
+
+    test('should render chart with scaled height for multiple queues', () => {
+      const chartWrapper = component.getByTestId('queues-stats-chart');
+      const expectedHeight = queueStatsChartHeight(
+        REPRESENTATIVE_SKEWED_QUEUES.length,
+      );
+
+      expect(chartWrapper).toBeInTheDocument();
+      expect(chartWrapper).toHaveStyle({ minHeight: `${expectedHeight}px` });
+      expect(
+        component
+          .getByTestId('QueuesStats')
+          .querySelector('.recharts-responsive-container'),
+      ).toBeInTheDocument();
+    });
+
+    test('should default to operational view without completed in copy', () => {
+      expect(
+        component.getByText(/backlog and active work/i),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('queues-stats-show-completed'),
+      ).not.toBeChecked();
+    });
+
+    test('should sort chart rows with plans first by total jobs', () => {
+      const rowNames = queuesToStatsChartData(REPRESENTATIVE_SKEWED_QUEUES).map(
+        (row) => row.name,
+      );
+
+      expect(rowNames[0]).toBe('plans');
+      expect(rowNames).toContain('embeddings-ingest');
+      expect(rowNames).toContain('default');
+    });
+
+    test('should keep operational X-scale max far below plans completed volume', () => {
+      const operationalMax = maxSingleSeriesForQueues(
+        REPRESENTATIVE_SKEWED_QUEUES,
+        false,
+      );
+      const fullMax = maxSingleSeriesForQueues(
+        REPRESENTATIVE_SKEWED_QUEUES,
+        true,
+      );
+
+      expect(operationalMax).toBe(22);
+      expect(fullMax).toBe(48_200);
+      expect(operationalMax / fullMax).toBeLessThan(0.01);
     });
   });
 });

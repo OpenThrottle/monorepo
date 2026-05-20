@@ -43,15 +43,39 @@ function totalJobsForChartRow(row: QueueStatsChartDatum): number {
 function maxSingleSeriesValue(
   rows: ReadonlyArray<QueueStatsChartDatum>,
 ): number {
+  return maxSingleSeriesForView(rows, true);
+}
+
+/**
+ * @description Largest value among series included in the chart view (operational vs all five).
+ */
+export function maxSingleSeriesForView(
+  rows: ReadonlyArray<QueueStatsChartDatum>,
+  includeCompleted: boolean,
+): number {
+  const keys = seriesKeysForQueueStatsView(includeCompleted);
   let max = 0;
   for (const row of rows) {
-    for (const key of QUEUE_STATS_CHART_SERIES) {
+    for (const key of keys) {
       if (row[key] > max) {
         max = row[key];
       }
     }
   }
   return max;
+}
+
+/**
+ * @description Convenience wrapper: max single-series value for queue fragments in a given view.
+ */
+export function maxSingleSeriesForQueues(
+  queues: ReadonlyArray<QueueCardFragment>,
+  includeCompleted: boolean,
+): number {
+  return maxSingleSeriesForView(
+    queuesToStatsChartData(queues),
+    includeCompleted,
+  );
 }
 
 /**
