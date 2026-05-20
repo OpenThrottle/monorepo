@@ -15,10 +15,10 @@ import {
   type WorkflowRalphTargetMode,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-interface PlanWorkflowConfigTargetProps {
-  readonly className?: string;
-  readonly input: WorkflowRalphRunOptionsInput;
-  readonly setInput: (
+export interface PlanWorkflowConfigTargetProps {
+  className?: string;
+  input: WorkflowRalphRunOptionsInput;
+  setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
 }

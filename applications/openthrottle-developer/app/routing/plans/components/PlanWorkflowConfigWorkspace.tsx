@@ -15,10 +15,10 @@ import {
   validateWorkspacePathClient,
 } from '~/routing/plans/utils/workspace-path';
 
-interface PlanWorkflowConfigWorkspaceProps {
-  readonly className?: string;
-  readonly onChange: (path: string) => void;
-  readonly value: string;
+export interface PlanWorkflowConfigWorkspaceProps {
+  className?: string;
+  onChange: (path: string) => void;
+  value: string;
 }
 
 export const PlanWorkflowConfigWorkspace = (
@@ -27,7 +27,7 @@ export const PlanWorkflowConfigWorkspace = (
   const { className, onChange, value } = props;
 
   // Hooks
-  const [recentPaths, setRecentPaths] = React.useState<readonly string[]>([]);
+  const [recentPaths, setRecentPaths] = React.useState<string[]>([]);
   const [recentOpen, setRecentOpen] = React.useState(false);
 
   // Setup

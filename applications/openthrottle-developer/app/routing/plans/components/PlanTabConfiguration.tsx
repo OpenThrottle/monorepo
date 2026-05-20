@@ -38,37 +38,37 @@ import {
  * with canonical preview/copy. When the parent controls state (plan detail), the
  * same values are serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped).
  */
-interface PlanTabConfigurationProps {
-  readonly className?: string;
-  readonly iterationTimeoutText?: string;
+export interface PlanTabConfigurationProps {
+  className?: string;
+  iterationTimeoutText?: string;
 
   /**
    * @description When set (plan detail URL-driven panel), shows a control to collapse the section.
    */
-  readonly onCollapse?: () => void;
-  readonly onIterationTimeoutTextChange?: (next: string) => void;
-  readonly onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
-  readonly onWorkingDirectoryChange?: (next: string) => void;
+  onCollapse?: () => void;
+  onIterationTimeoutTextChange?: (next: string) => void;
+  onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
+  onWorkingDirectoryChange?: (next: string) => void;
 
   /**
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
    */
-  readonly onResetToDefaults?: () => void;
+  onResetToDefaults?: () => void;
 
   /** When set (e.g. plan detail), seeds `--plan` and default target mode. */
-  readonly planId?: string;
+  planId?: string;
 
   /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
-  readonly taskId?: string;
+  taskId?: string;
 
   /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
-  readonly value?: WorkflowRalphRunOptionsInput;
+  value?: WorkflowRalphRunOptionsInput;
 
   /**
    * @description Optional absolute path for multi-workspace runs. Passed to
    * the enqueue mutation as `workingDirectory`. Empty string = monorepo root.
    */
-  readonly workingDirectory?: string;
+  workingDirectory?: string;
 }
 
 export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {

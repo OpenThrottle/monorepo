@@ -5,14 +5,14 @@ import { Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
 
-interface PlanWorkflowCommandProps {
-  readonly className?: string;
+export interface PlanWorkflowCommandProps {
+  className?: string;
 
   /**
    * @description When set (controlled workflow config), the preview and clipboard use this
    * string; otherwise {@link workflowRalphCanonicalCommandLineAtom} supplies the line.
    */
-  readonly canonicalCommandLineOverride?: string;
+  canonicalCommandLineOverride?: string;
 }
 
 export const PlanWorkflowCommand = (props: PlanWorkflowCommandProps) => {

@@ -5,9 +5,9 @@ import { EditorWindow } from '@openthrottle/react-router-editor';
 
 type Chunk = PlanDetailIndexLoaderQuery['planOutputStreamChunks'][number];
 
-interface PlanTabOutputProps {
-  readonly chunks: readonly Chunk[];
-  readonly className?: string;
+export interface PlanTabOutputProps {
+  chunks: Chunk[];
+  className?: string;
 }
 
 export const PlanTabOutput = (props: PlanTabOutputProps) => {

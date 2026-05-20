@@ -19,8 +19,8 @@ import {
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigWorktreeProps {
-  readonly input: WorkflowRalphRunOptionsInput;
-  readonly setInput: (
+  input: WorkflowRalphRunOptionsInput;
+  setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
 }
@@ -30,8 +30,12 @@ export const PlanWorkflowConfigWorktree = (
 ) => {
   const { input, setInput } = props;
 
+  // Hooks
+
+  // Setup
   const isCursor = input.executionBackend === 'cursor';
 
+  // Handlers
   const handleWorktreeCliChange = (value: WorkflowRalphWorktreeCli): void => {
     setInput((prev) => {
       if (value === 'named') {
@@ -53,6 +57,12 @@ export const PlanWorkflowConfigWorktree = (
       };
     });
   };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className="mt-8">

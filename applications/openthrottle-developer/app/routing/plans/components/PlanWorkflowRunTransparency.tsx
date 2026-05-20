@@ -21,13 +21,13 @@ import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-w
 type RecentRun =
   PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
 
-interface PlanWorkflowRunTransparencyProps {
-  readonly canonicalWorkflowCommand: string;
-  readonly className?: string;
-  readonly planId: string;
-  readonly recentPlanRuns: readonly RecentRun[];
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
-  readonly workflowTimeout: string;
+export interface PlanWorkflowRunTransparencyProps {
+  canonicalWorkflowCommand: string;
+  className?: string;
+  planId: string;
+  recentPlanRuns: RecentRun[];
+  workflowInput: WorkflowRalphRunOptionsInput;
+  workflowTimeout: string;
 }
 
 const formatFinishedOn = (finishedOn: number | null | undefined): string => {
@@ -44,7 +44,7 @@ const formatFinishedOn = (finishedOn: number | null | undefined): string => {
  */
 export const PlanWorkflowRunTransparency = (
   props: PlanWorkflowRunTransparencyProps,
-): React.ReactElement => {
+) => {
   const {
     canonicalWorkflowCommand,
     planId,
@@ -53,6 +53,7 @@ export const PlanWorkflowRunTransparency = (
     workflowTimeout,
   } = props;
 
+  // Hooks
   const debugBundleText = React.useMemo(
     () =>
       buildWorkflowRalphDebugBundleText({
@@ -67,6 +68,16 @@ export const PlanWorkflowRunTransparency = (
     () => buildWorkflowRalphTuningDiffLabels(workflowInput, workflowTimeout),
     [workflowInput, workflowTimeout],
   );
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Card className="mt-8">

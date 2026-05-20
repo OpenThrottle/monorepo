@@ -16,10 +16,10 @@ import type {
   WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-interface PlanWorkflowConfigExecutionProps {
-  readonly className?: string;
-  readonly input: WorkflowRalphRunOptionsInput;
-  readonly setInput: (
+export interface PlanWorkflowConfigExecutionProps {
+  className?: string;
+  input: WorkflowRalphRunOptionsInput;
+  setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
 }
@@ -28,6 +28,16 @@ export const PlanWorkflowConfigExecution = (
   props: PlanWorkflowConfigExecutionProps,
 ) => {
   const { className, input, setInput } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
 
   // 🔌 Short Circuit
 

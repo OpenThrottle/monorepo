@@ -19,11 +19,11 @@ import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksT
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
-interface PlanTabTasksProp {
-  readonly tasks: PlanTaskRowFragment[];
+export interface PlanTabTasksProps {
+  tasks: PlanTaskRowFragment[];
 }
 
-export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
+export const PlanTabTasks = (props: PlanTabTasksProps) => {
   const { tasks } = props;
 
   // Hooks

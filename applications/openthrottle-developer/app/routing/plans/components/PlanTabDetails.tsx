@@ -26,17 +26,15 @@ import {
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 import { EditorWindow } from '@openthrottle/react-router-editor';
 
-interface PlanTabDetailsProps {
-  readonly fullscreen: boolean;
-  readonly plan: PlanDetailsFragment;
-  readonly ralphTuningJson: string;
-  readonly recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
-  readonly setFullscreen: React.SetStateAction<
-    React.Dispatch<React.SetStateAction<boolean>>
-  >;
-  readonly workingDirectory?: string;
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
-  readonly workflowTimeout: string;
+export interface PlanTabDetailsProps {
+  fullscreen: boolean;
+  plan: PlanDetailsFragment;
+  ralphTuningJson: string;
+  recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
+  setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
+  workingDirectory?: string;
+  workflowInput: WorkflowRalphRunOptionsInput;
+  workflowTimeout: string;
 }
 
 export const PlanTabDetails = (props: PlanTabDetailsProps) => {

@@ -19,13 +19,13 @@ import {
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-interface PlanWorkflowConfigTuningProps {
-  readonly input: WorkflowRalphRunOptionsInput;
-  readonly iterationTimeoutText: string;
-  readonly setInput: (
+export interface PlanWorkflowConfigTuningProps {
+  input: WorkflowRalphRunOptionsInput;
+  iterationTimeoutText: string;
+  setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
-  readonly setIterationTimeoutText: (next: string) => void;
+  setIterationTimeoutText: (next: string) => void;
 }
 
 export const PlanWorkflowConfigTuning = (

@@ -17,14 +17,14 @@ import {
   type WorkflowRalphPromptLayer,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-interface PlanWorkflowConfigPromptProps {
-  readonly className?: string;
-  readonly onPromptChange: (next: string) => void;
-  readonly onPromptFileChange: (next: string) => void;
-  readonly onPromptLayerChange: (next: WorkflowRalphPromptLayer) => void;
-  readonly prompt: string;
-  readonly promptFile: string;
-  readonly promptLayer: WorkflowRalphPromptLayer;
+export interface PlanWorkflowConfigPromptProps {
+  className?: string;
+  onPromptChange: (next: string) => void;
+  onPromptFileChange: (next: string) => void;
+  onPromptLayerChange: (next: WorkflowRalphPromptLayer) => void;
+  prompt: string;
+  promptFile: string;
+  promptLayer: WorkflowRalphPromptLayer;
 }
 
 export const PlanWorkflowConfigPrompt = (
