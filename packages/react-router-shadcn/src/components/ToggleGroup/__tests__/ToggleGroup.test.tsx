@@ -4,15 +4,23 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ToggleGroup } from '../ToggleGroup';
 import type { ToggleGroupProps } from '../ToggleGroup';
+import { ToggleGroupItem } from '../ToggleGroupItem';
 
 describe('ToggleGroup Component', () => {
   let component: RenderResult;
   let props: ToggleGroupProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      'aria-label': 'Test',
+      type: 'single',
+    };
 
-    const Component = () => <ToggleGroup {...props} />;
+    const Component = () => (
+      <ToggleGroup {...props}>
+        <ToggleGroupItem value="a">A</ToggleGroupItem>
+      </ToggleGroup>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

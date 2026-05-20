@@ -1,25 +1,19 @@
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { toggleGroupItemVariants } from '../toggleGroupItemVariants';
-import type { toggleGroupItemVariantsProps } from '../toggleGroupItemVariants';
 
-describe('toggleGroupItemVariants Component', () => {
-  let component: RenderResult;
-  let props: toggleGroupItemVariantsProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const ToggleGroupItemVariantsScaffold = toggleGroupItemVariants;
-    const Component = () => <ToggleGroupItemVariantsScaffold {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+describe('toggleGroupItemVariants', () => {
+  test('returns base toggle item classes', () => {
+    expect(toggleGroupItemVariants()).toContain('inline-flex');
+    expect(toggleGroupItemVariants()).toContain('rounded-md');
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('applies size variant', () => {
+    expect(toggleGroupItemVariants({ size: 'sm' })).toContain('h-9');
+  });
+
+  test('applies outline variant', () => {
+    expect(toggleGroupItemVariants({ variant: 'outline' })).toContain(
+      'border-input',
+    );
   });
 });
