@@ -26,12 +26,12 @@ This document defines how N worktree targets (or separate repos) are registered 
 
 **Summary (registration):**
 
-| Aspect              | Current / recommendation                                      |
-|---------------------|---------------------------------------------------------------|
-| **Source**          | `WORKTREE_TARGETS` env (JSON array).                         |
-| **Optional future** | File-based config, or REST/GraphQL “register target” that calls `register(id, path)` or updates Redis. |
-| **Multi-worker**    | Use a Redis-backed `IWorktreeTargetsTracker` so all workers see the same targets and lock state. |
-| **N separate repos**| Register each repo (or worktree) as a target `{ id, path }`; no interface change. |
+| Aspect               | Current / recommendation                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Source**           | `WORKTREE_TARGETS` env (JSON array).                                                                   |
+| **Optional future**  | File-based config, or REST/GraphQL “register target” that calls `register(id, path)` or updates Redis. |
+| **Multi-worker**     | Use a Redis-backed `IWorktreeTargetsTracker` so all workers see the same targets and lock state.       |
+| **N separate repos** | Register each repo (or worktree) as a target `{ id, path }`; no interface change.                      |
 
 ---
 
@@ -65,12 +65,12 @@ This document defines how N worktree targets (or separate repos) are registered 
 
 **Summary (allocation):**
 
-| Aspect              | Design                                                                 |
-|---------------------|-----------------------------------------------------------------------|
-| **Interface**       | Reuse `IWorktreeTargetsTracker.acquire({ id?, lockedBy })`. No change to the tracker interface. |
-| **Options**         | Extend `ParentJobAcquireOptions` with optional `worktreeId`. Parent job passes it as `id` to `acquire`. |
-| **Behavior**        | If `worktreeId` provided and target available → lock that target. If not available → fail (no fallback to “any”). |
-| **Job payload**     | Extend `RunPlanJobData` with optional `worktreeId`; processor passes it into `acquire` options. |
+| Aspect          | Design                                                                                                            |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Interface**   | Reuse `IWorktreeTargetsTracker.acquire({ id?, lockedBy })`. No change to the tracker interface.                   |
+| **Options**     | Extend `ParentJobAcquireOptions` with optional `worktreeId`. Parent job passes it as `id` to `acquire`.           |
+| **Behavior**    | If `worktreeId` provided and target available → lock that target. If not available → fail (no fallback to “any”). |
+| **Job payload** | Extend `RunPlanJobData` with optional `worktreeId`; processor passes it into `acquire` options.                   |
 
 ---
 
@@ -85,6 +85,7 @@ This document defines how N worktree targets (or separate repos) are registered 
 - **Lock:** When a target is acquired, the tracker marks it **locked** with `lockedBy` (e.g. BullMQ job id). No process id (PID) or handle is stored in the tracker.
 - **Handoff:** After acquire and create-branch, the workflow has a `ParentJobHandoff`: `{ branchName, targetId, worktreePath }`. This is the **binding**: the child job and ensure-commit step use `worktreePath` as the working directory for all git and pnpm commands.
 - **Spawn:** `runChildJob(handoff, ...)` runs `pnpm exec workflow-ralph ...` with `cwd: handoff.worktreePath`. So the **only** binding of the Ralph process to the repo/worktree is **process cwd**.
+- **Agent CLI worktree (separate layer):** Nested Ralph may forward `-w` / `--worktree` to **cursor-agent** or **claude** per iteration. By default, when job tuning omits `ralph.worktree`, `runChildJob` passes `--worktree <targetId>` on nested argv so the agent name aligns with the acquired target id. This does **not** change git cwd or tracker binding. See [ralph-worktree-flag.md](../../../docs/workflows/ralph-worktree-flag.md).
 - **Release:** When the workflow finishes (success or failure), it calls `tracker.release({ id: handoff.targetId, lockedBy })`. The target becomes available again. The coordinator (e.g. BullMQ) knows “job J held target T” via the job’s lifecycle and the fact that `lockedBy === jobId`; it does **not** need to know the PID of the Ralph process.
 
 **Implications:**
@@ -95,12 +96,12 @@ This document defines how N worktree targets (or separate repos) are registered 
 
 **Summary (binding):**
 
-| Aspect           | Design                                                                 |
-|------------------|-----------------------------------------------------------------------|
-| **Binding**      | Handoff `(targetId, worktreePath, branchName)`; all git/pnpm in that run use `worktreePath` as cwd. |
-| **Spawn**        | `runChildJob` passes `cwd: handoff.worktreePath` to `spawnSync` (or future `spawn`). No PID in tracker. |
-| **Release**      | Always `tracker.release({ id: targetId, lockedBy })` after the workflow step (success or failure). |
-| **Coordinator**  | Job id is `lockedBy`; “job J → target T” is implicit in the workflow run; no process registry required. |
+| Aspect          | Design                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| **Binding**     | Handoff `(targetId, worktreePath, branchName)`; all git/pnpm in that run use `worktreePath` as cwd.     |
+| **Spawn**       | `runChildJob` passes `cwd: handoff.worktreePath` to `spawnSync` (or future `spawn`). No PID in tracker. |
+| **Release**     | Always `tracker.release({ id: targetId, lockedBy })` after the workflow step (success or failure).      |
+| **Coordinator** | Job id is `lockedBy`; “job J → target T” is implicit in the workflow run; no process registry required. |
 
 ---
 
@@ -111,5 +112,6 @@ This document defines how N worktree targets (or separate repos) are registered 
 - **Env parsing:** `packages/mattscholta/nestjs-worktrees/src/worktree-targets.env.ts` (`getWorktreeTargetsFromEnv()`).
 - **Workflow:** `tools/workflows/src/utils/workflow.ts` (`runWorktreeWorkflow`); `parent-job.ts` (`parentJobAcquireAndCreateBranch`); `child-job.ts` (`runChildJob` with `cwd: worktreePath`).
 - **Process model:** [process-model.md](./process-model.md).
+- **Agent CLI `--worktree`:** [ralph-worktree-flag.md](../../../docs/workflows/ralph-worktree-flag.md).
 - **Process management (spawn, timeout, cancel, streaming):** [process-management-proposal.md](./process-management-proposal.md).
 - **Local API (trigger, worktreeId in job):** [local-api-design.md](./local-api-design.md).
