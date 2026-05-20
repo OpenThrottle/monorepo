@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 import {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
@@ -52,6 +53,34 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     ]);
     expect(buildWorkflowRalphRunTuningArgv({ debug: 'verbose' })).toEqual([
       '--verbose',
+    ]);
+  });
+
+  it('includes --worktree argv when set', () => {
+    expect(buildWorkflowRalphRunTuningArgv({ worktree: 'target-one' })).toEqual(
+      ['--worktree', 'target-one'],
+    );
+  });
+
+  it('includes flag-only --worktree when sentinel', () => {
+    expect(
+      buildWorkflowRalphRunTuningArgv({ worktree: RALPH_WORKTREE_FLAG_ONLY }),
+    ).toEqual(['--worktree']);
+  });
+
+  it('includes cursor-only worktree-base and skip-worktree-setup', () => {
+    expect(
+      buildWorkflowRalphRunTuningArgv({
+        skipWorktreeSetup: true,
+        worktree: 'wt',
+        worktreeBase: 'main',
+      }),
+    ).toEqual([
+      '--worktree',
+      'wt',
+      '--worktree-base',
+      'main',
+      '--skip-worktree-setup',
     ]);
   });
 });

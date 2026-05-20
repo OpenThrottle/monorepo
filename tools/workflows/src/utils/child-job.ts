@@ -25,6 +25,7 @@ import {
   updatePlanStatus,
 } from './cortex-ralph';
 import { ralphDebugLogger } from './ralph-debug-logger';
+import { resolveRalphWorktreeName } from './ralph-worktree-cli';
 import { buildWorkflowRalphRunTuningArgv } from './workflow-ralph-nested-argv';
 import { createChildProcessMetricsCollector } from './child-process-metrics';
 import type { ChildProcessMetricsCollector } from './child-process-metrics';
@@ -254,8 +255,11 @@ export async function runChildJob(
     streamToCortex,
     streamIteration,
     childProcessMetrics: metricsOption,
+    skipWorktreeSetup,
+    worktree,
+    worktreeBase,
   } = input;
-  const { worktreePath } = handoff;
+  const { targetId, worktreePath } = handoff;
 
   const startTimestamp = Date.now();
   const cpuAtStart = process.cpuUsage();
@@ -326,6 +330,12 @@ export async function runChildJob(
       project,
       prompt,
       promptFile,
+      skipWorktreeSetup,
+      worktree: resolveRalphWorktreeName({
+        cli: worktree,
+        handoffTargetId: targetId,
+      }),
+      worktreeBase,
     }),
   ];
 

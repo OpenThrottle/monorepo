@@ -10,6 +10,10 @@ import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
 } from './ralph-runtime-config';
+import {
+  buildWorktreeNestedArgv,
+  type RalphWorktreeName,
+} from './ralph-worktree-cli';
 
 /**
  * @description Maps to `--debug` / `--verbose` / omit (env-only); matches `workflow-ralph` CLI.
@@ -34,6 +38,12 @@ export interface RalphNestedRunTuningInput {
   readonly project?: string;
   readonly prompt?: string;
   readonly promptFile?: string;
+  /** Agent CLI worktree name; forwarded as `--worktree` / `--worktree <name>`. */
+  readonly worktree?: RalphWorktreeName | null;
+  /** Cursor-only: `--worktree-base`. */
+  readonly worktreeBase?: string | null;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup?: boolean | null;
 }
 
 /**
@@ -104,6 +114,21 @@ export const buildWorkflowRalphRunTuningArgv = (
     default:
       break;
   }
+
+  const worktree =
+    input.worktree === null || input.worktree === undefined
+      ? undefined
+      : input.worktree;
+
+  ralphArgs.push(
+    ...buildWorktreeNestedArgv(worktree, {
+      skipWorktreeSetup: input.skipWorktreeSetup === true,
+      worktreeBase:
+        input.worktreeBase === null || input.worktreeBase === undefined
+          ? undefined
+          : input.worktreeBase,
+    }),
+  );
 
   return ralphArgs;
 };

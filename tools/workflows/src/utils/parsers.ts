@@ -14,6 +14,11 @@ import {
   DEFAULT_RALPH_RUNNER,
 } from './ralph-execution-backend';
 import {
+  RALPH_WORKTREE_FLAG_ONLY,
+  resolveRalphWorktreeName,
+  type RalphWorktreeName,
+} from './ralph-worktree-cli';
+import {
   mergeRalphRuntimeSeed,
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_PROMPT,
@@ -131,6 +136,12 @@ export interface RalphArgs {
   ralphDebugLevel: RalphDebugLevel;
   /** When set, Ralph runs in task-centric mode (single task). Plan can be omitted and resolved from the task. */
   task: string | undefined;
+  /** Resolved agent CLI worktree name for every iteration. */
+  worktree: RalphWorktreeName | undefined;
+  /** Cursor-only: `--worktree-base`. */
+  worktreeBase: string | undefined;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  skipWorktreeSetup: boolean | undefined;
 }
 
 /**
@@ -148,7 +159,10 @@ export const parseRalphArgs = (): RalphArgs => {
     model: seed.model,
     project: seed.project,
     prompt: seed.prompt,
+    skipWorktreeSetup: seed.skipWorktreeSetup,
     task: undefined,
+    worktree: seed.worktree,
+    worktreeBase: seed.worktreeBase,
   };
 
   /** CLI override for shim debug; `verbose` wins over `debug` if both appear. */
@@ -158,6 +172,9 @@ export const parseRalphArgs = (): RalphArgs => {
   let explicitNamedPrompt = false;
   let cliPromptFile: string | undefined;
   let cliPromptStdin = false;
+  let cliWorktree: RalphWorktreeName | undefined;
+  let cliWorktreeBase: string | undefined;
+  let cliSkipWorktreeSetup: boolean | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -243,6 +260,19 @@ export const parseRalphArgs = (): RalphArgs => {
     } else if (arg === '--backend' && i + 1 < args.length) {
       parsed.backend = parseRalphExecutionBackendId(args[i + 1] ?? '', 'cli');
       i++;
+    } else if (arg === '--worktree') {
+      const next = args[i + 1];
+      if (next !== undefined && !next.startsWith('--')) {
+        cliWorktree = next;
+        i++;
+      } else {
+        cliWorktree = RALPH_WORKTREE_FLAG_ONLY;
+      }
+    } else if (arg === '--worktree-base' && i + 1 < args.length) {
+      cliWorktreeBase = args[i + 1];
+      i++;
+    } else if (arg === '--skip-worktree-setup') {
+      cliSkipWorktreeSetup = true;
     } else if (arg.startsWith('--')) {
       throw new Error(`Unknown flag: ${arg}`);
     }
@@ -331,6 +361,11 @@ export const parseRalphArgs = (): RalphArgs => {
 
   setRalphDebugLevel(effectiveDebugLevel);
 
+  const worktree = resolveRalphWorktreeName({
+    cli: cliWorktree,
+    seed: parsed.worktree,
+  });
+
   const result: RalphArgs = {
     backend: parsed.backend ?? DEFAULT_RALPH_RUNNER,
     iterationTimeoutMs: parsed.iterationTimeoutMs,
@@ -342,7 +377,10 @@ export const parseRalphArgs = (): RalphArgs => {
     promptProfileKind,
     promptProfileLabel,
     ralphDebugLevel: ralphDebugLogger.level,
+    skipWorktreeSetup: cliSkipWorktreeSetup ?? parsed.skipWorktreeSetup,
     task: parsed.task,
+    worktree,
+    worktreeBase: cliWorktreeBase ?? parsed.worktreeBase,
   };
   return result;
 };

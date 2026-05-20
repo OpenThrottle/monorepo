@@ -122,6 +122,9 @@ export function resolveWorkflowRunOptions(params: {
     r.iterationTimeoutSeconds,
   );
 
+  const worktree = r.worktree?.trim() ?? '';
+  const worktreeBase = r.worktreeBase?.trim() ?? '';
+
   return {
     debug: resolveDebug(r.ralphDebugCli),
     iterationMax: iterations,
@@ -134,8 +137,11 @@ export function resolveWorkflowRunOptions(params: {
     project: resolveProject(r.project),
     prompt: resolvePrompt(r.prompt),
     runner: resolveExecutionBackend(r.backend ?? params.executionBackend),
+    skipWorktreeSetup: r.skipWorktreeSetup === true ? true : undefined,
     taskId,
     timeout: iterationTimeout,
+    worktree: worktree !== '' ? worktree : undefined,
+    worktreeBase: worktreeBase !== '' ? worktreeBase : undefined,
   };
 }
 

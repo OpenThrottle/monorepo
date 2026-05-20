@@ -234,8 +234,11 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
       project: 'openthrottle-workflows',
       prompt: '/agents/custom',
       runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
       taskId: '',
       timeout: 90,
+      worktree: undefined,
+      worktreeBase: undefined,
     };
 
     const ctx = buildRalphFlowContextFromRunOptionsShape(uiLike);
@@ -270,8 +273,11 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
       project: '',
       prompt: DEFAULT_RALPH_PROMPT,
       runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
       taskId,
       timeout: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
     };
 
     const ctx = buildRalphFlowContextFromRunOptionsShape(uiLike);

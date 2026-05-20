@@ -88,7 +88,10 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly project: string | undefined;
   readonly prompt: string;
   readonly runner: WorkflowRunner;
+  readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
+  readonly worktree: string | undefined;
+  readonly worktreeBase: string | undefined;
 }
 
 // export type WorkflowFlowContext = WorkflowRalphContext;

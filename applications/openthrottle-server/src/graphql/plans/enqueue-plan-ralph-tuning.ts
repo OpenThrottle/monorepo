@@ -139,6 +139,9 @@ type ChildJobRalphTuning = Pick<
   | 'prompt'
   | 'promptFile'
   | 'ralphDebugCli'
+  | 'skipWorktreeSetup'
+  | 'worktree'
+  | 'worktreeBase'
 >;
 
 /**
@@ -159,6 +162,9 @@ export const ralphTuningForChildJob = (
     ...(r.project !== undefined ? { project: r.project } : {}),
     ...(r.prompt !== undefined ? { prompt: r.prompt } : {}),
     ...(r.promptFile !== undefined ? { promptFile: r.promptFile } : {}),
+    ...(r.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),
+    ...(r.worktree !== undefined ? { worktree: r.worktree } : {}),
+    ...(r.worktreeBase !== undefined ? { worktreeBase: r.worktreeBase } : {}),
   } satisfies ChildJobRalphTuning;
 };
 
@@ -206,6 +212,8 @@ const parseEnqueueRalphTuning = (
   const project = normalizeOptionalString(input.project);
   const prompt = normalizeOptionalString(input.prompt);
   const promptFile = normalizeOptionalString(input.promptFile);
+  const worktree = normalizeOptionalString(input.worktree);
+  const worktreeBase = normalizeOptionalString(input.worktreeBase);
 
   let ralphDebugCli: RalphNestedDebugCli | undefined;
   if (input.ralphDebugCli != null) {
@@ -228,6 +236,9 @@ const parseEnqueueRalphTuning = (
     ...(prompt !== undefined ? { prompt } : {}),
     ...(promptFile !== undefined ? { promptFile } : {}),
     ...(ralphDebugCli !== undefined ? { ralphDebugCli } : {}),
+    ...(worktree !== undefined ? { worktree } : {}),
+    ...(worktreeBase !== undefined ? { worktreeBase } : {}),
+    ...(input.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),
   };
 
   if (Object.keys(tuning).length === 0) {

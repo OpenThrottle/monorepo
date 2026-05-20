@@ -20,7 +20,10 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
     promptProfileKind,
     promptProfileLabel,
     ralphDebugLevel,
+    skipWorktreeSetup,
     task,
+    worktree,
+    worktreeBase,
   } = parsedArgs;
 
   console.log(`Workflow configuration:\n`);
@@ -41,6 +44,19 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
 
   if (task) console.log(` - 📌 task: ${COLORS.green}${task}${COLORS.reset} (task-centric)`); // prettier-ignore
   if (ralphDebugLevel !== 'off') console.log(` - 🐛 debug: ${COLORS.green}${ralphDebugLevel}${COLORS.reset}`); // prettier-ignore
+
+  if (worktree !== undefined) {
+    const label = worktree === '' ? '(agent default name)' : worktree;
+    console.log(` - 🌳 worktree: ${COLORS.green}${label}${COLORS.reset} (agent CLI)`); // prettier-ignore
+  }
+
+  if (worktreeBase) {
+    console.log(` - 🌳 worktree-base: ${COLORS.green}${worktreeBase}${COLORS.reset}`); // prettier-ignore
+  }
+
+  if (skipWorktreeSetup === true) {
+    console.log(` - 🌳 skip-worktree-setup: ${COLORS.green}true${COLORS.reset}`); // prettier-ignore
+  }
 };
 
 /**

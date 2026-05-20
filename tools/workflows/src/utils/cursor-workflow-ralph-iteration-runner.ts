@@ -39,6 +39,9 @@ export interface CursorWorkflowRalphIterationRunParams {
   readonly runner: RalphExecutionBackendId;
   readonly signal: AbortSignal | undefined;
   readonly timeoutMs: number | undefined;
+  readonly skipWorktreeSetup?: boolean;
+  readonly worktree?: string;
+  readonly worktreeBase?: string;
 }
 
 /**
@@ -124,7 +127,10 @@ export const createCursorWorkflowRalphIterationRunner = (
       model: params.model,
       onChunk: mergedOnChunk,
       signal: params.signal,
+      skipWorktreeSetup: params.skipWorktreeSetup,
       timeoutMs: params.timeoutMs,
+      worktree: params.worktree,
+      worktreeBase: params.worktreeBase,
     });
   },
 });

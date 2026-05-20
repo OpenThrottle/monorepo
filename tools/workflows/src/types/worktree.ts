@@ -155,6 +155,14 @@ export interface ChildJobInput {
    * Shim debug level for nested runs; forwarded as `--debug` or `--verbose` when not `omit`.
    */
   readonly ralphDebugCli?: RalphNestedDebugCli;
+  /**
+   * Agent CLI worktree name. When omitted inside `runChildJob`, defaults to `handoff.targetId`.
+   */
+  readonly worktree?: string;
+  /** Cursor-only: `--worktree-base`. */
+  readonly worktreeBase?: string;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup?: boolean;
   /** Optional timeout in milliseconds; on expiry the child is killed (SIGTERM then SIGKILL after grace). */
   readonly timeoutMs?: number;
   /** Optional AbortSignal; when aborted the child is killed (SIGTERM then SIGKILL after grace). */

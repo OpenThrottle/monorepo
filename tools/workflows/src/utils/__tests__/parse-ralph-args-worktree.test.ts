@@ -1,8 +1,9 @@
 /**
- * @description Integration tests for `--backend` in {@link parseRalphArgs} (uses partial mock of seed merge).
+ * @description Integration tests for `--worktree` flags in {@link parseRalphArgs}.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 
 vi.mock('../ralph-runtime-config', async (importOriginal) => {
   const actual =
@@ -18,7 +19,7 @@ vi.mock('../ralph-runtime-config', async (importOriginal) => {
       prompt: '/agents/ralph',
       promptFile: undefined,
       skipWorktreeSetup: undefined,
-      worktree: undefined,
+      worktree: 'from-seed',
       worktreeBase: undefined,
     })),
   };
@@ -26,7 +27,7 @@ vi.mock('../ralph-runtime-config', async (importOriginal) => {
 
 const PLAN_UUID = '77cb14a0-5eb0-4061-87ea-d618b85e8818';
 
-describe('parseRalphArgs (execution backend)', () => {
+describe('parseRalphArgs (worktree)', () => {
   const originalArgv = process.argv;
 
   beforeEach(() => {
@@ -39,44 +40,50 @@ describe('parseRalphArgs (execution backend)', () => {
     process.argv = originalArgv;
   });
 
-  it('parses --backend cursor', async () => {
+  it('uses seed worktree when CLI omits --worktree', async () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID];
+    const { parseRalphArgs } = await import('../parsers');
+    const args = parseRalphArgs();
+    expect(args.worktree).toBe('from-seed');
+  });
+
+  it('parses --worktree <name> over seed', async () => {
     process.argv = [
       'node',
       'ralph.js',
       '--plan',
       PLAN_UUID,
-      '--backend',
-      'cursor',
+      '--worktree',
+      'cli-wt',
     ];
     const { parseRalphArgs } = await import('../parsers');
     const args = parseRalphArgs();
-    expect(args.backend).toBe('cursor');
+    expect(args.worktree).toBe('cli-wt');
   });
 
-  it('parses --backend claude (case-insensitive)', async () => {
+  it('parses flag-only --worktree when name omitted', async () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--worktree'];
+    const { parseRalphArgs } = await import('../parsers');
+    const args = parseRalphArgs();
+    expect(args.worktree).toBe(RALPH_WORKTREE_FLAG_ONLY);
+  });
+
+  it('parses --worktree-base and --skip-worktree-setup', async () => {
     process.argv = [
       'node',
       'ralph.js',
       '--plan',
       PLAN_UUID,
-      '--backend',
-      'Claude',
+      '--worktree',
+      'wt',
+      '--worktree-base',
+      'main',
+      '--skip-worktree-setup',
     ];
     const { parseRalphArgs } = await import('../parsers');
     const args = parseRalphArgs();
-    expect(args.backend).toBe('claude');
-  });
-
-  it('throws on unknown --backend', async () => {
-    process.argv = [
-      'node',
-      'ralph.js',
-      '--plan',
-      PLAN_UUID,
-      '--backend',
-      'not-a-runner',
-    ];
-    const { parseRalphArgs } = await import('../parsers');
-    expect(() => parseRalphArgs()).toThrow(/Unknown execution backend/);
+    expect(args.worktree).toBe('wt');
+    expect(args.worktreeBase).toBe('main');
+    expect(args.skipWorktreeSetup).toBe(true);
   });
 });

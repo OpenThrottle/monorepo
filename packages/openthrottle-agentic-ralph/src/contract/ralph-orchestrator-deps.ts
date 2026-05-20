@@ -45,7 +45,10 @@ export interface WorkflowRalphIterationRunParams {
   readonly onChunk?: WorkflowRalphIterationOnChunk;
   readonly runner: WorkflowRunner;
   readonly signal: AbortSignal | undefined;
+  readonly skipWorktreeSetup?: boolean;
   readonly timeoutMs: number | undefined;
+  readonly worktree?: string;
+  readonly worktreeBase?: string;
 }
 
 /**

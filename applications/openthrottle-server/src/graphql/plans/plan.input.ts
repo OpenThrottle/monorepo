@@ -221,6 +221,24 @@ export class RalphPlanRunTuningInput {
     nullable: true,
   })
   ralphDebugCli!: RalphNestedDebugCliGraphQL | null;
+
+  @Field(() => String, {
+    description: `Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id.`,
+    nullable: true,
+  })
+  worktree!: string | null;
+
+  @Field(() => String, {
+    description: `Cursor-only: branch/ref for --worktree-base.`,
+    nullable: true,
+  })
+  worktreeBase!: string | null;
+
+  @Field(() => Boolean, {
+    description: `Cursor-only: pass --skip-worktree-setup to cursor-agent.`,
+    nullable: true,
+  })
+  skipWorktreeSetup!: boolean | null;
 }
 
 @InputType()
