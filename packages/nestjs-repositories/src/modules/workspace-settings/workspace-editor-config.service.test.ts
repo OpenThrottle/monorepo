@@ -41,7 +41,7 @@ describe('WorkspaceEditorConfigService', () => {
     mockUserWorkspaceSettingsService.getOrCreateForUser.mockResolvedValue({
       enabledEditors: [],
       userId,
-    } as UserWorkspaceSettings);
+    } as unknown as UserWorkspaceSettings);
 
     const results = await service.applyForUser(userId, {
       apiBaseUrl: 'http://localhost:6021',

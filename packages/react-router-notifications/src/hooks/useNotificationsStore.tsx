@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { NotificationsStoreContext } from '../data/index';
 
-interface UseNotificationsStoreOptions {}
+export interface UseNotificationsStoreOptions {}
 
 /**
  * @description TODO: Add a description or delete the comment, dealers choice.

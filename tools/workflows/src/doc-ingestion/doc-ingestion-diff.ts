@@ -10,7 +10,7 @@ import { join, relative, sep } from 'node:path';
 import { getPriorState } from './doc-ingestion-state';
 
 /** Payload for the doc-ingestion BullMQ job. At least one of directories or files must be set. */
-interface DocIngestionJobPayload {
+export interface DocIngestionJobPayload {
   readonly directories?: readonly string[];
   readonly files?: readonly string[];
   readonly scope?: string;
@@ -19,7 +19,7 @@ interface DocIngestionJobPayload {
 }
 
 /** Result of diffing current filesystem state vs prior ingestion state. */
-interface DocIngestionDiff {
+export interface DocIngestionDiff {
   readonly toAdd: readonly string[];
   readonly toUpdate: readonly string[];
   readonly toRemove: readonly string[];
@@ -30,7 +30,7 @@ interface DocIngestionDiff {
 /**
  * @description Normalizes a path to be relative to workspace root with forward slashes and no leading ./.
  */
-function normalizeRelativePath(
+export function normalizeRelativePath(
   workspaceRoot: string,
   absolutePath: string,
 ): string {
@@ -41,7 +41,7 @@ function normalizeRelativePath(
 /**
  * @description Recursively collects relative paths of .md files under dir (relative to workspace root).
  */
-async function collectMdPathsUnderDir(
+export async function collectMdPathsUnderDir(
   workspaceRoot: string,
   dirRelative: string,
 ): Promise<string[]> {
@@ -75,7 +75,7 @@ async function collectMdPathsUnderDir(
  * @description Expands job payload (directories + files) to a deduplicated list of markdown paths relative to workspace root.
  * Directories are recursively scanned for .md files; files are included only if they exist and end in .md.
  */
-async function expandToMarkdownPaths(
+export async function expandToMarkdownPaths(
   workspaceRoot: string,
   payload: Pick<DocIngestionJobPayload, 'directories' | 'files'>,
 ): Promise<string[]> {
@@ -116,7 +116,7 @@ async function expandToMarkdownPaths(
 /**
  * @description Computes SHA-256 hex hash of file content. Returns undefined if file cannot be read.
  */
-async function computeContentHash(
+export async function computeContentHash(
   absolutePath: string,
 ): Promise<string | undefined> {
   try {
@@ -127,7 +127,7 @@ async function computeContentHash(
   }
 }
 
-interface ComputeDocIngestionDiffOptions {
+export interface ComputeDocIngestionDiffOptions {
   readonly connectionString: string;
   readonly payload: DocIngestionJobPayload;
   readonly scope: string;

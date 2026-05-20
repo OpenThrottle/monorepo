@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-interface NotificationPermissionAvailableProps {
+export interface NotificationPermissionAvailableProps {
   readonly className?: string;
 }
 

@@ -10,7 +10,7 @@ import {
 import type { NotificationInstance } from '../types';
 import { formatRelativeTime, formatSeverityToColor } from '../utils/formatters';
 
-interface NotificationItemProps {
+export interface NotificationItemProps {
   readonly notification: NotificationInstance;
   readonly onMarkRead: () => void;
   readonly onDismiss: () => void;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-interface NotificationPermissionDeniedProps {
+export interface NotificationPermissionDeniedProps {
   readonly className?: string;
 }
 

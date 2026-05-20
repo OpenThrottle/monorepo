@@ -4,7 +4,7 @@ import {
   NotificationsStoreContextValue,
 } from '../data/notifications-store.context';
 
-interface UseNotificationsStoreOptionalOptions {}
+export interface UseNotificationsStoreOptionalOptions {}
 
 /**
  * @description TODO: Add a description or delete the comment, dealers choice.

@@ -20,7 +20,7 @@ import { NotificationActions } from './NotificationActions';
 import { NotificationEmpty } from './NotificationEmpty';
 import { NotificationItem } from './NotificationItem';
 
-interface NotificationBellProps {}
+export interface NotificationBellProps {}
 
 /**
  * @description Notification bell with dropdown list. Shows unread count badge;

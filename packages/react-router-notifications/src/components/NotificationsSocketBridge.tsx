@@ -21,7 +21,7 @@ import {
  * at the WebSocket boundary before the first event. UI toggles and cross-tab sync live in
  * {@link useNotificationsSystemPreferences} (NotificationBell) — see that hook’s module doc.
  */
-interface NotificationsSocketBridgeProps {
+export interface NotificationsSocketBridgeProps {
   readonly children: React.ReactNode;
   readonly webSocketUrl: string;
 }
