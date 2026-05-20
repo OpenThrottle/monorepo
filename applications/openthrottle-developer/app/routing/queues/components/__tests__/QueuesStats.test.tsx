@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { QueuesStats } from '../QueuesStats';
@@ -74,11 +75,27 @@ describe('QueuesStats Component', () => {
       ).toBeInTheDocument();
     });
 
-    test('should describe all table metrics', () => {
+    test('should describe operational default view and tooltip parity', () => {
       expect(
-        component.getByText(
-          /Waiting, delayed, in flight, completed, and failed/i,
-        ),
+        component.getByText(/backlog and active work/i),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(/Hover for all five table counts/i),
+      ).toBeInTheDocument();
+    });
+
+    test('should render show completed toggle defaulting off', () => {
+      const toggle = component.getByTestId('queues-stats-show-completed');
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).not.toBeChecked();
+    });
+
+    test('should update description when show completed is enabled', async () => {
+      const user = userEvent.setup();
+      await user.click(component.getByTestId('queues-stats-show-completed'));
+
+      expect(
+        component.getByText(/including completed history/i),
       ).toBeInTheDocument();
     });
   });
