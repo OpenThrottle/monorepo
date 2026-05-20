@@ -1,33 +1,17 @@
-import * as React from 'react';
-import classnames from 'classnames';
+import type { ComponentPropsWithoutRef } from 'react';
+import { cn } from '../../utils/cn';
 
-export interface PopoverDescriptionProps {
-  readonly className?: string;
-}
+export type PopoverDescriptionProps = ComponentPropsWithoutRef<'p'>;
 
-export const PopoverDescription = (
-  props: PopoverDescriptionProps,
-): React.ReactElement => {
-  const { className } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function PopoverDescription({
+  className,
+  ...props
+}: PopoverDescriptionProps) {
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="PopoverDescription"
-    >
-      <h2>PopoverDescription</h2>
-    </div>
+    <p
+      className={cn('text-muted-foreground', className)}
+      data-slot="popover-description"
+      {...props}
+    />
   );
-};
+}

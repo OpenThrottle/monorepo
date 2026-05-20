@@ -1,28 +1,10 @@
-import * as React from 'react';
-import classnames from 'classnames';
+import type { ComponentPropsWithoutRef } from 'react';
+import { Popover as PopoverPrimitive } from 'radix-ui';
 
-export interface PopoverProps {
-  readonly className?: string;
+export type PopoverProps = ComponentPropsWithoutRef<
+  typeof PopoverPrimitive.Root
+>;
+
+export function Popover(props: PopoverProps) {
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
-
-export const Popover = (props: PopoverProps): React.ReactElement => {
-  const { className } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <div className={classnames('p-4', className)} data-testid="Popover">
-      <h2>Popover</h2>
-    </div>
-  );
-};

@@ -1,30 +1,14 @@
-import * as React from 'react';
-import classnames from 'classnames';
+import type { ComponentPropsWithoutRef } from 'react';
+import { cn } from '../../utils/cn';
 
-export interface PopoverHeaderProps {
-  readonly className?: string;
-}
+export type PopoverHeaderProps = ComponentPropsWithoutRef<'div'>;
 
-export const PopoverHeader = (
-  props: PopoverHeaderProps,
-): React.ReactElement => {
-  const { className } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
+export function PopoverHeader({ className, ...props }: PopoverHeaderProps) {
   return (
-    <div className={classnames('p-4', className)} data-testid="PopoverHeader">
-      <h2>PopoverHeader</h2>
-    </div>
+    <div
+      className={cn('flex flex-col gap-1 text-sm', className)}
+      data-slot="popover-header"
+      {...props}
+    />
   );
-};
+}
