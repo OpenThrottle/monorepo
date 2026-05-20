@@ -68,8 +68,11 @@ describe('QueuesStats Component', () => {
       component.rerender(<RoutesStub />);
     });
 
-    test('should render grouped bar chart container', () => {
+    test('should render grouped bar chart container with scaled height', () => {
       const section = component.getByTestId('QueuesStats');
+      const chartWrapper = component.getByTestId('queues-stats-chart');
+      expect(chartWrapper).toBeInTheDocument();
+      expect(chartWrapper).toHaveStyle({ minHeight: '300px' });
       expect(
         section.querySelector('.recharts-responsive-container'),
       ).toBeInTheDocument();

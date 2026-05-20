@@ -12,12 +12,14 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueStatsChartTooltip } from '~/routing/queues/components/QueueStatsChartTooltip';
 import {
+  formatQueueStatsChartTick,
+  queueStatsChartHeight,
   QUEUE_STATS_CHART_CONFIG,
   queuesToStatsChartData,
   seriesKeysForQueueStatsView,
 } from '~/routing/queues/utils/queue-stats-chart';
 
-interface QueuesStatsProps {
+export interface QueuesStatsProps {
   readonly className?: string;
   readonly queues: QueueCardFragment[];
 }
@@ -35,6 +37,11 @@ export const QueuesStats = (props: QueuesStatsProps) => {
   const visibleSeries = React.useMemo(
     () => seriesKeysForQueueStatsView(showCompleted),
     [showCompleted],
+  );
+
+  const chartHeight = React.useMemo(
+    () => queueStatsChartHeight(chartData.length),
+    [chartData.length],
   );
 
   const isEmpty = chartData.length === 0;
@@ -86,42 +93,60 @@ export const QueuesStats = (props: QueuesStatsProps) => {
         </div>
       </div>
 
-      <ChartContainer
-        className="mt-4 w-full min-h-[300px]"
-        config={QUEUE_STATS_CHART_CONFIG}
+      <div
+        className="mt-4 w-full"
+        data-testid="queues-stats-chart"
+        style={{ minHeight: chartHeight }}
       >
-        <BarChart
-          data={chartData}
-          height={300}
-          layout="vertical"
-          margin={{ bottom: 8, left: 4, right: 12, top: 4 }}
-          style={{ minHeight: 300 }}
+        <ChartContainer
+          className="h-full w-full"
+          config={QUEUE_STATS_CHART_CONFIG}
         >
-          <CartesianGrid
-            horizontal={true}
-            strokeDasharray="3 3"
-            vertical={false}
-          />
-          <XAxis axisLine={false} tickLine={false} type="auto" />
-          <YAxis
-            axisLine={false}
-            dataKey="name"
-            tickLine={false}
-            type="auto"
-            width={120}
-          />
-          <ChartTooltip content={<QueueStatsChartTooltip />} />
-          <ChartLegend content={<ChartLegendContent />} />
-          {visibleSeries.map((seriesKey) => (
-            <Bar
-              dataKey={seriesKey}
-              fill={`var(--color-${seriesKey})`}
-              key={seriesKey}
-              radius={[0, 4, 4, 0]}
+          <BarChart
+            accessibilityLayer={true}
+            data={chartData}
+            height={chartHeight}
+            layout="vertical"
+            margin={{ bottom: 28, left: 4, right: 12, top: 4 }}
+            style={{ minHeight: chartHeight }}
+          >
+            <CartesianGrid
+              horizontal={true}
+              strokeDasharray="3 3"
+              vertical={false}
             />
-          ))}
-        </BarChart>
-      </ChartContainer>
+            <XAxis
+              allowDecimals={false}
+              axisLine={false}
+              label={{
+                offset: 0,
+                position: 'insideBottom',
+                value: 'Jobs',
+              }}
+              tickFormatter={formatQueueStatsChartTick}
+              tickLine={false}
+              type="number"
+            />
+            <YAxis
+              axisLine={false}
+              dataKey="name"
+              tickLine={false}
+              type="category"
+              width={128}
+            />
+            <ChartTooltip content={<QueueStatsChartTooltip />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {visibleSeries.map((seriesKey) => (
+              <Bar
+                dataKey={seriesKey}
+                fill={`var(--color-${seriesKey})`}
+                key={seriesKey}
+                radius={[0, 4, 4, 0]}
+              />
+            ))}
+          </BarChart>
+        </ChartContainer>
+      </div>
     </section>
   );
 };

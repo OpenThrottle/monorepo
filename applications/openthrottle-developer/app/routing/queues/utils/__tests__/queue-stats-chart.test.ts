@@ -2,13 +2,18 @@ import { describe, expect, test } from 'vitest';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import {
   QUEUE_STATS_CHART_FINALIST_IDS,
+  QUEUE_STATS_CHART_MIN_HEIGHT,
   QUEUE_STATS_CHART_OPERATIONAL_SERIES,
   QUEUE_STATS_CHART_RECOMMENDED_FINALIST,
+  QUEUE_STATS_CHART_ROW_HEIGHT,
   QUEUE_STATS_CHART_SUCCESS_CRITERIA,
   QUEUE_STATS_CHART_VIEW_OPTIONS,
   REPRESENTATIVE_SKEWED_QUEUES,
   analyzeQueuesChartSkew,
   backlogForQueue,
+  chartConfigForQueueStatsView,
+  formatQueueStatsChartTick,
+  queueStatsChartHeight,
   queuesToStatsChartData,
   seriesKeysForQueueStatsView,
 } from '../queue-stats-chart';
@@ -180,5 +185,52 @@ describe('seriesKeysForQueueStatsView', () => {
   test('full view includes all five table series', () => {
     expect(seriesKeysForQueueStatsView(true)).toHaveLength(5);
     expect(seriesKeysForQueueStatsView(true)).toContain('completed');
+  });
+});
+
+describe('formatQueueStatsChartTick', () => {
+  test('formats large job counts compactly', () => {
+    expect(formatQueueStatsChartTick(48_200)).toBe('48.2K');
+    expect(formatQueueStatsChartTick(26)).toBe('26');
+  });
+});
+
+describe('queueStatsChartHeight', () => {
+  test('returns minimum height for empty or small queue counts', () => {
+    expect(queueStatsChartHeight(0)).toBe(QUEUE_STATS_CHART_MIN_HEIGHT);
+    expect(queueStatsChartHeight(2)).toBe(QUEUE_STATS_CHART_MIN_HEIGHT);
+  });
+
+  test('grows with queue count using row height constant', () => {
+    const queueCount = 12;
+    expect(queueStatsChartHeight(queueCount)).toBe(
+      Math.max(
+        QUEUE_STATS_CHART_MIN_HEIGHT,
+        queueCount * QUEUE_STATS_CHART_ROW_HEIGHT + 48,
+      ),
+    );
+  });
+});
+
+describe('chartConfigForQueueStatsView', () => {
+  test('operational config excludes completed label entry', () => {
+    const config = chartConfigForQueueStatsView(false);
+    expect(Object.keys(config).sort()).toEqual([
+      'active',
+      'delayed',
+      'failed',
+      'waiting',
+    ]);
+    expect(config.completed).toBeUndefined();
+  });
+
+  test('full config includes all five series', () => {
+    expect(Object.keys(chartConfigForQueueStatsView(true)).sort()).toEqual([
+      'active',
+      'completed',
+      'delayed',
+      'failed',
+      'waiting',
+    ]);
   });
 });

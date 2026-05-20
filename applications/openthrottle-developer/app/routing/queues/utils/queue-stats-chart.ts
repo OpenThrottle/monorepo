@@ -356,6 +356,55 @@ export function seriesKeysForQueueStatsView(
     : QUEUE_STATS_CHART_OPERATIONAL_SERIES;
 }
 
+/** Minimum height (px) for the vertical grouped bar chart. */
+export const QUEUE_STATS_CHART_MIN_HEIGHT = 300;
+
+/** Approximate height (px) per queue row including grouped bar padding. */
+export const QUEUE_STATS_CHART_ROW_HEIGHT = 52;
+
+/**
+ * @description Scales chart height with queue count so row labels and bars stay readable.
+ */
+export function queueStatsChartHeight(queueCount: number): number {
+  if (queueCount <= 0) {
+    return QUEUE_STATS_CHART_MIN_HEIGHT;
+  }
+  return Math.max(
+    QUEUE_STATS_CHART_MIN_HEIGHT,
+    queueCount * QUEUE_STATS_CHART_ROW_HEIGHT + 48,
+  );
+}
+
+/**
+ * @description Compact numeric ticks for job-count X-axis (e.g. 48200 → "48.2K").
+ */
+export function formatQueueStatsChartTick(value: number): string {
+  if (!Number.isFinite(value)) {
+    return String(value);
+  }
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 1,
+    notation: 'compact',
+  }).format(value);
+}
+
+/**
+ * @description ChartConfig entries for the active view (legend + bar colors).
+ */
+export function chartConfigForQueueStatsView(
+  includeCompleted: boolean,
+): ChartConfig {
+  const keys = seriesKeysForQueueStatsView(includeCompleted);
+  const config: ChartConfig = {};
+  for (const key of keys) {
+    const entry = QUEUE_STATS_CHART_CONFIG[key];
+    if (entry) {
+      config[key] = entry;
+    }
+  }
+  return config;
+}
+
 /**
  * @description Maps queue stats to chart rows with every QueueCard count, sorted by total jobs descending then name.
  */
