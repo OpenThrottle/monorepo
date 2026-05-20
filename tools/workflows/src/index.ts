@@ -64,6 +64,59 @@ export type {
   RalphNestedDebugCli,
   RalphNestedRunTuningInput,
 } from './utils/workflow-ralph-nested-argv';
+export {
+  compareJobRunHookEntries,
+  defaultJobRunHookOnFailure,
+  DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS,
+  formatJobRunHookEntryLabel,
+  JOB_RUN_HOOK_SKILL_PATH_PREFIXES,
+  MAX_JOB_RUN_HOOKS_PER_PHASE,
+  MAX_JOB_RUN_HOOKS_TOTAL,
+  MAX_JOB_RUN_HOOK_STRING_LEN,
+  MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS,
+  resolveJobRunHookOnFailure,
+  sortJobRunHookEntries,
+} from './types/job-run-lifecycle-hooks';
+export type {
+  JobRunHookConditions,
+  JobRunHookEntry,
+  JobRunHookEntryBase,
+  JobRunHookKind,
+  JobRunHookOnFailure,
+  JobRunHookPhase,
+  JobRunHookPromptDelivery,
+  JobRunHookPromptProfileFile,
+  JobRunHookPromptProfileNamed,
+  JobRunHookRunKind,
+  JobRunHookRunOptions,
+  JobRunHookSkill,
+  JobRunHooksConfig,
+} from './types/job-run-lifecycle-hooks';
+export {
+  jobRunHookEntryToPromptSeed,
+  parseJobRunHookEntry,
+  parseJobRunHooksConfig,
+  resolveJobRunHookTimeoutSeconds,
+  shouldRunJobRunHook,
+  validateJobRunHookNamedPrompt,
+  validateJobRunHookPromptFile,
+  validateJobRunHookSkillPath,
+} from './utils/job-run-lifecycle-hooks-validation';
+export {
+  buildJobRunHookAgentPrompt,
+  executeJobRunHooksPhase,
+  readJobRunHookSkillMarkdown,
+  resolveJobRunHookLayer1Prompt,
+  stripSkillMarkdownFrontmatter,
+} from './utils/job-run-hooks-runner';
+export type {
+  ExecuteJobRunHooksPhaseDeps,
+  ExecuteJobRunHooksPhaseParams,
+  ExecuteJobRunHooksPhaseResult,
+  JobRunHookIterationParams,
+  JobRunHookIterationResult,
+  JobRunHookPhaseEntryResult,
+} from './utils/job-run-hooks-runner';
 export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
 export {
   createMutexWorktreeTargetsTracker,

@@ -28,6 +28,9 @@ import { EditorWindow } from '@openthrottle/react-router-editor';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
+  jobRunHooksBlocked?: boolean;
+  jobRunHooksBlockedReason?: string;
+  jobRunHooksJson?: string;
   plan: PlanDetailsFragment;
   ralphTuningJson: string;
   recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
@@ -40,6 +43,9 @@ export interface PlanTabDetailsProps {
 export const PlanTabDetails = (props: PlanTabDetailsProps) => {
   const {
     fullscreen,
+    jobRunHooksBlocked = false,
+    jobRunHooksBlockedReason,
+    jobRunHooksJson = '',
     plan,
     ralphTuningJson,
     recentPlanRuns,
@@ -71,10 +77,15 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
     workingDirectory ?? '',
   );
   const workflowRunBlocked =
-    !workflowValidation.ok || workspacePathError != null;
-  const workflowRunBlockedReason = !workflowValidation.ok
-    ? workflowValidation.issues[0]?.message
-    : workspacePathError;
+    !workflowValidation.ok ||
+    workspacePathError != null ||
+    jobRunHooksBlocked;
+  const workflowRunBlockedReason = jobRunHooksBlocked
+    ? (jobRunHooksBlockedReason ??
+      'Fix job run lifecycle hooks in Configuration.')
+    : !workflowValidation.ok
+      ? workflowValidation.issues[0]?.message
+      : workspacePathError;
 
   // Setup
   // const isExpanded = isWorkflowOptionsExpanded(searchParams);
@@ -112,6 +123,7 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
           <PlanToolbar
             // className="bg-card rounded-lg border border-card-border p-4"
             className="p-4"
+            jobRunHooksJson={jobRunHooksJson}
             planId={plan.id}
             planStatus={plan.status}
             planTitle={plan.title ?? 'Untitled'}

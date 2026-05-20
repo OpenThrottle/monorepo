@@ -25,9 +25,11 @@ import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowComm
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
+import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
 import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
+import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 import {
   workflowRalphRunOptionsAtom,
   workflowRunIterationTimeoutTextAtom,
@@ -64,6 +66,13 @@ export interface PlanTabConfigurationProps {
   /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
   value?: WorkflowRalphRunOptionsInput;
 
+  /** Controlled: job-run lifecycle hooks (parent owns for enqueue + save). */
+  jobRunHookRows?: readonly JobRunHookDraftRow[];
+  onJobRunHookRowsChange?: (next: JobRunHookDraftRow[]) => void;
+  onSaveJobRunHooks?: () => void;
+  saveJobRunHooksDisabled?: boolean;
+  saveJobRunHooksPending?: boolean;
+
   /**
    * @description Optional absolute path for multi-workspace runs. Passed to
    * the enqueue mutation as `workingDirectory`. Empty string = monorepo root.
@@ -76,10 +85,15 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
     iterationTimeoutText: iterationTimeoutTextProp,
     onCollapse,
     onIterationTimeoutTextChange,
+    jobRunHookRows,
+    onJobRunHookRowsChange,
     onResetToDefaults,
+    onSaveJobRunHooks,
     onValueChange,
     onWorkingDirectoryChange,
     planId,
+    saveJobRunHooksDisabled,
+    saveJobRunHooksPending,
     taskId,
     value: valueProp,
     workingDirectory = '',
@@ -330,6 +344,16 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
           value={workingDirectory}
         />
       )}
+
+      {jobRunHookRows != null && onJobRunHookRowsChange != null ? (
+        <PlanWorkflowConfigHooks
+          hooks={jobRunHookRows}
+          onChange={onJobRunHookRowsChange}
+          onSave={onSaveJobRunHooks}
+          saveDisabled={saveJobRunHooksDisabled}
+          savePending={saveJobRunHooksPending}
+        />
+      ) : null}
 
       <PlanWorkflowConfigPrompt
         onPromptChange={(next) =>

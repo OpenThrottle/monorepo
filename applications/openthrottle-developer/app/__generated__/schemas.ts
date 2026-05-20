@@ -359,6 +359,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
   return z.object({
+    jobRunHooksJson: z.string().nullish(),
     planId: z.string(),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
@@ -749,6 +750,7 @@ export function UpdatePlanInputSchema(): z.ZodObject<
     category: z.string().nullish(),
     description: z.string().nullish(),
     id: z.string(),
+    jobRunHooksJson: z.string().nullish(),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     status: z.string().nullish(),

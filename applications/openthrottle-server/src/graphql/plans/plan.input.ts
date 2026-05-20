@@ -100,6 +100,12 @@ export class UpdatePlanInput {
 
   @Field(() => String, { nullable: true })
   title!: string | null;
+
+  @Field(() => String, {
+    description: `JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.`,
+    nullable: true,
+  })
+  jobRunHooksJson!: string | null;
 }
 
 @InputType()
@@ -263,6 +269,12 @@ export class EnqueuePlanRunInput {
     nullable: true,
   })
   workingDirectory!: string | null;
+
+  @Field(() => String, {
+    description: `Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set.`,
+    nullable: true,
+  })
+  jobRunHooksJson!: string | null;
 }
 
 @InputType()
@@ -307,6 +319,12 @@ export class EnqueuePlanRalphOrchestratorInput {
     nullable: true,
   })
   workingDirectory!: string | null;
+
+  @Field(() => String, {
+    description: `Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan.`,
+    nullable: true,
+  })
+  jobRunHooksJson!: string | null;
 }
 
 @InputType()

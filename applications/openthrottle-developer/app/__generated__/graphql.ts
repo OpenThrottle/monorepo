@@ -479,6 +479,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
 };
 
 export type EnqueuePlanRunInput = {
+  /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
+  jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
   /** Plan id to enqueue a run for */
   planId: Scalars['ID']['input'];
   /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
@@ -1144,6 +1146,8 @@ export type PlanObject = {
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** JSON string of job-run lifecycle hooks ({ hooks: [...] }), versioned with the plan. */
+  jobRunHooksJson: Scalars['String']['output'];
   project?: Maybe<Scalars['String']['output']>;
   /** Optional. Project UUID (FK to projects table). Null when plan is not linked to a project. */
   projectId?: Maybe<Scalars['String']['output']>;
@@ -2091,6 +2095,8 @@ export type UpdatePlanInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Plan id to update */
   id: Scalars['ID']['input'];
+  /** JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged. */
+  jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Pass null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
@@ -2652,6 +2658,7 @@ export type PlanDetailsFragment = {
   createdAt: any;
   description?: string | null;
   id: string;
+  jobRunHooksJson: string;
   projectId?: string | null;
   status: string;
   summary?: string | null;
@@ -2678,6 +2685,7 @@ export type GetPlanByIdQuery = {
     createdAt: any;
     description?: string | null;
     id: string;
+    jobRunHooksJson: string;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -2793,6 +2801,20 @@ export type PlanDetailUpdateTaskMutation = {
   } | null;
 };
 
+export type PlanDetailUpdatePlanJobRunHooksMutationVariables = Exact<{
+  input: UpdatePlanInput;
+}>;
+
+export type PlanDetailUpdatePlanJobRunHooksMutation = {
+  __typename?: 'Mutation';
+  updatePlan?: {
+    __typename?: 'PlanObject';
+    id: string;
+    jobRunHooksJson: string;
+    updatedAt: any;
+  } | null;
+};
+
 export type PlanDetailIndexLoaderQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
 }>;
@@ -2807,6 +2829,7 @@ export type PlanDetailIndexLoaderQuery = {
     createdAt: any;
     description?: string | null;
     id: string;
+    jobRunHooksJson: string;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -4103,6 +4126,7 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -5787,6 +5811,7 @@ export const GetPlanByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -6189,6 +6214,65 @@ export const PlanDetailUpdateTaskDocument = {
   PlanDetailUpdateTaskMutation,
   PlanDetailUpdateTaskMutationVariables
 >;
+export const PlanDetailUpdatePlanJobRunHooksDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailUpdatePlanJobRunHooks' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdatePlanInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updatePlan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'jobRunHooksJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailUpdatePlanJobRunHooksMutation,
+  PlanDetailUpdatePlanJobRunHooksMutationVariables
+>;
 export const PlanDetailIndexLoaderDocument = {
   kind: 'Document',
   definitions: [
@@ -6398,6 +6482,7 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',

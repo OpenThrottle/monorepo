@@ -57,6 +57,57 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
   });
 
+  test('passes jobRunHooksJson into enqueuePlanRun when form field is valid', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      enqueuePlanRun: {
+        jobId: 'job-hooks',
+        planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+      },
+    });
+
+    const hooksPayload = JSON.stringify({
+      hooks: [
+        {
+          kind: 'prompt_profile',
+          phase: 'before_run',
+          prompt: '/agents/ralph',
+          promptDelivery: 'named',
+        },
+      ],
+    });
+
+    const formData = new FormData();
+    formData.set('intent', 'runPlan');
+    formData.set('jobRunHooksJson', hooksPayload);
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailEnqueuePlanRunDocument,
+      {
+        input: {
+          planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+          priority: 1,
+          jobRunHooksJson: hooksPayload,
+        },
+      },
+    );
+  });
+
   test('passes parsed ralph tuning into enqueuePlanRun when ralphTuning JSON is valid', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       enqueuePlanRun: {

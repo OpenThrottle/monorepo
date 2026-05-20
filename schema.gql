@@ -160,6 +160,11 @@ type PlanObject {
   createdAt: DateTime!
   description: String
   id: String!
+
+  """
+  JSON string of job-run lifecycle hooks ({ hooks: [...] }), versioned with the plan.
+  """
+  jobRunHooksJson: String!
   project: String
 
   """
@@ -2217,6 +2222,11 @@ input UpdatePlanInput {
 
   """Plan id to update"""
   id: ID!
+
+  """
+  JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.
+  """
+  jobRunHooksJson: String
   project: String
 
   """
@@ -2261,6 +2271,11 @@ input EnqueuePlanRunInput {
   Optional absolute path to a local project directory used as the working directory for this run. When omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
   """
   workingDirectory: String
+
+  """
+  Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set.
+  """
+  jobRunHooksJson: String
 }
 
 input RalphPlanRunTuningInput {

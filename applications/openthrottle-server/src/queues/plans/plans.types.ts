@@ -2,6 +2,7 @@ import type { Job } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
 import type {
   ChildProcessMetrics,
+  JobRunHooksConfig,
   RalphExecutionBackendId,
   RalphNestedRunTuningInput,
   WallClockMetrics,
@@ -50,6 +51,10 @@ export interface RunPlanSpawnJobData {
    * When omitted, nested `workflow-ralph` uses env / `.workflow-ralph.json` in the worktree or workspace cwd (same precedence as manual CLI).
    */
   readonly ralph?: RalphNestedRunTuningInput;
+  /**
+   * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
+   */
+  readonly jobRunHooks?: JobRunHooksConfig;
   /**
    * Explicit spawn path; omit for backward compatibility (treated as spawn).
    */

@@ -49,6 +49,7 @@ describe('PlansResolver', () => {
     createdAt: new Date('2026-02-01T19:57:37.738Z'),
     description: 'A test plan',
     id: '80864bba-630a-451d-bfd2-4b25ec202381',
+    jobRunHooks: { hooks: [] },
     project: null,
     projectId: null,
     status: 'pending',
@@ -1069,7 +1070,59 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('jobRunHooksJson', () => {
+    test('serializes plan job_run_hooks column', () => {
+      const planWithHooks = {
+        ...mockPlan,
+        jobRunHooks: {
+          hooks: [
+            {
+              kind: 'prompt_profile',
+              phase: 'before_run',
+              prompt: '/agents/ralph',
+              promptDelivery: 'named',
+            },
+          ],
+        },
+      } as Plan;
+      const json = resolver.jobRunHooksJson(planWithHooks);
+      const parsed = JSON.parse(json) as { hooks: { phase: string }[] };
+      expect(parsed.hooks[0]?.phase).toBe('before_run');
+    });
+  });
+
   describe('updatePlan', () => {
+    test('persists jobRunHooksJson on update', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      const hooksJson = JSON.stringify({
+        hooks: [
+          {
+            kind: 'prompt_profile',
+            phase: 'after_run',
+            prompt: '/agents/ralph',
+            promptDelivery: 'named',
+          },
+        ],
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity) => entity as Plan);
+
+      await resolver.updatePlan({
+        id: mockPlan.id,
+        jobRunHooksJson: hooksJson,
+      } as UpdatePlanInput);
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobRunHooks: expect.objectContaining({
+            hooks: expect.arrayContaining([
+              expect.objectContaining({ phase: 'after_run' }),
+            ]),
+          }),
+        }),
+      );
+    });
+
     test('can set projectId to null', async () => {
       const repo = plansService.getRepository();
       const planWithProject = {

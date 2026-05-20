@@ -44,6 +44,10 @@ import { ProjectObject } from '../projects/project.object';
 import { QueuesService } from '../queues/queues.service';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
 import {
+  parseJobRunHooksJsonInput,
+  serializeJobRunHooksForGraphql,
+} from './enqueue-plan-job-run-hooks';
+import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
 } from './enqueue-plan-ralph-tuning';
@@ -115,6 +119,20 @@ export class PlansResolver {
     const project = await this.projectsService.findById(parent.projectId);
 
     return project;
+  }
+
+  @ResolveField(() => String, {
+    description: `Job-run lifecycle hooks stored on the plan ({ hooks: [...] }).`,
+  })
+  jobRunHooksJson(@Parent() parent: PlanObject): string {
+    const stored = (parent as PlanObject & { jobRunHooks?: unknown })
+      .jobRunHooks;
+    if (stored !== undefined && stored !== null) {
+      return serializeJobRunHooksForGraphql(
+        stored as Parameters<typeof serializeJobRunHooksForGraphql>[0],
+      );
+    }
+    return serializeJobRunHooksForGraphql({ hooks: [] });
   }
 
   // @ProfileResponseTime('PlansResolver.taskCount')
@@ -497,6 +515,24 @@ export class PlansResolver {
       entity.summary = input.summary;
       touched = true;
     }
+    if (input.jobRunHooksJson !== undefined) {
+      if (input.jobRunHooksJson === null) {
+        const hookCount = entity.jobRunHooks?.hooks?.length ?? 0;
+        if (hookCount > 0) {
+          entity.jobRunHooks = { hooks: [] };
+          touched = true;
+        }
+      } else {
+        const parsed = parseJobRunHooksJsonInput(input.jobRunHooksJson);
+        const next = parsed ?? { hooks: [] };
+        const prevJson = JSON.stringify(entity.jobRunHooks);
+        const nextJson = JSON.stringify(next);
+        if (prevJson !== nextJson) {
+          entity.jobRunHooks = next;
+          touched = true;
+        }
+      }
+    }
 
     if (!touched && inProgressBlocked) {
       throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
@@ -607,7 +643,8 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority, ralph, workingDirectory } = input;
+    const { jobRunHooksJson, planId, priority, ralph, workingDirectory } =
+      input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -618,7 +655,13 @@ export class PlansResolver {
 
     let jobData: RunPlanJobData;
     try {
-      jobData = buildRunPlanJobData({ planId, ralph, workingDirectory });
+      jobData = buildRunPlanJobData({
+        jobRunHooksJson,
+        planId,
+        planJobRunHooks: plan.jobRunHooks,
+        ralph,
+        workingDirectory,
+      });
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -714,7 +757,8 @@ export class PlansResolver {
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { planId, priority, ralph, workingDirectory } = input;
+    const { jobRunHooksJson, planId, priority, ralph, workingDirectory } =
+      input;
 
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -725,7 +769,13 @@ export class PlansResolver {
 
     let jobData: RunPlanJobData;
     try {
-      jobData = buildRunPlanJobData({ planId, ralph, workingDirectory });
+      jobData = buildRunPlanJobData({
+        jobRunHooksJson,
+        planId,
+        planJobRunHooks: plan.jobRunHooks,
+        ralph,
+        workingDirectory,
+      });
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : String(error);
@@ -820,6 +870,7 @@ export class PlansResolver {
   ): Promise<EnqueuePlanRunResultObject> {
     const {
       idempotencyKey,
+      jobRunHooksJson,
       planId,
       priority,
       ralph,
@@ -862,8 +913,10 @@ export class PlansResolver {
     let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
     try {
       jobData = buildRunPlanOrchestratorJobData({
+        jobRunHooksJson,
         mode,
         planId,
+        planJobRunHooks: plan.jobRunHooks,
         ralph,
         taskId,
         workingDirectory,

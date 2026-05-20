@@ -42,6 +42,10 @@ export interface PlanToolbarProps {
    */
   ralphTuningJson?: string;
   /**
+   * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
+   */
+  jobRunHooksJson?: string;
+  /**
    * @description Optional absolute path to a local project directory for multi-workspace runs.
    * Passed through to the enqueuePlanRun mutation as workingDirectory.
    */
@@ -66,6 +70,7 @@ export const PlanToolbar = (props: PlanToolbarProps) => {
     planId,
     planTitle = 'Untitled',
     planStatus,
+    jobRunHooksJson = '',
     ralphTuningJson = '',
     workingDirectory,
     workflowRunBlocked = false,
@@ -202,6 +207,13 @@ export const PlanToolbar = (props: PlanToolbarProps) => {
             <fetcherRunPlan.Form method="post">
               <Input name="intent" type="hidden" value="runPlan" />
               <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
+              {jobRunHooksJson !== '' ? (
+                <Input
+                  name="jobRunHooksJson"
+                  type="hidden"
+                  value={jobRunHooksJson}
+                />
+              ) : null}
               {workingDirectory != null && workingDirectory !== '' && (
                 <Input
                   name="workingDirectory"
