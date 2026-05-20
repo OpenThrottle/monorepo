@@ -38,7 +38,7 @@ export * from './components/MenuBar';
 export * from './components/MultiSelect';
 export * from './components/NavigationMenu';
 export * from './components/Pagination';
-export * from './components/Popover';
+export * from './components/Popover/index';
 export * from './components/Progress';
 export * from './components/Select/index';
 export * from './components/Separator';
@@ -48,15 +48,15 @@ export * from './components/SimpleAreaChart';
 export * from './components/SimpleBarChart';
 export * from './components/SimpleLineChart';
 export * from './components/SimplePieChart';
-export * from './components/Sidebar';
+export * from './components/Sidebar/index';
 export * from './components/Skeleton';
 export * from './components/Spinner';
 export * from './components/Switch';
 export * from './components/Table/index';
 export * from './components/Tabs/index';
 export * from './components/TextArea';
-export * from './components/ToggleGroup';
-export * from './components/Tooltip';
+export * from './components/ToggleGroup/index';
+export * from './components/Tooltip/index';
 
 // Utilities
 export * from './utils/cn';

@@ -47,7 +47,9 @@ export const skillsTableColumns: ColumnDef<
         <h3 className="mb-2 line-clamp-1 text-foreground">
           /{row.original.slug}
         </h3>
-        <p className="text-xs text-muted-foreground">{row.original.summary}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2">
+          {row.original.summary}
+        </p>
       </div>
     ),
     header: () => <div className="p-2">Summary</div>,

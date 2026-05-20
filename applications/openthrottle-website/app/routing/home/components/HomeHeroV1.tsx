@@ -54,7 +54,7 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
           <div className="flex flex-col justify-center sm:flex-row gap-4">
             <Button asChild={true} size="lg" variant="default">
               <Link target="_blank" to={ENV_SOURCE.APP_URL_DEVELOPER}>
-                Coming Soon
+                OpenThrottle Developer
                 <CodeIcon size={20} weight="regular" />
               </Link>
             </Button>

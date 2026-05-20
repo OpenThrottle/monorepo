@@ -10,12 +10,12 @@ import {
   GaugeIcon,
   GitPullRequest,
   ListOrderedIcon,
-  NotebookTextIcon,
+  MonitorCogIcon,
   NotebookTabsIcon,
+  NotebookTextIcon,
   Search,
   SwatchBookIcon,
   TerminalSquareIcon,
-  MonitorCogIcon,
 } from 'lucide-react';
 
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */

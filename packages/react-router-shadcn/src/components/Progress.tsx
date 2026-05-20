@@ -1,13 +1,28 @@
 import * as React from 'react';
 import { Progress as ProgressPrimitive } from 'radix-ui';
-
 import { cn } from '../utils/cn';
 
-function Progress({
-  className,
-  value,
-  ...props
-}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+type BaseProps = React.ComponentProps<typeof ProgressPrimitive.Root>;
+
+export interface ProgressProps extends BaseProps {
+  readonly value?: number;
+}
+
+export const Progress = (props: ProgressProps): React.ReactElement => {
+  const { className, value, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <ProgressPrimitive.Root
       className={cn(
@@ -15,7 +30,7 @@ function Progress({
         className,
       )}
       data-slot="progress"
-      {...props}
+      {...rest}
       value={value}
     >
       <ProgressPrimitive.Indicator
@@ -25,6 +40,4 @@ function Progress({
       />
     </ProgressPrimitive.Root>
   );
-}
-
-export { Progress };
+};

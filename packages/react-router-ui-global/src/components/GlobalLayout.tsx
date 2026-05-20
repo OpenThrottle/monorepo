@@ -10,6 +10,7 @@ import { GlobalSidebarContent } from './GlobalSidebarContent';
 import { GlobalSidebarFooter } from './GlobalSidebarFooter';
 import { GlobalSidebarHeader } from './GlobalSidebarHeader';
 import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
+import { useScrollContainerRestoration } from '../hooks/use-scroll-container-restoration';
 
 export interface GlobalLayoutProps {
   readonly children: React.ReactNode;
@@ -32,6 +33,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   const { children, className, data, health, overrides } = props;
 
   // Hooks
+  const refScrollableContent = React.useRef<HTMLDivElement>(null);
 
   // Setup
   const hideFooter = overrides?.footer ?? false;
@@ -42,6 +44,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   // Markup
 
   // Life Cycle
+  useScrollContainerRestoration(refScrollableContent);
 
   // 🔌 Short Circuit
 
@@ -52,7 +55,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         collapsible="icon"
         variant="sidebar"
       >
-        <GlobalSidebarHeader name="AI" to="/" />
+        <GlobalSidebarHeader name="Dev" to="/" />
         <GlobalSidebarContent
           data={data}
           defaultSectionsExpanded={false}
@@ -67,7 +70,10 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
-      <div className="flex flex-col max-w-full w-full overflow-auto max-h-screen relative">
+      <div
+        className="flex flex-col max-w-full w-full overflow-auto max-h-screen relative"
+        ref={refScrollableContent}
+      >
         <SidebarInset>{children}</SidebarInset>
       </div>
     </>

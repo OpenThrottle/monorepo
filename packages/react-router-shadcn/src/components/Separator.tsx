@@ -2,15 +2,32 @@
 
 import * as React from 'react';
 import { Separator as SeparatorPrimitive } from 'radix-ui';
-
 import { cn } from '../utils/cn';
 
-function Separator({
-  className,
-  orientation = 'horizontal',
-  decorative = true,
-  ...props
-}: React.ComponentProps<typeof SeparatorPrimitive.Root>) {
+type BaseProps = React.ComponentProps<typeof SeparatorPrimitive.Root>;
+
+export interface SeparatorProps extends BaseProps {}
+
+export const Separator = (props: SeparatorProps): React.ReactElement => {
+  const {
+    className,
+    decorative = true,
+    orientation = 'horizontal',
+    ...rest
+  } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <SeparatorPrimitive.Root
       className={cn(
@@ -20,9 +37,7 @@ function Separator({
       data-slot="separator"
       decorative={decorative}
       orientation={orientation}
-      {...props}
+      {...rest}
     />
   );
-}
-
-export { Separator };
+};
