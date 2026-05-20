@@ -593,6 +593,9 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
     prompt: z.string().nullish(),
     promptFile: z.string().nullish(),
     ralphDebugCli: RalphNestedDebugCliSchema.nullish(),
+    skipWorktreeSetup: z.boolean().nullish(),
+    worktree: z.string().nullish(),
+    worktreeBase: z.string().nullish(),
   });
 }
 

@@ -1744,6 +1744,12 @@ export type RalphPlanRunTuningInput = {
   promptFile?: InputMaybe<Scalars['String']['input']>;
   /** Whether to pass --debug / --verbose to nested workflow-ralph. */
   ralphDebugCli?: InputMaybe<RalphNestedDebugCli>;
+  /** Cursor-only: pass --skip-worktree-setup to cursor-agent. */
+  skipWorktreeSetup?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id. */
+  worktree?: InputMaybe<Scalars['String']['input']>;
+  /** Cursor-only: branch/ref for --worktree-base. */
+  worktreeBase?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RegisterInput = {

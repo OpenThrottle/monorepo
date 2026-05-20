@@ -26,6 +26,7 @@ import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWork
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
+import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
 import {
   workflowRalphRunOptionsAtom,
@@ -356,6 +357,8 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
       />
 
       <PlanWorkflowConfigExecution input={input} setInput={setInput} />
+
+      <PlanWorkflowConfigWorktree input={input} setInput={setInput} />
 
       <PlanWorkflowConfigTuning
         input={input}
