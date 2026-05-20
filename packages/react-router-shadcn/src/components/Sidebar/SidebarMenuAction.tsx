@@ -14,7 +14,18 @@ export function SidebarMenuAction({
   showOnHover = false,
   ...props
 }: SidebarMenuActionProps) {
+  // Hooks
+
+  // Setup
   const Comp = asChild ? Slot.Root : 'button';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Comp

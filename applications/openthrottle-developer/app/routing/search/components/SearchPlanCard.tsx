@@ -6,7 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Separator,
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
@@ -15,8 +14,8 @@ import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail
 
 interface SearchPlanCardProps {
   className?: string;
-  readonly defaultOpenWhy?: boolean;
-  readonly rankMeta?: SearchRankMeta;
+  defaultOpenWhy?: boolean;
+  rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
@@ -38,12 +37,6 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
   // Handlers
 
   // Markup
-  const sourceBadge = (
-    <Badge data-testid="SearchPlanCard-sourceBadge" variant="secondary">
-      {result.source}
-    </Badge>
-  );
-
   const similarityBlock =
     result.similarity != null ? (
       <p
@@ -61,7 +54,15 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
   return (
     <Card className={className} data-testid="SearchPlanCard" key={result.id}>
       <CardHeader className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            color="green"
+            data-testid="SearchPlanCard-sourceBadge"
+            size="xs"
+          >
+            {result.source}
+          </Badge>
+        </div>
         <CardTitle
           className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${TITLE_CLASS}`}
         >
@@ -91,7 +92,7 @@ export const SearchPlanCard = (props: SearchPlanCardProps) => {
           ) : null}
         </CardTitle>
       </CardHeader>
-      <Separator />
+      {/* <Separator /> */}
       <CardContent className="space-y-3 pt-4">
         <p className="text-sm text-muted-foreground leading-relaxed">
           {result.content}

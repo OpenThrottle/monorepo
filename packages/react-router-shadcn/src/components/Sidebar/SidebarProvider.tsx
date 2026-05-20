@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { cn } from '../../utils/cn';
 import { TooltipProvider } from '../Tooltip';
@@ -21,20 +20,27 @@ export type SidebarProviderProps = React.ComponentProps<'div'> & {
   readonly onOpenChange?: (open: boolean) => void;
 };
 
-export function SidebarProvider({
-  defaultOpen = true,
-  open: openProp,
-  onOpenChange: setOpenProp,
-  className,
-  style,
-  children,
-  ...props
-}: SidebarProviderProps) {
+export function SidebarProvider(props: SidebarProviderProps) {
+  const {
+    defaultOpen = true,
+    open: openProp,
+    onOpenChange: setOpenProp,
+    className,
+    style,
+    children,
+    ...rest
+  } = props;
+
+  // Hooks
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-
   const [_open, _setOpen] = React.useState(defaultOpen);
+
+  // Setup
   const open = openProp ?? _open;
+  const state = open ? 'expanded' : 'collapsed';
+
+  // Handlers
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === 'function' ? value(open) : value;
@@ -53,23 +59,6 @@ export function SidebarProvider({
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile]);
 
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
-        event.preventDefault();
-        toggleSidebar();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleSidebar]);
-
-  const state = open ? 'expanded' : 'collapsed';
-
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
       isMobile,
@@ -82,6 +71,29 @@ export function SidebarProvider({
     }),
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
   );
+
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+        (event.metaKey || event.ctrlKey)
+      ) {
+        event.preventDefault();
+        toggleSidebar();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [toggleSidebar]);
+
+  // 🔌 Short Circuit
 
   return (
     <SidebarContext.Provider value={contextValue}>
@@ -99,7 +111,7 @@ export function SidebarProvider({
               ...style,
             } as React.CSSProperties
           }
-          {...props}
+          {...rest}
         >
           {children}
         </div>

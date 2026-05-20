@@ -1,10 +1,23 @@
 import * as React from 'react';
-
 import { cn } from '../../utils/cn';
 
 export type SidebarContentProps = React.ComponentProps<'div'>;
 
-export function SidebarContent({ className, ...props }: SidebarContentProps) {
+export function SidebarContent(props: SidebarContentProps) {
+  const { className, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={cn(
@@ -13,7 +26,7 @@ export function SidebarContent({ className, ...props }: SidebarContentProps) {
       )}
       data-sidebar="content"
       data-slot="sidebar-content"
-      {...props}
+      {...rest}
     />
   );
 }

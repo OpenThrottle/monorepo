@@ -4,7 +4,21 @@ import { cn } from '../../utils/cn';
 
 export type SidebarInsetProps = React.ComponentProps<'main'>;
 
-export function SidebarInset({ className, ...props }: SidebarInsetProps) {
+export function SidebarInset(props: SidebarInsetProps) {
+  const { className, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <main
       className={cn(
@@ -13,7 +27,7 @@ export function SidebarInset({ className, ...props }: SidebarInsetProps) {
         className,
       )}
       data-slot="sidebar-inset"
-      {...props}
+      {...rest}
     />
   );
 }

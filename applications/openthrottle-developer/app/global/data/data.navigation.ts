@@ -1,4 +1,5 @@
 import { GlobalSidebarLinkProps } from '@openthrottle/react-router-ui-global';
+import { IS_DEVELOPMENT } from '@openthrottle/react-router-utils';
 import {
   BellIcon,
   BinaryIcon,
@@ -96,23 +97,28 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/settings/workspace',
     },
   ],
-  User: [
-    {
-      children: 'Notes',
-      icon: NotebookTextIcon,
-      to: '/notes',
-    },
-    {
-      children: 'Notifications',
-      icon: BellIcon,
-      to: '/notifications',
-    },
-    // {
-    //   children: 'Profile',
-    //   icon: UserCircle,
-    //   to: '/profile',
-    // },
-  ],
+  ...(IS_DEVELOPMENT
+    ? {
+        User: [
+          {
+            children: 'Notes',
+            icon: NotebookTextIcon,
+            to: '/notes',
+          },
+          {
+            children: 'Notifications',
+            icon: BellIcon,
+            to: '/notifications',
+          },
+          // {
+          //   children: 'Profile',
+          //   icon: UserCircle,
+          //   to: '/profile',
+          // },
+        ],
+      }
+    : {}),
+
   Legal: [
     {
       children: 'About',
@@ -125,16 +131,16 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       icon: NotebookTabsIcon,
       to: '/legal/license',
     },
-    {
-      children: 'Privacy Policy',
-      icon: NotebookTabsIcon,
-      to: '/legal/privacy-policy',
-    },
-    {
-      children: 'Terms of Use',
-      icon: NotebookTabsIcon,
-      to: '/legal/terms-of-use',
-    },
+    // {
+    //   children: 'Privacy Policy',
+    //   icon: NotebookTabsIcon,
+    //   to: '/legal/privacy-policy',
+    // },
+    // {
+    //   children: 'Terms of Use',
+    //   icon: NotebookTabsIcon,
+    //   to: '/legal/terms-of-use',
+    // },
   ],
 };
 /* eslint-enable sort-keys, sort-keys-fix/sort-keys-fix */

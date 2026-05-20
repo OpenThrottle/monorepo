@@ -1,14 +1,26 @@
 'use client';
 
 import * as React from 'react';
-
 import { cn } from '../../utils/cn';
 import { useSidebar } from './useSidebar';
 
 export type SidebarRailProps = React.ComponentProps<'button'>;
 
-export function SidebarRail({ className, ...props }: SidebarRailProps) {
+export function SidebarRail(props: SidebarRailProps) {
+  const { className, ...rest } = props;
+
+  // Hooks
   const { toggleSidebar } = useSidebar();
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <button
@@ -27,7 +39,7 @@ export function SidebarRail({ className, ...props }: SidebarRailProps) {
       onClick={toggleSidebar}
       tabIndex={-1}
       title="Toggle Sidebar"
-      {...props}
+      {...rest}
     />
   );
 }

@@ -1,18 +1,26 @@
 import * as React from 'react';
 import { Slot } from 'radix-ui';
-
 import { cn } from '../../utils/cn';
 
 export type SidebarGroupActionProps = React.ComponentProps<'button'> & {
   readonly asChild?: boolean;
 };
 
-export function SidebarGroupAction({
-  className,
-  asChild = false,
-  ...props
-}: SidebarGroupActionProps) {
+export function SidebarGroupAction(props: SidebarGroupActionProps) {
+  const { asChild = false, className, ...rest } = props;
+
+  // Hooks
+
+  // Setup
   const Comp = asChild ? Slot.Root : 'button';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Comp
@@ -24,7 +32,7 @@ export function SidebarGroupAction({
       )}
       data-sidebar="group-action"
       data-slot="sidebar-group-action"
-      {...props}
+      {...rest}
     />
   );
 }

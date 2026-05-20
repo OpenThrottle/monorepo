@@ -2,19 +2,27 @@
 
 import * as React from 'react';
 import { PanelLeftIcon } from 'lucide-react';
-
 import { cn } from '../../utils/cn';
 import { Button } from '../Button';
 import { useSidebar } from './useSidebar';
 
 export type SidebarTriggerProps = React.ComponentProps<typeof Button>;
 
-export function SidebarTrigger({
-  className,
-  onClick,
-  ...props
-}: SidebarTriggerProps) {
+export function SidebarTrigger(props: SidebarTriggerProps) {
+  const { className, onClick, ...rest } = props;
+
+  // Hooks
   const { toggleSidebar } = useSidebar();
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Button
@@ -27,7 +35,7 @@ export function SidebarTrigger({
       }}
       size="icon"
       variant="ghost"
-      {...props}
+      {...rest}
     >
       <PanelLeftIcon />
       <span className="sr-only">Toggle Sidebar</span>

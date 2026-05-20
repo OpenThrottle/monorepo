@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
+import {
+  Badge,
+  BadgeProps,
+  Button,
+  DataTable,
+} from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import classnames from 'classnames';
@@ -10,17 +15,6 @@ import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path
 
 const JOB_ID_DISPLAY_MAX = 24;
 const FAILED_REASON_MAX = 72;
-
-const JOB_STATE_BADGE_VARIANT: Record<
-  string,
-  'default' | 'destructive' | 'outline' | 'secondary'
-> = {
-  active: 'default',
-  completed: 'secondary',
-  delayed: 'outline',
-  failed: 'destructive',
-  waiting: 'outline',
-};
 
 type QueueJobsTableJob = NonNullable<
   NonNullable<GetQueueQuery['queue']>['jobs']
@@ -78,12 +72,32 @@ function buildQueueJobsTableColumns(
       cell: ({ row }) => {
         const job = row.original;
 
+        let color: BadgeProps['color'] = 'default';
+
+        switch (job.state) {
+          case 'active':
+            color = 'yellow';
+            break;
+          case 'completed':
+            color = 'green';
+            break;
+          case 'delayed':
+            color = 'amber';
+            break;
+        }
+        // active
+        // completed
+        // delayed
+        // failed
+        // waiting
+
         return (
           <div className="px-3 py-2">
             <Badge
+              color={color}
               data-testid={`job-state-${job.id}`}
               // size="sm"
-              variant={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}
+              // variant={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}
             >
               {job.state}
             </Badge>

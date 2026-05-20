@@ -1,18 +1,26 @@
 import * as React from 'react';
 import { Slot } from 'radix-ui';
-
 import { cn } from '../../utils/cn';
 
 export type SidebarGroupLabelProps = React.ComponentProps<'div'> & {
   readonly asChild?: boolean;
 };
 
-export function SidebarGroupLabel({
-  className,
-  asChild = false,
-  ...props
-}: SidebarGroupLabelProps) {
+export function SidebarGroupLabel(props: SidebarGroupLabelProps) {
+  const { className, asChild = false, ...rest } = props;
+
+  // Hooks
+
+  // Setup
   const Comp = asChild ? Slot.Root : 'div';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Comp
@@ -23,7 +31,7 @@ export function SidebarGroupLabel({
       )}
       data-sidebar="group-label"
       data-slot="sidebar-group-label"
-      {...props}
+      {...rest}
     />
   );
 }

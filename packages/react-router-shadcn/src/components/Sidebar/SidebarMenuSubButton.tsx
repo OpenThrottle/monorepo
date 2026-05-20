@@ -1,22 +1,34 @@
 import * as React from 'react';
 import { Slot } from 'radix-ui';
-
 import { cn } from '../../utils/cn';
 
 export type SidebarMenuSubButtonProps = React.ComponentProps<'a'> & {
   readonly asChild?: boolean;
-  readonly size?: 'sm' | 'md';
   readonly isActive?: boolean;
+  readonly size?: 'sm' | 'md';
 };
 
-export function SidebarMenuSubButton({
-  asChild = false,
-  size = 'md',
-  isActive = false,
-  className,
-  ...props
-}: SidebarMenuSubButtonProps) {
+export function SidebarMenuSubButton(props: SidebarMenuSubButtonProps) {
+  const {
+    asChild = false,
+    size = 'md',
+    isActive = false,
+    className,
+    ...rest
+  } = props;
+
+  // Hooks
+
+  // Setup
   const Comp = asChild ? Slot.Root : 'a';
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Comp
@@ -32,7 +44,7 @@ export function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-size={size}
       data-slot="sidebar-menu-sub-button"
-      {...props}
+      {...rest}
     />
   );
 }

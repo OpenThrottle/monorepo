@@ -1,13 +1,23 @@
 import * as React from 'react';
-
 import { cn } from '../../utils/cn';
 
 export type SidebarMenuBadgeProps = React.ComponentProps<'div'>;
 
-export function SidebarMenuBadge({
-  className,
-  ...props
-}: SidebarMenuBadgeProps) {
+export function SidebarMenuBadge(props: SidebarMenuBadgeProps) {
+  const { className, ...rest } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <div
       className={cn(
@@ -21,7 +31,7 @@ export function SidebarMenuBadge({
       )}
       data-sidebar="menu-badge"
       data-slot="sidebar-menu-badge"
-      {...props}
+      {...rest}
     />
   );
 }
