@@ -15,19 +15,17 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { PROMPTS_TYPE_FILTER_OPTIONS } from '~/routing/prompts/utils/parsers';
 
-interface TypeMultiSelectProps {
-  readonly compact?: boolean;
-  readonly 'data-testid'?: string;
-  readonly onChange: (value: string[]) => void;
-  readonly value: readonly string[];
+export interface TypeMultiSelectProps {
+  compact?: boolean;
+  'data-testid'?: string;
+  onChange: (value: string[]) => void;
+  value: string[];
 }
 
 /**
  * @description Multi-select dropdown to filter prompts by type. Shows "Type…" or "Type (n)" when compact; selected items as Badges below unless compact.
  */
-export function TypeMultiSelect(
-  props: TypeMultiSelectProps,
-): React.JSX.Element {
+export const TypeMultiSelect = (props: TypeMultiSelectProps) => {
   const { compact = false, 'data-testid': dataTestId, onChange, value } = props;
 
   // Hooks
@@ -85,7 +83,7 @@ export function TypeMultiSelect(
             aria-expanded={open}
             className={cn(
               'justify-between font-normal text-muted-foreground',
-              compact ? 'min-w-20 sshrink-0' : 'w-full min-w-40',
+              compact ? 'min-w-20 shrink-0' : 'w-full min-w-40',
             )}
             role="combobox"
             type="button"
@@ -158,4 +156,4 @@ export function TypeMultiSelect(
       ) : null}
     </Label>
   );
-}
+};

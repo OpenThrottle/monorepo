@@ -11,13 +11,13 @@ import {
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
-interface PromptToolbarProps {
-  readonly className?: string;
-  readonly limit: number;
-  readonly page: number;
-  readonly sortBy: PromptsSortBy;
-  readonly sortOrder: PromptsSortOrder;
-  readonly types: readonly string[];
+export interface PromptToolbarProps {
+  className?: string;
+  limit: number;
+  page: number;
+  sortBy: PromptsSortBy;
+  sortOrder: PromptsSortOrder;
+  types: string[];
 }
 
 /**

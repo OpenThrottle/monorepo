@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
   Select,
   SelectContent,
@@ -5,28 +6,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import * as React from 'react';
 import { PROMPTS_SORT_OPTIONS } from '~/routing/prompts/config';
 import {
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
-interface PromptSortDropdownProps {
-  readonly onChange: (
-    sortBy: PromptsSortBy,
-    sortOrder: PromptsSortOrder,
-  ) => void;
-  readonly sortBy: PromptsSortBy;
-  readonly sortOrder: PromptsSortOrder;
+export interface PromptSortDropdownProps {
+  onChange: (sortBy: PromptsSortBy, sortOrder: PromptsSortOrder) => void;
+  sortBy: PromptsSortBy;
+  sortOrder: PromptsSortOrder;
 }
 
 /**
  * @description Single dropdown to sort prompts (combines sortBy and sortOrder).
  */
-export const PromptSortDropdown = (
-  props: PromptSortDropdownProps,
-): React.JSX.Element => {
+export const PromptSortDropdown = (props: PromptSortDropdownProps) => {
   const { sortBy, sortOrder, onChange } = props;
 
   // Hooks
@@ -39,8 +34,11 @@ export const PromptSortDropdown = (
 
   // Handlers
   const handleChange = React.useCallback(
-    (value: string) => {
-      const [by, order] = value.split('-') as [PromptsSortBy, PromptsSortOrder];
+    (nextValue: string) => {
+      const [by, order] = nextValue.split('-') as [
+        PromptsSortBy,
+        PromptsSortOrder,
+      ];
 
       onChange(by, order);
     },
@@ -61,7 +59,7 @@ export const PromptSortDropdown = (
         className="w-[200px]"
         data-testid="PromptSortDropdown"
       >
-        <SelectValue placeholder="Poll interval…" />
+        <SelectValue placeholder="Sort" />
       </SelectTrigger>
       <SelectContent>
         {PROMPTS_SORT_OPTIONS.map((opt) => (

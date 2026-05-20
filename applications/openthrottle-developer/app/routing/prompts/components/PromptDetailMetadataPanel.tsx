@@ -16,11 +16,11 @@ import {
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
 import type { GetPromptQuery } from '~/__generated__/graphql';
 
-interface PromptDetailMetadataPanelProps {
-  readonly contentLength: number;
+export interface PromptDetailMetadataPanelProps {
+  contentLength: number;
   /** Current editor buffer (use for fingerprint; may differ from API until save). */
-  readonly debugContent: string;
-  readonly prompt: NonNullable<GetPromptQuery['customPrompt']>;
+  debugContent: string;
+  prompt: NonNullable<GetPromptQuery['customPrompt']>;
 }
 
 /**
@@ -57,9 +57,9 @@ function buildPromptDebugSnapshotJson(
  * Debug-oriented versioning metadata (timestamps, ids, repo path) for
  * custom prompts.
  */
-export function PromptDetailMetadataPanel(
+export const PromptDetailMetadataPanel = (
   props: PromptDetailMetadataPanelProps,
-): React.ReactElement {
+) => {
   const { contentLength, debugContent, prompt } = props;
 
   // Hooks
@@ -84,7 +84,7 @@ export function PromptDetailMetadataPanel(
   const labelsJoined =
     prompt.labels.length > 0 ? prompt.labels.join(', ') : '(none)';
 
-  const rows: readonly { label: string; value: string }[] = [
+  const rows: { label: string; value: string }[] = [
     { label: 'Prompt ID', value: prompt.id },
     { label: 'promptType', value: String(prompt.promptType) },
     { label: 'Labels', value: labelsJoined },
@@ -215,4 +215,4 @@ export function PromptDetailMetadataPanel(
       ) : null}
     </Card>
   );
-}
+};
