@@ -10,8 +10,8 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { buildGeneratorNxPresets } from '~/routing/generators/utils/build-generator-nx-presets';
 import { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 
-interface GeneratorTabPresetsProps {
-  readonly generator: GeneratorDetailCardFragment;
+export interface GeneratorTabPresetsProps {
+  generator: GeneratorDetailCardFragment;
 }
 
 export const GeneratorTabPresets = (props: GeneratorTabPresetsProps) => {

@@ -9,7 +9,7 @@ import {
 import { Link } from 'react-router';
 import { GeneratorCardFragment } from '~/__generated__/graphql';
 
-interface GeneratorCardProps {
+export interface GeneratorCardProps {
   className?: string;
   generator: GeneratorCardFragment;
 }

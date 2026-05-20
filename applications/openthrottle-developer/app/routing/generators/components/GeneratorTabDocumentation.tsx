@@ -9,15 +9,13 @@ import {
 import { Link } from 'react-router';
 import { generators } from '~/routing/generators/data/data.generators';
 
-interface GeneratorTabDocumentationProps {
-  readonly className?: string;
+export interface GeneratorTabDocumentationProps {
+  className?: string;
 }
 
 export const GeneratorTabDocumentation = (
   _props: GeneratorTabDocumentationProps,
 ) => {
-  // const { className } = props;
-
   // Hooks
 
   // Setup
