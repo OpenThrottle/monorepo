@@ -5,12 +5,12 @@ import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
 
-interface SearchWhyThisResultProps {
-  readonly className?: string;
+export interface SearchWhyThisResultProps {
+  className?: string;
   /** When set (e.g. `details=ranking`), sections start expanded. */
-  readonly defaultOpen?: boolean;
-  readonly rankMeta?: SearchRankMeta;
-  readonly result: SearchChunk;
+  defaultOpen?: boolean;
+  rankMeta?: SearchRankMeta;
+  result: SearchChunk;
 }
 
 /**
@@ -24,9 +24,12 @@ function formatRankSummary(meta: SearchRankMeta): string {
 /**
  * @description Power-user affordance: explains semantic ranking and surfaces chunk metadata for support and debugging.
  */
-export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
+export const SearchWhyThisResult = (props: SearchWhyThisResultProps) => {
   const { className, defaultOpen, rankMeta, result } = props;
 
+  // Hooks
+
+  // Setup
   const similarityHint =
     result.similarity != null
       ? `Cosine similarity to your query embedding is about ${Math.round(result.similarity * 100)}% (higher means closer in vector space).`
@@ -74,6 +77,9 @@ export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
   const hasTaskJump =
     hasPlanJump && result.taskId != null && result.taskId !== '';
 
+  // Handlers
+
+  // Markup
   const quickOpenLinks =
     hasDocBlob && result.sourceRepo != null && result.sourcePath != null ? (
       <p
@@ -117,6 +123,10 @@ export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
         ) : null}
       </p>
     ) : null;
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <details
@@ -172,4 +182,4 @@ export function SearchWhyThisResult(props: SearchWhyThisResultProps) {
       </div>
     </details>
   );
-}
+};
