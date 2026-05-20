@@ -102,6 +102,21 @@ export {
   validateJobRunHookPromptFile,
   validateJobRunHookSkillPath,
 } from './utils/job-run-lifecycle-hooks-validation';
+export {
+  buildJobRunHookAgentPrompt,
+  executeJobRunHooksPhase,
+  readJobRunHookSkillMarkdown,
+  resolveJobRunHookLayer1Prompt,
+  stripSkillMarkdownFrontmatter,
+} from './utils/job-run-hooks-runner';
+export type {
+  ExecuteJobRunHooksPhaseDeps,
+  ExecuteJobRunHooksPhaseParams,
+  ExecuteJobRunHooksPhaseResult,
+  JobRunHookIterationParams,
+  JobRunHookIterationResult,
+  JobRunHookPhaseEntryResult,
+} from './utils/job-run-hooks-runner';
 export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets';
 export {
   createMutexWorktreeTargetsTracker,

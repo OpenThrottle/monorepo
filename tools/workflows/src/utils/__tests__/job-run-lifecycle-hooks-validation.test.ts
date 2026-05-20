@@ -124,6 +124,26 @@ describe('parseJobRunHooksConfig', () => {
     }
   });
 
+  it('rejects more than max hooks per phase', () => {
+    const hooks = Array.from({ length: 11 }, () => ({
+      kind: 'prompt_profile' as const,
+      phase: 'before_run' as const,
+      prompt: '/agents/ralph',
+      promptDelivery: 'named' as const,
+    }));
+    expect(() => parseJobRunHooksConfig(hooks)).toThrow(/per phase/);
+  });
+
+  it('rejects more than max total hooks', () => {
+    const hooks = Array.from({ length: 21 }, (_, index) => ({
+      kind: 'prompt_profile' as const,
+      phase: (index < 11 ? 'before_run' : 'after_run') as const,
+      prompt: '/agents/ralph',
+      promptDelivery: 'named' as const,
+    }));
+    expect(() => parseJobRunHooksConfig(hooks)).toThrow(/20/);
+  });
+
   it('validates skill path exists when requireTargetsExist', () => {
     const dir = mkdtempSync(join(tmpdir(), 'hook-skill-'));
     try {

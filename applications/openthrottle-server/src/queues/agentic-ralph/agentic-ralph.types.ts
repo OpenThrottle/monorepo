@@ -1,4 +1,5 @@
 import type {
+  JobRunHooksConfig,
   RalphExecutionBackendId,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
@@ -24,6 +25,10 @@ export interface RunPlanOrchestratorJobData {
    * Optional Ralph runtime (argv-equivalent nested flags); see `RalphNestedRunTuningInput` in `@tools/workflows`.
    */
   readonly ralph?: RalphNestedRunTuningInput;
+  /**
+   * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
+   */
+  readonly jobRunHooks?: JobRunHooksConfig;
   /**
    * @description Defaults to `plan` when omitted. When `task`, set `taskId` for task-centric runs.
    */

@@ -72,7 +72,10 @@ export type { DailyStatFactoryData } from './modules/daily-stats/daily-stats.fac
 export type { NoteFactoryData } from './modules/notes/notes.factory';
 export type { PermissionData } from './modules/roles/permission.entity';
 export type { RoleData } from './modules/roles/role.entity';
-export type { PlanData } from './modules/plans/plan.entity';
+export type {
+  PlanData,
+  PlanJobRunHooksStorage,
+} from './modules/plans/plan.entity';
 export type {
   PlanRunData,
   PlanRunExecutionBackend,

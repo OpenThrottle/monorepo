@@ -20,6 +20,11 @@ import type {
   RunPlanOrchestratorJobData,
   RunPlanSpawnJobData,
 } from '../../queues/plans/plans.types';
+import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
+import {
+  jobRunHooksForJobPayload,
+  resolveJobRunHooksForEnqueue,
+} from './enqueue-plan-job-run-hooks';
 import type { RalphPlanRunTuningInput } from './plan.input';
 
 /** @description RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`. */
@@ -264,16 +269,26 @@ const resolvePlanRunExecutionBackend = (
  */
 export const buildRunPlanJobData = (input: {
   readonly planId: string;
+  readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
+  readonly jobRunHooksJson?: string | null;
   readonly ralph: RalphPlanRunTuningInput | null | undefined;
   readonly workingDirectory?: string | null;
 }): RunPlanSpawnJobData => {
   const ralph = parseEnqueueRalphTuning(input.ralph);
   const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
+  const jobRunHooks = jobRunHooksForJobPayload(
+    resolveJobRunHooksForEnqueue({
+      enqueueHooksJson: input.jobRunHooksJson,
+      planHooks: input.planJobRunHooks,
+      workingDirectory: input.workingDirectory,
+    }),
+  );
 
   return {
     executionBackend,
     planId: input.planId,
+    ...(jobRunHooks !== undefined ? { jobRunHooks } : {}),
     ...(ralph !== undefined ? { ralph } : {}),
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),
   };
@@ -285,6 +300,8 @@ export const buildRunPlanJobData = (input: {
  */
 export const buildRunPlanOrchestratorJobData = (input: {
   readonly planId: string;
+  readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
+  readonly jobRunHooksJson?: string | null;
   readonly mode?: 'plan' | 'task' | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
   readonly taskId?: string | null;
@@ -301,6 +318,15 @@ export const buildRunPlanOrchestratorJobData = (input: {
       ? input.taskId.trim()
       : '';
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
+  const jobRunHooks = jobRunHooksForJobPayload(
+    resolveJobRunHooksForEnqueue({
+      enqueueHooksJson: input.jobRunHooksJson,
+      planHooks: input.planJobRunHooks,
+      workingDirectory: input.workingDirectory,
+    }),
+  );
+  const jobRunHooksSpread =
+    jobRunHooks !== undefined ? { jobRunHooks } : {};
 
   if (mode === 'task') {
     if (taskRaw === '') {
@@ -315,6 +341,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
       executionBackend,
       mode: 'task',
       planId,
+      ...jobRunHooksSpread,
       ...(ralph !== undefined ? { ralph } : {}),
       runKind: 'orchestrator',
       taskId: taskRaw,
@@ -332,6 +359,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
     executionBackend,
     planId,
     runKind: 'orchestrator',
+    ...jobRunHooksSpread,
     ...(mode === 'plan' ? { mode: 'plan' } : {}),
     ...(ralph !== undefined ? { ralph } : {}),
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),

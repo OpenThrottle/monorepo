@@ -109,6 +109,25 @@ describe('buildRunPlanJobData', () => {
     });
   });
 
+  test('includes jobRunHooks from plan storage on enqueue payload', () => {
+    const result = buildRunPlanJobData({
+      planId: 'p1',
+      planJobRunHooks: {
+        hooks: [
+          {
+            kind: 'prompt_profile',
+            phase: 'before_run',
+            prompt: '/agents/ralph',
+            promptDelivery: 'named',
+          },
+        ],
+      },
+      ralph: null,
+    });
+    expect(result.jobRunHooks?.hooks).toHaveLength(1);
+    expect(result.jobRunHooks?.hooks[0]?.phase).toBe('before_run');
+  });
+
   test('includes ralph when tuning is present', () => {
     expect(
       buildRunPlanJobData({
