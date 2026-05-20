@@ -163,8 +163,12 @@ export const ralphTuningForChildJob = (
     ...(r.prompt !== undefined ? { prompt: r.prompt } : {}),
     ...(r.promptFile !== undefined ? { promptFile: r.promptFile } : {}),
     ...(r.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),
-    ...(r.worktree !== undefined ? { worktree: r.worktree } : {}),
-    ...(r.worktreeBase !== undefined ? { worktreeBase: r.worktreeBase } : {}),
+    ...(normalizeOptionalString(r.worktree) !== undefined
+      ? { worktree: normalizeOptionalString(r.worktree) }
+      : {}),
+    ...(normalizeOptionalString(r.worktreeBase) !== undefined
+      ? { worktreeBase: normalizeOptionalString(r.worktreeBase) }
+      : {}),
   } satisfies ChildJobRalphTuning;
 };
 
