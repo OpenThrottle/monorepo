@@ -25,7 +25,7 @@ import type { Route } from '@/app/routes/+types/pull-requests._index';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Pull requests',
+  breadcrumb: (_match) => 'Pull Requests',
   links: (_match) => [],
 };
 

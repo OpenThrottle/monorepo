@@ -18,10 +18,13 @@ type HealthStructured = {
   };
 };
 
-const healthSchema = z.object({});
+export const healthToolParameters = z.object({});
 
-async function healthHandler(
-  _args: z.infer<typeof healthSchema>,
+export const healthToolDescription =
+  'Health check via GraphQL: returns server health (api, database, redis, websocket). No arguments. No direct Postgres; uses getServerHealth query only.';
+
+export async function healthToolHandler(
+  _args: z.infer<typeof healthToolParameters>,
 ): Promise<GenericResult<HealthStructured>> {
   return runTool<HealthStructured>('health', async () => {
     const result = await executeGraphql(GetServerHealthDocument, {});
@@ -54,9 +57,9 @@ export function registerHealthTool(server: McpServer): void {
   server.registerTool(
     'health',
     {
-      description: `Health check via GraphQL: returns server health (api, database, redis, websocket). No arguments. No direct Postgres; uses getServerHealth query only.`,
-      inputSchema: healthSchema,
+      description: healthToolDescription,
+      inputSchema: healthToolParameters,
     },
-    healthHandler,
+    healthToolHandler,
   );
 }

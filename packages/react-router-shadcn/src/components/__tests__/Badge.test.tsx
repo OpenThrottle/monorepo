@@ -6,14 +6,14 @@ import { Badge } from '../Badge';
 describe('Badge', () => {
   it('should render with default props', () => {
     const { container } = render(<Badge>Label</Badge>);
-    const badge = container.querySelector('div');
+    const badge = container.querySelector('span');
     expect(badge).toBeInTheDocument();
     expect(badge).toHaveTextContent('Label');
   });
 
   it('should apply default variant classes', () => {
     const { container } = render(<Badge>Default</Badge>);
-    const badge = container.querySelector('div');
+    const badge = container.querySelector('span');
     expect(badge).toHaveClass('bg-primary', 'text-primary-foreground');
   });
 
@@ -22,16 +22,13 @@ describe('Badge', () => {
       const { container } = render(
         <Badge variant="destructive">Destructive</Badge>,
       );
-      const badge = container.querySelector('div');
-      expect(badge).toHaveClass(
-        'bg-destructive',
-        'text-destructive-foreground',
-      );
+      const badge = container.querySelector('span');
+      expect(badge).toHaveClass('bg-destructive', 'text-white');
     });
 
     it('should apply outline variant', () => {
       const { container } = render(<Badge variant="outline">Outline</Badge>);
-      const badge = container.querySelector('div');
+      const badge = container.querySelector('span');
       expect(badge).toHaveClass('text-foreground');
     });
 
@@ -39,7 +36,7 @@ describe('Badge', () => {
       const { container } = render(
         <Badge variant="secondary">Secondary</Badge>,
       );
-      const badge = container.querySelector('div');
+      const badge = container.querySelector('span');
       expect(badge).toHaveClass('bg-secondary', 'text-secondary-foreground');
     });
   });
@@ -48,13 +45,13 @@ describe('Badge', () => {
     const { container } = render(
       <Badge className="custom-class">Custom</Badge>,
     );
-    const badge = container.querySelector('div');
+    const badge = container.querySelector('span');
     expect(badge).toHaveClass('custom-class');
   });
 
   it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
+    const ref = React.createRef<HTMLSpanElement>();
     render(<Badge ref={ref}>Ref</Badge>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+    expect(ref.current).toBeInstanceOf(HTMLSpanElement);
   });
 });

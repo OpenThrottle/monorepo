@@ -11,7 +11,7 @@ import {
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
-export interface PromptToolbarProps {
+interface PromptToolbarProps {
   readonly className?: string;
   readonly limit: number;
   readonly page: number;

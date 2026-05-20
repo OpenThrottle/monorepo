@@ -6,7 +6,7 @@ import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import { SITE_SUBDOMAIN } from '~/global/config/settings';
 
-export interface GlobalHeaderProps {
+interface GlobalHeaderProps {
   className?: string;
 }
 

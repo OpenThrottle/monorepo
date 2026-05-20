@@ -9,7 +9,7 @@ import {
 import type { CheckoutLineItem } from '~/routing/checkout/types';
 import { formatPrice } from '~/global/utils/formatters';
 
-export interface CheckoutSummaryProps {
+interface CheckoutSummaryProps {
   readonly className?: string;
   readonly lineItems: readonly CheckoutLineItem[];
   readonly title?: string;

@@ -2,24 +2,55 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { Tabs } from '@openthrottle/react-router-shadcn';
+import { describe, expect, test } from 'vitest';
+import {
+  GENERATOR_DOCS_AGENT_USAGE,
+  GENERATOR_DOCS_AGENTS,
+  GENERATOR_DOCS_NX_LOCAL_GENERATORS,
+  GENERATOR_DOCS_PERSONAL_GENERATORS,
+  GENERATOR_DOCS_TOOLS_PACKAGE_README,
+} from '~/routing/generators/constants/generator-nx-docs';
 import { GeneratorTabDocumentation } from '../GeneratorTabDocumentation';
-import type { GeneratorTabDocumentationProps } from '../GeneratorTabDocumentation';
 
-describe('GeneratorTabDocumentation Component', () => {
-  let component: RenderResult;
-  let props: GeneratorTabDocumentationProps;
+function renderTab(): RenderResult {
+  const Component = () => (
+    <Tabs defaultValue="documentation">
+      <GeneratorTabDocumentation />
+    </Tabs>
+  );
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+}
 
-  beforeEach(() => {
-    props = {};
+describe('GeneratorTabDocumentation', () => {
+  test('lists canonical doc links with correct destinations', () => {
+    const view = renderTab();
 
-    const Component = () => <GeneratorTabDocumentation {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    expect(
+      view.getByRole('link', { name: /Nx — local generators/ }),
+    ).toHaveAttribute('href', GENERATOR_DOCS_NX_LOCAL_GENERATORS);
 
-    component = render(<RoutesStub />);
-  });
+    expect(
+      view.getByRole('link', { name: /@tools\/generators package/ }),
+    ).toHaveAttribute('href', GENERATOR_DOCS_TOOLS_PACKAGE_README);
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      view.getByRole('link', { name: /Generator-first rule/ }),
+    ).toHaveAttribute('href', GENERATOR_DOCS_PERSONAL_GENERATORS);
+
+    expect(view.getByRole('link', { name: /AGENTS\.md/ })).toHaveAttribute(
+      'href',
+      GENERATOR_DOCS_AGENTS,
+    );
+
+    expect(view.getByRole('link', { name: /Generator usage/ })).toHaveAttribute(
+      'href',
+      GENERATOR_DOCS_AGENT_USAGE,
+    );
+
+    expect(
+      view.getByText(/Clone path for local reference/),
+    ).toBeInTheDocument();
   });
 });

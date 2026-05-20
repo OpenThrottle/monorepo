@@ -36,7 +36,7 @@ export const PROMPTS_TYPE_FILTER_OPTIONS = [
   { label: 'Skills', value: CustomPromptType.Skills },
 ] as const;
 
-const PROMPTS_VALID_TYPES = new Set(
+export const PROMPTS_VALID_TYPES = new Set(
   PROMPTS_TYPE_FILTER_OPTIONS.map((opt) => opt.value),
 );
 

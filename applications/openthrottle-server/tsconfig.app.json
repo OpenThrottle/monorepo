@@ -59,6 +59,9 @@
       "path": "../../packages/nestjs-logging/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/nestjs-mcp-developer/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-graphql/tsconfig.lib.json"
     },
     {

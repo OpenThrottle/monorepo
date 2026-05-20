@@ -48,14 +48,6 @@ export default function Component(
 
   // 🔌 Short Circuit
 
-  if (!loaderData) {
-    return (
-      <GlobalScreen>
-        <p className="text-sm text-muted-foreground">Loading settings…</p>
-      </GlobalScreen>
-    );
-  }
-
   return (
     <GlobalScreen>
       <div>

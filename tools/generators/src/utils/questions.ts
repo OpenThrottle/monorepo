@@ -61,40 +61,6 @@ export const getReactHookDestination = async () => {
   return project;
 };
 
-/**
- * @description Get the destination "project" for a new React component.
- */
-export const getReactNativeTarget = async (
-  filter?: 'applications' | 'packages',
-) => {
-  const tags = ['technology:react-native'];
-
-  if (filter === 'applications') tags.push('type:application');
-  if (filter === 'packages') tags.push('type:package');
-
-  const projects = await getProjectsByTags(tags);
-  const names = projects.map((entry) => entry.name).sort();
-
-  const { package: packageName } = await prompts({
-    choices: names.map((name) => ({ title: name, value: name })),
-    message: '🤖 Select a package',
-    name: 'package',
-    type: 'select',
-  });
-
-  if (!packageName) throw new Error('No package selected');
-
-  const project = projects.find((entry) => {
-    return entry.name === packageName;
-  });
-
-  if (!project) throw new Error('No project found');
-
-  // console.log('🚨 🚨 project', project);
-
-  return project;
-};
-
 export const parsePossibleNames = (value: string) => {
   return parseCommaSeparatedValues(value);
 };

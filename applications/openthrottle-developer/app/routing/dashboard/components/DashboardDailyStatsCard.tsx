@@ -10,7 +10,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 /** One row of chart data: date plus the six series. */
-export interface DailyStatsChartDatum {
+interface DailyStatsChartDatum {
   readonly date: string;
   readonly plansCompleted: number;
   readonly plansCreated: number;
@@ -56,7 +56,7 @@ function mapToChartData(
   }));
 }
 
-export interface DashboardDailyStatsCardProps {
+interface DashboardDailyStatsCardProps {
   readonly className?: string;
   readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
 }

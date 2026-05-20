@@ -5,8 +5,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  Separator,
 } from '@openthrottle/react-router-shadcn';
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
@@ -15,18 +13,18 @@ import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail
 
 export interface SearchTaskCardProps {
   className?: string;
-  readonly defaultOpenWhy?: boolean;
-  readonly rankMeta?: SearchRankMeta;
+  defaultOpenWhy?: boolean;
+  rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
-export const SearchTaskCard = (props: SearchTaskCardProps) => {
+export const SearchTaskCard = (props: SearchTaskCardProps): React.ReactNode => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks
 
   // Setup
-  const titleClass = 'text-lg font-semibold leading-tight tracking-tight';
+  const titleClass = 'text-lg leading-tight tracking-tight';
   const hasPlanLink = result.planId != null && result.planId !== '';
   const hasTaskLink =
     hasPlanLink && result.taskId != null && result.taskId !== '';
@@ -34,12 +32,6 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
   // Handlers
 
   // Markup
-  const sourceBadge = (
-    <Badge data-testid="SearchTaskCard-sourceBadge" variant="secondary">
-      {result.source}
-    </Badge>
-  );
-
   const similarityBlock =
     result.similarity != null ? (
       <p
@@ -56,33 +48,23 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
 
   return (
     <Card className={className} data-testid="SearchTaskCard" key={result.id}>
-      <CardHeader className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
-        <CardTitle
-          className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${titleClass}`}
-        >
-          <span className={titleClass}>{result.taskTitle ?? 'Task'}</span>
-          {hasPlanLink && (
-            <span className="text-sm font-normal text-muted-foreground">
-              {hasTaskLink ? (
-                <>
-                  <Link
-                    className="underline-offset-4 hover:underline"
-                    data-testid="SearchTaskCard-planLink"
-                    to={`/plans/${result.planId}`}
-                  >
-                    {result.planTitle ?? 'Plan'}
-                  </Link>
-                  {' · '}
-                  <Link
-                    className="underline-offset-4 hover:underline"
-                    data-testid="SearchTaskCard-taskLink"
-                    to={planOrTaskDetailHref(result.planId!, result.taskId)}
-                  >
-                    View task
-                  </Link>
-                </>
-              ) : (
+      <CardHeader
+        className={`flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${titleClass}`}
+      >
+        <div className="flex flex-wrap items-center">
+          <Badge
+            color="blue"
+            data-testid="SearchTaskCard-sourceBadge"
+            size="xs"
+          >
+            {result.source}
+          </Badge>
+        </div>
+        <span className={titleClass}>{result.taskTitle ?? 'Task'}</span>
+        {hasPlanLink && (
+          <span className="text-sm font-normal text-muted-foreground">
+            {hasTaskLink ? (
+              <>
                 <Link
                   className="underline-offset-4 hover:underline"
                   data-testid="SearchTaskCard-planLink"
@@ -90,12 +72,27 @@ export const SearchTaskCard = (props: SearchTaskCardProps) => {
                 >
                   {result.planTitle ?? 'Plan'}
                 </Link>
-              )}
-            </span>
-          )}
-        </CardTitle>
+                {' · '}
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  data-testid="SearchTaskCard-taskLink"
+                  to={planOrTaskDetailHref(result.planId!, result.taskId)}
+                >
+                  View task
+                </Link>
+              </>
+            ) : (
+              <Link
+                className="underline-offset-4 hover:underline"
+                data-testid="SearchTaskCard-planLink"
+                to={`/plans/${result.planId}`}
+              >
+                {result.planTitle ?? 'Plan'}
+              </Link>
+            )}
+          </span>
+        )}
       </CardHeader>
-      <Separator />
       <CardContent className="space-y-3 pt-4">
         <p className="text-sm text-muted-foreground leading-relaxed">
           {result.content}

@@ -1,5 +1,5 @@
 /**
- * @description View registration: Plans tree and additional tabs (Welcome, Docs, Examples). Composes {@link registerPlansView} and {@link registerTabsView}.
+ * @description View registration: Plans tree and additional tabs (Welcome, Login, Docs). Composes {@link registerPlansView} and {@link registerTabsView}.
  */
 
 import * as vscode from 'vscode';
@@ -8,12 +8,12 @@ import type { PlansTreeDataProvider } from '../trees/plans-tree.js';
 import { registerPlansView } from './plans-view.js';
 import { registerTabsView } from './tabs-view.js';
 
-export interface RegisteredViews {
+interface RegisteredViews {
   readonly treeProvider: PlansTreeDataProvider;
 }
 
 /**
- * @description Register Plans, Welcome, Docs, and Examples views. Call once from activate.
+ * @description Register Plans, Welcome, Login, and Docs views. Call once from activate.
  */
 export function registerViews(
   context: vscode.ExtensionContext,

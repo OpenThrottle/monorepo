@@ -1,13 +1,5 @@
 {
   "mcpServers": {
-    "DISABLED______mcp-developer": {
-      "args": ["./scripts/run-mcp-developer.sh"],
-      "command": "bash",
-      "env": {
-        "MOCK_ENV": "🟢 🟢 ROOT MCP 🟢 🟢"
-      },
-      "type": "stdio"
-    },
     "expo-mcp": {
       "args": ["-y", "expo-mcp"],
       "command": "npx",

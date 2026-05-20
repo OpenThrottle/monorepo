@@ -74,10 +74,10 @@ export class GetPullInput {
 }
 
 /** Period bucket for lines-added/deleted aggregation. */
-export type LinesAddedDeletedPeriodInput = 'month' | 'week';
+type LinesAddedDeletedPeriodInput = 'month' | 'week';
 
 /** Period bucket for open-to-merged cycle time (optional). */
-export type OpenToMergedCycleTimePeriodInput = 'month' | 'week';
+type OpenToMergedCycleTimePeriodInput = 'month' | 'week';
 
 @InputType()
 export class OpenToMergedCycleTimeInput {
@@ -124,7 +124,7 @@ export class LinesAddedDeletedInput {
 }
 
 /** State filter for PR counts by label (open, closed, or all). */
-export type PrCountByLabelStateInput = 'all' | 'closed' | 'open';
+type PrCountByLabelStateInput = 'all' | 'closed' | 'open';
 
 @InputType()
 export class PrCountByLabelInput {
@@ -146,10 +146,10 @@ export class PrCountByLabelInput {
 }
 
 /** Period bucket for PRs merged per week/month. */
-export type PrsMergedPerPeriodInputPeriod = 'month' | 'week';
+type PrsMergedPerPeriodInputPeriod = 'month' | 'week';
 
 /** Period bucket for review cycle time (optional). */
-export type ReviewCycleTimePeriodInput = 'month' | 'week';
+type ReviewCycleTimePeriodInput = 'month' | 'week';
 
 @InputType()
 export class ReviewCycleTimeInput {
@@ -195,7 +195,7 @@ export class PrsMergedPerPeriodInput {
 }
 
 /** Period bucket for commits per PR (optional). */
-export type CommitsPerPrPeriodInput = 'month' | 'week';
+type CommitsPerPrPeriodInput = 'month' | 'week';
 
 @InputType()
 export class CommitsPerPrInput {

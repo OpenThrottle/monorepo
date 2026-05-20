@@ -9,7 +9,7 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 /** One row for the chart: state + count + avgDaysInState. */
-export interface PrTimeInStateDatum {
+interface PrTimeInStateDatum {
   readonly avgDaysInState?: number | null | undefined;
   readonly count: number;
   readonly state: string;
@@ -23,7 +23,7 @@ const CHART_CONFIG: ChartConfig = {
   count: { color: 'var(--chart-1)', label: 'Count' },
 };
 
-export interface DashboardPrTimeInStateCardProps {
+interface DashboardPrTimeInStateCardProps {
   readonly className?: string;
   readonly prTimeInStateSummary: ReadonlyArray<PrTimeInStateDatum>;
 }
@@ -82,6 +82,7 @@ export const DashboardPrTimeInStateCard = (
         <BarChart
           data={chartData}
           margin={{ bottom: 8, left: 0, right: 12, top: 4 }}
+          style={{ minHeight: 240 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis

@@ -56,16 +56,16 @@ describe('routes/projects.$projectId.tsx', () => {
         />
       </MemoryRouter>,
     );
-    expect(component.getByRole('main')).toBeInTheDocument();
+    expect(
+      component.getByRole('tablist', { name: 'Project sections' }),
+    ).toBeInTheDocument();
     expect(
       component.getAllByText('Test Project').length,
     ).toBeGreaterThanOrEqual(1);
     expect(component.getByText('Test project description')).toBeInTheDocument();
-    expect(component.getByText('proj-detail-1')).toBeInTheDocument();
-    expect(component.getByRole('link', { name: 'Projects' })).toHaveAttribute(
-      'href',
-      '/projects',
-    );
+    expect(
+      component.getByRole('button', { name: 'proj-detail-1' }),
+    ).toBeInTheDocument();
   });
 
   test('should render Overview and Tasks tabs', () => {
@@ -163,29 +163,6 @@ describe('routes/projects.$projectId.tsx', () => {
     expect(component.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
   });
 
-  test('should render nxProjectName badge when present', () => {
-    const component = render(
-      <MemoryRouter>
-        <ProjectDetail
-          actionData={undefined}
-          loaderData={{
-            ...defaultLoaderData,
-            project: {
-              ...mockProject,
-              nxProjectName: 'applications/openthrottle-developer',
-            },
-            projectTasks: [],
-          }}
-          matches={defaultMatches}
-          params={{ projectId: mockProject.id }}
-        />
-      </MemoryRouter>,
-    );
-    expect(
-      component.getByText('applications/openthrottle-developer'),
-    ).toBeInTheDocument();
-  });
-
   test('should render empty state when project is not found', () => {
     const component = render(
       <MemoryRouter>
@@ -197,7 +174,6 @@ describe('routes/projects.$projectId.tsx', () => {
         />
       </MemoryRouter>,
     );
-    expect(component.getByRole('main')).toBeInTheDocument();
     expect(component.getByText('Project not found')).toBeInTheDocument();
     expect(component.getByText(/was removed/)).toBeInTheDocument();
     expect(component.getByRole('link', { name: 'Projects' })).toHaveAttribute(

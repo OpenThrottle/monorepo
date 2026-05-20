@@ -10,7 +10,7 @@ import { RalphPlanRunTuningInputSchema } from '~/__generated__/schemas';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const DEFAULT_RALPH_RUNNER = 'cursor';
+const DEFAULT_RALPH_RUNNER = 'cursor';
 export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
 export const DEFAULT_RALPH_ITERATIONS = 10;
 export const DEFAULT_RALPH_MODEL = 'auto';
@@ -42,15 +42,8 @@ export const formatWorkflowRalphExecutionBackendLabel = (
 /**
  * @description Default precedence for resolving Ralph prompt + run tuning (matches CLI help).
  */
-export const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
+const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
   'CLI flags → WORKFLOW_RALPH_* / RALPH_* env → .workflow-ralph.json → built-in defaults';
-
-/**
- * @description Basename of the optional repo-local defaults file (see
- * `WORKFLOW_RALPH_DEFAULTS_FILE` in `tools/workflows/src/utils/ralph-runtime-config.ts`).
- */
-export const WORKFLOW_RALPH_DEFAULTS_FILE_NAME =
-  '.workflow-ralph.json' as const;
 
 /**
  * @description Env vars for run tuning and layer-1 prompt (matches {@link WORKFLOW_RALPH_DEFAULT_PRECEDENCE}
@@ -124,7 +117,7 @@ export const isUuid = (value: string): boolean => {
  * `--plan` / `--task` target as {@link input}, with every other field reset like
  * {@link getDefaultWorkflowRalphRunOptionsInput}.
  */
-export const getWorkflowRalphUiBaselineForDiff = (
+const getWorkflowRalphUiBaselineForDiff = (
   input: WorkflowRalphRunOptionsInput,
 ): WorkflowRalphRunOptionsInput => {
   const seeded = getDefaultWorkflowRalphRunOptionsInput({
@@ -341,7 +334,7 @@ export const parseWorkflowRunIterationTimeoutSeconds = (
 /**
  * @description One validation issue; messages mirror `tools/workflows/src/utils/parsers.ts` where applicable.
  */
-export interface WorkflowRalphValidationIssue {
+interface WorkflowRalphValidationIssue {
   readonly code: string;
   readonly message: string;
 }
@@ -350,7 +343,7 @@ export interface WorkflowRalphValidationIssue {
  * @description Options for {@link validateWorkflowRalphRunOptionsState}. When `requireCliTargetIds` is
  * false, `--plan` / `--task` id rules are skipped (e.g. Configuration panel without a route-seeded id).
  */
-export interface ValidateWorkflowRalphRunOptionsStateOptions {
+interface ValidateWorkflowRalphRunOptionsStateOptions {
   readonly requireCliTargetIds?: boolean;
 }
 
@@ -617,7 +610,7 @@ export const formatWorkflowRalphCommandLine = (
   return `${head} ${optionArgs.map(quoteShellArg).join(' ')}`;
 };
 
-export interface WorkflowRalphDebugBundleInput {
+interface WorkflowRalphDebugBundleInput {
   readonly iterationTimeoutText: string;
   readonly planId: string;
   readonly workflowInput: WorkflowRalphRunOptionsInput;

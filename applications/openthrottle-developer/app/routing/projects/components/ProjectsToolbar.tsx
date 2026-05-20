@@ -8,9 +8,9 @@ import {
   ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 
-export type ViewMode = 'table' | 'card';
+type ViewMode = 'table' | 'card';
 
-export interface ProjectsToolbarProps {
+interface ProjectsToolbarProps {
   className?: string;
   limit: number;
   page: number;

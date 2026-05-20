@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ToggleGroupItem Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      aria-label="Test"
+      class="flex items-center gap-1"
+      dir="ltr"
+      role="group"
+      style="outline: none;"
+      tabindex="0"
+    >
+      <button
+        aria-checked="false"
+        class="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-3 bg-transparent hover:bg-accent hover:text-accent-foreground"
+        data-radix-collection-item=""
+        data-state="off"
+        role="radio"
+        tabindex="-1"
+        type="button"
+      >
+        A
+      </button>
+    </div>
+  </div>
+</body>
+`;

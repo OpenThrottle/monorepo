@@ -4,7 +4,7 @@ import { SpeedometerIcon } from '@phosphor-icons/react/dist/ssr/Speedometer';
 import { CodeIcon } from '@phosphor-icons/react/dist/ssr/Code';
 import { LightningIcon } from '@phosphor-icons/react/dist/ssr/Lightning';
 
-export interface HomeBuiltByProps {
+interface HomeBuiltByProps {
   className?: string;
 }
 

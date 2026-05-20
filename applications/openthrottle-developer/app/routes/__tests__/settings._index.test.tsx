@@ -1,25 +1,28 @@
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../settings._index';
+import SettingsIndex from '../settings._index';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 
 describe('routes/settings._index.tsx', () => {
-  // let component: RenderResult;
+  test('should render', () => {
+    render(
+      <MemoryRouter>
+        <SettingsIndex
+          actionData={undefined}
+          loaderData={getSettingsDiagnosticsLoaderData()}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
+    );
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
-
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(
+      screen.getByRole('heading', { name: 'Settings' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Controls for the OpenThrottle Developer portal/i),
+    ).toBeInTheDocument();
   });
 });

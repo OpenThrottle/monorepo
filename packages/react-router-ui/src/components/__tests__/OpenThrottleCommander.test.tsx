@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
@@ -19,19 +19,26 @@ describe('OpenThrottleCommander Component', () => {
     return render(<RoutesStub />);
   };
 
+  const openCommandPalette = async (
+    user: ReturnType<typeof userEvent.setup>,
+    view: RenderResult,
+  ): Promise<void> => {
+    await user.keyboard('{Meta>}k{/Meta}');
+    expect(view.getByRole('dialog')).toBeInTheDocument();
+  };
+
   beforeEach(() => {
     props = { groups: [] };
     component = renderCommander(props);
   });
 
-  test('should render trigger button', () => {
-    const trigger = component.getByRole('button', {
-      name: 'Open command palette',
-    });
-    expect(trigger).toBeInTheDocument();
+  test('opens the command palette via keyboard shortcut', async () => {
+    const user = userEvent.setup();
+    await openCommandPalette(user, component);
   });
 
-  test('should render with empty groups', () => {
+  test('should render with empty groups when open', () => {
+    component = renderCommander({ ...props, defaultOpen: true });
     expect(component.getByTestId('OpenThrottleCommander')).toBeInTheDocument();
   });
 
@@ -50,10 +57,7 @@ describe('OpenThrottleCommander Component', () => {
       },
     ];
     component = renderCommander({ ...props, groups });
-    const trigger = component.getByRole('button', {
-      name: 'Open command palette',
-    });
-    await user.click(trigger);
+    await openCommandPalette(user, component);
     const dialog = component.getByRole('dialog');
     expect(dialog).toBeInTheDocument();
     expect(component.getByText('Navigation')).toBeInTheDocument();
@@ -70,13 +74,13 @@ describe('OpenThrottleCommander Component', () => {
       },
     ];
     component = renderCommander({ ...props, groups });
-    await user.click(
-      component.getByRole('button', { name: 'Open command palette' }),
-    );
+    await openCommandPalette(user, component);
     expect(component.getByRole('dialog')).toBeInTheDocument();
     await user.click(component.getByText('Do thing'));
     expect(onSelect).toHaveBeenCalledTimes(1);
-    expect(component.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   describe('abstract options shape', () => {
@@ -96,9 +100,7 @@ describe('OpenThrottleCommander Component', () => {
         },
       ];
       component = renderCommander({ ...props, groups });
-      await user.click(
-        component.getByRole('button', { name: 'Open command palette' }),
-      );
+      await openCommandPalette(user, component);
       expect(component.getByText('⌘P')).toBeInTheDocument();
     });
 
@@ -108,9 +110,7 @@ describe('OpenThrottleCommander Component', () => {
         ...props,
         placeholder: 'Search commands...',
       });
-      await user.click(
-        component.getByRole('button', { name: 'Open command palette' }),
-      );
+      await openCommandPalette(user, component);
       const input = component.getByPlaceholderText('Search commands...');
       expect(input).toBeInTheDocument();
     });
@@ -128,9 +128,7 @@ describe('OpenThrottleCommander Component', () => {
         },
       ];
       component = renderCommander({ ...props, groups });
-      await user.click(
-        component.getByRole('button', { name: 'Open command palette' }),
-      );
+      await openCommandPalette(user, component);
       expect(component.getByText('Navigation')).toBeInTheDocument();
       expect(component.getByText('Dashboard')).toBeInTheDocument();
       expect(component.getByText('Actions')).toBeInTheDocument();
@@ -153,9 +151,7 @@ describe('OpenThrottleCommander Component', () => {
         groups,
         onEmptyStateSearch,
       });
-      await user.click(
-        component.getByRole('button', { name: 'Open command palette' }),
-      );
+      await openCommandPalette(user, component);
       const input = component.getByPlaceholderText(
         'Type a command or search...',
       );
@@ -199,9 +195,7 @@ describe('OpenThrottleCommander Component', () => {
         ],
         groups,
       });
-      await user.click(
-        component.getByRole('button', { name: 'Open command palette' }),
-      );
+      await openCommandPalette(user, component);
       await user.type(
         component.getByPlaceholderText('Type a command or search...'),
         planId,
@@ -229,9 +223,7 @@ describe('OpenThrottleCommander Component', () => {
         },
       ];
       component = renderCommander({ ...props, groups });
-      await user.click(
-        component.getByRole('button', { name: 'Open command palette' }),
-      );
+      await openCommandPalette(user, component);
       await user.type(
         component.getByPlaceholderText('Type a command or search...'),
         'xyznomatch',

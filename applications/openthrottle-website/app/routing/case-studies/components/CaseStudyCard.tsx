@@ -10,7 +10,7 @@ import {
 import classnames from 'classnames';
 import type { CaseStudyListItem } from '../types';
 
-export interface CaseStudyCardProps {
+interface CaseStudyCardProps {
   readonly className?: string;
   readonly item: CaseStudyListItem;
 }

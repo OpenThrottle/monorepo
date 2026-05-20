@@ -17,8 +17,6 @@ import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import { redisConfig } from './nestjs-redis.config';
 
-export type RedisCache = ReturnType<typeof getRedisCache>;
-
 /**
  * @see https://www.apollographql.com/docs/apollo-server/performance/cache-backends/#configuring-redis
  * @see https://www.apollographql.com/docs/apollo-server/performance/cache-backends/#handling-cache-fetching-errors

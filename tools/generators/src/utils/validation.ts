@@ -20,22 +20,6 @@ export const validateCamelCase = (value: string): string | undefined => {
   return undefined;
 };
 
-export const validateSuffix = (
-  value: string,
-  suffix: string,
-): string | undefined => {
-  if (!value.endsWith(suffix)) return `Must end with "${suffix}"`;
-  return undefined;
-};
-
-export const validatePrefix = (
-  value: string,
-  prefix: string,
-): string | undefined => {
-  if (!value.startsWith(prefix)) return `Must start with "${prefix}"`;
-  return undefined;
-};
-
 export const validatePort = (value: number): string | undefined => {
   if (value < 4000 || value > 9999) return 'Port must be between 4000 and 9999';
   return undefined;

@@ -12,11 +12,24 @@ describe('Progress', () => {
 
   it('should apply track and indicator classes', () => {
     const { container } = render(<Progress value={50} />);
-    const root = container.querySelector('[role="progressbar"]');
-    expect(root).toHaveClass('bg-secondary', 'rounded-full');
-    const indicator = root?.firstElementChild;
+    const root = container.querySelector('[data-slot="progress"]');
+    expect(root).toHaveClass(
+      'relative',
+      'h-2',
+      'w-full',
+      'overflow-hidden',
+      'rounded-full',
+      'bg-primary/20',
+    );
+    const indicator = root?.querySelector('[data-slot="progress-indicator"]');
     expect(indicator).toBeInTheDocument();
-    expect(indicator).toHaveClass('bg-primary');
+    expect(indicator).toHaveClass(
+      'h-full',
+      'w-full',
+      'flex-1',
+      'bg-primary',
+      'transition-all',
+    );
   });
 
   it('should respect max prop', () => {
@@ -30,7 +43,7 @@ describe('Progress', () => {
     const { container } = render(
       <Progress className="custom-class" value={10} />,
     );
-    const progress = container.querySelector('[role="progressbar"]');
+    const progress = container.querySelector('[data-slot="progress"]');
     expect(progress).toHaveClass('custom-class');
   });
 

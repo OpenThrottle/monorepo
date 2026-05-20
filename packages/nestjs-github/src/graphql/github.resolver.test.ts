@@ -198,10 +198,32 @@ describe('GithubResolver', () => {
       expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
         'owner',
         'repo',
+        'open',
       );
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({ author: 'alice', openCount: 3 });
       expect(result[1]).toEqual({ author: 'bob', openCount: 1 });
+    });
+
+    test('passes closed state from input to GitHubStatsService', async () => {
+      vi.mocked(githubStatsService.getOpenPrCountByAuthor).mockResolvedValue([
+        { author: 'carol', openCount: 2 },
+      ]);
+
+      await resolver.openPrCountByAuthor(
+        {
+          owner: 'owner',
+          repo: 'repo',
+          state: 'closed',
+        },
+        gqlInfo,
+      );
+
+      expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
+        'owner',
+        'repo',
+        'closed',
+      );
     });
 
     test('returns empty array when service returns no authors', async () => {
@@ -218,6 +240,11 @@ describe('GithubResolver', () => {
         gqlInfo,
       );
 
+      expect(githubStatsService.getOpenPrCountByAuthor).toHaveBeenCalledWith(
+        'o',
+        'r',
+        'open',
+      );
       expect(result).toEqual([]);
     });
   });

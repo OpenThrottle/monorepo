@@ -1,0 +1,368 @@
+import type {
+  Project,
+  UserWorkspaceSettings,
+  WorkspaceLocalRepository,
+} from '@openthrottle/nestjs-repositories';
+import {
+  ProjectsService,
+  RolesService,
+  UserWorkspaceSettingsService,
+  WorkspaceEditorConfigService,
+  WorkspaceLocalRepositoriesService,
+} from '@openthrottle/nestjs-repositories';
+import { ConfigService } from '@nestjs/config';
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
+import { mkdtempSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import type { UpdateWorkspaceProfileInput } from './workspace-settings.input';
+import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
+import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
+
+describe('WorkspaceSettingsResolver', () => {
+  const userId = '11111111-1111-4111-8111-111111111111';
+
+  const mockRepo: WorkspaceLocalRepository = {
+    createdAt: new Date('2026-05-18T12:00:00.000Z'),
+    displayName: 'OpenThrottle',
+    filesystemPath: '/Users/dev/openthrottle',
+    gitDefaultBranch: 'main',
+    gitRemoteUrl: 'https://github.com/org/repo.git',
+    id: '22222222-2222-4222-8222-222222222222',
+    projectId: null,
+    updatedAt: new Date('2026-05-18T12:00:00.000Z'),
+    userId,
+  } as WorkspaceLocalRepository;
+
+  const projectId = '33333333-3333-4333-8333-333333333333';
+
+  const mockProfile: UserWorkspaceSettings = {
+    contactDisplayName: 'Matt',
+    contactEmail: 'matt@example.com',
+    createdAt: new Date('2026-05-18T12:00:00.000Z'),
+    enabledEditors: [],
+    updatedAt: new Date('2026-05-18T12:00:00.000Z'),
+    userId,
+  } as UserWorkspaceSettings;
+
+  const mockWorkspaceLocalRepositoriesService =
+    createMock<WorkspaceLocalRepositoriesService>({
+      create: vi.fn(),
+      delete: vi.fn(),
+      findByIdForUser: vi.fn(),
+      listByUserId: vi.fn(),
+      setProject: vi.fn(),
+      update: vi.fn(),
+    });
+
+  const mockUserWorkspaceSettingsService =
+    createMock<UserWorkspaceSettingsService>({
+      getOrCreateForUser: vi.fn(),
+      updateContactProfile: vi.fn(),
+      updateProfile: vi.fn(),
+    });
+
+  const mockProjectsService = createMock<ProjectsService>({
+    findById: vi.fn(),
+  });
+
+  const mockWorkspaceEditorConfigService =
+    createMock<WorkspaceEditorConfigService>({
+      applyForUser: vi.fn(),
+    });
+
+  const mockConfigService = createMock<ConfigService>({
+    get: vi.fn((key: string) => {
+      if (key === 'API_URL_INTERNAL') return 'http://localhost:6021';
+      if (key === 'PORT') return '6021';
+      return undefined;
+    }),
+  });
+
+  let resolver: WorkspaceSettingsResolver;
+
+  beforeAll(async () => {
+    const app = await Test.createTestingModule({
+      providers: [
+        WorkspaceSettingsResolver,
+        GqlPermissionsGuard,
+        {
+          provide: UserWorkspaceSettingsService,
+          useValue: mockUserWorkspaceSettingsService,
+        },
+        {
+          provide: WorkspaceLocalRepositoriesService,
+          useValue: mockWorkspaceLocalRepositoriesService,
+        },
+        {
+          provide: ProjectsService,
+          useValue: mockProjectsService,
+        },
+        {
+          provide: WorkspaceEditorConfigService,
+          useValue: mockWorkspaceEditorConfigService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
+        {
+          provide: RolesService,
+          useValue: createMock<RolesService>({
+            getPermissionsForUser: vi.fn().mockResolvedValue([]),
+          }),
+        },
+      ],
+    }).compile();
+
+    resolver = app.get(WorkspaceSettingsResolver);
+  });
+
+  describe('workspaceSettings', () => {
+    test('returns profile and local repositories for the current user', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.getOrCreateForUser,
+      ).mockResolvedValue(mockProfile);
+      vi.mocked(
+        mockWorkspaceLocalRepositoriesService.listByUserId,
+      ).mockResolvedValue([mockRepo]);
+
+      const result = await resolver.workspaceSettings(userId);
+
+      expect(result).toEqual({
+        localRepositories: [mockRepo],
+        profile: toUserWorkspaceProfileObject(mockProfile),
+      });
+    });
+  });
+
+  describe('updateWorkspaceProfile', () => {
+    test('validates contact fields and delegates to the service', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(mockProfile);
+
+      const result = await resolver.updateWorkspaceProfile(userId, {
+        contactDisplayName: '  Matt  ',
+        contactEmail: '  matt@example.com  ',
+        enabledEditors: null,
+      });
+
+      expect(result).toEqual(toUserWorkspaceProfileObject(mockProfile));
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenCalledWith(userId, {
+        contactDisplayName: 'Matt',
+        contactEmail: 'matt@example.com',
+      });
+    });
+
+    test('validates and persists enabled editors', async () => {
+      const withEditors = {
+        ...mockProfile,
+        enabledEditors: ['cursor', 'vscode'],
+      } as UserWorkspaceSettings;
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(withEditors);
+
+      const result = await resolver.updateWorkspaceProfile(userId, {
+        enabledEditors: [
+          WorkspaceEditorIdEnum.CURSOR,
+          WorkspaceEditorIdEnum.VSCODE,
+          WorkspaceEditorIdEnum.CURSOR,
+        ],
+      } as UpdateWorkspaceProfileInput);
+
+      expect(result).toEqual(toUserWorkspaceProfileObject(withEditors));
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenLastCalledWith(userId, {
+        enabledEditors: ['cursor', 'vscode'],
+      });
+    });
+
+    test('allows clearing all enabled editors', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(mockProfile);
+
+      await resolver.updateWorkspaceProfile(userId, {
+        enabledEditors: [],
+      } as UpdateWorkspaceProfileInput);
+
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenLastCalledWith(userId, {
+        enabledEditors: [],
+      });
+    });
+
+    test('rejects invalid contact email', async () => {
+      await expect(
+        resolver.updateWorkspaceProfile(userId, {
+          contactDisplayName: null,
+          contactEmail: 'not-an-email',
+          enabledEditors: null,
+        }),
+      ).rejects.toThrow(/valid email address/);
+    });
+  });
+
+  describe('workspaceLocalRepositories', () => {
+    test('returns repositories for the current user', async () => {
+      vi.mocked(
+        mockWorkspaceLocalRepositoriesService.listByUserId,
+      ).mockResolvedValue([mockRepo]);
+
+      const result = await resolver.workspaceLocalRepositories(userId);
+
+      expect(result).toEqual([mockRepo]);
+      expect(
+        mockWorkspaceLocalRepositoriesService.listByUserId,
+      ).toHaveBeenCalledWith(userId);
+    });
+  });
+
+  describe('workspaceLocalRepository', () => {
+    test('returns a repository when owned by the user', async () => {
+      vi.mocked(
+        mockWorkspaceLocalRepositoriesService.findByIdForUser,
+      ).mockResolvedValue(mockRepo);
+
+      const result = await resolver.workspaceLocalRepository(
+        userId,
+        mockRepo.id,
+      );
+
+      expect(result).toBe(mockRepo);
+    });
+  });
+
+  describe('createWorkspaceLocalRepository', () => {
+    test('validates path and delegates to the service', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'ot-ws-resolver-'));
+      vi.mocked(mockWorkspaceLocalRepositoriesService.create).mockResolvedValue(
+        mockRepo,
+      );
+
+      const result = await resolver.createWorkspaceLocalRepository(userId, {
+        displayName: '  My Repo ',
+        filesystemPath: tempDir,
+        gitDefaultBranch: ' main ',
+        gitRemoteUrl: 'https://github.com/org/repo.git',
+        projectId: null,
+      });
+
+      expect(result).toBe(mockRepo);
+      expect(mockWorkspaceLocalRepositoriesService.create).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({
+          displayName: 'My Repo',
+          filesystemPath: join(tempDir),
+          gitDefaultBranch: 'main',
+          gitRemoteUrl: 'https://github.com/org/repo.git',
+        }),
+      );
+    });
+  });
+
+  describe('updateWorkspaceLocalRepository', () => {
+    test('delegates validated fields to the service', async () => {
+      vi.mocked(mockWorkspaceLocalRepositoriesService.update).mockResolvedValue(
+        mockRepo,
+      );
+
+      const result = await resolver.updateWorkspaceLocalRepository(userId, {
+        displayName: 'Renamed',
+        gitDefaultBranch: null,
+        gitRemoteUrl: null,
+        id: mockRepo.id,
+        projectId: null,
+      });
+
+      expect(result).toBe(mockRepo);
+      expect(mockWorkspaceLocalRepositoriesService.update).toHaveBeenCalledWith(
+        userId,
+        mockRepo.id,
+        expect.objectContaining({ displayName: 'Renamed' }),
+      );
+    });
+  });
+
+  describe('setWorkspaceLocalRepositoryProject', () => {
+    test('delegates project link changes to the service', async () => {
+      const linked = { ...mockRepo, projectId };
+      vi.mocked(
+        mockWorkspaceLocalRepositoriesService.setProject,
+      ).mockResolvedValue(linked);
+
+      const result = await resolver.setWorkspaceLocalRepositoryProject(userId, {
+        id: mockRepo.id,
+        projectId,
+      });
+
+      expect(result).toBe(linked);
+      expect(
+        mockWorkspaceLocalRepositoriesService.setProject,
+      ).toHaveBeenCalledWith(userId, mockRepo.id, projectId);
+    });
+
+    test('passes null to clear the project link', async () => {
+      vi.mocked(
+        mockWorkspaceLocalRepositoriesService.setProject,
+      ).mockResolvedValue(mockRepo);
+
+      await resolver.setWorkspaceLocalRepositoryProject(userId, {
+        id: mockRepo.id,
+        projectId: null,
+      });
+
+      expect(
+        mockWorkspaceLocalRepositoriesService.setProject,
+      ).toHaveBeenCalledWith(userId, mockRepo.id, null);
+    });
+  });
+
+  describe('deleteWorkspaceLocalRepository', () => {
+    test('delegates delete to the service', async () => {
+      vi.mocked(mockWorkspaceLocalRepositoriesService.delete).mockResolvedValue(
+        true,
+      );
+
+      const result = await resolver.deleteWorkspaceLocalRepository(
+        userId,
+        mockRepo.id,
+      );
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('project', () => {
+    test('returns null when projectId is unset', async () => {
+      const result = await resolver.project({
+        ...mockRepo,
+        projectId: null,
+      });
+
+      expect(result).toBeNull();
+    });
+
+    test('loads project when projectId is set', async () => {
+      const project = { id: 'p1', name: 'openthrottle' } as Project;
+      vi.mocked(mockProjectsService.findById).mockResolvedValue(project);
+
+      const result = await resolver.project({
+        ...mockRepo,
+        projectId: project.id,
+      });
+
+      expect(result).toBe(project);
+    });
+  });
+});

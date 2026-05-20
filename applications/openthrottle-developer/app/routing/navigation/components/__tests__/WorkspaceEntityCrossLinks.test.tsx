@@ -48,4 +48,15 @@ describe('WorkspaceEntityCrossLinks', () => {
       expect(link).toHaveAttribute('href', item.to);
     }
   });
+
+  test('should forward className to the root section', () => {
+    cleanup();
+    const { getByTestId } = renderRoutesStub(
+      <WorkspaceEntityCrossLinks className="my-cross-links" />,
+    );
+
+    expect(getByTestId('WorkspaceEntityCrossLinks')).toHaveClass(
+      'my-cross-links',
+    );
+  });
 });

@@ -9,7 +9,7 @@ import {
 import { Link } from 'react-router';
 import { generators } from '~/routing/generators/data/data.generators';
 
-export interface GeneratorTabDocumentationProps {
+interface GeneratorTabDocumentationProps {
   readonly className?: string;
 }
 

@@ -17,16 +17,16 @@ import {
 } from '~/routing/plans/utils/group-plan-tasks-by-status';
 
 /** @description react-dnd drag type for plan task cards on the board. */
-export const PLAN_TASK_DRAG_TYPE = 'plan-task-card' as const;
+const PLAN_TASK_DRAG_TYPE = 'plan-task-card' as const;
 
-export interface PlanTaskDragItem {
+interface PlanTaskDragItem {
   readonly currentStatus: string;
   readonly planId: string;
   readonly taskId: string;
   readonly type: typeof PLAN_TASK_DRAG_TYPE;
 }
 
-export interface PlanTasksBoardProps {
+interface PlanTasksBoardProps {
   readonly className?: string;
   readonly planId: string;
   readonly tasks: readonly PlanTaskRowFragment[];

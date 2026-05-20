@@ -12,7 +12,7 @@ import {
   PlansSortOrder,
 } from '~/routing/plans/config/types';
 
-export interface SortDropdownProps {
+interface SortDropdownProps {
   readonly onChange: (sortBy: PlansSortBy, sortOrder: PlansSortOrder) => void;
   readonly sortBy: PlansSortBy;
   readonly sortOrder: PlansSortOrder;

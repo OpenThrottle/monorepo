@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { PlanDetailsFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 
-export interface PlanTabsMetadataProps {
+interface PlanTabsMetadataProps {
   readonly className?: string;
   readonly plan: PlanDetailsFragment;
 }

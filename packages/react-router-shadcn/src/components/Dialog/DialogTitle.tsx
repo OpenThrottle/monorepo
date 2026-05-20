@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
 export interface DialogTitleProps extends React.ComponentPropsWithoutRef<
@@ -26,10 +26,7 @@ export const DialogTitle = React.forwardRef<
 
   return (
     <DialogPrimitive.Title
-      className={cn(
-        'text-lg font-semibold leading-none tracking-tight',
-        className,
-      )}
+      className={cn('text-lg leading-none tracking-tight', className)}
       ref={ref}
       {...rest}
     />

@@ -15,7 +15,7 @@ import {
   validateWorkspacePathClient,
 } from '~/routing/plans/utils/workspace-path';
 
-export interface PlanWorkflowConfigWorkspaceProps {
+interface PlanWorkflowConfigWorkspaceProps {
   readonly className?: string;
   readonly onChange: (path: string) => void;
   readonly value: string;

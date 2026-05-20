@@ -4,3 +4,8 @@ url: http://localhost:6020
 ---
 - launchApp
 - assertVisible: 'OpenThrottle'
+
+- tapOn: Dashboard
+- assertVisible: "Get a pulse of all your Plans, Tasks, PR's, Prompts, Skills, and more coming soon."
+# - tapOn:
+#     text: ".*Settings.*"    # Regex for partial match

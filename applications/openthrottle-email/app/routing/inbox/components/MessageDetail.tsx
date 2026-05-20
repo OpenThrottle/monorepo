@@ -16,8 +16,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  toast,
 } from '@openthrottle/react-router-shadcn';
-import { toast } from 'sonner';
 import classnames from 'classnames';
 import { ArrowBendUpLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowBendUpLeft';
 import { ArrowBendDoubleUpLeftIcon } from '@phosphor-icons/react/dist/ssr/ArrowBendDoubleUpLeft';
@@ -36,7 +36,7 @@ import type { MailFolderId } from '~/types/mail';
 type ConfirmAction = 'archive' | 'delete' | null;
 
 /** Callbacks for reading pane actions; wire to compose route and API when backend is ready. */
-export interface MessageDetailActionCallbacks {
+interface MessageDetailActionCallbacks {
   readonly onArchive?: (message: MailMessageDetail) => void;
   readonly onDelete?: (message: MailMessageDetail) => void;
   readonly onForward?: (message: MailMessageDetail) => void;
@@ -49,7 +49,7 @@ export interface MessageDetailActionCallbacks {
   readonly onReplyAll?: (message: MailMessageDetail) => void;
 }
 
-export interface MessageDetailProps extends MessageDetailActionCallbacks {
+interface MessageDetailProps extends MessageDetailActionCallbacks {
   readonly className?: string;
   /** When true, show skeleton for header and body; used when loader defers or fetches async. */
   readonly loading?: boolean;
@@ -156,7 +156,7 @@ export const MessageDetail = (props: MessageDetailProps) => {
   // Message is non-null here after short circuits
 
   // FIXME: Swap out eventually
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const msg = message as MailMessageDetail;
 
   const attachments = msg.attachments ?? [];

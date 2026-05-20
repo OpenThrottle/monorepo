@@ -29,7 +29,7 @@ import {
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
-export interface PlanToolbarProps {
+interface PlanToolbarProps {
   readonly className?: string;
   readonly planId: string;
   /**

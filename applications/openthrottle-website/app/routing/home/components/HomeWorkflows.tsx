@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-export interface HomeWorkflowsProps {
+interface HomeWorkflowsProps {
   className?: string;
 }
 

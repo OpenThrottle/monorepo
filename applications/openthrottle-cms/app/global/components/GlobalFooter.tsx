@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import { SITE_NAME } from '~/global/config/settings';
 
-export interface GlobalFooterProps {}
+interface GlobalFooterProps {}
 
 export const GlobalFooter = (_props: GlobalFooterProps) => {
   // const { className } = props;

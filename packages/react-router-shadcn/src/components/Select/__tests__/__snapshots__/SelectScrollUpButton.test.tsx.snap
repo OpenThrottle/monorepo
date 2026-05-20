@@ -16,7 +16,7 @@ exports[`SelectScrollUpButton Component > should render 1`] = `
     >
       Error: \`SelectScrollUpButton\` must be used within \`SelectContent\`
     at useContext2 (file:///Users/matt/Development/openthrottle/node_modules/@radix-ui/react-context/dist/index.mjs:38:13)
-    at SelectScrollUpButton (file:///Users/matt/Development/openthrottle/packages/react-router-shadcn/node_modules/@radix-ui/react-select/dist/index.mjs:941:26)
+    at SelectScrollUpButton (file:///Users/matt/Development/openthrottle/node_modules/@radix-ui/react-select/dist/index.mjs:941:26)
     at Object.react_stack_bottom_frame (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
     at renderWithHooks (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
     at updateForwardRef (/Users/matt/Development/openthrottle/node_modules/react-dom/cjs/react-dom-client.development.js:9724:19)

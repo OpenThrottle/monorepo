@@ -17,7 +17,7 @@ import {
   writeGeneratorLastRun,
 } from '~/routing/generators/utils/generator-last-run-storage';
 
-export interface GeneratorTabDebugProps {
+interface GeneratorTabDebugProps {
   readonly className?: string;
   readonly generator: GeneratorDetailCardFragment;
 }

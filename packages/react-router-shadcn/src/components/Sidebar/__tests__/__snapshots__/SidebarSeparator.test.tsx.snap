@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SidebarSeparator Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px mx-2 w-auto bg-sidebar-border"
+      data-orientation="horizontal"
+      data-sidebar="separator"
+      data-slot="sidebar-separator"
+      role="none"
+    />
+  </div>
+</body>
+`;

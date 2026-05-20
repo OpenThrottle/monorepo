@@ -40,6 +40,9 @@ function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
   return `W:${queue.waitingCount} A:${queue.activeCount} C:${queue.completedCount} F:${queue.failedCount} D:${queue.delayedCount}`;
 }
 
+/**
+ * @deprecated Temporarily commented out on dashboard index; restore when re-enabling queue stats grid.
+ */
 export interface DashboardQueueStatsProps {
   // readonly className?: string;
   readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;

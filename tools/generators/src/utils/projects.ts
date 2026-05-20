@@ -96,51 +96,6 @@ export const getNestJSApplication = async () => {
   return project;
 };
 
-export const getNestJSProjects = async () => {
-  const nestjsProjects = await getProjectsByTags(['technology:nestjs']);
-  const projects: Choice[] = nestjsProjects.map((project) => ({
-    title: project.name,
-    value: project.name,
-  }));
-
-  const { project } = await prompts({
-    choices: projects.sort(sortChoices),
-    message: `Select a project`,
-    name: 'project',
-    type: 'select',
-  });
-
-  if (!project) throw new Error(MESSAGE_ON_CANCEL);
-
-  return project;
-};
-
-/**
- * @description Returns Nx projects with tags technology:nestjs + type:package (NestJS packages, e.g. @openthrottle/nestjs-repositories).
- */
-export const getNestJSPackages = async () => {
-  return getProjectsByTags(['technology:nestjs', 'type:package']);
-};
-
-export const getRemixProject = async () => {
-  const remixProjects = await getProjectsByTag('technology:remix');
-  const projects: Choice[] = remixProjects.map((project) => ({
-    title: project.name,
-    value: project.name,
-  }));
-
-  const { project } = await prompts({
-    choices: projects.sort(sortChoices),
-    message: `Select a project`,
-    name: 'project',
-    type: 'select',
-  });
-
-  if (!project) throw new Error(MESSAGE_ON_CANCEL);
-
-  return project;
-};
-
-export const sortChoices = (a: Choice, b: Choice) => {
+const sortChoices = (a: Choice, b: Choice) => {
   return a.title.localeCompare(b.title);
 };

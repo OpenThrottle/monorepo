@@ -19,7 +19,7 @@ import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksT
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 
-export interface PlanTabTasksProp {
+interface PlanTabTasksProp {
   readonly tasks: PlanTaskRowFragment[];
 }
 
@@ -64,8 +64,6 @@ export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
         // className="flex flex-col gap-4 md:gap-8"
         className="bg-card rounded-lg border border-card-border"
       >
-        {/* <PlanTasksToolbar className="bg-card rounded-lg border border-card-border" /> */}
-        {/* <PlanTasksList /> */}
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
           data={data}

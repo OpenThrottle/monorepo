@@ -9,6 +9,7 @@ export type PlanDetailTab =
   | 'configuration'
   | 'metadata'
   | 'overview'
+  | 'output'
   | 'requirements'
   | 'tasks';
 
@@ -21,6 +22,7 @@ const PLAN_DETAIL_TAB_VALUES = new Set<string>([
   'configuration',
   'metadata',
   'overview',
+  'output',
   'requirements',
   'tasks',
 ]);

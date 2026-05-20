@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenThrottleBreadcrumbs Component > should render 1`] = `
+<body>
+  <div>
+    <nav
+      aria-label="Breadcrumb"
+      class="flex"
+      data-testid="OpenThrottleBreadcrumbs"
+    >
+      <ol
+        class="flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground"
+      >
+        <li
+          class="inline-flex items-center gap-1.5"
+        >
+          <span
+            aria-current="page"
+            class="text-foreground text-accent! font-semibold"
+            role="link"
+          />
+        </li>
+      </ol>
+    </nav>
+  </div>
+</body>
+`;

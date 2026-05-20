@@ -21,7 +21,7 @@ import {
   UpdateNoteInputSchema,
 } from '../__generated__/schemas.js';
 import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 
@@ -45,16 +45,30 @@ type UpdateNoteResult = GenericResult<{
   note: UpdateNoteMutation['updateNote'];
 }>;
 
-const createNoteSchema = CreateNoteInputSchema();
-const deleteNoteSchema = z.object({ id: z.string().min(1) });
-const getNoteSchema = z.object({ id: z.string().min(1) });
-const listNotesSchema = z.object({});
-const updateNoteSchema = UpdateNoteInputSchema();
+export const createNoteToolParameters = CreateNoteInputSchema();
+export const deleteNoteToolParameters = z.object({ id: z.string().min(1) });
+export const getNoteToolParameters = z.object({ id: z.string().min(1) });
+export const listNotesToolParameters = z.object({});
+export const updateNoteToolParameters = UpdateNoteInputSchema();
 
-async function createNoteHandler(
-  args: z.infer<typeof createNoteSchema>,
+export const createNoteToolDescription =
+  'Create a note in Cortex. Requires content; optional author (e.g. GitHub username). For quick unstructured thoughts; foundation for notes route and planning workflow.';
+
+export const deleteNoteToolDescription =
+  'Delete a note by id. Returns whether a row was deleted.';
+
+export const getNoteToolDescription =
+  'Fetch a note by id (UUID). Returns the note row or not found.';
+
+export const listNotesToolDescription = 'List notes in Cortex, newest first.';
+
+export const updateNoteToolDescription =
+  'Update a note by id. Pass id and any of: content, author.';
+
+export async function createNoteToolHandler(
+  args: z.infer<typeof createNoteToolParameters>,
 ): Promise<CreateNoteResult> {
-  const parsed = createNoteSchema.safeParse(args);
+  const parsed = createNoteToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -77,10 +91,10 @@ async function createNoteHandler(
   );
 }
 
-async function deleteNoteHandler(
-  args: z.infer<typeof deleteNoteSchema>,
+export async function deleteNoteToolHandler(
+  args: z.infer<typeof deleteNoteToolParameters>,
 ): Promise<DeleteNoteResult> {
-  const parsed = deleteNoteSchema.safeParse(args);
+  const parsed = deleteNoteToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -99,10 +113,10 @@ async function deleteNoteHandler(
   });
 }
 
-async function getNoteHandler(
-  args: z.infer<typeof getNoteSchema>,
+export async function getNoteToolHandler(
+  args: z.infer<typeof getNoteToolParameters>,
 ): Promise<GetNoteResult> {
-  const parsed = getNoteSchema.safeParse(args);
+  const parsed = getNoteToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -123,8 +137,8 @@ async function getNoteHandler(
   });
 }
 
-async function listNotesHandler(
-  _args: z.infer<typeof listNotesSchema>,
+export async function listNotesToolHandler(
+  _args: z.infer<typeof listNotesToolParameters>,
 ): Promise<ListNotesResult> {
   return runTool<{ notes: GetNotesQuery['notes'] }>('list_notes', async () => {
     const token = getAuthToken();
@@ -140,10 +154,10 @@ async function listNotesHandler(
   });
 }
 
-async function updateNoteHandler(
-  args: z.infer<typeof updateNoteSchema>,
+export async function updateNoteToolHandler(
+  args: z.infer<typeof updateNoteToolParameters>,
 ): Promise<UpdateNoteResult> {
-  const parsed = updateNoteSchema.safeParse(args);
+  const parsed = updateNoteToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -169,45 +183,45 @@ export function registerNoteTools(server: McpServer): void {
   server.registerTool(
     'create_note',
     {
-      description: `Create a note in Cortex. Requires content; optional author (e.g. GitHub username). For quick unstructured thoughts; foundation for notes route and planning workflow.`,
-      inputSchema: createNoteSchema,
+      description: createNoteToolDescription,
+      inputSchema: createNoteToolParameters,
     },
-    createNoteHandler,
+    createNoteToolHandler,
   );
 
   server.registerTool(
     'delete_note',
     {
-      description: `Delete a note by id. Returns whether a row was deleted.`,
-      inputSchema: deleteNoteSchema,
+      description: deleteNoteToolDescription,
+      inputSchema: deleteNoteToolParameters,
     },
-    deleteNoteHandler,
+    deleteNoteToolHandler,
   );
 
   server.registerTool(
     'get_note',
     {
-      description: `Fetch a note by id (UUID). Returns the note row or not found.`,
-      inputSchema: getNoteSchema,
+      description: getNoteToolDescription,
+      inputSchema: getNoteToolParameters,
     },
-    getNoteHandler,
+    getNoteToolHandler,
   );
 
   server.registerTool(
     'list_notes',
     {
-      description: `List notes in Cortex, newest first.`,
-      inputSchema: listNotesSchema,
+      description: listNotesToolDescription,
+      inputSchema: listNotesToolParameters,
     },
-    listNotesHandler,
+    listNotesToolHandler,
   );
 
   server.registerTool(
     'update_note',
     {
-      description: `Update a note by id. Pass id and any of: content, author.`,
-      inputSchema: updateNoteSchema,
+      description: updateNoteToolDescription,
+      inputSchema: updateNoteToolParameters,
     },
-    updateNoteHandler,
+    updateNoteToolHandler,
   );
 }

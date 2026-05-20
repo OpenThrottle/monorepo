@@ -13,7 +13,7 @@ const SECRET_KEY_PREFIX = 'openthrottle.token';
  * @description SecretStorage key for the token, scoped by hash of baseUrl so changing
  * openthrottle.apiBaseUrl does not reuse a token from another environment.
  */
-export function getSecretKey(baseUrl: string): string {
+function getSecretKey(baseUrl: string): string {
   const normalized = baseUrl.replace(/\/$/, '');
   const hash = crypto
     .createHash('sha256')

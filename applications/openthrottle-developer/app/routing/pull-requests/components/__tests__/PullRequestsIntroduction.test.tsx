@@ -19,7 +19,14 @@ describe('PullRequestsIntroduction Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders title and supporting copy', () => {
+    expect(
+      component.getByRole('heading', { level: 1, name: 'Pull requests' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(
+        'Open a pull request to browse commits, checks, and conversation.',
+      ),
+    ).toBeInTheDocument();
   });
 });

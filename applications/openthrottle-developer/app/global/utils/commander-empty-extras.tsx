@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { CommanderItem } from '@openthrottle/react-router-ui';
 import {
   BotIcon,
@@ -7,12 +8,11 @@ import {
   MapIcon,
   SearchIcon,
 } from 'lucide-react';
-import * as React from 'react';
 
 /**
  * @description Matches typical Cortex / RFC UUID strings pasted into the command palette.
  */
-export const CORTEX_UUID_PATTERN =
+export const REGEX_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const UUID_GROUP =
@@ -33,7 +33,7 @@ export type CommanderSearchFields = {
 /**
  * @description Handlers for rows built when the palette filter matches no static commands.
  */
-export interface CommanderEmptyStateExtrasHandlers {
+interface CommanderEmptyStateExtrasHandlers {
   /**
    * @description Submit debug navigation via root action — same redirect rules as the loader-tested action map.
    */
@@ -142,7 +142,7 @@ export const buildCommanderEmptyStateExtras = (
     ];
   }
 
-  if (CORTEX_UUID_PATTERN.test(q)) {
+  if (REGEX_UUID.test(q)) {
     const preview = q.slice(0, 8);
     return [
       {

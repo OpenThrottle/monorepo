@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 
-export interface SettingsStorageProps {
+interface SettingsStorageProps {
   readonly className?: string;
 }
 

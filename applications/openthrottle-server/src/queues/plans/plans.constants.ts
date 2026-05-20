@@ -14,7 +14,7 @@ export { RUN_PLAN_ORCHESTRATOR_JOB_NAME };
  * @description Job names on the plans queue that represent a Ralph/plan run (spawn or orchestrator).
  * Used for cancellation and observability filters.
  */
-export const PLAN_RALPH_BULL_JOB_NAMES = [
+const PLAN_RALPH_BULL_JOB_NAMES = [
   RUN_PLAN_SPAWN_JOB_NAME,
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
 ] as const;
@@ -41,14 +41,11 @@ export const PLANS_WORKER_STALLED_INTERVAL_MS = 60_000; // check for stalled job
  * @description Job priority levels for BullMQ. Lower numbers = higher priority (processed first).
  * BullMQ uses a priority queue where jobs with lower priority values are dequeued before higher values.
  */
-export const PLAN_JOB_PRIORITY = {
+const PLAN_JOB_PRIORITY = {
   BATCH: 100,
   INTERACTIVE: 1,
   NORMAL: 10,
 } as const;
-
-export type PlanJobPriority =
-  (typeof PLAN_JOB_PRIORITY)[keyof typeof PLAN_JOB_PRIORITY];
 
 export const PLAN_JOB_PRIORITY_DEFAULT = PLAN_JOB_PRIORITY.NORMAL;
 

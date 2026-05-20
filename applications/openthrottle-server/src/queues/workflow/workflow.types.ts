@@ -1,15 +1,14 @@
-import type { Job, Queue } from 'bullmq';
+import type { Job } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
 import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
-  RunPlanSpawnJobData,
 } from '../plans/plans.types';
 import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
 
-export type { RunPlanOrchestratorJobData, RunPlanSpawnJobData, RunPlanJobData };
+export type { RunPlanOrchestratorJobData, RunPlanJobData };
 export { isRunPlanOrchestratorJobData };
 
 /**
@@ -60,5 +59,4 @@ export type WorkflowJobResult =
       ChildJobMetrics & { readonly taskRunMetrics?: TaskRunMetrics })
   | { readonly taskRunMetrics: TaskRunMetrics };
 
-export type WorkflowQueue = Queue<RunPlanJobData, WorkflowJobResult | void>;
 export type WorkflowJob = Job<RunPlanJobData, WorkflowJobResult | void>;

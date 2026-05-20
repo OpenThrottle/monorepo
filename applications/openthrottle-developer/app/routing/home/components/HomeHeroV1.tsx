@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-export interface HomeHeroV1Props {
+interface HomeHeroV1Props {
   className?: string;
 }
 
@@ -29,7 +29,15 @@ export const HomeHeroV1 = (props: HomeHeroV1Props) => {
             the <span className="text-accent font-black">plan</span>
             <br />
             in{' '}
-            <span className="tracking-tighter font-thin text-current/60">
+            <span
+              className="tracking-tighter font-thin text-current/60"
+              style={{
+                marginLeft: '-10px',
+                marginRight: '-8px',
+                verticalAlign: 'top',
+                zoom: 0.98,
+              }}
+            >
               between
             </span>{' '}
             tools.

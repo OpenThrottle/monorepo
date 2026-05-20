@@ -6,20 +6,44 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardDailyStatsModal } from '../DashboardDailyStatsModal';
 import type { DashboardDailyStatsModalProps } from '../DashboardDailyStatsModal';
 
+function renderWithProps(
+  props: DashboardDailyStatsModalProps,
+  initialEntries: readonly string[],
+): RenderResult {
+  const Component = () => <DashboardDailyStatsModal {...props} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub initialEntries={[...initialEntries]} />);
+}
+
 describe('DashboardDailyStatsModal Component', () => {
-  let component: RenderResult;
-  let props: DashboardDailyStatsModalProps;
+  describe('when modal search param matches', () => {
+    let component: RenderResult;
 
-  beforeEach(() => {
-    props = {};
+    beforeEach(() => {
+      component = renderWithProps({}, ['/?modal=daily-stats']);
+    });
 
-    const Component = () => <DashboardDailyStatsModal {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    test('renders modal title and body copy', () => {
+      expect(
+        component.getByRole('heading', {
+          level: 2,
+          name: 'Dashboard Daily Stats Modal',
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(/lorem ipsum dolor sit amet/i),
+      ).toBeInTheDocument();
+    });
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  describe('when modal search param does not match', () => {
+    test('does not surface modal heading in the accessible tree', () => {
+      const component = renderWithProps({}, ['/']);
+      expect(
+        component.queryByRole('heading', {
+          name: 'Dashboard Daily Stats Modal',
+        }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -30,7 +30,7 @@ export interface DocIngestionDiff {
 /**
  * @description Normalizes a path to be relative to workspace root with forward slashes and no leading ./.
  */
-function normalizeRelativePath(
+export function normalizeRelativePath(
   workspaceRoot: string,
   absolutePath: string,
 ): string {
@@ -41,7 +41,7 @@ function normalizeRelativePath(
 /**
  * @description Recursively collects relative paths of .md files under dir (relative to workspace root).
  */
-async function collectMdPathsUnderDir(
+export async function collectMdPathsUnderDir(
   workspaceRoot: string,
   dirRelative: string,
 ): Promise<string[]> {

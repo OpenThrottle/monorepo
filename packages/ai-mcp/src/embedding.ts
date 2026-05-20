@@ -11,8 +11,6 @@ import {
 } from './ollama-embedding.js';
 
 /** Re-export for callers that need to check if an embedding provider is available (e.g. cortex:import). */
-export { isOllamaEmbeddingConfigured } from './ollama-embedding.js';
-
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const EMBEDDING_DIM = 1536;
 
@@ -20,7 +18,7 @@ const EMBEDDING_DIM = 1536;
  * @description Embeds a single text using OpenAI. Requires OPENAI_API_KEY in env.
  * @returns 1536-dim embedding array, or undefined if API key missing or request fails.
  */
-export async function embedQueryWithOpenAI(
+async function embedQueryWithOpenAI(
   text: string,
 ): Promise<number[] | undefined> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();

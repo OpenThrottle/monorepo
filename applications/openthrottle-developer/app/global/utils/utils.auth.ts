@@ -32,18 +32,3 @@ export async function callLoginMutation(
 
   return data.login?.accessToken ?? null;
 }
-
-export function decodeAuthTokenEmail(token: string): string {
-  try {
-    const payload = token.split('.')[1];
-    if (!payload) return '';
-
-    const decoded = JSON.parse(
-      atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
-    );
-
-    return decoded.email ?? decoded.sub ?? '';
-  } catch {
-    return '';
-  }
-}

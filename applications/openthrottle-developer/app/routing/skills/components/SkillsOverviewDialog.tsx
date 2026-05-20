@@ -7,7 +7,7 @@ import {
 import { AgentsSkillsRegistry } from '~/routing/agents/components/AgentsSkillsRegistry';
 import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
-export interface SkillsOverviewDialogProps {
+interface SkillsOverviewDialogProps {
   readonly children: React.ReactNode;
   readonly entries?: ReadonlyArray<RepoSkillEntry>;
 }

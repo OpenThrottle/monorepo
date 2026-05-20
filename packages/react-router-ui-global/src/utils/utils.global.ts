@@ -16,19 +16,6 @@ export const formatCpuMs = (value: number): number => {
   return Number(value.toFixed(0));
 };
 
-/**
- * @description Normalize path for comparison (strip trailing slash
- * so /mail and /mail/ match).
- */
-export function normalizePath(p: string): string {
-  const s = p.replace(/\/$/, '') || '/';
-  return s === '' ? '/' : s;
-}
-
-export function getPath(to: LinkProps['to']): string {
-  return typeof to === 'string' ? to : (to.pathname ?? '/');
-}
-
 export function getPathFromTo(to: LinkProps['to']): string {
   return typeof to === 'string' ? to : (to.pathname ?? '/');
 }

@@ -13,33 +13,31 @@ import {
 describe('Card', () => {
   it('should render with default props', () => {
     const { container } = render(<Card>Card content</Card>);
-    const card = container.querySelector('div');
+    const card = container.querySelector('[data-slot="card"]');
     expect(card).toBeInTheDocument();
     expect(card).toHaveTextContent('Card content');
   });
 
   it('should apply default card classes', () => {
     const { container } = render(<Card>Card</Card>);
-    const card = container.querySelector('div');
+    const card = container.querySelector('[data-slot="card"]');
     expect(card).toHaveClass(
-      'bg-card',
+      'flex',
+      'flex-col',
+      'gap-6',
+      'rounded-xl',
       'border',
-      'hover:border-accent/60',
-      'rounded-lg',
-      'transition-colors',
+      'bg-card',
+      'py-6',
+      'text-card-foreground',
+      'shadow-sm',
     );
   });
 
   it('should merge custom className', () => {
     const { container } = render(<Card className="custom-class">Card</Card>);
-    const card = container.querySelector('div');
+    const card = container.querySelector('[data-slot="card"]');
     expect(card).toHaveClass('custom-class');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<Card ref={ref}>Card</Card>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 
   it('should forward HTML div attributes', () => {
@@ -48,7 +46,7 @@ describe('Card', () => {
         Card
       </Card>,
     );
-    const card = container.querySelector('div');
+    const card = container.querySelector('[data-slot="card"]');
     expect(card).toHaveAttribute('data-testid', 'test-card');
     expect(card).toHaveAttribute('id', 'card-1');
   });
@@ -57,63 +55,53 @@ describe('Card', () => {
 describe('CardHeader', () => {
   it('should render with default props', () => {
     const { container } = render(<CardHeader>Header</CardHeader>);
-    const header = container.querySelector('div');
+    const header = container.querySelector('[data-slot="card-header"]');
     expect(header).toBeInTheDocument();
     expect(header).toHaveTextContent('Header');
   });
 
   it('should apply default header classes', () => {
     const { container } = render(<CardHeader>Header</CardHeader>);
-    const header = container.querySelector('div');
-    expect(header).toHaveClass('flex', 'flex-col', 'space-y-1.5', 'p-6');
+    const header = container.querySelector('[data-slot="card-header"]');
+    expect(header).toHaveClass(
+      '@container/card-header',
+      'grid',
+      'auto-rows-min',
+      'items-start',
+      'gap-2',
+      'px-6',
+    );
   });
 
   it('should merge custom className', () => {
     const { container } = render(
       <CardHeader className="custom-header">Header</CardHeader>,
     );
-    const header = container.querySelector('div');
+    const header = container.querySelector('[data-slot="card-header"]');
     expect(header).toHaveClass('custom-header');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<CardHeader ref={ref}>Header</CardHeader>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });
 
 describe('CardTitle', () => {
   it('should render with default props', () => {
     const { container } = render(<CardTitle>Title</CardTitle>);
-    const title = container.querySelector('div');
+    const title = container.querySelector('[data-slot="card-title"]');
     expect(title).toBeInTheDocument();
     expect(title).toHaveTextContent('Title');
   });
 
   it('should apply default title classes', () => {
     const { container } = render(<CardTitle>Title</CardTitle>);
-    const title = container.querySelector('div');
-    expect(title).toHaveClass(
-      'text-2xl',
-      'font-semibold',
-      'leading-none',
-      'tracking-tight',
-    );
+    const title = container.querySelector('[data-slot="card-title"]');
+    expect(title).toHaveClass('leading-none', 'font-semibold');
   });
 
   it('should merge custom className', () => {
     const { container } = render(
       <CardTitle className="custom-title">Title</CardTitle>,
     );
-    const title = container.querySelector('div');
+    const title = container.querySelector('[data-slot="card-title"]');
     expect(title).toHaveClass('custom-title');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<CardTitle ref={ref}>Title</CardTitle>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });
 
@@ -122,7 +110,9 @@ describe('CardDescription', () => {
     const { container } = render(
       <CardDescription>Description</CardDescription>,
     );
-    const description = container.querySelector('div');
+    const description = container.querySelector(
+      '[data-slot="card-description"]',
+    );
     expect(description).toBeInTheDocument();
     expect(description).toHaveTextContent('Description');
   });
@@ -131,7 +121,9 @@ describe('CardDescription', () => {
     const { container } = render(
       <CardDescription>Description</CardDescription>,
     );
-    const description = container.querySelector('div');
+    const description = container.querySelector(
+      '[data-slot="card-description"]',
+    );
     expect(description).toHaveClass('text-sm', 'text-muted-foreground');
   });
 
@@ -139,72 +131,56 @@ describe('CardDescription', () => {
     const { container } = render(
       <CardDescription className="custom-desc">Description</CardDescription>,
     );
-    const description = container.querySelector('div');
+    const description = container.querySelector(
+      '[data-slot="card-description"]',
+    );
     expect(description).toHaveClass('custom-desc');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<CardDescription ref={ref}>Description</CardDescription>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });
 
 describe('CardContent', () => {
   it('should render with default props', () => {
     const { container } = render(<CardContent>Content</CardContent>);
-    const content = container.querySelector('div');
+    const content = container.querySelector('[data-slot="card-content"]');
     expect(content).toBeInTheDocument();
     expect(content).toHaveTextContent('Content');
   });
 
   it('should apply default content classes', () => {
     const { container } = render(<CardContent>Content</CardContent>);
-    const content = container.querySelector('div');
-    expect(content).toHaveClass('p-6', 'pt-0');
+    const content = container.querySelector('[data-slot="card-content"]');
+    expect(content).toHaveClass('px-6');
   });
 
   it('should merge custom className', () => {
     const { container } = render(
       <CardContent className="custom-content">Content</CardContent>,
     );
-    const content = container.querySelector('div');
+    const content = container.querySelector('[data-slot="card-content"]');
     expect(content).toHaveClass('custom-content');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<CardContent ref={ref}>Content</CardContent>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });
 
 describe('CardFooter', () => {
   it('should render with default props', () => {
     const { container } = render(<CardFooter>Footer</CardFooter>);
-    const footer = container.querySelector('div');
+    const footer = container.querySelector('[data-slot="card-footer"]');
     expect(footer).toBeInTheDocument();
     expect(footer).toHaveTextContent('Footer');
   });
 
   it('should apply default footer classes', () => {
     const { container } = render(<CardFooter>Footer</CardFooter>);
-    const footer = container.querySelector('div');
-    expect(footer).toHaveClass('flex', 'items-center', 'p-6', 'pt-0');
+    const footer = container.querySelector('[data-slot="card-footer"]');
+    expect(footer).toHaveClass('flex', 'items-center', 'px-6');
   });
 
   it('should merge custom className', () => {
     const { container } = render(
       <CardFooter className="custom-footer">Footer</CardFooter>,
     );
-    const footer = container.querySelector('div');
+    const footer = container.querySelector('[data-slot="card-footer"]');
     expect(footer).toHaveClass('custom-footer');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<CardFooter ref={ref}>Footer</CardFooter>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });
 
@@ -221,9 +197,9 @@ describe('Card composition', () => {
       </Card>,
     );
 
-    expect(
-      container.querySelector('[class*="rounded-lg"]'),
-    ).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="card"]')).toHaveClass(
+      'rounded-xl',
+    );
     expect(container.textContent).toContain('Card Title');
     expect(container.textContent).toContain('Card Description');
     expect(container.textContent).toContain('Card Content');

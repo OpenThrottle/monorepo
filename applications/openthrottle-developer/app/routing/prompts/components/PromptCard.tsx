@@ -15,7 +15,7 @@ import {
   formatPromptType,
 } from '~/routing/prompts/utils/formatters';
 
-export interface PromptCardProps {
+interface PromptCardProps {
   readonly className?: string;
   readonly prompt: PromptCardFragment;
 }

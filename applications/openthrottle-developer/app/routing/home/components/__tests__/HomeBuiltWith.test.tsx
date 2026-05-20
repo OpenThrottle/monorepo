@@ -1,13 +1,11 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { HomeBuiltWith } from '../HomeBuiltWith';
 import type { HomeBuiltWithProps } from '../HomeBuiltWith';
 
 describe('HomeBuiltWith Component', () => {
-  let component: RenderResult;
   let props: HomeBuiltWithProps;
 
   beforeEach(() => {
@@ -16,10 +14,21 @@ describe('HomeBuiltWith Component', () => {
     const Component = () => <HomeBuiltWith {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-    component = render(<RoutesStub />);
+    render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render section heading', () => {
+    expect(screen.getByTestId('HomeBuiltWith')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: /Everything is built on OpenSource work/,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  test('when technologies list is empty, should not render technology images', () => {
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
   });
 });

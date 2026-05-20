@@ -1,25 +1,27 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import * as FEATURE_FLAGS from '@openthrottle/react-router-utils/src/config/features';
 import { SettingsFeatureFlags } from '../SettingsFeatureFlags';
-import type { SettingsFeatureFlagsProps } from '../SettingsFeatureFlags';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('SettingsFeatureFlags Component', () => {
-  let component: RenderResult;
-  let props: SettingsFeatureFlagsProps;
+  test('renders feature flag keys and devtools guidance', () => {
+    renderRoutesStub(<SettingsFeatureFlags />);
 
-  beforeEach(() => {
-    props = {};
+    expect(
+      screen.getByRole('heading', { name: 'Feature flags' }),
+    ).toBeInTheDocument();
 
-    const Component = () => <SettingsFeatureFlags {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    for (const key of Object.keys(FEATURE_FLAGS)) {
+      expect(screen.getByText(`${key}:`)).toBeInTheDocument();
+    }
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getAllByText(/REACT_ROUTER_DEV_TOOLS/i).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/APP_ENABLE_ANALYTICS/i).length).toBeGreaterThan(
+      0,
+    );
   });
 });

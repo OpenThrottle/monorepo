@@ -2,7 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
+    "moduleResolution": "bundler",
     "outDir": "./dist",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "resolvePackageJsonImports": true,
     "rootDirs": ["./src", "./tests"]
   },
   "include": ["**/*.json", "src/**/*", "tests/**/*"],

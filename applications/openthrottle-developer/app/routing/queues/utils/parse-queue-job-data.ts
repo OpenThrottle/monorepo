@@ -2,7 +2,7 @@
  * @description Parses BullMQ job `data` JSON for plans-queue jobs (plan/task correlation).
  */
 
-export interface ParsedQueueJobData {
+interface ParsedQueueJobData {
   /** Optional idempotency or trace id if the worker or client put it in the JSON payload. */
   readonly correlationId: string | undefined;
   readonly mode: string | undefined;

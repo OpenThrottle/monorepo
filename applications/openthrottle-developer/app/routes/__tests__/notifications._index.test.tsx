@@ -1,25 +1,27 @@
+import * as React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../notifications._index';
+import NotificationsIndex from '../notifications._index';
 
 describe('routes/notifications._index.tsx', () => {
-  // let component: RenderResult;
+  test('should render', () => {
+    render(
+      <MemoryRouter>
+        <NotificationsIndex
+          actionData={undefined}
+          loaderData={{}}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
+    );
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
-
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(
+      screen.getByRole('heading', { name: 'Notifications' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Event subscriptions' }),
+    ).toBeInTheDocument();
   });
 });

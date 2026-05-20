@@ -29,10 +29,13 @@
       "path": "../../packages/react-router-auth"
     },
     {
-      "path": "../../packages/react-router-graphql"
+      "path": "../../packages/react-router-chat"
     },
     {
       "path": "../../packages/openthrottle-developer-codegen"
+    },
+    {
+      "path": "../../packages/react-router-graphql"
     },
     {
       "path": "../../packages/react-router-ui"

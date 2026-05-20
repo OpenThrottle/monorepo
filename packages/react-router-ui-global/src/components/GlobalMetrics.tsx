@@ -395,7 +395,7 @@ export const GlobalMetrics = (props: GlobalMetricsProps) => {
           </div> */}
 
           <ChartContainer
-            className="min-h-[160px] w-full -ml-1 text-sm"
+            className="min-h-[160px] w-full -ml-1 text-sm overflow-visible"
             config={GLOBAL_METRICS_CHART_CONFIG}
           >
             <LineChart

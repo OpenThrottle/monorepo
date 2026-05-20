@@ -37,7 +37,7 @@ import {
  * with canonical preview/copy. When the parent controls state (plan detail), the
  * same values are serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped).
  */
-export interface PlanTabConfigurationProps {
+interface PlanTabConfigurationProps {
   readonly className?: string;
   readonly iterationTimeoutText?: string;
 

@@ -29,7 +29,7 @@ const UUID_REGEX =
 /**
  * @description Returns true when `value` is a plausible Cortex plan/task UUID.
  */
-export const isCortexPlanTaskUuid = (value: string): boolean =>
+const isCortexPlanTaskUuid = (value: string): boolean =>
   UUID_REGEX.test(value.trim());
 
 /** @description Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph. */
@@ -166,7 +166,7 @@ export const ralphTuningForChildJob = (
  * @description Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
  * @throws Error when values are out of range or backend is unknown.
  */
-export const parseEnqueueRalphTuning = (
+const parseEnqueueRalphTuning = (
   input: RalphPlanRunTuningInput | null | undefined,
 ): RalphNestedRunTuningInput | undefined => {
   if (input == null) return undefined;
@@ -240,7 +240,7 @@ export const parseEnqueueRalphTuning = (
 /**
  * @description Resolves the execution backend persisted for the plan run. GraphQL omission falls back to the workflow-ralph default.
  */
-export const resolvePlanRunExecutionBackend = (
+const resolvePlanRunExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
 ): RalphExecutionBackendId => ralph?.backend ?? DEFAULT_RALPH_RUNNER;
 

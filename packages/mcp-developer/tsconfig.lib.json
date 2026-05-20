@@ -2,6 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "outDir": "./dist",
     "rootDirs": ["./src", "./tests"]
   },
@@ -14,6 +16,9 @@
     "dist"
   ],
   "references": [
+    {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
     {
       "path": "../nodejs-graphql/tsconfig.lib.json"
     },

@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/openthrottle-developer-codegen';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 
-export interface PlanTabRequirementsProps {
+interface PlanTabRequirementsProps {
   readonly className?: string;
   readonly plan: PlanDetailsFragment;
   readonly tasks: PlanTaskRowFragment[];

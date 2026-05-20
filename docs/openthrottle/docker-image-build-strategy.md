@@ -6,15 +6,15 @@ This document records the chosen **image build strategy** and **registry** for *
 
 ## 1. Build strategy summary
 
-| Decision             | Choice                                                                                                                                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Build context**    | Monorepo root. Images are built with `docker build -f applications/<app>/Dockerfile .` so Nx and pnpm can resolve workspace dependencies.                                                                          |
-| **Dockerfiles**      | One Dockerfile per app: `Dockerfile.NestJS`, `Dockerfile.ReactRouter`. Both are multi-stage and parameterized via build args.                                                                                      |
-| **Stages**           | Base → dependencies (pnpm install) → builder (Nx build + pnpm deploy pruned) → production (copy pruned app only, non-root user, `CMD start:docker`).                                                               |
-| **Tooling in image** | Node 22, pnpm (version pinned), Nx via `pnpm dlx nx@<version>`. No global Nx install; lockfile and workspace define deps.                                                                                          |
-| **Registry**         | **Google Artifact Registry** in region `us-west2`: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`. Aligns with existing monorepo pattern (see [Google-Cloud.md](../monorepo/Google-Cloud.md)). |
-| **Image naming**     | `openthrottle-server`, `openthrottle-developer`. Full path: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/openthrottle-server` and same for `openthrottle-developer`.                                        |
-| **Tagging**          | `latest` (optional), Git SHA (e.g. `sha-abc1234`), and/or app version from `package.json` (e.g. `1.3.0`). CI should set tag from `GITHUB_SHA` or version.                                                          |
+| Decision             | Choice                                                                                                                                                                                                                                                               |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Build context**    | Monorepo root. Images are built with `docker build -f applications/<app>/Dockerfile .` so Nx and pnpm can resolve workspace dependencies.                                                                                                                            |
+| **Dockerfiles**      | One baseline Dockerfile per app: `Dockerfile.NestJS`, `Dockerfile.ReactRouter`. Optimized variants: `Dockerfile.NestJS.v2`, `Dockerfile.ReactRouter.v2` (same build args; smaller production stage). Both families are multi-stage and parameterized via build args. |
+| **Stages**           | Base → dependencies (pnpm install) → builder (Nx build + pnpm deploy pruned) → production (copy pruned app only, non-root user, `CMD start:docker`).                                                                                                                 |
+| **Tooling in image** | Node 22, pnpm (version pinned), Nx via `pnpm dlx nx@<version>`. No global Nx install; lockfile and workspace define deps.                                                                                                                                            |
+| **Registry**         | **Google Artifact Registry** in region `us-west2`: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`. Aligns with existing monorepo pattern (see [Google-Cloud.md](../monorepo/Google-Cloud.md)).                                                   |
+| **Image naming**     | `openthrottle-server`, `openthrottle-developer`. Full path: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/openthrottle-server` and same for `openthrottle-developer`.                                                                                          |
+| **Tagging**          | `latest` (optional), Git SHA (e.g. `sha-abc1234`), and/or app version from `package.json` (e.g. `1.3.0`). CI should set tag from `GITHUB_SHA` or version.                                                                                                            |
 
 ---
 

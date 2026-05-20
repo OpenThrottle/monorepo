@@ -12,7 +12,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { GetTaskByIdQuery } from '~/__generated__/graphql';
 
-export interface TaskFormProps {
+interface TaskFormProps {
   readonly actionData?: { error?: string } | null;
   readonly className?: string;
   readonly planId: string;

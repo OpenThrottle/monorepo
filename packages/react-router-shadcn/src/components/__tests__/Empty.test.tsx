@@ -17,37 +17,34 @@ describe('Empty', () => {
         <EmptyHeader />
       </Empty>,
     );
-    const empty = container.querySelector('div');
+    const empty = container.querySelector('[data-slot="empty"]');
     expect(empty).toBeInTheDocument();
   });
 
   it('should apply default empty classes', () => {
     const { container } = render(<Empty />);
-    const empty = container.querySelector('div');
+    const empty = container.querySelector('[data-slot="empty"]');
     expect(empty).toHaveClass(
       'flex',
+      'min-w-0',
+      'flex-1',
       'flex-col',
       'items-center',
       'justify-center',
-      'gap-4',
+      'gap-6',
       'rounded-lg',
-      'border',
       'border-dashed',
-      'p-8',
+      'p-6',
       'text-center',
+      'text-balance',
+      'md:p-12',
     );
   });
 
   it('should merge custom className', () => {
     const { container } = render(<Empty className="custom-class" />);
-    const empty = container.querySelector('div');
+    const empty = container.querySelector('[data-slot="empty"]');
     expect(empty).toHaveClass('custom-class');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<Empty ref={ref} />);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });
 
@@ -60,9 +57,17 @@ describe('EmptyHeader', () => {
         </EmptyHeader>
       </Empty>,
     );
-    const header = container.querySelector('.flex.flex-col.items-center.gap-2');
+    const header = container.querySelector('[data-slot="empty-header"]');
     expect(header).toBeInTheDocument();
     expect(header).toHaveTextContent('Title');
+    expect(header).toHaveClass(
+      'flex',
+      'max-w-sm',
+      'flex-col',
+      'items-center',
+      'gap-2',
+      'text-center',
+    );
   });
 });
 
@@ -73,8 +78,9 @@ describe('EmptyMedia', () => {
         <span>Media</span>
       </EmptyMedia>,
     );
-    const media = container.querySelector('div');
+    const media = container.querySelector('[data-slot="empty-icon"]');
     expect(media).toBeInTheDocument();
+    expect(media).toHaveAttribute('data-variant', 'default');
     expect(media).toHaveTextContent('Media');
   });
 
@@ -84,12 +90,16 @@ describe('EmptyMedia', () => {
         <span>Icon</span>
       </EmptyMedia>,
     );
-    const media = container.querySelector('div');
+    const media = container.querySelector('[data-slot="empty-icon"]');
+    expect(media).toHaveAttribute('data-variant', 'icon');
     expect(media).toHaveClass(
-      'rounded-full',
+      'flex',
+      'size-10',
+      'items-center',
+      'justify-center',
+      'rounded-lg',
       'bg-muted',
-      'p-3',
-      'text-muted-foreground',
+      'text-foreground',
     );
   });
 });
@@ -97,10 +107,10 @@ describe('EmptyMedia', () => {
 describe('EmptyTitle', () => {
   it('should render title', () => {
     const { container } = render(<EmptyTitle>No data</EmptyTitle>);
-    const title = container.querySelector('h3');
+    const title = container.querySelector('[data-slot="empty-title"]');
     expect(title).toBeInTheDocument();
     expect(title).toHaveTextContent('No data');
-    expect(title).toHaveClass('text-lg', 'font-semibold');
+    expect(title).toHaveClass('text-lg', 'font-medium', 'tracking-tight');
   });
 });
 
@@ -109,10 +119,10 @@ describe('EmptyDescription', () => {
     const { container } = render(
       <EmptyDescription>No data found</EmptyDescription>,
     );
-    const desc = container.querySelector('p');
+    const desc = container.querySelector('[data-slot="empty-description"]');
     expect(desc).toBeInTheDocument();
     expect(desc).toHaveTextContent('No data found');
-    expect(desc).toHaveClass('text-sm', 'text-muted-foreground');
+    expect(desc).toHaveClass('text-sm/relaxed', 'text-muted-foreground');
   });
 });
 
@@ -123,7 +133,7 @@ describe('EmptyContent', () => {
         <button type="button">Add data</button>
       </EmptyContent>,
     );
-    const content = container.querySelector('div');
+    const content = container.querySelector('[data-slot="empty-content"]');
     expect(content).toBeInTheDocument();
     const button = content?.querySelector('button');
     expect(button).toHaveTextContent('Add data');

@@ -29,6 +29,6 @@ export default {
       name: 'openthrottle-developer GraphQL Codegen',
       url: `${url}/graphql`,
     },
-    tagName: 'gql',
+    // tagName: 'gql',
   },
 };

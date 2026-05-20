@@ -3,7 +3,7 @@ import { dirname, join } from 'path';
 
 declare const require: NodeRequire;
 
-export interface GeneratorMeta {
+interface GeneratorMeta {
   readonly description: string;
   readonly factory: string;
   readonly schema: string;

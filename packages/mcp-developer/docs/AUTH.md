@@ -4,10 +4,10 @@ Tools that call authenticated GraphQL (e.g. notes, plans, tasks) need a token. T
 
 ## Token source
 
-- **Primary:** environment variable **`MCP_DEVELOPER_AUTH_TOKEN`**
-- **Override:** optional programmatic override via `setAuthTokenOverride(token)` (e.g. tests or host injection at server init)
+- **Per-request (embedded in openthrottle-server):** `withMcpDeveloperAuthToken` / `withMcpDeveloperAuthTokenAsync` from `@openthrottle/mcp-developer/auth` (re-exported by `@openthrottle/nestjs-mcp-developer`) so concurrent GraphQL requests do not share a global token.
+- **Primary (stdio MCP / CLI):** environment variable **`MCP_DEVELOPER_AUTH_TOKEN`**
 
-Resolution order: override → `MCP_DEVELOPER_AUTH_TOKEN`. If none is set or the value is empty, any tool that needs auth will throw a clear error asking you to set one of the env vars.
+Resolution order: per-request store → `MCP_DEVELOPER_AUTH_TOKEN`. If none is set or the value is empty, any tool that needs auth will throw a clear error asking you to set the env var.
 
 ## How to set the token
 
@@ -23,4 +23,4 @@ Resolution order: override → `MCP_DEVELOPER_AUTH_TOKEN`. If none is set or the
 ## Implementation
 
 - **Resolver:** `getAuthToken()` in `src/auth/get-auth-token.ts`. Used by tool handlers (e.g. notes) before calling `executeGraphqlWithAuth(token, document, variables)`.
-- **No hardcoded tokens:** all auth is via env (or override). Replace any leftover placeholders with `getAuthToken()`.
+- **No hardcoded tokens:** all auth is via per-request store or env. Replace any leftover placeholders with `getAuthToken()`.

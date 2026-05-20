@@ -1,4 +1,5 @@
 /**
+ * @deprecated Disabled in `app.module.ts` (PaymentsModule import commented). Kept for intentional rollback; do not delete without re-enabling the module.
  * @description Payments module: wires `@openthrottle/nestjs-stripe` to repository services.
  */
 

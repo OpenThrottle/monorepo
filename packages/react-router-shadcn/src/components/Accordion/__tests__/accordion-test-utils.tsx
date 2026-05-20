@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
+import { Accordion as AccordionPrimitive } from 'radix-ui';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { AccordionContent } from '../AccordionContent';

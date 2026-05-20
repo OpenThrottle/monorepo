@@ -3,11 +3,6 @@
  * See tools/workflows/docs/server-and-task-metrics.md.
  */
 
-import {
-  formatChildProcessMetrics,
-  formatSystemCpuMetrics,
-  formatWallClockMetrics,
-} from '@tools/workflows';
 import type {
   EnhancedTaskRunMetrics,
   TaskRunMetrics,
@@ -16,7 +11,7 @@ import type {
 /**
  * @description Returns a one-line summary of task-run metrics (start → end) for logs and plan output.
  */
-export function formatTaskRunMetricsSummary(metrics: TaskRunMetrics): string {
+function formatTaskRunMetricsSummary(metrics: TaskRunMetrics): string {
   const { atStart, atEnd } = metrics;
 
   const rss = `${atStart.rssMb.toFixed(1)}→${atEnd.rssMb.toFixed(1)}`;
@@ -96,31 +91,4 @@ export function formatEnhancedTaskRunMetricsSummary(
   }
 
   return `Metrics: ${parts.join(', ')}`;
-}
-
-/**
- * @description Returns a detailed multi-line metrics report suitable for logs or debugging.
- * Unlike formatEnhancedTaskRunMetricsSummary, this includes full details of each metric type.
- */
-export function formatEnhancedTaskRunMetricsDetailed(
-  metrics: EnhancedTaskRunMetrics,
-): string {
-  const { childProcessMetrics, wallClockMetrics, systemCpuMetrics } = metrics;
-  const lines: string[] = ['Task Run Metrics:'];
-
-  lines.push(`  ${formatTaskRunMetricsSummary(metrics)}`);
-
-  if (wallClockMetrics) {
-    lines.push(`  ${formatWallClockMetrics(wallClockMetrics)}`);
-  }
-
-  if (childProcessMetrics && childProcessMetrics.sampleCount > 0) {
-    lines.push(`  ${formatChildProcessMetrics(childProcessMetrics)}`);
-  }
-
-  if (systemCpuMetrics) {
-    lines.push(`  ${formatSystemCpuMetrics(systemCpuMetrics)}`);
-  }
-
-  return lines.join('\n');
 }

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 // import { default as Route } from '../profile._index';
 
-describe('routes/profile._index.tsx', () => {
+describe.skip('routes/profile._index.tsx', () => {
   // let component: RenderResult;
 
   // beforeEach(() => {

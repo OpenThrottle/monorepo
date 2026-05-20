@@ -12,7 +12,7 @@ import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisRe
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 
-export interface SearchDocumentationCardProps {
+interface SearchDocumentationCardProps {
   className?: string;
   readonly defaultOpenWhy?: boolean;
   readonly rankMeta?: SearchRankMeta;
@@ -85,7 +85,7 @@ export const SearchDocumentationCard = (
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
         {blobLink != null ? (
-          <CardTitle className="text-lg font-semibold leading-tight tracking-tight">
+          <CardTitle className="text-lg leading-tight tracking-tight">
             {blobLink}
           </CardTitle>
         ) : null}

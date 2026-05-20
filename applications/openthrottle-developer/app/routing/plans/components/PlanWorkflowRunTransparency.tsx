@@ -21,7 +21,7 @@ import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-w
 type RecentRun =
   PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
 
-export interface PlanWorkflowRunTransparencyProps {
+interface PlanWorkflowRunTransparencyProps {
   readonly canonicalWorkflowCommand: string;
   readonly className?: string;
   readonly planId: string;
@@ -97,20 +97,20 @@ export const PlanWorkflowRunTransparency = (
               <code className="text-[0.65rem]">workflow-ralph</code> locally in
               task-centric mode.
             </CardDescription>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">
+            <div className="flex flex-wrap gap-2 my-4">
+              <Badge color="accent">
                 <OpenThrottleClipboard
                   label="Copy canonical workflow-ralph command"
                   text={canonicalWorkflowCommand}
                 />
               </Badge>
-              <Badge variant="outline">
+              <Badge color="accent">
                 <OpenThrottleClipboard
                   label="Copy workflow debug bundle"
                   text={debugBundleText.trim()}
                 />
               </Badge>
-              <Badge variant="secondary">
+              <Badge color="accent">
                 <Link
                   className="text-xs underline-offset-4 hover:underline"
                   to={`/queues/${encodeURIComponent(PLAN_RUN_BULLMQ_QUEUE_NAME)}`}

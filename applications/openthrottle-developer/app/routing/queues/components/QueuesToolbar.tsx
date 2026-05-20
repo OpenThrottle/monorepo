@@ -1,6 +1,9 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
+/**
+ * @deprecated Stub toolbar; commented out in `QueuesIntroduction` until queues list UX is wired.
+ */
 export interface QueuesToolbarProps {
   readonly className?: string;
 }

@@ -16,8 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  toast,
 } from '@openthrottle/react-router-shadcn';
-import { toast } from 'sonner';
 import classnames from 'classnames';
 import { Link } from 'react-router';
 import { ConfirmModal } from '~/global/components/ConfirmModal';
@@ -50,7 +50,7 @@ const EMPTY_COPY: Record<
   },
 };
 
-export interface MessageListProps {
+interface MessageListProps {
   /** Current folder for empty-state copy and future behavior (e.g. bulk actions). */
   readonly folderId?: MailFolderId;
   readonly className?: string;

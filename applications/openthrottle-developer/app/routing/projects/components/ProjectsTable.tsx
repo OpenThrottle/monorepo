@@ -110,7 +110,7 @@ const projectTableColumns: ColumnDef<
   },
 ];
 
-export interface ProjectsTableProps {
+interface ProjectsTableProps {
   className?: string;
   projects: ProjectCardFragment[];
 }

@@ -1,25 +1,20 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import swc from 'unplugin-swc';
 import type { UserConfig } from 'vite';
 
-/**
- * @description Gets the directory path in ESM modules (replacement for __dirname)
- */
-export const getDirname = (importMetaUrl: string): string => {
-  return dirname(fileURLToPath(importMetaUrl));
-};
+export { getDirname } from './vite-config.js';
 
 /**
  * @description Test environment type
+ * @publicApi
  */
 export type TestEnvironment = 'jsdom' | 'happy-dom' | 'node';
 
 /**
  * @description Options for creating vitest configuration
+ * @publicApi
  */
 export interface CreateVitestConfigOptions {
   /**
@@ -139,6 +134,7 @@ const createBaseVitestConfig = (
 
 /**
  * @description Creates a vitest configuration for jsdom environment (React packages)
+ * @publicApi
  */
 export const createVitestConfigJsdom = (
   options: Omit<CreateVitestConfigOptions, 'environment'>,
@@ -156,6 +152,7 @@ export const createVitestConfigJsdom = (
 
 /**
  * @description Creates a vitest configuration for happy-dom environment (React Native packages)
+ * @publicApi
  */
 export const createVitestConfigHappyDom = (
   options: Omit<CreateVitestConfigOptions, 'environment'>,
@@ -191,6 +188,7 @@ export const createVitestConfigHappyDom = (
 
 /**
  * @description Creates a vitest configuration for node environment (NestJS/Node packages)
+ * @publicApi
  */
 export const createVitestConfigNode = (
   options: Omit<CreateVitestConfigOptions, 'environment'>,
@@ -202,8 +200,6 @@ export const createVitestConfigNode = (
     setupFiles,
     ...rest
   } = options;
-
-  console.log('🟡 🟡 createVitestConfigNode', options);
 
   return createBaseVitestConfig({
     ...rest,
@@ -222,6 +218,7 @@ export const createVitestConfigNode = (
 
 /**
  * @description Factory function to create vitest config based on environment type
+ * @publicApi
  */
 export const createVitestConfig = (
   options: CreateVitestConfigOptions,
