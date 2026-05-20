@@ -2,8 +2,8 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
-interface PullRequestStatsProps {
-  readonly className?: string;
+export interface PullRequestStatsProps {
+  className?: string;
 }
 
 export const PullRequestStats = (props: PullRequestStatsProps) => {

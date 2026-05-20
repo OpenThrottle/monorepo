@@ -5,9 +5,9 @@ import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 import { Building2Icon, GitGraphIcon } from 'lucide-react';
 
-interface PullRequestsToolbarProps {
-  readonly className?: string;
-  readonly filters: PullRequestsListFilters;
+export interface PullRequestsToolbarProps {
+  className?: string;
+  filters: PullRequestsListFilters;
 }
 
 export const PullRequestsToolbar = (props: PullRequestsToolbarProps) => {
