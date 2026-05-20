@@ -37,7 +37,7 @@ function buildColumns(): ColumnDef<
       cell: ({ row }) => {
         const category = row.original.category;
         return category ? (
-          <Badge size="xs" variant="secondary">
+          <Badge color="slate" size="xs" variant="secondary">
             {category}
           </Badge>
         ) : (

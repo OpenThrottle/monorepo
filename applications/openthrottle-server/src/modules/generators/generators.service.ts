@@ -9,7 +9,7 @@ interface GeneratorMeta {
   readonly schema: string;
 }
 
-interface GeneratorItem {
+export interface GeneratorItem {
   readonly description: string;
   readonly name: string;
 }

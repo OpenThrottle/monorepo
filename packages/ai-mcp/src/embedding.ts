@@ -11,8 +11,6 @@ import {
 } from './ollama-embedding.js';
 
 /** Re-export for callers that need to check if an embedding provider is available (e.g. cortex:import). */
-export { isOllamaEmbeddingConfigured } from './ollama-embedding.js';
-
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const EMBEDDING_DIM = 1536;
 

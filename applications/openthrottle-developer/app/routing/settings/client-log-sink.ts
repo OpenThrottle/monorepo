@@ -33,14 +33,14 @@ export const CLIENT_LOG_BUFFER_MAX_ENTRIES = 1000;
 /**
  * @description Soft ceiling on total characters of stored `message` strings; oldest entries removed first.
  */
-const CLIENT_LOG_BUFFER_MAX_APPROX_CHARS = 512 * 1024;
+export const CLIENT_LOG_BUFFER_MAX_APPROX_CHARS = 512 * 1024;
 
 /**
  * @description Max characters stored for a single log line; remainder replaced with a truncation suffix.
  */
-const CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS = 50_000;
+export const CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS = 50_000;
 
-const LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const;
+export const LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const;
 
 export type ClientLogLevel = (typeof LEVELS)[number];
 
@@ -53,7 +53,7 @@ export interface ClientLogEntry {
   readonly t: number;
 }
 
-type ConsoleImpl = (...args: unknown[]) => void;
+export type ConsoleImpl = (...args: unknown[]) => void;
 
 let buffer: ClientLogEntry[] = [];
 const listeners = new Set<() => void>();
@@ -62,7 +62,7 @@ const savedConsole: Partial<Record<ClientLogLevel, ConsoleImpl>> = {};
 let errorListener: ((ev: ErrorEvent) => void) | undefined;
 let rejectionListener: ((ev: PromiseRejectionEvent) => void) | undefined;
 
-const notify = (): void => {
+export const notify = (): void => {
   for (const listener of listeners) {
     listener();
   }
@@ -71,7 +71,7 @@ const notify = (): void => {
 /**
  * @description Best-effort removal of common credential substrings from one captured line.
  */
-const redactSensitiveLogText = (text: string): string => {
+export const redactSensitiveLogText = (text: string): string => {
   let out = text;
   // Whole header segment first so we do not leave `Authorization: Bearer` after standalone Bearer redaction.
   out = out.replace(
@@ -94,7 +94,7 @@ const redactSensitiveLogText = (text: string): string => {
 /**
  * @description Stringifies console argument list for a single line.
  */
-const formatLogArgs = (args: readonly unknown[]): string => {
+export const formatLogArgs = (args: readonly unknown[]): string => {
   return args
     .map((arg) => {
       if (typeof arg === 'string') {
@@ -112,14 +112,14 @@ const formatLogArgs = (args: readonly unknown[]): string => {
     .join(' ');
 };
 
-const truncateMessage = (message: string): string => {
+export const truncateMessage = (message: string): string => {
   if (message.length <= CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS) {
     return message;
   }
   return `${message.slice(0, CLIENT_LOG_BUFFER_MAX_MESSAGE_CHARS)}… (truncated)`;
 };
 
-const push = (level: ClientLogLevel, args: readonly unknown[]): void => {
+export const push = (level: ClientLogLevel, args: readonly unknown[]): void => {
   const raw = redactSensitiveLogText(formatLogArgs(args));
   const message = truncateMessage(raw);
   buffer = [...buffer, { level, message, t: Date.now() }];

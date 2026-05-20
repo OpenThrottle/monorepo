@@ -15,7 +15,7 @@ export const DATABASE_BACKUP_DEFAULT_CRON_PATTERN = '0 0 0 * * *';
 /** @description Default BullMQ job timeout (30 minutes). */
 export const DATABASE_BACKUP_DEFAULT_JOB_TIMEOUT_MS = 1_800_000;
 
-interface DatabaseBackupRepeatableConfig {
+export interface DatabaseBackupRepeatableConfig {
   readonly cronPattern: string;
   readonly enabled: true;
   readonly jobName: typeof DATABASE_BACKUP_JOB_NAME;
@@ -26,11 +26,11 @@ interface DatabaseBackupRepeatableConfig {
   readonly workspaceRoot: string;
 }
 
-type DatabaseBackupScheduleResolution =
+export type DatabaseBackupScheduleResolution =
   | { readonly enabled: false; readonly reason: string }
   | DatabaseBackupRepeatableConfig;
 
-function parseTruthyEnv(value: string | undefined): boolean {
+export function parseTruthyEnv(value: string | undefined): boolean {
   if (value === undefined || value.trim() === '') {
     return true;
   }
@@ -40,7 +40,7 @@ function parseTruthyEnv(value: string | undefined): boolean {
   return !['0', 'false', 'no', 'off'].includes(normalized);
 }
 
-function parsePositiveIntEnv(
+export function parsePositiveIntEnv(
   value: string | undefined,
   fallback: number,
 ): number {

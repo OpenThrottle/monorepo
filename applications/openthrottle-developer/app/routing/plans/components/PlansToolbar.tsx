@@ -19,14 +19,14 @@ import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect'
 import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
 interface PlansToolbarProps {
-  readonly assigneeOptions: readonly string[];
-  readonly assignees: readonly string[];
+  assigneeOptions: string[];
+  assignees: string[];
   className?: string;
   limit: number;
   page: number;
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
-  statuses: readonly string[];
+  statuses: string[];
   view: 'card' | 'table';
 }
 

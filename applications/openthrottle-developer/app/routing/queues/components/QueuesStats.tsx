@@ -19,7 +19,7 @@ import {
   seriesKeysForQueueStatsView,
 } from '~/routing/queues/utils/queue-stats-chart';
 
-export interface QueuesStatsProps {
+interface QueuesStatsProps {
   readonly className?: string;
   readonly queues: QueueCardFragment[];
 }

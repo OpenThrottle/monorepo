@@ -11,7 +11,7 @@ import {
  * @description Default workflow run form state: {@link WorkflowRalphRunOptionsInput}
  * plus the raw `--iteration-timeout` text field (parsed for argv / GraphQL).
  */
-interface WorkflowRunAtomDefaultState {
+export interface WorkflowRunAtomDefaultState {
   readonly iterationTimeoutText: string;
   readonly runOptions: WorkflowRalphRunOptionsInput;
 }
@@ -20,7 +20,7 @@ interface WorkflowRunAtomDefaultState {
  * @description Builds default atom state; aligns with uncontrolled workflow
  * config initialization and reset-to-defaults.
  */
-const getWorkflowRunAtomDefaultState = (options?: {
+export const getWorkflowRunAtomDefaultState = (options?: {
   readonly planId?: string;
   readonly taskId?: string;
 }): WorkflowRunAtomDefaultState => ({
@@ -43,7 +43,7 @@ export const workflowRunIterationTimeoutTextAtom = atom<string>('');
 /**
  * @description Merges stored run options with parsed iteration timeout for argv and tuning payloads.
  */
-const workflowRalphMergedRunOptionsForArgvAtom = atom(
+export const workflowRalphMergedRunOptionsForArgvAtom = atom(
   (get): WorkflowRalphRunOptionsInput => {
     const runOptions = get(workflowRalphRunOptionsAtom);
     const iterationTimeoutText = get(workflowRunIterationTimeoutTextAtom);
@@ -59,7 +59,7 @@ const workflowRalphMergedRunOptionsForArgvAtom = atom(
 /**
  * @description `workflow-ralph` argv segments after the binary (same as {@link buildWorkflowRalphOptionArgs} on merged state).
  */
-const workflowRalphOptionArgsAtom = atom((get) =>
+export const workflowRalphOptionArgsAtom = atom((get) =>
   buildWorkflowRalphOptionArgs(get(workflowRalphMergedRunOptionsForArgvAtom)),
 );
 

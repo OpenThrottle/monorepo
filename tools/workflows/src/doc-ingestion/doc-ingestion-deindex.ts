@@ -5,7 +5,7 @@
 
 import { Client } from 'pg';
 
-export interface DeindexDocumentationByPathOptions {
+interface DeindexDocumentationByPathOptions {
   readonly connectionString: string;
   readonly paths: readonly string[];
   readonly repo: string;

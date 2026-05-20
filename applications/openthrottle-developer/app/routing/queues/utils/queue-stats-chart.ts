@@ -11,7 +11,7 @@ export const QUEUE_STATS_CHART_SERIES = [
 ] as const;
 
 /** One row per queue: name plus all five count series for grouped bar charts. */
-interface QueueStatsChartDatum {
+export interface QueueStatsChartDatum {
   readonly active: number;
   readonly completed: number;
   readonly delayed: number;
@@ -35,12 +35,12 @@ export function backlogForQueue(queue: QueueCardFragment): number {
   return queue.waitingCount + queue.delayedCount;
 }
 
-function totalJobsForChartRow(row: QueueStatsChartDatum): number {
+export function totalJobsForChartRow(row: QueueStatsChartDatum): number {
   return row.waiting + row.delayed + row.active + row.completed + row.failed;
 }
 
 /** @description Largest single-series value in chart rows (sets grouped BarChart X-axis max). */
-function maxSingleSeriesValue(
+export function maxSingleSeriesValue(
   rows: ReadonlyArray<QueueStatsChartDatum>,
 ): number {
   return maxSingleSeriesForView(rows, true);

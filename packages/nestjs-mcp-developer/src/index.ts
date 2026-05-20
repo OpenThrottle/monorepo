@@ -5,5 +5,5 @@
 export {
   withMcpDeveloperAuthToken,
   withMcpDeveloperAuthTokenAsync,
-} from '@openthrottle/mcp-developer/auth';
+} from '@openthrottle/mcp-developer';
 export * from '@openthrottle/mcp-developer/nest';

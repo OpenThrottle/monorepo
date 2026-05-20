@@ -15,7 +15,7 @@ import {
   SearchDocument,
 } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 

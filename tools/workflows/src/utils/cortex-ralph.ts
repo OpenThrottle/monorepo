@@ -12,22 +12,22 @@ export interface WorkflowRalphConfig {
 }
 
 /** Fatal error prefix used by getCortexConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
-const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
+export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
 export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 ';
 
 /** Shared message when Cortex env is missing. Used by getCortexConfigOrExit and all workflow bins/scripts. */
-const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
+export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
-const RALPH_FATAL_UNREACHABLE_SUFFIX =
+export const RALPH_FATAL_UNREACHABLE_SUFFIX =
   '\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
 
 /**
  * @description Normalizes JSONB task requirements from Postgres to a readonly array.
  */
-function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
+export function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
   return Array.isArray(raw) ? raw : [];
 }
 
@@ -80,7 +80,7 @@ export async function ensureCortexReachable(
   }
 }
 
-interface TaskRow {
+export interface TaskRow {
   readonly category: string | null;
   readonly createdAt: string;
   readonly description: string | null;
@@ -92,7 +92,7 @@ interface TaskRow {
   readonly updatedAt: string;
 }
 
-interface PlanRow {
+export interface PlanRow {
   readonly author: string;
   readonly category: string;
   readonly createdAt: string;
@@ -104,7 +104,7 @@ interface PlanRow {
   readonly updatedAt: string;
 }
 
-interface ProjectRow {
+export interface ProjectRow {
   readonly id: string;
   readonly name: string;
   readonly nxProjectName: string | null;
@@ -216,7 +216,7 @@ export async function getTaskById(
   }
 }
 
-interface ListPlansByStatusRow {
+export interface ListPlansByStatusRow {
   readonly id: string;
   readonly title: string;
   readonly status: string;
@@ -562,7 +562,7 @@ export async function updatePlanStatus(
   }
 }
 
-interface CommitLinkInput {
+export interface CommitLinkInput {
   readonly message: string | null;
   readonly planId: string;
   readonly repo: string;
@@ -570,7 +570,7 @@ interface CommitLinkInput {
   readonly taskId: string | null;
 }
 
-interface CommitLinkRow {
+export interface CommitLinkRow {
   readonly createdAt: string;
   readonly id: string;
   readonly message: string | null;

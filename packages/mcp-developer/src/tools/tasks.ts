@@ -30,7 +30,7 @@ import {
 } from '../__generated__/schemas.js';
 import type { GenericResult } from '../types/index.js';
 import { filterTasksByCategory } from '../utils/filters.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 

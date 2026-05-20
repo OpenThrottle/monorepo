@@ -1,10 +1,14 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
-import { getGeneratorByName, getGeneratorsList } from './generators.service';
+import {
+  GeneratorItem,
+  getGeneratorByName,
+  getGeneratorsList,
+} from './generators.service';
 
 @Controller('generators')
 export class GeneratorsController {
   @Get()
-  list() {
+  list(): GeneratorItem[] {
     return getGeneratorsList();
   }
 

@@ -10,7 +10,7 @@ import { join, relative, sep } from 'node:path';
 import { getPriorState } from './doc-ingestion-state';
 
 /** Payload for the doc-ingestion BullMQ job. At least one of directories or files must be set. */
-export interface DocIngestionJobPayload {
+interface DocIngestionJobPayload {
   readonly directories?: readonly string[];
   readonly files?: readonly string[];
   readonly scope?: string;
@@ -19,7 +19,7 @@ export interface DocIngestionJobPayload {
 }
 
 /** Result of diffing current filesystem state vs prior ingestion state. */
-export interface DocIngestionDiff {
+interface DocIngestionDiff {
   readonly toAdd: readonly string[];
   readonly toUpdate: readonly string[];
   readonly toRemove: readonly string[];
@@ -75,7 +75,7 @@ async function collectMdPathsUnderDir(
  * @description Expands job payload (directories + files) to a deduplicated list of markdown paths relative to workspace root.
  * Directories are recursively scanned for .md files; files are included only if they exist and end in .md.
  */
-export async function expandToMarkdownPaths(
+async function expandToMarkdownPaths(
   workspaceRoot: string,
   payload: Pick<DocIngestionJobPayload, 'directories' | 'files'>,
 ): Promise<string[]> {
@@ -116,7 +116,7 @@ export async function expandToMarkdownPaths(
 /**
  * @description Computes SHA-256 hex hash of file content. Returns undefined if file cannot be read.
  */
-export async function computeContentHash(
+async function computeContentHash(
   absolutePath: string,
 ): Promise<string | undefined> {
   try {
@@ -127,7 +127,7 @@ export async function computeContentHash(
   }
 }
 
-export interface ComputeDocIngestionDiffOptions {
+interface ComputeDocIngestionDiffOptions {
   readonly connectionString: string;
   readonly payload: DocIngestionJobPayload;
   readonly scope: string;

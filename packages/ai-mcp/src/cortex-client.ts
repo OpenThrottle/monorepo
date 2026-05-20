@@ -403,7 +403,7 @@ export interface PlanStatusCount {
 }
 
 /** Plan row returned by listPlansByStatus (all plan columns except description). Aligns with {@link PlanData} but with string timestamps from raw query. */
-interface ListPlansByStatusPlan extends Omit<
+export interface ListPlansByStatusPlan extends Omit<
   PlanData,
   'createdAt' | 'updatedAt' | 'description'
 > {
@@ -411,18 +411,18 @@ interface ListPlansByStatusPlan extends Omit<
   readonly updatedAt: string;
 }
 
-interface ListPlansByStatusResult {
+export interface ListPlansByStatusResult {
   readonly plans: readonly ListPlansByStatusPlan[];
   readonly totalCount: number;
 }
 
 /** Sort field for listPlansByStatus. */
-type ListPlansByStatusSortBy = 'created' | 'updated';
+export type ListPlansByStatusSortBy = 'created' | 'updated';
 
 /** Sort direction for listPlansByStatus. */
-type ListPlansByStatusSortOrder = 'asc' | 'desc';
+export type ListPlansByStatusSortOrder = 'asc' | 'desc';
 
-const DEFAULT_PLANS_PAGE_SIZE = 20;
+export const DEFAULT_PLANS_PAGE_SIZE = 20;
 
 /**
  * @description Lists plans in Cortex filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.

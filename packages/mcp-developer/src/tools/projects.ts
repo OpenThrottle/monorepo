@@ -8,7 +8,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { DeleteProjectDocument } from '../__generated__/graphql.js';
 import { DeleteProjectInputSchema } from '../__generated__/schemas.js';
 import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 

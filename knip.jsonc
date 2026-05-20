@@ -1,5 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  // Treat in-file-only interface/type exports as used (component Props, public API types).
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true,
+  },
+  // Exclude exports tagged /** @publicApi */ from unused-export reports (see docs/monorepo/Knip.md).
+  "tags": ["-publicApi"],
   "entry": [
     // "applications/**/*.{ts,tsx,js,jsx}", // Uncomment this to include all applications
     // NestJS applications
@@ -400,61 +407,11 @@
     },
   },
   "ignoreIssues": {
-    // @tools/workflows: public ./ralph-debug subpath and unit tests.
-    "tools/workflows/src/utils/ralph-debug-logger.ts": ["exports"],
-    // Parser helpers are covered by unit tests; mirrored in @openthrottle/openthrottle-workflows.
-    "tools/workflows/src/utils/parsers.ts": ["exports"],
     // Nx generator factories export both a named function and default (required by @nx/devkit).
     "tools/generators/src/generators/folders/generator.ts": ["duplicates"],
     "tools/generators/src/generators/nestjs/generator.ts": ["duplicates"],
     "tools/generators/src/generators/package/generator.ts": ["duplicates"],
     "tools/generators/src/generators/react/generator.ts": ["duplicates"],
     "tools/generators/src/generators/react-router/generator.ts": ["duplicates"],
-    // @openthrottle/mcp-developer: public ./auth and ./nest subpaths (consumed via @openthrottle/nestjs-mcp-developer).
-    "packages/mcp-developer/src/auth/index.ts": ["exports"],
-    "packages/mcp-developer/src/auth/get-auth-token.ts": ["exports"],
-    "packages/mcp-developer/src/nest/index.ts": ["exports"],
-    // @tools/dotfiles: documented public API for React Native / generic vitest factories.
-    "tools/dotfiles/src/vitest-config.ts": ["exports"],
-    "tools/dotfiles/src/index.ts": ["exports"],
-    "tools/dotfiles/src/config.ts": ["exports"],
-    // openthrottle-developer: SITE_DEVELOPER_PORTAL_URL kept for commented home hero CTA rollback.
-    "applications/openthrottle-developer/app/global/config/settings.ts": [
-      "exports",
-    ],
-    // Vitest-only exports (knip excludes **/__tests__/** and *.test.ts).
-    "applications/openthrottle-developer/app/routing/home/data/index.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/plans/config/status-options.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/plans/data/atom.plan.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/plans/utils/workflow-run-options-search-param.ts":
-      ["exports"],
-    "applications/openthrottle-developer/app/routing/projects/config/index.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/projects/utils/parsers.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/prompts/config/index.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/prompts/utils/parsers.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/pull-requests/utils/parsers.ts":
-      ["exports"],
-    "applications/openthrottle-developer/app/routing/search/utils/parsers.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-developer/app/routing/settings/client-log-sink.ts": [
-      "exports",
-    ],
-    "applications/openthrottle-server/src/queues/database-backup/database-backup.env.ts":
-      ["exports"],
   },
 }

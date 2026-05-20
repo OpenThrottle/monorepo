@@ -12,7 +12,9 @@ import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
 import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 import tslint from 'typescript-eslint';
 
+/** @publicApi */
 export type { Config as EslintFlatConfig } from 'eslint/config';
+/** @publicApi */
 export {
   createViteConfig,
   defineViteConfig,
@@ -20,6 +22,7 @@ export {
   type CreateViteConfigOptions,
   type PackageType,
 } from './vite-config.js';
+/** @publicApi */
 export {
   createVitestConfig,
   createVitestConfigJsdom,
@@ -33,6 +36,7 @@ export {
  * ESLint and the new "flat config" system
  * @link https://eslint.org/docs/latest
  * @link https://eslint.org/blog/2022/08/new-config-system-part-2/
+ * @publicApi
  */
 export const eslintConfig = tslint.config([
   /**
