@@ -11,13 +11,13 @@ import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 /** One row of chart data: date plus the six series. */
 interface DailyStatsChartDatum {
-  readonly date: string;
-  readonly plansCompleted: number;
-  readonly plansCreated: number;
-  readonly plansUpdated: number;
-  readonly tasksCompleted: number;
-  readonly tasksCreated: number;
-  readonly tasksUpdated: number;
+  date: string;
+  plansCompleted: number;
+  plansCreated: number;
+  plansUpdated: number;
+  tasksCompleted: number;
+  tasksCreated: number;
+  tasksUpdated: number;
 }
 
 const CHART_CONFIG: ChartConfig = {
@@ -43,7 +43,7 @@ function formatChartDate(value: string): string {
  * @description Maps DashboardDailyStatsCardFragment[] to chart data and config for Recharts.
  */
 function mapToChartData(
-  items: ReadonlyArray<DashboardDailyStatsCardFragment>,
+  items: DashboardDailyStatsCardFragment[],
 ): DailyStatsChartDatum[] {
   return items.map((item) => ({
     date: item.date,
@@ -56,9 +56,9 @@ function mapToChartData(
   }));
 }
 
-interface DashboardDailyStatsCardProps {
-  readonly className?: string;
-  readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
+export interface DashboardDailyStatsCardProps {
+  className?: string;
+  dailyStats: DashboardDailyStatsCardFragment[];
 }
 
 export const DashboardDailyStatsCard = (
@@ -67,14 +67,14 @@ export const DashboardDailyStatsCard = (
   const { className, dailyStats } = props;
 
   // Hooks
-
-  // Setup
-
-  // Handlers
   const chartData = React.useMemo(
     () => mapToChartData(dailyStats),
     [dailyStats],
   );
+
+  // Setup
+
+  // Handlers
 
   // Markup
 

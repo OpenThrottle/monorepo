@@ -4,15 +4,29 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
 
 export interface DashboardQuickNavigationProps {
-  readonly className?: string;
+  className?: string;
 }
 
 /**
  * @deprecated Temporarily commented out on dashboard index; restore when re-enabling quick navigation block.
  * @description Compact cross-entity links from the dashboard for faster navigation and debugging paths.
  */
-export function DashboardQuickNavigation(props: DashboardQuickNavigationProps) {
+export const DashboardQuickNavigation = (
+  props: DashboardQuickNavigationProps,
+) => {
   const { className } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <section className={className} data-testid="DashboardQuickNavigation">
@@ -30,4 +44,4 @@ export function DashboardQuickNavigation(props: DashboardQuickNavigationProps) {
       </div>
     </section>
   );
-}
+};

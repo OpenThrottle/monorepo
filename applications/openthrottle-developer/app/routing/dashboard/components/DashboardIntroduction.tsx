@@ -3,8 +3,8 @@ import classnames from 'classnames';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { GaugeIcon } from 'lucide-react';
 
-interface DashboardIntroductionProps {
-  readonly className?: string;
+export interface DashboardIntroductionProps {
+  className?: string;
 }
 
 export const DashboardIntroduction = (props: DashboardIntroductionProps) => {

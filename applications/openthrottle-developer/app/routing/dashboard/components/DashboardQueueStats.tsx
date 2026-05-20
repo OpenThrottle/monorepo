@@ -6,8 +6,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 
-const COLUMNS: ReadonlyArray<{
-  readonly key: keyof Pick<
+const COLUMNS: Array<{
+  key: keyof Pick<
     DashboardQueueStatsCardFragment,
     | 'waitingCount'
     | 'activeCount'
@@ -15,7 +15,7 @@ const COLUMNS: ReadonlyArray<{
     | 'failedCount'
     | 'delayedCount'
   >;
-  readonly label: string;
+  label: string;
 }> = [
   { key: 'waitingCount', label: 'Waiting' },
   { key: 'activeCount', label: 'Active' },
@@ -44,12 +44,12 @@ function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
  * @deprecated Temporarily commented out on dashboard index; restore when re-enabling queue stats grid.
  */
 export interface DashboardQueueStatsProps {
-  // readonly className?: string;
-  readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;
+  className?: string;
+  data: DashboardQueueStatsCardFragment[];
 }
 
 export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
-  const { data } = props;
+  const { className, data } = props;
 
   // Hooks
 
@@ -65,7 +65,7 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div data-testid="DashboardQueueStats">
+    <div className={className} data-testid="DashboardQueueStats">
       <h2 className="mb-4">Queue Stats</h2>
       {isEmpty ? (
         <p className="mt-2 text-sm text-muted-foreground">No queues</p>
