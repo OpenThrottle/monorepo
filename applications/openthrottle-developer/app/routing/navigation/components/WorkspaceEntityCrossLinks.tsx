@@ -6,30 +6,42 @@ import {
   WORKSPACE_FULL_JUMP_LINKS,
 } from '~/routing/navigation/data/workspace-jump-links';
 
-interface WorkspaceEntityCrossLinksProps {
-  readonly className?: string;
+export interface WorkspaceEntityCrossLinksProps {
+  className?: string;
   /**
    * @description When set, describe the strip for assistive tech (e.g. context-specific region label).
    */
-  readonly label?: string;
+  label?: string;
   /**
    * @description `core` lists dashboard/search/plans/projects/notes. `full` matches dashboard quick nav (queues, PRs, generators, etc.).
    */
-  readonly variant?: 'core' | 'full';
+  variant?: 'core' | 'full';
 }
 
 /**
  * @description Compact links between workspace areas for faster entity jumps.
  */
-export function WorkspaceEntityCrossLinks(
+export const WorkspaceEntityCrossLinks = (
   props: WorkspaceEntityCrossLinksProps,
-) {
+) => {
   const { className, label, variant = 'core' } = props;
+
+  // Hooks
+
+  // Setup
 
   const items =
     variant === 'full'
       ? WORKSPACE_FULL_JUMP_LINKS
       : WORKSPACE_CORE_ENTITY_LINKS;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <section
@@ -48,4 +60,4 @@ export function WorkspaceEntityCrossLinks(
       </div>
     </section>
   );
-}
+};
