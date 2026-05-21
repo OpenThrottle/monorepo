@@ -124,6 +124,7 @@ export default function Component(
   const [searchParams] = useSearchParams();
 
   // Setup
+  const showStats = false;
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
 
   // Handlers
@@ -136,11 +137,13 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <PromptsStats
-        countAgents={countAgents}
-        countSkills={countSkills}
-        total={total}
-      />
+      {showStats && (
+        <PromptsStats
+          countAgents={countAgents}
+          countSkills={countSkills}
+          total={total}
+        />
+      )}
       <PromptsIntroduction />
       <div className="flex flex-col gap-4">
         <PromptToolbar

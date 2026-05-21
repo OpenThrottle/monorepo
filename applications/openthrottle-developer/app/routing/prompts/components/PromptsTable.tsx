@@ -56,6 +56,22 @@ PromptsTable.buildTable = (): ColumnDef<
 >[] => {
   return [
     {
+      accessorKey: 'status',
+      cell: ({ row }) => {
+        const prompt = row.original;
+
+        return (
+          <div>
+            <Badge variant="secondary">
+              {formatPromptType(prompt.promptType)}
+            </Badge>
+          </div>
+        );
+      },
+      header: () => <div className="p-2 w-12">Status</div>,
+      // maxSize: 20,
+    },
+    {
       accessorKey: 'title',
       cell: ({ row }) => {
         const prompt = row.original;
@@ -68,27 +84,24 @@ PromptsTable.buildTable = (): ColumnDef<
         const overflowLabelCount = prompt.labels.length - 3;
 
         return (
-          <div className="overflow-hidden p-2">
-            <div className="mb-2 flex items-start justify-between gap-2">
-              <h2 className="mb-0 line-clamp-1 text-ellipsis text-sm font-medium">
-                <Link
-                  aria-label={`View prompt: ${title}`}
-                  className="underline underline-offset-2 hover:text-primary"
-                  to={promptHref}
-                  viewTransition={true}
-                >
-                  {title}
-                </Link>
-              </h2>
-              <Badge className="shrink-0" variant="secondary">
-                {formatPromptType(prompt.promptType)}
-              </Badge>
-            </div>
+          <div className="overflow-hidden-- flex-1 w-full p-2">
+            <h2 className="mb-2 line-clamp-1 text-ellipsis text-sm font-medium">
+              <Link
+                aria-label={`View prompt: ${title}`}
+                className="underline underline-offset-2 hover:text-primary"
+                to={promptHref}
+                viewTransition={true}
+              >
+                {title}
+              </Link>
+            </h2>
+
             {prompt.description ? (
               <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">
                 {prompt.description}
               </p>
             ) : null}
+
             {prompt.labels.length > 0 ? (
               <div className="mb-2 flex flex-wrap gap-1">
                 {visibleLabels.map((label) => (
@@ -121,7 +134,8 @@ PromptsTable.buildTable = (): ColumnDef<
           </div>
         );
       },
-      header: () => <div className="p-2">Prompt</div>,
+
+      header: () => <div className="p-2 flex-1 w-full">Prompt</div>,
     },
   ];
 };

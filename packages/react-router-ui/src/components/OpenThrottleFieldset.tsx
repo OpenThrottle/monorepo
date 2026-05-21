@@ -26,7 +26,7 @@ export const OpenThrottleFieldset = (props: OpenThrottleFieldsetProps) => {
     <fieldset
       aria-labelledby={id}
       className={classnames(
-        'bg-card border border-border rounded-md space-y-4 p-4 transition-colors',
+        '--bg-card border border-border rounded-md space-y-4 p-4 transition-colors',
         className,
       )}
       data-testid="OpenThrottleFieldset"

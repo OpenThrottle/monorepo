@@ -1,19 +1,11 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import { Form, useNavigation } from 'react-router';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  Input,
-  Label,
-} from '@openthrottle/react-router-shadcn';
-import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
+import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
 
 export interface SettingsWorkspaceProfileFormProps {
   actionError?: string | null;
@@ -50,14 +42,19 @@ export const SettingsWorkspaceProfileForm = (
   // 🔌 Short Circuit
 
   return (
-    <Card
-      className={classnames(className)}
-      data-testid="SettingsWorkspaceProfileForm"
+    <OpenThrottleFieldset
+      id="settings-workspace-profile-form"
+      legend="Contact & editors"
     >
-      <CardHeader>
-        <CardTitle>Contact & editors</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <div
+        className={classnames('space-y-4 md:space-y-8', className)}
+        data-testid="SettingsWorkspaceProfileForm"
+      >
+        <p className="text-muted-foreground text-sm">
+          OpenThrottle can write MCP, skills, and rules into linked repos for
+          the editors you enable.
+        </p>
+
         <Form className="space-y-4" method="post">
           <input name="intent" type="hidden" value="updateProfile" />
 
@@ -101,13 +98,11 @@ export const SettingsWorkspaceProfileForm = (
             </p>
           ) : null}
 
-          <CardFooter className="flex justify-end p-0 pt-2">
-            <Button disabled={isSubmitting} type="submit" variant="outline">
-              {isSubmitting ? 'Saving…' : 'Save profile'}
-            </Button>
-          </CardFooter>
+          <Button disabled={isSubmitting} type="submit" variant="outline">
+            {isSubmitting ? 'Saving…' : 'Save profile'}
+          </Button>
         </Form>
-      </CardContent>
-    </Card>
+      </div>
+    </OpenThrottleFieldset>
   );
 };
