@@ -35,7 +35,18 @@ export { Role } from './modules/roles/role.entity';
 export { RolesService } from './modules/roles/roles.service';
 export { ServiceAccount } from './modules/service-accounts/service-account.entity';
 export { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
+export {
+  SERVICE_ACCOUNT_BEARER_PREFIX,
+  formatServiceAccountToken,
+  normalizeServiceAccountBearerToken,
+  parseServiceAccountToken,
+} from './modules/service-accounts/service-account-token.util';
 export { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
+export { ServiceAccountsService } from './modules/service-accounts/service-accounts.service';
+export type {
+  CreateServiceAccountCredentialResult,
+  VerifiedServiceAccountCredential,
+} from './modules/service-accounts/service-accounts.service';
 export { Project } from './modules/projects/project.entity';
 export { Subscription } from './modules/subscriptions/subscription.entity';
 export { SubscriptionsService } from './modules/subscriptions/subscriptions.service';
