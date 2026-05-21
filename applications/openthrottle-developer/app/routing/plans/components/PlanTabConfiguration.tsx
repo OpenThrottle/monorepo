@@ -61,8 +61,8 @@ export interface PlanTabConfigurationProps {
 
   /** Controlled: job-run lifecycle hooks (parent owns for enqueue + save). */
   jobRunHookRows?: readonly JobRunHookDraftRow[];
-  onJobRunHookRowsChange?: (next: JobRunHookDraftRow[]) => void;
-  onSaveJobRunHooks?: () => void;
+  onJobRunHookRowsChange: (next: JobRunHookDraftRow[]) => void;
+  onSaveJobRunHooks: () => void;
   saveJobRunHooksDisabled?: boolean;
   saveJobRunHooksPending?: boolean;
 
@@ -190,94 +190,99 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
 
   return (
     <TabsContent value="configuration">
-      <Card
-        className="p-4"
-        // className="p-4 sticky top-[100px] z-100"
-      >
-        <PlanWorkflowCommand command={command} onReset={onResetToDefaults} />
-      </Card>
+      <div className="flex flex-col gap-4 md:gap-8">
+        <Card className="p-4">
+          <PlanWorkflowCommand command={command} onReset={onResetToDefaults} />
+        </Card>
 
-      <div className="space-y-4 md:space-y-8">
-        <CardContent className="flex flex-col flex-1 gap-4">
-          {!validation.ok ? (
-            <div
-              className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              data-testid="workflow-run-validation"
-              role="alert"
-            >
-              <p className="font-medium">
-                Workflow options blocked until fixed
-              </p>
-              <ul className="mt-1 list-inside list-disc text-xs">
-                {validation.issues.map((issue, index) => (
-                  <li key={`${issue.code}-${index}`}>{issue.message}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </CardContent>
-      </div>
+        <div className="space-y-4 md:space-y-8">
+          <CardContent className="flex flex-col flex-1 gap-4">
+            {!validation.ok ? (
+              <div
+                className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                data-testid="workflow-run-validation"
+                role="alert"
+              >
+                <p className="font-medium">
+                  Workflow options blocked until fixed
+                </p>
+                <ul className="mt-1 list-inside list-disc text-xs">
+                  {validation.issues.map((issue, index) => (
+                    <li key={`${issue.code}-${index}`}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardContent>
+        </div>
 
-      <hr className="my-12" />
-      <PlanWorkflowConfigTarget input={input} setInput={setInput} />
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={input}
+          setInput={setInput}
+        />
 
-      {onWorkingDirectoryChange != null && (
-        <>
-          <hr className="my-12" />
+        {onWorkingDirectoryChange != null && (
           <PlanWorkflowConfigWorkspace
+            heading="02. Workspace"
             onChange={onWorkingDirectoryChange}
             value={workingDirectory}
           />
-        </>
-      )}
-      {jobRunHookRows != null && onJobRunHookRowsChange != null ? (
-        <>
-          <hr className="my-12" />
-          <PlanWorkflowConfigHooks
-            hooks={jobRunHookRows}
-            onChange={onJobRunHookRowsChange}
-            onSave={onSaveJobRunHooks}
-            saveDisabled={saveJobRunHooksDisabled}
-            savePending={saveJobRunHooksPending}
-          />
-        </>
-      ) : null}
-      <hr className="my-12" />
-      <PlanWorkflowConfigPrompt
-        onPromptChange={(next) =>
-          setInput((prev) => ({ ...prev, prompt: next }))
-        }
-        onPromptFileChange={(next) =>
-          setInput((prev) => ({ ...prev, promptFile: next }))
-        }
-        onPromptLayerChange={(next) => {
-          setInput((prev) => {
-            if (next === 'named') {
-              return { ...prev, promptFile: '', promptLayer: 'named' };
-            }
+        )}
 
-            return {
-              ...prev,
-              prompt: DEFAULT_RALPH_PROMPT,
-              promptLayer: 'file',
-            };
-          });
-        }}
-        prompt={input.prompt}
-        promptFile={input.promptFile}
-        promptLayer={input.promptLayer}
-      />
-      <hr className="my-12" />
-      <PlanWorkflowConfigExecution input={input} setInput={setInput} />
-      <hr className="my-12" />
-      <PlanWorkflowConfigWorktree input={input} setInput={setInput} />
-      <hr className="my-12" />
-      <PlanWorkflowConfigTuning
-        input={input}
-        iterationTimeoutText={iterationTimeoutText}
-        setInput={setInput}
-        setIterationTimeoutText={setIterationTimeoutText}
-      />
+        <PlanWorkflowConfigHooks
+          heading="03. Lifecycle"
+          hooks={jobRunHookRows ?? []}
+          onChange={onJobRunHookRowsChange}
+          onSave={onSaveJobRunHooks}
+          saveDisabled={saveJobRunHooksDisabled}
+          savePending={saveJobRunHooksPending}
+        />
+
+        <PlanWorkflowConfigPrompt
+          heading="04. Prompt"
+          onPromptChange={(next) =>
+            setInput((prev) => ({ ...prev, prompt: next }))
+          }
+          onPromptFileChange={(next) =>
+            setInput((prev) => ({ ...prev, promptFile: next }))
+          }
+          onPromptLayerChange={(next) => {
+            setInput((prev) => {
+              if (next === 'named') {
+                return { ...prev, promptFile: '', promptLayer: 'named' };
+              }
+
+              return {
+                ...prev,
+                prompt: DEFAULT_RALPH_PROMPT,
+                promptLayer: 'file',
+              };
+            });
+          }}
+          prompt={input.prompt}
+          promptFile={input.promptFile}
+          promptLayer={input.promptLayer}
+        />
+
+        <PlanWorkflowConfigExecution
+          heading="05. Life Cycle"
+          input={input}
+          setInput={setInput}
+        />
+        <PlanWorkflowConfigWorktree
+          heading="06. Worktree"
+          input={input}
+          setInput={setInput}
+        />
+        <PlanWorkflowConfigTuning
+          heading="07. Run Tuning"
+          input={input}
+          iterationTimeoutText={iterationTimeoutText}
+          setInput={setInput}
+          setIterationTimeoutText={setIterationTimeoutText}
+        />
+      </div>
     </TabsContent>
   );
 };

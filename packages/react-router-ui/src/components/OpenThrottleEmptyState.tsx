@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import { ARTWORK_YODA } from '../data/data.artwork';
 
 export interface OpenThrottleEmptyStateProps {
@@ -23,8 +24,11 @@ export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div className={className} data-testid="OpenThrottleEmptyState">
-      <h2 className="text-lg font-bold mb-2">{title}</h2>
+    <div
+      className={classnames('p-4', className)}
+      data-testid="OpenThrottleEmptyState"
+    >
+      <h2 className="text-base text-foreground mb-4">{title}</h2>
       <p className="text-sm text-muted-foreground">{description}</p>
 
       <div className="w-full flex">

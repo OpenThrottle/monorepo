@@ -5,13 +5,13 @@
 
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-/** @description When a hook runs relative to the main Ralph/orchestrator run. */
+/** When a hook runs relative to the main Ralph/orchestrator run. */
 export type JobRunHookPhase = 'after_run' | 'before_run';
 
-/** @description How hook failure affects the job. */
+/** How hook failure affects the job. */
 export type JobRunHookOnFailure = 'block' | 'ignore' | 'warn';
 
-/** @description Matches hook entry variants. */
+/** Matches hook entry variants. */
 export type JobRunHookKind = 'prompt_profile' | 'skill';
 
 export type JobRunHookPromptDelivery = 'file' | 'named';
@@ -79,10 +79,10 @@ const sortJobRunHookEntries = (
   hooks: readonly JobRunHookEntry[],
 ): JobRunHookEntry[] => [...hooks].sort(compareJobRunHookEntries);
 
-/** @description Stable React key for an editable hook row. */
-export interface JobRunHookDraftRow extends JobRunHookEntry {
+/** Stable React key for an editable hook row. */
+export type JobRunHookDraftRow = JobRunHookEntry & {
   readonly draftId: string;
-}
+};
 
 const JOB_RUN_HOOK_PHASES: readonly JobRunHookPhase[] = [
   'after_run',
@@ -118,9 +118,7 @@ const parsePhase = (value: unknown): JobRunHookPhase => {
     typeof value !== 'string' ||
     !JOB_RUN_HOOK_PHASES.includes(value as JobRunHookPhase)
   ) {
-    throw new Error(
-      `phase must be one of: ${JOB_RUN_HOOK_PHASES.join(', ')}`,
-    );
+    throw new Error(`phase must be one of: ${JOB_RUN_HOOK_PHASES.join(', ')}`);
   }
   return value as JobRunHookPhase;
 };
@@ -237,8 +235,8 @@ const parseHookEntryFromRecord = (
   return {
     ...base,
     kind: 'prompt_profile',
-    promptDelivery: 'named',
     prompt: named,
+    promptDelivery: 'named',
   };
 };
 
@@ -352,9 +350,7 @@ export const validateJobRunHooksDraftRows = (
   const beforeCount = rows.filter((r) => r.phase === 'before_run').length;
   const afterCount = rows.filter((r) => r.phase === 'after_run').length;
   if (beforeCount > MAX_JOB_RUN_HOOKS_PER_PHASE) {
-    issues.push(
-      `At most ${MAX_JOB_RUN_HOOKS_PER_PHASE} before_run hooks.`,
-    );
+    issues.push(`At most ${MAX_JOB_RUN_HOOKS_PER_PHASE} before_run hooks.`);
   }
   if (afterCount > MAX_JOB_RUN_HOOKS_PER_PHASE) {
     issues.push(`At most ${MAX_JOB_RUN_HOOKS_PER_PHASE} after_run hooks.`);

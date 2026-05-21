@@ -2,7 +2,6 @@ import * as React from 'react';
 import classnames from 'classnames';
 import {
   Button,
-  Card,
   Markdown,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
@@ -77,9 +76,7 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
     workingDirectory ?? '',
   );
   const workflowRunBlocked =
-    !workflowValidation.ok ||
-    workspacePathError != null ||
-    jobRunHooksBlocked;
+    !workflowValidation.ok || workspacePathError != null || jobRunHooksBlocked;
   const workflowRunBlockedReason = jobRunHooksBlocked
     ? (jobRunHooksBlockedReason ??
       'Fix job run lifecycle hooks in Configuration.')
@@ -114,34 +111,34 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
   return (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
-        <Card
-          className={classnames({
-            'absolute inset-0 z-50': fullscreen,
+        <PlanToolbar
+          className="bg-card rounded-lg border border-card-border p-4"
+          // className="p-4"
+          jobRunHooksJson={jobRunHooksJson}
+          planId={plan.id}
+          planStatus={plan.status}
+          planTitle={plan.title ?? 'Untitled'}
+          ralphTuningJson={ralphTuningJson}
+          workflowRunBlocked={workflowRunBlocked}
+          workflowRunBlockedReason={workflowRunBlockedReason}
+          workingDirectory={workingDirectory}
+        />
+
+        <div
+          className={classnames('bg-card', {
+            'absolute inset-0 z-50 h-full w-full': fullscreen,
             'border-transparent hover:border-transparent': fullscreen,
+            relative: !fullscreen,
           })}
         >
-          <PlanToolbar
-            // className="bg-card rounded-lg border border-card-border p-4"
-            className="p-4"
-            jobRunHooksJson={jobRunHooksJson}
-            planId={plan.id}
-            planStatus={plan.status}
-            planTitle={plan.title ?? 'Untitled'}
-            ralphTuningJson={ralphTuningJson}
-            workflowRunBlocked={workflowRunBlocked}
-            workflowRunBlockedReason={workflowRunBlockedReason}
-            workingDirectory={workingDirectory}
-          />
-          <div>
-            <Button
-              onClick={() => {
-                setFullscreen((prev) => !prev);
-              }}
-            >
-              Full Screen
-            </Button>
-          </div>
-          {/* <CardContent> */}
+          <Button
+            className="absolute top-4 right-4 z-10"
+            onClick={() => {
+              setFullscreen((prev) => !prev);
+            }}
+          >
+            Full Screen
+          </Button>
 
           {fullscreen ? (
             <EditorWindow
@@ -157,73 +154,27 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
               // onChange={handleEditorChange}
             />
           ) : (
-            <>
-              <Markdown
-                className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
-                content={plan.description ?? ''}
-              />
-              {/* <p className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal">
-                {plan.description ?? ''}
-              </p> */}
-            </>
-          )}
-
-          {/* </CardContent> */}
-
-          {/* <div>
-
-          {(hasDescription || hasSummary) && (
-            <div className="space-y-4">
-              {hasDescription && (
-                <div className="space-y-1">
-                  <Markdown
-                    className={classnames(
-                      'text-sm my-8 text-muted-foreground whitespace-normal',
-                      !expanded && 'line-clamp-4',
-                    )}
-                    content={plan.description ?? ''}
-                  />
-                  <p
-                  className={classnames(
-                    'text-md leading-relaxed transition-colors',
-                    'text-muted-foreground hover:text-foreground',
-                    // 'text-sidebar-foreground',
-                    // showDescriptionPreview && 'line-clamp-4',
-                  )}
-                >
-                  {plan.description}
-                </p>
-                  {isLongDescription && (
-                    <Button onClick={() => setExpanded((e) => !e)}>
-                      {expanded ? 'Show less' : 'Show more'}
-                    </Button>
-                  )}
-                </div>
-              )}
-              {hasDescription && hasSummary && <Separator />}
+            <div className="space-y-4 p-4 md:p-8">
               {hasSummary && (
-                <div className="space-y-1">
-                  <Blockquote
-                    className={classnames(
-                      'border-l-4 border-muted-foreground/30 pl-4 italic text-muted-foreground',
-                      showSummaryPreview && 'line-clamp-3',
-                    )}
-                  >
-                    {plan.summary}
-                  </Blockquote>
-                  {isLongSummary && (
-                    <Button onClick={() => setSummary((e) => !e)}>
-                      {summary ? 'Show less' : 'Show more'}
-                    </Button>
-                  )}
+                <div>
+                  <h2 className="mb-4">Summary</h2>
+                  <Markdown
+                    className="text-wrap text-sm text-muted-foreground whitespace-normal"
+                    content={plan.summary ?? ''}
+                  />
                 </div>
               )}
+
+              <div>
+                <h2 className="mb-4">Description</h2>
+                <Markdown
+                  className="text-wrap text-sm text-muted-foreground whitespace-normal"
+                  content={plan.description ?? ''}
+                />
+              </div>
             </div>
           )}
-
-          <CardFooter></CardFooter>
-        </div> */}
-        </Card>
+        </div>
 
         <PlanWorkflowRunTransparency
           canonicalWorkflowCommand={canonicalWorkflowCommand}

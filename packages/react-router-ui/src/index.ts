@@ -6,6 +6,7 @@ export * from './components/OpenThrottleClipboard';
 export * from './components/OpenThrottleCommander';
 export * from './components/OpenThrottleEmptyState';
 export * from './components/OpenThrottleEntrance';
+export * from './components/OpenThrottleFieldset';
 export * from './components/OpenThrottleLoader';
 export * from './components/OpenThrottleLogo';
 export * from './components/OpenThrottleModal';

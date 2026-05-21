@@ -23,15 +23,18 @@ import {
   validateJobRunHooksDraftRows,
 } from '~/routing/plans/utils/job-run-hooks-ui';
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { PlanWorkflowConfigHooksValidation } from '~/routing/plans/components/PlanWorkflowConfigHooksValidation';
+import { PlanWorkflowConfigHooksEmpty } from '~/routing/plans/components/PlanWorkflowConfigHooksEmpty';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface PlanWorkflowConfigHooksProps {
-  className?: string;
+  heading: string;
   hooks: readonly JobRunHookDraftRow[];
   onChange: (next: JobRunHookDraftRow[]) => void;
   /**
    * @description When set, shows Save to plan (persists via parent fetcher).
    */
-  onSave?: () => void;
+  onSave: () => void;
   saveDisabled?: boolean;
   savePending?: boolean;
 }
@@ -41,7 +44,9 @@ const updateRow = (
   draftId: string,
   patch: Partial<JobRunHookDraftRow>,
 ): JobRunHookDraftRow[] =>
-  rows.map((row) => (row.draftId === draftId ? { ...row, ...patch } : row));
+  rows.map((row) =>
+    row.draftId === draftId ? { ...row, ...patch } : row,
+  ) as JobRunHookDraftRow[];
 
 const moveRowWithinPhase = (
   rows: readonly JobRunHookDraftRow[],
@@ -64,8 +69,10 @@ const moveRowWithinPhase = (
   const swapIndex = phaseIndices[swapPos];
   const next = [...rows];
   const current = next[index];
+
   next[index] = next[swapIndex];
   next[swapIndex] = current;
+
   return next;
 };
 
@@ -73,7 +80,7 @@ export const PlanWorkflowConfigHooks = (
   props: PlanWorkflowConfigHooksProps,
 ) => {
   const {
-    className,
+    heading,
     hooks,
     onChange,
     onSave,
@@ -151,28 +158,25 @@ export const PlanWorkflowConfigHooks = (
   };
 
   return (
-    <div className={className ?? 'mt-8'}>
-      <div className="pb-2 mb-4 flex flex-row flex-wrap items-center justify-between gap-2">
-        <div className="space-y-1">
-          <h2 className="mb-4">Job run lifecycle hooks</h2>
+    <>
+      <OpenThrottleFieldset id="job-run-hooks-legend" legend={heading}>
+        <div className="pb-2 mb-4 flex flex-row flex-wrap items-center justify-between gap-4">
           <p className="text-muted-foreground text-xs font-normal">
             Run a prompt profile or repo skill before or after the main Ralph
             job (server-side; not CLI flags). Saved on the plan and sent on
             enqueue.
           </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button
-            data-testid="job-run-hooks-add"
-            onClick={handleAdd}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <Plus />
-            Add hook
-          </Button>
-          {onSave != null ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              data-testid="job-run-hooks-add"
+              onClick={handleAdd}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <Plus />
+              Add hook
+            </Button>
             <Button
               data-testid="job-run-hooks-save"
               disabled={saveDisabled || !validation.ok || savePending}
@@ -182,324 +186,308 @@ export const PlanWorkflowConfigHooks = (
             >
               {savePending ? 'Saving…' : 'Save to plan'}
             </Button>
-          ) : null}
+          </div>
         </div>
-      </div>
-      <div>
-        <fieldset className="space-y-4" data-testid="PlanWorkflowConfigHooks">
-          {!validation.ok ? (
-            <div
-              className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              data-testid="job-run-hooks-validation"
-              role="alert"
-            >
-              <p className="font-medium">Fix hook configuration</p>
-              <ul className="mt-1 list-inside list-disc text-xs">
-                {validation.issues.map((issue, index) => (
-                  <li key={`${issue}-${index}`}>{issue}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+      </OpenThrottleFieldset>
 
-          {hooks.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              No hooks configured. The worker runs Ralph only (unchanged from
-              plans without hooks).
-            </p>
-          ) : (
-            <ul className="space-y-4">
-              {hooks.map((row, index) => {
-                const kindValue =
-                  row.kind === 'skill' ? 'skill' : 'prompt_profile';
-                const onFailureValue = row.onFailure ?? 'default';
-                const phaseIndices = hooks
-                  .map((r, i) => (r.phase === row.phase ? i : -1))
-                  .filter((i) => i >= 0);
-                const posInPhase = phaseIndices.indexOf(index);
-                const canMoveUp = posInPhase > 0;
-                const canMoveDown = posInPhase < phaseIndices.length - 1;
+      <fieldset
+        className="space-y-4 ml-4"
+        data-testid="PlanWorkflowConfigHooks"
+      >
+        <PlanWorkflowConfigHooksValidation validation={validation} />
+        {hooks.length === 0 ? (
+          <PlanWorkflowConfigHooksEmpty />
+        ) : (
+          <ul className="space-y-4">
+            {hooks.map((row, index) => {
+              const kindValue =
+                row.kind === 'skill' ? 'skill' : 'prompt_profile';
+              const onFailureValue = row.onFailure ?? 'default';
+              const phaseIndices = hooks
+                .map((r, i) => (r.phase === row.phase ? i : -1))
+                .filter((i) => i >= 0);
+              const posInPhase = phaseIndices.indexOf(index);
+              const canMoveUp = posInPhase > 0;
+              const canMoveDown = posInPhase < phaseIndices.length - 1;
 
-                return (
-                  <li
-                    className="rounded-lg border border-border p-4 space-y-3"
-                    data-testid={`job-run-hook-row-${index}`}
-                    key={row.draftId}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-sm font-medium">
-                        Hook {index + 1}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          aria-label="Move hook up within phase"
-                          disabled={!canMoveUp}
-                          onClick={() =>
-                            onChange(moveRowWithinPhase(hooks, row.draftId, -1))
-                          }
-                          size="icon"
-                          type="button"
-                          variant="ghost"
-                        >
-                          <ArrowUp />
-                        </Button>
-                        <Button
-                          aria-label="Move hook down within phase"
-                          disabled={!canMoveDown}
-                          onClick={() =>
-                            onChange(moveRowWithinPhase(hooks, row.draftId, 1))
-                          }
-                          size="icon"
-                          type="button"
-                          variant="ghost"
-                        >
-                          <ArrowDown />
-                        </Button>
-                        <Button
-                          aria-label="Remove hook"
-                          onClick={() => handleRemove(row.draftId)}
-                          size="icon"
-                          type="button"
-                          variant="ghost"
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    </div>
+              return (
+                <li
+                  className="rounded-lg border border-border p-4 space-y-3"
+                  data-testid={`job-run-hook-row-${index}`}
+                  key={row.draftId}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-medium">
+                      Hook {index + 1}
+                    </span>
 
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`hook-phase-${row.draftId}`}>
-                          Phase
-                        </Label>
-                        <Select
-                          onValueChange={(value) =>
-                            handlePhaseChange(
-                              row.draftId,
-                              value as JobRunHookPhase,
-                            )
-                          }
-                          value={row.phase}
-                        >
-                          <SelectTrigger id={`hook-phase-${row.draftId}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="before_run">
-                              {jobRunHookPhaseLabel('before_run')}
-                            </SelectItem>
-                            <SelectItem value="after_run">
-                              {jobRunHookPhaseLabel('after_run')}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`hook-kind-${row.draftId}`}>Kind</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            handleKindChange(
-                              row.draftId,
-                              value as 'prompt_profile' | 'skill',
-                            )
-                          }
-                          value={kindValue}
-                        >
-                          <SelectTrigger id={`hook-kind-${row.draftId}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="prompt_profile">
-                              {jobRunHookKindLabel('prompt_profile')}
-                            </SelectItem>
-                            <SelectItem value="skill">
-                              {jobRunHookKindLabel('skill')}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`hook-on-failure-${row.draftId}`}>
-                          On failure
-                        </Label>
-                        <Select
-                          onValueChange={(value) =>
-                            handleOnFailureChange(
-                              row.draftId,
-                              value as JobRunHookOnFailure | 'default',
-                            )
-                          }
-                          value={onFailureValue}
-                        >
-                          <SelectTrigger id={`hook-on-failure-${row.draftId}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="default">
-                              Default (
-                              {row.phase === 'before_run' ? 'block' : 'warn'})
-                            </SelectItem>
-                            <SelectItem value="block">block</SelectItem>
-                            <SelectItem value="warn">warn</SelectItem>
-                            <SelectItem value="ignore">ignore</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`hook-timeout-${row.draftId}`}>
-                          Timeout (s)
-                        </Label>
-                        <Input
-                          id={`hook-timeout-${row.draftId}`}
-                          min={1}
-                          onChange={(event) => {
-                            const raw = event.target.value.trim();
-                            onChange(
-                              updateRow(hooks, row.draftId, {
-                                timeoutSeconds:
-                                  raw === ''
-                                    ? undefined
-                                    : Number.parseInt(raw, 10),
-                              }),
-                            );
-                          }}
-                          placeholder={jobRunHookDefaultTimeoutHint()}
-                          type="number"
-                          value={
-                            row.timeoutSeconds === undefined
-                              ? ''
-                              : String(row.timeoutSeconds)
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    {row.kind === 'skill' ? (
-                      <div className="space-y-2">
-                        <Label htmlFor={`hook-skill-${row.draftId}`}>
-                          Skill path
-                        </Label>
-                        <Input
-                          id={`hook-skill-${row.draftId}`}
-                          onChange={(event) =>
-                            onChange(
-                              updateRow(hooks, row.draftId, {
-                                skillPath: event.target.value,
-                              }),
-                            )
-                          }
-                          placeholder=".agents/skills/workflow-ralph/SKILL.md"
-                          spellCheck={false}
-                          value={row.skillPath}
-                        />
-                      </div>
-                    ) : row.promptDelivery === 'file' ? (
-                      <div className="space-y-2">
-                        <Label htmlFor={`hook-prompt-file-${row.draftId}`}>
-                          Prompt file
-                        </Label>
-                        <Input
-                          id={`hook-prompt-file-${row.draftId}`}
-                          onChange={(event) =>
-                            onChange(
-                              updateRow(hooks, row.draftId, {
-                                promptFile: event.target.value,
-                              }),
-                            )
-                          }
-                          placeholder="prompts/preflight.md"
-                          spellCheck={false}
-                          value={row.promptFile}
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-end gap-2">
-                          <div className="min-w-0 flex-1 space-y-2">
-                            <Label htmlFor={`hook-prompt-${row.draftId}`}>
-                              Named prompt (--prompt)
-                            </Label>
-                            <Input
-                              id={`hook-prompt-${row.draftId}`}
-                              onChange={(event) =>
-                                onChange(
-                                  updateRow(hooks, row.draftId, {
-                                    prompt: event.target.value,
-                                  }),
-                                )
-                              }
-                              placeholder={DEFAULT_RALPH_PROMPT}
-                              spellCheck={false}
-                              value={row.prompt}
-                            />
-                          </div>
-                          <Button
-                            onClick={() =>
-                              onChange(
-                                hooks.map((r) =>
-                                  r.draftId === row.draftId
-                                    ? {
-                                        draftId: r.draftId,
-                                        kind: 'prompt_profile' as const,
-                                        onFailure: r.onFailure,
-                                        order: r.order,
-                                        phase: r.phase,
-                                        promptDelivery: 'file' as const,
-                                        promptFile: '',
-                                        timeoutSeconds: r.timeoutSeconds,
-                                      }
-                                    : r,
-                                ),
-                              )
-                            }
-                            size="sm"
-                            type="button"
-                            variant="outline"
-                          >
-                            Use file
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {row.kind === 'prompt_profile' &&
-                    row.promptDelivery === 'file' ? (
+                    <div className="flex items-center gap-1">
                       <Button
+                        aria-label="Move hook up within phase"
+                        disabled={!canMoveUp}
                         onClick={() =>
-                          onChange(
-                            hooks.map((r) =>
-                              r.draftId === row.draftId
-                                ? {
-                                    draftId: r.draftId,
-                                    kind: 'prompt_profile' as const,
-                                    onFailure: r.onFailure,
-                                    order: r.order,
-                                    phase: r.phase,
-                                    prompt: DEFAULT_RALPH_PROMPT,
-                                    promptDelivery: 'named' as const,
-                                    timeoutSeconds: r.timeoutSeconds,
-                                  }
-                                : r,
-                            ),
-                          )
+                          onChange(moveRowWithinPhase(hooks, row.draftId, -1))
                         }
-                        size="sm"
+                        size="icon"
                         type="button"
                         variant="ghost"
                       >
-                        Use named profile
+                        <ArrowUp />
                       </Button>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </fieldset>
-      </div>
-    </div>
+                      <Button
+                        aria-label="Move hook down within phase"
+                        disabled={!canMoveDown}
+                        onClick={() =>
+                          onChange(moveRowWithinPhase(hooks, row.draftId, 1))
+                        }
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <ArrowDown />
+                      </Button>
+                      <Button
+                        aria-label="Remove hook"
+                        onClick={() => handleRemove(row.draftId)}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`hook-phase-${row.draftId}`}>Phase</Label>
+                      <Select
+                        onValueChange={(value) =>
+                          handlePhaseChange(
+                            row.draftId,
+                            value as JobRunHookPhase,
+                          )
+                        }
+                        value={row.phase}
+                      >
+                        <SelectTrigger id={`hook-phase-${row.draftId}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="before_run">
+                            {jobRunHookPhaseLabel('before_run')}
+                          </SelectItem>
+                          <SelectItem value="after_run">
+                            {jobRunHookPhaseLabel('after_run')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`hook-kind-${row.draftId}`}>Kind</Label>
+                      <Select
+                        onValueChange={(value) =>
+                          handleKindChange(
+                            row.draftId,
+                            value as 'prompt_profile' | 'skill',
+                          )
+                        }
+                        value={kindValue}
+                      >
+                        <SelectTrigger id={`hook-kind-${row.draftId}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="prompt_profile">
+                            {jobRunHookKindLabel('prompt_profile')}
+                          </SelectItem>
+                          <SelectItem value="skill">
+                            {jobRunHookKindLabel('skill')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`hook-on-failure-${row.draftId}`}>
+                        On failure
+                      </Label>
+                      <Select
+                        onValueChange={(value) =>
+                          handleOnFailureChange(
+                            row.draftId,
+                            value as JobRunHookOnFailure | 'default',
+                          )
+                        }
+                        value={onFailureValue}
+                      >
+                        <SelectTrigger id={`hook-on-failure-${row.draftId}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">
+                            Default (
+                            {row.phase === 'before_run' ? 'block' : 'warn'})
+                          </SelectItem>
+                          <SelectItem value="block">block</SelectItem>
+                          <SelectItem value="warn">warn</SelectItem>
+                          <SelectItem value="ignore">ignore</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`hook-timeout-${row.draftId}`}>
+                        Timeout (s)
+                      </Label>
+                      <Input
+                        id={`hook-timeout-${row.draftId}`}
+                        min={1}
+                        onChange={(event) => {
+                          const raw = event.target.value.trim();
+                          onChange(
+                            updateRow(hooks, row.draftId, {
+                              timeoutSeconds:
+                                raw === ''
+                                  ? undefined
+                                  : Number.parseInt(raw, 10),
+                            }),
+                          );
+                        }}
+                        placeholder={jobRunHookDefaultTimeoutHint()}
+                        type="number"
+                        value={
+                          row.timeoutSeconds === undefined
+                            ? ''
+                            : String(row.timeoutSeconds)
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {row.kind === 'skill' ? (
+                    <div className="space-y-2">
+                      <Label htmlFor={`hook-skill-${row.draftId}`}>
+                        Skill path
+                      </Label>
+                      <Input
+                        id={`hook-skill-${row.draftId}`}
+                        onChange={(event) =>
+                          onChange(
+                            updateRow(hooks, row.draftId, {
+                              skillPath: event.target.value,
+                            }),
+                          )
+                        }
+                        placeholder=".agents/skills/workflow-ralph/SKILL.md"
+                        spellCheck={false}
+                        value={row.skillPath}
+                      />
+                    </div>
+                  ) : row.promptDelivery === 'file' ? (
+                    <div className="space-y-2">
+                      <Label htmlFor={`hook-prompt-file-${row.draftId}`}>
+                        Prompt file
+                      </Label>
+                      <Input
+                        id={`hook-prompt-file-${row.draftId}`}
+                        onChange={(event) =>
+                          onChange(
+                            updateRow(hooks, row.draftId, {
+                              promptFile: event.target.value,
+                            }),
+                          )
+                        }
+                        placeholder="prompts/preflight.md"
+                        spellCheck={false}
+                        value={row.promptFile}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <Label htmlFor={`hook-prompt-${row.draftId}`}>
+                            Named prompt (--prompt)
+                          </Label>
+                          <Input
+                            id={`hook-prompt-${row.draftId}`}
+                            onChange={(event) =>
+                              onChange(
+                                updateRow(hooks, row.draftId, {
+                                  prompt: event.target.value,
+                                }),
+                              )
+                            }
+                            placeholder={DEFAULT_RALPH_PROMPT}
+                            spellCheck={false}
+                            value={row.prompt}
+                          />
+                        </div>
+                        <Button
+                          onClick={() =>
+                            onChange(
+                              hooks.map((r) =>
+                                r.draftId === row.draftId
+                                  ? {
+                                      draftId: r.draftId,
+                                      kind: 'prompt_profile' as const,
+                                      onFailure: r.onFailure,
+                                      order: r.order,
+                                      phase: r.phase,
+                                      promptDelivery: 'file' as const,
+                                      promptFile: '',
+                                      timeoutSeconds: r.timeoutSeconds,
+                                    }
+                                  : r,
+                              ),
+                            )
+                          }
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          Use file
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {row.kind === 'prompt_profile' &&
+                  row.promptDelivery === 'file' ? (
+                    <Button
+                      onClick={() =>
+                        onChange(
+                          hooks.map((r) =>
+                            r.draftId === row.draftId
+                              ? {
+                                  draftId: r.draftId,
+                                  kind: 'prompt_profile' as const,
+                                  onFailure: r.onFailure,
+                                  order: r.order,
+                                  phase: r.phase,
+                                  prompt: DEFAULT_RALPH_PROMPT,
+                                  promptDelivery: 'named' as const,
+                                  timeoutSeconds: r.timeoutSeconds,
+                                }
+                              : r,
+                          ),
+                        )
+                      }
+                      size="sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      Use named profile
+                    </Button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </fieldset>
+    </>
   );
 };
