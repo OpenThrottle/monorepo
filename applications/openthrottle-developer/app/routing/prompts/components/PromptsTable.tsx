@@ -1,10 +1,11 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router';
-import { Badge } from '@openthrottle/react-router-shadcn';
+import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import { Clock, FileText } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PromptCardFragment } from '~/__generated__/graphql';
+import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
 import {
   formatPromptDate,
   formatPromptType,
@@ -18,11 +19,12 @@ export interface PromptsTableProps {
 }
 
 export const PromptsTable = (props: PromptsTableProps) => {
-  const { className, prompts: _prompts, search: _search } = props;
+  const { className, prompts, search } = props;
 
   // Hooks
 
   // Setup
+  const columns = React.useMemo(() => PromptsTable.buildTable(), []);
 
   // Handlers
 
@@ -31,10 +33,19 @@ export const PromptsTable = (props: PromptsTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (prompts.length === 0) {
+    return <PromptsEmpty search={search} />;
+  }
 
   return (
-    <div className={classnames('p-4', className)} data-testid="PromptsTable">
-      <h2>PromptsTable</h2>
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PromptsTable"
+    >
+      <DataTable<PromptCardFragment, string | number | null | undefined>
+        columns={columns}
+        data={prompts}
+      />
     </div>
   );
 };
