@@ -6,7 +6,7 @@ For schema, embeddings, and local Postgres setup, see [databases/README.md](../.
 
 ## Authentication
 
-Authenticated GraphQL calls use a token from the environment. Set **`MCP_DEVELOPER_AUTH_TOKEN`** to your JWT or API token so tools can call `executeGraphqlWithAuth`. See [docs/AUTH.md](docs/AUTH.md) for details and Cursor MCP config. For local verification (services, env vars, smoke checklist), see [docs/verification-environment.md](docs/verification-environment.md).
+Authenticated GraphQL calls use a bearer token from the environment. Set **`MCP_DEVELOPER_AUTH_TOKEN`** to a service account token (`ot_sa_<prefix>_<secret>`) minted via `pnpm run database:bootstrap-service-accounts` or admin GraphQL — not a short-lived human JWT. See [docs/AUTH.md](docs/AUTH.md) for setup, rotation, and Cursor MCP config. For local verification (services, env vars, smoke checklist), see [docs/verification-environment.md](docs/verification-environment.md).
 
 ## Installation
 
