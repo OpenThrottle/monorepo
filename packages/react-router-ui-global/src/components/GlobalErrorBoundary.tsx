@@ -237,9 +237,7 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
     const subtype = inferJavascriptErrorSubtype(error);
     return (
       <div className={className}>
-        <h1 className="text-title text-2xl">
-          {javascriptErrorBoundaryTitle(subtype)}
-        </h1>
+        <h1 className="text-lg">{javascriptErrorBoundaryTitle(subtype)}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {javascriptErrorBoundaryHint(subtype)}
         </p>

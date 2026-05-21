@@ -136,16 +136,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={KeyRoundIcon}
-          title="Keys"
-        />
-      </div>
-
-      <div className="mt-8 space-y-8">
+      <div className="space-y-8">
         <SettingsKeysIntroduction />
         <SettingsKeysToolbar
           canCreate={canManageCredentials}

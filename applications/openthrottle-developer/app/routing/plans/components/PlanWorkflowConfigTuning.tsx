@@ -1,8 +1,5 @@
 import * as React from 'react';
 import {
-  Card,
-  CardContent,
-  CardHeader,
   Input,
   Label,
   Select,
@@ -15,8 +12,10 @@ import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   WORKFLOW_RALPH_ENV_VARS,
-  type WorkflowRalphDebugCli,
-  type WorkflowRalphRunOptionsInput,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type {
+  WorkflowRalphDebugCli,
+  WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigTuningProps {
@@ -59,9 +58,9 @@ export const PlanWorkflowConfigTuning = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="mt-8">
-      <CardHeader className="pb-2 mb-4">Layer 3 — Run tuning</CardHeader>
-      <CardContent>
+    <div className="mt-8">
+      <h2 className="pb-2 mb-4">Layer 3 — Run tuning</h2>
+      <div>
         <fieldset
           aria-labelledby="workflow-run-layer3-legend"
           className="space-y-4"
@@ -198,7 +197,7 @@ export const PlanWorkflowConfigTuning = (
             </p>
           </div>
         </fieldset>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

@@ -1,9 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {
-  Card,
-  CardContent,
-  CardHeader,
   Label,
   Select,
   SelectContent,
@@ -42,9 +39,9 @@ export const PlanWorkflowConfigExecution = (
   // 🔌 Short Circuit
 
   return (
-    <Card className={classnames('mt-8', className)}>
-      <CardHeader className="pb-2 mb-4">Layer 2 — Execution backend</CardHeader>
-      <CardContent>
+    <div className={classnames('mt-8', className)}>
+      <h2 className="pb-2 mb-4">Layer 2 — Execution backend</h2>
+      <div>
         <fieldset
           aria-labelledby="plan-workflow-config-layer2-legend"
           className={classnames('space-y-4')}
@@ -94,7 +91,7 @@ export const PlanWorkflowConfigExecution = (
             </Select>
           </div>
         </fieldset>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

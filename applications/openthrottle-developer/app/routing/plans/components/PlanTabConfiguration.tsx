@@ -1,12 +1,8 @@
 import * as React from 'react';
 import { useAtom } from 'jotai';
-// import classnames from 'classnames';
 import {
-  Button,
   Card,
   CardContent,
-  // CardDescription,
-  CardHeader,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 import {
@@ -16,9 +12,6 @@ import {
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
   validateWorkflowRalphRunOptionsState,
-  // WORKFLOW_RALPH_DEFAULTS_FILE_NAME,
-  // WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
-  // WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
@@ -83,7 +76,7 @@ export interface PlanTabConfigurationProps {
 export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   const {
     iterationTimeoutText: iterationTimeoutTextProp,
-    onCollapse,
+    onCollapse: _onCollapse, // FIXME: Trim this bad boy
     onIterationTimeoutTextChange,
     jobRunHookRows,
     onJobRunHookRowsChange,
@@ -103,6 +96,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   const [atomRunOptions, setAtomRunOptions] = useAtom(
     workflowRalphRunOptionsAtom,
   );
+
   const [atomIterationTimeoutText, setAtomIterationTimeoutText] = useAtom(
     workflowRunIterationTimeoutTextAtom,
   );
@@ -151,7 +145,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   const uncontrolledSessionStartedRef = React.useRef(false);
 
   // Setup
-  const canonicalCommandLineOverride = isControlled
+  const command = isControlled
     ? formatWorkflowRalphCommandLine(
         buildWorkflowRalphOptionArgs({
           ...input,
@@ -179,6 +173,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
     setAtomRunOptions(
       getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
     );
+
     if (!uncontrolledSessionStartedRef.current) {
       setAtomIterationTimeoutText('');
       uncontrolledSessionStartedRef.current = true;
@@ -194,122 +189,15 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   // 🔌 Short Circuit
 
   return (
-    <TabsContent
-      className="bg-card rounded-lg border border-card-border"
-      value="configuration"
-    >
-      <Card>
-        <CardHeader className="pb-2 mb-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1.5">
-              {/* <h2
-                className="text-base font-semibold leading-none tracking-tight"
-                id="workflow-run-options-title"
-              >
-                Configuration
-              </h2>
-              <CardDescription className="space-y-2">
-                <p>
-                  Compose flags aligned with{' '}
-                  <code className="text-xs">
-                    pnpm exec workflow-ralph --help
-                  </code>{' '}
-                  and{' '}
-                  <span className="text-xs">
-                    tools/workflows (parseRalphArgs)
-                  </span>
-                  . Resolution when fields are left blank here:{' '}
-                  {WORKFLOW_RALPH_DEFAULT_PRECEDENCE}. Enqueue uses the same
-                  tuning; unchanged values fall back to worktree / server
-                  defaults.
-                </p>
-                <p className="text-xs">
-                  Env mirror (see CLI help): backend →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.backend}
-                  </code>
-                  ; iterations →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.iterations}
-                  </code>
-                  ; iteration timeout (seconds) →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.iterationTimeout}
-                  </code>
-                  ; model →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.model}
-                  </code>
-                  ; project →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.project}
-                  </code>
-                  ; prompt / prompt file →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.prompt}
-                  </code>{' '}
-                  /{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.promptFile}
-                  </code>
-                  ; debug →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.debug}
-                  </code>
-                  ,{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.debugAlias}
-                  </code>
-                  ,{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.verbose}
-                  </code>
-                  . <code className="text-xs">--debug=verbose</code> matches{' '}
-                  <code className="text-xs">--verbose</code> in the CLI.
-                </p>
-                <p className="text-xs">
-                  Optional{' '}
-                  <code className="text-xs">
-                    ./{WORKFLOW_RALPH_DEFAULTS_FILE_NAME}
-                  </code>{' '}
-                  in the shell cwd merges before argv (
-                  <code className="text-xs">mergeRalphRuntimeSeed</code>,{' '}
-                  <code className="text-xs">tools/workflows</code>
-                  ): JSON keys <code className="text-xs">backend</code>,{' '}
-                  <code className="text-xs">iterations</code>,{' '}
-                  <code className="text-xs">iterationTimeout</code> (seconds —
-                  same unit as{' '}
-                  <code className="text-xs">--iteration-timeout</code>),{' '}
-                  <code className="text-xs">model</code>,{' '}
-                  <code className="text-xs">project</code>, and either{' '}
-                  <code className="text-xs">prompt</code> or{' '}
-                  <code className="text-xs">promptFile</code> (not both —
-                  matches CLI <code className="text-xs">--prompt</code> /{' '}
-                  <code className="text-xs">--prompt-file</code> mutual
-                  exclusion).
-                </p>
-              </CardDescription> */}
-            </div>
+    <TabsContent value="configuration">
+      <Card
+        className="p-4"
+        // className="p-4 sticky top-[100px] z-100"
+      >
+        <PlanWorkflowCommand command={command} onReset={onResetToDefaults} />
+      </Card>
 
-            {onResetToDefaults != null || onCollapse != null ? (
-              <div className="flex shrink-0 items-center gap-2">
-                {onResetToDefaults != null ? (
-                  <Button
-                    aria-label="Reset workflow run options to defaults"
-                    data-testid="workflow-run-options-reset"
-                    onClick={onResetToDefaults}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    Reset to defaults
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </CardHeader>
-
+      <div className="space-y-4 md:space-y-8">
         <CardContent className="flex flex-col flex-1 gap-4">
           {!validation.ok ? (
             <div
@@ -328,33 +216,33 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
             </div>
           ) : null}
         </CardContent>
-      </Card>
+      </div>
 
-      {/* <Card className="mt-8">
-        <CardHeader className="pb-2 mb-4">
-          PlanWorkflowConfigExecution
-        </CardHeader>
-        <CardContent>
-        </CardContent>
-      </Card> */}
+      <hr className="my-12" />
       <PlanWorkflowConfigTarget input={input} setInput={setInput} />
+
       {onWorkingDirectoryChange != null && (
-        <PlanWorkflowConfigWorkspace
-          onChange={onWorkingDirectoryChange}
-          value={workingDirectory}
-        />
+        <>
+          <hr className="my-12" />
+          <PlanWorkflowConfigWorkspace
+            onChange={onWorkingDirectoryChange}
+            value={workingDirectory}
+          />
+        </>
       )}
-
       {jobRunHookRows != null && onJobRunHookRowsChange != null ? (
-        <PlanWorkflowConfigHooks
-          hooks={jobRunHookRows}
-          onChange={onJobRunHookRowsChange}
-          onSave={onSaveJobRunHooks}
-          saveDisabled={saveJobRunHooksDisabled}
-          savePending={saveJobRunHooksPending}
-        />
+        <>
+          <hr className="my-12" />
+          <PlanWorkflowConfigHooks
+            hooks={jobRunHookRows}
+            onChange={onJobRunHookRowsChange}
+            onSave={onSaveJobRunHooks}
+            saveDisabled={saveJobRunHooksDisabled}
+            savePending={saveJobRunHooksPending}
+          />
+        </>
       ) : null}
-
+      <hr className="my-12" />
       <PlanWorkflowConfigPrompt
         onPromptChange={(next) =>
           setInput((prev) => ({ ...prev, prompt: next }))
@@ -379,26 +267,17 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
         promptFile={input.promptFile}
         promptLayer={input.promptLayer}
       />
-
+      <hr className="my-12" />
       <PlanWorkflowConfigExecution input={input} setInput={setInput} />
-
+      <hr className="my-12" />
       <PlanWorkflowConfigWorktree input={input} setInput={setInput} />
-
+      <hr className="my-12" />
       <PlanWorkflowConfigTuning
         input={input}
         iterationTimeoutText={iterationTimeoutText}
         setInput={setInput}
         setIterationTimeoutText={setIterationTimeoutText}
       />
-
-      <Card className="mt-8">
-        <CardHeader className="pb-2 mb-4">PlanWorkflowCommand</CardHeader>
-        <CardContent>
-          <PlanWorkflowCommand
-            canonicalCommandLineOverride={canonicalCommandLineOverride}
-          />
-        </CardContent>
-      </Card>
     </TabsContent>
   );
 };

@@ -1,15 +1,7 @@
 import * as React from 'react';
-import {
-  ArrowDown,
-  ArrowUp,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import {
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Input,
   Label,
   Select,
@@ -159,10 +151,10 @@ export const PlanWorkflowConfigHooks = (
   };
 
   return (
-    <Card className={className ?? 'mt-8'}>
-      <CardHeader className="pb-2 mb-4 flex flex-row flex-wrap items-center justify-between gap-2">
+    <div className={className ?? 'mt-8'}>
+      <div className="pb-2 mb-4 flex flex-row flex-wrap items-center justify-between gap-2">
         <div className="space-y-1">
-          <b>Job run lifecycle hooks</b>
+          <h2 className="mb-4">Job run lifecycle hooks</h2>
           <p className="text-muted-foreground text-xs font-normal">
             Run a prompt profile or repo skill before or after the main Ralph
             job (server-side; not CLI flags). Saved on the plan and sent on
@@ -192,12 +184,9 @@ export const PlanWorkflowConfigHooks = (
             </Button>
           ) : null}
         </div>
-      </CardHeader>
-      <CardContent>
-        <fieldset
-          className="space-y-4"
-          data-testid="PlanWorkflowConfigHooks"
-        >
+      </div>
+      <div>
+        <fieldset className="space-y-4" data-testid="PlanWorkflowConfigHooks">
           {!validation.ok ? (
             <div
               className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
@@ -246,9 +235,7 @@ export const PlanWorkflowConfigHooks = (
                           aria-label="Move hook up within phase"
                           disabled={!canMoveUp}
                           onClick={() =>
-                            onChange(
-                              moveRowWithinPhase(hooks, row.draftId, -1),
-                            )
+                            onChange(moveRowWithinPhase(hooks, row.draftId, -1))
                           }
                           size="icon"
                           type="button"
@@ -260,9 +247,7 @@ export const PlanWorkflowConfigHooks = (
                           aria-label="Move hook down within phase"
                           disabled={!canMoveDown}
                           onClick={() =>
-                            onChange(
-                              moveRowWithinPhase(hooks, row.draftId, 1),
-                            )
+                            onChange(moveRowWithinPhase(hooks, row.draftId, 1))
                           }
                           size="icon"
                           type="button"
@@ -514,7 +499,7 @@ export const PlanWorkflowConfigHooks = (
             </ul>
           )}
         </fieldset>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

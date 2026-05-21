@@ -1,18 +1,9 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import {
-  Button,
-  Input,
-  Label,
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@openthrottle/react-router-shadcn';
+import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
 import { FileUpIcon, PlusIcon } from 'lucide-react';
-import {
-  PLAN_STATUS_FILTER_OPTIONS,
-  STATUS_OPTIONS,
-} from '~/routing/plans/config/status-options';
+import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
@@ -96,10 +87,13 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
         next.set('sortOrder', updates.sortOrder);
       }
       if (updates.view !== undefined) next.set('view', updates.view);
+
       next.set('page', String(page));
       next.set('limit', String(limit));
+
       setSearchParams(next, { replace: true });
     },
+
     [limit, page, searchParams, setSearchParams],
   );
 
@@ -113,8 +107,10 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
   const handleSearchSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+
       const next = new URLSearchParams(searchParams);
       const q = searchInput.trim();
+
       if (q) {
         next.set('q', q);
         if (semanticChecked) {
@@ -126,10 +122,13 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
         next.delete('q');
         next.delete('semantic');
       }
+
       next.set('page', '1');
       next.set('limit', String(limit));
+
       setSearchParams(next, { replace: true });
     },
+
     [limit, searchParams, searchInput, semanticChecked, setSearchParams],
   );
 
@@ -200,7 +199,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
           </Button>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
+        {/* <div className="mt-4 flex items-center gap-2">
           <Label>Status:</Label>
           <ToggleGroup
             aria-label="Filter by status"
@@ -223,7 +222,7 @@ export const PlansToolbar = (props: PlansToolbarProps) => {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        </div>
+        </div> */}
       </form>
     </div>
   );

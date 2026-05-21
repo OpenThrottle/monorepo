@@ -47,11 +47,12 @@ export const SettingsKeysForm = (props: SettingsKeysFormProps) => {
 
   // Hooks
   const navigation = useNavigation();
+  const refCredentialId = React.useRef<string | null>(null);
   const revalidator = useRevalidator();
   const [expiresAt, setExpiresAt] = React.useState<Date | undefined>(undefined);
-  const [dismissedSuccessCredentialId, setDismissedSuccessCredentialId] =
-    React.useState<string | null>(null);
-  const revalidatedCredentialIdRef = React.useRef<string | null>(null);
+  const [dismissedCredentialId, setDismissedCredentialId] = React.useState<
+    string | null
+  >(null);
 
   // Setup
   const isSubmitting =
@@ -63,17 +64,19 @@ export const SettingsKeysForm = (props: SettingsKeysFormProps) => {
       : null;
   const showSuccess =
     successPayload != null &&
-    successPayload.credential.id !== dismissedSuccessCredentialId;
+    successPayload.credential.id !== dismissedCredentialId;
   const canSubmit = serviceAccountId != null && !isSubmitting;
 
   // Handlers
   const handleOpenChange = (open: boolean): void => {
     if (!open) {
       if (successPayload != null) {
-        setDismissedSuccessCredentialId(successPayload.credential.id);
+        setDismissedCredentialId(successPayload.credential.id);
       }
+
       setExpiresAt(undefined);
     }
+
     onCreateDialogOpenChange?.(open);
   };
 
@@ -102,12 +105,16 @@ export const SettingsKeysForm = (props: SettingsKeysFormProps) => {
     if (credentialId == null) {
       return;
     }
-    if (revalidatedCredentialIdRef.current === credentialId) {
+
+    if (refCredentialId.current === credentialId) {
       return;
     }
-    revalidatedCredentialIdRef.current = credentialId;
+
+    refCredentialId.current = credentialId;
     revalidator.revalidate();
   }, [successPayload?.credential.id, revalidator]);
+
+  console.log('dismissedCredentialId', dismissedCredentialId);
 
   // 🔌 Short Circuit
 
@@ -200,6 +207,7 @@ export const SettingsKeysForm = (props: SettingsKeysFormProps) => {
                 type="hidden"
                 value={serviceAccountId ?? ''}
               />
+
               {expiresAt != null ? (
                 <input
                   name="expiresAt"

@@ -1,9 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {
-  Card,
-  CardContent,
-  CardHeader,
   Input,
   Label,
   Select,
@@ -12,10 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import {
-  DEFAULT_RALPH_PROMPT,
-  type WorkflowRalphPromptLayer,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { WorkflowRalphPromptLayer } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigPromptProps {
   className?: string;
@@ -70,11 +65,11 @@ export const PlanWorkflowConfigPrompt = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="mt-8">
-      <CardHeader className="pb-2 mb-4 flex gap-2">
+    <div className="mt-8">
+      <h2 className="pb-2 mb-4 flex gap-2">
         <b>Layer 1</b> — Prompt profile
-      </CardHeader>
-      <CardContent>
+      </h2>
+      <div className="bg-card rounded-lg border border-card-border p-2 md:p-4">
         <fieldset
           aria-labelledby="workflow-run-layer1-legend"
           className={classnames('space-y-4', className)}
@@ -162,7 +157,7 @@ export const PlanWorkflowConfigPrompt = (
             </div>
           )}
         </fieldset>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

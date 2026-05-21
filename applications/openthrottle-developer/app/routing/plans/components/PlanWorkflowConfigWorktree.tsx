@@ -1,8 +1,5 @@
 import * as React from 'react';
 import {
-  Card,
-  CardContent,
-  CardHeader,
   Input,
   Label,
   Select,
@@ -65,9 +62,9 @@ export const PlanWorkflowConfigWorktree = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="mt-8">
-      <CardHeader className="pb-2 mb-4">Agent CLI worktree</CardHeader>
-      <CardContent>
+    <div className="mt-8">
+      <h2 className="pb-2 mb-4">Layer X - Agent CLI worktree</h2>
+      <div>
         <fieldset
           aria-labelledby="workflow-run-worktree-legend"
           className="space-y-4"
@@ -217,7 +214,7 @@ export const PlanWorkflowConfigWorktree = (
             </p>
           )}
         </fieldset>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

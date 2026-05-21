@@ -187,17 +187,19 @@ export default function Component(
         totalCountQueued={totalCountQueued}
       />
       <PlansIntroduction />
-      <PlansToolbar
-        assigneeOptions={assigneeOptions}
-        assignees={assignees}
-        limit={limit}
-        page={page}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        statuses={statuses}
-        view={view}
-      />
-      <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
+      <div className="flex flex-col gap-4">
+        <PlansToolbar
+          assigneeOptions={assigneeOptions}
+          assignees={assignees}
+          limit={limit}
+          page={page}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+          view={view}
+        />
+        <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
+      </div>
       <OpenThrottlePagination
         assignees={assignees}
         basePath="/plans"
