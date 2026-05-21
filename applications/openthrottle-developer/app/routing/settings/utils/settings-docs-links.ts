@@ -21,3 +21,6 @@ export const LOCAL_SERVICES_PORTS_DOC_HREF =
  * @description Jump to the services/port matrix in {@link LOCAL_SERVICES_PORTS_DOC_HREF}.
  */
 export const LOCAL_SERVICES_PORTS_SERVICES_TABLE_HREF = `${LOCAL_SERVICES_PORTS_DOC_HREF}#services-to-expose`;
+
+export const MCP_DEVELOPER_AUTH_DOC_HREF =
+  'https://github.com/OpenThrottle/monorepo/blob/main/packages/mcp-developer/docs/AUTH.md';
