@@ -1,6 +1,7 @@
 /**
- * @description Guard that enforces permission-based access using DB-backed user roles and permissions.
- * Use with @Permissions() from @openthrottle/nestjs-rbac after JWT auth so request.user is set.
+ * @description Guard that enforces permission-based access using DB-backed roles.
+ * Use with @Permissions() from @openthrottle/nestjs-rbac after {@link GlobalAuthGuard}
+ * so `request.user` is a normalized {@link AuthPrincipal} (human JWT or service account).
  */
 
 import {
@@ -9,14 +10,14 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { getRequestFromExecutionContext } from '@openthrottle/nestjs-auth';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  getAuthPrincipalFromRequest,
+  getRequestFromExecutionContext,
+} from '@openthrottle/nestjs-auth';
 import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import type { Permission } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
-
-interface RequestWithUser {
-  user?: { sub?: string };
-}
 
 @Injectable()
 export class GqlPermissionsGuard {
@@ -27,7 +28,9 @@ export class GqlPermissionsGuard {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
-    if (!isAuthEnabled) return true;
+    if (!isAuthEnabled) {
+      return true;
+    }
 
     const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(
       PERMISSIONS_KEY,
@@ -38,22 +41,19 @@ export class GqlPermissionsGuard {
       return true;
     }
 
-    const request = getRequestFromExecutionContext(context) as RequestWithUser;
-    const user = request.user;
+    const request = getRequestFromExecutionContext(context);
+    const principal = getAuthPrincipalFromRequest(request);
 
-    if (!user?.sub) {
-      if (process.env.APP_ENABLE_AUTHENTICATION !== 'true') {
-        return true;
-      }
-
+    if (principal == null) {
       throw new ForbiddenException('Authentication required');
     }
 
-    const userPermissions = await this.rolesService.getPermissionsForUser(
-      user.sub,
-    );
+    const principalPermissions =
+      principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
+        ? await this.rolesService.getPermissionsForServiceAccount(principal.sub)
+        : await this.rolesService.getPermissionsForUser(principal.sub);
 
-    const set = new Set(userPermissions);
+    const set = new Set(principalPermissions);
 
     for (const permission of requiredPermissions) {
       if (!set.has(permission)) {
