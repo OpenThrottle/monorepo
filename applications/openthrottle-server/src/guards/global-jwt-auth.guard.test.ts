@@ -77,6 +77,19 @@ describe('GlobalJwtAuthGuard', () => {
     );
   });
 
+  it('skips JWT and CLS when APP_ENABLE_AUTHENTICATION is not true', async () => {
+    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'false');
+    vi.mocked(reflector.getAllAndOverride).mockReturnValue(false);
+    const ctx = createHttpExecutionContext({
+      headers: { authorization: 'Bearer eyJ.test' },
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+
+    expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromJwtPayload).not.toHaveBeenCalled();
+  });
+
   it('skips CLS hook when JWT succeeds but user payload is missing', async () => {
     vi.mocked(reflector.getAllAndOverride).mockReturnValue(false);
     vi.mocked(jwtAuthGuard.canActivate).mockResolvedValue(true);

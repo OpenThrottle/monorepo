@@ -1,6 +1,6 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { GqlExecutionContext } from '@nestjs/graphql';
+import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import type { JwtPayload } from '../strategies/jwt.strategy';
+import { getRequestFromExecutionContext } from '../utils/get-request-from-execution-context';
 
 /**
  * @description Extracts the authenticated user from the request.
@@ -28,8 +28,8 @@ export const CurrentUser = createParamDecorator(
   (
     data: keyof JwtPayload | undefined,
     ctx: ExecutionContext,
-  ): JwtPayload | JwtPayload[keyof JwtPayload] => {
-    const request = getRequest(ctx);
+  ): JwtPayload | JwtPayload[keyof JwtPayload] | undefined => {
+    const request = getRequestFromExecutionContext(ctx);
     const user = request?.user;
 
     if (!user) {
@@ -43,17 +43,3 @@ export const CurrentUser = createParamDecorator(
     return user;
   },
 );
-
-/**
- * @description Gets the request from ExecutionContext. For GraphQL, uses
- * GqlExecutionContext so context.req is used; for HTTP, uses switchToHttp().getRequest().
- */
-function getRequest(ctx: ExecutionContext): { user?: JwtPayload } | undefined {
-  if (ctx.getType<'http' | 'graphql'>() === 'graphql') {
-    const gqlCtx = GqlExecutionContext.create(ctx);
-
-    return gqlCtx.getContext<{ req?: { user?: JwtPayload } }>().req;
-  }
-
-  return ctx.switchToHttp().getRequest<{ user?: JwtPayload }>();
-}

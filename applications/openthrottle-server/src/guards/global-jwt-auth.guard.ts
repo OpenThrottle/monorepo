@@ -25,9 +25,11 @@ export class GlobalJwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // FIXME: APP_ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
+    /** When false, skip Passport JWT so all routes are open; {@link request.user} is not set. */
     const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
-    if (!isAuthEnabled) return true;
+    if (!isAuthEnabled) {
+      return true;
+    }
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),

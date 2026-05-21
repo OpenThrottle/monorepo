@@ -9,7 +9,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { GqlExecutionContext } from '@nestjs/graphql';
+import { getRequestFromExecutionContext } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import type { Permission } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
@@ -26,7 +26,6 @@ export class GqlPermissionsGuard {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // FIXME: APP_ENABLE_AUTHENTICATION is disabled and we're not checking for it here.
     const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
     if (!isAuthEnabled) return true;
 
@@ -39,7 +38,7 @@ export class GqlPermissionsGuard {
       return true;
     }
 
-    const request = this.getRequest(context) as RequestWithUser;
+    const request = getRequestFromExecutionContext(context) as RequestWithUser;
     const user = request.user;
 
     if (!user?.sub) {
@@ -63,16 +62,7 @@ export class GqlPermissionsGuard {
         );
       }
     }
+
     return true;
-  }
-
-  private getRequest(context: ExecutionContext): unknown {
-    if ((context.getType() as string) === 'graphql') {
-      const ctx = GqlExecutionContext.create(context);
-
-      return ctx.getContext<{ req: unknown }>().req;
-    }
-
-    return context.switchToHttp().getRequest();
   }
 }
