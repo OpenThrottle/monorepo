@@ -33,6 +33,9 @@ export { Permission } from './modules/roles/permission.entity';
 export { PermissionsService } from './modules/roles/permissions.service';
 export { Role } from './modules/roles/role.entity';
 export { RolesService } from './modules/roles/roles.service';
+export { ServiceAccount } from './modules/service-accounts/service-account.entity';
+export { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
+export { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module';
 export { Project } from './modules/projects/project.entity';
 export { Subscription } from './modules/subscriptions/subscription.entity';
 export { SubscriptionsService } from './modules/subscriptions/subscriptions.service';
@@ -72,6 +75,8 @@ export type { DailyStatFactoryData } from './modules/daily-stats/daily-stats.fac
 export type { NoteFactoryData } from './modules/notes/notes.factory';
 export type { PermissionData } from './modules/roles/permission.entity';
 export type { RoleData } from './modules/roles/role.entity';
+export type { ServiceAccountCredentialData } from './modules/service-accounts/service-account-credential.entity';
+export type { ServiceAccountData } from './modules/service-accounts/service-account.entity';
 export type {
   PlanData,
   PlanJobRunHooksStorage,

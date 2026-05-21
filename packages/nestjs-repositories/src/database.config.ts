@@ -14,6 +14,8 @@ import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-
 import { PlanRun } from './modules/plan-runs/plan-run.entity';
 import { Permission } from './modules/roles/permission.entity';
 import { Role } from './modules/roles/role.entity';
+import { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity';
+import { ServiceAccount } from './modules/service-accounts/service-account.entity';
 import { Project } from './modules/projects/project.entity';
 import { Subscription } from './modules/subscriptions/subscription.entity';
 import { Task } from './modules/tasks/task.entity';
@@ -69,6 +71,8 @@ export function getTypeOrmOptions(): DataSourceOptions {
       PlanRun,
       Project,
       Role,
+      ServiceAccount,
+      ServiceAccountCredential,
       Subscription,
       Task,
       TaskEmbedding,
