@@ -71,7 +71,7 @@ services:
       context: ./
       dockerfile: Dockerfile.ReactRouter
       secrets: *build-secrets
-      target: production-alpine
+      target: production
     container_name: openthrottle-developer
     depends_on:
       openthrottle-server:
@@ -151,7 +151,7 @@ services:
       args:
         <<: *openthrottle-server
       context: ./
-      dockerfile: Dockerfile.NestJS
+      dockerfile: Dockerfile.NestJS.v2
       secrets: *build-secrets
     container_name: openthrottle-server
     depends_on:
@@ -171,14 +171,18 @@ services:
       POSTGRES_VERSION: ${POSTGRES_VERSION}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
+    # No curl/wget required: Node hits /health on PORT (from OPENTHROTTLE_SERVER_PORT). For Dockerfile.NestJS.v2
+    # (distroless), either drop this block to use the image HEALTHCHECK or use /nodejs/bin/node instead of /usr/local/bin/node.
     healthcheck:
       interval: 30s
       retries: 3
       start_period: 40s
-      test: [
-          'CMD-SHELL',
-          'wget -q --spider
-          http://localhost:${OPENTHROTTLE_SERVER_PORT}/health || exit 1',
+      test:
+        [
+          'CMD',
+          '/usr/local/bin/node',
+          '-e',
+          "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})",
         ]
       timeout: 10s
     image: openthrottle-server:latest

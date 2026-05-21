@@ -1,25 +1,16 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { UsageIntroduction } from '../UsageIntroduction';
-import type { UsageIntroductionProps } from '../UsageIntroduction';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('UsageIntroduction Component', () => {
-  let component: RenderResult;
-  let props: UsageIntroductionProps;
+  test('renders Usage heading and range copy', () => {
+    renderRoutesStub(<UsageIntroduction rangeDays={14} />);
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <UsageIntroduction {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByRole('heading', { name: 'Usage' })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usage metrics for this portal over the last 14 days/),
+    ).toBeInTheDocument();
   });
 });

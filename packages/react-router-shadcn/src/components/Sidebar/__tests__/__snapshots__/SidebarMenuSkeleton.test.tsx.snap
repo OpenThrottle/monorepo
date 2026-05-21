@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SidebarMenuSkeleton Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex h-8 items-center gap-2 rounded-md px-2"
+      data-sidebar="menu-skeleton"
+      data-slot="sidebar-menu-skeleton"
+    >
+      <div
+        class="animate-pulse rounded-md bg-accent h-4 max-w-(--skeleton-width) flex-1"
+        data-sidebar="menu-skeleton-text"
+        data-slot="skeleton"
+        style="--skeleton-width: 83%;"
+      />
+    </div>
+  </div>
+</body>
+`;

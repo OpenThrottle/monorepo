@@ -19,7 +19,7 @@ import {
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-export interface PlanWorkflowConfigTuningProps {
+interface PlanWorkflowConfigTuningProps {
   readonly input: WorkflowRalphRunOptionsInput;
   readonly iterationTimeoutText: string;
   readonly setInput: (
@@ -65,6 +65,7 @@ export const PlanWorkflowConfigTuning = (
         <fieldset
           aria-labelledby="workflow-run-layer3-legend"
           className="space-y-4"
+          data-testid="PlanWorkflowConfigTuning"
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

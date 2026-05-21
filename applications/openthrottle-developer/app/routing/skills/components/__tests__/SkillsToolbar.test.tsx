@@ -1,25 +1,19 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { SkillsToolbar } from '../SkillsToolbar';
-import type { SkillsToolbarProps } from '../SkillsToolbar';
 
 describe('SkillsToolbar Component', () => {
-  let component: RenderResult;
-  let props: SkillsToolbarProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <SkillsToolbar {...props} />;
+  test('renders search input with placeholder and search button', () => {
+    const Component = () => <SkillsToolbar />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByPlaceholderText('Filter by slug, path, or summary'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
+    expect(screen.getByTestId('SkillsToolbar')).toBeInTheDocument();
   });
 });

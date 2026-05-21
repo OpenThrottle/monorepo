@@ -1,11 +1,25 @@
 import * as React from 'react';
 import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { DashboardQueueStats } from '../DashboardQueueStats';
 import type { DashboardQueueStatsProps } from '../DashboardQueueStats';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
+
+function renderDashboardQueueStats(
+  props: DashboardQueueStatsProps,
+): RenderResult {
+  const Component = () => <DashboardQueueStats {...props} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+  return render(
+    <TooltipProvider>
+      <RoutesStub />
+    </TooltipProvider>,
+  );
+}
 
 const twoQueues: ReadonlyArray<DashboardQueueStatsCardFragment> = [
   {
@@ -37,10 +51,7 @@ describe('DashboardQueueStats Component', () => {
       data: [],
     };
 
-    const Component = () => <DashboardQueueStats {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderDashboardQueueStats(props);
   });
 
   test('should have data-testid when empty', () => {
@@ -53,9 +64,7 @@ describe('DashboardQueueStats Component', () => {
     beforeEach(() => {
       cleanup();
       props = { data: twoQueues };
-      const Component = () => <DashboardQueueStats {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      component = renderDashboardQueueStats(props);
     });
 
     test('should render queue list with queue data', () => {

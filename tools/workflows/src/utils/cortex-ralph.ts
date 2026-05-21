@@ -27,7 +27,7 @@ export const RALPH_FATAL_UNREACHABLE_SUFFIX =
 /**
  * @description Normalizes JSONB task requirements from Postgres to a readonly array.
  */
-function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
+export function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
   return Array.isArray(raw) ? raw : [];
 }
 

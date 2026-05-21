@@ -21,7 +21,7 @@ const readTrimmedEnv = (key: string): string | undefined => {
  * 3. `MCP_DEVELOPER_AUTH_TOKEN` — local parity with mcp-developer.
  * 4. Non-production only: `OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN` — explicit opt-in dev/test token when no real credential is set. Ignored when `NODE_ENV` is `production`; replace with a secrets-managed or workload token before shipping.
  */
-export function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
+function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
   | string
   | undefined {
   const primary =
@@ -43,7 +43,7 @@ export function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
 /**
  * @description GraphQL HTTP endpoint override for the agentic Ralph worker. `OPENTHROTTLE_WORKER_GRAPHQL_URL` wins over `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`; otherwise callers use internal URL resolution (`API_URL_INTERNAL` + `/graphql`).
  */
-export function resolveAgenticRalphWorkerGraphqlUrlOverrideFromEnv():
+function resolveAgenticRalphWorkerGraphqlUrlOverrideFromEnv():
   | string
   | undefined {
   return (

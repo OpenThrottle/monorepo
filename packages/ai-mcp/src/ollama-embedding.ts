@@ -7,7 +7,7 @@
 const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434';
 const DEFAULT_OLLAMA_EMBEDDING_MODEL = 'nomic-embed-text';
 
-export interface OllamaEmbeddingConfig {
+interface OllamaEmbeddingConfig {
   readonly baseUrl: string;
   readonly model: string;
 }
@@ -16,7 +16,7 @@ export interface OllamaEmbeddingConfig {
  * @description Returns Ollama embedding config from env when OLLAMA_BASE_URL or OLLAMA_EMBEDDING_MODEL is set.
  * @returns Config or undefined if neither env var is set (caller should use OpenAI path).
  */
-export function getOllamaEmbeddingConfig(): OllamaEmbeddingConfig | undefined {
+function getOllamaEmbeddingConfig(): OllamaEmbeddingConfig | undefined {
   const baseUrlRaw = process.env.OLLAMA_BASE_URL?.trim();
   const modelRaw = process.env.OLLAMA_EMBEDDING_MODEL?.trim();
 

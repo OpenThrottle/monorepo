@@ -5,7 +5,7 @@ import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
 
-export interface SearchWhyThisResultProps {
+interface SearchWhyThisResultProps {
   readonly className?: string;
   /** When set (e.g. `details=ranking`), sections start expanded. */
   readonly defaultOpen?: boolean;

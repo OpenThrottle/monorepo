@@ -2,7 +2,7 @@
  * @description Copyable Nx commands that bridge the portal to local @tools/generators usage.
  */
 
-export interface GeneratorNxPreset {
+interface GeneratorNxPreset {
   readonly command: string;
   readonly description: string;
   readonly id: string;

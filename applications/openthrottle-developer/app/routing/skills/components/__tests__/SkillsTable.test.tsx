@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { SkillsTable } from '../SkillsTable';
@@ -23,58 +22,61 @@ const mockEntries: readonly RepoSkillEntry[] = [
 ];
 
 describe('SkillsTable Component', () => {
-  let component: RenderResult;
   let props: SkillsTableProps;
 
   beforeEach(() => {
     props = {};
+  });
 
+  test('when entries is empty renders SkillsEmpty instead of the table', () => {
     const Component = () => <SkillsTable {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('renders table shell', () => {
-    expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
-    expect(component.getByRole('table')).toBeInTheDocument();
-  });
-
-  test('renders table headers', () => {
-    expect(
-      component.getByRole('columnheader', { name: 'Layout' }),
-    ).toBeDefined();
-    expect(component.getByRole('columnheader', { name: 'Slug' })).toBeDefined();
-    expect(component.getByRole('columnheader', { name: 'Path' })).toBeDefined();
-    expect(
-      component.getByRole('columnheader', { name: 'Summary' }),
-    ).toBeDefined();
-  });
-
-  test('shows no results when entries is empty', () => {
-    expect(component.getByText('No results.')).toBeInTheDocument();
+    expect(screen.queryByTestId('SkillsTable')).not.toBeInTheDocument();
+    expect(screen.getByText('No skills yet')).toBeInTheDocument();
   });
 
   describe('when entries are provided', () => {
     beforeEach(() => {
+      cleanup();
       props = { entries: mockEntries };
+    });
+
+    test('renders table shell and column headers', () => {
       const Component = () => <SkillsTable {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      component = render(<RoutesStub />);
+      render(<RoutesStub />);
+
+      expect(screen.getByTestId('SkillsTable')).toBeInTheDocument();
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(
+        screen.getByRole('columnheader', { name: 'Owner' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('columnheader', { name: 'Summary' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('columnheader', { name: 'Actions' }),
+      ).toBeInTheDocument();
     });
 
     test('renders table rows from entries', () => {
-      expect(component.getByText('agents')).toBeInTheDocument();
-      expect(component.getByText('cursor')).toBeInTheDocument();
-      expect(component.getByText('brag-sheet')).toBeInTheDocument();
-      expect(component.getByText('nx-workspace')).toBeInTheDocument();
+      const Component = () => <SkillsTable {...props} />;
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      render(<RoutesStub />);
+
+      expect(screen.getByText('agents')).toBeInTheDocument();
+      expect(screen.getByText('cursor')).toBeInTheDocument();
+      expect(screen.getByText('/brag-sheet')).toBeInTheDocument();
+      expect(screen.getByText('/nx-workspace')).toBeInTheDocument();
       expect(
-        component.getByText('.agents/skills/brag-sheet/SKILL.md'),
-      ).toBeInTheDocument();
-      expect(
-        component.getByText(
+        screen.getByText(
           'Build impact statements from commits and PR activity.',
         ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Explore Nx projects, targets, and dependency graph.'),
       ).toBeInTheDocument();
     });
   });

@@ -1,12 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import {
-  PLAN_RUN_JOB_NAME,
-  cancelPlanRunJobsForPlan,
-} from './cancel-plan-run-jobs';
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+  RUN_PLAN_SPAWN_JOB_NAME,
+} from '../../queues/plans/plans.constants';
+import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
 
 describe('cancelPlanRunJobsForPlan', () => {
   test('returns empty when no jobs match plan id', async () => {
@@ -47,7 +47,7 @@ describe('cancelPlanRunJobsForPlan', () => {
     const job = {
       data: { planId: 'plan-1' },
       id: 'j1',
-      name: PLAN_RUN_JOB_NAME,
+      name: RUN_PLAN_SPAWN_JOB_NAME,
       remove,
     };
     const getJobs = vi.fn().mockResolvedValue([job]);
@@ -69,7 +69,7 @@ describe('cancelPlanRunJobsForPlan', () => {
       {
         data: { planId: 'other' },
         id: 'x',
-        name: PLAN_RUN_JOB_NAME,
+        name: RUN_PLAN_SPAWN_JOB_NAME,
         remove,
       },
       {
@@ -94,7 +94,7 @@ describe('cancelPlanRunJobsForPlan', () => {
       data: { planId: 'plan-1' },
       getState,
       id: 'j-active',
-      name: PLAN_RUN_JOB_NAME,
+      name: RUN_PLAN_SPAWN_JOB_NAME,
       remove,
     };
     const getJobs = vi.fn().mockResolvedValue([job]);
@@ -114,13 +114,13 @@ describe('cancelPlanRunJobsForPlan', () => {
       {
         data: { planId: 'plan-1' },
         id: 'a',
-        name: PLAN_RUN_JOB_NAME,
+        name: RUN_PLAN_SPAWN_JOB_NAME,
         remove: remove1,
       },
       {
         data: { planId: 'plan-1' },
         id: 'b',
-        name: PLAN_RUN_JOB_NAME,
+        name: RUN_PLAN_SPAWN_JOB_NAME,
         remove: remove2,
       },
     ]);
@@ -141,7 +141,7 @@ describe('cancelPlanRunJobsForPlan', () => {
       data: { planId: 'plan-1' },
       getState,
       id: 'j-w',
-      name: PLAN_RUN_JOB_NAME,
+      name: RUN_PLAN_SPAWN_JOB_NAME,
       remove,
     };
     const getJobs = vi.fn().mockResolvedValue([job]);

@@ -2,11 +2,11 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { Progress, Spinner } from '@openthrottle/react-router-shadcn';
 
-export type DocumentUploadProgressState =
+type DocumentUploadProgressState =
   | { readonly kind: 'busy'; readonly message: string; readonly value: number }
   | { readonly kind: 'idle' };
 
-export interface DocumentUploadProgressProps {
+interface DocumentUploadProgressProps {
   readonly className?: string;
   readonly state: DocumentUploadProgressState;
 }

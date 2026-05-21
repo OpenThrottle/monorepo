@@ -1,12 +1,26 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import type { LinkProps } from 'react-router';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
-import { SITE_SUBDOMAIN } from '~/global/config/settings';
-import { dataNavigation, MAIL_PATHS } from '~/global/data/data.navigation';
+import { MAIL_PATHS } from '~/global/data/data.navigation';
+
+/**
+ * @deprecated Commented out in root layout; kept for intentional rollback. See root.tsx.
+ */
+
+const headerNavigation: LinkProps[] = [
+  { children: 'Inbox', to: MAIL_PATHS.inbox },
+  { children: 'Sent', to: MAIL_PATHS.sent },
+  { children: 'Drafts', to: MAIL_PATHS.drafts },
+  { children: 'Trash', to: MAIL_PATHS.trash },
+  { children: 'Search', to: MAIL_PATHS.search },
+  { children: 'Compose', to: MAIL_PATHS.compose },
+  { children: 'Settings', to: '/settings' },
+];
 
 export interface GlobalHeaderProps {
   className?: string;
@@ -25,7 +39,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
   const renderNavItems = () => {
     return (
       <>
-        {dataNavigation.map((item) => (
+        {headerNavigation.map((item) => (
           <NavLink
             className="text-sm h-full hover:text-accent p-4 transition"
             key={item.to.toString()}
@@ -55,7 +69,7 @@ export const GlobalHeader = (props: GlobalHeaderProps) => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <OpenThrottleLogo
           className="text-lg"
-          name={SITE_SUBDOMAIN}
+          name="Email"
           to={MAIL_PATHS.inbox}
         />
 

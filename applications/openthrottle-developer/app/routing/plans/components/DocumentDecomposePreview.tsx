@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { ProposedPlanDecomposition } from '~/routing/plans/types/document-decompose';
 
-export interface DocumentDecomposePreviewProps {
+interface DocumentDecomposePreviewProps {
   readonly className?: string;
   readonly proposal: ProposedPlanDecomposition | undefined;
 }

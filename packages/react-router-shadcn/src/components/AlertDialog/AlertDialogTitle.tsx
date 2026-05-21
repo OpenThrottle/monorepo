@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
+import { AlertDialog as AlertDialogPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
 export interface AlertDialogTitleProps extends React.ComponentPropsWithoutRef<
@@ -26,7 +26,7 @@ export const AlertDialogTitle = React.forwardRef<
 
   return (
     <AlertDialogPrimitive.Title
-      className={cn('text-lg font-semibold', className)}
+      className={cn('text-lg', className)}
       ref={ref}
       {...rest}
     />

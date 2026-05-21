@@ -17,15 +17,14 @@ describe('HomeHeroV1 Component', () => {
     render(<RoutesStub />);
   });
 
-  test('should render hero with primary heading and intro copy', () => {
+  test('should render hero section with primary heading copy', () => {
     expect(screen.getByTestId('HomeHeroV1')).toBeInTheDocument();
 
     const heading = screen.getByRole('heading', { level: 1 });
     expect(heading).toHaveTextContent(/Stop/);
-    expect(heading).toHaveTextContent(/Plan/);
-
-    expect(
-      screen.getByText(/Postgres-backed plans knowledge base/),
-    ).toBeInTheDocument();
+    expect(heading).toHaveTextContent(/losing/);
+    expect(heading).toHaveTextContent(/plan/);
+    expect(heading).toHaveTextContent(/between/);
+    expect(heading).toHaveTextContent(/tools/);
   });
 });

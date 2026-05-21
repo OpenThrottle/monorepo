@@ -150,15 +150,25 @@ export default function Component(
       */}
 
       <div className="flex flex-col gap-4">
-        <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects">
-          {/*
-          <Button asChild={true} className="shrink-0" variant="outline">
-            <Link to="/projects/create">
-              <PlusIcon className="w-4 h-4" /> Create project
-            </Link>
-          </Button>
+        <div className="flex flex-col gap-4">
+          <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects">
+            {/*
+            <Button asChild={true} className="shrink-0" variant="outline">
+              <Link to="/projects/create">
+                <PlusIcon className="w-4 h-4" /> Create project
+              </Link>
+            </Button>
           */}
-        </GlobalHeading>
+          </GlobalHeading>
+          <p className="text-muted-foreground text-sm">
+            Projects group plans and tasks by Nx application in this monorepo.
+            Each row maps to one app (for example openthrottle-developer or
+            openthrottle-server) so you can see linked plan and task counts per
+            codebase. Set a project on a plan or task when work clearly targets
+            a single app; leave it unset for cross-cutting, docs-only, or
+            multi-app work.
+          </p>
+        </div>
 
         <ProjectsToolbar
           limit={limit}

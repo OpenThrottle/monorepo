@@ -6,7 +6,7 @@ import {
   WORKSPACE_FULL_JUMP_LINKS,
 } from '~/routing/navigation/data/workspace-jump-links';
 
-export interface WorkspaceEntityCrossLinksProps {
+interface WorkspaceEntityCrossLinksProps {
   readonly className?: string;
   /**
    * @description When set, describe the strip for assistive tech (e.g. context-specific region label).

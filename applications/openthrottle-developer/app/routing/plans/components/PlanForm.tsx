@@ -24,7 +24,7 @@ const PLAN_CATEGORIES = [
   'product',
 ] as const;
 
-export interface PlanFormProps {
+interface PlanFormProps {
   readonly actionData?: { error?: string } | null;
   readonly plan?: PlanDetailsFragment | null;
 }

@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import type { CaseStudyListItem } from '../types';
 import { CaseStudyCard } from './CaseStudyCard';
 
-export interface CaseStudyListProps {
+interface CaseStudyListProps {
   readonly caseStudies: readonly CaseStudyListItem[];
   readonly className?: string;
 }

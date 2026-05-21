@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 
-export interface SettingsEnvironmentProps {
+interface SettingsEnvironmentProps {
   readonly className?: string;
   readonly envSnapshot: Record<string, string>;
 }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
+import { Accordion as AccordionPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
 export interface AccordionItemProps extends React.ComponentPropsWithoutRef<

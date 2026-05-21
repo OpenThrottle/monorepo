@@ -17,7 +17,7 @@ describe('routing/plans/utils/parsers', () => {
     });
 
     test('search param key is stable for docs and routes', () => {
-      expect(PLANS_DETAIL_TAB_SEARCH_PARAM).toBe('plansDetailTab');
+      expect(PLANS_DETAIL_TAB_SEARCH_PARAM).toBe('tab');
     });
   });
 });

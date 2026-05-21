@@ -1,4 +1,4 @@
-import type { Job, Queue } from 'bullmq';
+import type { Job } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
 import type {
   ChildProcessMetrics,
@@ -7,13 +7,10 @@ import type {
   WallClockMetrics,
 } from '@tools/workflows';
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
-import type {
-  RunPlanJobWorkflowMode,
-  RunPlanOrchestratorJobData,
-} from '../agentic-ralph/agentic-ralph.types';
+import type { RunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
 import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
 
-export type { RunPlanJobWorkflowMode, RunPlanOrchestratorJobData };
+export type { RunPlanOrchestratorJobData };
 export { isRunPlanOrchestratorJobData };
 
 /**
@@ -87,7 +84,5 @@ export type PlanRunJobResult =
   | (WorktreeWorkflowResult &
       ChildJobMetrics & { readonly taskRunMetrics?: TaskRunMetrics })
   | { readonly taskRunMetrics: TaskRunMetrics };
-
-export type PlansQueue = Queue<RunPlanJobData, PlanRunJobResult | void>;
 
 export type RunPlanJob = Job<RunPlanJobData, PlanRunJobResult | void>;

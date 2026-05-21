@@ -1,6 +1,5 @@
 export const DEFAULT_PLAN_DESCRIPTION_PREVIEW_LINES = 4;
 export const DEFAULT_PLAN_SUMMARY_PREVIEW_LINES = 3;
-export const DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH = 80;
 
 export const DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY = `openthrottle-developer:planTasksView`;
 

@@ -1,31 +1,29 @@
 import * as React from 'react';
-import { useSearchParams } from 'react-router';
+import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
 import {
   DEFAULT_PAGINATION_LIMIT,
   DEFAULT_PAGINATION_PAGE,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottlePagination,
-  OpenThrottleStatCard,
-} from '@openthrottle/react-router-ui';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
-import { PromptCard } from '~/routing/prompts/components/PromptCard';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
   parsePromptsSortFromSearchParams,
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
-import type { Route } from '@/app/routes/+types/prompts._index';
+import { PromptCard } from '~/routing/prompts/components/PromptCard';
 import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
 import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
+import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
+import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
+import { SITE_TITLE } from '~/global/config/settings';
+import { useSearchParams } from 'react-router';
+import type { Route } from '@/app/routes/+types/prompts._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -99,6 +97,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   };
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `Prompts | ${SITE_TITLE}` }];
 });
@@ -134,12 +136,11 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
-        <OpenThrottleStatCard title="Agents-type prompts" value={countAgents} />
-        <OpenThrottleStatCard title="Skills-type prompts" value={countSkills} />
-        <OpenThrottleStatCard title="Total (this list)" value={total} />
-      </div>
-
+      <PromptsStats
+        countAgents={countAgents}
+        countSkills={countSkills}
+        total={total}
+      />
       <PromptsIntroduction />
       {/* <AgentsSectionQuickLinks /> */}
 

@@ -1,14 +1,12 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { useSearchParams } from 'react-router';
-import { SearchIcon } from 'lucide-react';
 import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
 import { GetSearchResultsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -16,8 +14,8 @@ import { parseSearchParams } from '~/routing/search/utils/parsers';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
+import { SearchIntroduction } from '~/routing/search/components/SearchIntroduction';
 import { SITE_TITLE } from '~/global/config/settings';
-import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/search._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -40,8 +38,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.request.url ? new URL(args.request.url) : null;
   const searchParams = url?.searchParams ?? new URLSearchParams();
-  const { expandRankingDetails, limit, page, q } =
-    parseSearchParams(searchParams);
+
+  const params = parseSearchParams(searchParams);
+  const { expandRankingDetails, limit, page, q } = params;
   const trimmed = q.trim();
 
   if (trimmed === '') {
@@ -122,6 +121,7 @@ export default function Component(
     } else {
       next.delete('details');
     }
+
     setSearchParams(next, { replace: true });
   };
 
@@ -133,66 +133,11 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={SearchIcon}
-          title="Search"
-        />
-        <p className="text-sm text-muted-foreground mb-4">
-          Semantic search over embedded plan, task, and documentation chunks.
-          {/* Open “Why this result?” on a card to see ranking notes, similarity,
-          and entity ids. Enable power-user mode below to expand every card’s
-          ranking section and add result position labels. */}
-        </p>
-        <WorkspaceEntityCrossLinks
-          label="Jump to a workspace area"
-          variant="full"
-        />
-      </div>
-
-      {!currentQ ? (
-        <div className="mb-6 space-y-3">
-          <p className="text-muted-foreground">
-            Enter a query below for semantic search across embedded plans,
-            tasks, and documentation. Results are ranked by embedding
-            similarity—open{' '}
-            <strong className="font-medium text-foreground">
-              Why this result?
-            </strong>{' '}
-            on any hit for scores and ids, or use power-user mode after you run
-            a search to expand ranking details on every card.
-          </p>
-        </div>
-      ) : null}
-
-      {currentQ ? (
-        <div className="text-muted-foreground text-sm max-w-2xl mb-2 space-y-2">
-          <p>
-            Semantic search over embedded plan, task, and documentation chunks.
-            Open “Why this result?” on a card to see ranking notes, similarity,
-            and entity ids. Enable power-user mode below to expand every card’s
-            ranking section and add result position labels.
-          </p>
-          <label className="flex cursor-pointer items-center gap-2 text-foreground">
-            <input
-              aria-label="Expand ranking details on all results"
-              checked={expandRankingDetails}
-              className="rounded border-input"
-              onChange={handleExpandRankingChange}
-              type="checkbox"
-            />
-            <span>
-              Power user: expand ranking details (sets{' '}
-              <code className="rounded bg-muted px-1 text-[11px]">
-                details=ranking
-              </code>{' '}
-              in the URL; preserved when paging)
-            </span>
-          </label>
-        </div>
-      ) : null}
+      <SearchIntroduction
+        expandRankingDetails={expandRankingDetails}
+        hasQuery={Boolean(currentQ)}
+        onExpandRankingChange={currentQ ? handleExpandRankingChange : undefined}
+      />
 
       {/* SearchFilters: limit (results per page) wired to URL; future: source filter when API supports it */}
       <SearchFilters />

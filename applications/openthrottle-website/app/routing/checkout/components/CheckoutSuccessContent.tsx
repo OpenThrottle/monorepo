@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import classnames from 'classnames';
 
-export interface CheckoutSuccessContentProps {
+interface CheckoutSuccessContentProps {
   readonly className?: string;
 }
 

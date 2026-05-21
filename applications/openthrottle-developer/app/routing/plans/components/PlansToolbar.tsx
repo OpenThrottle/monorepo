@@ -18,15 +18,15 @@ import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSel
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
 import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
-export interface PlansToolbarProps {
-  readonly assigneeOptions: readonly string[];
-  readonly assignees: readonly string[];
+interface PlansToolbarProps {
+  assigneeOptions: string[];
+  assignees: string[];
   className?: string;
   limit: number;
   page: number;
   sortBy: PlansSortBy;
   sortOrder: PlansSortOrder;
-  statuses: readonly string[];
+  statuses: string[];
   view: 'card' | 'table';
 }
 

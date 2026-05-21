@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SidebarMenuItem Component > should render 1`] = `
+<body>
+  <div>
+    <li
+      class="group/menu-item relative"
+      data-sidebar="menu-item"
+      data-slot="sidebar-menu-item"
+    />
+  </div>
+</body>
+`;

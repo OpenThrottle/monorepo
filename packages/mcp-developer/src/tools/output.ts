@@ -16,7 +16,7 @@ import {
   ListPlanOutputStreamChunksInputSchema,
 } from '../__generated__/schemas.js';
 import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 
@@ -28,12 +28,15 @@ type GetPlanOutputResult = GenericResult<{
   chunks: GetPlanOutputStreamChunksQuery['planOutputStreamChunks'];
 }>;
 
-const appendPlanOutputSchema = AppendPlanOutputInputSchema();
+export const appendPlanOutputToolParameters = AppendPlanOutputInputSchema();
 
-async function appendPlanOutputHandler(
-  args: z.infer<typeof appendPlanOutputSchema>,
+export const appendPlanOutputToolDescription =
+  'Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number.';
+
+export async function appendPlanOutputToolHandler(
+  args: z.infer<typeof appendPlanOutputToolParameters>,
 ): Promise<AppendPlanOutputResult> {
-  const parsed = appendPlanOutputSchema.safeParse(args);
+  const parsed = appendPlanOutputToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -66,12 +69,16 @@ async function appendPlanOutputHandler(
   );
 }
 
-const getPlanOutputSchema = ListPlanOutputStreamChunksInputSchema();
+export const getPlanOutputToolParameters =
+  ListPlanOutputStreamChunksInputSchema();
 
-async function getPlanOutputHandler(
-  args: z.infer<typeof getPlanOutputSchema>,
+export const getPlanOutputToolDescription =
+  'Fetch all streaming output chunks for a plan, ordered by created_at ascending (stream order).';
+
+export async function getPlanOutputToolHandler(
+  args: z.infer<typeof getPlanOutputToolParameters>,
 ): Promise<GetPlanOutputResult> {
-  const parsed = getPlanOutputSchema.safeParse(args);
+  const parsed = getPlanOutputToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -100,18 +107,18 @@ export function registerOutputTools(server: McpServer): void {
   server.registerTool(
     'append_plan_output',
     {
-      description: `Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number.`,
-      inputSchema: appendPlanOutputSchema,
+      description: appendPlanOutputToolDescription,
+      inputSchema: appendPlanOutputToolParameters,
     },
-    appendPlanOutputHandler,
+    appendPlanOutputToolHandler,
   );
 
   server.registerTool(
     'get_plan_output',
     {
-      description: `Fetch all streaming output chunks for a plan, ordered by created_at ascending (stream order).`,
-      inputSchema: getPlanOutputSchema,
+      description: getPlanOutputToolDescription,
+      inputSchema: getPlanOutputToolParameters,
     },
-    getPlanOutputHandler,
+    getPlanOutputToolHandler,
   );
 }

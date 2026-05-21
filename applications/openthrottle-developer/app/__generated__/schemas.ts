@@ -2,7 +2,9 @@ import { z } from 'zod/v3';
 import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
+  AgentsRunChatTurnInput,
   AppendPlanOutputInput,
+  ApplyWorkspaceEditorConfigurationInput,
   CancelPlanRunInput,
   CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
@@ -15,6 +17,7 @@ import {
   CreateQueueInput,
   CreateTaskInput,
   CreateUserInput,
+  CreateWorkspaceLocalRepositoryInput,
   CustomPromptType,
   DeletePlanInput,
   DeleteProjectInput,
@@ -58,6 +61,7 @@ import {
   SearchInput,
   SearchPlansInput,
   SetPlanStatusInput,
+  SetWorkspaceLocalRepositoryProjectInput,
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
@@ -67,7 +71,10 @@ import {
   UpdateProjectInput,
   UpdateTaskInput,
   UpdateUserInput,
+  UpdateWorkspaceLocalRepositoryInput,
+  UpdateWorkspaceProfileInput,
   WallClockInterpretation,
+  WorkspaceEditorId,
 } from './graphql.js';
 
 type Properties<T> = Required<{
@@ -95,6 +102,8 @@ export const WallClockInterpretationSchema = z.nativeEnum(
   WallClockInterpretation,
 );
 
+export const WorkspaceEditorIdSchema = z.nativeEnum(WorkspaceEditorId);
+
 export function ActivityByDateInputSchema(): z.ZodObject<
   Properties<ActivityByDateInput>
 > {
@@ -117,6 +126,15 @@ export function ActivityByDateRangeInputSchema(): z.ZodObject<
   });
 }
 
+export function AgentsRunChatTurnInputSchema(): z.ZodObject<
+  Properties<AgentsRunChatTurnInput>
+> {
+  return z.object({
+    conversationId: z.string().nullish(),
+    message: z.string(),
+  });
+}
+
 export function AppendPlanOutputInputSchema(): z.ZodObject<
   Properties<AppendPlanOutputInput>
 > {
@@ -124,6 +142,14 @@ export function AppendPlanOutputInputSchema(): z.ZodObject<
     content: z.string(),
     iteration: z.number().nullish(),
     planId: z.string(),
+  });
+}
+
+export function ApplyWorkspaceEditorConfigurationInputSchema(): z.ZodObject<
+  Properties<ApplyWorkspaceEditorConfigurationInput>
+> {
+  return z.object({
+    repositoryIds: z.array(z.string()).nullish(),
   });
 }
 
@@ -255,6 +281,18 @@ export function CreateUserInputSchema(): z.ZodObject<
   return z.object({
     email: z.string().nullish(),
     githubUsername: z.string(),
+  });
+}
+
+export function CreateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
+  Properties<CreateWorkspaceLocalRepositoryInput>
+> {
+  return z.object({
+    displayName: z.string(),
+    filesystemPath: z.string(),
+    gitDefaultBranch: z.string().nullish(),
+    gitRemoteUrl: z.string().nullish(),
+    projectId: z.string().nullish(),
   });
 }
 
@@ -637,6 +675,15 @@ export function SetPlanStatusInputSchema(): z.ZodObject<
   });
 }
 
+export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
+  Properties<SetWorkspaceLocalRepositoryProjectInput>
+> {
+  return z.object({
+    id: z.string(),
+    projectId: z.string().nullish(),
+  });
+}
+
 export function TaskEmbeddingsByTaskInputSchema(): z.ZodObject<
   Properties<TaskEmbeddingsByTaskInput>
 > {
@@ -744,5 +791,27 @@ export function UpdateUserInputSchema(): z.ZodObject<
     email: z.string().nullish(),
     githubUsername: z.string().nullish(),
     id: z.string(),
+  });
+}
+
+export function UpdateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
+  Properties<UpdateWorkspaceLocalRepositoryInput>
+> {
+  return z.object({
+    displayName: z.string().nullish(),
+    gitDefaultBranch: z.string().nullish(),
+    gitRemoteUrl: z.string().nullish(),
+    id: z.string(),
+    projectId: z.string().nullish(),
+  });
+}
+
+export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
+  Properties<UpdateWorkspaceProfileInput>
+> {
+  return z.object({
+    contactDisplayName: z.string().nullish(),
+    contactEmail: z.string().nullish(),
+    enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
   });
 }

@@ -5,7 +5,6 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { REPO_SKILLS_REGISTRY } from '~/routing/agents/data/repo-skills-registry';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import { SkillsOverviewModal } from '~/routing/skills/components/SkillsOverviewModal';
@@ -21,7 +20,14 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+  const { discoverRepoSkills } =
+    await import('~/routing/agents/data/discover-repo-skills.server');
+  const { getMonorepoRoot } =
+    await import('~/routing/agents/data/resolve-monorepo-root.server');
+  const monorepoRoot = getMonorepoRoot();
+  const entries = discoverRepoSkills(monorepoRoot);
+
+  return { entries };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -33,8 +39,10 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 });
 
 export default function Component(
-  _props: Route.ComponentProps,
+  props: Route.ComponentProps,
 ): React.ReactElement {
+  const { entries } = props.loaderData;
+
   // Hooks
 
   // Setup
@@ -50,13 +58,13 @@ export default function Component(
   return (
     <>
       <GlobalScreen>
-        <SkillsIntroduction entries={REPO_SKILLS_REGISTRY} />
+        <SkillsIntroduction entries={entries} />
         <SkillsToolbar />
-        <SkillsTable entries={REPO_SKILLS_REGISTRY} />
+        <SkillsTable entries={entries} />
 
         {/* <AgentsSectionQuickLinks /> */}
-        {/* <SkillsList entries={REPO_SKILLS_REGISTRY} /> */}
-        {/* <AgentsSkillsRegistry entries={REPO_SKILLS_REGISTRY} /> */}
+        {/* <SkillsList entries={entries} /> */}
+        {/* <AgentsSkillsRegistry entries={entries} /> */}
       </GlobalScreen>
 
       <SkillsOverviewModal />

@@ -3,13 +3,13 @@ import type {
   CortexParseBlock,
 } from '../cortex-document-parse/cortex-document-parse.types';
 
-export interface IngestDraftTask {
+interface IngestDraftTask {
   readonly description: string | null;
   readonly requirements: readonly string[];
   readonly title: string;
 }
 
-export interface IngestDraft {
+interface IngestDraft {
   readonly planTitle: string;
   readonly proposedTasks: readonly IngestDraftTask[];
 }

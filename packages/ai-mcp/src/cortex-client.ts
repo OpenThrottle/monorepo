@@ -359,7 +359,7 @@ interface ListSourcesItem {
   readonly name: string;
 }
 
-export interface ListSourcesResult {
+interface ListSourcesResult {
   readonly plans: readonly Pick<PlanData, 'id' | 'title'>[];
   readonly sources: ListSourcesItem[];
 }
@@ -397,57 +397,9 @@ export async function listSources(
   };
 }
 
-/**
- * @description Returns sorted unique author and assignee values from plans and tasks (for dashboard filter dropdowns).
- * @param config Cortex Postgres connection config.
- */
-export async function listDistinctAuthorsAndAssignees(
-  config: CortexPostgresConfig,
-): Promise<readonly string[]> {
-  const ds = await getOrCreateDataSource(config);
-  const res = await ds.query<{ person: string }>(
-    `(SELECT author AS person FROM plans)
-     UNION
-     (SELECT assignee AS person FROM plans WHERE assignee IS NOT NULL)
-     UNION
-     (SELECT assignee AS person FROM tasks WHERE assignee IS NOT NULL)
-     ORDER BY person`,
-  );
-  const { rows } = normalizeQueryResult<{ person: string }>(res);
-  return rows.map((r) => r.person);
-}
-
-/**
- * @description Returns sorted unique category values from plans (for sidebar/filters).
- */
-export async function listDistinctCategories(
-  config: CortexPostgresConfig,
-): Promise<readonly string[]> {
-  const ds = await getOrCreateDataSource(config);
-  const res = await ds.query<{ category: string }>(
-    `SELECT DISTINCT category FROM plans ORDER BY category`,
-  );
-  const { rows } = normalizeQueryResult<{ category: string }>(res);
-  return rows.map((r) => r.category);
-}
-
 export interface PlanStatusCount {
   readonly count: number;
   readonly status: string;
-}
-
-/**
- * @description Returns plan count per status (for sidebar status list with total count).
- */
-export async function listPlanCountsByStatus(
-  config: CortexPostgresConfig,
-): Promise<readonly PlanStatusCount[]> {
-  const ds = await getOrCreateDataSource(config);
-  const res = await ds.query<{ count: string; status: string }>(
-    `SELECT status, COUNT(*)::text AS count FROM plans GROUP BY status ORDER BY status`,
-  );
-  const { rows } = normalizeQueryResult<{ count: string; status: string }>(res);
-  return rows.map((r) => ({ count: Number(r.count), status: r.status }));
 }
 
 /** Plan row returned by listPlansByStatus (all plan columns except description). Aligns with {@link PlanData} but with string timestamps from raw query. */
@@ -470,7 +422,7 @@ export type ListPlansByStatusSortBy = 'created' | 'updated';
 /** Sort direction for listPlansByStatus. */
 export type ListPlansByStatusSortOrder = 'asc' | 'desc';
 
-const DEFAULT_PLANS_PAGE_SIZE = 20;
+export const DEFAULT_PLANS_PAGE_SIZE = 20;
 
 /**
  * @description Lists plans in Cortex filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.
@@ -611,7 +563,7 @@ function normalizeAssignee(value: string | null | undefined): string | null {
   return GITHUB_USERNAME_REGEX.test(trimmed) ? trimmed : null;
 }
 
-export interface CreatePlanInput {
+interface CreatePlanInput {
   readonly assignee?: string | null;
   readonly author: string;
   readonly category: string;
@@ -623,7 +575,7 @@ export interface CreatePlanInput {
   readonly title: string;
 }
 
-export interface UpdatePlanInput {
+interface UpdatePlanInput {
   readonly assignee?: string | null;
   readonly author?: string;
   readonly category?: string;
@@ -635,7 +587,7 @@ export interface UpdatePlanInput {
   readonly title?: string;
 }
 
-export interface CreateTaskInput {
+interface CreateTaskInput {
   readonly assignee?: string | null;
   readonly category?: string | null;
   readonly description?: string | null;
@@ -648,7 +600,7 @@ export interface CreateTaskInput {
   readonly title: string;
 }
 
-export interface UpdateTaskInput {
+interface UpdateTaskInput {
   readonly assignee?: string | null;
   readonly category?: string | null;
   readonly description?: string | null;
@@ -981,7 +933,7 @@ export async function getRemainingTasksByPlanId(
 }
 
 /** Input for {@link listTasksByCategory}. */
-export interface ListTasksByCategoryInput {
+interface ListTasksByCategoryInput {
   readonly category: string;
   readonly limit?: number;
   readonly planId?: string;
@@ -1063,7 +1015,7 @@ export async function deleteTask(
 // Commit links (associate git commits with plans/tasks)
 // ---------------------------------------------------------------------------
 
-export interface CommitLinkRow {
+interface CommitLinkRow {
   readonly createdAt: string;
   readonly id: string;
   readonly message: string | null;
@@ -1073,7 +1025,7 @@ export interface CommitLinkRow {
   readonly taskId: string | null;
 }
 
-export interface CreateCommitLinkInput {
+interface CreateCommitLinkInput {
   readonly message?: string | null;
   readonly planId: string;
   readonly repo: string;
@@ -1385,7 +1337,7 @@ export async function getLastActivityForPlanOrTask(
 // Plan output stream (streaming output / agent log per plan)
 // ---------------------------------------------------------------------------
 
-export interface PlanOutputChunkRow {
+interface PlanOutputChunkRow {
   readonly content: string;
   readonly createdAt: string;
   readonly id: string;
@@ -1393,7 +1345,7 @@ export interface PlanOutputChunkRow {
   readonly planId: string;
 }
 
-export interface CreatePlanOutputChunkInput {
+interface CreatePlanOutputChunkInput {
   readonly content: string;
   readonly iteration?: number | null;
   readonly planId: string;
@@ -1486,7 +1438,7 @@ interface ActivityTaskUpdatedRow {
   readonly updatedAt: string;
 }
 
-export interface ActivityByDateResult {
+interface ActivityByDateResult {
   readonly commits: readonly ActivityCommitRow[];
   readonly outputChunks: readonly ActivityOutputChunkRow[];
   readonly tasksUpdated: readonly ActivityTaskUpdatedRow[];
@@ -1495,7 +1447,7 @@ export interface ActivityByDateResult {
 /**
  * @description Fetches commit links in a date range (inclusive start, exclusive end). Joins plan and task titles.
  */
-export async function getCommitLinksInDateRange(
+async function getCommitLinksInDateRange(
   config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
@@ -1539,7 +1491,7 @@ export async function getCommitLinksInDateRange(
 /**
  * @description Fetches plan output stream chunks in a date range. Joins plan title.
  */
-export async function getPlanOutputChunksInDateRange(
+async function getPlanOutputChunksInDateRange(
   config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
@@ -1575,7 +1527,7 @@ export async function getPlanOutputChunksInDateRange(
 /**
  * @description Fetches tasks whose updated_at falls in a date range. Joins plan title.
  */
-export async function getTasksUpdatedInDateRange(
+async function getTasksUpdatedInDateRange(
   config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
@@ -1636,12 +1588,12 @@ export interface NoteRow {
   readonly updatedAt: string;
 }
 
-export interface CreateNoteInput {
+interface CreateNoteInput {
   readonly author?: string | null;
   readonly content: string;
 }
 
-export interface UpdateNoteInput {
+interface UpdateNoteInput {
   readonly author?: string | null;
   readonly content?: string;
 }

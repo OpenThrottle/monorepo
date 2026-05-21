@@ -15,7 +15,7 @@ import {
   SearchDocument,
 } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 
@@ -35,17 +35,26 @@ type SemanticSearchResult = GenericResult<{
   chunks: SearchQuery['search']['chunks'];
 }>;
 
-const getDocumentSchema = z.object({ id: z.string().uuid() });
-const listSourcesSchema = z.object({});
-const semanticSearchSchema = z.object({
+export const getDocumentToolParameters = z.object({ id: z.string().uuid() });
+export const listSourcesToolParameters = z.object({});
+export const semanticSearchToolParameters = z.object({
   limit: z.number().int().min(1).max(SEARCH_MAX_LIMIT).optional(),
   query: z.string().min(1),
 });
 
-async function getDocumentHandler(
-  args: z.infer<typeof getDocumentSchema>,
+export const getDocumentToolDescription =
+  'Fetch a single document chunk by id (UUID from plan_embeddings or task_embeddings). Use after semantic_search to read full chunk content.';
+
+export const listSourcesToolDescription =
+  'List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.';
+
+export const semanticSearchToolDescription =
+  'Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content via GraphQL. Requires OPENAI_API_KEY or Ollama on the server for query embedding.';
+
+export async function getDocumentToolHandler(
+  args: z.infer<typeof getDocumentToolParameters>,
 ): Promise<GetDocumentResult> {
-  const parsed = getDocumentSchema.safeParse(args);
+  const parsed = getDocumentToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -72,8 +81,8 @@ async function getDocumentHandler(
   );
 }
 
-async function listSourcesHandler(
-  _args: z.infer<typeof listSourcesSchema>,
+export async function listSourcesToolHandler(
+  _args: z.infer<typeof listSourcesToolParameters>,
 ): Promise<ListSourcesResult> {
   return runTool<{
     plans: ListSourcesQuery['listSources']['plans'];
@@ -101,10 +110,10 @@ async function listSourcesHandler(
   });
 }
 
-async function semanticSearchHandler(
-  args: z.infer<typeof semanticSearchSchema>,
+export async function semanticSearchToolHandler(
+  args: z.infer<typeof semanticSearchToolParameters>,
 ): Promise<SemanticSearchResult> {
-  const parsed = semanticSearchSchema.safeParse(args);
+  const parsed = semanticSearchToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -149,27 +158,27 @@ export function registerSearchTools(server: McpServer): void {
   server.registerTool(
     'get_document',
     {
-      description: `Fetch a single document chunk by id (UUID from plan_embeddings or task_embeddings). Use after semantic_search to read full chunk content.`,
-      inputSchema: getDocumentSchema,
+      description: getDocumentToolDescription,
+      inputSchema: getDocumentToolParameters,
     },
-    getDocumentHandler,
+    getDocumentToolHandler,
   );
 
   server.registerTool(
     'list_sources',
     {
-      description: `List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.`,
-      inputSchema: listSourcesSchema,
+      description: listSourcesToolDescription,
+      inputSchema: listSourcesToolParameters,
     },
-    listSourcesHandler,
+    listSourcesToolHandler,
   );
 
   server.registerTool(
     'semantic_search',
     {
-      description: `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content via GraphQL. Requires OPENAI_API_KEY or Ollama on the server for query embedding.`,
-      inputSchema: semanticSearchSchema,
+      description: semanticSearchToolDescription,
+      inputSchema: semanticSearchToolParameters,
     },
-    semanticSearchHandler,
+    semanticSearchToolHandler,
   );
 }

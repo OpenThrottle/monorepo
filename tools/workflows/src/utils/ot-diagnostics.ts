@@ -16,7 +16,7 @@ const PLANS_SPAWN_DIAGNOSTICS_PREFIX = '[plans-spawn:ot-diagnostics]' as const;
 /**
  * @description True when `value` is a non-empty string after trim (common env toggles: `1`, `true`).
  */
-export function isOtDiagnosticsEnvTruthy(value: string | undefined): boolean {
+function isOtDiagnosticsEnvTruthy(value: string | undefined): boolean {
   if (value === undefined || value === '') {
     return false;
   }
@@ -29,9 +29,7 @@ export function isOtDiagnosticsEnvTruthy(value: string | undefined): boolean {
 /**
  * @description Returns a Postgres URL safe for logs (password stripped). Falls back if parsing fails.
  */
-export function sanitizePostgresConnectionForLogs(
-  connectionString: string,
-): string {
+function sanitizePostgresConnectionForLogs(connectionString: string): string {
   try {
     const u = new URL(connectionString);
     u.password = '';
@@ -92,7 +90,7 @@ export function logWorkflowRalphOtDiagnostics(params: {
   console.error(OT_DIAGNOSTICS_LOG_PREFIX, JSON.stringify(payload));
 }
 
-export interface PlansProcessorSpawnOtDiagnosticsParams {
+interface PlansProcessorSpawnOtDiagnosticsParams {
   readonly jobId: string;
   readonly planId: string;
   readonly queueLabel: string;

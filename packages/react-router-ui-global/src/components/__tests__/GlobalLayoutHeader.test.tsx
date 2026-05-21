@@ -38,7 +38,7 @@ describe('GlobalLayoutHeader Component', () => {
   test('renders navigation chrome and inert search field by default', () => {
     renderHeader({});
     expect(
-      screen.getByRole('button', { name: 'Toggle sidebar' }),
+      screen.getByRole('button', { name: /toggle sidebar/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId('OpenThrottleBreadcrumbs')).toBeInTheDocument();
     expect(screen.getByRole('searchbox')).toBeInTheDocument();

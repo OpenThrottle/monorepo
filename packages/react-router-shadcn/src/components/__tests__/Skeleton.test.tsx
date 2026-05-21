@@ -6,25 +6,19 @@ import { Skeleton } from '../Skeleton';
 describe('Skeleton', () => {
   it('should render with default props', () => {
     const { container } = render(<Skeleton />);
-    const skeleton = container.querySelector('div');
+    const skeleton = container.querySelector('[data-slot="skeleton"]');
     expect(skeleton).toBeInTheDocument();
   });
 
-  it('should apply animate-pulse and bg-muted', () => {
+  it('should apply animate-pulse and bg-accent', () => {
     const { container } = render(<Skeleton />);
-    const skeleton = container.querySelector('div');
-    expect(skeleton).toHaveClass('animate-pulse', 'bg-muted', 'rounded-md');
+    const skeleton = container.querySelector('[data-slot="skeleton"]');
+    expect(skeleton).toHaveClass('animate-pulse', 'rounded-md', 'bg-accent');
   });
 
   it('should merge custom className', () => {
     const { container } = render(<Skeleton className="custom-class" />);
-    const skeleton = container.querySelector('div');
+    const skeleton = container.querySelector('[data-slot="skeleton"]');
     expect(skeleton).toHaveClass('custom-class');
-  });
-
-  it('should forward ref', () => {
-    const ref = React.createRef<HTMLDivElement>();
-    render(<Skeleton ref={ref} />);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 });

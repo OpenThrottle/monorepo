@@ -1,4 +1,4 @@
-export interface GeneratorErrorPayload {
+interface GeneratorErrorPayload {
   readonly code: string;
   readonly field?: string;
   readonly message: string;

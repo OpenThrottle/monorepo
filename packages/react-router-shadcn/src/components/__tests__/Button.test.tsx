@@ -14,7 +14,7 @@ describe('Button', () => {
   it('should apply default variant and size classes', () => {
     const { container } = render(<Button>Default</Button>);
     const button = container.querySelector('button');
-    expect(button).toHaveClass('bg-primary', 'h-10', 'px-4');
+    expect(button).toHaveClass('bg-primary', 'h-9', 'px-4');
   });
 
   describe('variants', () => {
@@ -29,16 +29,13 @@ describe('Button', () => {
         <Button variant="destructive">Destructive</Button>,
       );
       const button = container.querySelector('button');
-      expect(button).toHaveClass(
-        'bg-destructive',
-        'text-destructive-foreground',
-      );
+      expect(button).toHaveClass('bg-destructive', 'text-white');
     });
 
     it('should apply outline variant', () => {
       const { container } = render(<Button variant="outline">Outline</Button>);
       const button = container.querySelector('button');
-      expect(button).toHaveClass('border', 'border-input', 'bg-background');
+      expect(button).toHaveClass('border', 'bg-background', 'shadow-xs');
     });
 
     it('should apply secondary variant', () => {
@@ -66,25 +63,25 @@ describe('Button', () => {
     it('should apply default size', () => {
       const { container } = render(<Button size="default">Default</Button>);
       const button = container.querySelector('button');
-      expect(button).toHaveClass('h-10', 'px-4', 'py-2');
+      expect(button).toHaveClass('h-9', 'px-4');
     });
 
     it('should apply sm size', () => {
       const { container } = render(<Button size="sm">Small</Button>);
       const button = container.querySelector('button');
-      expect(button).toHaveClass('h-9', 'px-3');
+      expect(button).toHaveClass('h-8', 'px-3');
     });
 
     it('should apply lg size', () => {
       const { container } = render(<Button size="lg">Large</Button>);
       const button = container.querySelector('button');
-      expect(button).toHaveClass('h-11', 'px-8');
+      expect(button).toHaveClass('h-10', 'px-6');
     });
 
     it('should apply icon size', () => {
       const { container } = render(<Button size="icon">Icon</Button>);
       const button = container.querySelector('button');
-      expect(button).toHaveClass('h-10', 'w-10');
+      expect(button).toHaveClass('size-9');
     });
   });
 

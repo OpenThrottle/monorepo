@@ -10,7 +10,7 @@ import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notifica
 import type { NotificationPreferenceId } from '~/routing/settings/config/notification-preferences';
 import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
 
-export interface NotificationPreferencesSectionProps {
+interface NotificationPreferencesSectionProps {
   readonly className?: string;
 }
 

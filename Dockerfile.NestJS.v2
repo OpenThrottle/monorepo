@@ -1,0 +1,167 @@
+# OpenThrottle server — multi-stage build from monorepo root.
+# v2 copy: created from Dockerfile.NestJS with no behavior change. All optimizations go here; baseline stays in Dockerfile.NestJS.
+# Build: docker build -f Dockerfile.NestJS.v2 [--build-arg ...] .
+# See docs/openthrottle/docker-image-build-strategy.md.
+#
+# Production runtime: gcr.io/distroless/nodejs22-debian12:nonroot (glibc). Build stages use
+# node:*-bookworm-slim so pruned native addons match distroless; Alpine-built node_modules (musl) would not.
+###########################################################################
+#
+#     👀 https://pnpm.io/docker using NX for the monorepo build
+#
+###########################################################################
+ARG NODE_VERSION="24"
+FROM node:${NODE_VERSION}-bookworm-slim AS base
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG APP_ENV="production"
+ARG APP_NAME="__REQUIRED_ARG__"
+ARG APP_VERSION="__REQUIRED_ARG__"
+ARG GITHUB_TOKEN="__REQUIRED_ARG__"
+ARG NX_VERSION="__REQUIRED_ARG__"
+ARG NX_KEY="__REQUIRED_ARG__"
+ARG PNPM_VERSION="__REQUIRED_ARG__"
+
+ENV APP_ENV="${APP_ENV}"
+ENV APP_NAME="${APP_NAME}"
+ENV APP_VERSION="${APP_VERSION}"
+ENV CI="true"
+ENV HUSKY="0"
+ENV NX_DAEMON="false"
+
+# Enable pnpm via npm
+RUN npm install --global pnpm@${PNPM_VERSION}
+
+# Only copy what's needed to install our dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+
+# Non-root identity for intermediate stages (final image uses distroless `nonroot`).
+RUN groupadd --system --gid 1001 appuser \
+  && useradd --system --uid 1001 --gid appuser appuser
+
+################################################################################
+#
+#   BUILDER ~ Everything needed to build the application(s)
+#
+################################################################################
+FROM base AS builder
+
+# We limit the token to this layer, which is disposed of in the final build
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+ENV NODE_ENV="development"
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.json
+COPY ./packages ./packages
+COPY ./tools ./tools
+
+# Install "all" dependencies from NPM + Github Packages
+RUN pnpm install --frozen-lockfile
+
+
+################################################################################
+#
+#   DEPENDENCIES ~ Trim the non-production dependencies - used in production
+#
+################################################################################
+FROM builder AS dependencies
+
+# Set the environment to production for the build
+ENV NODE_ENV="production"
+
+# Install dependencies
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile --prod
+
+# # Trim those packages down to what we need for production
+# RUN pnpm install --frozen-lockfile --ignore-scripts --prod
+# RUN pnpm install --frozen-lockfile --prod
+# RUN pnpm install --frozen-lockfile
+
+# Prune the store to reduce image size
+RUN pnpm store prune
+
+# Remove Expo and React modules (not needed for NestJS server)
+RUN rm -rf /app/node_modules/.pnpm/@radix* \
+  /app/node_modules/.pnpm/@react \
+  /app/node_modules/.pnpm/react*
+
+
+################################################################################
+#
+#   BUILD - This layer builds the application and we grab the artifacts from
+#
+################################################################################
+FROM builder AS build
+
+# Set the environment to production for the build
+ENV NODE_ENV="production"
+ENV NX_DAEMON="false"
+ENV NX_KEY=${NX_KEY}
+ENV NX_SWC="true"
+
+# Now we copy over all the source code
+COPY . .
+
+# Trim those packages down to what we need for production
+# RUN pnpm install --frozen-lockfile --ignore-scripts --prod
+# RUN pnpm install --frozen-lockfile --prod
+# RUN pnpm install --frozen-lockfile
+
+
+# Install dependencies
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Build the application using GCS cache for Nx (secret is not persisted in final image)
+RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
+  export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json && \
+  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool && \
+  pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build && \
+  mkdir -p /app/applications/${APP_NAME}/i18n
+
+# Cache the production dependencies
+RUN --mount=type=cache,id=pnpm-production,target=/pnpm/store pnpm install --frozen-lockfile --prod
+
+# Prune the store to reduce image size
+RUN pnpm store prune && \
+  rm -rf /app/node_modules/.pnpm/@radix* \
+  /app/node_modules/.pnpm/@react \
+  /app/node_modules/.pnpm/react*
+
+# App-only runtime tree: pruned package dir with build/ + isolated production node_modules
+# (same pattern as Dockerfile.ReactRouter — avoids copying full monorepo node_modules, packages/, tools/).
+RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
+
+################################################################################
+#
+#   PRODUCTION - Finally, build the production image with a "minimal" footprint
+#
+################################################################################
+# Distroless: no shell, package manager, curl, or wget. Baseline Dockerfile.NestJS installs curl only for
+# compose probes; here we use Node's built-in HTTP client (no extra packages). Compose maps PORT from
+# OPENTHROTTLE_SERVER_PORT (see docker-nestjs-v2-stage-audit.md). If you override healthcheck in compose,
+# use exec form with /nodejs/bin/node (CMD-SHELL + wget will not run on distroless).
+FROM gcr.io/distroless/nodejs22-debian12:nonroot AS production
+
+WORKDIR /app
+
+ENV NODE_ENV="production"
+
+# Production ships only `pnpm deploy` output: the app package, its `build/`, and prod `node_modules`.
+# We never COPY monorepo roots `/app/packages` or `/app/tools` into this stage; workspace libraries
+# the server needs at runtime are already resolved into the pruned tree (built artifacts + linked deps).
+COPY --from=build --chown=65532:65532 /app/pruned/. /app/
+
+# In-image probe only — no curl. Matches root compose intent (GET /health on PORT).
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD ["/nodejs/bin/node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
+
+# ENTRYPOINT is Node; CMD is argv only (see distroless/nodejs README).
+CMD ["-r", "dotenv/config", "build/src/main.js"]

@@ -6,10 +6,10 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { GetProjectByIdQuery } from '~/__generated__/graphql';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 
-export type ProjectTaskRow =
+type ProjectTaskRow =
   GetProjectByIdQuery['projectTasksResult']['tasks'][number];
 
-export interface ProjectTasksTableProps {
+interface ProjectTasksTableProps {
   className?: string;
   tasks: ProjectTaskRow[];
 }
@@ -37,7 +37,7 @@ function buildColumns(): ColumnDef<
       cell: ({ row }) => {
         const category = row.original.category;
         return category ? (
-          <Badge size="xs" variant="secondary">
+          <Badge color="slate" size="xs" variant="secondary">
             {category}
           </Badge>
         ) : (

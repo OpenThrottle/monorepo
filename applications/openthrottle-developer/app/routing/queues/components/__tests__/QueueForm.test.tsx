@@ -19,7 +19,30 @@ describe('QueueForm Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders queue name field and submit actions', () => {
+    expect(component.getByTestId('QueueForm')).toBeInTheDocument();
+    expect(component.getByLabelText(/queue name/i)).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: /create queue/i }),
+    ).toBeInTheDocument();
+    expect(component.getByRole('link', { name: /cancel/i })).toHaveAttribute(
+      'href',
+      '/queues',
+    );
+  });
+
+  describe('when actionData includes an error', () => {
+    beforeEach(() => {
+      props = { actionData: { error: 'Queue name already exists' } };
+      const Component = () => <QueueForm {...props} />;
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      component.rerender(<RoutesStub />);
+    });
+
+    test('shows the error in an alert', () => {
+      expect(component.getByRole('alert')).toHaveTextContent(
+        'Queue name already exists',
+      );
+    });
   });
 });

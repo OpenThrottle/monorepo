@@ -1,11 +1,9 @@
-import type { Job, Queue } from 'bullmq';
+import type { Job } from 'bullmq';
 
 /** @description Empty job payload for scheduled daily stats aggregation. */
 export interface AggregateDailyStatsJobData {
   /* No payload needed for scheduled run */
 }
-
-export type DailyStatsQueue = Queue<AggregateDailyStatsJobData, void>;
 
 export type AggregateDailyStatsJob = Job<AggregateDailyStatsJobData, void>;
 

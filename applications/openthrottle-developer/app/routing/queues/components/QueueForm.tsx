@@ -4,7 +4,7 @@ import { Form } from 'react-router';
 import { Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
-export interface QueueFormProps {
+interface QueueFormProps {
   readonly actionData?: { error?: string } | null;
   readonly className?: string;
 }

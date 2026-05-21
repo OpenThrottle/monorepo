@@ -1,7 +1,6 @@
 export { createProfileExecutionFileWriter } from './profile-execution-file-writer';
 export {
   getProfileExecutionReporter,
-  notifyProfileExecutionReporter,
   setProfileExecutionReporter,
 } from './profile-execution.reporter';
 export { ProfileExecution } from './profile-execution.decorator';

@@ -22,12 +22,14 @@ import {
   isOpenthrottleServerDevJsonlLoggingEnabled,
 } from './config/openthrottle-server-dev-jsonl-logging';
 import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
+import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
 import { CortexDocumentIngestGraphqlModule } from './graphql/cortex-document-ingest/cortex-document-ingest-graphql.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
+import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module';
 import { DevelopmentModule } from './modules/development/development.module';
 import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-queue.module';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module';
@@ -37,6 +39,7 @@ import { GlobalJwtAuthGuard } from './guards/global-jwt-auth.guard';
 import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module';
 import { HealthModule } from './modules/health/health.module';
+import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module';
 import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
@@ -52,6 +55,7 @@ import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
 import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
+import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
 import { WorkflowModule } from './queues/workflow/workflow.module';
 
 // import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
@@ -103,14 +107,17 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
 
     // 🧩 Application Modules
     DailyStatsQueueModule,
+    DatabaseBackupQueueModule,
     DevelopmentModule,
     DocIngestionQueueModule,
     GeneratorsModule,
+    McpDeveloperModule,
     PlansQueueModule,
     WorkflowModule,
 
     // 🧩 GraphQL Modules
     ActivityGraphqlModule,
+    AgentsGraphqlModule,
     AuthGraphqlModule,
     CommitLinksGraphqlModule,
     CortexDocumentIngestGraphqlModule,
@@ -131,6 +138,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     TaskEmbeddingsGraphqlModule,
     TasksGraphqlModule,
     UsersGraphqlModule,
+    WorkspaceSettingsGraphqlModule,
   ],
   providers: [
     GlobalClsAuthHook,

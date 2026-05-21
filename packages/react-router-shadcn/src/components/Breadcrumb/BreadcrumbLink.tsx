@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot as SlotPrimitive } from 'radix-ui';
 import { cn } from '../../utils/cn';
 
 export interface BreadcrumbLinkProps extends React.ComponentPropsWithoutRef<'a'> {
@@ -15,7 +15,7 @@ export const BreadcrumbLink = React.forwardRef<
   // Hooks
 
   // Setup
-  const Component = asChild ? Slot : 'a';
+  const Component = asChild ? SlotPrimitive.Slot : 'a';
 
   // Handlers
 

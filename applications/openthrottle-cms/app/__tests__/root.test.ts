@@ -32,12 +32,12 @@ describe('app/root.tsx exports', () => {
 
     expect(result.canonical).toBe('https://cms.openthrottle.ai/some-route');
     expect(result.env).toMatchObject({
-      APP_ENV: process.env.APP_ENV,
-      APP_NAME: process.env.APP_NAME,
-      APP_URL: process.env.APP_URL,
-      APP_VERSION: process.env.APP_VERSION,
-      NODE_ENV: process.env.NODE_ENV,
-      ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
+      APP_ENV: 'test',
+      APP_NAME: 'openthrottle-cms',
+      APP_URL: 'http://localhost',
+      APP_VERSION: '1.0.0',
+      NODE_ENV: 'test',
+      ROLLBAR_TOKEN: 'xxxxxxxxxxxxxxxx',
     });
   });
 

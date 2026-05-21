@@ -18,7 +18,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { ProcessMetricsSnapshot } from '../data/metrics-types';
 import { computeTaskRunDeltas } from '../data/task-run-metrics-deltas';
-import { useJobTaskRunMetrics } from '../hooks/use-job-task-run-metrics';
+import { useJobTaskRunMetrics } from '../hooks/useJobTaskRunMetrics';
 
 /** Format MB to 2 decimal places for display. */
 function formatMb(value: number): string {

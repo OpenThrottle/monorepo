@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import LegalIndex from '../legal._index';
 
 describe('routes/legal._index.tsx', () => {
-  test('should render overview with links to terms and privacy', () => {
+  test('renders about section, OpenThrottle link, stack logos, and author block', () => {
     const view = render(
       <MemoryRouter>
         <LegalIndex
@@ -18,19 +18,25 @@ describe('routes/legal._index.tsx', () => {
     );
 
     expect(
-      view.getByRole('heading', { level: 1, name: 'Legal' }),
+      view.getByRole('heading', { level: 1, name: 'About' }),
     ).toBeInTheDocument();
-    expect(view.getByRole('link', { name: 'License' })).toHaveAttribute(
+    expect(view.getByRole('link', { name: 'OpenThrottle' })).toHaveAttribute(
       'href',
-      '/legal/license',
+      'https://github.com/OpenThrottle?ref=openthrottle',
     );
-    expect(view.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute(
+    expect(view.getByRole('link', { name: 'BullMQ' })).toHaveAttribute(
       'href',
-      '/legal/privacy-policy',
+      'https://bullmq.io',
     );
-    expect(view.getByRole('link', { name: 'Terms of use' })).toHaveAttribute(
+    expect(
+      view.getByRole('heading', { level: 2, name: 'Matthew Scholta' }),
+    ).toBeInTheDocument();
+    expect(
+      view.getByRole('button', { name: 'matthew@openthrottle.com' }),
+    ).toBeInTheDocument();
+    expect(view.getByRole('link', { name: 'mattscholta.com' })).toHaveAttribute(
       'href',
-      '/legal/terms-of-use',
+      'https://mattscholta.com?ref=openthrottle-developer',
     );
   });
 });

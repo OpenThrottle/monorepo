@@ -23,6 +23,7 @@ export * from './components/GlobalTheme';
 // export * from './components/GlobalSignOut';
 // export * from './components/GlobalUserMenu';
 export * from './config';
+export * from './hooks/use-scroll-container-restoration';
 export * from './hooks/use-url-synced-overlay';
 // export * from './data';
 // export * from './utils';

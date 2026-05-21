@@ -42,6 +42,7 @@ const PROMISE_INPUT_REQUIRED = '<promise>INPUT_REQUIRED</promise>' as const;
 
 /**
  * @description Snapshot of delimiter / terminal markers in agent output (for shim debug; single pass over {@link result}).
+ * @publicApi
  */
 export const getRalphOutputMarkerFlags = (
   result: string,
@@ -59,14 +60,17 @@ export const getRalphOutputMarkerFlags = (
   hasPromiseInputRequired: result.includes(PROMISE_INPUT_REQUIRED),
 });
 
+/** @publicApi */
 export const isCortexPlanId = (plan: string): boolean =>
   RALPH_UUID_REGEX.test(plan.trim());
 
+/** @publicApi */
 export const isCortexTaskId = (task: string): boolean =>
   RALPH_UUID_REGEX.test(task.trim());
 
 /**
  * @description Parses agent result for <ralph:task-complete>uuid</ralph:task-complete>. Returns unique task IDs; Ralph marks them completed via Postgres.
+ * @publicApi
  */
 export const parseRalphCompleteTaskSignals = (result: string): string[] => {
   const ids: string[] = [];
@@ -101,6 +105,7 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
   return unique;
 };
 
+/** @publicApi */
 export interface RalphArgs {
   /**
    * @description Layer 2: which runner invokes every iteration of this plan run. One of
@@ -130,6 +135,7 @@ export interface RalphArgs {
 
 /**
  * @description Parses command-line arguments from process.argv
+ * @publicApi
  */
 export const parseRalphArgs = (): RalphArgs => {
   const args = process.argv.slice(2);
@@ -343,6 +349,7 @@ export const parseRalphArgs = (): RalphArgs => {
 
 /**
  * @description Parses the results of an iteration and exits the process if necessary
+ * @publicApi
  */
 export const parseRalphResponse = (
   result: string,

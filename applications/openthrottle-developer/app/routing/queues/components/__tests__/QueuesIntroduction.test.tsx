@@ -19,7 +19,12 @@ describe('QueuesIntroduction Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders page title and operational hint', () => {
+    expect(
+      component.getByRole('heading', { level: 1, name: 'Queues' }),
+    ).toBeInTheDocument();
+    const hint = component.getByTestId('queues-operational-hint');
+    expect(hint).toHaveTextContent(/Worker queues \(BullMQ\)/);
+    expect(hint).toHaveTextContent(/support bundle/);
   });
 });

@@ -4,7 +4,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { HomeFeatures } from '../HomeFeatures';
 import type { HomeFeaturesProps } from '../HomeFeatures';
-import { HOME_FEATURES, HOME_FEATURES_DOC_URL } from '~/routing/home/data';
+import { HOME_FEATURES } from '~/routing/home/data';
 
 describe('HomeFeatures Component', () => {
   let props: HomeFeaturesProps;
@@ -18,21 +18,12 @@ describe('HomeFeatures Component', () => {
     render(<RoutesStub />);
   });
 
-  test('should render section with heading, doc link, and feature cards', () => {
+  test('should render feature cards from HOME_FEATURES', () => {
     expect(screen.getByTestId('HomeFeatures')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Features' }),
-    ).toBeInTheDocument();
-
-    const docLink = screen.getByRole('link', {
-      name: /docs\/openthrottle\/features\.md/,
-    });
-    expect(docLink).toHaveAttribute('href', HOME_FEATURES_DOC_URL);
-    expect(docLink).toHaveAttribute('target', '_blank');
-    expect(docLink).toHaveAttribute('rel', 'noopener noreferrer');
 
     for (const feature of HOME_FEATURES) {
       expect(screen.getByText(feature.title)).toBeInTheDocument();
+      expect(screen.getByText(feature.description)).toBeInTheDocument();
     }
   });
 });

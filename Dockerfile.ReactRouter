@@ -1,6 +1,6 @@
-# React Router apps — multi-stage build from monorepo root (v2 optimization target).
-# Copy of Dockerfile.ReactRouter; all size/optimization changes go here. Baseline kept in Dockerfile.ReactRouter.
-# Build: docker build -f Dockerfile.ReactRouter.v2 [--build-arg ...] .
+# React Router apps — multi-stage build from monorepo root.
+# Working baseline for compose and local builds. Size optimizations belong in Dockerfile.ReactRouter.v2 only.
+# Build: docker build -f Dockerfile.ReactRouter [--build-arg ...] .
 # See docs/openthrottle/docker-image-build-strategy.md and docs/openthrottle/docker-react-router-v2.md.
 ###########################################################################
 #
@@ -9,7 +9,6 @@
 ###########################################################################
 ARG NODE_VERSION="22"
 FROM node:${NODE_VERSION}-alpine AS base
-# FROM node:${NODE_VERSION}-slim AS base
 
 WORKDIR /app
 
@@ -28,11 +27,12 @@ ENV CI="true"
 ENV HUSKY="0"
 ENV NX_DAEMON="false"
 
-# Enable pnpm via npm
 RUN npm install --global pnpm@${PNPM_VERSION}
 
-# Avoid gid/uid 1000 — node:alpine already has node:1000:1000
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+
 RUN addgroup --system --gid 1001 appuser
+
 RUN adduser --system --uid 1001 --ingroup appuser appuser
 
 ################################################################################
@@ -42,28 +42,19 @@ RUN adduser --system --uid 1001 --ingroup appuser appuser
 ################################################################################
 FROM base AS builder
 
-# We limit the token to this layer, which is disposed of in the final build
-ENV CI="true"
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV NODE_ENV="development"
-
-# Only copy what's needed to install our dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.json
 COPY ./packages ./packages
 COPY ./tools ./tools
 
-# Python tools are required to build
-RUN apk add --update build-base python3 make g++\
+RUN apk add --update build-base python3 make g++ \
   && rm -rf /var/cache/apk/*
 
-# General best practice, keep it up to date
 RUN apk update && apk upgrade
 
-# Install "all" dependencies from NPM + Github Packages
-RUN pnpm install
-
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
 
 ################################################################################
 #
@@ -72,37 +63,13 @@ RUN pnpm install
 ################################################################################
 FROM builder AS dependencies
 
-# Set the environment to production for the build
 ENV NODE_ENV="production"
 
-# Trim those packages down to what we need for production
-RUN pnpm install --frozen-lockfile --prod
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile --prod
 
-# Prune the store to reduce image size
 RUN pnpm store prune
 
-# Remove as much fat as we can here - its rough right now, we need to improve it
-RUN rm -rf /app/node_modules/.pnpm/@langchain \
-  /app/node_modules/.pnpm/@modelcontextprotocol \
-  /app/node_modules/.pnpm/@nestjs \
-  /app/node_modules/.pnpm/ajv* \
-  /app/node_modules/.pnpm/bullmq* \
-  /app/node_modules/.pnpm/jimp* \
-  /app/node_modules/.pnpm/nestjs* \
-  /app/node_modules/.pnpm/passport-local \
-  /app/node_modules/.pnpm/pdf-parse \
-  /app/node_modules/.pnpm/pg \
-  /app/node_modules/.pnpm/pdf-parse \
-  /app/node_modules/.pnpm/pg \
-  /app/node_modules/.pnpm/reflect-metadata \
-  /app/node_modules/.pnpm/rxjs \
-  /app/node_modules/.pnpm/stripe \
-  /app/node_modules/.pnpm/uuid \
-  /app/node_modules/.pnpm/youtubei.js
-
-# Remove NestJS, Expo and React Native modules (not needed for React Router applications)
 RUN rm -rf /app/node_modules/.pnpm/@nestjs*
-
 
 ################################################################################
 #
@@ -111,66 +78,38 @@ RUN rm -rf /app/node_modules/.pnpm/@nestjs*
 ################################################################################
 FROM builder AS build
 
-# Set the environment to production for the build
 ENV NODE_ENV="production"
 ENV NX_DAEMON="false"
 ENV NX_KEY=${NX_KEY}
 ENV NX_SWC="true"
 
-# Now we copy over all the source code
 COPY . .
 
-# Install dependencies
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Build the application using GCS cache for Nx (secret is not persisted in final image)
 RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
   export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json && \
-  npx nx@${NX_VERSION} run ${APP_NAME}:build
-
-# App-only runtime deps: deploy creates /app/pruned with only this app + its production node_modules
-RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
-
+  pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build
 
 ################################################################################
 #
-#   PRODUCTION-ALPINE - Alternative: node:alpine base (has shell, can add curl)
+#   PRODUCTION - Full monorepo runtime tree (baseline; large image)
 #
 ################################################################################
-# Use this target if you need a shell for debugging or curl for healthchecks:
-#   docker build -f Dockerfile.ReactRouter.v2 --target production-alpine ...
-FROM base AS production-alpine
+FROM base AS production
 
 ENV NODE_ENV="production"
 
-# Production gets only the pruned app tree (no full /app/packages or /app/tools).
-COPY --from=build /app/pruned/. /app/
+COPY --from=dependencies /app/node_modules /app/node_modules
+COPY --from=build /app/applications/${APP_NAME}/build /app/build
+COPY --from=build /app/applications/${APP_NAME}/package.json /app/package.json
+COPY --from=build /app/packages /app/packages
+COPY --from=build /app/tools /app/tools
 
-# Curl is not installed in production by default. For dev/docker-compose healthchecks,
-# either use wget (Alpine has it) or uncomment the line below and use --target production-alpine.
-# RUN apk --update --no-cache add curl
+RUN apk --update --no-cache add curl
 
 RUN chown -R appuser:appuser /app
+
 USER appuser
 
-# Run React Router server via node (no pnpm in pruned image)
-CMD ["node", "node_modules/@react-router/serve/bin.js", "build/server/index.js"]
-
-################################################################################
-#
-#   PRODUCTION - Default: minimal footprint distroless/nodejs (no shell, no package manager)
-#
-################################################################################
-# Distroless nodejs22 (Debian 12 base, nonroot). Smaller than node:alpine; no curl/shell.
-# For a shell + curl (e.g. local healthchecks), use --target production-alpine.
-FROM gcr.io/distroless/nodejs22-debian12:nonroot AS production
-
-ENV NODE_ENV="production"
-
-# Production gets only the pruned app tree (no full /app/packages or /app/tools).
-COPY --from=build --chown=65532:65532 /app/pruned/. /app/
-
-WORKDIR /app
-
-# distroless nodejs image ENTRYPOINT is node; CMD is the script path + args
-CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]
+CMD ["pnpm", "start:docker"]

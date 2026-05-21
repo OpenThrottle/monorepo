@@ -11,7 +11,7 @@ import {
 import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
-export interface UsageSnapshotProps {
+interface UsageSnapshotProps {
   readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
   readonly rangeDays: number;
   readonly rangeEndIso: string;

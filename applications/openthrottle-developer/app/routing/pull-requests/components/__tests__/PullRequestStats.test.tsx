@@ -19,7 +19,15 @@ describe('PullRequestStats Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders stat cards with expected titles and values', () => {
+    expect(component.getByTestId('PullRequestStats')).toBeInTheDocument();
+    expect(component.getByText('Open / Yours')).toBeInTheDocument();
+    expect(component.getByText('23')).toBeInTheDocument();
+    expect(component.getByText('21')).toBeInTheDocument();
+    expect(component.getByText('Merged / Closed')).toBeInTheDocument();
+    expect(component.getByText('100')).toBeInTheDocument();
+    expect(component.getByText('85')).toBeInTheDocument();
+    expect(component.getByText('All')).toBeInTheDocument();
+    expect(component.getByText('123')).toBeInTheDocument();
   });
 });

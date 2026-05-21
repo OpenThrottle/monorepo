@@ -7,14 +7,14 @@ import type { Extension } from '../loaders/markdown';
 /**
  * Get the root directory of our
  */
-export function getRepositoryRoot(): string {
+function getRepositoryRoot(): string {
   return path.resolve(__dirname, '../../../../../');
 }
 
 /**
  * Get the .gitignore patterns for the repository
  */
-export function getGitignorePatterns(): string[] {
+function getGitignorePatterns(): string[] {
   const rootDir = getRepositoryRoot();
   const gitignorePath = path.join(rootDir, '.gitignore');
 
@@ -64,36 +64,4 @@ export async function getFilesByExtension(
 
   // Return absolute paths
   return filteredFiles.map((file: string) => path.join(rootDir, file));
-}
-
-/**
- * @description Get file statistics by extension
- */
-export async function getFileStatsByExtension(): Promise<
-  Record<string, number>
-> {
-  const stats: Record<string, number> = {};
-  const extensions: Extension[] = [
-    'js',
-    'jsx',
-    'json',
-    'md',
-    'pdf',
-    'ts',
-    'txt',
-    'yaml',
-    'yml',
-  ];
-  const filePromises = extensions.map(async (ext) => {
-    const files = await getFilesByExtension(ext);
-    return { count: files.length, ext };
-  });
-
-  const results = await Promise.all(filePromises);
-
-  for (const { ext, count } of results) {
-    stats[ext] = count;
-  }
-
-  return stats;
 }

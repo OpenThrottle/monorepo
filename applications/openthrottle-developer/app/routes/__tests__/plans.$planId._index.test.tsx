@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub, useSearchParams, type UIMatch } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import PlanDetail from '../plans.$planId._index';
 
 const mockPlan = {
@@ -75,14 +76,16 @@ describe('routes/plans.$planId.tsx', () => {
 
     expect(component.getByText('Test Plan')).toBeInTheDocument();
     expect(component.getByText('In Progress')).toBeInTheDocument();
-    expect(component.getByText('Plan description')).toBeInTheDocument();
+    expect(component.getAllByText('Plan description').length).toBeGreaterThan(
+      0,
+    );
 
     await user.click(screen.getByRole('tab', { name: 'Tasks' }));
 
     const paramsAfterTasks = new URLSearchParams(
       screen.getByTestId('plan-detail-search-params').textContent ?? '',
     );
-    expect(paramsAfterTasks.get('plansDetailTab')).toBe('tasks');
+    expect(paramsAfterTasks.get(PLANS_DETAIL_TAB_SEARCH_PARAM)).toBe('tasks');
     expect(paramsAfterTasks.get('view')).toBe('table');
 
     expect(component.getByText('Test Task')).toBeInTheDocument();
@@ -111,9 +114,11 @@ describe('routes/plans.$planId.tsx', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Tasks' }));
 
-    expect(component.getByText('No tasks')).toBeInTheDocument();
     expect(
-      component.getByText('This plan has no tasks yet.'),
+      component.getByRole('heading', { name: 'No plans yet' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText('Create your first plan to get started.'),
     ).toBeInTheDocument();
   });
 
@@ -135,7 +140,7 @@ describe('routes/plans.$planId.tsx', () => {
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
-    expect(component.getByRole('main')).toBeInTheDocument();
+    expect(component.getByTestId('OpenThrottleEmptyState')).toBeInTheDocument();
     expect(component.getByText('Plan not found')).toBeInTheDocument();
     expect(component.getByText(/does not exist/)).toBeInTheDocument();
   });
@@ -161,7 +166,9 @@ describe('routes/plans.$planId.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     render(
-      <RoutesStub initialEntries={['/?plansDetailTab=tasks&view=table']} />,
+      <RoutesStub
+        initialEntries={[`/?${PLANS_DETAIL_TAB_SEARCH_PARAM}=tasks&view=table`]}
+      />,
     );
 
     const tasksTab = screen.getByRole('tab', { name: 'Tasks' });
@@ -172,7 +179,7 @@ describe('routes/plans.$planId.tsx', () => {
     const paramsAfterDetails = new URLSearchParams(
       screen.getByTestId('plan-detail-search-params').textContent ?? '',
     );
-    expect(paramsAfterDetails.get('plansDetailTab')).toBeNull();
+    expect(paramsAfterDetails.get(PLANS_DETAIL_TAB_SEARCH_PARAM)).toBeNull();
     expect(paramsAfterDetails.get('view')).toBe('table');
   });
 
@@ -195,7 +202,9 @@ describe('routes/plans.$planId.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     render(
-      <RoutesStub initialEntries={['/?plansDetailTab=nope&view=table']} />,
+      <RoutesStub
+        initialEntries={[`/?${PLANS_DETAIL_TAB_SEARCH_PARAM}=nope&view=table`]}
+      />,
     );
 
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute(

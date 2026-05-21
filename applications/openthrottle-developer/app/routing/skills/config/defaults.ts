@@ -1,1 +1,0 @@
-export const DEFAULT_SKILLS = 'DEFAULT_SKILLS';

@@ -10,4 +10,3 @@ export const planStatusValues = {
 } as const;
 
 export type PlanStatusKey = keyof typeof planStatusValues;
-export type PlanStatusValue = (typeof planStatusValues)[PlanStatusKey];

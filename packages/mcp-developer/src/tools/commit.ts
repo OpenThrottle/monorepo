@@ -8,7 +8,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import type { LinkCommitMutation } from '../__generated__/graphql.js';
 import { LinkCommitDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.js';
-import { getAuthToken } from '../auth/index.js';
+import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
 import { runTool } from '../utils/tool-result.js';
 
@@ -16,7 +16,7 @@ type LinkCommitResult = GenericResult<{
   link: LinkCommitMutation['linkCommit'];
 }>;
 
-const linkCommitSchema = z.object({
+export const linkCommitToolParameters = z.object({
   message: z.string().nullable().optional(),
   planId: z.string().uuid(),
   repo: z.string().min(1),
@@ -24,10 +24,13 @@ const linkCommitSchema = z.object({
   taskId: z.string().uuid().nullable().optional(),
 });
 
-async function linkCommitHandler(
-  args: z.infer<typeof linkCommitSchema>,
+export const linkCommitToolDescription =
+  'Associate a git commit with a plan (and optionally a task). Requires planId, repo, sha; optional taskId, message. Use after PR merge with squash SHA.';
+
+export async function linkCommitToolHandler(
+  args: z.infer<typeof linkCommitToolParameters>,
 ): Promise<LinkCommitResult> {
-  const parsed = linkCommitSchema.safeParse(args);
+  const parsed = linkCommitToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
@@ -62,9 +65,9 @@ export function registerCommitTools(server: McpServer): void {
   server.registerTool(
     'link_commit',
     {
-      description: `Associate a git commit with a plan (and optionally a task). Requires planId, repo, sha; optional taskId, message. Use after PR merge with squash SHA.`,
-      inputSchema: linkCommitSchema,
+      description: linkCommitToolDescription,
+      inputSchema: linkCommitToolParameters,
     },
-    linkCommitHandler,
+    linkCommitToolHandler,
   );
 }

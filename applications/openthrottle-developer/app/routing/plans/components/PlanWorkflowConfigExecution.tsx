@@ -16,7 +16,7 @@ import type {
   WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-export interface PlanWorkflowConfigExecutionProps {
+interface PlanWorkflowConfigExecutionProps {
   readonly className?: string;
   readonly input: WorkflowRalphRunOptionsInput;
   readonly setInput: (

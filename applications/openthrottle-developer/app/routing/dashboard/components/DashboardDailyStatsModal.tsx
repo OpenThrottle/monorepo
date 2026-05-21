@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { GlobalModal } from '@openthrottle/react-router-ui-global';
 
-export interface DashboardDailyStatsModalProps {
+interface DashboardDailyStatsModalProps {
   // readonly className?: string;
 }
 

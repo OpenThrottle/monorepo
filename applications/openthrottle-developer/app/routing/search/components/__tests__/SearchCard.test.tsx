@@ -126,8 +126,9 @@ describe('SearchCard Component', () => {
       expect(taskLink).toHaveTextContent('View task');
     });
 
-    test('should match snapshot for task card with plan + task links', () => {
-      expect(component.baseElement).toMatchSnapshot();
+    test('should show task title on task card', () => {
+      const card = component.getByTestId('SearchTaskCard');
+      expect(within(card).getByText('A task')).toBeInTheDocument();
     });
   });
 

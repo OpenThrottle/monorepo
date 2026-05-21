@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDirs": ["./src"]
+  },
+  "include": ["src/**/*.json", "src/**/*"],
+  "references": [
+    {
+      "path": "../nestjs-modules/tsconfig.lib.json"
+    },
+    {
+      "path": "../mcp-developer/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "tests/**"
+  ]
+}

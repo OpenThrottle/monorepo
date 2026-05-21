@@ -62,7 +62,16 @@ describe('ProjectsTable Component', () => {
       component.getAllByRole('columnheader', { name: 'Context' }).length,
     ).toBeGreaterThan(0);
     expect(
-      component.getAllByRole('columnheader', { name: 'Project' }).length,
+      component.getAllByRole('columnheader', { name: 'Plans' }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      component.getAllByRole('columnheader', { name: 'Tasks' }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      component.getAllByRole('columnheader', { name: 'Updated' }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      component.getAllByRole('columnheader', { name: 'Actions' }).length,
     ).toBeGreaterThan(0);
   });
 
@@ -85,7 +94,6 @@ describe('ProjectsTable Component', () => {
     });
     expect(secondProjectLink).toHaveAttribute('href', '/projects/proj-2');
     expect(getByText('First project description')).toBeDefined();
-    expect(getByText('applications/openthrottle-developer')).toBeDefined();
     const viewProjectLinks = getAllByRole('link', { name: 'View Project' });
     expect(viewProjectLinks[0]).toHaveAttribute('href', '/projects/proj-1');
     expect(viewProjectLinks[1]).toHaveAttribute('href', '/projects/proj-2');
@@ -97,10 +105,14 @@ describe('ProjectsTable Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByText, getAllByText, getAllByRole } = render(<RoutesStub />);
 
-    expect(getByText('2 plans · 3 tasks')).toBeInTheDocument();
-    expect(getAllByText('—').length).toBeGreaterThan(0); // second project shows — for plans/tasks; nxProjectName also uses —
+    expect(getByText('2')).toBeInTheDocument();
+    expect(getByText('3')).toBeInTheDocument();
+    expect(getAllByText('0').length).toBeGreaterThanOrEqual(2);
     expect(
-      getAllByRole('columnheader', { name: 'Plans · Tasks' }).length,
+      getAllByRole('columnheader', { name: 'Plans' }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      getAllByRole('columnheader', { name: 'Tasks' }).length,
     ).toBeGreaterThan(0);
     expect(
       getAllByRole('columnheader', { name: 'Updated' }).length,

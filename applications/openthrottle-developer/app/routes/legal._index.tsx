@@ -15,6 +15,7 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal._index';
+import { opensource } from '~/routing/legal/data/data.opensource';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -40,16 +41,17 @@ export default function Component(
 ): React.ReactElement {
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
-  const images = [
-    `https://assets.streamlinehq.com/image/private/w_300,h_300,ar_1/f_auto/v1/icons/2/react-router-afaraavuno5ulxx3m6dqif.png/react-router-iz5gsrt4bescjzyay2otud.png?_a=DATAiZAAZAA0`,
-    `https://nestjs.com/logo-small-gradient.0ed287ce.svg`,
-    `https://www.postgresql.org/media/img/about/press/elephant.png`,
-    `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcR5U16C8yXgBpl7-Bc7Itjx3_LRl425zINA&s`,
-    `https://pbs.twimg.com/profile_images/1275858117893468165/SsjMbPlo_400x400.jpg`,
-    `https://pbs.twimg.com/profile_images/1816856437567406080/ByISu1ft_400x400.jpg`,
-    `https://pbs.twimg.com/profile_images/2019490616971776000/BjdNKmgz_400x400.jpg`,
-    `https://pbs.twimg.com/profile_images/1777412927425060864/kxNqq_Gc_400x400.jpg`,
-  ];
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <GlobalScreen>
@@ -73,9 +75,19 @@ export default function Component(
         </p>
 
         <div className="my-4 flex flex-wrap gap-4">
-          {images.map((image) => (
-            <img className="size-10 bg-muted rounded-full p-1" src={image} />
-          ))}
+          {opensource.map((data) => {
+            const { image, name, url } = data;
+
+            return (
+              <Link key={url} target="_blank" to={url}>
+                <img
+                  alt={name}
+                  className="size-10 grayscale hover:grayscale-0 hover:rotate-12 hover:scale-125 cursor-pointer transition-all duration-300 bg-muted rounded-full p-1"
+                  src={image}
+                />
+              </Link>
+            );
+          })}
         </div>
 
         <div className="mt-6 mb-2">

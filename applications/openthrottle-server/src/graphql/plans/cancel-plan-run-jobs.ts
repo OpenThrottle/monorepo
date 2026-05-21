@@ -6,14 +6,8 @@
 
 import type { JobType } from 'bullmq';
 import type { Queue } from 'bullmq';
-import {
-  isPlanRalphBullJobName,
-  RUN_PLAN_SPAWN_JOB_NAME,
-} from '../../queues/plans/plans.constants';
+import { isPlanRalphBullJobName } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
-
-/** @deprecated Prefer {@link RUN_PLAN_SPAWN_JOB_NAME} from `plans.constants`; kept for tests and callers. */
-export const PLAN_RUN_JOB_NAME = RUN_PLAN_SPAWN_JOB_NAME;
 
 const PLAN_RUN_SCAN_STATES: readonly JobType[] = [
   'waiting',
@@ -23,7 +17,7 @@ const PLAN_RUN_SCAN_STATES: readonly JobType[] = [
   'prioritized',
 ];
 
-export interface CancelPlanRunJobsResult {
+interface CancelPlanRunJobsResult {
   /** Number of plan Ralph jobs whose payload matched `planId` (before removal attempts). */
   readonly matchingJobCount: number;
   /** BullMQ job ids successfully removed (waiting, delayed, paused, prioritized). */

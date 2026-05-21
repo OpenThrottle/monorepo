@@ -10,7 +10,7 @@ import type { RalphRuntimeSeed } from './ralph-runtime-config';
 /** How the effective prompt string was obtained (for logging / `--help` semantics). */
 export type RalphPromptProfileKind = 'named' | 'file' | 'stdin';
 
-export interface ResolvedRalphPromptProfile {
+interface ResolvedRalphPromptProfile {
   readonly prompt: string;
   readonly promptProfileKind: RalphPromptProfileKind;
   /** Short label for logs: command-style path, absolute file path, or `stdin`. */
@@ -20,7 +20,10 @@ export interface ResolvedRalphPromptProfile {
 /**
  * @description Reads UTF-8 prompt text from `path` resolved against `cwd`.
  */
-export const readRalphPromptFileUtf8 = (cwd: string, userPath: string): string => {
+export const readRalphPromptFileUtf8 = (
+  cwd: string,
+  userPath: string,
+): string => {
   const absolute = resolve(cwd, userPath.trim());
   return readFileSync(absolute, 'utf8');
 };

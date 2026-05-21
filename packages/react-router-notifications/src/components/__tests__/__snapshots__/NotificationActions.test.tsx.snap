@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NotificationActions Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex gap-1"
+      data-testid="NotificationActions"
+    >
+      <button
+        class="inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-7 text-xs"
+        data-size="sm"
+        data-slot="button"
+        data-variant="ghost"
+      >
+        Mark all read
+      </button>
+      <button
+        class="inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 h-7 text-xs"
+        data-size="sm"
+        data-slot="button"
+        data-variant="ghost"
+      >
+        Dismiss all
+      </button>
+    </div>
+  </div>
+</body>
+`;

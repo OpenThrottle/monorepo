@@ -3,6 +3,9 @@ import classnames from 'classnames';
 import { Link } from 'react-router';
 import { technologies } from '~/routing/home/data/technology';
 
+/**
+ * @deprecated Temporarily removed from home index; restore when re-enabling commented JSX in `app/routes/_index.tsx`.
+ */
 export interface HomeBuiltWithProps {
   readonly className?: string;
 }

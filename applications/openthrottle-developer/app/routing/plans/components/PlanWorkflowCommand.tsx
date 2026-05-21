@@ -5,7 +5,7 @@ import { Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
 
-export interface PlanWorkflowCommandProps {
+interface PlanWorkflowCommandProps {
   readonly className?: string;
 
   /**

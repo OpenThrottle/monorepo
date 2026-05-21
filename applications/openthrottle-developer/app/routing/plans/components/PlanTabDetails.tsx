@@ -25,7 +25,8 @@ import {
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 import { EditorWindow } from '@openthrottle/react-router-editor';
-export interface PlanTabDetailsProps {
+
+interface PlanTabDetailsProps {
   readonly fullscreen: boolean;
   readonly plan: PlanDetailsFragment;
   readonly ralphTuningJson: string;
@@ -110,13 +111,6 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
             'border-transparent hover:border-transparent': fullscreen,
           })}
         >
-          <Button
-            onClick={() => {
-              setFullscreen((prev) => !prev);
-            }}
-          >
-            Full Screen
-          </Button>
           <PlanToolbar
             // className="bg-card rounded-lg border border-card-border p-4"
             className="p-4"
@@ -128,6 +122,15 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
             workflowRunBlockedReason={workflowRunBlockedReason}
             workingDirectory={workingDirectory}
           />
+          <div>
+            <Button
+              onClick={() => {
+                setFullscreen((prev) => !prev);
+              }}
+            >
+              Full Screen
+            </Button>
+          </div>
           {/* <CardContent> */}
 
           {fullscreen ? (
@@ -149,9 +152,9 @@ export const PlanTabDetails = (props: PlanTabDetailsProps) => {
                 className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal"
                 content={plan.description ?? ''}
               />
-              <p className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal">
+              {/* <p className="p-4 md:p-8 text-wrap text-sm text-muted-foreground whitespace-normal">
                 {plan.description ?? ''}
-              </p>
+              </p> */}
             </>
           )}
 

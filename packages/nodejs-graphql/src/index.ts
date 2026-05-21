@@ -80,7 +80,7 @@ export async function executeGraphql<
   });
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const json = (await res.json()) as GraphqlResponse<TData>;
 
   if (!res.ok) {
@@ -100,7 +100,7 @@ export async function executeGraphql<
   }
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   return parseDateTimeInResponse(json.data) as TData;
 }
 
@@ -158,7 +158,7 @@ export async function executeGraphqlAtUrl<
   });
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const json = (await res.json()) as GraphqlResponse<TData>;
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;
@@ -177,7 +177,7 @@ export async function executeGraphqlAtUrl<
   }
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   return parseDateTimeInResponse(json.data) as TData;
 }
 
@@ -195,7 +195,7 @@ export async function executeGraphqlWithAuth<
   const isTokenNull = !token || token == null;
   const options = !isTokenNull
     ? { headers: { Authorization: `Bearer ${token}` } }
-    : undefined;
+    : {};
 
   return executeGraphql(document, variables, options);
 }

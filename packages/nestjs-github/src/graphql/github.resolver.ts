@@ -101,6 +101,7 @@ export class GithubResolver {
     return this.githubStatsService.getOpenPrCountByAuthor(
       input.owner,
       input.repo,
+      input.state,
     );
   }
 

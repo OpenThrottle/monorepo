@@ -7,7 +7,6 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalCollapsible,
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -26,8 +25,8 @@ import {
   CogIcon,
   FileIcon,
   LayoutListIcon,
-  LucideIcon,
   NotebookTextIcon,
+  TerminalSquareIcon,
 } from 'lucide-react';
 import {
   EnqueuePlanRunInputSchema,
@@ -77,11 +76,8 @@ import {
   OpenThrottleClipboard,
   OpenThrottleEmptyState,
 } from '@openthrottle/react-router-ui';
-// import { formatPlanDate } from '~/routing/plans/utils/formatters';
-// import { PlanDetails } from '~/routing/plans/components/PlanDetails';
-// import { PlanLoggerOutput } from '~/routing/plans/components/PlanLoggerOutput';
-// import { PlanTasksTable } from '~/routing/plans/components/PlanTasksTable';
-// import { PlanWorkflowConfig } from '~/routing/plans/components/PlanWorkflowConfig';
+import { formatPlanDate } from '~/routing/plans/utils/formatters';
+import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -143,8 +139,8 @@ export default function Component(
 
   // Hooks
   const revalidator = useRevalidator();
-  const [searchParams, setSearchParams] = useSearchParams();
   const socketContext = useNotificationsSocket();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [workflowTimeout, setWorkflowTimeout] = React.useState('');
   const [workingDirectory, setWorkingDirectory] = React.useState('');
   const [workflowInput, setWorkflowInput] =
@@ -300,37 +296,6 @@ export default function Component(
     );
   }
 
-  interface Item {
-    content: React.ReactNode;
-    icon: LucideIcon;
-    title: string;
-  }
-
-  const items: Item[] = [
-    // {
-    //   content: (
-    //     <PlanWorkflowConfig
-    //       iterationTimeoutText={workflowTimeout}
-    //       onCollapse={() => onToggleExpanded(false)}
-    //       onIterationTimeoutTextChange={setWorkflowTimeout}
-    //       onResetToDefaults={onResetToDefaults}
-    //       onValueChange={setWorkflowInput}
-    //       onWorkingDirectoryChange={setWorkingDirectory}
-    //       planId={plan.id}
-    //       value={workflowInput}
-    //       workingDirectory={workingDirectory}
-    //     />
-    //   ),
-    //   icon: CogIcon,
-    //   title: 'Configuration',
-    // },
-    // {
-    //   content: <PlanLoggerOutput chunks={planOutputChunks} />,
-    //   icon: TerminalSquareIcon,
-    //   title: 'Output',
-    // },
-  ];
-
   return (
     <>
       <GlobalScreen>
@@ -344,81 +309,83 @@ export default function Component(
           </GlobalHeading>
           <div className="text-sm text-muted-foreground line-clamp-3">
             <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
-            {/* {formatPlanDate(plan.updatedAt)} */}
+            {formatPlanDate(plan.updatedAt)}
             {/* {plan.description ?? 'No description'} */}
           </div>
         </div>
 
-        <Tabs
-          className="w-full"
-          onValueChange={onPlanDetailTabChange}
-          value={planDetailTab}
-        >
-          <TabsList className="mb-8 gap-4 w-full" variant="line">
-            <TabsTrigger className="flex-0 cursor-pointer" value="overview">
-              <BoltIcon />
-              Details
-            </TabsTrigger>
-            <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
-              <LayoutListIcon />
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger className="flex-0 cursor-pointer" value="requirements">
-              <BadgeCheckIcon />
-              Requirements
-            </TabsTrigger>
-            <div className="flex-1" />
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              value="configuration"
+        <div className="">
+          <Tabs
+            className="w-full"
+            onValueChange={onPlanDetailTabChange}
+            value={planDetailTab}
+          >
+            <TabsList
+              className="mb-8 gap-4 justify-start max-w-full overflow-x-auto overflow-y-hidden w-full"
+              variant="line"
             >
-              <CogIcon />
-              Configuration
-            </TabsTrigger>
-            <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
-              <FileIcon />
-              Metadata
-            </TabsTrigger>
-          </TabsList>
+              <TabsTrigger className="flex-0 cursor-pointer" value="overview">
+                <BoltIcon />
+                Details
+              </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
+                <LayoutListIcon />
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                value="requirements"
+              >
+                <BadgeCheckIcon />
+                Requirements
+              </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="output">
+                <TerminalSquareIcon />
+                Output
+              </TabsTrigger>
+              {/* {loaderData.planOutputChunks.length > 0 ? (
+              ) : null} */}
+              <div className="flex-1" />
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                value="configuration"
+              >
+                <CogIcon />
+                Configuration
+              </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
+                <FileIcon />
+                Metadata
+              </TabsTrigger>
+            </TabsList>
 
-          <PlanTabDetails
-            fullscreen={fullscreen}
-            plan={plan}
-            ralphTuningJson={ralphTuningJson}
-            recentPlanRuns={recentPlanRuns}
-            setFullscreen={setFullscreen}
-            workflowInput={workflowInput}
-            workflowTimeout={workflowTimeout}
-            workingDirectory={workingDirectory}
-          />
-          <PlanTabTasks tasks={tasks} />
-          <PlanTabConfiguration
-            iterationTimeoutText={workflowTimeout}
-            onCollapse={() => onToggleExpanded(false)}
-            onIterationTimeoutTextChange={setWorkflowTimeout}
-            onResetToDefaults={onResetToDefaults}
-            onValueChange={setWorkflowInput}
-            onWorkingDirectoryChange={setWorkingDirectory}
-            planId={plan.id}
-            value={workflowInput}
-            workingDirectory={workingDirectory}
-          />
-          <PlanTabRequirements plan={plan} tasks={tasks} />
-          <PlanTabsMetadata plan={plan} />
-        </Tabs>
-
-        {items.map((item) => {
-          return (
-            <GlobalCollapsible
-              icon={item.icon}
-              key={item.title}
-              open={true}
-              title={item.title}
-            >
-              {item.content}
-            </GlobalCollapsible>
-          );
-        })}
+            <PlanTabDetails
+              fullscreen={fullscreen}
+              plan={plan}
+              ralphTuningJson={ralphTuningJson}
+              recentPlanRuns={recentPlanRuns}
+              setFullscreen={setFullscreen}
+              workflowInput={workflowInput}
+              workflowTimeout={workflowTimeout}
+              workingDirectory={workingDirectory}
+            />
+            <PlanTabTasks tasks={tasks} />
+            <PlanTabRequirements plan={plan} tasks={tasks} />
+            <PlanTabOutput chunks={loaderData.planOutputChunks} />
+            <PlanTabConfiguration
+              iterationTimeoutText={workflowTimeout}
+              onCollapse={() => onToggleExpanded(false)}
+              onIterationTimeoutTextChange={setWorkflowTimeout}
+              onResetToDefaults={onResetToDefaults}
+              onValueChange={setWorkflowInput}
+              onWorkingDirectoryChange={setWorkingDirectory}
+              planId={plan.id}
+              value={workflowInput}
+              workingDirectory={workingDirectory}
+            />
+            <PlanTabsMetadata plan={plan} />
+          </Tabs>
+        </div>
       </GlobalScreen>
 
       {isBoardView ? (

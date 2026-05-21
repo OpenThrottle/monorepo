@@ -1,7 +1,5 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { formatDistanceToNow } from 'date-fns';
-import { FileText, GitCommit, ListTodo } from 'lucide-react';
 import { Link } from 'react-router';
 import {
   Table,
@@ -15,7 +13,7 @@ import {
 import { DashboardActivityCardFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 
-export interface DashboardRecentActivityProps {
+interface DashboardRecentActivityProps {
   className?: string;
   data: DashboardActivityCardFragment;
 }
@@ -83,43 +81,6 @@ function toActivityRows(data: DashboardActivityCardFragment): ActivityRow[] {
   rows.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return rows.slice(0, 20);
-}
-
-const TYPE_ICON_MAP: Record<
-  ActivityRow['type'],
-  {
-    ariaLabel: string;
-    Icon: React.ComponentType<{ 'aria-hidden'?: boolean; className?: string }>;
-  }
-> = {
-  commit: { Icon: GitCommit, ariaLabel: 'Commit' },
-  output: { Icon: FileText, ariaLabel: 'Output' },
-  task: { Icon: ListTodo, ariaLabel: 'Task' },
-};
-
-/**
- * @description Renders the activity type icon with accessible label.
- */
-function TypeIcon({ type }: { type: ActivityRow['type'] }): React.ReactElement {
-  const { Icon, ariaLabel } = TYPE_ICON_MAP[type];
-
-  return (
-    <Icon
-      aria-label={ariaLabel}
-      className="h-4 w-4 shrink-0 text-muted-foreground"
-      // role="img"
-    />
-  );
-}
-
-/**
- * @description Formats activity date as short date plus relative time (e.g. "2/12/25 · 2 hours ago").
- */
-function formatActivityDate(dateStr: string): string {
-  const date = new Date(dateStr);
-
-  // return `${date.toLocaleDateString('en-US', { dateStyle: 'short' })} · ${formatDistanceToNow(date, { addSuffix: true })}`;
-  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 /**
@@ -248,10 +209,7 @@ export const DashboardRecentActivity = (
           <TableHeader>
             <TableRow>
               <TableHead align="left" className="pb-2" scope="col">
-                Type
-              </TableHead>
-              <TableHead align="left" className="pb-2" scope="col">
-                Date
+                Status
               </TableHead>
               <TableHead align="left" className="pb-2" scope="col">
                 Plan
@@ -297,12 +255,6 @@ export const DashboardRecentActivity = (
                 content
               );
 
-              const typeBadge = null;
-              // const typeBadge = (
-              //   <Badge size="sm" variant="secondary">
-              //     {row.type}
-              //   </Badge>
-              // );
               const statusBadge =
                 row.type === 'task' &&
                 row.status != null &&
@@ -312,18 +264,10 @@ export const DashboardRecentActivity = (
 
               return (
                 <TableRow key={row.id}>
-                  <TableCell className="align-top">
-                    <span className="flex items-center gap-2">
-                      <TypeIcon type={row.type} />
-                      {typeBadge}
-                      {statusBadge}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground align-top text-sm">
-                    {formatActivityDate(row.date)}
-                  </TableCell>
-                  <TableCell className="overflow-hidden text-sm">
+                  <TableCell className="align-top">{statusBadge}</TableCell>
+                  <TableCell className="overflow-hidden text-xs">
                     {planCell}
+                    {/* {formatActivityDate(row.date)} */}
                   </TableCell>
                 </TableRow>
               );

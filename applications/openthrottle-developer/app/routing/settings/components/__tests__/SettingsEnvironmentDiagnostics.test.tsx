@@ -47,7 +47,8 @@ describe('SettingsEnvironmentDiagnostics', () => {
     expect(screen.getByText('Local Vite profiling')).toBeInTheDocument();
     expect(screen.getByText('http://api-int.test')).toBeInTheDocument();
     expect(screen.getByText('http://localhost:6022')).toBeInTheDocument();
-    expect(screen.getByText(import.meta.env.MODE)).toBeInTheDocument();
+    expect(screen.getByText('APP_ENV')).toBeInTheDocument();
+    expect(screen.getByText('NODE_ENV')).toBeInTheDocument();
   });
 
   it('copies support bundle JSON to clipboard', async () => {

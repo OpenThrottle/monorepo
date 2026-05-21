@@ -6,11 +6,11 @@ import { ServerMetricsCard } from '../ServerMetricsCard';
 
 const mockRefetch = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('../../hooks/use-server-metrics', () => ({
+vi.mock('../../hooks/useServerMetrics', () => ({
   useServerMetrics: vi.fn(),
 }));
 
-const { useServerMetrics } = await import('../../hooks/use-server-metrics');
+const { useServerMetrics } = await import('../../hooks/useServerMetrics');
 
 describe('ServerMetricsCard', () => {
   beforeEach(() => {

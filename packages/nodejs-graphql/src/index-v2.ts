@@ -13,24 +13,6 @@ import {
 } from './utils.js';
 
 /**
- * @description Simple helper to build out the GraphQL request headers.
- */
-export const getRequestHeaders = (
-  token?: string | undefined,
-): Record<string, string> => {
-  const isInvalid = !token || token == null || token === '';
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  if (!isInvalid) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  return headers;
-};
-
-/**
  * @description Standard GraphQL response shape from openthrottle-server.
  */
 export interface GraphqlResponseV2<TData> {
@@ -95,7 +77,7 @@ export async function executeGraphqlV2<
   });
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const json = (await res.json()) as GraphqlResponseV2<TData>;
 
   if (!res.ok) {
@@ -115,6 +97,6 @@ export async function executeGraphqlV2<
   }
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   return parseDateTimeInResponse(json.data) as TData;
 }

@@ -38,17 +38,16 @@ export const OpenThrottleStatCard = (props: OpenThrottleStatCardProps) => {
 
   return (
     <Card
-      className={classnames('p-4', className)}
+      className={classnames('p-4 gap-2', className)}
       data-testid="OpenThrottleStatCard"
     >
-      <CardHeader className="p-0 pb-2">
-        <div className="flex gap-2 items-center">
-          {color ? <div className={`size-2 rounded-full ${color}`} /> : null}
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            {title}
-          </CardTitle>
-        </div>
+      <CardHeader className="p-0 pb-2 flex gap-2 items-center">
+        {color ? <div className={`size-2 rounded-full ${color}`} /> : null}
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
       </CardHeader>
+
       <CardContent className="p-0 flex gap-1">
         <p className="text-2xl font-bold">{formattedValue}</p>
         {formattedSubValue ? (

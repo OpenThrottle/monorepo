@@ -11,8 +11,13 @@
     "mcp-developer": "./dist/src/bin.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.3",
-    "@openthrottle/nodejs-graphql": "workspace:*"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
+    "@openthrottle/nodejs-graphql": "workspace:*",
+    "@openthrottle/nestjs-modules": "workspace:*",
+    "@rekog/mcp-nest": "^1.9.9",
+    "zod": "^4.3.6"
   },
   "devDependencies": {},
   "exports": {
@@ -20,6 +25,21 @@
       "import": "./dist/src/index.js",
       "require": "./dist/src/index.js",
       "types": "./dist/src/index.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/src/auth/index.js",
+      "require": "./dist/src/auth/index.js",
+      "types": "./dist/src/auth/index.d.ts"
+    },
+    "./nest": {
+      "import": "./dist/src/nest/index.js",
+      "require": "./dist/src/nest/index.js",
+      "types": "./dist/src/nest/index.d.ts"
+    },
+    "./nest-tool-handlers": {
+      "import": "./dist/src/nest-tool-handlers.js",
+      "require": "./dist/src/nest-tool-handlers.js",
+      "types": "./dist/src/nest-tool-handlers.d.ts"
     },
     "./*": {
       "import": "./dist/*.js",

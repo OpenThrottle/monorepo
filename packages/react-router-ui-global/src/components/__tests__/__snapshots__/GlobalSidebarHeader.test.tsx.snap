@@ -6,6 +6,7 @@ exports[`GlobalSidebarHeader Component > should render 1`] = `
     <div
       class="flex flex-col gap-2 p-2"
       data-sidebar="header"
+      data-slot="sidebar-header"
       data-testid="GlobalSidebarHeader"
     >
       <a
