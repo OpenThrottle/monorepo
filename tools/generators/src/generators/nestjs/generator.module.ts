@@ -19,7 +19,7 @@ export interface NestJSModuleGeneratorSchema {
 }
 
 /**
- * @description Resolves destination directory for modules: either applications/<app>/src/modules/ or <project.root>/src/modules/ when destination (NestJS package) is set.
+ * Resolves destination directory for modules: either applications/<app>/src/modules/ or <project.root>/src/modules/ when destination (NestJS package) is set.
  */
 function resolveModulesDestination(
   application: string | undefined,

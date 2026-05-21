@@ -114,7 +114,8 @@ export const resolveJobRunHookLayer1Prompt = (
     return readJobRunHookSkillMarkdown(cwd, entry.skillPath);
   }
 
-  const seed = jobRunHookEntryToPromptSeed(entry);
+  // FIXME: __OT_UPDATE__ Lets fix this one
+  const seed: any = jobRunHookEntryToPromptSeed(entry);
   const resolved = resolveRalphPromptFromSeed(cwd, seed);
 
   return resolved.prompt;
@@ -229,11 +230,7 @@ export const executeJobRunHooksPhase = async (
     hookIndex += 1;
 
     const failed = hookFailed(iterationResult);
-    const policy = applyHookFailurePolicy(
-      params.phase,
-      onFailure,
-      failed,
-    );
+    const policy = applyHookFailurePolicy(params.phase, onFailure, failed);
 
     if (iterationResult.output?.trim()) {
       // eslint-disable-next-line no-await-in-loop
@@ -256,7 +253,10 @@ export const executeJobRunHooksPhase = async (
       );
     } else {
       // eslint-disable-next-line no-await-in-loop
-      await params.deps.appendPlanOutput(`[job-run-hook] Finished ${label}\n`, null);
+      await params.deps.appendPlanOutput(
+        `[job-run-hook] Finished ${label}\n`,
+        null,
+      );
     }
 
     results.push({

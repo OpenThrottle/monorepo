@@ -153,6 +153,11 @@ export type ApplyWorkspaceEditorConfigurationResultObject = {
   applications: Array<WorkspaceEditorConfigApplicationObject>;
 };
 
+export type AssignRoleToServiceAccountInput = {
+  roleId: Scalars['ID']['input'];
+  serviceAccountId: Scalars['ID']['input'];
+};
+
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
@@ -319,6 +324,26 @@ export type CreateQueueResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type CreateServiceAccountCredentialInput = {
+  expiresAt?: InputMaybe<Scalars['DateTime']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  serviceAccountId: Scalars['ID']['input'];
+};
+
+export type CreateServiceAccountCredentialResultObject = {
+  __typename?: 'CreateServiceAccountCredentialResultObject';
+  /** Saved credential metadata (secret hash is never returned). */
+  credential: ServiceAccountCredentialObject;
+  /** Plaintext ot_sa_<prefix>_<secret> token; store securely — not retrievable again. */
+  token: Scalars['String']['output'];
+};
+
+export type CreateServiceAccountInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Stable name (e.g. mcp-developer). Must be unique. */
+  name: Scalars['String']['input'];
+};
+
 export type CreateTaskInput = {
   assignee?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
@@ -464,6 +489,8 @@ export type EnqueueDocIngestionResultObject = {
 export type EnqueuePlanRalphOrchestratorInput = {
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. */
+  jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
   /** Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric). */
   mode?: InputMaybe<PlanRalphWorkflowMode>;
   /** Plan id to run the orchestrator for */
@@ -811,6 +838,8 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories. */
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
+  /** Assign a role to a service account (admin, human only). */
+  assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
@@ -825,6 +854,10 @@ export type Mutation = {
   createProject: ProjectObject;
   /** Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error. */
   createQueue: CreateQueueResultObject;
+  /** Create a service account (admin, human only). */
+  createServiceAccount: ServiceAccountObject;
+  /** Create a credential; returns plaintext token once (admin, human only). */
+  createServiceAccountCredential?: Maybe<CreateServiceAccountCredentialResultObject>;
   /** Create a task */
   createTask: TaskObject;
   /** Create a user */
@@ -843,10 +876,14 @@ export type Mutation = {
   deleteTask: Scalars['Boolean']['output'];
   /** Remove a local repository owned by the authenticated user. */
   deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
+  /** Disable a service account (admin, human only). */
+  disableServiceAccount?: Maybe<ServiceAccountObject>;
   /** Disable a user; they will not be able to log in. */
   disableUser?: Maybe<UserObject>;
   /** Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error. */
   duplicateJob: DuplicateJobResultObject;
+  /** Re-enable a disabled service account (admin, human only). */
+  enableServiceAccount?: Maybe<ServiceAccountObject>;
   /** Re-enable a disabled user. */
   enableUser?: Maybe<UserObject>;
   /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
@@ -867,10 +904,14 @@ export type Mutation = {
   register: RegisterResultObject;
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
+  /** Remove a role from a service account (admin, human only). */
+  removeRoleFromServiceAccount: Scalars['Boolean']['output'];
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
   retryJob: RetryJobResultObject;
+  /** Revoke a service account credential (admin, human only). */
+  revokeServiceAccountCredential: Scalars['Boolean']['output'];
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
   /** Assign, change, or clear the Cortex project link for a local repository. */
@@ -889,6 +930,8 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
+  /** Update a service account (admin, human only). */
+  updateServiceAccount?: Maybe<ServiceAccountObject>;
   /** Update a task */
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
@@ -913,6 +956,10 @@ export type MutationAppendPlanOutputArgs = {
 
 export type MutationApplyWorkspaceEditorConfigurationArgs = {
   input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
+};
+
+export type MutationAssignRoleToServiceAccountArgs = {
+  input: AssignRoleToServiceAccountInput;
 };
 
 export type MutationCancelPlanRunArgs = {
@@ -941,6 +988,14 @@ export type MutationCreateProjectArgs = {
 
 export type MutationCreateQueueArgs = {
   input: CreateQueueInput;
+};
+
+export type MutationCreateServiceAccountArgs = {
+  input: CreateServiceAccountInput;
+};
+
+export type MutationCreateServiceAccountCredentialArgs = {
+  input: CreateServiceAccountCredentialInput;
 };
 
 export type MutationCreateTaskArgs = {
@@ -979,12 +1034,20 @@ export type MutationDeleteWorkspaceLocalRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationDisableServiceAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationDisableUserArgs = {
   id: Scalars['ID']['input'];
 };
 
 export type MutationDuplicateJobArgs = {
   input: DuplicateJobInput;
+};
+
+export type MutationEnableServiceAccountArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationEnableUserArgs = {
@@ -1027,12 +1090,20 @@ export type MutationRemoveRepeatableJobArgs = {
   input: RemoveRepeatableJobInput;
 };
 
+export type MutationRemoveRoleFromServiceAccountArgs = {
+  input: RemoveRoleFromServiceAccountInput;
+};
+
 export type MutationRestoreCustomPromptArgs = {
   id: Scalars['ID']['input'];
 };
 
 export type MutationRetryJobArgs = {
   input: RetryJobInput;
+};
+
+export type MutationRevokeServiceAccountCredentialArgs = {
+  credentialId: Scalars['ID']['input'];
 };
 
 export type MutationSetPlanStatusArgs = {
@@ -1057,6 +1128,10 @@ export type MutationUpdatePlanArgs = {
 
 export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
+};
+
+export type MutationUpdateServiceAccountArgs = {
+  input: UpdateServiceAccountInput;
 };
 
 export type MutationUpdateTaskArgs = {
@@ -1121,6 +1196,15 @@ export type OpenToMergedCycleTimeObject = {
   prCount: Scalars['Int']['output'];
 };
 
+export type PermissionObject = {
+  __typename?: 'PermissionObject';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /** Permission identifier (e.g. users:read, settings:write) */
+  name: Scalars['String']['output'];
+};
+
 export type PlanEmbeddingObject = {
   __typename?: 'PlanEmbeddingObject';
   content: Scalars['String']['output'];
@@ -1146,7 +1230,7 @@ export type PlanObject = {
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
-  /** JSON string of job-run lifecycle hooks ({ hooks: [...] }), versioned with the plan. */
+  /** Job-run lifecycle hooks stored on the plan ({ hooks: [...] }). */
   jobRunHooksJson: Scalars['String']['output'];
   project?: Maybe<Scalars['String']['output']>;
   /** Optional. Project UUID (FK to projects table). Null when plan is not linked to a project. */
@@ -1427,6 +1511,8 @@ export type Query = {
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
   /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
+  /** Permission names for a service account (union of role permissions). */
+  permissionsForServiceAccount: Array<Scalars['String']['output']>;
   /** Get a plan by ID */
   plan?: Maybe<PlanObject>;
   /** Plan count per status for sidebar/filters */
@@ -1467,6 +1553,8 @@ export type Query = {
   repeatableJobs: Array<RepeatableJobObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
+  /** Roles assigned to a service account (admin, human only). */
+  rolesForServiceAccount: Array<RoleObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
@@ -1475,6 +1563,12 @@ export type Query = {
   serverHealth: ServerHealthObject;
   /** Current process CPU and memory snapshot. Memory in MB; CPU in ms (cumulative). Same data as REST GET /metrics. */
   serverMetrics: ServerMetricsObject;
+  /** Get a service account by ID (admin, human only). */
+  serviceAccount?: Maybe<ServiceAccountObject>;
+  /** List credentials for a service account, including revoked (admin, human only). */
+  serviceAccountCredentials: Array<ServiceAccountCredentialObject>;
+  /** List all service accounts (admin, human only). */
+  serviceAccounts: Array<ServiceAccountObject>;
   /** Get a task by ID */
   task?: Maybe<TaskObject>;
   /** Get a task embedding by ID */
@@ -1577,6 +1671,10 @@ export type QueryOpenToMergedCycleTimeArgs = {
   input: OpenToMergedCycleTimeInput;
 };
 
+export type QueryPermissionsForServiceAccountArgs = {
+  serviceAccountId: Scalars['ID']['input'];
+};
+
 export type QueryPlanArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1641,12 +1739,24 @@ export type QueryReviewCycleTimeArgs = {
   input: ReviewCycleTimeInput;
 };
 
+export type QueryRolesForServiceAccountArgs = {
+  serviceAccountId: Scalars['ID']['input'];
+};
+
 export type QuerySearchArgs = {
   input: SearchInput;
 };
 
 export type QuerySearchPlansArgs = {
   input: SearchPlansInput;
+};
+
+export type QueryServiceAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryServiceAccountCredentialsArgs = {
+  serviceAccountId: Scalars['ID']['input'];
 };
 
 export type QueryTaskArgs = {
@@ -1795,6 +1905,11 @@ export type RemoveRepeatableJobResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type RemoveRoleFromServiceAccountInput = {
+  roleId: Scalars['ID']['input'];
+  serviceAccountId: Scalars['ID']['input'];
+};
+
 export type RepeatableJobObject = {
   __typename?: 'RepeatableJobObject';
   /** Unix timestamp when the repeat ends, or null if no end. */
@@ -1864,6 +1979,18 @@ export type ReviewCycleTimeObject = {
   period?: Maybe<Scalars['String']['output']>;
   /** Number of merged PRs in this bucket that had at least one CHANGES_REQUESTED and then an APPROVED or merge. */
   prCount: Scalars['Int']['output'];
+};
+
+export type RoleObject = {
+  __typename?: 'RoleObject';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /** Role identifier (e.g. admin, user, viewer) */
+  name: Scalars['String']['output'];
+  /** Permissions assigned to this role */
+  permissions: Array<PermissionObject>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type SearchChunk = {
@@ -1939,6 +2066,30 @@ export type ServerMetricsObject = {
   heapUsedMb: Scalars['Float']['output'];
   /** Resident set size (total process memory) in MB. */
   rssMb: Scalars['Float']['output'];
+};
+
+export type ServiceAccountCredentialObject = {
+  __typename?: 'ServiceAccountCredentialObject';
+  createdAt: Scalars['DateTime']['output'];
+  expiresAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  label?: Maybe<Scalars['String']['output']>;
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens. */
+  prefix: Scalars['String']['output'];
+  revokedAt?: Maybe<Scalars['DateTime']['output']>;
+  serviceAccountId: Scalars['ID']['output'];
+};
+
+export type ServiceAccountObject = {
+  __typename?: 'ServiceAccountObject';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  /** When set, the service account cannot authenticate. */
+  disabledAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['String']['output'];
+  /** Stable identifier (e.g. mcp-developer, workflow-ralph). */
+  name: Scalars['String']['output'];
 };
 
 export type SetPlanStatusInput = {
@@ -2112,6 +2263,13 @@ export type UpdateProjectInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   /** NX project name (e.g. applications/openthrottle-server) */
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateServiceAccountInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  /** Display name. Pass null to leave unchanged. */
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateTaskInput = {
@@ -3617,6 +3775,86 @@ export type GetSearchResultsQuery = {
   };
 };
 
+export type ServiceAccountCredentialFieldsFragment = {
+  __typename?: 'ServiceAccountCredentialObject';
+  createdAt: any;
+  expiresAt?: any | null;
+  id: string;
+  label?: string | null;
+  lastUsedAt?: any | null;
+  prefix: string;
+  revokedAt?: any | null;
+  serviceAccountId: string;
+};
+
+export type ServiceAccountListItemFragment = {
+  __typename?: 'ServiceAccountObject';
+  createdAt: any;
+  description?: string | null;
+  disabledAt?: any | null;
+  id: string;
+  name: string;
+};
+
+export type GetSettingsKeysQueryVariables = Exact<{
+  serviceAccountId: Scalars['ID']['input'];
+}>;
+
+export type GetSettingsKeysQuery = {
+  __typename?: 'Query';
+  serviceAccounts: Array<{
+    __typename?: 'ServiceAccountObject';
+    createdAt: any;
+    description?: string | null;
+    disabledAt?: any | null;
+    id: string;
+    name: string;
+  }>;
+  serviceAccountCredentials: Array<{
+    __typename?: 'ServiceAccountCredentialObject';
+    createdAt: any;
+    expiresAt?: any | null;
+    id: string;
+    label?: string | null;
+    lastUsedAt?: any | null;
+    prefix: string;
+    revokedAt?: any | null;
+    serviceAccountId: string;
+  }>;
+};
+
+export type CreateServiceAccountCredentialMutationVariables = Exact<{
+  input: CreateServiceAccountCredentialInput;
+}>;
+
+export type CreateServiceAccountCredentialMutation = {
+  __typename?: 'Mutation';
+  createServiceAccountCredential?: {
+    __typename?: 'CreateServiceAccountCredentialResultObject';
+    token: string;
+    credential: {
+      __typename?: 'ServiceAccountCredentialObject';
+      createdAt: any;
+      expiresAt?: any | null;
+      id: string;
+      label?: string | null;
+      lastUsedAt?: any | null;
+      prefix: string;
+      revokedAt?: any | null;
+      serviceAccountId: string;
+    };
+  } | null;
+};
+
+export type RevokeServiceAccountCredentialMutationVariables = Exact<{
+  credentialId: Scalars['ID']['input'];
+}>;
+
+export type RevokeServiceAccountCredentialMutation = {
+  __typename?: 'Mutation';
+  revokeServiceAccountCredential: boolean;
+};
+
 export type WorkspaceLocalRepositoryFieldsFragment = {
   __typename?: 'WorkspaceLocalRepositoryObject';
   createdAt: any;
@@ -4517,6 +4755,55 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const ServiceAccountCredentialFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ServiceAccountCredentialFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ServiceAccountCredentialObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'prefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'serviceAccountId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ServiceAccountCredentialFieldsFragment, unknown>;
+export const ServiceAccountListItemFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ServiceAccountListItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ServiceAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ServiceAccountListItemFragment, unknown>;
 export const WorkspaceLocalRepositoryFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -8573,6 +8860,254 @@ export const GetSearchResultsDocument = {
 } as unknown as DocumentNode<
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
+>;
+export const GetSettingsKeysDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSettingsKeys' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'serviceAccountId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'serviceAccounts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ServiceAccountListItem' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'serviceAccountCredentials' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'serviceAccountId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'serviceAccountId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: {
+                    kind: 'Name',
+                    value: 'ServiceAccountCredentialFields',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ServiceAccountListItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ServiceAccountObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ServiceAccountCredentialFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ServiceAccountCredentialObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'prefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'serviceAccountId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSettingsKeysQuery,
+  GetSettingsKeysQueryVariables
+>;
+export const CreateServiceAccountCredentialDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createServiceAccountCredential' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'CreateServiceAccountCredentialInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createServiceAccountCredential' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'credential' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'ServiceAccountCredentialFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'token' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ServiceAccountCredentialFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ServiceAccountCredentialObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'prefix' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'serviceAccountId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateServiceAccountCredentialMutation,
+  CreateServiceAccountCredentialMutationVariables
+>;
+export const RevokeServiceAccountCredentialDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'revokeServiceAccountCredential' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'credentialId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'revokeServiceAccountCredential' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'credentialId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'credentialId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RevokeServiceAccountCredentialMutation,
+  RevokeServiceAccountCredentialMutationVariables
 >;
 export const GetWorkspaceSettingsDocument = {
   kind: 'Document',

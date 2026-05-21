@@ -12,6 +12,7 @@ import {
   buildPaginationPageItems,
   buildProjectsSearchParams,
 } from '../utils/index';
+import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react';
 
 export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras {
   /** Base path for pagination links (default /projects). Use /plans for plans index. */
@@ -113,7 +114,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   variant="ghost"
                 >
                   <Link className="gap-1 pl-2.5" to={prevUrl}>
-                    <span className="sm:inline">Previous</span>
+                    {/* <span className="sm:inline">Previous</span> */}
+                    <ChevronsLeftIcon className="h-4 w-4" />
                   </Link>
                 </Button>
               ) : (
@@ -122,7 +124,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   className="pointer-events-none opacity-50"
                   variant="ghost"
                 >
-                  <span className="sm:inline">Previous</span>
+                  {/* <span className="sm:inline">Previous</span> */}
+                  <ChevronsLeftIcon className="h-4 w-4" />
                 </Button>
               )}
             </PaginationItem>
@@ -164,8 +167,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   variant="ghost"
                 >
                   <Link className="gap-1 pr-2.5" to={nextUrl}>
-                    {/* <ChevronRight className="h-4 w-4" /> */}
-                    <span className="sm:inline">Next</span>
+                    {/* <span className="sm:inline">Next</span> */}
+                    <ChevronsRightIcon className="h-4 w-4" />
                   </Link>
                 </Button>
               ) : (
@@ -174,9 +177,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   className="pointer-events-none opacity-50"
                   variant="ghost"
                 >
-                  <span className="hidden sm:inline">Next</span>
-                  <span className="sm:inline">Next</span>
-                  {/* <ChevronRight className="h-4 w-4" /> */}
+                  {/* <span className="sm:inline">Next</span> */}
+                  <ChevronsRightIcon className="h-4 w-4" />
                 </Button>
               )}
             </PaginationItem>

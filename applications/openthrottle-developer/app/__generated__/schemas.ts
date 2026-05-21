@@ -5,6 +5,7 @@ import {
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
   ApplyWorkspaceEditorConfigurationInput,
+  AssignRoleToServiceAccountInput,
   CancelPlanRunInput,
   CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
@@ -15,6 +16,8 @@ import {
   CreatePlanInput,
   CreateProjectInput,
   CreateQueueInput,
+  CreateServiceAccountCredentialInput,
+  CreateServiceAccountInput,
   CreateTaskInput,
   CreateUserInput,
   CreateWorkspaceLocalRepositoryInput,
@@ -55,6 +58,7 @@ import {
   RegisterInput,
   RemainingTasksByPlanIdInput,
   RemoveRepeatableJobInput,
+  RemoveRoleFromServiceAccountInput,
   RepeatableJobsInput,
   RetryJobInput,
   ReviewCycleTimeInput,
@@ -69,6 +73,7 @@ import {
   UpdateNoteInput,
   UpdatePlanInput,
   UpdateProjectInput,
+  UpdateServiceAccountInput,
   UpdateTaskInput,
   UpdateUserInput,
   UpdateWorkspaceLocalRepositoryInput,
@@ -150,6 +155,15 @@ export function ApplyWorkspaceEditorConfigurationInputSchema(): z.ZodObject<
 > {
   return z.object({
     repositoryIds: z.array(z.string()).nullish(),
+  });
+}
+
+export function AssignRoleToServiceAccountInputSchema(): z.ZodObject<
+  Properties<AssignRoleToServiceAccountInput>
+> {
+  return z.object({
+    roleId: z.string(),
+    serviceAccountId: z.string(),
   });
 }
 
@@ -258,6 +272,25 @@ export function CreateQueueInputSchema(): z.ZodObject<
   });
 }
 
+export function CreateServiceAccountCredentialInputSchema(): z.ZodObject<
+  Properties<CreateServiceAccountCredentialInput>
+> {
+  return z.object({
+    expiresAt: definedNonNullAnySchema.nullish(),
+    label: z.string().nullish(),
+    serviceAccountId: z.string(),
+  });
+}
+
+export function CreateServiceAccountInputSchema(): z.ZodObject<
+  Properties<CreateServiceAccountInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string(),
+  });
+}
+
 export function CreateTaskInputSchema(): z.ZodObject<
   Properties<CreateTaskInput>
 > {
@@ -346,6 +379,7 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
 > {
   return z.object({
     idempotencyKey: z.string().nullish(),
+    jobRunHooksJson: z.string().nullish(),
     mode: PlanRalphWorkflowModeSchema.nullish(),
     planId: z.string(),
     priority: z.number().nullish(),
@@ -625,6 +659,15 @@ export function RemoveRepeatableJobInputSchema(): z.ZodObject<
   });
 }
 
+export function RemoveRoleFromServiceAccountInputSchema(): z.ZodObject<
+  Properties<RemoveRoleFromServiceAccountInput>
+> {
+  return z.object({
+    roleId: z.string(),
+    serviceAccountId: z.string(),
+  });
+}
+
 export function RepeatableJobsInputSchema(): z.ZodObject<
   Properties<RepeatableJobsInput>
 > {
@@ -767,6 +810,16 @@ export function UpdateProjectInputSchema(): z.ZodObject<
     id: z.string(),
     name: z.string().nullish(),
     nxProjectName: z.string().nullish(),
+  });
+}
+
+export function UpdateServiceAccountInputSchema(): z.ZodObject<
+  Properties<UpdateServiceAccountInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    id: z.string(),
+    name: z.string().nullish(),
   });
 }
 

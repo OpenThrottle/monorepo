@@ -10,6 +10,7 @@ import {
   FoldersIcon,
   GaugeIcon,
   GitPullRequest,
+  KeyRoundIcon,
   ListOrderedIcon,
   MonitorCogIcon,
   NotebookTabsIcon,
@@ -17,6 +18,7 @@ import {
   Search,
   SwatchBookIcon,
   TerminalSquareIcon,
+  UserCircleIcon,
 } from 'lucide-react';
 
 /* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
@@ -87,6 +89,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       to: '/settings/debug',
     },
     {
+      children: 'Keys',
+      icon: KeyRoundIcon,
+      to: '/settings/keys',
+    },
+    {
       children: 'Logs',
       icon: TerminalSquareIcon,
       to: '/settings/logs',
@@ -110,11 +117,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
             icon: BellIcon,
             to: '/notifications',
           },
-          // {
-          //   children: 'Profile',
-          //   icon: UserCircle,
-          //   to: '/profile',
-          // },
+          {
+            children: 'Profile',
+            icon: UserCircleIcon,
+            to: '/profile',
+          },
         ],
       }
     : {}),

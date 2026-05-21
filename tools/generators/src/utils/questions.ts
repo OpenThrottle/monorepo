@@ -7,7 +7,7 @@ import { validatePascalCase, validatePort, validateSlug } from './validation';
 import { getMonorepoApplications } from './index';
 
 /**
- * @description Get the destination "project" for a new React component.
+ * Get the destination "project" for a new React component.
  */
 export const getReactComponentDestination = async () => {
   const tags = ['technology:react'];
@@ -34,9 +34,8 @@ export const getReactComponentDestination = async () => {
 };
 
 /**
- * @description Get the destination "package" for a new React hook. This
- * generator differs from the "component" generator as its tests use a
- * slightly different setup.
+ * Get the destination "package" for a new React hook. This generator differs
+ * from the "component" generator as its tests use a slightly different setup.
  */
 export const getReactHookDestination = async () => {
   const tags = ['technology:react'];

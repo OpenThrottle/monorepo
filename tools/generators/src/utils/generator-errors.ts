@@ -7,7 +7,7 @@ interface GeneratorErrorPayload {
 }
 
 /**
- * @description Throws an Error with an embedded machine-readable payload.
+ * Throws an Error with an embedded machine-readable payload.
  * The payload can be extracted by tooling by searching for `TEMPLATES_ERROR=`.
  */
 export const throwGeneratorError = (payload: GeneratorErrorPayload): never => {

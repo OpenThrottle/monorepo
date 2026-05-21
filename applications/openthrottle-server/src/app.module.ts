@@ -52,6 +52,7 @@ import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
+import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
@@ -135,6 +136,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     ProjectsGraphqlModule,
     QueuesGraphqlModule,
     // RolesGraphqlModule,
+    ServiceAccountsGraphqlModule,
     SearchGraphqlModule,
     TaskEmbeddingsGraphqlModule,
     TasksGraphqlModule,

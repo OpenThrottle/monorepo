@@ -22,18 +22,20 @@ export class <%= namePascal %>Processor
   }
 
   /**
+   * Called once the host module's dependencies have been resolved.
+   *
    * @external https://docs.nestjs.com/fundamentals/lifecycle-events#lifecycle-events-1
-   * @description Called once the host module's dependencies have been resolved.
    */
   async onModuleInit() {
     onModuleInitWorkerLogging(this.worker, this.logger);
   }
 
   /**
+   * Gracefully shut down the worker when the application shuts down by
+   * implementing the `OnApplicationShutdown` interface provided by NestJS.
+   *
    * @external https://docs.nestjs.com/fundamentals/lifecycle-events#application-shutdown
    * @external https://docs.bullmq.io/guide/going-to-production#gracefully-shut-down-workers
-   * @description Gracefully shut down the worker when the application shuts
-   * down by implementing the `OnApplicationShutdown` interface provided by NestJS.
    */
   async onApplicationShutdown(signal: string) {
     this.logger.info(`onApplicationShutdown`, { signal });

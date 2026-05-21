@@ -55,10 +55,84 @@ export class ServiceAccountsService {
   }
 
   /**
+   * @description Returns all service accounts, newest first.
+   */
+  async findAll(): Promise<ServiceAccount[]> {
+    return this.serviceAccountRepository.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
    * @description Finds a service account by id, or null if not found.
    */
   async findById(id: string): Promise<ServiceAccount | null> {
     return this.serviceAccountRepository.findOne({ where: { id } });
+  }
+
+  /**
+   * @description Creates a service account.
+   */
+  async create(data: {
+    name: string;
+    description?: string | null;
+  }): Promise<ServiceAccount> {
+    const entity = this.serviceAccountRepository.create({
+      description: data.description ?? null,
+      name: data.name,
+    });
+    return this.serviceAccountRepository.save(entity);
+  }
+
+  /**
+   * @description Updates a service account by id. Returns null when not found.
+   */
+  async update(
+    id: string,
+    data: {
+      description?: string | null;
+      name?: string;
+    },
+  ): Promise<ServiceAccount | null> {
+    const existing = await this.serviceAccountRepository.findOne({
+      where: { id },
+    });
+    if (!existing) {
+      return null;
+    }
+    this.serviceAccountRepository.merge(existing, {
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.name != null && { name: data.name }),
+    });
+    return this.serviceAccountRepository.save(existing);
+  }
+
+  /**
+   * @description Disables a service account. Returns null when not found.
+   */
+  async disable(id: string): Promise<ServiceAccount | null> {
+    const existing = await this.serviceAccountRepository.findOne({
+      where: { id },
+    });
+    if (!existing) {
+      return null;
+    }
+    existing.disabledAt = new Date();
+    return this.serviceAccountRepository.save(existing);
+  }
+
+  /**
+   * @description Re-enables a disabled service account. Returns null when not found.
+   */
+  async enable(id: string): Promise<ServiceAccount | null> {
+    const existing = await this.serviceAccountRepository.findOne({
+      where: { id },
+    });
+    if (!existing) {
+      return null;
+    }
+    existing.disabledAt = null;
+    return this.serviceAccountRepository.save(existing);
   }
 
   /**
@@ -251,5 +325,26 @@ export class ServiceAccountsService {
         serviceAccountId,
       },
     });
+  }
+
+  /**
+   * @description All credentials for a service account (including revoked), for admin listing.
+   */
+  async findCredentials(
+    serviceAccountId: string,
+  ): Promise<ServiceAccountCredential[]> {
+    return this.credentialRepository.find({
+      order: { createdAt: 'DESC' },
+      where: { serviceAccountId },
+    });
+  }
+
+  /**
+   * @description Finds a credential by id, or null if not found.
+   */
+  async findCredentialById(
+    id: string,
+  ): Promise<ServiceAccountCredential | null> {
+    return this.credentialRepository.findOne({ where: { id } });
   }
 }

@@ -37,11 +37,6 @@ const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 
 type QueueJobDetailJob = NonNullable<GetQueueJobDetailsQuery['job']>;
 
-export interface QueueJobDetailProps {
-  job: QueueJobDetailJob;
-  queueName: string;
-}
-
 /** Action payload from `queues.$queueId.$jobId` route for mutation feedback. */
 type QueueJobDetailActionData =
   | { cancelPlanRunError: string }
@@ -50,6 +45,11 @@ type QueueJobDetailActionData =
       cancelPlanRun: QueueJobDetailCancelPlanRunMutation['cancelPlanRun'];
     }
   | { retryJob: QueueJobDetailRetryMutation['retryJob'] };
+
+export interface QueueJobDetailProps {
+  job: QueueJobDetailJob;
+  queueName: string;
+}
 
 /**
  * @description Full job introspection: payload, correlation, plan/task links, retry and cancel.

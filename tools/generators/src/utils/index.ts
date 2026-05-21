@@ -7,8 +7,8 @@ import { logger } from '@nx/devkit';
 import { getProjectsByTag } from './projects';
 
 /**
- * @description A little helper that gets the current git username
- * which we use in some of our generators.
+ * A little helper that gets the current git username which we use in some of
+ * our generators.
  */
 export const getGithubUsername = () => {
   if (process.env.NODE_ENV === 'test') return 'test-username';
@@ -23,9 +23,8 @@ export const getGithubUsername = () => {
 };
 
 /**
- * @description A little helper to display the overview of a generator
- * in a nice format. We should use this for all generators to create a
- * consistent look and feel.
+ * A little helper to display the overview of a generator in a nice format.
+ * We should use this for all generators to create a consistent look and feel.
  */
 export const getGeneratorOverview = async (name: string, overview: string) => {
   logger.log(`\n\n ----------------------------------------- \n\n`);
