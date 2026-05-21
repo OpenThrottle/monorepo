@@ -4,10 +4,14 @@ import {
   Button,
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
 } from '@openthrottle/react-router-shadcn';
 import type { ProjectsSearchParamsExtras } from '../utils/index';
-import { buildProjectsSearchParams } from '../utils/index';
+import {
+  buildPaginationPageItems,
+  buildProjectsSearchParams,
+} from '../utils/index';
 
 export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras {
   /** Base path for pagination links (default /projects). Use /plans for plans index. */
@@ -81,6 +85,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
 
+  const pageItems = buildPaginationPageItems({ page, totalPages });
+
   // Handlers
 
   // Markup
@@ -121,20 +127,30 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
               )}
             </PaginationItem>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-              const isActive = p === page;
-              const url = `${basePath}?${buildProjectsSearchParams(p, limit, extras)}`;
+            {pageItems.map((item, index) => {
+              if (item.type === 'ellipsis') {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+
+              const pageNumber = item.page;
+              const isActive = pageNumber === page;
+              const url = `${basePath}?${buildProjectsSearchParams(pageNumber, limit, extras)}`;
 
               return (
-                <PaginationItem key={p}>
+                <PaginationItem key={pageNumber}>
                   <Button
+                    aria-current={isActive ? 'page' : undefined}
                     aria-disabled={isActive}
                     asChild={true}
                     className={isActive ? 'pointer-events-none opacity-50' : ''}
                     disabled={isActive}
                     variant="outline"
                   >
-                    <Link to={url}>{p}</Link>
+                    <Link to={url}>{pageNumber}</Link>
                   </Button>
                 </PaginationItem>
               );
