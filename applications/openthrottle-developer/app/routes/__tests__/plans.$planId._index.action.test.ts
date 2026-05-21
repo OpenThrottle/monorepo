@@ -100,9 +100,51 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
       PlanDetailEnqueuePlanRunDocument,
       {
         input: {
+          jobRunHooksJson: hooksPayload,
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           priority: 1,
-          jobRunHooksJson: hooksPayload,
+        },
+      },
+    );
+  });
+
+  test('passes workingDirectory into enqueuePlanRun when form field is set', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      enqueuePlanRun: {
+        jobId: 'job-wd',
+        planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+      },
+    });
+
+    const workspacePath = '/Users/matt/Development/openthrottle';
+
+    const formData = new FormData();
+    formData.set('intent', 'runPlan');
+    formData.set('workingDirectory', workspacePath);
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailEnqueuePlanRunDocument,
+      {
+        input: {
+          planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+          priority: 1,
+          workingDirectory: workspacePath,
         },
       },
     );

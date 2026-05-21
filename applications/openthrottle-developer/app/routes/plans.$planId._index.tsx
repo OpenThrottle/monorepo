@@ -13,7 +13,12 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { redirect, useFetcher, useRevalidator, useSearchParams } from 'react-router';
+import {
+  redirect,
+  useFetcher,
+  useRevalidator,
+  useSearchParams,
+} from 'react-router';
 import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
 import type {
   PlanStatusChangedPayload,
@@ -303,8 +308,10 @@ export default function Component(
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
+
     setWorkingDirectory('');
     setWorkflowTimeout('');
+
     try {
       const entries = parseJobRunHooksJsonFromPlan(plan?.jobRunHooksJson);
       setJobRunHookRows(jobRunHookEntriesToDraftRows(entries));
@@ -428,9 +435,9 @@ export default function Component(
 
             <PlanTabDetails
               fullscreen={fullscreen}
-              jobRunHooksJson={jobRunHooksJson}
               jobRunHooksBlocked={!jobRunHooksValidation.ok}
               jobRunHooksBlockedReason={jobRunHooksValidation.issues[0]}
+              jobRunHooksJson={jobRunHooksJson}
               plan={plan}
               ralphTuningJson={ralphTuningJson}
               recentPlanRuns={recentPlanRuns}
@@ -454,9 +461,7 @@ export default function Component(
               onWorkingDirectoryChange={setWorkingDirectory}
               planId={plan.id}
               saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
-              saveJobRunHooksPending={
-                fetcherSaveJobRunHooks.state !== 'idle'
-              }
+              saveJobRunHooksPending={fetcherSaveJobRunHooks.state !== 'idle'}
               value={workflowInput}
               workingDirectory={workingDirectory}
             />
@@ -632,16 +637,12 @@ export const action = async (args: Route.ActionArgs) => {
 
     const jobRunHooksRaw = formData.get('jobRunHooksJson');
     let jobRunHooksJson: string | undefined;
-    if (
-      typeof jobRunHooksRaw === 'string' &&
-      jobRunHooksRaw.trim() !== ''
-    ) {
+    if (typeof jobRunHooksRaw === 'string' && jobRunHooksRaw.trim() !== '') {
       try {
         parseJobRunHooksJsonFromPlan(jobRunHooksRaw.trim());
         jobRunHooksJson = jobRunHooksRaw.trim();
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : String(error);
+        const message = error instanceof Error ? error.message : String(error);
         return {
           runPlanError: `Invalid job run hooks: ${message}`,
         };

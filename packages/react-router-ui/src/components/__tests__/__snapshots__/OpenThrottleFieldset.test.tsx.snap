@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenThrottleFieldset Component > should render 1`] = `
+<body>
+  <div>
+    <fieldset
+      class="--bg-card border border-border rounded-md space-y-4 p-4 transition-colors"
+      data-testid="OpenThrottleFieldset"
+    >
+      <legend
+        class="px-1 mb-0 text-base font-medium text-foreground"
+      />
+    </fieldset>
+  </div>
+</body>
+`;

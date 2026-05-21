@@ -43,7 +43,7 @@ export interface PlanTabConfigurationProps {
   onCollapse?: () => void;
   onIterationTimeoutTextChange?: (next: string) => void;
   onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
-  onWorkingDirectoryChange?: (next: string) => void;
+  onWorkingDirectoryChange: (next: string) => void;
 
   /**
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
@@ -190,7 +190,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
 
   return (
     <TabsContent value="configuration">
-      <div className="flex flex-col gap-4 md:gap-8">
+      <div className="flex flex-col gap-4 md:gap-8 max-w-3xl">
         <Card className="p-4">
           <PlanWorkflowCommand command={command} onReset={onResetToDefaults} />
         </Card>
@@ -222,13 +222,11 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
           setInput={setInput}
         />
 
-        {onWorkingDirectoryChange != null && (
-          <PlanWorkflowConfigWorkspace
-            heading="02. Workspace"
-            onChange={onWorkingDirectoryChange}
-            value={workingDirectory}
-          />
-        )}
+        <PlanWorkflowConfigWorkspace
+          heading="02. Workspace"
+          onChange={onWorkingDirectoryChange}
+          value={workingDirectory}
+        />
 
         <PlanWorkflowConfigHooks
           heading="03. Lifecycle"
