@@ -40,7 +40,7 @@ From the monorepo root (optional env override `API_URL_INTERNAL`):
 API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
 ```
 
-This probes **`GET /health`** on the API base and reports missing `.env` keys / unset auth token.
+This probes **`GET /health`** on the API base and reports missing `.env` keys / unset auth token. When **`MCP_DEVELOPER_AUTH_TOKEN`** is set, it also POSTs an authenticated **`listSources`** GraphQL query to confirm **`APP_ENABLE_AUTHENTICATION=true`** accepts the `ot_sa_…` bearer (401/403 fails the script).
 
 ## Secondary workspace (another repo open in Cursor)
 
