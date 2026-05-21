@@ -388,6 +388,11 @@
       "keytar",
       "msgpackr-extract",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ],
     "overrides": {
@@ -433,6 +438,7 @@
     "database:backup": "tsx ./scripts/openthrottle-database-backup.ts",
     "database:import": "tsx ./scripts/openthrottle-ingest-plans.ts",
     "database:import-docs": "node --env-file .env --experimental-strip-types ./scripts/openthrottle-ingest-docs.ts",
+    "database:bootstrap-service-accounts": "tsx ./scripts/bootstrap-service-account-credentials.ts",
     "database:migrate": "pnpm run database:backup && tsx ./scripts/openthrottle-database-migrations.ts",
     "database:reset": "tsx ./scripts/openthrottle-database-reset.ts",
     "database:start": "docker compose up -d openthrottle-redis openthrottle-postgres",
