@@ -3,10 +3,20 @@ import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
   authPrincipalFromJwtPayload,
+  authPrincipalFromServiceAccountId,
   getAuthPrincipalSub,
   isAuthPrincipal,
   normalizeRequestAuthPrincipal,
 } from './auth-principal';
+
+describe('authPrincipalFromServiceAccountId', () => {
+  it('maps service account id to service_account principal', () => {
+    expect(authPrincipalFromServiceAccountId('sa-uuid')).toEqual({
+      kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+      sub: 'sa-uuid',
+    });
+  });
+});
 
 describe('authPrincipalFromJwtPayload', () => {
   it('maps JWT payload to user principal', () => {

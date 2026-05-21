@@ -45,6 +45,16 @@ export const getAuthPrincipalSub = (principal: AuthPrincipal): string =>
 /**
  * @description Maps a validated JWT payload to a user {@link AuthPrincipal}.
  */
+/**
+ * @description Maps a verified service account id to a {@link ServiceAccountAuthPrincipal}.
+ */
+export const authPrincipalFromServiceAccountId = (
+  serviceAccountId: string,
+): ServiceAccountAuthPrincipal => ({
+  kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  sub: serviceAccountId,
+});
+
 export const authPrincipalFromJwtPayload = (
   payload: JwtPayload,
 ): UserAuthPrincipal => ({

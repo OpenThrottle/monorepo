@@ -68,7 +68,7 @@ GraphQL endpoint: `http://localhost:6021/graphql` (or the configured `PORT`). He
 
 The app uses `@openthrottle/nestjs-modules` **Global CLS** (`GlobalClsModule` / `GlobalClsService`) so each HTTP or GraphQL request has an isolated store. The store’s `user` field holds a [`GlobalClsUser`](../../packages/mattscholta/nestjs-modules/src/modules/global-cls/global-cls-user.ts) snapshot after authentication.
 
-- **Protected routes:** `GlobalJwtAuthGuard` runs after `GqlJwtAuthGuard` validates the JWT. It then calls `GlobalClsAuthHook.populateFromPrincipal` with a normalized `AuthPrincipal` (user JWT today; service account in a follow-up guard). The hook loads the user or service account (when present) plus permissions and roles from `UsersService` / `ServiceAccountsService` / `RolesService`, or falls back to a minimal CLS mapping.
+- **Protected routes:** `GlobalAuthGuard` tries `Bearer ot_sa_…` service-account tokens first (`ServiceAccountAuthService`), otherwise delegates to `GqlJwtAuthGuard` for JWT. It then calls `GlobalClsAuthHook.populateFromPrincipal` with a normalized `AuthPrincipal`. The hook loads the user or service account plus permissions and roles from `UsersService` / `ServiceAccountsService` / `RolesService`, or falls back to a minimal CLS mapping.
 - **Public routes** (`@Public()`): The global guard returns early; `user` is **not** set on CLS. Resolvers and services should treat `globalCls.get('user')` as absent or use `globalCls.has('user')` before reading it.
 
 **Reading the current user in code:** inject `GlobalClsService` and use `this.globalCls.get('user')` (optional) or `this.globalCls.has('user')`. Types live in `@openthrottle/nestjs-modules` (`GlobalClsUser`).
