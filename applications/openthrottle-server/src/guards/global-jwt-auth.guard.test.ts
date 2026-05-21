@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createMock } from '@golevelup/ts-vitest';
+import { authPrincipalFromJwtPayload } from '@openthrottle/nestjs-auth';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { GlobalJwtAuthGuard } from './global-jwt-auth.guard';
@@ -31,7 +32,7 @@ describe('GlobalJwtAuthGuard', () => {
       canActivate: vi.fn(),
     });
     globalClsAuthHook = createMock<GlobalClsAuthHook>({
-      populateFromJwtPayload: vi.fn(),
+      populateFromPrincipal: vi.fn(),
     });
 
     guard = new GlobalJwtAuthGuard(reflector, jwtAuthGuard, globalClsAuthHook);
@@ -48,7 +49,7 @@ describe('GlobalJwtAuthGuard', () => {
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
     expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
-    expect(globalClsAuthHook.populateFromJwtPayload).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
   });
 
   it('returns false when JWT guard rejects', async () => {
@@ -60,7 +61,7 @@ describe('GlobalJwtAuthGuard', () => {
 
     await expect(guard.canActivate(ctx)).resolves.toBe(false);
 
-    expect(globalClsAuthHook.populateFromJwtPayload).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
   });
 
   it('calls CLS hook after JWT success when request.user is a valid payload', async () => {
@@ -71,9 +72,9 @@ describe('GlobalJwtAuthGuard', () => {
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
-    expect(globalClsAuthHook.populateFromJwtPayload).toHaveBeenCalledTimes(1);
-    expect(globalClsAuthHook.populateFromJwtPayload).toHaveBeenCalledWith(
-      payload,
+    expect(globalClsAuthHook.populateFromPrincipal).toHaveBeenCalledTimes(1);
+    expect(globalClsAuthHook.populateFromPrincipal).toHaveBeenCalledWith(
+      authPrincipalFromJwtPayload(payload),
     );
   });
 
@@ -87,7 +88,7 @@ describe('GlobalJwtAuthGuard', () => {
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
     expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
-    expect(globalClsAuthHook.populateFromJwtPayload).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
   });
 
   it('skips CLS hook when JWT succeeds but user payload is missing', async () => {
@@ -97,6 +98,6 @@ describe('GlobalJwtAuthGuard', () => {
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
 
-    expect(globalClsAuthHook.populateFromJwtPayload).not.toHaveBeenCalled();
+    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
   });
 });

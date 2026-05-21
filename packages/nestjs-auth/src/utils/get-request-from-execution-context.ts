@@ -1,6 +1,12 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import type { AuthPrincipal } from '../auth-principal';
 import type { JwtPayload } from '../strategies/jwt.strategy';
+
+/** HTTP/GraphQL request shape after auth (JWT payload or {@link AuthPrincipal}). */
+export type AuthenticatedRequest = {
+  user?: AuthPrincipal | JwtPayload;
+};
 
 /**
  * @description Resolves the HTTP request from GraphQL or REST execution context.
@@ -8,12 +14,12 @@ import type { JwtPayload } from '../strategies/jwt.strategy';
  */
 export const getRequestFromExecutionContext = (
   ctx: ExecutionContext,
-): { user?: JwtPayload } | undefined => {
+): AuthenticatedRequest | undefined => {
   const isGraphql = `${ctx.getType()}` === 'graphql';
 
   if (isGraphql) {
     const gqlCtx = GqlExecutionContext.create(ctx);
-    const req = gqlCtx.getContext<{ req?: { user?: JwtPayload } }>().req;
+    const req = gqlCtx.getContext<{ req?: AuthenticatedRequest }>().req;
 
     if (req == null) {
       throw new Error(
@@ -24,5 +30,5 @@ export const getRequestFromExecutionContext = (
     return req;
   }
 
-  return ctx.switchToHttp().getRequest<{ user?: JwtPayload }>();
+  return ctx.switchToHttp().getRequest<AuthenticatedRequest>();
 };

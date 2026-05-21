@@ -4,11 +4,13 @@ import {
   type CanActivate,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '@openthrottle/nestjs-auth';
+import {
+  getAuthPrincipalFromRequest,
+  IS_PUBLIC_KEY,
+} from '@openthrottle/nestjs-auth';
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
-import { getJwtPayloadFromRequest } from './jwt-payload-from-request';
 // import { LoggerService } from '@openthrottle/nestjs-modules';
 
 /**
@@ -46,10 +48,10 @@ export class GlobalJwtAuthGuard implements CanActivate {
     }
 
     const req = getRequestFromExecutionContext(context);
-    const user = getJwtPayloadFromRequest(req);
+    const principal = getAuthPrincipalFromRequest(req);
 
-    if (user != null) {
-      await this.globalClsAuthHook.populateFromJwtPayload(user);
+    if (principal != null) {
+      await this.globalClsAuthHook.populateFromPrincipal(principal);
     }
 
     return true;

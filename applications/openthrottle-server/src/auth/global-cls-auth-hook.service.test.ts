@@ -1,18 +1,24 @@
 /**
- * @description Unit tests for {@link GlobalClsAuthHook}: CLS user from DB + RBAC vs JWT fallback.
+ * @description Unit tests for {@link GlobalClsAuthHook}: CLS user from DB + RBAC vs JWT/SA fallback.
  */
 
 import { Test } from '@nestjs/testing';
 import { ClsService } from 'nestjs-cls';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  AUTH_PRINCIPAL_KIND_USER,
+} from '@openthrottle/nestjs-auth';
+import {
   globalClsUserFromJwtLike,
   GlobalClsModule,
   type GlobalClsStore,
 } from '@openthrottle/nestjs-modules';
 import {
+  type ServiceAccount,
   type User,
   RolesService,
+  ServiceAccountsService,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
 import { GlobalClsAuthHook } from './global-cls-auth-hook.service';
@@ -27,26 +33,46 @@ const userRow = (
   ...fields,
 });
 
+const serviceAccountRow = (
+  fields: Pick<ServiceAccount, 'disabledAt' | 'description' | 'id' | 'name'>,
+): ServiceAccount =>
+  ({
+    createdAt: new Date('2019-01-01T00:00:00.000Z'),
+    credentials: [],
+    roles: [],
+    ...fields,
+  }) as ServiceAccount;
+
 describe('GlobalClsAuthHook', () => {
   let hook: GlobalClsAuthHook;
   /** Same CLS instance {@link GlobalClsModule} augments with `setUser` for {@link GlobalClsAuthHook}. */
   let cls: ClsService<GlobalClsStore>;
   const mockUsersService = { findById: vi.fn() };
+  const mockServiceAccountsService = { findById: vi.fn() };
   const mockRolesService = {
+    findRoleNamesByServiceAccountId: vi.fn(),
     findRoleNamesByUserId: vi.fn(),
+    getPermissionsForServiceAccount: vi.fn(),
     getPermissionsForUser: vi.fn(),
   };
 
   beforeEach(async () => {
     vi.mocked(mockUsersService.findById).mockReset();
+    vi.mocked(mockServiceAccountsService.findById).mockReset();
     vi.mocked(mockRolesService.findRoleNamesByUserId).mockReset();
     vi.mocked(mockRolesService.getPermissionsForUser).mockReset();
+    vi.mocked(mockRolesService.findRoleNamesByServiceAccountId).mockReset();
+    vi.mocked(mockRolesService.getPermissionsForServiceAccount).mockReset();
 
     const moduleRef = await Test.createTestingModule({
       imports: [GlobalClsModule],
       providers: [
         GlobalClsAuthHook,
         { provide: UsersService, useValue: mockUsersService },
+        {
+          provide: ServiceAccountsService,
+          useValue: mockServiceAccountsService,
+        },
         { provide: RolesService, useValue: mockRolesService },
       ],
     }).compile();
@@ -86,8 +112,9 @@ describe('GlobalClsAuthHook', () => {
     ]);
 
     await cls.run(async () => {
-      await hook.populateFromJwtPayload({
+      await hook.populateFromPrincipal({
         email: 'token@example.com',
+        kind: AUTH_PRINCIPAL_KIND_USER,
         sub: userId,
       });
 
@@ -126,5 +153,74 @@ describe('GlobalClsAuthHook', () => {
 
       expect(cls.get('user')?.email).toBe('from-jwt@example.com');
     });
+  });
+
+  it('sets minimal CLS user when service account row is missing', async () => {
+    const saId = '770e8400-e29b-41d4-a716-446655440002';
+    vi.mocked(mockServiceAccountsService.findById).mockResolvedValue(null);
+
+    await cls.run(async () => {
+      await hook.populateFromPrincipal({
+        kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        sub: saId,
+      });
+
+      expect(cls.get('user')).toEqual({
+        displayName: saId,
+        email: '',
+        isDeleted: false,
+        permissions: undefined,
+        roles: [],
+        uuid: saId,
+      });
+    });
+
+    expect(
+      mockRolesService.getPermissionsForServiceAccount,
+    ).not.toHaveBeenCalled();
+    expect(
+      mockRolesService.findRoleNamesByServiceAccountId,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('loads service account name, permissions, roles, and isDeleted from DB', async () => {
+    const saId = '880e8400-e29b-41d4-a716-446655440003';
+    vi.mocked(mockServiceAccountsService.findById).mockResolvedValue(
+      serviceAccountRow({
+        description: 'MCP automation',
+        disabledAt: null,
+        id: saId,
+        name: 'mcp-developer',
+      }),
+    );
+    vi.mocked(
+      mockRolesService.getPermissionsForServiceAccount,
+    ).mockResolvedValue(['plans:write']);
+    vi.mocked(
+      mockRolesService.findRoleNamesByServiceAccountId,
+    ).mockResolvedValue(['mcp']);
+
+    await cls.run(async () => {
+      await hook.populateFromPrincipal({
+        kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        sub: saId,
+      });
+
+      expect(cls.get('user')).toEqual({
+        displayName: 'mcp-developer',
+        email: '',
+        isDeleted: false,
+        permissions: ['plans:write'],
+        roles: ['mcp'],
+        uuid: saId,
+      });
+    });
+
+    expect(
+      mockRolesService.getPermissionsForServiceAccount,
+    ).toHaveBeenCalledWith(saId);
+    expect(
+      mockRolesService.findRoleNamesByServiceAccountId,
+    ).toHaveBeenCalledWith(saId);
   });
 });
