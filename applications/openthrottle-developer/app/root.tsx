@@ -435,11 +435,9 @@ export default function App(): React.ReactElement {
                 suppress={data?.rootLoaderFailure?.step === 'health'}
               />
 
-              {/* {!_isHeaderHidden ? ( */}
               <GlobalLayoutHeader
                 onSearchChromeEvent={handleSearchChromeEvent}
               />
-              {/* ) : null} */}
 
               <Outlet />
 

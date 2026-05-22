@@ -70,7 +70,7 @@ export default function Component(
     <GlobalScreen>
       <SettingsWorkspaceIntro />
 
-      <div className="mt-8 space-y-8">
+      <div className="space-y-8">
         <SettingsWorkspaceProfileForm
           actionError={actionError}
           profile={profile}

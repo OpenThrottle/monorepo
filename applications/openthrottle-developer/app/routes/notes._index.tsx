@@ -14,7 +14,6 @@ import { NotesIntroduction } from '~/routing/notes/components/NotesIntroduction'
 import { NotesTable } from '~/routing/notes/components/NotesTable';
 import { NotesToolbar } from '~/routing/notes/components/NotesToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
-import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/notes._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -69,10 +68,6 @@ export default function Component(
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <WorkspaceEntityCrossLinks
-          className="min-w-0"
-          label="Workspace shortcuts from notes"
-        />
         <div className="flex shrink-0 items-center justify-end">
           <Button asChild={true} size="sm" variant="outline">
             <Link to="/notes/create" viewTransition={true}>

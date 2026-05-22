@@ -1,7 +1,13 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
-import { PlusIcon } from 'lucide-react';
+import {
+  Button,
+  Input,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
+import { FilePlusIcon } from 'lucide-react';
 
 export interface SkillsToolbarProps {
   className?: string;
@@ -36,9 +42,18 @@ export const SkillsToolbar = (props: SkillsToolbarProps) => {
 
       <div className="flex-1" />
 
-      <Button type="submit" variant="outline">
-        <PlusIcon className="size-4" />
-      </Button>
+      <Tooltip delayDuration={1_000}>
+        <TooltipTrigger asChild={true}>
+          <Button
+            aria-label="Toggle sidebar (Cmd/Ctrl+B)"
+            type="submit"
+            variant="outline"
+          >
+            <FilePlusIcon className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">Create new skill</TooltipContent>
+      </Tooltip>
     </div>
   );
 };

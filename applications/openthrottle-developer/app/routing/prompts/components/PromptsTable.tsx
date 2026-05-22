@@ -33,9 +33,6 @@ export const PromptsTable = (props: PromptsTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (prompts.length === 0) {
-    return <PromptsEmpty search={search} />;
-  }
 
   return (
     <div
@@ -45,6 +42,7 @@ export const PromptsTable = (props: PromptsTableProps) => {
       <DataTable<PromptCardFragment, string | number | null | undefined>
         columns={columns}
         data={prompts}
+        emptyState={<PromptsEmpty search={search} />}
       />
     </div>
   );
@@ -61,15 +59,12 @@ PromptsTable.buildTable = (): ColumnDef<
         const prompt = row.original;
 
         return (
-          <div>
-            <Badge variant="secondary">
-              {formatPromptType(prompt.promptType)}
-            </Badge>
+          <div className="p-2">
+            <Badge size="xs">{formatPromptType(prompt.promptType)}</Badge>
           </div>
         );
       },
-      header: () => <div className="p-2 w-12">Status</div>,
-      // maxSize: 20,
+      header: () => <div className="p-2">Status</div>,
     },
     {
       accessorKey: 'title',
@@ -84,8 +79,8 @@ PromptsTable.buildTable = (): ColumnDef<
         const overflowLabelCount = prompt.labels.length - 3;
 
         return (
-          <div className="overflow-hidden-- flex-1 w-full p-2">
-            <h2 className="mb-2 line-clamp-1 text-ellipsis text-sm font-medium">
+          <div className="p-2">
+            <h2 className="line-clamp-1 pb-2 text-ellipsis text-sm font-medium w-full">
               <Link
                 aria-label={`View prompt: ${title}`}
                 className="underline underline-offset-2 hover:text-primary"
@@ -96,46 +91,54 @@ PromptsTable.buildTable = (): ColumnDef<
               </Link>
             </h2>
 
-            {prompt.description ? (
-              <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">
-                {prompt.description}
-              </p>
-            ) : null}
-
-            {prompt.labels.length > 0 ? (
-              <div className="mb-2 flex flex-wrap gap-1">
-                {visibleLabels.map((label) => (
-                  <Badge className="text-xs" key={label} variant="outline">
-                    {label}
-                  </Badge>
-                ))}
-                {overflowLabelCount > 0 ? (
-                  <Badge className="text-xs" variant="outline">
-                    +{overflowLabelCount}
-                  </Badge>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              {fileBasename ? (
-                <span
-                  className="flex items-center gap-1"
-                  title={prompt.filePath ?? undefined}
-                >
-                  <FileText className="h-3 w-3 shrink-0" />
-                  <span className="max-w-[160px] truncate">{fileBasename}</span>
-                </span>
+            <div className="max-w-3xl">
+              {prompt.description ? (
+                <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">
+                  {prompt.description}
+                </p>
               ) : null}
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3 shrink-0" />
-                {formatPromptDate(prompt.updatedAt)}
-              </span>
+
+              {prompt.labels.length > 0 ? (
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {visibleLabels.map((label) => (
+                    <Badge size="xs">{label}</Badge>
+                  ))}
+                  {overflowLabelCount > 0 ? (
+                    <Badge size="xs">+{overflowLabelCount}</Badge>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {fileBasename ? (
+                  <span
+                    className="flex items-center gap-1"
+                    title={prompt.filePath ?? undefined}
+                  >
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span className="max-w-[160px] truncate">
+                      {fileBasename}
+                    </span>
+                  </span>
+                ) : null}
+
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 shrink-0" />
+                  {formatPromptDate(prompt.updatedAt)}
+                </span>
+              </div>
+
+              <p className="text-xs line-clamp-2 text-muted-foreground mt-2">
+                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vero
+                quasi dignissimos, commodi ex maiores tempore. Odit recusandae
+                adipisci ab eius asperiores ut cumque illum deserunt. Vel soluta
+                ipsum voluptas maxime.
+              </p>
             </div>
           </div>
         );
       },
-
-      header: () => <div className="p-2 flex-1 w-full">Prompt</div>,
+      header: () => <div className="p-2">Prompt</div>,
     },
   ];
 };

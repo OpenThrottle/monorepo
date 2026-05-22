@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
@@ -42,12 +41,7 @@ export interface SettingsEnvironmentDiagnosticsProps extends SettingsDiagnostics
 export const SettingsEnvironmentDiagnostics = (
   props: SettingsEnvironmentDiagnosticsProps,
 ) => {
-  const {
-    className,
-    env,
-    idPrefix = 'settings-diagnostics',
-    supportBundle,
-  } = props;
+  const { env, idPrefix = 'settings-diagnostics', supportBundle } = props;
 
   // Hooks
   const [origin, setOrigin] = React.useState<string | null>(null);
@@ -79,7 +73,7 @@ export const SettingsEnvironmentDiagnostics = (
   // 🔌 Short Circuit
 
   return (
-    <div className={classnames('space-y-4 md:space-y-8', className)}>
+    <>
       <OpenThrottleFieldset
         id={`${idPrefix}-build`}
         legend="Environment Diagnostics"
@@ -197,7 +191,7 @@ export const SettingsEnvironmentDiagnostics = (
             )}
           </p>
         )}
-        <div className="overflow-auto rounded-md border">
+        <div className="overflow-auto rounded-md border mt-8">
           <table className="w-full text-left text-xs">
             <thead className="sticky top-0 bg-muted/80">
               <tr>
@@ -228,6 +222,6 @@ export const SettingsEnvironmentDiagnostics = (
           Copy support bundle
         </Button>
       </OpenThrottleFieldset>
-    </div>
+    </>
   );
 };

@@ -182,7 +182,7 @@ export const SettingsWorkspaceRepositoriesSection = (
   return (
     <OpenThrottleFieldset
       id="settings-workspace-repositories-section"
-      legend="Local repositories"
+      legend="Local Repositories"
     >
       <section
         className={classnames('space-y-4 md:space-y-8', className)}

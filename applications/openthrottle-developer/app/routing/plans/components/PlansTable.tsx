@@ -42,9 +42,6 @@ export const PlansTable = (props: PlansTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (plans.length === 0) {
-    return <PlanTasksEmpty search={search} />;
-  }
 
   return (
     <div
@@ -54,6 +51,7 @@ export const PlansTable = (props: PlansTableProps) => {
       <DataTable<PlanCardFragment, string | number | null | undefined>
         columns={columns}
         data={plans}
+        emptyState={<PlanTasksEmpty search={search} />}
       />
     </div>
   );

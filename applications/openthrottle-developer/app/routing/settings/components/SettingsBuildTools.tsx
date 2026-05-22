@@ -4,12 +4,8 @@ import {
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
   VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '~/routing/settings/utils/settings-docs-links';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { ToolboxIcon } from 'lucide-react';
 
 export interface SettingsBuildToolsProps {}
 
@@ -27,13 +23,12 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">
-          React Router / Vite devtools
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm text-muted-foreground">
+    <OpenThrottleFieldset
+      icon={ToolboxIcon}
+      id="react-router-vite-devtools"
+      legend="React Router / Vite devtools"
+    >
+      <div className="space-y-3 text-sm text-muted-foreground">
         <p>
           <span className="font-medium text-foreground">When to open:</span> Use
           the bundle analyzer for chunk overlap, duplicate packages, or split
@@ -83,7 +78,7 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
             docs/monorepo/openthrottle-developer-vite-devtools.md
           </code>
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </OpenThrottleFieldset>
   );
 };

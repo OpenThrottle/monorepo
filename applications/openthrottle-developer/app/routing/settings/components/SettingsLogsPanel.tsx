@@ -29,6 +29,7 @@ import {
   getEmptyServerSnapshot,
 } from '~/routing/settings/utils/settings.support';
 import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface SettingsLogsPanelProps {}
 
@@ -281,13 +282,11 @@ export const SettingsLogsPanel = (_props: SettingsLogsPanelProps) => {
 
       <SettingsSupportBundle />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Workflow &amp; agent logs (server)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
+      <OpenThrottleFieldset
+        id="workflow-agent-logs"
+        legend="Workflow & Server Logs"
+      >
+        <div className="space-y-3 text-sm text-muted-foreground">
           <p>
             A tail or subscription to workflow-ralph stderr, queue worker logs,
             or plan-output streams is not wired to this UI yet. Until an
@@ -308,8 +307,8 @@ export const SettingsLogsPanel = (_props: SettingsLogsPanelProps) => {
             operator; correlation IDs linking queue jobs, plan IDs, and task
             IDs; no raw secrets in payloads.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </OpenThrottleFieldset>
     </>
   );
 };

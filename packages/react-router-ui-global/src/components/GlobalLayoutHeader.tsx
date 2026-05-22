@@ -15,6 +15,7 @@ import { Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
+import { NotificationBell } from '@openthrottle/react-router-notifications';
 
 /**
  * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.
@@ -169,6 +170,8 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
           </Link>
         </>
       ) : null}
+
+      <NotificationBell />
     </nav>
   );
 };

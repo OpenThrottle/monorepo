@@ -31,9 +31,6 @@ export const SkillsTable = (props: SkillsTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (entries.length === 0) {
-    return <SkillsEmpty />;
-  }
 
   return (
     <div
@@ -43,6 +40,7 @@ export const SkillsTable = (props: SkillsTableProps) => {
       <DataTable<RepoSkillEntry, SkillsTableColumnValue>
         columns={skillsTableColumns}
         data={data}
+        emptyState={<SkillsEmpty />}
         getRowId={getRowId}
       />
     </div>

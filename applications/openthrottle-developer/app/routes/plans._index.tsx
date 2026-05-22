@@ -19,12 +19,12 @@ import {
   PLAN_STATUS_FILTER_OPTIONS,
   parseStatusesFromSearchParams,
 } from '~/routing/plans/config/status-options';
+import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
 import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans._index';
-import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
 
 /** Parse multiple assignee values from URL (repeated params or comma-separated). */
 function parseAssigneesFromSearchParams(
@@ -129,7 +129,6 @@ export default function Component(
     assignees,
     limit,
     page,
-    plans,
     statusCounts,
     statuses,
     totalCount,
@@ -198,7 +197,7 @@ export default function Component(
           statuses={statuses}
           view={view}
         />
-        <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
+        <PlansTable plans={[]} statusFilterUrls={statusFilterUrls} />
       </div>
       <OpenThrottlePagination
         assignees={assignees}

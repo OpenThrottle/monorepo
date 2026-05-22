@@ -1,12 +1,5 @@
 import * as React from 'react';
 import {
-  GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
-import { useAtom } from 'jotai';
-import {
-  Badge,
   Button,
   Collapsible,
   CollapsibleContent,
@@ -22,6 +15,12 @@ import {
   SunIcon,
   SwatchBookIcon,
 } from 'lucide-react';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
+import { useAtom } from 'jotai';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
@@ -80,6 +79,7 @@ export default function Component(
     if (value !== 'light' && value !== 'dark') {
       return;
     }
+
     setConfig({ ...config, theme: value as ThemeMode });
   };
 
@@ -212,57 +212,6 @@ export default function Component(
               </CollapsibleContent>
             </Collapsible>
           </section>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <Badge color="amber" size="2xl">
-          2xl amber
-        </Badge>
-        <Badge color="accent" size="xl">
-          xl accent
-        </Badge>
-        <Badge color="lime" size="lg">
-          lg lime
-        </Badge>
-        <Badge color="orange" size="sm">
-          sm orange
-        </Badge>
-        <Badge color="sky" size="xl">
-          xl sky
-        </Badge>
-
-        <div className="flex gap-2 w-full">
-          <Badge color="accent" size="xs">
-            accent
-          </Badge>
-          <Badge color="amber" size="xs">
-            amber
-          </Badge>
-          <Badge color="default" size="xs">
-            default
-          </Badge>
-          <Badge color="lime" size="xs">
-            lime
-          </Badge>
-          <Badge color="orange" size="xs">
-            orange
-          </Badge>
-          <Badge color="red" size="xs">
-            red
-          </Badge>
-          <Badge color="sky" size="xs">
-            sky
-          </Badge>
-          <Badge color="slate" size="xs">
-            slate
-          </Badge>
-          <Badge color="violet" size="xs">
-            violet
-          </Badge>
-          <Badge color="yellow" size="xs">
-            yellow
-          </Badge>
         </div>
       </div>
     </GlobalScreen>

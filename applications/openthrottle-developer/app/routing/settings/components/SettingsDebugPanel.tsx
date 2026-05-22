@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { useRevalidator } from 'react-router';
 import {
   GlobalHeading,
@@ -17,12 +11,13 @@ import {
 import type { GlobalMetricsChartLineKey } from '@openthrottle/react-router-ui-global';
 import { BugIcon } from 'lucide-react';
 import { SettingsPortsTroubleshootingCard } from '~/routing/settings/components/SettingsPortsTroubleshootingCard';
-import type { ServerHealthObject } from '~/__generated__/graphql';
 import { SettingsFeatureFlags } from '~/routing/settings/components/SettingsFeatureFlags';
 import { SettingsEnvironment } from '~/routing/settings/components/SettingsEnvironment';
 import { SettingsBuildTools } from '~/routing/settings/components/SettingsBuildTools';
 import { SettingsStorage } from '~/routing/settings/components/SettingsStorage';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import type { ServerHealthObject } from '~/__generated__/graphql';
 
 export type SettingsDebugGraphQLResult =
   | {
@@ -81,7 +76,7 @@ export const SettingsDebugPanel = (props: SettingsDebugPanelProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div className="space-y-6">
+    <>
       <div>
         <GlobalHeading
           className="mb-4"
@@ -107,11 +102,11 @@ export const SettingsDebugPanel = (props: SettingsDebugPanelProps) => {
 
       <SettingsPortsTroubleshootingCard />
 
-      <Card id="server-metrics-definitions">
-        <CardHeader>
-          <CardTitle className="text-base">Server metrics strip</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
+      <OpenThrottleFieldset
+        id="server-metrics-definitions"
+        legend="Server metrics definitions"
+      >
+        <div className="space-y-4 text-sm text-muted-foreground">
           <p>
             When the footer{' '}
             <strong className="text-foreground">Server metrics</strong> strip is
@@ -162,15 +157,15 @@ export const SettingsDebugPanel = (props: SettingsDebugPanelProps) => {
               )}
             </ul>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </OpenThrottleFieldset>
 
       <SettingsGraphQLHealthCard
         graphQL={graphQL}
         onRecheck={handleRecheckGraphQL}
         revalidateState={state}
       />
-    </div>
+    </>
   );
 };
 
@@ -196,49 +191,48 @@ const SettingsGraphQLHealthCard = (props: SettingsGraphQLHealthCardProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card id="graphql-endpoint-health">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base">GraphQL endpoint health</CardTitle>
-        <Button
-          disabled={revalidateState === 'loading'}
-          onClick={onRecheck}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          {revalidateState === 'loading' ? 'Checking…' : 'Re-check'}
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-2 text-sm">
-        {graphQL.status === 'ok' ? (
-          <>
-            <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">getRootHealth</span>{' '}
-              succeeded in{' '}
-              <code className="bg-accent-foreground px-1.5 py-0.5 rounded-lg text-xs">
-                {graphQL.latencyMs} ms
-              </code>
-              .
-            </p>
-            <ul className="list-inside list-disc space-y-1 font-mono text-xs text-muted-foreground">
-              <li>api: {graphQL.serverHealth.api}</li>
-              <li>database: {graphQL.serverHealth.database}</li>
-              <li>redis: {graphQL.serverHealth.redis}</li>
-              <li>websocket: {graphQL.serverHealth.websocket}</li>
-            </ul>
-          </>
-        ) : (
-          <>
-            <p className="text-destructive">
-              <span className="font-medium">Request failed</span> after{' '}
-              <code className="text-xs">{graphQL.latencyMs} ms</code>.
-            </p>
-            <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 text-xs">
-              {graphQL.error}
-            </pre>
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <OpenThrottleFieldset
+      id="graphql-endpoint-health"
+      legend="GraphQL endpoint health"
+    >
+      <Button
+        disabled={revalidateState === 'loading'}
+        onClick={onRecheck}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        {revalidateState === 'loading' ? 'Checking…' : 'Re-check'}
+      </Button>
+
+      {graphQL.status === 'ok' ? (
+        <>
+          <p className="text-muted-foreground">
+            <span className="font-medium text-foreground">getRootHealth</span>{' '}
+            succeeded in{' '}
+            <code className="bg-accent-foreground px-1.5 py-0.5 rounded-lg text-xs">
+              {graphQL.latencyMs} ms
+            </code>
+            .
+          </p>
+          <ul className="list-inside list-disc space-y-1 font-mono text-xs text-muted-foreground">
+            <li>api: {graphQL.serverHealth.api}</li>
+            <li>database: {graphQL.serverHealth.database}</li>
+            <li>redis: {graphQL.serverHealth.redis}</li>
+            <li>websocket: {graphQL.serverHealth.websocket}</li>
+          </ul>
+        </>
+      ) : (
+        <>
+          <p className="text-destructive">
+            <span className="font-medium">Request failed</span> after{' '}
+            <code className="text-xs">{graphQL.latencyMs} ms</code>.
+          </p>
+          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 text-xs">
+            {graphQL.error}
+          </pre>
+        </>
+      )}
+    </OpenThrottleFieldset>
   );
 };

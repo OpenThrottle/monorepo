@@ -1,12 +1,8 @@
 import * as React from 'react';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { DatabaseIcon } from 'lucide-react';
 
 export interface SettingsStorageProps {
   className?: string;
@@ -17,8 +13,8 @@ type StorageEntryRow = {
   preview: string;
 };
 
-export const SettingsStorage = (props: SettingsStorageProps) => {
-  const { className } = props;
+export const SettingsStorage = (_props: SettingsStorageProps) => {
+  // const { className } = props;
 
   // Hooks
   const [localEntries, setLocalEntries] = React.useState<StorageEntryRow[]>([]);
@@ -41,20 +37,21 @@ export const SettingsStorage = (props: SettingsStorageProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base">Storage: local & session</CardTitle>
-        <Button
-          onClick={handleRefreshStorage}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Refresh
-        </Button>
-      </CardHeader>
+    <OpenThrottleFieldset
+      icon={DatabaseIcon}
+      id="storage"
+      legend="Storage: local & session"
+    >
+      <Button
+        onClick={handleRefreshStorage}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        Refresh
+      </Button>
 
-      <CardContent className="space-y-4 text-sm">
+      <div className="space-y-4 text-sm">
         <div>
           <p className="mb-2 font-medium text-foreground">local storage</p>
           {localEntries.length === 0 ? (
@@ -109,7 +106,7 @@ export const SettingsStorage = (props: SettingsStorageProps) => {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </OpenThrottleFieldset>
   );
 };

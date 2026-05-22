@@ -1,16 +1,19 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
-import classnames from 'classnames';
+import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 
 function formatUpdatedAt(project: ProjectCardFragment): string {
   const raw = project.updatedAt ?? project.createdAt;
+
   if (raw == null) return '—';
   try {
     const date = typeof raw === 'string' ? new Date(raw) : raw;
+
     return format(date, 'MMM d, yyyy');
   } catch {
     return '—';
@@ -111,6 +114,7 @@ export const ProjectsTable = (props: ProjectsTableProps) => {
       <DataTable<ProjectCardFragment, string | null | undefined>
         columns={projectTableColumns}
         data={projects}
+        emptyState={<ProjectsEmpty />}
       />
     </div>
   );

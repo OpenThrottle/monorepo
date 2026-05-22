@@ -1,9 +1,15 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
+import {
+  Button,
+  Input,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
-import { PlusIcon } from 'lucide-react';
+import { FilePlusIcon } from 'lucide-react';
 import { TypeMultiSelect } from './TypeMultiSelect';
 import { PromptSortDropdown } from './PromptSortDropdown';
 import {
@@ -163,16 +169,22 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
           </Button>
         ) : null}
         <div className="flex-1 min-w-0" />
-        <Button
-          asChild={true}
-          className="shrink-0"
-          data-testid="PromptToolbar-create-button"
-          variant="outline"
-        >
-          <Link to="/prompts/create">
-            <PlusIcon className="w-4 h-4" /> Create prompt
-          </Link>
-        </Button>
+
+        <Tooltip delayDuration={1_000}>
+          <TooltipTrigger asChild={true}>
+            <Button
+              asChild={true}
+              className="shrink-0"
+              data-testid="PromptToolbar-create-button"
+              variant="outline"
+            >
+              <Link to="/prompts/create">
+                <FilePlusIcon className="size-4" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Create new prompt</TooltipContent>
+        </Tooltip>
       </form>
     </div>
   );

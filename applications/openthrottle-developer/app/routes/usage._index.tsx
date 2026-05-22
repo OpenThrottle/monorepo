@@ -79,7 +79,7 @@ export default function Component(
       <UsageIntroduction rangeDays={rangeDays} />
       <UsageOverview rangeDays={rangeDays} />
       <div data-testid="UsageDailyActivity">
-        <GlobalHeading className="text-xl" title="Daily activity" />
+        <GlobalHeading className="text-lg" title="Daily activity" />
         <DashboardDailyStatsCard className="mt-8" dailyStats={dailyStats} />
       </div>
       <UsageDailyActivityOverview rangeDays={rangeDays} />

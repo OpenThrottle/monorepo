@@ -69,15 +69,13 @@ export default function Component(
           Theme controls for this portal. Diagnostics below mirror General
           settings and help verify URLs and build metadata.
         </p>
-
-        <div className="space-y-8">
-          <SettingsEnvironmentDiagnostics
-            env={loaderData.env}
-            idPrefix="settings-general"
-            supportBundle={loaderData.supportBundle}
-          />
-        </div>
       </div>
+
+      <SettingsEnvironmentDiagnostics
+        env={loaderData.env}
+        idPrefix="settings-general"
+        supportBundle={loaderData.supportBundle}
+      />
     </GlobalScreen>
   );
 }

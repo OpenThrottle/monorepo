@@ -154,18 +154,18 @@ export default function Component(
           types={types}
         />
         <PromptsTable prompts={prompts} search={search ?? undefined} />
+        <OpenThrottlePagination
+          basePath="/prompts"
+          className="mt-8"
+          limit={limit}
+          page={page}
+          resultLabel="prompts"
+          search={search ?? undefined}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          total={total}
+        />
       </div>
-      <OpenThrottlePagination
-        basePath="/prompts"
-        className="mt-8"
-        limit={limit}
-        page={page}
-        resultLabel="prompts"
-        search={search ?? undefined}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        total={total}
-      />
     </GlobalScreen>
   );
 }

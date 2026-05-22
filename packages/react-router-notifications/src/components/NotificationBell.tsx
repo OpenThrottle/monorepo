@@ -71,11 +71,11 @@ export const NotificationBell = (
               ? `${unreadCount} unread notifications`
               : 'Notifications'
           }
-          className="relative size-9 shrink-0 rounded-full"
+          className="relative size-6 shrink-0 rounded-full"
           data-testid="notification-bell-trigger"
           variant="ghost"
         >
-          <Bell className="size-8" />
+          <Bell className="size-4" />
 
           {unreadCount > 0 ? (
             <Badge
@@ -95,7 +95,6 @@ export const NotificationBell = (
         sideOffset={8}
       >
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
           {hasAny ? (
             <NotificationActions
               dismissAll={dismissAll}

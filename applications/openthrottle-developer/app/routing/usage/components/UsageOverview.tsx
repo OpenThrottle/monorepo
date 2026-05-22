@@ -53,15 +53,17 @@ export const UsageOverview = (props: UsageOverviewProps) => {
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 md:mt-8">
-        <Link className="text-primary underline" to="/prompts?type=AGENTS">
-          <Badge>Agents-type prompts</Badge>
-        </Link>
-        <Link className="text-primary underline" to="/prompts?type=SKILLS">
-          <Badge>Skills-type prompts</Badge>
-        </Link>
-        <Link className="text-primary underline" to="/skills">
-          <Badge>Repo skill paths</Badge>
-        </Link>
+        <Badge color="yellow" size="xs">
+          <Link to="/prompts?type=AGENTS">Agents-type prompts</Link>
+        </Badge>
+        {' · '}
+        <Badge color="orange" size="xs">
+          <Link to="/prompts?type=SKILLS">Skills-type prompts</Link>
+        </Badge>
+        {' · '}
+        <Badge color="red" size="xs">
+          <Link to="/skills">Repo skill paths</Link>
+        </Badge>
       </div>
     </div>
   );
