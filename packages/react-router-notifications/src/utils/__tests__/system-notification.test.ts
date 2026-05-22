@@ -103,10 +103,24 @@ describe('showSystemNotification', () => {
       close: vi.fn(),
       onclick: null,
     };
-    mockNotificationCtor = vi
-      .fn()
-      .mockImplementation(() => mockNotificationInstance);
+    class MockNotification {
+      static permission = 'granted';
 
+      onclick: (() => void) | null = null;
+
+      constructor(
+        _title: string,
+        _options?: { body?: string; data?: unknown; tag?: string },
+      ) {
+        Object.assign(this, mockNotificationInstance);
+      }
+
+      close(): void {
+        mockNotificationInstance.close();
+      }
+    }
+
+    mockNotificationCtor = vi.fn(MockNotification);
     notificationApi = Object.assign(mockNotificationCtor, {
       permission: 'granted',
     });
@@ -145,7 +159,6 @@ describe('showSystemNotification', () => {
 
   test('does not create Notification when Notification API is missing', () => {
     vi.stubGlobal('window', {
-      Notification: undefined,
       focus: vi.fn(),
       isSecureContext: true,
       localStorage: mockLocalStorage,
