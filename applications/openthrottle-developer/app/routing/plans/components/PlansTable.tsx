@@ -98,6 +98,37 @@ PlansTable.buildTable = (
     //   ),
     // },
     {
+      accessorKey: 'taskCount',
+      cell: ({ row }) => {
+        const count = row.original.taskCount ?? 0;
+        return (
+          <div
+            aria-label={`${count} tasks`}
+            className="p-2 text-center w-full tabular-nums"
+          >
+            {count}
+          </div>
+        );
+      },
+      header: () => <span className="p-2 text-center">Tasks</span>,
+    },
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => (
+        <div className="p-2">
+          <Link
+            // className="mx-auto"
+            to={`/plans?status=${row.original.status}`}
+            viewTransition={true}
+          >
+            <PlanStatusBadge status={row.original.status as PlanStatusKey} />
+          </Link>
+        </div>
+      ),
+      header: () => <div className="p-2">Status</div>,
+    },
+
+    {
       accessorKey: 'title',
       cell: ({ row }) => {
         const plan = row.original;
@@ -142,59 +173,11 @@ PlansTable.buildTable = (
                 Updated:{' '}
                 {formatDate(plan.updatedAt ?? plan.createdAt, 'MM/dd/yyyy')}
               </span>
-              {/* {plan.category ? (
-                <Badge
-                  aria-label={`Category: ${plan.category}`}
-                  size="sm"
-                  variant="secondary"
-                >
-                  {plan.category}
-                </Badge>
-              ) : null} */}
             </div>
-            {/* {plan.summary ? (
-              <Tooltip>
-                <TooltipTrigger asChild={true}>
-                  <p
-                    className="mt-0.5 line-clamp-1 text-ellipsis text-xs text-muted-foreground"
-                    title={plan.summary}
-                  >
-                    {plan.summary.length > DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH
-                      ? `${plan.summary.slice(0, DEFAULT_PLAN_SUMMARY_TRUNCATE_LENGTH)}…`
-                      : plan.summary}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent side="top">{plan.summary}</TooltipContent>
-              </Tooltip>
-            ) : null} */}
           </div>
         );
       },
       header: () => <div className="p-2">Plan</div>,
-    },
-    {
-      accessorKey: 'status',
-      cell: ({ row }) => (
-        <Link to={`/plans?status=${row.original.status}`} viewTransition={true}>
-          <PlanStatusBadge status={row.original.status as PlanStatusKey} />
-        </Link>
-      ),
-      header: () => <div className="p-2">Status</div>,
-    },
-    {
-      accessorKey: 'taskCount',
-      cell: ({ row }) => {
-        const count = row.original.taskCount ?? 0;
-        return (
-          <div
-            aria-label={`${count} tasks`}
-            className="tabular-nums text-center"
-          >
-            {count}
-          </div>
-        );
-      },
-      header: () => <span className="inline-block w-full">Tasks</span>,
     },
     {
       cell: ({ row }) => {
