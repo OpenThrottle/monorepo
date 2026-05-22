@@ -6,7 +6,6 @@ import { existsSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
 import { DEFAULT_RALPH_PROMPT } from './ralph-runtime-config';
 import {
-  compareJobRunHookEntries,
   DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS,
   JOB_RUN_HOOK_SKILL_PATH_PREFIXES,
   MAX_JOB_RUN_HOOK_STRING_LEN,
@@ -78,10 +77,11 @@ const parseOptionalPositiveInt = (
 };
 
 const parsePhase = (value: unknown): JobRunHookPhase => {
-  if (typeof value !== 'string' || !JOB_RUN_HOOK_PHASES.includes(value as JobRunHookPhase)) {
-    throw new Error(
-      `phase must be one of: ${JOB_RUN_HOOK_PHASES.join(', ')}`,
-    );
+  if (
+    typeof value !== 'string' ||
+    !JOB_RUN_HOOK_PHASES.includes(value as JobRunHookPhase)
+  ) {
+    throw new Error(`phase must be one of: ${JOB_RUN_HOOK_PHASES.join(', ')}`);
   }
   return value as JobRunHookPhase;
 };
@@ -279,7 +279,10 @@ export const parseJobRunHookEntry = (
   }
   const conditions = parseConditions(raw.conditions);
 
-  if (conditions?.whenMainRunSucceeded !== undefined && phase === 'before_run') {
+  if (
+    conditions?.whenMainRunSucceeded !== undefined &&
+    phase === 'before_run'
+  ) {
     throw new Error(
       'conditions.whenMainRunSucceeded is only valid for after_run hooks',
     );
@@ -351,8 +354,8 @@ export const parseJobRunHookEntry = (
   return {
     ...base,
     kind: 'prompt_profile',
-    promptDelivery: 'named',
     prompt: validateJobRunHookNamedPrompt(named),
+    promptDelivery: 'named',
   };
 };
 

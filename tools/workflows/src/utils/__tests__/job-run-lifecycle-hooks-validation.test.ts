@@ -84,10 +84,10 @@ describe('parseJobRunHookEntry', () => {
   it('rejects whenMainRunSucceeded on before_run', () => {
     expect(() =>
       parseJobRunHookEntry({
+        conditions: { whenMainRunSucceeded: true },
         kind: 'skill',
         phase: 'before_run',
         skillPath: '.agents/skills/foo/SKILL.md',
-        conditions: { whenMainRunSucceeded: true },
       }),
     ).toThrow(/whenMainRunSucceeded/);
   });
@@ -110,16 +110,34 @@ describe('parseJobRunHooksConfig', () => {
 
   it('sorts before_run before after_run and by order', () => {
     const { hooks } = parseJobRunHooksConfig([
-      { kind: 'skill', phase: 'after_run', skillPath: '.agents/skills/a/SKILL.md', order: 1 },
-      { kind: 'prompt_profile', phase: 'before_run', prompt: '/agents/ralph', order: 2 },
-      { kind: 'prompt_profile', phase: 'before_run', prompt: '/agents/seo', order: 1 },
+      {
+        kind: 'skill',
+        order: 1,
+        phase: 'after_run',
+        skillPath: '.agents/skills/a/SKILL.md',
+      },
+      {
+        kind: 'prompt_profile',
+        order: 2,
+        phase: 'before_run',
+        prompt: '/agents/ralph',
+      },
+      {
+        kind: 'prompt_profile',
+        order: 1,
+        phase: 'before_run',
+        prompt: '/agents/seo',
+      },
     ]);
     expect(hooks.map((h) => h.phase)).toEqual([
       'before_run',
       'before_run',
       'after_run',
     ]);
-    if (hooks[0]?.kind === 'prompt_profile' && hooks[0].promptDelivery === 'named') {
+    if (
+      hooks[0]?.kind === 'prompt_profile' &&
+      hooks[0].promptDelivery === 'named'
+    ) {
       expect(hooks[0].prompt).toBe('/agents/seo');
     }
   });
@@ -164,52 +182,52 @@ describe('parseJobRunHooksConfig', () => {
 
 describe('shouldRunJobRunHook', () => {
   const beforeSkill = parseJobRunHookEntry({
+    conditions: { runKinds: ['spawn'] },
     kind: 'skill',
     phase: 'before_run',
     skillPath: '.agents/skills/x/SKILL.md',
-    conditions: { runKinds: ['spawn'] },
   });
 
   it('filters by runKinds', () => {
     expect(
       shouldRunJobRunHook(beforeSkill, {
+        mainRunStarted: false,
+        mainRunSucceeded: false,
         phase: 'before_run',
         runKind: 'spawn',
-        mainRunSucceeded: false,
-        mainRunStarted: false,
       }),
     ).toBe(true);
     expect(
       shouldRunJobRunHook(beforeSkill, {
+        mainRunStarted: false,
+        mainRunSucceeded: false,
         phase: 'before_run',
         runKind: 'orchestrator',
-        mainRunSucceeded: false,
-        mainRunStarted: false,
       }),
     ).toBe(false);
   });
 
   it('filters after_run by whenMainRunSucceeded', () => {
     const after = parseJobRunHookEntry({
+      conditions: { whenMainRunSucceeded: true },
       kind: 'prompt_profile',
       phase: 'after_run',
       prompt: '/agents/ralph',
-      conditions: { whenMainRunSucceeded: true },
     });
     expect(
       shouldRunJobRunHook(after, {
+        mainRunStarted: true,
+        mainRunSucceeded: true,
         phase: 'after_run',
         runKind: 'spawn',
-        mainRunSucceeded: true,
-        mainRunStarted: true,
       }),
     ).toBe(true);
     expect(
       shouldRunJobRunHook(after, {
+        mainRunStarted: true,
+        mainRunSucceeded: false,
         phase: 'after_run',
         runKind: 'spawn',
-        mainRunSucceeded: false,
-        mainRunStarted: true,
       }),
     ).toBe(false);
   });
@@ -218,12 +236,12 @@ describe('shouldRunJobRunHook', () => {
 describe('helpers', () => {
   it('resolveJobRunHookOnFailure applies defaults', () => {
     expect(
-      resolveJobRunHookOnFailure({ phase: 'before_run', onFailure: undefined }),
+      resolveJobRunHookOnFailure({ onFailure: undefined, phase: 'before_run' }),
     ).toBe('block');
     expect(
       resolveJobRunHookOnFailure({
-        phase: 'after_run',
         onFailure: 'ignore',
+        phase: 'after_run',
       }),
     ).toBe('ignore');
   });
@@ -236,9 +254,9 @@ describe('helpers', () => {
   it('formatJobRunHookEntryLabel includes phase and policy', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
+      onFailure: 'warn',
       phase: 'before_run',
       prompt: '/agents/ralph',
-      onFailure: 'warn',
     });
     expect(formatJobRunHookEntryLabel(entry)).toContain('before_run');
     expect(formatJobRunHookEntryLabel(entry)).toContain('warn');

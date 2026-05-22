@@ -146,7 +146,11 @@ describe('executePlanJobRunHooks', () => {
 
     await executePlanJobRunHooks({
       hooks: namedBeforeHook,
-      jobData: { ...baseJobData, executionBackend: 'claude', ralph: { model: 'gpt-4' } },
+      jobData: {
+        ...baseJobData,
+        executionBackend: 'claude',
+        ralph: { model: 'gpt-4' },
+      },
       logLabel: 'PlansProcessor',
       logger: mockLogger,
       phase: 'before_run',
@@ -178,9 +182,9 @@ describe('executePlanJobRunHooks', () => {
       jobData: { planId, runKind: 'orchestrator' },
       logLabel: 'test',
       logger: mockLogger,
-      phase: 'after_run',
       mainRunStarted: true,
       mainRunSucceeded: true,
+      phase: 'after_run',
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
       tasksService: mockTasksService,
@@ -271,9 +275,9 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
     });
     expect(emitQueueJobCompleted).toHaveBeenCalledWith(
       expect.objectContaining({
+        message: expect.stringContaining('blocked'),
         planId,
         severity: 'error',
-        message: expect.stringContaining('blocked'),
       }),
     );
   });
@@ -337,9 +341,9 @@ describe('runAfterRunHooksThenNotify', () => {
         {
           blocked: false,
           entry: namedBeforeHook.hooks[0]!,
+          errorMessage: 'hook failed',
           ok: false,
           onFailure: 'warn',
-          errorMessage: 'hook failed',
         },
       ],
     });
