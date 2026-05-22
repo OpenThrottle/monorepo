@@ -77,6 +77,21 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
   },
   {
     layout: 'agents',
+    repoRelativePath: '.agents/skills/openthrottle-generators/SKILL.md',
+    slug: 'openthrottle-generators',
+  },
+  {
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/openthrottle-stack/SKILL.md',
+    slug: 'openthrottle-stack',
+  },
+  {
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/ot-plans/SKILL.md',
+    slug: 'ot-plans',
+  },
+  {
+    layout: 'agents',
     repoRelativePath: '.agents/skills/secret-scanning/SKILL.md',
     slug: 'secret-scanning',
   },
@@ -84,6 +99,11 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
     layout: 'agents',
     repoRelativePath: '.agents/skills/shadcn/SKILL.md',
     slug: 'shadcn',
+  },
+  {
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/workflow-ralph/SKILL.md',
+    slug: 'workflow-ralph',
   },
   {
     layout: 'cursor',

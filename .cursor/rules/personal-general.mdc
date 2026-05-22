@@ -10,7 +10,7 @@ alwaysApply: true
 
 - Alphabetize arrays and object keys when their order doesn't matter.
 - Avoid type casing using `as` and using `any` as much as possible.
-- Use enums for structured data that must be hardcoded.
+- Do not introduce new TypeScript enums; use `as const` objects for enum-like values (see [enums.mdc](./coding/enums.mdc)). Retain existing enums.
 - Use `const` instead of `let` or `var` when possible.
 - Use `async/await` instead of `.then()` for asynchronous code.
 
@@ -18,7 +18,7 @@ alwaysApply: true
 
 ## UI Applications
 
-Our UI Applications use Remix and React.
+Our UI applications use React Router and React.
 
 ### Creating New Files
 

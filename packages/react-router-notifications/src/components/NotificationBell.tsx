@@ -79,9 +79,10 @@ export const NotificationBell = (
 
           {unreadCount > 0 ? (
             <Badge
-              className="absolute -right-1 -top-1 size-4 rounded-full p-0 text-[10px] items-center justify-center font-medium"
+              className="absolute -right-1 -top-1 size-4 rounded-full p-0 text-[10px]"
+              color="orange"
               data-testid="notification-bell-badge"
-              variant="destructive"
+              size="xs"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
