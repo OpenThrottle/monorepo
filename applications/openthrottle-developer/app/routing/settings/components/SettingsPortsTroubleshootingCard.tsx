@@ -5,7 +5,7 @@ import {
   LOCAL_SERVICES_PORTS_SERVICES_TABLE_HREF,
   VITE_DEVTOOLS_DOC_HREF,
 } from '../utils/settings-docs-links';
-import { BadgeQuestionMarkIcon } from 'lucide-react';
+import { BadgeInfoIcon } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 /**
@@ -36,7 +36,7 @@ export const SettingsPortsTroubleshootingCard = (
 
   return (
     <OpenThrottleFieldset
-      icon={BadgeQuestionMarkIcon}
+      icon={BadgeInfoIcon}
       id={SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID}
       legend="Local dev: ports, hosts & API URLs"
     >

@@ -28,6 +28,7 @@ import {
 } from '~/routing/settings/utils/settings-keys-action';
 import { optionalTrimmedString } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.keys';
+import { SettingsKeysServiceAccountCredentials } from '~/routing/settings/components/SettingsKeysServiceAccountCredentials';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -134,8 +135,8 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="space-y-8">
-        <SettingsKeysIntroduction />
+      <SettingsKeysIntroduction />
+      <div className="flex flex-col gap-4">
         <SettingsKeysToolbar
           canCreate={canManageCredentials}
           createDialogOpen={createDialogOpen}
@@ -149,13 +150,14 @@ export default function Component(
           canRevoke={canManageCredentials}
           credentials={credentials}
         />
-        <SettingsKeysForm
-          actionData={createActionData}
-          createDialogOpen={createDialogOpen}
-          onCreateDialogOpenChange={setCreateDialogOpen}
-          serviceAccountId={selectedServiceAccountId}
-        />
       </div>
+      <SettingsKeysServiceAccountCredentials />
+      <SettingsKeysForm
+        actionData={createActionData}
+        createDialogOpen={createDialogOpen}
+        onCreateDialogOpenChange={setCreateDialogOpen}
+        serviceAccountId={selectedServiceAccountId}
+      />
     </GlobalScreen>
   );
 }

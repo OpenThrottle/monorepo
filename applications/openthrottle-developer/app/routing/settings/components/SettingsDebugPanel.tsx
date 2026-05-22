@@ -9,7 +9,7 @@ import {
   GLOBAL_METRICS_STAT_CARD_DOCS,
 } from '@openthrottle/react-router-ui-global';
 import type { GlobalMetricsChartLineKey } from '@openthrottle/react-router-ui-global';
-import { BugIcon } from 'lucide-react';
+import { BugIcon, DatabaseIcon, BadgeInfoIcon } from 'lucide-react';
 import { SettingsPortsTroubleshootingCard } from '~/routing/settings/components/SettingsPortsTroubleshootingCard';
 import { SettingsFeatureFlags } from '~/routing/settings/components/SettingsFeatureFlags';
 import { SettingsEnvironment } from '~/routing/settings/components/SettingsEnvironment';
@@ -103,6 +103,7 @@ export const SettingsDebugPanel = (props: SettingsDebugPanelProps) => {
       <SettingsPortsTroubleshootingCard />
 
       <OpenThrottleFieldset
+        icon={BadgeInfoIcon}
         id="server-metrics-definitions"
         legend="Server metrics definitions"
       >
@@ -192,6 +193,7 @@ const SettingsGraphQLHealthCard = (props: SettingsGraphQLHealthCardProps) => {
 
   return (
     <OpenThrottleFieldset
+      icon={DatabaseIcon}
       id="graphql-endpoint-health"
       legend="GraphQL endpoint health"
     >
