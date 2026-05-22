@@ -1,10 +1,5 @@
 import * as React from 'react';
-import {
-  Card,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@openthrottle/react-router-shadcn';
+import { Card, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
@@ -75,7 +70,6 @@ import {
   PLANS_DETAIL_TAB_SEARCH_PARAM,
   parsePlanDetailTab,
   parsePlanTasksView,
-  type PlanDetailTab,
 } from '~/routing/plans/utils/parsers';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
@@ -89,6 +83,7 @@ import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   OpenThrottleClipboard,
   OpenThrottleEmptyState,
+  OpenThrottleTabs,
 } from '@openthrottle/react-router-ui';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
@@ -173,9 +168,6 @@ export default function Component(
   const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
-  const planDetailTab: PlanDetailTab =
-    parsePlanDetailTab(searchParams.get(PLANS_DETAIL_TAB_SEARCH_PARAM)) ??
-    'overview';
 
   const planId = params.planId ?? '';
   const status =
@@ -217,20 +209,6 @@ export default function Component(
       : undefined;
 
   // Handlers
-  const onPlanDetailTabChange = (next: string): void => {
-    const parsed = parsePlanDetailTab(next);
-    const tab: PlanDetailTab = parsed ?? 'overview';
-    const nextParams = new URLSearchParams(searchParams);
-
-    if (tab === 'overview') {
-      nextParams.delete(PLANS_DETAIL_TAB_SEARCH_PARAM);
-    } else {
-      nextParams.set(PLANS_DETAIL_TAB_SEARCH_PARAM, tab);
-    }
-
-    setSearchParams(nextParams, { preventScrollReset: true });
-  };
-
   const onResetToDefaults = (): void => {
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
@@ -389,10 +367,12 @@ export default function Component(
         </div>
 
         <div className="">
-          <Tabs
-            className="w-full"
-            onValueChange={onPlanDetailTabChange}
-            value={planDetailTab}
+          <OpenThrottleTabs
+            urlSync={{
+              defaultValue: 'overview',
+              param: PLANS_DETAIL_TAB_SEARCH_PARAM,
+              parse: (raw) => parsePlanDetailTab(raw) ?? undefined,
+            }}
           >
             <TabsList
               className="mb-8 gap-4 justify-start max-w-full overflow-x-auto overflow-y-hidden w-full"
@@ -471,7 +451,7 @@ export default function Component(
               </p>
             ) : null}
             <PlanTabsMetadata plan={plan} />
-          </Tabs>
+          </OpenThrottleTabs>
         </div>
       </GlobalScreen>
 

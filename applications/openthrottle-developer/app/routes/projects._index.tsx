@@ -169,7 +169,9 @@ export default function Component(
             multi-app work.
           </p>
         </div>
+      </div>
 
+      <div className="flex flex-col gap-4">
         <ProjectsToolbar
           limit={limit}
           page={page}
@@ -178,25 +180,24 @@ export default function Component(
           sortOrder={sortOrder}
           view={view}
         />
+        {isEmpty ? (
+          <ProjectEmpty search={search} />
+        ) : (
+          <>
+            <ProjectsTable projects={projects} />
+            <OpenThrottlePagination
+              className="mt-8"
+              limit={limit}
+              page={page}
+              search={search}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              total={totalCount}
+              view={view}
+            />
+          </>
+        )}
       </div>
-
-      {isEmpty ? (
-        <ProjectEmpty search={search} />
-      ) : (
-        <>
-          <ProjectsTable projects={projects} />
-          <OpenThrottlePagination
-            className="mt-8"
-            limit={limit}
-            page={page}
-            search={search}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            total={totalCount}
-            view={view}
-          />
-        </>
-      )}
     </GlobalScreen>
   );
 }
