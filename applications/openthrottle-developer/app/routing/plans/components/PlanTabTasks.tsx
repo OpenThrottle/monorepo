@@ -39,13 +39,6 @@ export const PlanTabTasks = (props: PlanTabTasksProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (tasks.length === 0) {
-    return (
-      <TabsContent value="tasks">
-        <PlanTasksEmpty />
-      </TabsContent>
-    );
-  }
 
   return (
     <TabsContent value="tasks">
@@ -56,6 +49,7 @@ export const PlanTabTasks = (props: PlanTabTasksProps) => {
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
           data={data}
+          emptyState={<PlanTasksEmpty />}
           getRowId={getRowId}
           getRowProps={getRowProps}
         />

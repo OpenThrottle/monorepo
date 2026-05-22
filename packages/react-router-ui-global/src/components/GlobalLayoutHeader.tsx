@@ -150,6 +150,7 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
         </Tooltip>
         <GlobalLayoutBreadcrumbs />
       </div>
+
       <ChatDialog
         title="OpenThrottle Assistant"
         triggerLabel="Chat"
