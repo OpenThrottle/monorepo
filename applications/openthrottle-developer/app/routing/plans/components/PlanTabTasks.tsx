@@ -74,18 +74,14 @@ PlanTabTasks.buildTable = (): ColumnDef<
       cell: ({ row }) => {
         const status = row.original.status;
         return (
-          <div className="px-4 py-2">
+          <div className="p-2">
             <PlanStatusBadge
               status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
             />
           </div>
         );
       },
-      header: () => (
-        <span className="px-4 py-2 inline-block w-full text-center">
-          Status
-        </span>
-      ),
+      header: () => <span className="p-2 text-center">Status</span>,
     },
     {
       accessorKey: 'title',

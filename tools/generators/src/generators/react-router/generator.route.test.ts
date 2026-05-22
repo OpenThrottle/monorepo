@@ -25,7 +25,7 @@ describe('generatorReactRouterRoute', () => {
       'nx.json',
       'tsconfig.base.json',
       'applications/openthrottle/app/routes/example.route._index.tsx',
-      'applications/openthrottle/app/routes/example.route._index.tsx.graphql.tmp',
+      'applications/openthrottle/app/routes/example.route._index.tsx.graphql',
       'applications/openthrottle/app/routes/__tests__/example.route._index.test.tsx',
     ]);
   });

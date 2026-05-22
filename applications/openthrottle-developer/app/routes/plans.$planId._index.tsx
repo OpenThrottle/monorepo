@@ -356,9 +356,7 @@ export default function Component(
             className="mb-4"
             icon={NotebookTextIcon}
             title={plan.title ?? 'Untitled'}
-          >
-            <div></div>
-          </GlobalHeading>
+          />
           <div className="text-sm text-muted-foreground line-clamp-3">
             <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
             {formatPlanDate(plan.updatedAt)}

@@ -55,7 +55,7 @@ describe('routes/dashboard._index.tsx', () => {
         .mockResolvedValueOnce(mockGithubStats);
 
       const request = new Request(
-        'http://localhost/dashboard?owner=shiftsmartinc&repo=native-apps',
+        'http://localhost/dashboard?owner=openthrottle&repo=openthrottle',
       );
       const args: Route.LoaderArgs = {
         context: {},
@@ -71,7 +71,7 @@ describe('routes/dashboard._index.tsx', () => {
         2,
         request,
         expect.any(Object),
-        { owner: 'shiftsmartinc', repo: 'native-apps' },
+        { owner: 'openthrottle', repo: 'openthrottle' },
       );
     });
 

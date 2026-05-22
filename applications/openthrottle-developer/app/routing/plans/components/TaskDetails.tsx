@@ -7,12 +7,10 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-  CardTitle,
   Separator,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 
 export interface TaskDetailsProps {
   className?: string;
@@ -28,8 +26,10 @@ const SUMMARY_PREVIEW_LINES = 3;
  */
 function formatTaskDate(value: string | number | unknown): string {
   if (value == null) return '—';
-  const date =
-    typeof value === 'number' ? new Date(value) : new Date(String(value));
+
+  const isNumber = typeof value === 'number';
+  const date = isNumber ? new Date(value) : new Date(String(value));
+
   return Number.isNaN(date.getTime())
     ? '—'
     : format(date, 'MMM d, yyyy h:mm a');
@@ -77,17 +77,6 @@ export const TaskDetails = (props: TaskDetailsProps) => {
       <Card className="mb-6">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">
-            <CardTitle className="flex items-center gap-4">
-              <PlanStatusBadge
-                status={task.status as keyof typeof PlanStatusBadge}
-              />
-              <h1 className="text-lg text-accent line-clamp-1">{task.title}</h1>
-
-              <div className="flex-1" />
-            </CardTitle>
-
-            <div className="flex flex-wrap items-center gap-2 text-sm mb-6"></div>
-
             <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
               {task.assignee != null && task.assignee !== '' && (
                 <div className="flex flex-wrap gap-x-2">

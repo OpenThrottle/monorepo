@@ -156,7 +156,7 @@ export const SettingsLogsPanel = (_props: SettingsLogsPanelProps) => {
     <>
       <div>
         <GlobalHeading
-          className="mb-2"
+          className="mb-4"
           heading="h3"
           icon={ScrollText}
           title="Logs"
@@ -167,7 +167,7 @@ export const SettingsLogsPanel = (_props: SettingsLogsPanelProps) => {
           Server workflow and agent streams are described below—when an operator
           API exists, optional tailing can plug into the same bundle shape.
         </p>
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
+        <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
           Logs may include URLs or user-visible strings. Only copy or export
           what you intend to share; the support bundle redacts env secrets but
           not every substring inside log lines.

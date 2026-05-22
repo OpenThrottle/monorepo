@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
   DATABASE_BACKUP_DEFAULT_CRON_PATTERN,
   DATABASE_BACKUP_DEFAULT_JOB_TIMEOUT_MS,
@@ -26,6 +26,10 @@ describe('resolveDatabaseBackupSchedule', () => {
   });
 
   describe('when DATABASE_BACKUP_CRON is unset', () => {
+    beforeEach(() => {
+      clearEnv();
+    });
+
     test('returns disabled', () => {
       const result = resolveDatabaseBackupSchedule();
       expect(result.enabled).toBe(false);
