@@ -32,7 +32,7 @@ Copy defaults into local env files (gitignored):
 
 **Auth (default):** Server `.env.default` has **`APP_ENABLE_AUTHENTICATION=true`**. MCP and workers need long-lived **service account** tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/mcp-developer/docs/AUTH.md).
 
-**Embeddings (MCP launcher):** Root `.env` should include **`OPENAI_API_KEY=…`** if you use [`scripts/run-mcp-developer.sh`](../../scripts/run-mcp-developer.sh) (required today). For Ollama-only local stacks, see [run-locally-oss.md](./run-locally-oss.md).
+**Embeddings:** Configure **`OPENAI_API_KEY`** or **`OLLAMA_BASE_URL`** on **`applications/openthrottle-server/.env`** (not required in root `.env` for the MCP launcher). [`scripts/run-mcp-developer.sh`](../../scripts/run-mcp-developer.sh) starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-mcp-developersh).
 
 ---
 
@@ -134,7 +134,7 @@ export MCP_DEVELOPER_AUTH_TOKEN="ot_sa_<prefix>_<secret>"
 API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
 ```
 
-Expect **`OK: GET …/health`**, **`OK: OPENAI_API_KEY`**, and with the token set **`OK: authenticated GraphQL listSources`**.
+Expect **`OK: GET …/health`**, **`OK: embedding provider configured`** (or a WARN with link to run-locally-oss), and with the token set **`OK: authenticated GraphQL listSources`**.
 
 ### In Cursor
 
@@ -159,14 +159,14 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 
 ## Troubleshooting
 
-| Symptom                                | What to check                                                                                  |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `database:migrate` fails               | Postgres up? `pnpm run database:start`                                                         |
-| Bootstrap: missing service account     | Run migrate first (migration **045**)                                                          |
-| `/health` unreachable                  | Server running? `PORT` matches `API_URL_INTERNAL`                                              |
-| MCP exits: `OPENAI_API_KEY is not set` | Root `.env` or use Ollama path in [run-locally-oss.md](./run-locally-oss.md)                   |
-| Authenticated tools 401/403            | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/mcp-developer/docs/AUTH.md) |
-| MCP script not found in Cursor         | Use absolute path to `run-mcp-developer.sh`                                                    |
+| Symptom                            | What to check                                                                                                   |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                                          |
+| Bootstrap: missing service account | Run migrate first (migration **045**)                                                                           |
+| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                               |
+| `semantic_search` empty or errors  | Set **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on server `.env` — [run-locally-oss.md](./run-locally-oss.md) |
+| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/mcp-developer/docs/AUTH.md)                  |
+| MCP script not found in Cursor     | Use absolute path to `run-mcp-developer.sh`                                                                     |
 
 ---
 

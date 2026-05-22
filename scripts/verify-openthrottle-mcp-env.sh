@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Verifies local prerequisites for OpenThrottle MCP (@openthrottle/mcp-developer):
-# openthrottle-server reachable, OPENAI key for run-mcp-developer.sh, optional auth token.
+# openthrottle-server reachable, embedding config hint, optional auth token.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -22,10 +22,20 @@ fi
 
 echo "OK: GET ${BASE}/health"
 
-if [ -f .env ] && grep -qE '^OPENAI_API_KEY=.+' .env; then
-  echo "OK: OPENAI_API_KEY is set in .env (required by scripts/run-mcp-developer.sh)"
+has_embedding_config() {
+  local file="$1"
+  [ -f "$file" ] || return 1
+  grep -qE '^OPENAI_API_KEY=.+' "$file" 2>/dev/null && return 0
+  grep -qE '^OLLAMA_BASE_URL=.+' "$file" 2>/dev/null && return 0
+  return 1
+}
+
+SERVER_ENV="${ROOT}/applications/openthrottle-server/.env"
+if has_embedding_config .env || has_embedding_config "${SERVER_ENV}"; then
+  echo "OK: embedding provider configured (OPENAI_API_KEY or OLLAMA_BASE_URL in root .env and/or server .env)"
 else
-  echo "WARN: OPENAI_API_KEY missing or empty in .env — scripts/run-mcp-developer.sh will exit until set."
+  echo "WARN: no OPENAI_API_KEY or OLLAMA_BASE_URL in root .env or applications/openthrottle-server/.env"
+  echo "      MCP starts without a launcher key; semantic_search needs server-side embeddings — see docs/openthrottle/run-locally-oss.md"
 fi
 
 if [ -n "${MCP_DEVELOPER_AUTH_TOKEN:-}" ]; then
