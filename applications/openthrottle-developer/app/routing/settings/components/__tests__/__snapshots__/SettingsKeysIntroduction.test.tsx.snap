@@ -3,6 +3,47 @@
 exports[`SettingsKeysIntroduction Component > should render 1`] = `
 <body>
   <div>
+    <div>
+      <div
+        class="flex gap-2"
+      >
+        <h1
+          class="flex flex-1 items-center gap-4 mb-4"
+          data-testid="GlobalHeading"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-key-round size-4 text-muted-foreground"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"
+            />
+            <circle
+              cx="16.5"
+              cy="7.5"
+              fill="currentColor"
+              r=".5"
+            />
+          </svg>
+          Keys
+        </h1>
+      </div>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Long-lived bearer tokens for automation (MCP, Ralph workers, CI). Each credential uses the
+         
+      </p>
+    </div>
     <div
       class="flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm"
       data-slot="card"
@@ -65,7 +106,8 @@ exports[`SettingsKeysIntroduction Component > should render 1`] = `
           >
             Rotation:
           </span>
-           create a new credential, update your env, then revoke the old one from the table below. Revoked or expired credentials stop working at the next request.
+           
+          create a new credential, update your env, then revoke the old one from the table below. Revoked or expired credentials stop working at the next request.
         </p>
         <p>
           Human JWT sessions manage these keys in the developer portal; service account tokens must not call these admin mutations. See

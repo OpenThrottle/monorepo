@@ -63,7 +63,7 @@ export async function handleSendAgentMessageIntent(
 /**
  * @description Call `agentsRunChatTurn` on openthrottle-server with auth from the request cookie.
  */
-async function callSendAgentMessage(
+export async function callSendAgentMessage(
   request: Request,
   params: CallSendAgentMessageParams,
 ): Promise<ChatTurnResult> {

@@ -12,6 +12,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
 
   beforeEach(() => {
     props = {
+      heading: '04. Prompt',
       onPromptChange: vi.fn(),
       onPromptFileChange: vi.fn(),
       onPromptLayerChange: vi.fn(),
@@ -21,19 +22,13 @@ describe('PlanWorkflowConfigPrompt Component', () => {
     };
   });
 
-  test('should render Layer 1 prompt profile fieldset', () => {
+  test('should render prompt profile fieldset', () => {
     const Component = () => <PlanWorkflowConfigPrompt {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
     expect(
       component.getByTestId('PlanWorkflowConfigPrompt'),
-    ).toBeInTheDocument();
-    expect(
-      component.getByText('Layer 1', { exact: false }),
-    ).toBeInTheDocument();
-    expect(
-      component.getByText('Prompt profile', { exact: false }),
     ).toBeInTheDocument();
     expect(
       component.getByLabelText('Prompt profile for --prompt'),
@@ -74,6 +69,7 @@ describe('PlanWorkflowConfigPrompt Component', () => {
 
   test('should show placeholder from DEFAULT_RALPH_PROMPT when prompt is empty', () => {
     props = {
+      heading: '04. Prompt',
       onPromptChange: vi.fn(),
       onPromptFileChange: vi.fn(),
       onPromptLayerChange: vi.fn(),

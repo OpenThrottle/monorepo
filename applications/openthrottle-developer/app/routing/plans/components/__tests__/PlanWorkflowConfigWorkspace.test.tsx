@@ -19,6 +19,7 @@ describe('PlanWorkflowConfigWorkspace Component', () => {
     overrides: Partial<PlanWorkflowConfigWorkspaceProps> = {},
   ) => {
     const props: PlanWorkflowConfigWorkspaceProps = {
+      heading: '02. Workspace',
       onChange,
       value: '',
       ...overrides,
@@ -34,7 +35,7 @@ describe('PlanWorkflowConfigWorkspace Component', () => {
     renderComponent();
 
     expect(
-      screen.getByTestId('PlanWorkflowConfigWorkspace'),
+      screen.getByRole('group', { name: '02. Workspace' }),
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText('Absolute path to workspace directory'),

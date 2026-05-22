@@ -49,7 +49,9 @@ describe('PlanWorkflowCommand Component', () => {
       `--plan ${planId}`,
     );
     expect(
-      getByRole('button', { name: 'Copy canonical command' }),
+      getByRole('button', {
+        name: `pnpm exec workflow-ralph --plan ${planId}`,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -77,7 +79,7 @@ describe('PlanWorkflowCommand Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 
-    fireEvent.click(getByRole('button', { name: 'Copy canonical command' }));
+    fireEvent.click(getByRole('button', { name: line }));
 
     expect(document.execCommand).toHaveBeenCalledWith('copy');
     expect(lastCopiedViaExecCommand).toBe(line);

@@ -12,6 +12,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
 
   beforeEach(() => {
     props = {
+      heading: '06. Worktree',
       input: getDefaultWorkflowRalphRunOptionsInput(),
       setInput: vi.fn(),
     };
@@ -20,9 +21,8 @@ describe('PlanWorkflowConfigWorktree Component', () => {
   test('renders worktree fieldset and default omit mode', () => {
     const Component = () => <PlanWorkflowConfigWorktree {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByTestId, getByLabelText } = render(<RoutesStub />);
+    const { getByLabelText } = render(<RoutesStub />);
 
-    expect(getByTestId('PlanWorkflowConfigWorktree')).toBeInTheDocument();
     expect(getByLabelText('--worktree')).toBeInTheDocument();
   });
 
@@ -54,6 +54,7 @@ describe('PlanWorkflowConfigWorktree Component', () => {
 
   test('shows cursor-only fields when backend is cursor', () => {
     props = {
+      heading: '06. Worktree',
       input: getDefaultWorkflowRalphRunOptionsInput(),
       setInput: vi.fn(),
     };
