@@ -10,7 +10,7 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
   - See `docs/monorepo/NX/tags.md`.
   - Validate with `pnpm nx:validate-tags`.
 - **Caching**: remote caching is configured via `@nx/gcs-cache` with a **two-bucket model** in CI (staging vs production).
-  - Setup notes: `docs/infra/nx-gcs-cache-setup.md`.
+  - Setup notes: `docs/infra/gcs-nx-cache-verify.md`.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`.
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
 

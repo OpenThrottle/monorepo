@@ -398,6 +398,11 @@
       "keytar",
       "msgpackr-extract",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ],
     "overrides": {
@@ -419,7 +424,7 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
     "build": "pnpm run build:packages",
-    "build:docker": "pnpm run docker:build",
+    "build:docker": "pnpm nx run openthrottle-server:docker-build",
     "build:graphql": "nx run-many --target \"codegen:build\" --projects tag:production:true",
     "build:licenses": "pnpm dlx license-checker --csv --production --out \"$(basename $PWD)-licenses.csv\"",
     "build:packages": "nx run-many --target build --projects tag:type:package,tag:type:tool",
