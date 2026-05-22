@@ -34,8 +34,8 @@ describe('showConfiguration', () => {
     showConfiguration(baseArgs());
 
     const cwdLine = logSpy.mock.calls
-      .map((call) => String(call[0]))
-      .find((line) => line.includes('working directory:'));
+      .map((call: readonly unknown[]) => String(call[0]))
+      .find((line: string) => line.includes('working directory:'));
 
     expect(cwdLine).toContain(process.cwd());
     expect(cwdLine).toContain('process cwd');
@@ -45,8 +45,11 @@ describe('showConfiguration', () => {
     showConfiguration({ ...baseArgs(), worktree: 'my-wt' });
 
     const worktreeLine = logSpy.mock.calls
-      .map((call) => String(call[0]))
-      .find((line) => line.includes('worktree:') && line.includes('agent CLI'));
+      .map((call: readonly unknown[]) => String(call[0]))
+      .find(
+        (line: string) =>
+          line.includes('worktree:') && line.includes('agent CLI'),
+      );
 
     expect(worktreeLine).toContain('my-wt');
   });

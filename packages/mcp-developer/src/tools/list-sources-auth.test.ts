@@ -26,8 +26,10 @@ describe('listSourcesToolHandler — auth enabled path', () => {
   it('fails when MCP_DEVELOPER_AUTH_TOKEN is unset', async () => {
     const result = await listSourcesToolHandler({});
 
-    expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toMatch(/MCP_DEVELOPER_AUTH_TOKEN/);
+    expect(result).toMatchObject({
+      content: [{ text: expect.stringMatching(/MCP_DEVELOPER_AUTH_TOKEN/) }],
+      isError: true,
+    });
     expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
@@ -42,13 +44,16 @@ describe('listSourcesToolHandler — auth enabled path', () => {
 
     const result = await listSourcesToolHandler({});
 
-    expect(result.isError).not.toBe(true);
+    expect(result).toMatchObject({
+      structuredContent: {
+        plans: [{ id: 'plan-1', title: 'Smoke plan' }],
+      },
+    });
     expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
       serviceAccountToken,
       expect.anything(),
       {},
     );
-    expect(result.structuredContent?.plans).toHaveLength(1);
   });
 
   it('calls executeGraphqlWithAuth with per-request ot_sa token', async () => {
@@ -60,9 +65,8 @@ describe('listSourcesToolHandler — auth enabled path', () => {
     });
 
     await withMcpDeveloperAuthToken(serviceAccountToken, async () => {
-      const result = await listSourcesToolHandler({});
+      await listSourcesToolHandler({});
 
-      expect(result.isError).not.toBe(true);
       expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),

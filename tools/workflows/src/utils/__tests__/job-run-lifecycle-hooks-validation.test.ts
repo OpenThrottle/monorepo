@@ -155,7 +155,7 @@ describe('parseJobRunHooksConfig', () => {
   it('rejects more than max total hooks', () => {
     const hooks = Array.from({ length: 21 }, (_, index) => ({
       kind: 'prompt_profile' as const,
-      phase: (index < 11 ? 'before_run' : 'after_run') as const,
+      phase: index < 11 ? ('before_run' as const) : ('after_run' as const),
       prompt: '/agents/ralph',
       promptDelivery: 'named' as const,
     }));

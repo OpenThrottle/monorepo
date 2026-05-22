@@ -37,7 +37,7 @@ function role(id: string, name: string, permissions: Permission[]): Role {
 }
 
 describe('RolesService (service accounts)', () => {
-  type UserRepo = ReturnType<RolesService['getRepository']> & {
+  type UserRepo = {
     findOne: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
   };
