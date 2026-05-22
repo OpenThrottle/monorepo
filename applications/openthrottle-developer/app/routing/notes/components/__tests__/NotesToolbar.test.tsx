@@ -19,7 +19,19 @@ describe('NotesToolbar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toolbar shell', () => {
+    expect(component.getByTestId('NotesToolbar')).toBeInTheDocument();
+  });
+
+  test('renders notes search input', () => {
+    expect(
+      component.getByRole('searchbox', { name: /search notes/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('renders Create note link', () => {
+    expect(
+      component.getByRole('link', { name: /create note/i }),
+    ).toHaveAttribute('href', '/notes/create');
   });
 });
