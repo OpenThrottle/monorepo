@@ -11,8 +11,7 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 /**
  * @description Fragment id for deep links from Appearance diagnostics and bookmarks — stable URL: `/settings/debug#ports-hosts-api-troubleshooting`.
  */
-export const SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID =
-  'ports-hosts-api-troubleshooting' as const;
+export const SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID = `ports-hosts-api-troubleshooting`;
 
 export interface SettingsPortsTroubleshootingCardProps {}
 
