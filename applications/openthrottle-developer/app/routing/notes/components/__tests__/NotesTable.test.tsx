@@ -11,7 +11,7 @@ describe('NotesTable Component', () => {
   let props: NotesTableProps;
 
   beforeEach(() => {
-    props = {};
+    props = { notes: [] };
 
     const Component = () => <NotesTable {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,11 @@ describe('NotesTable Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('shows empty state when notes is empty', () => {
+    expect(component.getByTestId('NotesTable')).toBeInTheDocument();
+    expect(component.getByText('No notes yet')).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'Create note' }),
+    ).toHaveAttribute('href', '/notes/create');
   });
 });

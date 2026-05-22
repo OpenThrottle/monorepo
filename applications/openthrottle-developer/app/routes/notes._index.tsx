@@ -64,7 +64,7 @@ export default function Component(
 
       <div className="flex-flex-col gap-4">
         <NotesToolbar />
-        <NotesTable />
+        <NotesTable notes={notes} />
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
