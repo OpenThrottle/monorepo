@@ -8,6 +8,8 @@ This playbook is for someone who has already configured the **mcp-developer** MC
 
 ## Quick start
 
+**New clone?** Follow [local-quickstart.md](./local-quickstart.md) first (env → migrate → bootstrap → server → verify MCP), then return here.
+
 1. Confirm [Prerequisites](#prerequisites-checklist) (server up, MCP pointed at GraphQL, token env).
 2. Read the [Mental model](#mental-model-post-setup) so you know when to use OT MCP vs docs-MCP vs repo rules.
 3. Run the [Prompt sequence](#prompt-sequence-minimal-e2e) in Cursor to complete one trivial but real workflow (search → plan → task → commit).
