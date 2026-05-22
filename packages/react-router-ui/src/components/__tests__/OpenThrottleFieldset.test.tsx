@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
@@ -10,7 +11,10 @@ describe('OpenThrottleFieldset Component', () => {
   let props: OpenThrottleFieldsetProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      id: 'fieldset',
+      legend: 'Fieldset',
+    };
 
     const Component = () => <OpenThrottleFieldset {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

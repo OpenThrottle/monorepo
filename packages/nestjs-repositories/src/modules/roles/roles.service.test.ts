@@ -108,7 +108,7 @@ describe('RolesService (service accounts)', () => {
         id: serviceAccountId,
         name: 'mcp-developer',
         roles: [],
-      } as ServiceAccount);
+      });
 
       const permissions =
         await service.getPermissionsForServiceAccount(serviceAccountId);
@@ -158,7 +158,7 @@ describe('RolesService (service accounts)', () => {
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue({
         id: serviceAccountId,
         roles: [],
-      } as ServiceAccount);
+      });
 
       const names =
         await service.findRoleNamesByServiceAccountId(serviceAccountId);

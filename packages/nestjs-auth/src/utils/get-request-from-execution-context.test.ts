@@ -18,7 +18,7 @@ const createHttpContext = (httpReq: { user?: JwtPayload }): ExecutionContext =>
   }) as unknown as ExecutionContext;
 
 const createGraphqlContext = (
-  gqlReq: { user?: JwtPayload },
+  _gqlReq: { user?: JwtPayload },
   httpReq: { user?: JwtPayload } = {},
 ): ExecutionContext =>
   ({
