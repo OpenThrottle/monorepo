@@ -304,6 +304,7 @@
     },
     "test": {
       "cache": true,
+      "dependsOn": ["@tools/dotfiles:build"],
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^default"],
       "options": {
