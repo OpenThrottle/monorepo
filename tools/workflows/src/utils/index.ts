@@ -47,7 +47,8 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
   if (ralphDebugLevel !== 'off') console.log(` - 🐛 debug: ${COLORS.green}${ralphDebugLevel}${COLORS.reset}`); // prettier-ignore
 
   if (worktree !== undefined) {
-    const label = worktree === '' ? '(agent default name)' : worktree;
+    const label =
+      worktree == null || worktree === '' ? '(agent default name)' : worktree;
     console.log(` - 🌳 worktree: ${COLORS.green}${label}${COLORS.reset} (agent CLI)`); // prettier-ignore
   }
 
@@ -58,6 +59,8 @@ export const showConfiguration = (parsedArgs: RalphArgs): void => {
   if (skipWorktreeSetup === true) {
     console.log(` - 🌳 skip-worktree-setup: ${COLORS.green}true${COLORS.reset}`); // prettier-ignore
   }
+
+  console.log(``);
 };
 
 /**
