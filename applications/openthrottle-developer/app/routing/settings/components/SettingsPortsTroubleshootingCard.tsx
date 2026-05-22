@@ -148,7 +148,7 @@ export const SettingsPortsTroubleshootingCard = (
           </ul>
         </div>
 
-        <p>
+        <div className="flex gap-4">
           <Badge color="yellow" size="xs">
             <a
               href={LOCAL_SERVICES_PORTS_SERVICES_TABLE_HREF}
@@ -174,7 +174,7 @@ export const SettingsPortsTroubleshootingCard = (
               Vite &amp; devtools (analyzers)
             </a>
           </Badge>
-        </p>
+        </div>
       </div>
     </OpenThrottleFieldset>
   );

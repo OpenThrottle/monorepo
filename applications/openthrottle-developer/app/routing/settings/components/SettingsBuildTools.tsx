@@ -45,7 +45,7 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
           <code className="text-xs">vite-plugin-devtools-json</code>, and React
           Router DevTools hook order are documented here:
         </p>
-        <div className="my-8">
+        <div className="my-8 flex gap-4">
           <Badge color="yellow" size="xs">
             <a
               href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
@@ -56,7 +56,6 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
             </a>
           </Badge>
           {' · '}
-
           <Badge color="orange" size="xs">
             <a href={VITE_DEVTOOLS_DOC_HREF} rel="noreferrer" target="_blank">
               docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)

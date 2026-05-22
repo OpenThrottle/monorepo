@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { useSearchParams } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -7,16 +7,36 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { GetNotesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
+import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import { NotesIntroduction } from '~/routing/notes/components/NotesIntroduction';
 import { NotesTable } from '~/routing/notes/components/NotesTable';
 import { NotesToolbar } from '~/routing/notes/components/NotesToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
+import type { NoteCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/notes._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
+
+/** Client-side filter until notes list supports server-side search. */
+function filterNotesBySearch(
+  notes: NoteCardFragment[],
+  search: string,
+): NoteCardFragment[] {
+  const q = search.trim().toLowerCase();
+
+  if (q.length === 0) {
+    return notes;
+  }
+
+  return notes.filter((note) => {
+    const content = note.content.toLowerCase();
+    const author = note.author?.trim().toLowerCase() ?? '';
+
+    return content.includes(q) || author.includes(q);
+  });
+}
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Notes',
@@ -24,12 +44,18 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const { notes } = await executeGraphqlWithAuth(
+  const url = args.request.url ? new URL(args.request.url) : null;
+  const searchParams = url?.searchParams ?? new URLSearchParams();
+  const search = searchParams.get('q')?.trim() ?? '';
+
+  const { notes: allNotes } = await executeGraphqlWithAuth(
     args.request,
     GetNotesDocument,
   );
 
-  return { notes };
+  const notes = filterNotesBySearch(allNotes, search);
+
+  return { notes, search };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -46,9 +72,12 @@ export default function Component(
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
+  const [searchParams] = useSearchParams();
 
   // Setup
-  const { notes } = loaderData;
+  const { notes, search } = loaderData;
+  const isCard = searchParams.get('view') === 'card';
+  const view: 'card' | 'table' = isCard ? 'card' : 'table';
 
   // Handlers
 
@@ -62,25 +91,21 @@ export default function Component(
     <GlobalScreen>
       <NotesIntroduction />
 
-      <div className="flex-flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <NotesToolbar />
-        <NotesTable notes={notes} />
-      </div>
-
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex shrink-0 items-center justify-end">
-          <Button asChild={true} size="sm" variant="outline">
-            <Link to="/notes/create" viewTransition={true}>
-              Create Note
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
-        {notes.map((note) => (
-          <NoteCard key={note.id} note={note} />
-        ))}
+        {view === 'card' ? (
+          notes.length === 0 ? (
+            <NotesEmpty search={search} />
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+              {notes.map((note) => (
+                <NoteCard key={note.id} note={note} />
+              ))}
+            </div>
+          )
+        ) : (
+          <NotesTable notes={notes} />
+        )}
       </div>
     </GlobalScreen>
   );

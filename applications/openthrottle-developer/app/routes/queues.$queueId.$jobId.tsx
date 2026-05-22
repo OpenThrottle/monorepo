@@ -30,7 +30,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
       return 'Job';
     }
 
-    return id.length > 28 ? `${id.slice(0, 14)}…${id.slice(-8)}` : id;
+    return `#${id}`;
   },
 
   links: (match) => {
@@ -108,7 +108,7 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={ListOrderedIcon}
-          title={`Job: ${job.name}`}
+          title={`${job.name} #${job.id}`}
         />
         <p className="text-muted-foreground text-sm">
           Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab ducimus,
