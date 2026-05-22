@@ -1,10 +1,23 @@
 import 'reflect-metadata';
+import { Reflector } from '@nestjs/core';
 import { describe, expect, it } from 'vitest';
 import {
   EMIT_NOTIFICATION_KEY,
   type EmitNotificationMetadata,
+  type EmitNotificationMetadataValue,
   EmitNotification,
 } from './emit-notification.decorator';
+
+const reflector = new Reflector();
+
+function getEmitNotificationMetadata(
+  handler: object,
+): EmitNotificationMetadataValue | undefined {
+  return reflector.get<EmitNotificationMetadataValue | undefined>(
+    EMIT_NOTIFICATION_KEY,
+    handler,
+  );
+}
 
 describe('EmitNotification', () => {
   it('returns a MethodDecorator', () => {
@@ -17,11 +30,9 @@ describe('EmitNotification', () => {
       @(EmitNotification('plan.updated') as MethodDecorator)
       updatePlan(): void {}
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'updatePlan',
-    ) as EmitNotificationMetadata | undefined;
+    const meta = getEmitNotificationMetadata(Test.prototype.updatePlan) as
+      | EmitNotificationMetadata
+      | undefined;
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('plan.updated');
     expect(meta?.payload).toBeUndefined();
@@ -35,11 +46,9 @@ describe('EmitNotification', () => {
         return null;
       }
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'completeTask',
-    ) as EmitNotificationMetadata | undefined;
+    const meta = getEmitNotificationMetadata(Test.prototype.completeTask) as
+      | EmitNotificationMetadata
+      | undefined;
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('task.completed');
     expect(meta?.payload).toBe(payloadFn);
@@ -54,11 +63,9 @@ describe('EmitNotification', () => {
       }) as MethodDecorator)
       setStatus(): void {}
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'setStatus',
-    ) as EmitNotificationMetadata | undefined;
+    const meta = getEmitNotificationMetadata(Test.prototype.setStatus) as
+      | EmitNotificationMetadata
+      | undefined;
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('plan.status_changed');
     expect(meta?.payload).toBe(payloadFn);
@@ -77,10 +84,8 @@ describe('EmitNotification', () => {
       ]) as MethodDecorator)
       setPlanStatus(): void {}
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'setPlanStatus',
+    const meta = getEmitNotificationMetadata(
+      Test.prototype.setPlanStatus,
     ) as EmitNotificationMetadata[];
     expect(Array.isArray(meta)).toBe(true);
     expect(meta).toHaveLength(2);
