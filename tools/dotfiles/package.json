@@ -36,13 +36,6 @@
     "./*": {
       "import": "./src/*.ts",
       "require": "./dist/*.js"
-    },
-    "./config": "./src/config.ts",
-    "./vite-config": "./src/vite-config.ts",
-    "./vitest-config": {
-      "types": "./dist/src/vitest-config.d.ts",
-      "import": "./dist/src/vitest-config.js",
-      "default": "./dist/src/vitest-config.js"
     }
   },
   "nx": {
