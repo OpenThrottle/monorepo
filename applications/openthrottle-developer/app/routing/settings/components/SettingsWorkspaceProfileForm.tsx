@@ -1,6 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+import { ComputerIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
@@ -43,6 +44,7 @@ export const SettingsWorkspaceProfileForm = (
 
   return (
     <OpenThrottleFieldset
+      icon={ComputerIcon}
       id="settings-workspace-profile-form"
       legend="Contact & editors"
     >

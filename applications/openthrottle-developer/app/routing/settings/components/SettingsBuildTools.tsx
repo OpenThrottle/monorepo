@@ -6,6 +6,7 @@ import {
 } from '~/routing/settings/utils/settings-docs-links';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { ToolboxIcon } from 'lucide-react';
+import { Badge } from '@openthrottle/react-router-shadcn';
 
 export interface SettingsBuildToolsProps {}
 
@@ -44,34 +45,34 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
           <code className="text-xs">vite-plugin-devtools-json</code>, and React
           Router DevTools hook order are documented here:
         </p>
-        <p>
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Quick reference (when to enable what)
-          </a>
+        <div className="my-8">
+          <Badge color="yellow" size="xs">
+            <a
+              href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Quick reference (when to enable what)
+            </a>
+          </Badge>
           {' · '}
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={VITE_DEVTOOLS_DOC_HREF}
-            rel="noreferrer"
-            target="_blank"
-          >
-            docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
-          </a>
+
+          <Badge color="orange" size="xs">
+            <a href={VITE_DEVTOOLS_DOC_HREF} rel="noreferrer" target="_blank">
+              docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
+            </a>
+          </Badge>
           {' · '}
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Vite CLI build profiling
-          </a>
-        </p>
+          <Badge color="red" size="xs">
+            <a
+              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Vite CLI build profiling
+            </a>
+          </Badge>
+        </div>
         <p>
           <span className="font-medium text-foreground">Clone path:</span>{' '}
           <code className="rounded bg-muted px-1.5 py-0.5 text-xs">

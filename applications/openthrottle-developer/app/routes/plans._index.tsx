@@ -129,6 +129,7 @@ export default function Component(
     assignees,
     limit,
     page,
+    plans,
     statusCounts,
     statuses,
     totalCount,
@@ -197,7 +198,7 @@ export default function Component(
           statuses={statuses}
           view={view}
         />
-        <PlansTable plans={[]} statusFilterUrls={statusFilterUrls} />
+        <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
       </div>
       <OpenThrottlePagination
         assignees={assignees}

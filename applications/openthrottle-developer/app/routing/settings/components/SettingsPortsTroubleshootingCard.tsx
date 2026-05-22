@@ -38,7 +38,7 @@ export const SettingsPortsTroubleshootingCard = (
     <OpenThrottleFieldset
       icon={BadgeQuestionMarkIcon}
       id={SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID}
-      legend="Local dev: ports, hosts &amp; API URLs"
+      legend="Local dev: ports, hosts & API URLs"
     >
       <div className="space-y-4 text-sm text-muted-foreground">
         <p>
@@ -150,7 +150,7 @@ export const SettingsPortsTroubleshootingCard = (
         </div>
 
         <p>
-          <Badge color="orange" size="xs">
+          <Badge color="yellow" size="xs">
             <a
               href={LOCAL_SERVICES_PORTS_SERVICES_TABLE_HREF}
               rel="noreferrer"
