@@ -8,14 +8,27 @@ This playbook is for someone who has already configured the **mcp-developer** MC
 
 ## Quick start
 
-**New clone?** Follow [local-quickstart.md](./local-quickstart.md) first (env → migrate → bootstrap → server → verify MCP), then return here.
+**New clone?** Follow [local-quickstart.md](./local-quickstart.md) first (env → migrate → [bootstrap tokens](#bootstrap-and-auth) → server → verify MCP), then return here.
 
 1. Confirm [Prerequisites](#prerequisites-checklist) (server up, MCP pointed at GraphQL, token env).
 2. Read the [Mental model](#mental-model-post-setup) so you know when to use OT MCP vs docs-MCP vs repo rules.
 3. Run the [Prompt sequence](#prompt-sequence-minimal-e2e) in Cursor to complete one trivial but real workflow (search → plan → task → commit).
 4. If something fails, use [Troubleshooting](#troubleshooting).
 
-Later sections in this file will be expanded as the onboarding plan tasks complete (prerequisites detail, full prompt script, optional Ralph/worktrees).
+---
+
+## Bootstrap and auth
+
+Before MCP tools can create or list plans, you need a long-lived **service account** bearer token — not a human JWT from the developer UI.
+
+| Step                                            | Command / doc                                                                                                                                 |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migrate (includes service-account seed **045**) | `pnpm run database:migrate` — see [local-quickstart § Database](./local-quickstart.md#2-database-start-and-migrate)                           |
+| Mint tokens (shown once)                        | `pnpm run database:bootstrap-service-accounts` — see [local-quickstart § Bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) |
+| Set env                                         | Copy `MCP_DEVELOPER_AUTH_TOKEN` into `applications/openthrottle-server/.env` and Cursor MCP `env` for **mcp-developer**                       |
+| Understand token types, rotation, Cursor `env`  | [AUTH.md](../../packages/mcp-developer/docs/AUTH.md)                                                                                          |
+
+If bootstrap skips an account because a credential already exists, rotate per [AUTH.md § Credential rotation](../../packages/mcp-developer/docs/AUTH.md#credential-rotation) or revoke in admin GraphQL, then re-run the script.
 
 ---
 
@@ -23,13 +36,14 @@ Later sections in this file will be expanded as the onboarding plan tasks comple
 
 Use this before relying on OT tools in the agent.
 
-| Check                                                                    | Notes                                                                                                                                        |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Postgres + Redis up; migrations applied                                  | See [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md) (`pnpm run database:start`, `pnpm run database:migrate`). |
-| **openthrottle-server** running                                          | GraphQL defaults to `http://localhost:6021/graphql` (see server `.env`).                                                                     |
-| MCP **`API_URL` / `API_URL_INTERNAL`** match the server                  | See [verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md).                                            |
-| **`MCP_DEVELOPER_AUTH_TOKEN`** (and any embedding keys your stack needs) | Same doc; root `.env` often holds `OPENAI_API_KEY` for the MCP wrapper script.                                                               |
-| Cursor registers **mcp-developer**                                       | `.cursor/mcp.json`; restart Cursor after changes.                                                                                            |
+| Check                                                                | Notes                                                                                                                                                                                             |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Postgres + Redis up; migrations applied                              | See [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md) (`pnpm run database:start`, `pnpm run database:migrate`).                                                      |
+| **Service account token** minted and in env                          | `pnpm run database:bootstrap-service-accounts` → `MCP_DEVELOPER_AUTH_TOKEN` in server `.env` and MCP config. [AUTH.md](../../packages/mcp-developer/docs/AUTH.md).                                |
+| **openthrottle-server** running                                      | GraphQL defaults to `http://localhost:6021/graphql` (see server `.env`).                                                                                                                          |
+| MCP **`API_URL` / `API_URL_INTERNAL`** match the server              | See [verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md).                                                                                                 |
+| **`MCP_DEVELOPER_AUTH_TOKEN`** (and embedding keys your stack needs) | Auth: [AUTH.md](../../packages/mcp-developer/docs/AUTH.md). Root `.env` often holds `OPENAI_API_KEY` for `scripts/run-mcp-developer.sh`; Ollama-only: [run-locally-oss.md](./run-locally-oss.md). |
+| Cursor registers **mcp-developer**                                   | `.cursor/mcp.json` or [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example); restart Cursor after changes.                                                                                 |
 
 For database layout, imports, and PRD-style fields on plans/tasks, see [`databases/README.md`](../../databases/README.md).
 
@@ -42,41 +56,80 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 - **Workspace rules** (e.g. [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc)) define when to use which OT tool and that **plans/tasks belong in OT**, not in new Markdown plan files under `docs/`.
 - **Optional automation:** [workflow-ralph](../../tools/workflows/README.md) and worktrees are advanced paths; you can ignore them until after your first successful manual flow.
 
-_(This section will gain a tighter checklist and tool-choice table in the same onboarding effort.)_
+### When to use which tool
+
+| Question or intent                            | Use                                                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| “What plans/tasks exist?” / status lists      | **mcp-developer** — `list_plans_by_status`, `get_plan`, `get_tasks_by_plan_id`                                   |
+| “Find plans about X” (meaning, not filenames) | **mcp-developer** — `semantic_search`, then `get_document` for a chunk                                           |
+| “What’s in the OT knowledge base?”            | **mcp-developer** — `list_sources`                                                                               |
+| “What does this repo’s docs say about X?”     | **docs-mcp** (ingested `docs/`)                                                                                  |
+| Create or update a plan/task                  | **mcp-developer** — `create_plan`, `create_task`, `update_task` (never a new plan `.md` in `docs/`)              |
+| Log agent iteration output for a plan         | **mcp-developer** — `append_plan_output`                                                                         |
+| Tie landed work on `main` to a plan           | After PR merge — `link_commit` or `workflow-link-merge` (see [`databases/README.md`](../../databases/README.md)) |
 
 ---
 
 ## Prompt sequence (minimal E2E)
 
-Ordered prompts you can paste into the agent (adjust names to your repo). Expected outcomes are noted so you can verify each step.
+Ordered prompts you can paste into the agent. Replace bracketed placeholders with your topic and repo context. Expected outcomes are noted so you can verify each step.
 
-1. **Warm-up — ask OT**
-   - _Prompt (example):_ “Using OpenThrottle MCP only, run `semantic_search` with query `<your topic>` and limit 5. Summarize what you found.”
-   - _Expected:_ Retrieved chunks from the OT KB, no invented plan content.
+### 1. Warm-up — ask OT
 
-2. **Create a small plan**
-   - _Prompt (example):_ “Create a plan via MCP with title `<short title>` and two tasks: (1) `<task A>` (2) `<task B>`. Reply with plan id and task ids.”
-   - _Expected:_ Real UUIDs from `create_plan` / `create_task`.
+```
+Using OpenThrottle MCP only, run semantic_search with query "local onboarding" and limit 5.
+Summarize what you found from the retrieved chunks only; do not invent plan content.
+```
 
-3. **Complete one task with traceability**
-   - _Prompt (example):_ “Complete task `<task id>` with a small doc or code change. Commit using a conventional commit message and include `Plan-Id: <plan uuid>` and `Task-Id: <task uuid>` in the commit body.”
-   - _Expected:_ One commit that ties work to OT; optional follow-up to mark the task completed via MCP.
+**Expected:** Bullet summary citing real chunk content, or a clear “nothing relevant found.”
 
-4. **(Optional) List sources or pending plans**
-   - _Prompt:_ “Call `list_sources`” or “`list_plans_by_status` with status `pending`” to confirm visibility.
+### 2. Create a small plan
 
-_(The plan’s dedicated task will replace examples with a single concrete scenario and exact copy-paste blocks.)_
+```
+Create a plan via MCP with title "Onboarding smoke test" and category "documentation".
+Add two tasks:
+1) "Confirm MCP health tool works"
+2) "Add one line to a scratch file in this repo"
+Reply with the plan UUID and both task UUIDs.
+```
+
+**Expected:** Real UUIDs from `create_plan` / `create_task` (not fabricated).
+
+### 3. Complete one task with traceability
+
+Use the plan and task UUIDs from step 2.
+
+```
+Complete the first task from plan <PLAN_UUID> (task <TASK_UUID>).
+Make a minimal change (e.g. add a one-line comment in README or a scratch note).
+Commit with a conventional commit message and include in the commit body:
+Plan-Id: <PLAN_UUID>
+Task-Id: <TASK_UUID>
+Then update the task status to completed via MCP.
+```
+
+**Expected:** One git commit with `Plan-Id` / `Task-Id` footers; task marked completed in OT.
+
+### 4. Confirm visibility
+
+```
+Call list_sources via MCP and list_plans_by_status with status "pending".
+Summarize how many sources and pending plans you see.
+```
+
+**Expected:** Tool results from GraphQL, not guessed counts.
 
 ---
 
 ## Troubleshooting
 
-| Symptom                              | What to check                                                                                                                                                             |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MCP tools missing or “not connected” | Cursor MCP config, restart Cursor; `API_URL_INTERNAL` matches server port ([verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md)). |
-| GraphQL errors / 401                 | Token: `MCP_DEVELOPER_AUTH_TOKEN` and server auth ([../../packages/mcp-developer/docs/AUTH.md](../../packages/mcp-developer/docs/AUTH.md) if applicable).                 |
-| Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/README.md`](../../databases/README.md).                                                               |
-| Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc).                                    |
+| Symptom                              | What to check                                                                                                                                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MCP tools missing or “not connected” | Cursor MCP config, restart Cursor; `API_URL_INTERNAL` matches server port ([verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md)).                                                 |
+| GraphQL errors / 401 / 403           | Token: `MCP_DEVELOPER_AUTH_TOKEN`; server `APP_ENABLE_AUTHENTICATION=true`. [AUTH.md](../../packages/mcp-developer/docs/AUTH.md). Re-run [bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) if needed. |
+| Bootstrap script skips account       | Active credential already exists — rotate per [AUTH.md § Credential rotation](../../packages/mcp-developer/docs/AUTH.md#credential-rotation).                                                                             |
+| Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/README.md`](../../databases/README.md).                                                                                                               |
+| Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc).                                                                                    |
 
 ---
 
@@ -84,8 +137,11 @@ _(The plan’s dedicated task will replace examples with a single concrete scena
 
 | Topic                                        | Location                                                                                                              |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Fresh clone → server + MCP                   | [local-quickstart.md](./local-quickstart.md)                                                                          |
+| Service account tokens and MCP `env`         | [AUTH.md](../../packages/mcp-developer/docs/AUTH.md)                                                                  |
 | Run server + developer app locally           | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                        |
 | MCP verification, env, smoke checks          | [verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md)                          |
+| MCP config template                          | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                                          |
 | DB schema, migrations, imports, commit links | [databases/README.md](../../databases/README.md)                                                                      |
 | OT MCP tool choice and commands              | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), [.cursor/commands/ot/](../../.cursor/commands/ot/) |
 | Workflow CLI / Ralph (optional)              | [tools/workflows/README.md](../../tools/workflows/README.md)                                                          |
