@@ -32,6 +32,8 @@ Verified daily path for **Postgres, Redis, migrations, API, and optional develop
 
 Cursor MCP config lives in `.cursor/mcp.json` under **`mcp-developer`** — keep **`API_URL` / `API_URL_INTERNAL`** aligned with the running server port.
 
+**Committed template:** [`.cursor/mcp.json.example`](../../../.cursor/mcp.json.example) shows the minimal **`mcp-developer`** entry (API base URL + **`MCP_DEVELOPER_AUTH_TOKEN`** placeholder). Copy or merge into `.cursor/mcp.json` (project workspace) or `~/.cursor/mcp.json` (secondary workspace); replace the token with output from **`pnpm run database:bootstrap-service-accounts`**. Do not commit real tokens. Token setup: [AUTH.md](./AUTH.md).
+
 ## Quick prerequisite check
 
 From the monorepo root (optional env override `API_URL_INTERNAL`):
