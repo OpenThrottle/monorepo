@@ -1,13 +1,17 @@
-import { render } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { OpenThrottleAuthForm } from '../OpenThrottleAuthForm';
 import type { OpenThrottleAuthFormProps } from '../OpenThrottleAuthForm';
 
 describe('OpenThrottleAuthForm Component', () => {
   let component: ReturnType<typeof render>;
   let props: OpenThrottleAuthFormProps;
+
+  afterEach(() => {
+    cleanup();
+  });
 
   beforeEach(() => {
     props = {};
@@ -20,12 +24,17 @@ describe('OpenThrottleAuthForm Component', () => {
 
   test('should render email and password fields and submit button', () => {
     expect(component.getByTestId('OpenThrottleAuthForm')).toBeInTheDocument();
-    expect(component.getByRole('textbox', { name: /email/i })).toBeInTheDocument();
+    expect(
+      component.getByRole('textbox', { name: /email/i }),
+    ).toBeInTheDocument();
     expect(component.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(component.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: /sign in/i }),
+    ).toBeInTheDocument();
   });
 
   test('should call onSubmit with email and password when form is submitted', async () => {
+    cleanup();
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     const RoutesStub = createRoutesStub([
@@ -34,11 +43,18 @@ describe('OpenThrottleAuthForm Component', () => {
         path: '/',
       },
     ]);
-    component.rerender(<RoutesStub />);
+    render(<RoutesStub />);
 
-    await user.type(component.getByRole('textbox', { name: /email/i }), 'test@example.com');
-    await user.type(component.getByLabelText(/password/i), 'secret');
-    await user.click(component.getByRole('button', { name: /sign in/i }));
+    const email = screen.getByRole('textbox', { name: /email/i });
+    const password = screen.getByLabelText(/password/i);
+    await user.clear(email);
+    await user.clear(password);
+    await user.type(email, 'test@example.com');
+    await user.type(password, 'secret');
+    const form = screen.getByTestId('OpenThrottleAuthForm');
+    await user.click(
+      within(form).getByRole('button', { exact: true, name: 'Sign in' }),
+    );
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledWith({
