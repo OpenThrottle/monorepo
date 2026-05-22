@@ -2,16 +2,17 @@ import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GetNotesDocument } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { Link } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { NotebookTextIcon } from 'lucide-react';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { GetNotesDocument } from '~/__generated__/graphql';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
+import { NotesIntroduction } from '~/routing/notes/components/NotesIntroduction';
+import { NotesTable } from '~/routing/notes/components/NotesTable';
+import { NotesToolbar } from '~/routing/notes/components/NotesToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
 import { WorkspaceEntityCrossLinks } from '~/routing/navigation/components/WorkspaceEntityCrossLinks';
 import type { Route } from '@/app/routes/+types/notes._index';
@@ -60,16 +61,11 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={NotebookTextIcon}
-          title="Notes"
-        />
-        <p className="text-sm text-muted-foreground">
-          Notes are a collection of unstructured thoughts and ideas.
-        </p>
+      <NotesIntroduction />
+
+      <div className="flex-flex-col gap-4">
+        <NotesToolbar />
+        <NotesTable />
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
