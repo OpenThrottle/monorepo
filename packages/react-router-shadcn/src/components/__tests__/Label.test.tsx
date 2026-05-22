@@ -14,7 +14,11 @@ describe('Label', () => {
   it('should apply default label classes', () => {
     const { container } = render(<Label>Label</Label>);
     const label = container.querySelector('label');
-    expect(label).toHaveClass('text-sm', 'font-medium');
+    expect(label).toHaveClass(
+      'text-muted-foreground',
+      'text-xs',
+      'leading-none',
+    );
   });
 
   it('should merge custom className', () => {

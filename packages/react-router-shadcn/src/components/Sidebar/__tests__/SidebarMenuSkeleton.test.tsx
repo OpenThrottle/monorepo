@@ -1,24 +1,28 @@
 import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SidebarMenuSkeleton } from '../SidebarMenuSkeleton';
 import type { SidebarMenuSkeletonProps } from '../SidebarMenuSkeleton';
 
 describe('SidebarMenuSkeleton Component', () => {
-  let component: RenderResult;
-  let props: SidebarMenuSkeletonProps;
-
   beforeEach(() => {
-    props = {};
-
-    const Component = () => <SidebarMenuSkeleton {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    vi.spyOn(Math, 'random').mockReturnValue(0.825);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('should render skeleton text with deterministic width', () => {
+    const props: SidebarMenuSkeletonProps = {};
+    const Component = () => <SidebarMenuSkeleton {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const { container } = render(<RoutesStub />);
+
+    const skeletonText = container.querySelector(
+      '[data-sidebar="menu-skeleton-text"]',
+    );
+    expect(skeletonText).toBeInTheDocument();
+    expect(skeletonText).toHaveStyle({ '--skeleton-width': '83%' });
   });
 });

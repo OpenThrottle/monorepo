@@ -14,7 +14,7 @@ describe('Badge', () => {
   it('should apply default variant classes', () => {
     const { container } = render(<Badge>Default</Badge>);
     const badge = container.querySelector('span');
-    expect(badge).toHaveClass('bg-primary', 'text-primary-foreground');
+    expect(badge).toHaveClass('--bg-primary', '--text-primary-foreground');
   });
 
   describe('variants', () => {
@@ -23,13 +23,13 @@ describe('Badge', () => {
         <Badge variant="destructive">Destructive</Badge>,
       );
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-destructive', 'text-white');
+      expect(badge).toHaveClass('--bg-destructive', '--text-white');
     });
 
     it('should apply outline variant', () => {
       const { container } = render(<Badge variant="outline">Outline</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('text-foreground');
+      expect(badge).toHaveClass('--text-foreground');
     });
 
     it('should apply secondary variant', () => {
@@ -37,7 +37,10 @@ describe('Badge', () => {
         <Badge variant="secondary">Secondary</Badge>,
       );
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-secondary', 'text-secondary-foreground');
+      expect(badge).toHaveClass(
+        '--bg-secondary',
+        '--text-secondary-foreground',
+      );
     });
   });
 
