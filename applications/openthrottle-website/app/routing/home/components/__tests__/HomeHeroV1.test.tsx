@@ -25,7 +25,10 @@ describe('HomeHeroV1 Component', () => {
       component.getByRole('heading', { name: /context is king/i }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('link', { name: /coming soon/i }),
+      component.getByRole('link', { name: /openthrottle developer/i }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: /view on github/i }),
     ).toBeInTheDocument();
   });
 });
