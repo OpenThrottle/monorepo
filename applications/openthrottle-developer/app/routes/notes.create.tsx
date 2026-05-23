@@ -8,7 +8,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { CreateNoteOtDocument, CreateNoteInput } from '~/__generated__/graphql';
+import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
 
@@ -74,7 +74,7 @@ export const action = async (args: Route.ActionArgs) => {
 
     const result = await executeGraphqlWithAuth(
       args.request,
-      CreateNoteOtDocument,
+      CreateNoteDocument,
       { input },
     );
 
