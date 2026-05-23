@@ -31,6 +31,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md#testing-typecheck-tests-versus-test)
 | **P0**   | Affected GraphQL + React Router codegen drift | `build` → Codegen Tasks                    | `nx affected --target=codegen-graphql,codegen-react-router` then `git diff --exit-code`                          | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
 | **P0**   | Lint, typecheck, typecheck-tests (affected)   | `build`                                    | `nx affected --target=lint,typecheck,typecheck-tests`                                                            | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
 | **P1**   | Nx project graph circular dependencies        | `nx-circular-dependencies`                 | `pnpm exec tsx ./scripts/nx-circular-dependencies.ts`                                                            | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
+| **P1**   | Root `schema.gql` matches server schema       | `build`                                    | `nx run openthrottle-server:verify-graphql-schema-sync`                                                          | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
 | **P1**   | Agentic Ralph GraphQL codegen drift           | `build`                                    | `nx run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen`                                         | [visormatt](https://github.com/visormatt) | Yes              | **On**                                                                    |
 | **P2**   | Vitest (phased: server, MCP, workflows)       | `build` → NX affected Vitest (phased gate) | `nx affected --target=test` with exclude `*,!openthrottle-server,!@openthrottle/mcp-developer,!@tools/workflows` | [visormatt](https://github.com/visormatt) | Yes (affected)   | **On** (phased)                                                           |
 | **P3**   | Knip dead-code baseline                       | `knip-report`                              | `nx run monorepo:knip-ci` — see [Knip.md](./Knip.md)                                                             | [visormatt](https://github.com/visormatt) | Yes (regression) | **On**                                                                    |
@@ -73,6 +74,7 @@ pnpm dlx nx affected --target=lint,typecheck,typecheck-tests --parallel
 
 # P1 — circular deps
 pnpm exec tsx ./scripts/nx-circular-dependencies.ts
+pnpm nx run openthrottle-server:verify-graphql-schema-sync
 pnpm nx run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen
 
 # P2 — phased tests

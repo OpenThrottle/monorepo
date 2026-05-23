@@ -100,6 +100,9 @@ jobs:
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@v4
 
+      - name: '🔒 GraphQL schema sync (root vs server)'
+        run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
+
       - name: '🧩 Codegen Tasks'
         run: |
           pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel --verbose
