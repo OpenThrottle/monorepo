@@ -135,6 +135,18 @@ All NX projects in this monorepo must have appropriate technology tags. Technolo
 }
 ```
 
+**Isomorphic Node library (client + server):**
+
+```json
+{
+  "nx": {
+    "tags": ["technology:nodejs", "type:package"]
+  }
+}
+```
+
+Use `technology:nodejs` only for shared libraries consumed on both server and client (for example `@openthrottle/nodejs-graphql`) or the workspace root. Node-only TypeScript packages use `technology:typescript` — never both on one project. See [docs/monorepo/NX/tags.md](docs/monorepo/NX/tags.md).
+
 **NestJS API:**
 
 ```json

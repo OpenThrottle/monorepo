@@ -34,7 +34,7 @@
       "name:@openthrottle/openthrottle-agentic-ralph",
       "production:true",
       "publish:false",
-      "technology:nodejs",
+      "technology:typescript",
       "type:package"
     ],
     "targets": {

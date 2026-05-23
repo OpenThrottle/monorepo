@@ -20,7 +20,7 @@
       "name:@openthrottle/openthrottle-skills",
       "production:true",
       "publish:false",
-      "technology:nodejs",
+      "technology:typescript",
       "type:package"
     ],
     "targets": {

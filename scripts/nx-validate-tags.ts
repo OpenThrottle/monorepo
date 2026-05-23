@@ -58,6 +58,7 @@ const isValidProductionValue = (
  * @description Validates technology and production tags for a single project
  */
 interface ValidationResult {
+  readonly conflictingNodejsTypescript: boolean;
   readonly hasProductionTag: boolean;
   readonly hasTechnologyTag: boolean;
   readonly invalidProductionTags: readonly string[];
@@ -80,7 +81,11 @@ const validateProjectTags = (
     (tag) => !isValidProductionValue(tag),
   );
 
+  const hasNodejs = technologyTags.includes('nodejs');
+  const hasTypescript = technologyTags.includes('typescript');
+
   return {
+    conflictingNodejsTypescript: hasNodejs && hasTypescript,
     hasProductionTag: productionTags.length === 1,
     hasTechnologyTag: technologyTags.length > 0,
     invalidProductionTags,
@@ -105,6 +110,9 @@ const formatResults = (results: readonly ValidationResult[]): string => {
   );
   const invalidProductionTags = results.filter(
     (r) => r.invalidProductionTags.length > 0,
+  );
+  const conflictingNodejsTypescript = results.filter(
+    (r) => r.conflictingNodejsTypescript,
   );
 
   const lines: string[] = [];
@@ -160,12 +168,31 @@ const formatResults = (results: readonly ValidationResult[]): string => {
     lines.push('');
   }
 
+  if (conflictingNodejsTypescript.length > 0) {
+    lines.push(
+      '❌ Projects with both technology:nodejs and technology:typescript:',
+    );
+    lines.push('');
+    conflictingNodejsTypescript.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+    lines.push(
+      '   Use technology:nodejs only for isomorphic shared libraries or monorepo root.',
+    );
+    lines.push(
+      '   Use technology:typescript for Node-only TypeScript packages.',
+    );
+    lines.push('');
+  }
+
   const hasErrors =
     missingTechnologyTags.length > 0 ||
     missingProductionTags.length > 0 ||
     multipleProductionTags.length > 0 ||
     invalidTechnologyTags.length > 0 ||
-    invalidProductionTags.length > 0;
+    invalidProductionTags.length > 0 ||
+    conflictingNodejsTypescript.length > 0;
 
   if (!hasErrors) {
     lines.push('✅ All projects have valid technology and production tags!');
@@ -248,7 +275,8 @@ const main = async (): Promise<void> => {
         !r.hasProductionTag ||
         r.multipleProductionTags ||
         r.invalidTechnologyTags.length > 0 ||
-        r.invalidProductionTags.length > 0,
+        r.invalidProductionTags.length > 0 ||
+        r.conflictingNodejsTypescript,
     );
 
     if (hasErrors) {
