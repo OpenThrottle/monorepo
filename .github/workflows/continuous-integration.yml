@@ -125,9 +125,7 @@ jobs:
       #     done
 
   nx-circular-dependencies:
-    # FIXME: 💰 Re-enable when we want to spend more
-    # if: ${{ (github.actor != 'dependabot[bot]') && (github.ref_name == 'main') }}
-    if: false
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
