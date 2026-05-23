@@ -13,11 +13,11 @@ export type RalphWorktreeName = string | typeof RALPH_WORKTREE_FLAG_ONLY;
  * @description Optional agent worktree flags for one iteration.
  */
 export interface RalphWorktreeCliOptions {
+  /** Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup?: boolean;
   readonly worktree?: RalphWorktreeName;
   /** Cursor-only: branch/ref for `--worktree-base`. */
   readonly worktreeBase?: string;
-  /** Cursor-only: `--skip-worktree-setup`. */
-  readonly skipWorktreeSetup?: boolean;
 }
 
 /**
@@ -26,8 +26,8 @@ export interface RalphWorktreeCliOptions {
  */
 export const resolveRalphWorktreeName = (sources: {
   readonly cli?: RalphWorktreeName | undefined;
-  readonly seed?: string | undefined;
   readonly handoffTargetId?: string | undefined;
+  readonly seed?: string | undefined;
 }): RalphWorktreeName | undefined => {
   if (sources.cli !== undefined) {
     return sources.cli;
@@ -60,8 +60,8 @@ const formatWorktreeFlagArgv = (name: RalphWorktreeName): string[] => {
 export const buildWorktreeNestedArgv = (
   worktree: RalphWorktreeName | undefined,
   extras?: {
-    readonly worktreeBase?: string;
     readonly skipWorktreeSetup?: boolean;
+    readonly worktreeBase?: string;
   },
 ): string[] => {
   if (worktree === undefined) {

@@ -6,12 +6,12 @@ import { useSearchParams } from 'react-router';
  * Options for {@link useUrlSyncedOverlay}. Prefer **feature-prefixed** `param` keys in app code.
  */
 export interface UseUrlSyncedOverlayOptions {
-  /** Search param key whose value signals “open”. */
-  readonly param: string;
-  /** Substring match for open state: `open` when `searchParams.get(param) === openValue`. */
-  readonly openValue?: string;
   /** Extra keys removed when closing (nested child params). */
   readonly clearParamsOnClose?: readonly string[];
+  /** Substring match for open state: `open` when `searchParams.get(param) === openValue`. */
+  readonly openValue?: string;
+  /** Search param key whose value signals “open”. */
+  readonly param: string;
   /** Options forwarded to `setSearchParams`. Defaults preserve scroll position for param-only updates. */
   readonly setSearchParamsOptions?: NavigateOptions;
 }
@@ -20,9 +20,9 @@ export interface UseUrlSyncedOverlayOptions {
  * Return value of {@link useUrlSyncedOverlay}.
  */
 export interface UseUrlSyncedOverlayResult {
-  readonly open: boolean;
   /** Radix overlay root `onOpenChange`. */
   readonly onOpenChange: (open: boolean) => void;
+  readonly open: boolean;
   /**
    * Imperatively open or close. When opening, optionally set extra params in one atomic update.
    */

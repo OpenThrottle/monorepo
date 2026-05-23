@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MultiSelect } from '../MultiSelect';
 
-const OPTIONS: readonly { value: string; label: string }[] = [
+const OPTIONS: readonly { label: string; value: string }[] = [
   { label: 'Alpha', value: 'alpha' },
   { label: 'Beta', value: 'beta' },
   { label: 'Gamma', value: 'gamma' },

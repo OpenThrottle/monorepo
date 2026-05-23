@@ -51,12 +51,12 @@ export interface WorkflowRalphDefaultsFileJson {
   readonly prompt?: string;
   /** Repo-relative or absolute path; file body is the prompt (mutually exclusive with `prompt` in file). */
   readonly promptFile?: string;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup?: boolean;
   /** Agent CLI worktree name (same as `--worktree <name>`). */
   readonly worktree?: string;
   /** Cursor-only: `--worktree-base`. */
   readonly worktreeBase?: string;
-  /** Cursor-only: `--skip-worktree-setup`. */
-  readonly skipWorktreeSetup?: boolean;
 }
 
 /** @internal Mutable builder for {@link WorkflowRalphDefaultsFileJson} (TS forbids assigning to readonly props). */
@@ -80,9 +80,9 @@ export interface RalphRuntimeSeed {
    * merged `prompt` from env + file (see {@link mergeRalphRuntimeSeed}).
    */
   readonly promptFile: string | undefined;
+  readonly skipWorktreeSetup: boolean | undefined;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;
-  readonly skipWorktreeSetup: boolean | undefined;
 }
 
 const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>

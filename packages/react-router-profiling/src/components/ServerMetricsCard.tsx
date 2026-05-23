@@ -31,10 +31,10 @@ function formatCpuMs(value: number): string {
 }
 
 const METRIC_ROWS: ReadonlyArray<{
+  readonly format: (v: number) => string;
   readonly key: keyof ProcessMetricsSnapshot;
   readonly label: string;
   readonly unit: string;
-  readonly format: (v: number) => string;
 }> = [
   { format: formatMb, key: 'rssMb', label: 'RSS', unit: 'MB' },
   { format: formatMb, key: 'heapUsedMb', label: 'Heap used', unit: 'MB' },

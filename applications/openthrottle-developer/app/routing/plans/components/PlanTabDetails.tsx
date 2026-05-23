@@ -34,9 +34,9 @@ export interface PlanTabDetailsProps {
   ralphTuningJson: string;
   recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
   setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
-  workingDirectory?: string;
   workflowInput: WorkflowRalphRunOptionsInput;
   workflowTimeout: string;
+  workingDirectory?: string;
 }
 
 export const PlanTabDetails = (

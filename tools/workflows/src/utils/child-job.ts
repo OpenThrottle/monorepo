@@ -37,12 +37,12 @@ const MICROSECONDS_PER_MS = 1000;
 const SIGKILL_GRACE_MS = 10_000;
 
 interface RalphSpawnResult {
-  readonly status: number | null;
-  readonly signal: NodeJS.Signals | null;
-  readonly stdout: string;
-  readonly stderr: string;
   readonly killReason?: 'timeout' | 'abort';
   readonly pid: number | undefined;
+  readonly signal: NodeJS.Signals | null;
+  readonly status: number | null;
+  readonly stderr: string;
+  readonly stdout: string;
 }
 
 /**
@@ -55,10 +55,10 @@ function runRalphAsync(
   ralphArgs: string[],
   options: {
     readonly canonicalCortexPostgresUrl?: string;
-    readonly timeoutMs?: number;
-    readonly signal?: AbortSignal;
-    readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
     readonly metricsCollector?: ChildProcessMetricsCollector;
+    readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
+    readonly signal?: AbortSignal;
+    readonly timeoutMs?: number;
   },
 ): Promise<RalphSpawnResult> {
   return new Promise((resolve, reject) => {

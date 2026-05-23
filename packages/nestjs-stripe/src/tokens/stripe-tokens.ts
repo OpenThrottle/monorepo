@@ -31,8 +31,8 @@ export interface StripeModuleInit {
  * @description Async registration options for {@link StripeModule.forRootAsync}.
  */
 export interface StripeModuleAsyncOptions {
-  readonly inject?: FactoryProvider<StripeModuleInit>['inject'];
   readonly imports?: ModuleMetadata['imports'];
+  readonly inject?: FactoryProvider<StripeModuleInit>['inject'];
   /** @description When true, register as a global module. */
   readonly isGlobal?: boolean;
   readonly useFactory: FactoryProvider<StripeModuleInit>['useFactory'];

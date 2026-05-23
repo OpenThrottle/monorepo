@@ -124,9 +124,9 @@ const resolveProjectFromTuning = (raw: string | null | undefined): string => {
  */
 export function resolveWorkflowRalphRunOptionsShapeFromPlanRunTuning(params: {
   readonly executionBackend?: string | null;
+  readonly mode?: WorkflowMode;
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowMode;
   readonly taskId?: string;
 }): WorkflowOptions {
   const r = params.ralph ?? {};
@@ -185,9 +185,9 @@ export function buildRalphFlowContextFromRunOptionsShape(
  */
 export function buildRalphFlowContextFromPlanRunTuning(params: {
   readonly executionBackend?: string | null;
+  readonly mode?: WorkflowMode;
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowMode;
   readonly taskId?: string;
 }): WorkflowRalphContext {
   return buildRalphFlowContextFromRunOptionsShape(

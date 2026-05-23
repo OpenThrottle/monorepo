@@ -268,9 +268,9 @@ const resolvePlanRunExecutionBackend = (
  * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
  */
 export const buildRunPlanJobData = (input: {
+  readonly jobRunHooksJson?: string | null;
   readonly planId: string;
   readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
-  readonly jobRunHooksJson?: string | null;
   readonly ralph: RalphPlanRunTuningInput | null | undefined;
   readonly workingDirectory?: string | null;
 }): RunPlanSpawnJobData => {
@@ -299,10 +299,10 @@ export const buildRunPlanJobData = (input: {
  * @throws Error when ids are invalid or task mode constraints fail.
  */
 export const buildRunPlanOrchestratorJobData = (input: {
-  readonly planId: string;
-  readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
   readonly jobRunHooksJson?: string | null;
   readonly mode?: 'plan' | 'task' | null;
+  readonly planId: string;
+  readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
@@ -325,8 +325,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
       workingDirectory: input.workingDirectory,
     }),
   );
-  const jobRunHooksSpread =
-    jobRunHooks !== undefined ? { jobRunHooks } : {};
+  const jobRunHooksSpread = jobRunHooks !== undefined ? { jobRunHooks } : {};
 
   if (mode === 'task') {
     if (taskRaw === '') {

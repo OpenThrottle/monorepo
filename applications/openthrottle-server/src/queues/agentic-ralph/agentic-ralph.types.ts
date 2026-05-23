@@ -19,12 +19,6 @@ export interface RunPlanOrchestratorJobData {
    * Execution backend selected once for this run. Optional only for previously persisted BullMQ jobs.
    */
   readonly executionBackend?: RalphExecutionBackendId;
-  readonly runKind: 'orchestrator';
-  readonly planId: string;
-  /**
-   * Optional Ralph runtime (argv-equivalent nested flags); see `RalphNestedRunTuningInput` in `@tools/workflows`.
-   */
-  readonly ralph?: RalphNestedRunTuningInput;
   /**
    * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
    */
@@ -33,6 +27,12 @@ export interface RunPlanOrchestratorJobData {
    * @description Defaults to `plan` when omitted. When `task`, set `taskId` for task-centric runs.
    */
   readonly mode?: RunPlanJobWorkflowMode;
+  readonly planId: string;
+  /**
+   * Optional Ralph runtime (argv-equivalent nested flags); see `RalphNestedRunTuningInput` in `@tools/workflows`.
+   */
+  readonly ralph?: RalphNestedRunTuningInput;
+  readonly runKind: 'orchestrator';
   readonly taskId?: string;
   /**
    * Optional absolute path to a local project directory. When set, the orchestrator uses this as the
@@ -46,6 +46,6 @@ export interface RunPlanOrchestratorJobData {
  * and `planId` (including spawn payloads on the same queue).
  */
 export const isRunPlanOrchestratorJobData = (data: {
-  readonly runKind?: string;
   readonly planId: string;
+  readonly runKind?: string;
 }): data is RunPlanOrchestratorJobData => data.runKind === 'orchestrator';

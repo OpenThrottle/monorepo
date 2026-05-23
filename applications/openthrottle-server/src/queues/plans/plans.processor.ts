@@ -295,7 +295,7 @@ export class PlansProcessor
    */
   @OnWorkerEvent('failed')
   async onPlanJobFailed(
-    payload: { job?: RunPlanJob; error?: Error } | RunPlanJob,
+    payload: { error?: Error; job?: RunPlanJob } | RunPlanJob,
     errorArg?: Error,
   ): Promise<void> {
     const job =

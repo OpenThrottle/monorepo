@@ -31,18 +31,18 @@ export interface RunIterationConfig {
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
   model?: string;
-  /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
-  timeoutMs?: number;
-  /** Optional AbortSignal to cancel the iteration (async path only). */
-  signal?: AbortSignal;
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
+  /** Optional AbortSignal to cancel the iteration (async path only). */
+  signal?: AbortSignal;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  skipWorktreeSetup?: boolean;
+  /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
+  timeoutMs?: number;
   /** Agent CLI worktree (`-w` / `--worktree`); see `docs/workflows/ralph-worktree-flag.md`. */
   worktree?: RalphWorktreeCliOptions['worktree'];
   /** Cursor-only: `--worktree-base`. */
   worktreeBase?: string;
-  /** Cursor-only: `--skip-worktree-setup`. */
-  skipWorktreeSetup?: boolean;
 }
 
 /** Grace period in ms after SIGTERM before sending SIGKILL (runner child). */

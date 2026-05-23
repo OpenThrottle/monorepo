@@ -16,8 +16,8 @@ import type { SidebarContextProps } from './sidebar-context';
 
 export type SidebarProviderProps = React.ComponentProps<'div'> & {
   readonly defaultOpen?: boolean;
-  readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly open?: boolean;
 };
 
 export function SidebarProvider(props: SidebarProviderProps) {

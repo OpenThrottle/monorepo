@@ -2,13 +2,13 @@ import * as React from 'react';
 
 export interface UseAudioOptions {
   /**
-   * @description Optional `src` applied to the bound `<audio>` element when {@link UseAudioResult.audioRef} is attached.
-   */
-  readonly src?: string;
-  /**
    * @description Existing ref for an `<audio>` element; kept in sync with {@link UseAudioResult.audioRef}.
    */
   readonly audioRef?: React.RefObject<HTMLAudioElement | null>;
+  /**
+   * @description Optional `src` applied to the bound `<audio>` element when {@link UseAudioResult.audioRef} is attached.
+   */
+  readonly src?: string;
 }
 
 export interface UseAudioResult {
@@ -20,8 +20,8 @@ export interface UseAudioResult {
   readonly duration: number;
   readonly ended: boolean;
   readonly error: Error | null;
-  readonly paused: boolean;
   readonly pause: () => void;
+  readonly paused: boolean;
   readonly play: () => Promise<void>;
   readonly seek: (seconds: number) => void;
   readonly src: string | undefined;

@@ -12,8 +12,8 @@ import type { NavLinkProps } from 'react-router';
 
 /** Approach A — optional URL sync for controlled Radix tabs (same route, search param). */
 export interface UrlSyncedTabConfig<TTab extends string = string> {
-  readonly param: string;
   readonly defaultValue: TTab;
+  readonly param: string;
   readonly parse?: (raw: string | null) => TTab | undefined;
 }
 
@@ -26,14 +26,14 @@ export interface OpenThrottleTabsProps extends TabsProps {
 }
 
 export interface UseUrlSyncedTabValueOptions<TTab extends string = string> {
-  readonly param: string;
   readonly defaultValue: TTab;
+  readonly param: string;
   readonly parse?: (raw: string | null) => TTab | undefined;
 }
 
 export interface UseUrlSyncedTabValueResult<TTab extends string = string> {
-  readonly value: TTab;
   readonly onValueChange: (next: string) => void;
+  readonly value: TTab;
 }
 
 /** Approach B — link tab bar list container (not Radix TabsList). */

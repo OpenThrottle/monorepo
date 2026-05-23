@@ -20,12 +20,12 @@ export const VERBOSE_LABEL = '[verbose]' as const;
 export type RalphDebugLevel = 'off' | 'debug' | 'verbose';
 
 export interface RalphDebugLogger {
-  readonly enabled: boolean;
-  readonly level: RalphDebugLevel;
   /**
    * @description High-signal messages (phases, buffer sizes, parse outcomes). Enabled for `debug` and `verbose` levels.
    */
   debug: (...args: readonly unknown[]) => void;
+  readonly enabled: boolean;
+  readonly level: RalphDebugLevel;
   /**
    * @description Extra detail (e.g. tight loops). Enabled only for `verbose` level.
    */

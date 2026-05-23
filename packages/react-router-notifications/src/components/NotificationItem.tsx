@@ -12,9 +12,9 @@ import { formatRelativeTime, formatSeverityToColor } from '../utils/formatters';
 
 export interface NotificationItemProps {
   readonly notification: NotificationInstance;
-  readonly onMarkRead: () => void;
   readonly onDismiss: () => void;
   readonly onDismissAndClose: () => void;
+  readonly onMarkRead: () => void;
 }
 
 /**

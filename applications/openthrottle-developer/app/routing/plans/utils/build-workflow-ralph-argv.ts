@@ -101,8 +101,8 @@ export type WorkflowRalphExecutionBackendUi =
 export interface WorkflowRalphRunOptionsInput {
   readonly debugCli: WorkflowRalphDebugCli;
   readonly executionBackend: WorkflowRalphExecutionBackendUi;
-  readonly iterations: number;
   readonly iterationTimeoutSeconds: number | undefined;
+  readonly iterations: number;
   readonly model: string;
   readonly planId: string;
   readonly project: string;
@@ -111,15 +111,15 @@ export interface WorkflowRalphRunOptionsInput {
   readonly promptFile: string;
   /** @description `--prompt` (named profile) vs `--prompt-file` — matches CLI mutual exclusion. */
   readonly promptLayer: WorkflowRalphPromptLayer;
+  /** @description Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup: boolean;
   readonly targetMode: WorkflowRalphTargetMode;
   readonly taskId: string;
+  /** @description Cursor-only: `--worktree-base`. */
+  readonly worktreeBase: string;
   /** @description Agent CLI worktree: omit, `--worktree` only, or `--worktree <name>`. */
   readonly worktreeCli: WorkflowRalphWorktreeCli;
   readonly worktreeName: string;
-  /** @description Cursor-only: `--worktree-base`. */
-  readonly worktreeBase: string;
-  /** @description Cursor-only: `--skip-worktree-setup`. */
-  readonly skipWorktreeSetup: boolean;
 }
 
 /**
@@ -469,8 +469,8 @@ export const validateWorkflowRalphRunOptionsState = (
 ):
   | { readonly ok: true }
   | {
-      readonly ok: false;
       readonly issues: readonly WorkflowRalphValidationIssue[];
+      readonly ok: false;
     } => {
   const requireCliTargetIds = options?.requireCliTargetIds === true;
   const issues: WorkflowRalphValidationIssue[] = [];

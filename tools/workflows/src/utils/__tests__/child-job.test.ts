@@ -50,8 +50,8 @@ vi.mock('child_process', () => ({
  */
 function createMockRalphChild(behavior: {
   readonly status: number;
-  readonly stdout?: string;
   readonly stderr?: string;
+  readonly stdout?: string;
 }): ReturnType<typeof spawn> {
   let closeListener: (
     code: number | null,
@@ -692,7 +692,7 @@ describe('runChildJob', () => {
       } as ReturnType<typeof spawnSync>);
     mockCortexState.tasks = [{ status: 'COMPLETED' }];
 
-    const chunks: Array<{ stream: 'stdout' | 'stderr'; data: string }> = [];
+    const chunks: Array<{ data: string; stream: 'stdout' | 'stderr' }> = [];
     const dir = createTempDir();
     const input: ChildJobInput = {
       handoff: handoff(dir),

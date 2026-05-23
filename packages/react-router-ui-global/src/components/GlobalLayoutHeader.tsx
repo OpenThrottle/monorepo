@@ -22,7 +22,7 @@ import { NotificationBell } from '@openthrottle/react-router-notifications';
  */
 export type GlobalLayoutHeaderSearchEvent =
   | { readonly type: 'engage' }
-  | { readonly type: 'submit'; readonly query: string };
+  | { readonly query: string; readonly type: 'submit' };
 
 export interface GlobalLayoutHeaderProps {
   readonly className?: string;

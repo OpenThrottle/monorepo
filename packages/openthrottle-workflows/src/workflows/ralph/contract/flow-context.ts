@@ -71,8 +71,8 @@ export type WorkflowDebug = 'omit' | 'debug' | 'verbose';
 export interface WorkflowConfiguration {
   readonly debug: WorkflowDebug;
   readonly iterationMax: number;
-  readonly iterations: number;
   readonly iterationTimeout: number | undefined;
+  readonly iterations: number;
   readonly timeout: number | undefined;
 }
 

@@ -38,12 +38,12 @@ export interface RalphNestedRunTuningInput {
   readonly project?: string;
   readonly prompt?: string;
   readonly promptFile?: string;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup?: boolean | null;
   /** Agent CLI worktree name; forwarded as `--worktree` / `--worktree <name>`. */
   readonly worktree?: RalphWorktreeName | null;
   /** Cursor-only: `--worktree-base`. */
   readonly worktreeBase?: string | null;
-  /** Cursor-only: `--skip-worktree-setup`. */
-  readonly skipWorktreeSetup?: boolean | null;
 }
 
 /**

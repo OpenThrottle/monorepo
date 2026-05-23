@@ -437,10 +437,10 @@ export const resolveJobRunHookTimeoutSeconds = (
 export const shouldRunJobRunHook = (
   entry: JobRunHookEntry,
   context: {
+    readonly mainRunStarted: boolean;
+    readonly mainRunSucceeded: boolean;
     readonly phase: JobRunHookPhase;
     readonly runKind: JobRunHookRunKind;
-    readonly mainRunSucceeded: boolean;
-    readonly mainRunStarted: boolean;
   },
 ): boolean => {
   if (entry.phase !== context.phase) return false;

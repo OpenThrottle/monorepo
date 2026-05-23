@@ -29,17 +29,17 @@ export type NotificationEventName =
  * @description Base payload fields present on all notification events.
  */
 export interface NotificationPayloadBase {
+  /**
+   * Optional app-relative path for click-through (e.g. `/plans/:id`).
+   * When present, the developer app can show a "View plan" (or similar) link.
+   */
+  readonly link?: string;
   /** Human-readable message for display in toast or list. */
   readonly message: string;
   /** Severity for styling and filtering. */
   readonly severity: NotificationSeverity;
   /** ISO 8601 timestamp when the event occurred. */
   readonly timestamp: string;
-  /**
-   * Optional app-relative path for click-through (e.g. `/plans/:id`).
-   * When present, the developer app can show a "View plan" (or similar) link.
-   */
-  readonly link?: string;
 }
 
 /**

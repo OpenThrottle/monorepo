@@ -24,10 +24,10 @@ export interface SimpleLineChartProps<
   /** Data rows; each must include the keys given by categoryKey and valueKey. */
   readonly data: ReadonlyArray<T>;
   readonly margin?: {
-    readonly top?: number;
-    readonly right?: number;
     readonly bottom?: number;
     readonly left?: number;
+    readonly right?: number;
+    readonly top?: number;
   };
   /** Show dots at each data point. */
   readonly showDots?: boolean;

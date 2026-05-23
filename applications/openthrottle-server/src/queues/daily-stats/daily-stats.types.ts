@@ -10,12 +10,12 @@ export type AggregateDailyStatsJob = Job<AggregateDailyStatsJobData, void>;
 /** @description Aggregated counts for a single calendar day (UTC). */
 export interface DailyStatsAggregate {
   readonly date: string;
-  readonly plansCreated: number;
-  readonly plansCompleted: number;
-  readonly plansUpdated: number;
-  readonly tasksCreated: number;
-  readonly tasksCompleted: number;
-  readonly tasksUpdated: number;
   readonly plansByStatus: Record<string, number>;
+  readonly plansCompleted: number;
+  readonly plansCreated: number;
+  readonly plansUpdated: number;
   readonly tasksByStatus: Record<string, number>;
+  readonly tasksCompleted: number;
+  readonly tasksCreated: number;
+  readonly tasksUpdated: number;
 }

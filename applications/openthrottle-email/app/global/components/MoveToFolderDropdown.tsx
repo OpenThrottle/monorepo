@@ -8,10 +8,10 @@ import {
 import type { MailFolder, MailFolderId } from '~/types/mail';
 
 interface MoveToFolderDropdownProps {
-  /** List of folders to show; typically MOCK_FOLDERS or API result. */
-  readonly folders: readonly MailFolder[];
   /** Current folder id to disable in the list (e.g. message already in this folder). */
   readonly currentFolderId?: MailFolderId;
+  /** List of folders to show; typically MOCK_FOLDERS or API result. */
+  readonly folders: readonly MailFolder[];
   /** Called when user selects a folder; wire to move-message API. */
   readonly onSelect: (folderId: MailFolderId) => void;
   /** Label for the submenu trigger. */

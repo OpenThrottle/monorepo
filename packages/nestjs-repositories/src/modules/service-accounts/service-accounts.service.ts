@@ -74,8 +74,8 @@ export class ServiceAccountsService {
    * @description Creates a service account.
    */
   async create(data: {
-    name: string;
     description?: string | null;
+    name: string;
   }): Promise<ServiceAccount> {
     const entity = this.serviceAccountRepository.create({
       description: data.description ?? null,
@@ -139,9 +139,9 @@ export class ServiceAccountsService {
    * @description Creates a credential and returns the plaintext `ot_sa_<prefix>_<secret>` once.
    */
   async createCredential(input: {
-    serviceAccountId: string;
-    label?: string | null;
     expiresAt?: Date | null;
+    label?: string | null;
+    serviceAccountId: string;
   }): Promise<CreateServiceAccountCredentialResult | null> {
     const account = await this.serviceAccountRepository.findOne({
       where: { id: input.serviceAccountId },

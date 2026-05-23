@@ -31,25 +31,20 @@ import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
 export interface PlanToolbarProps {
   className?: string;
-  planId: string;
-  /**
-   * @description Display title for Kill run confirmation (defaults when omitted).
-   */
-  planTitle?: string;
-  planStatus?: string;
-  /**
-   * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
-   */
-  ralphTuningJson?: string;
   /**
    * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
    */
   jobRunHooksJson?: string;
+  planId: string;
+  planStatus?: string;
   /**
-   * @description Optional absolute path to a local project directory for multi-workspace runs.
-   * Passed through to the enqueuePlanRun mutation as workingDirectory.
+   * @description Display title for Kill run confirmation (defaults when omitted).
    */
-  workingDirectory?: string;
+  planTitle?: string;
+  /**
+   * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
+   */
+  ralphTuningJson?: string;
   /**
    * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
    */
@@ -58,6 +53,11 @@ export interface PlanToolbarProps {
    * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
    */
   workflowRunBlockedReason?: string;
+  /**
+   * @description Optional absolute path to a local project directory for multi-workspace runs.
+   * Passed through to the enqueuePlanRun mutation as workingDirectory.
+   */
+  workingDirectory?: string;
 }
 
 /**

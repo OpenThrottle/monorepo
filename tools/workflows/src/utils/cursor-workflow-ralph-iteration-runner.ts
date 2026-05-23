@@ -38,8 +38,8 @@ export interface CursorWorkflowRalphIterationRunParams {
   ) => void | Promise<void>;
   readonly runner: RalphExecutionBackendId;
   readonly signal: AbortSignal | undefined;
-  readonly timeoutMs: number | undefined;
   readonly skipWorktreeSetup?: boolean;
+  readonly timeoutMs: number | undefined;
   readonly worktree?: string;
   readonly worktreeBase?: string;
 }
@@ -56,13 +56,13 @@ export type CursorWorkflowRalphAppendPlanOutputChunk = (input: {
 }) => void | Promise<void>;
 
 export interface CreateCursorWorkflowRalphIterationRunnerOptions {
-  /** @description Forwarded to {@link runIterationAsync} `onChunk`. */
-  readonly onChunk?: (chunk: CursorAgentChunk) => void | Promise<void>;
   /**
    * @description Optional per-chunk side effect (e.g. MCP `append_plan_output`). Invoked alongside
    * `onChunk` when both are set.
    */
   readonly appendPlanOutput?: CursorWorkflowRalphAppendPlanOutputChunk;
+  /** @description Forwarded to {@link runIterationAsync} `onChunk`. */
+  readonly onChunk?: (chunk: CursorAgentChunk) => void | Promise<void>;
 }
 
 /**

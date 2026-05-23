@@ -296,7 +296,7 @@ export class WorkflowProcessor
    */
   @OnWorkerEvent('failed')
   async onPlanJobFailed(
-    payload: { job?: WorkflowJob; error?: Error } | WorkflowJob,
+    payload: { error?: Error; job?: WorkflowJob } | WorkflowJob,
     errorArg?: Error,
   ): Promise<void> {
     const job =

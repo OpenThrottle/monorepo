@@ -18,14 +18,6 @@ export type TestEnvironment = 'jsdom' | 'happy-dom' | 'node';
  */
 export interface CreateVitestConfigOptions {
   /**
-   * @description Test environment type
-   */
-  readonly environment: TestEnvironment;
-  /**
-   * @description Path to the package directory (used for coverage directory calculation)
-   */
-  readonly packagePath: string;
-  /**
    * @description Custom coverage directory (defaults to auto-calculation)
    */
   readonly coverageDirectory?: string;
@@ -38,13 +30,21 @@ export interface CreateVitestConfigOptions {
    */
   readonly env?: Record<string, string>;
   /**
-   * @description Setup files to include
+   * @description Test environment type
    */
-  readonly setupFiles?: readonly string[];
+  readonly environment: TestEnvironment;
   /**
    * @description Custom vitest config overrides
    */
   readonly overrides?: Partial<UserConfig>;
+  /**
+   * @description Path to the package directory (used for coverage directory calculation)
+   */
+  readonly packagePath: string;
+  /**
+   * @description Setup files to include
+   */
+  readonly setupFiles?: readonly string[];
 }
 
 /**
@@ -81,12 +81,12 @@ const calculateCoverageDirectory = (packagePath: string): string => {
  * @description Base configuration options for environment-specific configs
  */
 interface BaseConfigOptions {
-  readonly packagePath: string;
   readonly coverageDirectory?: string;
   readonly coverageEnabled: boolean;
   readonly env: Record<string, string>;
-  readonly setupFiles?: readonly string[];
   readonly overrides?: Partial<UserConfig>;
+  readonly packagePath: string;
+  readonly setupFiles?: readonly string[];
 }
 
 /**

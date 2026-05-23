@@ -361,7 +361,7 @@ export class PlansResolver {
     const repo = this.plansService.getRepository();
     const rows = (await repo.query(
       'SELECT status, COUNT(*)::int AS count FROM plans GROUP BY status ORDER BY status',
-    )) as { status: string; count: number }[];
+    )) as { count: number; status: string }[];
 
     return rows.map((r) => {
       const obj = new PlanStatusCountObject();

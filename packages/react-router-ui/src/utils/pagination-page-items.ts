@@ -1,13 +1,13 @@
 import { PAGINATION_CONFIG } from '../config/pagination';
 
 export type PaginationPageItem =
-  | { readonly type: 'page'; readonly page: number }
+  | { readonly page: number; readonly type: 'page' }
   | { readonly type: 'ellipsis' };
 
 export interface BuildPaginationPageItemsOptions {
   readonly page: number;
-  readonly siblingCount?: number;
   readonly showAllPagesThreshold?: number;
+  readonly siblingCount?: number;
   readonly totalPages: number;
 }
 

@@ -62,16 +62,16 @@ export interface LogStreamHub {
   publish(record: StructuredLogRecord): void;
 
   /**
+   * @description Read complete JSONL lines starting at {@link byteOffset} (skip a leading partial line when offset is mid-line); caps read size for backpressure.
+   */
+  readReplayFromByteOffset(byteOffset: number): Promise<LogReplayChunk>;
+
+  /**
    * @description Read up to {@link lineCount} complete records from the tail of the active JSONL file (bounded by module replay limits).
    */
   readReplayTailLines(
     lineCount?: number,
   ): Promise<ReadonlyArray<StructuredLogRecord>>;
-
-  /**
-   * @description Read complete JSONL lines starting at {@link byteOffset} (skip a leading partial line when offset is mid-line); caps read size for backpressure.
-   */
-  readReplayFromByteOffset(byteOffset: number): Promise<LogReplayChunk>;
 
   /**
    * @description Register a listener; returned function unsubscribes.

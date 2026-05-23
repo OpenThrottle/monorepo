@@ -23,8 +23,8 @@ export async function getPriorState(
   await client.connect();
   try {
     const result = await client.query<{
-      path: string;
       content_hash: string;
+      path: string;
       updated_at: Date;
     }>(
       `SELECT path, content_hash, updated_at
@@ -51,7 +51,7 @@ export async function getPriorState(
 export async function savePriorState(
   connectionString: string,
   scope: string,
-  entries: readonly { readonly path: string; readonly contentHash: string }[],
+  entries: readonly { readonly contentHash: string; readonly path: string }[],
 ): Promise<void> {
   if (entries.length === 0) return;
 

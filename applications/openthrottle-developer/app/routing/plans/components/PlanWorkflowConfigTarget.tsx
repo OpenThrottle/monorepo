@@ -16,11 +16,11 @@ import {
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface PlanWorkflowConfigTargetProps {
+  heading: string;
   input: WorkflowRalphRunOptionsInput;
   setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
-  heading: string;
 }
 
 export const PlanWorkflowConfigTarget = (

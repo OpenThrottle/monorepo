@@ -8,9 +8,9 @@ const DEFAULT_OPTIONS = ['IN_PROGRESS', 'PENDING', 'BACKLOG'];
 
 function renderStatusMultiSelect(
   props: {
-    value?: readonly string[];
     onChange?: (value: string[]) => void;
     options?: readonly string[];
+    value?: readonly string[];
   } = {},
 ) {
   const value = props.value ?? [];

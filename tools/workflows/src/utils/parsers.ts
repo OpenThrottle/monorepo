@@ -134,14 +134,14 @@ export interface RalphArgs {
   promptProfileLabel: string;
   /** Effective Ralph shim debug level after env + CLI (see {@link setRalphDebugLevel}). */
   ralphDebugLevel: RalphDebugLevel;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  skipWorktreeSetup: boolean | undefined;
   /** When set, Ralph runs in task-centric mode (single task). Plan can be omitted and resolved from the task. */
   task: string | undefined;
   /** Resolved agent CLI worktree name for every iteration. */
   worktree: RalphWorktreeName | undefined;
   /** Cursor-only: `--worktree-base`. */
   worktreeBase: string | undefined;
-  /** Cursor-only: `--skip-worktree-setup`. */
-  skipWorktreeSetup: boolean | undefined;
 }
 
 /**

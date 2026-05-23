@@ -14,14 +14,14 @@ import { DEFAULT_POLL_INTERVAL_MS } from '../types/child-process-metrics';
 const BYTES_PER_MB = 1024 * 1024;
 
 interface ChildProcessMetricsCollectorState {
-  readonly pollIntervalMs: number;
-  readonly keepSamples: boolean;
-  pid: number;
-  startTime: number;
-  samples: ChildProcessSample[];
   intervalId: ReturnType<typeof setInterval> | null;
-  stopped: boolean;
+  readonly keepSamples: boolean;
   metricsReturned: boolean;
+  pid: number;
+  readonly pollIntervalMs: number;
+  samples: ChildProcessSample[];
+  startTime: number;
+  stopped: boolean;
 }
 
 /**

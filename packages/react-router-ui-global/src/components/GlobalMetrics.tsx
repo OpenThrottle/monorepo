@@ -42,10 +42,10 @@ import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
 
 export interface GlobalMetricsProps {
   readonly className?: string;
-  /** In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer). */
-  readonly diagnosticsHref?: string;
   /** Deep link to a persistent metric-definitions panel (e.g. Settings → Debug → Server metrics definitions). */
   readonly definitionsHref?: string;
+  /** In-app link for GraphQL connectivity troubleshooting (e.g. Settings → Debug in openthrottle-developer). */
+  readonly diagnosticsHref?: string;
   readonly pollIntervalMs?: number;
   /** When true, show a collapsed “Sampling & endpoint” block with poll interval, sample count, and GraphQL URL (for support / debugging). */
   readonly showSamplingDetails?: boolean;

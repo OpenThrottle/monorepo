@@ -19,11 +19,11 @@ import type {
 const SIGKILL_GRACE_MS = 10_000;
 
 interface NxSpawnResult {
-  readonly status: number | null;
-  readonly signal: NodeJS.Signals | null;
-  readonly stdout: string;
-  readonly stderr: string;
   readonly killReason?: 'timeout' | 'abort';
+  readonly signal: NodeJS.Signals | null;
+  readonly status: number | null;
+  readonly stderr: string;
+  readonly stdout: string;
 }
 
 const DEFAULT_BASE_BRANCH = 'main';
@@ -184,9 +184,9 @@ function runNxCheckAsync(
   worktreePath: string,
   args: string[],
   options: {
-    readonly timeoutMs?: number;
-    readonly signal?: AbortSignal;
     readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
+    readonly signal?: AbortSignal;
+    readonly timeoutMs?: number;
   },
 ): Promise<NxSpawnResult> {
   return new Promise((resolve, reject) => {
@@ -282,9 +282,9 @@ async function runLintTestTypecheck(
   worktreePath: string,
   base: string | undefined,
   options: {
-    readonly timeoutMs?: number;
-    readonly signal?: AbortSignal;
     readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
+    readonly signal?: AbortSignal;
+    readonly timeoutMs?: number;
   } = {},
 ): Promise<ParentJobEnsureCommitResult> {
   for (const check of ENSURE_COMMIT_NX_CHECKS) {

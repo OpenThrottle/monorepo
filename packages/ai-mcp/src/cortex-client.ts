@@ -38,46 +38,46 @@ interface PlanRawRow {
  * @description Normalizes TypeORM query result (array or pg-style { rows, rowCount }) to { rows, rowCount }.
  */
 function normalizeQueryResult<T>(raw: unknown): {
-  rows: T[];
   rowCount: number;
+  rows: T[];
 } {
   if (Array.isArray(raw)) {
     return { rowCount: raw.length, rows: raw as T[] };
   }
-  const r = raw as { rows?: T[]; rowCount?: number };
+  const r = raw as { rowCount?: number; rows?: T[] };
   return { rowCount: r.rowCount ?? 0, rows: r.rows ?? [] };
 }
 
 export interface SemanticSearchChunk {
+  readonly authors?: readonly unknown[];
   readonly content: string;
+  /** Set when source is 'documentation'. */
+  readonly documentationId?: string;
   readonly id: string;
   readonly metadata: Record<string, unknown>;
+  readonly path?: string;
   readonly planId?: string;
   readonly planTitle?: string;
+  readonly prNumber?: number | null;
+  readonly repo?: string;
+  readonly sha?: string;
   readonly similarity: number;
   readonly source: 'plan' | 'task' | 'documentation';
   readonly taskId?: string;
   readonly taskTitle?: string;
-  /** Set when source is 'documentation'. */
-  readonly documentationId?: string;
-  readonly path?: string;
-  readonly repo?: string;
-  readonly sha?: string;
-  readonly prNumber?: number | null;
-  readonly authors?: readonly unknown[];
 }
 
 /** Raw row from documentation_embeddings + documentation join for semantic search. */
 interface DocumentationEmbeddingSearchRow {
-  id: string;
+  authors: unknown;
   content: string;
-  metadata: unknown;
   documentation_id: string;
+  id: string;
+  metadata: unknown;
   path: string;
+  pr_number: number | null;
   repo: string;
   sha: string;
-  pr_number: number | null;
-  authors: unknown;
   similarity: string;
 }
 
@@ -1156,20 +1156,20 @@ export type LastActivityKind = 'commit' | 'output_chunk' | 'task_update';
 
 export interface LastActivityResult {
   readonly at: string;
-  readonly kind: LastActivityKind;
-  readonly planId: string;
-  readonly taskId: string | null;
-  /** Human-readable summary for the answer. */
-  readonly summary: string;
   readonly commit?: {
     readonly message: string | null;
     readonly repo: string;
     readonly sha: string;
   };
+  readonly kind: LastActivityKind;
   readonly outputChunk?: {
     readonly content: string;
     readonly iteration: number | null;
   };
+  readonly planId: string;
+  /** Human-readable summary for the answer. */
+  readonly summary: string;
+  readonly taskId: string | null;
   readonly taskUpdate?: {
     readonly status: string;
     readonly taskId: string;
@@ -1189,10 +1189,10 @@ export async function getLastActivityForPlanOrTask(
 
   type Candidate = {
     at: string;
-    kind: LastActivityKind;
-    summary: string;
     commit?: LastActivityResult['commit'];
+    kind: LastActivityKind;
     outputChunk?: LastActivityResult['outputChunk'];
+    summary: string;
     taskUpdate?: LastActivityResult['taskUpdate'];
   };
   const candidates: Candidate[] = [];

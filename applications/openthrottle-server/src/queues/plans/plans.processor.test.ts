@@ -36,28 +36,26 @@ vi.mock('child_process', () => ({
 }));
 
 const mockRunBeforeRunHooksAndHandleBlock = vi.fn().mockResolvedValue(false);
-const mockRunAfterRunHooksThenNotify = vi
-  .fn()
-  .mockImplementation(
-    async (params: {
-      notification: {
+const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
+  async (params: {
+    notification: {
+      jobType: string;
+      message: string;
+      planId: string;
+      severity: 'error' | 'info' | 'success' | 'warning';
+    };
+    notifications: {
+      emitQueueJobCompleted: (payload: {
         jobType: string;
         message: string;
         planId: string;
         severity: 'error' | 'info' | 'success' | 'warning';
-      };
-      notifications: {
-        emitQueueJobCompleted: (payload: {
-          jobType: string;
-          message: string;
-          planId: string;
-          severity: 'error' | 'info' | 'success' | 'warning';
-        }) => void;
-      };
-    }) => {
-      params.notifications.emitQueueJobCompleted(params.notification);
-    },
-  );
+      }) => void;
+    };
+  }) => {
+    params.notifications.emitQueueJobCompleted(params.notification);
+  },
+);
 
 vi.mock('../job-run-hooks/execute-plan-job-run-hooks', () => ({
   runAfterRunHooksThenNotify: (
@@ -1065,8 +1063,8 @@ describe('PlansProcessor', () => {
       ).buildEnhancedMetrics.bind(processor);
 
       const enhanced = buildEnhancedMetrics(result) as {
-        atStart: typeof snapshotStub;
         atEnd: typeof snapshotStub;
+        atStart: typeof snapshotStub;
       };
 
       expect(enhanced).toHaveProperty('atStart', snapshotStub);
@@ -1143,8 +1141,8 @@ describe('PlansProcessor', () => {
       ).buildEnhancedMetrics.bind(processor);
 
       const enhanced = buildEnhancedMetrics(result) as {
-        atStart: typeof snapshotStub;
         atEnd: typeof snapshotStub;
+        atStart: typeof snapshotStub;
         childProcessMetrics?: ChildProcessMetrics;
         wallClockMetrics?: WallClockMetrics;
       };

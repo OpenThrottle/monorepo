@@ -44,8 +44,8 @@ function sanitizePostgresConnectionForLogs(connectionString: string): string {
  * @description One stderr line with cwd, plan id, sanitized Postgres target, and booleans for related env (no token values).
  */
 export function logWorkflowRalphOtDiagnostics(params: {
-  readonly planId: string;
   readonly connectionString: string;
+  readonly planId: string;
 }): void {
   const raw = process.env[WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV];
 

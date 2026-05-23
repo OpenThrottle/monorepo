@@ -1,8 +1,8 @@
 interface GeneratorErrorPayload {
   readonly code: string;
   readonly field?: string;
-  readonly message: string;
   readonly hint?: string;
+  readonly message: string;
   readonly validValues?: readonly string[];
 }
 

@@ -51,15 +51,14 @@ export const parseJobRunHooksJsonInput = (
  */
 export const jobRunHooksFromPlanStorage = (
   stored: PlanJobRunHooksStorage | null | undefined,
-): JobRunHooksConfig =>
-  parseJobRunHooksConfig(stored ?? { hooks: [] });
+): JobRunHooksConfig => parseJobRunHooksConfig(stored ?? { hooks: [] });
 
 /**
  * @description Resolves hooks for a queued run: enqueue override wins, else persisted plan hooks.
  */
 export const resolveJobRunHooksForEnqueue = (params: {
-  readonly planHooks: PlanJobRunHooksStorage | null | undefined;
   readonly enqueueHooksJson?: string | null;
+  readonly planHooks: PlanJobRunHooksStorage | null | undefined;
   readonly workingDirectory?: string | null;
 }): JobRunHooksConfig | undefined => {
   const cwd =

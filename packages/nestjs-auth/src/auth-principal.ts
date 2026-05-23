@@ -14,12 +14,12 @@ export type AuthPrincipalKind =
  * @description Human identity after JWT validation (or explicit user principal).
  */
 export interface UserAuthPrincipal {
-  readonly kind: typeof AUTH_PRINCIPAL_KIND_USER;
-  readonly sub: string;
   readonly email?: string;
   readonly exp?: number;
   readonly iat?: number;
+  readonly kind: typeof AUTH_PRINCIPAL_KIND_USER;
   readonly roles?: readonly string[];
+  readonly sub: string;
 }
 
 /**

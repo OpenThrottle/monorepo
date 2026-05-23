@@ -42,29 +42,29 @@ export interface OpenThrottleCommanderProps {
   readonly className?: string;
   /** Uncontrolled: initial open state when open/onOpenChange are not provided. */
   readonly defaultOpen?: boolean;
-  readonly groups: readonly CommanderGroup[];
   /**
    * When the query matches nothing in `groups`, extra items (e.g. UUID debug jumps) rendered with "Search for …".
    * Set `value` on each item to include the typed query so cmdk filtering keeps rows visible.
    */
   readonly emptyStateExtras?: (query: string) => readonly CommanderItem[];
   /**
-   * When provided and the user has typed a query with no matching items, a "Search for [query]" option is shown in the empty state. Called when the user selects that option.
+   * Replaces the default empty state when no commands match and there are no UUID/search extras.
    */
-  readonly onEmptyStateSearch?: (query: string) => void;
-  /** Controlled: when set, open state is controlled by parent. */
-  readonly open?: boolean;
-  /** Controlled: called when dialog open state changes. */
-  readonly onOpenChange?: (open: boolean) => void;
-  readonly placeholder?: string;
+  readonly emptyStateMessage?: React.ReactNode;
   /**
    * Optional left-aligned hint in the dialog footer (e.g. UUID / queue-job paste behavior).
    */
   readonly footerHint?: string;
+  readonly groups: readonly CommanderGroup[];
   /**
-   * Replaces the default empty state when no commands match and there are no UUID/search extras.
+   * When provided and the user has typed a query with no matching items, a "Search for [query]" option is shown in the empty state. Called when the user selects that option.
    */
-  readonly emptyStateMessage?: React.ReactNode;
+  readonly onEmptyStateSearch?: (query: string) => void;
+  /** Controlled: called when dialog open state changes. */
+  readonly onOpenChange?: (open: boolean) => void;
+  /** Controlled: when set, open state is controlled by parent. */
+  readonly open?: boolean;
+  readonly placeholder?: string;
 }
 
 export const OpenThrottleCommander = (

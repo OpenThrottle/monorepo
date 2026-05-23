@@ -37,35 +37,34 @@ export interface PlanTabConfigurationProps {
   className?: string;
   iterationTimeoutText?: string;
 
+  /** Controlled: job-run lifecycle hooks (parent owns for enqueue + save). */
+  jobRunHookRows?: readonly JobRunHookDraftRow[];
   /**
    * @description When set (plan detail URL-driven panel), shows a control to collapse the section.
    */
   onCollapse?: () => void;
   onIterationTimeoutTextChange?: (next: string) => void;
-  onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
-  onWorkingDirectoryChange: (next: string) => void;
+  onJobRunHookRowsChange: (next: JobRunHookDraftRow[]) => void;
 
   /**
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
    */
   onResetToDefaults?: () => void;
 
+  onSaveJobRunHooks: () => void;
+
+  onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
+
+  onWorkingDirectoryChange: (next: string) => void;
+
   /** When set (e.g. plan detail), seeds `--plan` and default target mode. */
   planId?: string;
-
-  /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
-  taskId?: string;
-
-  /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
-  value?: WorkflowRalphRunOptionsInput;
-
-  /** Controlled: job-run lifecycle hooks (parent owns for enqueue + save). */
-  jobRunHookRows?: readonly JobRunHookDraftRow[];
-  onJobRunHookRowsChange: (next: JobRunHookDraftRow[]) => void;
-  onSaveJobRunHooks: () => void;
   saveJobRunHooksDisabled?: boolean;
   saveJobRunHooksPending?: boolean;
-
+  /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
+  taskId?: string;
+  /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
+  value?: WorkflowRalphRunOptionsInput;
   /**
    * @description Optional absolute path for multi-workspace runs. Passed to
    * the enqueue mutation as `workingDirectory`. Empty string = monorepo root.

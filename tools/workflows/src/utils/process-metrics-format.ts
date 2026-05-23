@@ -16,8 +16,8 @@ import { formatWallClockMetrics } from '../types/wall-clock-metrics';
  */
 export interface TaskRunMetrics {
   readonly childProcessMetrics?: ChildProcessMetrics;
-  readonly wallClockMetrics?: WallClockMetrics;
   readonly systemCpuMetrics?: SystemCpuMetrics;
+  readonly wallClockMetrics?: WallClockMetrics;
 }
 
 /**

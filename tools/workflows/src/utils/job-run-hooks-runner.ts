@@ -24,15 +24,15 @@ import { resolveJobRunHookTimeoutSeconds } from './job-run-lifecycle-hooks-valid
 export interface JobRunHookIterationParams {
   readonly agentPrompt: string;
   readonly hookIndex: number;
-  readonly timeoutMs: number;
   readonly signal?: AbortSignal;
+  readonly timeoutMs: number;
 }
 
 export interface JobRunHookIterationResult {
+  readonly cancelled?: boolean;
+  readonly errorMessage?: string;
   readonly ok: boolean;
   readonly output?: string;
-  readonly errorMessage?: string;
-  readonly cancelled?: boolean;
 }
 
 export interface ExecuteJobRunHooksPhaseDeps {
@@ -40,31 +40,31 @@ export interface ExecuteJobRunHooksPhaseDeps {
     content: string,
     iteration: number | null,
   ) => Promise<void>;
+  readonly cwd: string;
   readonly runHookIteration: (
     params: JobRunHookIterationParams,
   ) => Promise<JobRunHookIterationResult>;
-  readonly cwd: string;
 }
 
 export interface ExecuteJobRunHooksPhaseParams {
   readonly deps: ExecuteJobRunHooksPhaseDeps;
   readonly hooks: JobRunHooksConfig | undefined;
+  readonly layer1Suffix: string;
+  readonly mainRunStarted?: boolean;
+  readonly mainRunSucceeded?: boolean;
   readonly phase: JobRunHookPhase;
   readonly planContextBlock: string;
   readonly planId: string;
   readonly runKind: JobRunHookRunKind;
-  readonly layer1Suffix: string;
-  readonly mainRunStarted?: boolean;
-  readonly mainRunSucceeded?: boolean;
   readonly signal?: AbortSignal;
 }
 
 export interface JobRunHookPhaseEntryResult {
+  readonly blocked: boolean;
   readonly entry: JobRunHookEntry;
+  readonly errorMessage?: string;
   readonly ok: boolean;
   readonly onFailure: JobRunHookOnFailure;
-  readonly blocked: boolean;
-  readonly errorMessage?: string;
 }
 
 export interface ExecuteJobRunHooksPhaseResult {
@@ -126,10 +126,10 @@ export const resolveJobRunHookLayer1Prompt = (
  */
 export const buildJobRunHookAgentPrompt = (params: {
   readonly entry: JobRunHookEntry;
+  readonly layer1Suffix: string;
   readonly layer1Text: string;
   readonly planContextBlock: string;
   readonly planId: string;
-  readonly layer1Suffix: string;
 }): string => {
   const { entry, layer1Suffix, layer1Text, planContextBlock, planId } = params;
   const phaseLabel = entry.phase === 'before_run' ? 'before_run' : 'after_run';

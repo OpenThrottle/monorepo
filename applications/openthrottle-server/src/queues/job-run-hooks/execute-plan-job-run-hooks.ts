@@ -26,7 +26,9 @@ import type { RunPlanJobData } from '../plans/plans.types';
 import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
 
 function getWorkspaceRoot(jobData: RunPlanJobData): string {
-  return jobData.workingDirectory ?? process.env.WORKSPACE_ROOT ?? process.cwd();
+  return (
+    jobData.workingDirectory ?? process.env.WORKSPACE_ROOT ?? process.cwd()
+  );
 }
 
 function runKindFromJobData(jobData: RunPlanJobData): JobRunHookRunKind {
@@ -58,7 +60,9 @@ export type PlanQueueJobCompletedPayload = {
 };
 
 export interface PlanJobRunHooksServices {
-  readonly emitQueueJobCompleted: (payload: PlanQueueJobCompletedPayload) => void;
+  readonly emitQueueJobCompleted: (
+    payload: PlanQueueJobCompletedPayload,
+  ) => void;
 }
 
 const logAfterRunHookFailures = (
@@ -84,13 +88,13 @@ export interface ExecutePlanJobRunHooksParams {
   readonly jobData: RunPlanJobData;
   readonly logLabel: string;
   readonly logger: LoggerService;
+  readonly mainRunStarted?: boolean;
+  readonly mainRunSucceeded?: boolean;
   readonly phase: JobRunHookPhase;
   readonly planOutputStreamService: PlanOutputStreamService;
   readonly plansService: PlansService;
   readonly signal?: AbortSignal;
   readonly tasksService: TasksService;
-  readonly mainRunSucceeded?: boolean;
-  readonly mainRunStarted?: boolean;
 }
 
 /**
@@ -155,7 +159,12 @@ export const executePlanJobRunHooks = async (
     deps: {
       appendPlanOutput,
       cwd,
-      runHookIteration: async ({ agentPrompt, hookIndex, signal, timeoutMs }) => {
+      runHookIteration: async ({
+        agentPrompt,
+        hookIndex,
+        signal,
+        timeoutMs,
+      }) => {
         try {
           const output = await iterationRunner.run({
             agentPrompt,

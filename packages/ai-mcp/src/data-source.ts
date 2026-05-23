@@ -51,8 +51,8 @@ export async function getOrCreateDataSource(
 }
 
 interface QueryResult<T = unknown> {
-  readonly rows: T[];
   readonly rowCount: number;
+  readonly rows: T[];
 }
 
 /**
@@ -67,6 +67,6 @@ export async function runQuery<T = unknown>(
   if (Array.isArray(raw)) {
     return { rowCount: raw.length, rows: raw as T[] };
   }
-  const r = raw as { rows?: T[]; rowCount?: number };
+  const r = raw as { rowCount?: number; rows?: T[] };
   return { rowCount: r.rowCount ?? 0, rows: r.rows ?? [] };
 }
