@@ -23,10 +23,10 @@ export interface SimpleBarChartProps<
   /** Vertical bars (category on X) or horizontal bars (category on Y). */
   readonly layout?: 'horizontal' | 'vertical';
   readonly margin?: {
-    readonly top?: number;
-    readonly right?: number;
     readonly bottom?: number;
     readonly left?: number;
+    readonly right?: number;
+    readonly top?: number;
   };
   /** Key in each datum for the bar value. */
   readonly valueKey: keyof T & string;

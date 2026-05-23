@@ -35,6 +35,7 @@ export const plansFactory = Factory.define<Plan>(() => ({
   createdAt: faker.date.past(),
   description: faker.lorem.paragraph(),
   id: faker.string.uuid(),
+  jobRunHooks: { hooks: [] },
   planEmbeddings: [],
   planOutputChunks: [],
   project: null,

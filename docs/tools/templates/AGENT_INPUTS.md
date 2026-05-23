@@ -19,9 +19,18 @@ Agents (e.g. Cursor, Ralph) should receive the following rules. Cursor loads `.c
 | `.cursor/rules/commands/github.mdc`       | Conventional commits, PR template, no Co-authored-by, no Cursor attribution                                                |
 | `.cursor/rules/cursor-commands.mdc`       | PNPM, NX, `import * as React`                                                                                              |
 | `.cursor/rules/no-cursor-attribution.mdc` | No "Made with Cursor" anywhere                                                                                             |
-| `.cursor/rules/nx-rules.mdc`              | Nx workspace usage, generators, MCP                                                                                        |
 
-### 1.2 Coding rules (apply when editing/generating code)
+### 1.2 Agent skills (repo-local)
+
+Invoke skills **before** writing code when the task matches their **USE WHEN** triggers. For `@tools/generators`, use **openthrottle-generators** first (not **nx-generate**).
+
+| Path                                                   | Purpose                                                                                                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.agents/skills/openthrottle-generators/SKILL.md`      | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE |
+| **AGENTS.md** (repo root) § Cursor Agent Skills        | Index: **openthrottle-stack**, **ot-plans**, **workflow-ralph**; generic Nx: **nx-workspace**, **nx-generate**, **nx-run-tasks**           |
+| **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                               |
+
+### 1.3 Coding rules (apply when editing/generating code)
 
 | Path                                                    | Purpose                                                |
 | ------------------------------------------------------- | ------------------------------------------------------ |
@@ -40,7 +49,7 @@ Agents (e.g. Cursor, Ralph) should receive the following rules. Cursor loads `.c
 | `.cursor/rules/coding/no-unchecked-indexed-access.mdc`  | Index access may be `T \| undefined`                   |
 | `.cursor/rules/coding/any-inside-generic-functions.mdc` | When `any` is acceptable in generics                   |
 
-### 1.3 Single entry point for agents
+### 1.4 Single entry point for agents
 
 - **`.cursor/rules/README.md`** — Describes layout (coding/ vs commands/), **Agent behavior** (plans in OT, fail loudly, generators first), and points to personal-generators.mdc and AGENT_USAGE.md. Agents should be directed here for "what rules exist and how to behave."
 
@@ -87,28 +96,29 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 ### 3.1 Primary entry points (must mention generator-first)
 
-| Location                                  | Content                                                                                                |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **AGENTS.md** (repo root)                 | § Generators (check first): 4-step workflow, link to AGENT_USAGE.md and personal-generators.mdc.       |
-| **.cursor/rules/README.md**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.             |
-| **.cursor/rules/personal-generators.mdc** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md. |
-| **docs/tools/templates/AGENT_USAGE.md**   | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.       |
+| Location                                  | Content                                                                                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **AGENTS.md** (repo root)                 | § Scaffolding: **openthrottle-generators** before nx-generate; § Cursor Agent Skills; link to AGENT_USAGE.md and personal-generators.mdc. |
+| **.cursor/rules/README.md**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.                                                |
+| **.cursor/rules/personal-generators.mdc** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md.                                    |
+| **docs/tools/templates/AGENT_USAGE.md**   | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.                                          |
 
 ### 3.2 Supporting references
 
-| Location                       | Content                                                                                             |
-| ------------------------------ | --------------------------------------------------------------------------------------------------- |
-| **AGENTS.md**                  | § Code style: ".cursor/rules/ — see README.md"; § Generators links to AGENT_USAGE.md.               |
-| **RULES_TO_GENERATORS_MAP.md** | Maps which rules apply to which generator; use when auditing or applying rules per artifact type.   |
-| **AUDIT_SCOPE.md**             | Defines what’s in scope for component/template audits (apps, packages, artifact types).             |
-| **AUDIT_CHECKLIST.md**         | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`. |
-| **AGENT_INPUTS.md** (this doc) | Single spec for what to provide to agents: rules list, example commands, discoverability.           |
+| Location                          | Content                                                                                                    |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **AGENTS.md**                     | § Code style: ".cursor/rules/ — see README.md"; § Generators links to AGENT_USAGE.md.                      |
+| **RULES_TO_GENERATORS_MAP.md**    | Maps which rules apply to which generator; use when auditing or applying rules per artifact type.          |
+| **AUDIT_SCOPE.md**                | Defines what’s in scope for component/template audits (apps, packages, artifact types).                    |
+| **AUDIT_CHECKLIST.md**            | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`.        |
+| **AGENT_INPUTS.md** (this doc)    | Single spec for what to provide to agents: rules list, example commands, discoverability.                  |
+| **openthrottle-generators** skill | `.agents/skills/openthrottle-generators/SKILL.md` — invoke before **nx-generate** for `@tools/generators`. |
 
 ### 3.3 Recommendations for implementation (post-planning)
 
 - **AGENTS.md:** Keep the Generators section at the top (or immediately after Nx) so agents see it early. Explicitly say: "Before writing new code, components, or services, check generators first (see AGENT_USAGE.md and personal-generators.mdc)."
 - **Cursor rules:** Ensure `personal-generators.mdc` has `alwaysApply: true` (already set) so it’s always in context.
-- **Skills / onboarding:** If the repo uses Cursor "skills" or an onboarding doc, include one line: "New code: always run `NX_ISOLATE_PLUGINS=false nx list @tools/generators` and use a generator if one exists; see docs/tools/templates/AGENT_USAGE.md."
+- **Skills / onboarding:** Direct agents to **openthrottle-generators** (`.agents/skills/openthrottle-generators/SKILL.md`) before scaffolding: `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators`, then AGENT_USAGE.md. Nx workspace/tasks: **nx-workspace** / **nx-run-tasks** (see AGENTS.md § Cursor Agent Skills).
 
 ---
 
@@ -116,7 +126,7 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 | What                 | Where                                                                                                                                                                                                                 |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rules to load**    | §1: always-applied (.cursor/rules: personal-generators, personal-general, commands/_, no-cursor-attribution, nx-rules); coding/_ for code edits. Single entry: .cursor/rules/README.md.                               |
+| **Rules to load**    | §1: always-applied rules; §1.2 **openthrottle-generators** + AGENTS.md skills for Nx/generators; coding/\* for code edits. Single entry: .cursor/rules/README.md.                                                     |
 | **Example commands** | §2: discover (list → describe → list=<key> → execute); NX_ISOLATE_PLUGINS=false on every generator command; EXAMPLES.md for per-generator snippets; AGENT_USAGE.md is authoritative.                                  |
 | **Discoverability**  | §3: AGENTS.md, .cursor/rules/README.md, personal-generators.mdc, AGENT_USAGE.md all state "generator first"; RULES_TO_GENERATORS_MAP, AUDIT_SCOPE, AUDIT_CHECKLIST, AGENT_INPUTS support audits and agent onboarding. |
 

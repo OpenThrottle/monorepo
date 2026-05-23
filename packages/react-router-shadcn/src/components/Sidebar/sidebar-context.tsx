@@ -3,12 +3,12 @@
 import * as React from 'react';
 
 export type SidebarContextProps = {
-  readonly state: 'expanded' | 'collapsed';
-  readonly open: boolean;
-  readonly setOpen: (open: boolean) => void;
-  readonly openMobile: boolean;
-  readonly setOpenMobile: (open: boolean) => void;
   readonly isMobile: boolean;
+  readonly open: boolean;
+  readonly openMobile: boolean;
+  readonly setOpen: (open: boolean) => void;
+  readonly setOpenMobile: (open: boolean) => void;
+  readonly state: 'expanded' | 'collapsed';
   readonly toggleSidebar: () => void;
 };
 

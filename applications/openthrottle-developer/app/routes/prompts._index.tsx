@@ -16,11 +16,10 @@ import {
   parsePromptsSortFromSearchParams,
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
-import { PromptCard } from '~/routing/prompts/components/PromptCard';
-import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
 import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
 import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
+import { PromptsTable } from '~/routing/prompts/components/PromptsTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useSearchParams } from 'react-router';
 import type { Route } from '@/app/routes/+types/prompts._index';
@@ -91,6 +90,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     limit,
     page,
     prompts: paginatedPrompts,
+    search,
     total,
     totalPages,
     types,
@@ -115,8 +115,8 @@ export default function Component(
     limit,
     page,
     prompts,
+    search,
     total,
-    // totalPages,
     types,
   } = loaderData;
 
@@ -124,6 +124,7 @@ export default function Component(
   const [searchParams] = useSearchParams();
 
   // Setup
+  const showStats = false;
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
 
   // Handlers
@@ -136,37 +137,35 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <PromptsStats
-        countAgents={countAgents}
-        countSkills={countSkills}
-        total={total}
-      />
-      <PromptsIntroduction />
-      {/* <AgentsSectionQuickLinks /> */}
-
-      <PromptToolbar
-        limit={limit}
-        page={page}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        types={types}
-      />
-
-      {prompts.length === 0 ? (
-        <PromptsEmpty />
-      ) : (
-        <>
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
-            data-testid="prompts-grid"
-          >
-            {prompts.map((prompt) => (
-              <PromptCard key={prompt.id} prompt={prompt} />
-            ))}
-          </div>
-          <OpenThrottlePagination limit={limit} page={page} total={total} />
-        </>
+      {showStats && (
+        <PromptsStats
+          countAgents={countAgents}
+          countSkills={countSkills}
+          total={total}
+        />
       )}
+      <PromptsIntroduction />
+      <div className="flex flex-col gap-4">
+        <PromptToolbar
+          limit={limit}
+          page={page}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          types={types}
+        />
+        <PromptsTable prompts={prompts} search={search ?? undefined} />
+        <OpenThrottlePagination
+          basePath="/prompts"
+          className="mt-8"
+          limit={limit}
+          page={page}
+          resultLabel="prompts"
+          search={search ?? undefined}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          total={total}
+        />
+      </div>
     </GlobalScreen>
   );
 }

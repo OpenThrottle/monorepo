@@ -4,7 +4,7 @@ import { createRoutesStub } from 'react-router';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
 import { PlanTabTasks } from '../PlanTabTasks';
-import type { PlanTabTasksProp } from '../PlanTabTasks';
+import type { PlanTabTasksProps } from '../PlanTabTasks';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 const mockTask: PlanTaskRowFragment = {
@@ -23,7 +23,7 @@ const mockTask: PlanTaskRowFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-function renderTabTasks(props: PlanTabTasksProp) {
+function renderTabTasks(props: PlanTabTasksProps) {
   const Component = () => (
     <TooltipProvider>
       <Tabs value="tasks">

@@ -1,16 +1,20 @@
 import { getDirname } from './vite-config.js';
 import js from '@eslint/js';
-import pluginComments from 'eslint-plugin-eslint-comments';
 import pluginImport from 'eslint-plugin-import';
 import pluginImportSort from 'eslint-plugin-simple-import-sort';
 import pluginJest from 'eslint-plugin-jest';
-import pluginJson from 'eslint-plugin-json'; // @ts expect-error
 import pluginNx from '@nx/eslint-plugin';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
-import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 import tslint from 'typescript-eslint';
+// @ts-expect-error FIXME: TypeScript error (no types on these)
+import pluginComments from 'eslint-plugin-eslint-comments';
+// @ts-expect-error FIXME: TypeScript error (no types on these)
+import pluginJson from 'eslint-plugin-json';
+// @ts-expect-error FIXME: TypeScript error (no types on these)
+import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
+// @ts-expect-error FIXME: TypeScript error (no types on these)
+import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 
 /** @publicApi */
 export type { Config as EslintFlatConfig } from 'eslint/config';
@@ -220,6 +224,10 @@ export const eslintConfig = tslint.config([
         { caseSensitive: true, minKeys: 2, natural: false },
       ],
       'sort-keys-fix/sort-keys-fix': 'error',
+
+      // FIXME: https://www.npmjs.com/package/eslint-plugin-typescript-sort-keys
+      'typescript-sort-keys/interface': 'error',
+      'typescript-sort-keys/string-enum': 'error',
 
       // '@typescript-eslint/naming-convention': [
       //   'error',

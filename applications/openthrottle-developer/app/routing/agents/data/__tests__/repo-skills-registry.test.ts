@@ -1,8 +1,20 @@
 import { describe, expect, test } from 'vitest';
 import {
   getRepoSkillsRegistryCounts,
+  REQUIRED_AGENTS_SKILL_SLUGS,
   type RepoSkillEntry,
 } from '~/routing/agents/data/repo-skills-registry';
+
+describe('REQUIRED_AGENTS_SKILL_SLUGS', () => {
+  test('lists OpenThrottle-specific agent skills', () => {
+    expect([...REQUIRED_AGENTS_SKILL_SLUGS]).toEqual([
+      'openthrottle-generators',
+      'openthrottle-stack',
+      'ot-plans',
+      'workflow-ralph',
+    ]);
+  });
+});
 
 describe('getRepoSkillsRegistryCounts', () => {
   test('returns zeros for an empty list', () => {

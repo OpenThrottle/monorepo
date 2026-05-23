@@ -4,7 +4,7 @@ exports[`GlobalScreen Component > should render 1`] = `
 <body>
   <div>
     <div
-      class="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12 max-w-5xl-- w-full"
+      class="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12 max-w-5xl-- h-full w-full"
     />
   </div>
 </body>

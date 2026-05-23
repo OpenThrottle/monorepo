@@ -33,7 +33,7 @@ const expandShortHex = (hex: string): string => {
 
 const parseHslComponents = (
   color: string,
-): { readonly h: number; readonly s: number; readonly l: number } | null => {
+): { readonly h: number; readonly l: number; readonly s: number } | null => {
   const match =
     /^hsla?\(\s*([+-]?\d*\.?\d+)\s*(?:[, ]\s*|\s+)([+-]?\d*\.?\d+)%\s*(?:[, ]\s*|\s+)([+-]?\d*\.?\d+)%/i.exec(
       color.trim(),

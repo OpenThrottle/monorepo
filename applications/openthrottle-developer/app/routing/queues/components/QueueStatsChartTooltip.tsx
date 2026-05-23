@@ -5,14 +5,16 @@ import {
   QUEUE_STATS_CHART_SERIES,
 } from '~/routing/queues/utils/queue-stats-chart';
 
+export type QueueStatsChartTooltipProps = ChartTooltipContentProps;
+
 type QueueStatsChartRow = Record<
   (typeof QUEUE_STATS_CHART_SERIES)[number],
   number
 > & {
-  readonly name: string;
+  name: string;
 };
 
-function isQueueStatsChartRow(value: unknown): value is QueueStatsChartRow {
+const isQueueStatsChartRow = (value: unknown): value is QueueStatsChartRow => {
   if (value == null || typeof value !== 'object') {
     return false;
   }
@@ -21,16 +23,27 @@ function isQueueStatsChartRow(value: unknown): value is QueueStatsChartRow {
     typeof row.name === 'string' &&
     QUEUE_STATS_CHART_SERIES.every((key) => typeof row[key] === 'number')
   );
-}
+};
 
 /**
  * @description Tooltip for QueuesStats: always lists all five table counts even when completed is hidden from bars.
  */
 export const QueueStatsChartTooltip = (
-  props: ChartTooltipContentProps,
+  props: QueueStatsChartTooltipProps,
 ): React.ReactElement | null => {
   const { active, label, payload = [] } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (!active || payload.length === 0) {
     return null;
   }

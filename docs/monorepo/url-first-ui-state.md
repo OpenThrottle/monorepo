@@ -390,3 +390,18 @@ export const ExampleSheet = () => {
   );
 };
 ```
+
+---
+
+## 12. Tabs (search param vs routes)
+
+OpenThrottle splits tab UX into two APIs in [`@openthrottle/react-router-ui`](../../packages/react-router-ui/README.md#tabs-controlled-url-param-vs-link-route):
+
+| Model                        | Mechanism                                                                       | Typical param / path                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Same route, search param** | Controlled Radix `Tabs` + `useUrlSyncedTabValue` / `OpenThrottleTabs` `urlSync` | Feature-prefixed key (e.g. `?tab=tasks`); **delete** the param when the default tab is active |
+| **Real routes**              | `OpenThrottleTabsNav` + `OpenThrottleTabLink` (`NavLink`)                       | Paths like `/plans` and `/plans/board`; active state from `aria-current`                      |
+
+Apply **sections 1–6** above to Approach A: prefixed param names, `preventScrollReset` on param-only tab changes, loader reads committed `tab` (or your key) for SSR. For route-based tabs, prefer **section 8** (nested routes + `Outlet`) instead of overloading query params.
+
+**Example param key in openthrottle-developer:** plan detail uses `tab` (`PLANS_DETAIL_TAB_SEARCH_PARAM` in `parsers.ts`) with values such as `overview`, `tasks`, `requirements`, `output`.

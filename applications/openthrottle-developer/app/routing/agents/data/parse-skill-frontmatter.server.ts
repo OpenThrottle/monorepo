@@ -3,8 +3,8 @@
  * Supports inline scalars and folded (`>-`) / literal (`|-`) multiline blocks.
  */
 interface SkillFrontmatter {
-  readonly name: string | undefined;
   readonly description: string | undefined;
+  readonly name: string | undefined;
 }
 
 const extractFrontmatterBody = (fileContent: string): string | null => {
@@ -47,7 +47,7 @@ const parseIndentedBlock = (
   lines: readonly string[],
   startIndex: number,
   joinWith: 'space' | 'newline',
-): { readonly value: string; readonly nextIndex: number } => {
+): { readonly nextIndex: number; readonly value: string } => {
   const parts: string[] = [];
   let index = startIndex;
 

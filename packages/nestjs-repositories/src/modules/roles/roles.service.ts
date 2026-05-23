@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 import type { DeepPartial } from 'typeorm/common/DeepPartial';
+import { ServiceAccount } from '../service-accounts/service-account.entity';
 import { User } from '../users/user.entity';
 import { Permission } from './permission.entity';
 import { Role } from './role.entity';
@@ -19,6 +20,8 @@ export class RolesService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ServiceAccount)
+    private readonly serviceAccountRepository: Repository<ServiceAccount>,
   ) {
     this.logger.debug('🎭 roles 🎭');
   }
@@ -213,5 +216,90 @@ export class RolesService {
       where: { id: userId },
     });
     return user?.roles ?? [];
+  }
+
+  /**
+   * @description Returns role names assigned to the service account (for RBAC / CLS).
+   */
+  async findRoleNamesByServiceAccountId(
+    serviceAccountId: string,
+  ): Promise<string[]> {
+    const account = await this.serviceAccountRepository.findOne({
+      relations: ['roles'],
+      where: { id: serviceAccountId },
+    });
+    if (!account?.roles) return [];
+    return account.roles.map((r) => r.name);
+  }
+
+  /**
+   * @description Returns all permission names for the service account (union across roles).
+   */
+  async getPermissionsForServiceAccount(
+    serviceAccountId: string,
+  ): Promise<string[]> {
+    const account = await this.serviceAccountRepository.findOne({
+      relations: ['roles', 'roles.permissions'],
+      where: { id: serviceAccountId },
+    });
+
+    if (!account?.roles) return [];
+    const set = new Set<string>();
+
+    for (const role of account.roles) {
+      for (const p of role.permissions ?? []) {
+        set.add(p.name);
+      }
+    }
+
+    return Array.from(set);
+  }
+
+  /**
+   * @description Returns roles for a service account (full entities with permissions).
+   */
+  async findRolesForServiceAccount(serviceAccountId: string): Promise<Role[]> {
+    const account = await this.serviceAccountRepository.findOne({
+      relations: ['roles', 'roles.permissions'],
+      where: { id: serviceAccountId },
+    });
+    return account?.roles ?? [];
+  }
+
+  /**
+   * @description Assigns a role to a service account. Idempotent (no-op if already assigned).
+   */
+  async assignRoleToServiceAccount(
+    serviceAccountId: string,
+    roleId: string,
+  ): Promise<boolean> {
+    const account = await this.serviceAccountRepository.findOne({
+      relations: ['roles'],
+      where: { id: serviceAccountId },
+    });
+    const role = await this.roleRepository.findOne({ where: { id: roleId } });
+    if (!account || !role) return false;
+    const hasRole = account.roles?.some((r) => r.id === roleId);
+    if (hasRole) return true;
+    account.roles = [...(account.roles ?? []), role];
+    await this.serviceAccountRepository.save(account);
+    return true;
+  }
+
+  /**
+   * @description Removes a role from a service account. Idempotent.
+   */
+  async removeRoleFromServiceAccount(
+    serviceAccountId: string,
+    roleId: string,
+  ): Promise<boolean> {
+    const account = await this.serviceAccountRepository.findOne({
+      relations: ['roles'],
+      where: { id: serviceAccountId },
+    });
+    if (!account) return false;
+    account.roles = (account.roles ?? []).filter((r) => r.id !== roleId);
+    await this.serviceAccountRepository.save(account);
+    return true;
   }
 }

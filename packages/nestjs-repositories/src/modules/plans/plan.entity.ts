@@ -19,6 +19,11 @@ import type { Project } from '../projects/project.entity';
 import type { Task } from '../tasks/task.entity';
 
 /** Scalar/column fields of Plan (no relations). Use this to type GraphQL objects or DTOs that mirror the entity. */
+/** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
+export interface PlanJobRunHooksStorage {
+  readonly hooks: readonly unknown[];
+}
+
 export type PlanData = Pick<
   Plan,
   | 'assignee'
@@ -66,6 +71,13 @@ export class Plan {
 
   @Column({ name: 'project_id', nullable: true, type: 'uuid' })
   projectId!: string | null;
+
+  @Column({
+    default: () => '\'{"hooks":[]}\'::jsonb',
+    name: 'job_run_hooks',
+    type: 'jsonb',
+  })
+  jobRunHooks!: PlanJobRunHooksStorage;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

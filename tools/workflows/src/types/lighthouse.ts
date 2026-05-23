@@ -8,12 +8,12 @@ export interface LighthouseAuditConfig {
 export interface LighthouseAuditIssue {
   readonly auditId: string;
   readonly description: string;
-  readonly displayValue?: string;
   readonly details?: {
     readonly items?: readonly unknown[];
-    readonly overallSavingsMs?: number;
     readonly overallSavingsBytes?: number;
+    readonly overallSavingsMs?: number;
   };
+  readonly displayValue?: string;
   readonly score: number | null;
   readonly title: string;
 }
@@ -58,20 +58,20 @@ export interface LighthouseCWVThresholds {
 }
 
 export interface LighthouseCWVReport {
-  readonly url: string;
-  readonly deviceType: LighthouseDeviceType;
   readonly cls: {
-    readonly value: number | null;
     readonly status: LighthouseCWVStatus;
+    readonly value: number | null;
   };
+  readonly deviceType: LighthouseDeviceType;
   readonly inp: {
-    readonly value: number | null;
     readonly status: LighthouseCWVStatus;
+    readonly value: number | null;
   };
   readonly lcp: {
-    readonly value: number | null;
     readonly status: LighthouseCWVStatus;
+    readonly value: number | null;
   };
+  readonly url: string;
 }
 
 export interface LighthouseCWVSummaryReport {

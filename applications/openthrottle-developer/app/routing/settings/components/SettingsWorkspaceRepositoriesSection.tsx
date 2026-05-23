@@ -5,8 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
@@ -14,24 +12,42 @@ import type {
   WorkspaceLocalRepositoryFieldsFragment,
   GetWorkspaceSettingsQuery,
 } from '~/__generated__/graphql';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { FolderGit2Icon } from 'lucide-react';
 
 type ProjectOption = GetWorkspaceSettingsQuery['projects'][number];
 
-interface SettingsWorkspaceRepositoriesSectionProps {
-  readonly actionError?: string | null;
-  readonly className?: string;
-  readonly localRepositories: readonly WorkspaceLocalRepositoryFieldsFragment[];
-  readonly projects: readonly ProjectOption[];
+export interface SettingsWorkspaceRepositoriesSectionProps {
+  actionError?: string | null;
+  className?: string;
+  localRepositories: WorkspaceLocalRepositoryFieldsFragment[];
+  projects: ProjectOption[];
 }
 
 const NONE_PROJECT_VALUE = '__none__';
 
-const ProjectSelect = (props: {
-  readonly currentProjectId: string | null;
-  readonly name: string;
-  readonly projects: readonly ProjectOption[];
-}): React.ReactElement => {
+export interface WorkspaceRepositoriesProjectSelectProps {
+  currentProjectId: string | null;
+  name: string;
+  projects: ProjectOption[];
+}
+
+const WorkspaceRepositoriesProjectSelect = (
+  props: WorkspaceRepositoriesProjectSelectProps,
+): React.ReactElement => {
   const { currentProjectId, name, projects } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <select
@@ -49,12 +65,18 @@ const ProjectSelect = (props: {
   );
 };
 
-const LocalRepositoryRow = (props: {
-  readonly actionError?: string | null;
-  readonly projects: readonly ProjectOption[];
-  readonly repo: WorkspaceLocalRepositoryFieldsFragment;
-}): React.ReactElement => {
+export interface WorkspaceRepositoriesLocalRepositoryRowProps {
+  actionError?: string | null;
+  projects: ProjectOption[];
+  repo: WorkspaceLocalRepositoryFieldsFragment;
+}
+
+const WorkspaceRepositoriesLocalRepositoryRow = (
+  props: WorkspaceRepositoriesLocalRepositoryRowProps,
+): React.ReactElement => {
   const { actionError, projects, repo } = props;
+
+  // Hooks
   const navigation = useNavigation();
   const isUpdating =
     navigation.state === 'submitting' &&
@@ -65,8 +87,21 @@ const LocalRepositoryRow = (props: {
     navigation.formData?.get('intent') === 'deleteRepo' &&
     navigation.formData?.get('id') === repo.id;
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
-    <Card className="border-dashed" data-testid={`workspace-repo-${repo.id}`}>
+    <Card
+      className="border-dashed bg-background"
+      data-testid={`workspace-repo-${repo.id}`}
+    >
       <CardContent className="space-y-3 pt-6">
         <Form className="space-y-3" method="post">
           <input name="intent" type="hidden" value="updateRepo" />
@@ -92,7 +127,7 @@ const LocalRepositoryRow = (props: {
 
           <div className="space-y-2">
             <Label htmlFor={`repo-project-${repo.id}`}>Linked project</Label>
-            <ProjectSelect
+            <WorkspaceRepositoriesProjectSelect
               currentProjectId={repo.projectId ?? null}
               name="projectId"
               projects={projects}
@@ -128,91 +163,101 @@ export const SettingsWorkspaceRepositoriesSection = (
   props: SettingsWorkspaceRepositoriesSectionProps,
 ): React.ReactElement => {
   const { actionError, className, localRepositories, projects } = props;
+
+  // Hooks
   const navigation = useNavigation();
   const isCreating =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'createRepo';
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
-    <section
-      className={classnames('space-y-4', className)}
-      data-testid="SettingsWorkspaceRepositoriesSection"
+    <OpenThrottleFieldset
+      icon={FolderGit2Icon}
+      id="local-repositories"
+      legend="Local Repositories"
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Local repositories</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Register directories on the machine running openthrottle-server.
-            Paths must exist on that host and are validated when you add them.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Form className="space-y-4" method="post">
-            <input name="intent" type="hidden" value="createRepo" />
-
-            <div className="space-y-2">
-              <Label htmlFor="new-repo-display-name">Label</Label>
-              <Input
-                id="new-repo-display-name"
-                name="displayName"
-                placeholder="OpenThrottle monorepo"
-                required={true}
-                type="text"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="new-repo-filesystem-path">Absolute path</Label>
-              <Input
-                id="new-repo-filesystem-path"
-                name="filesystemPath"
-                placeholder="/Users/you/Development/openthrottle"
-                required={true}
-                type="text"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="new-repo-project">
-                Linked project (optional)
-              </Label>
-              <ProjectSelect
-                currentProjectId={null}
-                name="projectId"
-                projects={projects}
-              />
-            </div>
-
-            {actionError ? (
-              <p className="text-destructive text-sm" role="alert">
-                {actionError}
-              </p>
-            ) : null}
-
-            <Button disabled={isCreating} type="submit" variant="outline">
-              {isCreating ? 'Adding…' : 'Add repository'}
-            </Button>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {localRepositories.length === 0 ? (
+      <section
+        className={classnames('space-y-4 md:space-y-8', className)}
+        data-testid="SettingsWorkspaceRepositoriesSection"
+      >
         <p className="text-muted-foreground text-sm">
-          No local repositories yet. Add one above.
+          Register directories on the machine running openthrottle-server. Paths
+          must exist on that host and are validated when you add them.
         </p>
-      ) : (
-        <ul className="space-y-4">
-          {localRepositories.map((repo) => (
-            <li key={repo.id}>
-              <LocalRepositoryRow
-                actionError={actionError}
-                projects={projects}
-                repo={repo}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+
+        <Form className="space-y-4" method="post">
+          <input name="intent" type="hidden" value="createRepo" />
+
+          <div className="space-y-2">
+            <Label htmlFor="new-repo-display-name">Label</Label>
+            <Input
+              id="new-repo-display-name"
+              name="displayName"
+              placeholder="OpenThrottle monorepo"
+              required={true}
+              type="text"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="new-repo-filesystem-path">Absolute path</Label>
+            <Input
+              id="new-repo-filesystem-path"
+              name="filesystemPath"
+              placeholder="/Users/you/Development/openthrottle"
+              required={true}
+              type="text"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="new-repo-project">Linked project (optional)</Label>
+            <WorkspaceRepositoriesProjectSelect
+              currentProjectId={null}
+              name="projectId"
+              projects={projects}
+            />
+          </div>
+
+          {actionError ? (
+            <p className="text-destructive text-sm" role="alert">
+              {actionError}
+            </p>
+          ) : null}
+
+          <Button disabled={isCreating} type="submit" variant="outline">
+            {isCreating ? 'Adding…' : 'Add repository'}
+          </Button>
+        </Form>
+
+        {localRepositories.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            No local repositories yet. Add one above.
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {localRepositories.map((repo) => (
+              <li key={repo.id}>
+                <WorkspaceRepositoriesLocalRepositoryRow
+                  actionError={actionError}
+                  projects={projects}
+                  repo={repo}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </OpenThrottleFieldset>
   );
 };

@@ -2,11 +2,13 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ListOrderedIcon } from 'lucide-react';
 
-interface QueuesIntroductionProps {
-  readonly className?: string;
+export interface QueuesIntroductionProps {
+  className?: string;
 }
 
-export const QueuesIntroduction = (props: QueuesIntroductionProps) => {
+export const QueuesIntroduction = (
+  props: QueuesIntroductionProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

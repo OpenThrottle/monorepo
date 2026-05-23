@@ -28,6 +28,7 @@ fragment PlanDetails on PlanObject {
   createdAt
   description
   id
+  jobRunHooksJson
   projectId
   projectRelation {
     ...ProjectDetails
@@ -83,6 +84,14 @@ mutation PlanDetailSetPlanStatus($input: SetPlanStatusInput!) {
 mutation PlanDetailUpdateTask($input: UpdateTaskInput!) {
   updateTask(input: $input) {
     ...PlanTaskRow
+  }
+}
+
+mutation PlanDetailUpdatePlanJobRunHooks($input: UpdatePlanInput!) {
+  updatePlan(input: $input) {
+    id
+    jobRunHooksJson
+    updatedAt
   }
 }
 

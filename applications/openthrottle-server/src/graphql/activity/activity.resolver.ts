@@ -1,5 +1,4 @@
 // FIXME: Swap out eventually
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
 
 /**
  * @description Resolver for activity-by-date-range. Uses PlansService repository manager for raw SQL across commit_links, plan_output_stream, tasks.
@@ -212,10 +211,10 @@ export class ActivityResolver {
 
     type Candidate = {
       at: string;
-      kind: 'commit' | 'output_chunk' | 'task_update';
-      summary: string;
       commit?: { message: string | null; repo: string; sha: string };
+      kind: 'commit' | 'output_chunk' | 'task_update';
       outputChunk?: { content: string; iteration: number | null };
+      summary: string;
       taskUpdate?: { status: string; taskId: string; taskTitle: string };
     };
     const candidates: Candidate[] = [];
@@ -370,14 +369,14 @@ export class ActivityResolver {
         [startIso, endIso],
       ) as Promise<
         {
+          created_at: string;
           id: string;
+          message: string | null;
           plan_id: string;
-          task_id: string | null;
+          plan_title: string;
           repo: string;
           sha: string;
-          message: string | null;
-          created_at: string;
-          plan_title: string;
+          task_id: string | null;
           task_title: string | null;
         }[]
       >,
@@ -390,11 +389,11 @@ export class ActivityResolver {
         [startIso, endIso],
       ) as Promise<
         {
-          id: string;
-          plan_id: string;
-          iteration: number | null;
           content: string;
           created_at: string;
+          id: string;
+          iteration: number | null;
+          plan_id: string;
           plan_title: string;
         }[]
       >,
@@ -409,10 +408,10 @@ export class ActivityResolver {
         {
           id: string;
           plan_id: string;
-          title: string;
-          status: string;
-          updated_at: string;
           plan_title: string;
+          status: string;
+          title: string;
+          updated_at: string;
         }[]
       >,
     ]);

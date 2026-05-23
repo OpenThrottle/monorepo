@@ -7,7 +7,9 @@ export interface NotificationActionsProps {
   readonly setOpen: (open: boolean) => void;
 }
 
-export const NotificationActions = (props: NotificationActionsProps) => {
+export const NotificationActions = (
+  props: NotificationActionsProps,
+): React.ReactElement => {
   const { dismissAll, markAllAsRead, setOpen } = props;
 
   // Hooks

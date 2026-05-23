@@ -20,7 +20,6 @@ import {
   parseProjectsBySearch,
   parseProjectWithStats,
 } from '~/routing/projects/utils/parsers';
-import { ProjectEmpty } from '~/routing/projects/components/ProjectEmpty';
 import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
 import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
@@ -126,7 +125,6 @@ export default function Component(
   // Hooks
 
   // Setup
-  const isEmpty = totalCount === 0;
 
   // Handlers
 
@@ -142,34 +140,20 @@ export default function Component(
         plansLinkedCount={plansLinkedCount}
         totalProjects={totalCount}
       />
-      {/*
-      <WorkspaceEntityCrossLinks
-        className="mb-4"
-        label="Workspace shortcuts from projects"
-      />
-      */}
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4">
-          <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects">
-            {/*
-            <Button asChild={true} className="shrink-0" variant="outline">
-              <Link to="/projects/create">
-                <PlusIcon className="w-4 h-4" /> Create project
-              </Link>
-            </Button>
-          */}
-          </GlobalHeading>
-          <p className="text-muted-foreground text-sm">
-            Projects group plans and tasks by Nx application in this monorepo.
-            Each row maps to one app (for example openthrottle-developer or
-            openthrottle-server) so you can see linked plan and task counts per
-            codebase. Set a project on a plan or task when work clearly targets
-            a single app; leave it unset for cross-cutting, docs-only, or
-            multi-app work.
-          </p>
-        </div>
+        <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />
+        <p className="text-muted-foreground text-sm">
+          Projects group plans and tasks by Nx application in this monorepo.
+          Each row maps to one app (for example openthrottle-developer or
+          openthrottle-server) so you can see linked plan and task counts per
+          codebase. Set a project on a plan or task when work clearly targets a
+          single app; leave it unset for cross-cutting, docs-only, or multi-app
+          work.
+        </p>
+      </div>
 
+      <div className="flex flex-col gap-4">
         <ProjectsToolbar
           limit={limit}
           page={page}
@@ -178,25 +162,18 @@ export default function Component(
           sortOrder={sortOrder}
           view={view}
         />
+        <ProjectsTable projects={projects} />
+        <OpenThrottlePagination
+          className="mt-8"
+          limit={limit}
+          page={page}
+          search={search}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          total={totalCount}
+          view={view}
+        />
       </div>
-
-      {isEmpty ? (
-        <ProjectEmpty search={search} />
-      ) : (
-        <>
-          <ProjectsTable projects={projects} />
-          <OpenThrottlePagination
-            className="mt-8"
-            limit={limit}
-            page={page}
-            search={search}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            total={totalCount}
-            view={view}
-          />
-        </>
-      )}
     </GlobalScreen>
   );
 }

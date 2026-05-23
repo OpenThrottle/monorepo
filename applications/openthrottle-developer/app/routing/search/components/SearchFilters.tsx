@@ -7,15 +7,17 @@ import {
 } from '~/routing/search/config';
 import { parseSearchParams } from '~/routing/search/utils/parsers';
 
-interface SearchFiltersProps {
-  readonly className?: string;
+export interface SearchFiltersProps {
+  className?: string;
 }
 
 /**
  * @description Filter controls for search. Limit (results per page) is wired to URL params.
  * Future: source filter when API supports filtering by chunk source.
  */
-export const SearchFilters = (props: SearchFiltersProps) => {
+export const SearchFilters = (
+  props: SearchFiltersProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

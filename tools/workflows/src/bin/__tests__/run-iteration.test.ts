@@ -95,6 +95,48 @@ describe('runIteration (sync) backend dispatch', () => {
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
     expect(firstArg).toContain(' --model sonnet');
   });
+
+  it('passes -w worktree for cursor when configured', () => {
+    runIteration({
+      agentPrompt: 'x',
+      backend: 'cursor',
+      iteration: 1,
+      worktree: 'my-wt',
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toMatch(/cursor-agent --force -p "/);
+    expect(firstArg).toContain('-w my-wt');
+  });
+
+  it('passes cursor-only worktree-base and skip-worktree-setup', () => {
+    runIteration({
+      agentPrompt: 'x',
+      backend: 'cursor',
+      iteration: 1,
+      skipWorktreeSetup: true,
+      worktree: 'my-wt',
+      worktreeBase: 'main',
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toContain('-w my-wt');
+    expect(firstArg).toContain('--worktree-base main');
+    expect(firstArg).toContain('--skip-worktree-setup');
+  });
+
+  it('passes -w worktree for claude when configured', () => {
+    runIteration({
+      agentPrompt: 'x',
+      backend: 'claude',
+      iteration: 1,
+      worktree: 'my-wt',
+    });
+    const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
+    expect(firstArg).toMatch(
+      /^claude --bare --permission-mode acceptEdits -p "/,
+    );
+    expect(firstArg).toContain('-w my-wt');
+    expect(firstArg).not.toContain('--worktree-base');
+  });
 });
 
 describe('runIterationAsync backend dispatch', () => {
@@ -148,5 +190,27 @@ describe('runIterationAsync backend dispatch', () => {
     });
     const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
     expect(firstArg).toMatch(/^cursor-agent --force -p "/);
+  });
+
+  it('passes -w worktree on async cursor iteration', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'cursor',
+      iteration: 1,
+      worktree: 'async-wt',
+    });
+    const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
+    expect(firstArg).toContain('-w async-wt');
+  });
+
+  it('passes -w worktree on async claude iteration', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'claude',
+      iteration: 2,
+      worktree: 'async-wt',
+    });
+    const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
+    expect(firstArg).toContain('-w async-wt');
   });
 });

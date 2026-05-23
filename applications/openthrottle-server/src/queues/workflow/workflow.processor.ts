@@ -30,7 +30,13 @@ import {
   getCortexPostgresUrl,
   PlanOutputStreamService,
   PlansService,
+  TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  runAfterRunHooksThenNotify,
+  runBeforeRunHooksAndHandleBlock,
+  type PlanQueueJobCompletedPayload,
+} from '../job-run-hooks/execute-plan-job-run-hooks';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
@@ -198,6 +204,7 @@ export class WorkflowProcessor
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly workflowService: WorkflowService,
     private readonly plansService: PlansService,
+    private readonly tasksService: TasksService,
     private readonly processMetrics: ProcessMetricsService,
     @Inject(WORKTREE_TRACKER_TOKEN)
     private readonly worktreeTracker: IWorktreeTargetsTracker,
@@ -289,7 +296,7 @@ export class WorkflowProcessor
    */
   @OnWorkerEvent('failed')
   async onPlanJobFailed(
-    payload: { job?: WorkflowJob; error?: Error } | WorkflowJob,
+    payload: { error?: Error; job?: WorkflowJob } | WorkflowJob,
     errorArg?: Error,
   ): Promise<void> {
     const job =
@@ -327,6 +334,32 @@ export class WorkflowProcessor
     } catch {
       return null;
     }
+  }
+
+  /**
+   * @description Runs `after_run` hooks for the terminal main-run outcome, then emits queue job completed.
+   */
+  private async completePlanRunWithHooks(params: {
+    readonly cancelSignal?: AbortSignal;
+    readonly job: WorkflowJob;
+    readonly mainRunStarted: boolean;
+    readonly mainRunSucceeded: boolean;
+    readonly notification: PlanQueueJobCompletedPayload;
+  }): Promise<void> {
+    await runAfterRunHooksThenNotify({
+      hooks: params.job.data.jobRunHooks,
+      jobData: params.job.data,
+      logLabel: WorkflowProcessor.name,
+      logger: this.logger,
+      mainRunStarted: params.mainRunStarted,
+      mainRunSucceeded: params.mainRunSucceeded,
+      notification: params.notification,
+      notifications: this.notifications,
+      planOutputStreamService: this.planOutputStreamService,
+      plansService: this.plansService,
+      signal: params.cancelSignal,
+      tasksService: this.tasksService,
+    });
   }
 
   /**
@@ -462,6 +495,26 @@ export class WorkflowProcessor
         planId,
         status: 'IN_PROGRESS',
       });
+
+      const blockedByBeforeRunHook = await runBeforeRunHooksAndHandleBlock({
+        hooks: job.data.jobRunHooks,
+        jobData: job.data,
+        logLabel: WorkflowProcessor.name,
+        logger: this.logger,
+        notifications: this.notifications,
+        planOutputStreamService: this.planOutputStreamService,
+        plansService: this.plansService,
+        signal: cancelSignal,
+        tasksService: this.tasksService,
+      });
+
+      if (blockedByBeforeRunHook) {
+        const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
+
+        return {
+          taskRunMetrics: { atEnd: metricsAtEnd, atStart: metricsAtStart },
+        };
+      }
 
       const useWorktree = this.worktreeTracker.listTargets().length > 0;
 
@@ -615,11 +668,17 @@ export class WorkflowProcessor
         WorkflowProcessor.name,
       );
 
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message: `Plan run failed: ${data.planId} — ${outcome.reason}`,
-        planId: data.planId,
-        severity: 'error',
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: true,
+        mainRunSucceeded: false,
+        notification: {
+          jobType: 'plans',
+          message: `Plan run failed: ${data.planId} — ${outcome.reason}`,
+          planId: data.planId,
+          severity: 'error',
+        },
       });
 
       return { taskRunMetrics };
@@ -631,11 +690,17 @@ export class WorkflowProcessor
         WorkflowProcessor.name,
       );
 
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message: `Plan run cancelled: ${data.planId}`,
-        planId: data.planId,
-        severity: 'info',
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: true,
+        mainRunSucceeded: false,
+        notification: {
+          jobType: 'plans',
+          message: `Plan run cancelled: ${data.planId}`,
+          planId: data.planId,
+          severity: 'info',
+        },
       });
 
       return { taskRunMetrics };
@@ -666,11 +731,17 @@ export class WorkflowProcessor
       WorkflowProcessor.name,
     );
 
-    this.notifications.emitQueueJobCompleted({
-      jobType: 'plans',
-      message,
-      planId: data.planId,
-      severity,
+    await this.completePlanRunWithHooks({
+      cancelSignal,
+      job,
+      mainRunStarted: true,
+      mainRunSucceeded: true,
+      notification: {
+        jobType: 'plans',
+        message,
+        planId: data.planId,
+        severity,
+      },
     });
 
     return { taskRunMetrics };
@@ -772,11 +843,17 @@ export class WorkflowProcessor
         WorkflowProcessor.name,
       );
 
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message: `Plan run skipped (no worktree available): ${planId}`,
-        planId,
-        severity: 'warning',
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: false,
+        mainRunSucceeded: false,
+        notification: {
+          jobType: 'plans',
+          message: `Plan run skipped (no worktree available): ${planId}`,
+          planId,
+          severity: 'warning',
+        },
       });
 
       return withMetrics(result);
@@ -793,11 +870,17 @@ export class WorkflowProcessor
           WorkflowProcessor.name,
         );
 
-        this.notifications.emitQueueJobCompleted({
-          jobType: 'plans',
-          message: `Plan run cancelled: ${planId}`,
-          planId,
-          severity: 'info',
+        await this.completePlanRunWithHooks({
+          cancelSignal,
+          job,
+          mainRunStarted: true,
+          mainRunSucceeded: false,
+          notification: {
+            jobType: 'plans',
+            message: `Plan run cancelled: ${planId}`,
+            planId,
+            severity: 'info',
+          },
         });
 
         return withMetrics(result);
@@ -808,11 +891,17 @@ export class WorkflowProcessor
         WorkflowProcessor.name,
       );
 
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message: `Plan run failed: ${planId} — ${result.loop.reason}`,
-        planId,
-        severity: 'error',
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: true,
+        mainRunSucceeded: false,
+        notification: {
+          jobType: 'plans',
+          message: `Plan run failed: ${planId} — ${result.loop.reason}`,
+          planId,
+          severity: 'error',
+        },
       });
 
       return withMetrics(result);
@@ -864,11 +953,17 @@ export class WorkflowProcessor
         }
       }
 
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message: `Plan run: ${reason}${detail} — ${planId}`,
-        planId,
-        severity: 'warning',
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: true,
+        mainRunSucceeded: false,
+        notification: {
+          jobType: 'plans',
+          message: `Plan run: ${reason}${detail} — ${planId}`,
+          planId,
+          severity: 'warning',
+        },
       });
 
       return withMetrics(result);
@@ -898,11 +993,17 @@ export class WorkflowProcessor
       `Plan run finished: ${planId}`,
     );
 
-    this.notifications.emitQueueJobCompleted({
-      jobType: 'plans',
-      message,
-      planId,
-      severity,
+    await this.completePlanRunWithHooks({
+      cancelSignal,
+      job,
+      mainRunStarted: true,
+      mainRunSucceeded: true,
+      notification: {
+        jobType: 'plans',
+        message,
+        planId,
+        severity,
+      },
     });
 
     return withMetrics(result);
@@ -976,11 +1077,17 @@ export class WorkflowProcessor
           WorkflowProcessor.name,
         );
 
-        this.notifications.emitQueueJobCompleted({
-          jobType: 'plans',
-          message: `Plan run cancelled: ${planId}`,
-          planId,
-          severity: 'info',
+        await this.completePlanRunWithHooks({
+          cancelSignal,
+          job,
+          mainRunStarted: true,
+          mainRunSucceeded: false,
+          notification: {
+            jobType: 'plans',
+            message: `Plan run cancelled: ${planId}`,
+            planId,
+            severity: 'info',
+          },
         });
 
         const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
@@ -1005,11 +1112,17 @@ export class WorkflowProcessor
 
       const { message, severity } = result;
 
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message,
-        planId,
-        severity,
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: true,
+        mainRunSucceeded: isSuccess,
+        notification: {
+          jobType: 'plans',
+          message,
+          planId,
+          severity,
+        },
       });
 
       const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
@@ -1027,11 +1140,17 @@ export class WorkflowProcessor
       const message = `Ralph Workflow failed to spawn: ${logContext}, error=${msgError}`;
 
       this.logger.error(message, WorkflowProcessor.name);
-      this.notifications.emitQueueJobCompleted({
-        jobType: 'plans',
-        message: `Plan run failed: ${planId} — ${msgError}`,
-        planId,
-        severity: 'error',
+      await this.completePlanRunWithHooks({
+        cancelSignal,
+        job,
+        mainRunStarted: false,
+        mainRunSucceeded: false,
+        notification: {
+          jobType: 'plans',
+          message: `Plan run failed: ${planId} — ${msgError}`,
+          planId,
+          severity: 'error',
+        },
       });
 
       const metricsAtEnd = this.processMetrics.getCurrentSnapshot();

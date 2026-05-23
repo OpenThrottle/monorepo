@@ -26,6 +26,9 @@ Options:
   ${COLORS.cyan}--prompt-file ${COLORS.gray}<path>${COLORS.reset}     Read layer-1 prompt text from a UTF-8 file (mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset})
   ${COLORS.cyan}--prompt-stdin ${COLORS.reset}           Read layer-1 prompt text from stdin (pipe; mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset} / ${COLORS.cyan}--prompt-file${COLORS.reset})
   ${COLORS.cyan}--verbose ${COLORS.reset}           Verbose shim debug (same as ${RALPH_DEBUG_ENV}=verbose or ${RALPH_VERBOSE_ENV}=1)
+  ${COLORS.cyan}--worktree ${COLORS.gray}[name]${COLORS.reset}  Agent CLI isolated worktree (-w); optional name (cursor-agent, claude)
+  ${COLORS.cyan}--worktree-base ${COLORS.gray}<branch>${COLORS.reset}  Cursor-only: base branch/ref for new agent worktree
+  ${COLORS.cyan}--skip-worktree-setup ${COLORS.reset}  Cursor-only: skip .cursor/worktrees.json setup scripts
 
 Environment (debug shim; optional — omit both flags to rely on env only):
   ${COLORS.gray}${RALPH_DEBUG_ENV}${COLORS.reset}=1|true|verbose|0|off  ${COLORS.gray}${RALPH_DEBUG_ENV_LEGACY}${COLORS.reset} (alias)  ${COLORS.gray}${RALPH_VERBOSE_ENV}${COLORS.reset}=1 (verbose lines)
@@ -39,7 +42,10 @@ Environment (prompt profile + run tuning; optional):
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.iterationTimeout}${COLORS.reset}   Per-iteration timeout in ${COLORS.green}seconds${COLORS.reset} (non-interactive), same as ${COLORS.cyan}--iteration-timeout${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.model}${COLORS.reset}   Default model for the active backend, same as ${COLORS.cyan}--model${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.project}${COLORS.reset}   Default NX project, same as ${COLORS.cyan}--project${COLORS.reset}
-  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (JSON: backend, prompt, promptFile, iterations, iterationTimeout, model, project — use either ${COLORS.cyan}prompt${COLORS.reset} or ${COLORS.cyan}promptFile${COLORS.reset}, not both).
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.worktree}${COLORS.reset}   Agent CLI worktree name, same as ${COLORS.cyan}--worktree${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.worktreeBase}${COLORS.reset}   Cursor-only: ${COLORS.cyan}--worktree-base${COLORS.reset}
+  ${COLORS.gray}${WORKFLOW_RALPH_ENV.skipWorktreeSetup}${COLORS.reset}   Cursor-only: truthy enables ${COLORS.cyan}--skip-worktree-setup${COLORS.reset}
+  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (JSON: backend, prompt, promptFile, iterations, iterationTimeout, model, project, worktree, worktreeBase, skipWorktreeSetup — use either ${COLORS.cyan}prompt${COLORS.reset} or ${COLORS.cyan}promptFile${COLORS.reset}, not both).
   Precedence: ${COLORS.green}CLI flags${COLORS.reset} override ${COLORS.green}environment${COLORS.reset} override ${COLORS.green}file${COLORS.reset} override built-in defaults.
 `;
 

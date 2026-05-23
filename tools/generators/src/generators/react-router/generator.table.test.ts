@@ -6,7 +6,7 @@ import { generatorReactRouterTable } from './generator.table';
 describe('remix table generator', () => {
   let tree: Tree;
 
-  const application = 'openthrottle';
+  const application = 'openthrottle-developer';
   const folder = 'routing/home/components';
   const name = 'HomeExampleTable';
 

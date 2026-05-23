@@ -25,6 +25,7 @@ import {
   updatePlanStatus,
 } from './cortex-ralph';
 import { ralphDebugLogger } from './ralph-debug-logger';
+import { resolveRalphWorktreeName } from './ralph-worktree-cli';
 import { buildWorkflowRalphRunTuningArgv } from './workflow-ralph-nested-argv';
 import { createChildProcessMetricsCollector } from './child-process-metrics';
 import type { ChildProcessMetricsCollector } from './child-process-metrics';
@@ -36,12 +37,12 @@ const MICROSECONDS_PER_MS = 1000;
 const SIGKILL_GRACE_MS = 10_000;
 
 interface RalphSpawnResult {
-  readonly status: number | null;
-  readonly signal: NodeJS.Signals | null;
-  readonly stdout: string;
-  readonly stderr: string;
   readonly killReason?: 'timeout' | 'abort';
   readonly pid: number | undefined;
+  readonly signal: NodeJS.Signals | null;
+  readonly status: number | null;
+  readonly stderr: string;
+  readonly stdout: string;
 }
 
 /**
@@ -54,10 +55,10 @@ function runRalphAsync(
   ralphArgs: string[],
   options: {
     readonly canonicalCortexPostgresUrl?: string;
-    readonly timeoutMs?: number;
-    readonly signal?: AbortSignal;
-    readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
     readonly metricsCollector?: ChildProcessMetricsCollector;
+    readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
+    readonly signal?: AbortSignal;
+    readonly timeoutMs?: number;
   },
 ): Promise<RalphSpawnResult> {
   return new Promise((resolve, reject) => {
@@ -254,8 +255,11 @@ export async function runChildJob(
     streamToCortex,
     streamIteration,
     childProcessMetrics: metricsOption,
+    skipWorktreeSetup,
+    worktree,
+    worktreeBase,
   } = input;
-  const { worktreePath } = handoff;
+  const { targetId, worktreePath } = handoff;
 
   const startTimestamp = Date.now();
   const cpuAtStart = process.cpuUsage();
@@ -326,6 +330,12 @@ export async function runChildJob(
       project,
       prompt,
       promptFile,
+      skipWorktreeSetup,
+      worktree: resolveRalphWorktreeName({
+        cli: worktree,
+        handoffTargetId: targetId,
+      }),
+      worktreeBase,
     }),
   ];
 

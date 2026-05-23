@@ -13,16 +13,10 @@
     }
   },
   "namedInputs": {
-    "noMarkdown": ["!{projectRoot}/**/*.md"]
+    "noMarkdown": ["!{projectRoot}/**/*.md"],
+    "production": ["default", "!{projectRoot}/jest.config.ts"]
   },
   "plugins": [
-    {
-      "plugin": "@nx/docker",
-      "options": {
-        "buildTarget": "docker:build",
-        "runTarget": "docker:run"
-      }
-    },
     {
       "plugin": "@nx/js/typescript",
       "options": {
@@ -140,25 +134,6 @@
       },
       "outputs": ["{options.outputPath}"]
     },
-    "@nx/vitest:test": {
-      "dependsOn": ["@tools/dotfiles:build"],
-      "executor": "@nx/vitest:test",
-      "cache": true,
-      "configurations": {
-        "coverage": {
-          "ci": true,
-          "coverage": true
-        }
-      },
-      "inputs": ["default", "^default", "^production"],
-      "options": {
-        "configFile": "{projectRoot}/vitest.config.ts",
-        "passWithNoTests": true,
-        "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
-        "watch": false
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
-    },
     "build": {
       "cache": true,
       "executor": "@nx/vite:build",
@@ -262,6 +237,7 @@
     "lint": {
       "cache": true,
       "executor": "nx:run-commands",
+      "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
         "cwd": "{projectRoot}"
@@ -304,13 +280,22 @@
     },
     "test": {
       "cache": true,
+      "configurations": {
+        "coverage": {
+          "ci": true,
+          "coverage": true
+        }
+      },
+      "dependsOn": ["@tools/dotfiles:build"],
       "executor": "@nx/vitest:test",
-      "inputs": ["default", "^default"],
+      "inputs": ["default", "^default", "^production"],
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
+        "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}",
         "watch": false
-      }
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "test-e2e": {
       "configurations": {

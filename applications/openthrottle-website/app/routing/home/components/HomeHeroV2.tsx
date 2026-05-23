@@ -6,7 +6,7 @@ export interface HomeHeroV2Props {
   className?: string;
 }
 
-export const HomeHeroV2 = (props: HomeHeroV2Props) => {
+export const HomeHeroV2 = (props: HomeHeroV2Props): React.ReactElement => {
   const { className } = props;
 
   // Hooks

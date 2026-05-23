@@ -7,13 +7,15 @@ import {
 } from '@openthrottle/openthrottle-developer-codegen';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 
-interface PlanTabRequirementsProps {
-  readonly className?: string;
-  readonly plan: PlanDetailsFragment;
-  readonly tasks: PlanTaskRowFragment[];
+export interface PlanTabRequirementsProps {
+  className?: string;
+  plan: PlanDetailsFragment;
+  tasks: PlanTaskRowFragment[];
 }
 
-export const PlanTabRequirements = (props: PlanTabRequirementsProps) => {
+export const PlanTabRequirements = (
+  props: PlanTabRequirementsProps,
+): React.ReactElement => {
   const { className, plan: _plan, tasks } = props;
 
   // Hooks
@@ -24,8 +26,6 @@ export const PlanTabRequirements = (props: PlanTabRequirementsProps) => {
       .map((task) => JSON.parse(task.requirementsJson))
       .filter((requirement) => requirement.length > 0);
   }, [tasks]);
-
-  console.log('PlanTabRequirements requirements', requirements);
 
   // Handlers
 

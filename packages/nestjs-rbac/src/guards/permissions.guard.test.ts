@@ -10,7 +10,7 @@ function createMockContext(
   const request = { user };
 
   // FIXME: Swap out eventually
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   return {
     getClass: vi.fn(),
     getHandler: vi.fn(),
@@ -26,6 +26,9 @@ describe('PermissionsGuard', () => {
   describe('when no @Permissions() metadata', () => {
     it('allows access', () => {
       const ctx = createMockContext(undefined);
+      vi.spyOn(Reflector.prototype, 'getAllAndOverride').mockReturnValue(
+        undefined,
+      );
       expect(guard.canActivate(ctx)).toBe(true);
     });
   });

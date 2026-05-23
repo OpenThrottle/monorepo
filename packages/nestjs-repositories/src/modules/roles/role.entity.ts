@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import type { ServiceAccount } from '../service-accounts/service-account.entity';
 import type { User } from '../users/user.entity';
 import type { Permission } from './permission.entity';
 
@@ -52,4 +53,12 @@ export class Role {
     name: 'user_roles',
   })
   users!: User[];
+
+  @ManyToMany('ServiceAccount', 'roles')
+  @JoinTable({
+    inverseJoinColumn: { name: 'service_account_id' },
+    joinColumn: { name: 'role_id' },
+    name: 'service_account_roles',
+  })
+  serviceAccounts!: ServiceAccount[];
 }

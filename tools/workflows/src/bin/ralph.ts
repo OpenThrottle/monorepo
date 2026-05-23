@@ -225,6 +225,9 @@ export const main = async (): Promise<void> => {
       backend: parsedArgs.backend,
       iteration,
       model: parsedArgs.model,
+      skipWorktreeSetup: parsedArgs.skipWorktreeSetup,
+      worktree: parsedArgs.worktree,
+      worktreeBase: parsedArgs.worktreeBase,
     };
     ralphDebugLogger.debug('main: invoking iteration runner', {
       agentPromptLen: agentPrompt.length,

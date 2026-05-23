@@ -6,8 +6,8 @@
 export interface WorkflowConfig {
   readonly debug: 'debug' | 'omit' | 'verbose';
   readonly iterationMax: number;
-  readonly iterations: number;
   readonly iterationTimeout: number | undefined;
+  readonly iterations: number;
   readonly model: string;
   readonly prompt: string;
   readonly timeout: number | undefined;

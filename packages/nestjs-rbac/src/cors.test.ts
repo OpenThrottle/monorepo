@@ -45,13 +45,13 @@ describe('getCorsOptions', () => {
           expect(opts.origin).toBe(true);
           expect(opts.credentials).toBe(true);
           expect(opts.methods).toEqual([
+            'DELETE',
             'GET',
             'HEAD',
-            'PUT',
+            'OPTIONS',
             'PATCH',
             'POST',
-            'DELETE',
-            'OPTIONS',
+            'PUT',
           ]);
         },
       );

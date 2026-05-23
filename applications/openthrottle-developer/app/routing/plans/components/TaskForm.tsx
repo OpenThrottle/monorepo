@@ -12,21 +12,21 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { GetTaskByIdQuery } from '~/__generated__/graphql';
 
-interface TaskFormProps {
-  readonly actionData?: { error?: string } | null;
-  readonly className?: string;
-  readonly planId: string;
-  readonly task?: GetTaskByIdQuery['task'] | null;
+export interface TaskFormProps {
+  actionData?: { error?: string } | null;
+  className?: string;
+  planId: string;
+  task?: GetTaskByIdQuery['task'] | null;
 }
 
-export const TaskForm = (props: TaskFormProps) => {
+export const TaskForm = (props: TaskFormProps): React.ReactElement => {
   const { actionData, className, planId, task } = props;
-  const error = actionData?.error;
-  const isEdit = task != null;
 
   // Hooks
 
   // Setup
+  const error = actionData?.error;
+  const isEdit = task != null;
 
   // Handlers
 

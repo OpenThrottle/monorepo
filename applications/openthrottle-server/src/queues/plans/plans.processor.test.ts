@@ -9,6 +9,7 @@ import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
 import {
   PlanOutputStreamService,
   PlansService,
+  TasksService,
 } from '@openthrottle/nestjs-repositories';
 import 'reflect-metadata';
 import { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
@@ -32,6 +33,39 @@ const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
 
 vi.mock('child_process', () => ({
   spawn: vi.fn(),
+}));
+
+const mockRunBeforeRunHooksAndHandleBlock = vi.fn().mockResolvedValue(false);
+const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
+  async (params: {
+    notification: {
+      jobType: string;
+      message: string;
+      planId: string;
+      severity: 'error' | 'info' | 'success' | 'warning';
+    };
+    notifications: {
+      emitQueueJobCompleted: (payload: {
+        jobType: string;
+        message: string;
+        planId: string;
+        severity: 'error' | 'info' | 'success' | 'warning';
+      }) => void;
+    };
+  }) => {
+    params.notifications.emitQueueJobCompleted(params.notification);
+  },
+);
+
+vi.mock('../job-run-hooks/execute-plan-job-run-hooks', () => ({
+  runAfterRunHooksThenNotify: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockRunAfterRunHooksThenNotify> =>
+    mockRunAfterRunHooksThenNotify(...args),
+  runBeforeRunHooksAndHandleBlock: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockRunBeforeRunHooksAndHandleBlock> =>
+    mockRunBeforeRunHooksAndHandleBlock(...args),
 }));
 
 const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
@@ -62,6 +96,13 @@ const mockPlansService = createMock<PlansService>({
       findOne: mockRepoFindOne,
       update: mockRepoUpdate,
     }) as unknown as ReturnType<PlansService['getRepository']>,
+});
+
+const mockTasksService = createMock<TasksService>({
+  getRepository: () =>
+    ({
+      find: vi.fn().mockResolvedValue([]),
+    }) as unknown as ReturnType<TasksService['getRepository']>,
 });
 
 const snapshotStub = {
@@ -149,6 +190,10 @@ describe('PlansProcessor', () => {
         {
           provide: PlansService,
           useValue: mockPlansService,
+        },
+        {
+          provide: TasksService,
+          useValue: mockTasksService,
         },
         {
           provide: WORKTREE_TRACKER_TOKEN,
@@ -352,6 +397,57 @@ describe('PlansProcessor', () => {
         cwd: process.cwd(),
       }),
     );
+  });
+
+  it('runs after_run hooks on orchestrator success before queue notification', async () => {
+    mockJob = {
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        runKind: 'orchestrator',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockRunAfterRunHooksThenNotify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mainRunStarted: true,
+        mainRunSucceeded: true,
+        notification: expect.objectContaining({
+          planId: mockJob.data.planId,
+          severity: 'success',
+        }),
+      }),
+    );
+  });
+
+  it('should skip main run when before_run hook blocks', async () => {
+    mockRunBeforeRunHooksAndHandleBlock.mockResolvedValueOnce(true);
+    mockJob = {
+      data: {
+        jobRunHooks: {
+          hooks: [
+            {
+              kind: 'prompt_profile',
+              onFailure: 'block',
+              phase: 'before_run',
+              prompt: '/agents/ralph',
+              promptDelivery: 'named',
+            },
+          ],
+        },
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        runKind: 'orchestrator',
+      },
+      id: 'job-1',
+    } as RunPlanJob;
+
+    await processor.process(mockJob);
+
+    expect(mockRunBeforeRunHooksAndHandleBlock).toHaveBeenCalled();
+    expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 
   it('should call runPlanOrchestratorJob and not spawn when runKind is orchestrator', async () => {
@@ -768,6 +864,10 @@ describe('PlansProcessor', () => {
             useValue: mockPlansService,
           },
           {
+            provide: TasksService,
+            useValue: mockTasksService,
+          },
+          {
             provide: WORKTREE_TRACKER_TOKEN,
             useValue: mockAllLockedTracker,
           },
@@ -963,8 +1063,8 @@ describe('PlansProcessor', () => {
       ).buildEnhancedMetrics.bind(processor);
 
       const enhanced = buildEnhancedMetrics(result) as {
-        atStart: typeof snapshotStub;
         atEnd: typeof snapshotStub;
+        atStart: typeof snapshotStub;
       };
 
       expect(enhanced).toHaveProperty('atStart', snapshotStub);
@@ -1041,8 +1141,8 @@ describe('PlansProcessor', () => {
       ).buildEnhancedMetrics.bind(processor);
 
       const enhanced = buildEnhancedMetrics(result) as {
-        atStart: typeof snapshotStub;
         atEnd: typeof snapshotStub;
+        atStart: typeof snapshotStub;
         childProcessMetrics?: ChildProcessMetrics;
         wallClockMetrics?: WallClockMetrics;
       };

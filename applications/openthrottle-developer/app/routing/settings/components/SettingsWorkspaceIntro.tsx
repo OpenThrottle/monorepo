@@ -3,11 +3,13 @@ import classnames from 'classnames';
 import { MonitorCogIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-interface SettingsWorkspaceIntroProps {
-  readonly className?: string;
+export interface SettingsWorkspaceIntroProps {
+  className?: string;
 }
 
-export const SettingsWorkspaceIntro = (props: SettingsWorkspaceIntroProps) => {
+export const SettingsWorkspaceIntro = (
+  props: SettingsWorkspaceIntroProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

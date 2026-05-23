@@ -32,7 +32,7 @@ describe('routes/legal._index.tsx', () => {
       view.getByRole('heading', { level: 2, name: 'Matthew Scholta' }),
     ).toBeInTheDocument();
     expect(
-      view.getByRole('button', { name: 'matthew@openthrottle.com' }),
+      view.getByRole('button', { name: 'openthrottle.ai@gmail.com' }),
     ).toBeInTheDocument();
     expect(view.getByRole('link', { name: 'mattscholta.com' })).toHaveAttribute(
       'href',

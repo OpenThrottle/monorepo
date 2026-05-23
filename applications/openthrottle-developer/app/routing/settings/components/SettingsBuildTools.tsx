@@ -4,18 +4,15 @@ import {
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
   VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '~/routing/settings/utils/settings-docs-links';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { ToolboxIcon } from 'lucide-react';
+import { Badge } from '@openthrottle/react-router-shadcn';
 
-interface SettingsBuildToolsProps {}
+export interface SettingsBuildToolsProps {}
 
-export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
-  // const { className } = props;
-
+export const SettingsBuildTools = (
+  _props: SettingsBuildToolsProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup
@@ -29,13 +26,12 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">
-          React Router / Vite devtools
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm text-muted-foreground">
+    <OpenThrottleFieldset
+      icon={ToolboxIcon}
+      id="react-router-vite-devtools"
+      legend="React Router / Vite devtools"
+    >
+      <div className="space-y-3 text-sm text-muted-foreground">
         <p>
           <span className="font-medium text-foreground">When to open:</span> Use
           the bundle analyzer for chunk overlap, duplicate packages, or split
@@ -51,41 +47,40 @@ export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
           <code className="text-xs">vite-plugin-devtools-json</code>, and React
           Router DevTools hook order are documented here:
         </p>
-        <p>
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Quick reference (when to enable what)
-          </a>
+        <div className="my-8 flex gap-4">
+          <Badge color="yellow" size="xs">
+            <a
+              href={VITE_DEVTOOLS_DOC_QUICK_REF_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Quick reference (when to enable what)
+            </a>
+          </Badge>
           {' · '}
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={VITE_DEVTOOLS_DOC_HREF}
-            rel="noreferrer"
-            target="_blank"
-          >
-            docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
-          </a>
+          <Badge color="orange" size="xs">
+            <a href={VITE_DEVTOOLS_DOC_HREF} rel="noreferrer" target="_blank">
+              docs/monorepo/openthrottle-developer-vite-devtools.md (GitHub)
+            </a>
+          </Badge>
           {' · '}
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Vite CLI build profiling
-          </a>
-        </p>
+          <Badge color="red" size="xs">
+            <a
+              href={VITE_DEVTOOLS_DOC_PROFILING_HREF}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Vite CLI build profiling
+            </a>
+          </Badge>
+        </div>
         <p>
           <span className="font-medium text-foreground">Clone path:</span>{' '}
           <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
             docs/monorepo/openthrottle-developer-vite-devtools.md
           </code>
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </OpenThrottleFieldset>
   );
 };

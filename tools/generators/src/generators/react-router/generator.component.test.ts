@@ -28,5 +28,17 @@ describe('generatorReactRouterComponent', () => {
       'applications/openthrottle-website/app/global/components/TestComponent.tsx',
       'applications/openthrottle-website/app/global/components/__tests__/TestComponent.test.tsx',
     ]);
+
+    const componentPath =
+      'applications/openthrottle-website/app/global/components/TestComponent.tsx';
+    const source = tree.read(componentPath, 'utf-8');
+
+    expect(source).toBeDefined();
+    expect(source).toContain(`export interface ${name}Props`);
+    expect(source).not.toMatch(/readonly\s+className/);
+    expect(source).toMatch(
+      /export const TestComponent = \(props: TestComponentProps\) =>/,
+    );
+    expect(source).toContain('// 🔌 Short Circuit');
   });
 });

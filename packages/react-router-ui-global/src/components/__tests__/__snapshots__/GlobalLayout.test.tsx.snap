@@ -68,7 +68,7 @@ exports[`GlobalLayout Component > should render 1`] = `
                   <span
                     class="text-highlight font-normal"
                   >
-                    AI
+                    Dev
                   </span>
                 </div>
               </a>

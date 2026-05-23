@@ -126,11 +126,6 @@ export interface GraphqlV2ExecuteOptions<
   TFailure extends GraphqlV2Failure = GraphqlV2Failure,
 > {
   /**
-   * @description When false, return raw `data` without V1-style DateTime parsing. Default true
-   * (V1 parity).
-   */
-  readonly parseDateTime?: boolean | undefined;
-  /**
    * @description Optional injectable `fetch` (tests, non-global environments).
    */
   readonly fetch?: typeof fetch | undefined;
@@ -142,6 +137,11 @@ export interface GraphqlV2ExecuteOptions<
    * @description Optional failure mapper (see {@link GraphqlV2MapFailure}).
    */
   readonly mapFailure?: GraphqlV2MapFailure<TFailure> | undefined;
+  /**
+   * @description When false, return raw `data` without V1-style DateTime parsing. Default true
+   * (V1 parity).
+   */
+  readonly parseDateTime?: boolean | undefined;
   /**
    * @description Merged into `fetch` after method/body/headers. Excludes `body`, `headers`,
    * `method`, and `signal` (those are owned by the executor).
@@ -269,7 +269,7 @@ export const executeGraphql_v2: ExecuteGraphqlV2 = async <
 
     const error: TFailure = options.mapFailure
       ? options.mapFailure(context)
-      : (failure as TFailure); // eslint-disable-line @typescript-eslint/consistent-type-assertions -- generic failure branch
+      : (failure as TFailure);
 
     return { error, ok: false };
   };
@@ -428,7 +428,7 @@ export const executeGraphql_v2: ExecuteGraphqlV2 = async <
       : parseDateTimeInResponse(parsed.data);
 
   return {
-    data: data as TData, // eslint-disable-line @typescript-eslint/consistent-type-assertions -- V1 parity: DateTime walk
+    data: data as TData,
     ok: true,
   };
 };

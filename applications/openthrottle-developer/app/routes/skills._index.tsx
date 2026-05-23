@@ -7,7 +7,6 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
-import { SkillsOverviewModal } from '~/routing/skills/components/SkillsOverviewModal';
 import { SkillsTable } from '~/routing/skills/components/SkillsTable';
 import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
 import type { Route } from '@/app/routes/+types/skills._index';
@@ -59,15 +58,17 @@ export default function Component(
     <>
       <GlobalScreen>
         <SkillsIntroduction entries={entries} />
-        <SkillsToolbar />
-        <SkillsTable entries={entries} />
+
+        <div className="flex flex-col gap-4">
+          <SkillsToolbar />
+          <SkillsTable entries={entries} />
+          {/* <SkillsTable entries={[]} /> */}
+        </div>
 
         {/* <AgentsSectionQuickLinks /> */}
         {/* <SkillsList entries={entries} /> */}
         {/* <AgentsSkillsRegistry entries={entries} /> */}
       </GlobalScreen>
-
-      <SkillsOverviewModal />
     </>
   );
 }

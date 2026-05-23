@@ -28,12 +28,12 @@ export interface SimplePieChartProps<
   readonly innerRadiusRatio?: number;
   /** Key in each datum for the slice label (tooltip and config). */
   readonly nameKey: keyof T & string;
-  /** Part-to-whole layout: full pie or donut (ring). */
-  readonly variant?: 'donut' | 'pie';
   /** Key in each datum for the slice value. */
   readonly valueKey: keyof T & string;
   /** Optional label for the value series (tooltip). */
   readonly valueLabel?: string;
+  /** Part-to-whole layout: full pie or donut (ring). */
+  readonly variant?: 'donut' | 'pie';
 }
 
 /**

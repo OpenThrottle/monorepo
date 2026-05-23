@@ -31,7 +31,9 @@ export interface OpenThrottleAuthFormProps {
  * @description Simple login form with email/password using shadcn-ui.
  * Submits via form action (name/intent) or optional onSubmit callback.
  */
-export const OpenThrottleAuthForm = (props: OpenThrottleAuthFormProps) => {
+export const OpenThrottleAuthForm = (
+  props: OpenThrottleAuthFormProps,
+): React.ReactElement => {
   const {
     action = '/',
     className,
@@ -61,7 +63,7 @@ export const OpenThrottleAuthForm = (props: OpenThrottleAuthFormProps) => {
       // Let the form submit natively to action (e.g. root route action)
 
       // FIXME: Tighten this up
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
       (e.target as HTMLFormElement).submit();
     },
 

@@ -12,16 +12,18 @@ import { formatRelativeTime, formatSeverityToColor } from '../utils/formatters';
 
 export interface NotificationItemProps {
   readonly notification: NotificationInstance;
-  readonly onMarkRead: () => void;
   readonly onDismiss: () => void;
   readonly onDismissAndClose: () => void;
+  readonly onMarkRead: () => void;
 }
 
 /**
  * @description Single row in the notification dropdown: message, optional link,
  * relative time, mark-read and dismiss actions.
  */
-export const NotificationItem = (props: NotificationItemProps) => {
+export const NotificationItem = (
+  props: NotificationItemProps,
+): React.ReactElement => {
   const {
     notification,
     onMarkRead,

@@ -9,7 +9,9 @@ interface CaseStudyListProps {
   readonly className?: string;
 }
 
-export const CaseStudyList = (props: CaseStudyListProps) => {
+export const CaseStudyList = (
+  props: CaseStudyListProps,
+): React.ReactElement => {
   const { caseStudies, className } = props;
 
   // Hooks

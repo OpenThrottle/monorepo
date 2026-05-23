@@ -2,7 +2,9 @@ import * as React from 'react';
 
 export interface NotificationEmptyProps {}
 
-export const NotificationEmpty = (_props: NotificationEmptyProps) => {
+export const NotificationEmpty = (
+  _props: NotificationEmptyProps,
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

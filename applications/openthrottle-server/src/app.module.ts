@@ -35,7 +35,8 @@ import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-qu
 import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module';
 import { GeneratorsModule } from './modules/generators/generators.module';
 import { GlobalClsAuthHook } from './auth/global-cls-auth-hook.service';
-import { GlobalJwtAuthGuard } from './guards/global-jwt-auth.guard';
+import { ServiceAccountAuthService } from './auth/service-account-auth.service';
+import { GlobalAuthGuard } from './guards/global-auth.guard';
 import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module';
 import { HealthModule } from './modules/health/health.module';
@@ -51,6 +52,7 @@ import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
 import { PlansQueueModule } from './queues/plans/plans-queue.module';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
 import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
+import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
 import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
 import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
 import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
@@ -134,6 +136,7 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
     ProjectsGraphqlModule,
     QueuesGraphqlModule,
     // RolesGraphqlModule,
+    ServiceAccountsGraphqlModule,
     SearchGraphqlModule,
     TaskEmbeddingsGraphqlModule,
     TasksGraphqlModule,
@@ -142,11 +145,12 @@ import { WorkflowModule } from './queues/workflow/workflow.module';
   ],
   providers: [
     GlobalClsAuthHook,
-    GlobalJwtAuthGuard,
+    GlobalAuthGuard,
     GqlJwtAuthGuard,
+    ServiceAccountAuthService,
     {
       provide: APP_GUARD,
-      useClass: GlobalJwtAuthGuard,
+      useClass: GlobalAuthGuard,
     },
     {
       multi: true,

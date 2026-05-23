@@ -20,6 +20,11 @@ import type {
   RunPlanOrchestratorJobData,
   RunPlanSpawnJobData,
 } from '../../queues/plans/plans.types';
+import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
+import {
+  jobRunHooksForJobPayload,
+  resolveJobRunHooksForEnqueue,
+} from './enqueue-plan-job-run-hooks';
 import type { RalphPlanRunTuningInput } from './plan.input';
 
 /** @description RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`. */
@@ -139,6 +144,9 @@ type ChildJobRalphTuning = Pick<
   | 'prompt'
   | 'promptFile'
   | 'ralphDebugCli'
+  | 'skipWorktreeSetup'
+  | 'worktree'
+  | 'worktreeBase'
 >;
 
 /**
@@ -159,6 +167,13 @@ export const ralphTuningForChildJob = (
     ...(r.project !== undefined ? { project: r.project } : {}),
     ...(r.prompt !== undefined ? { prompt: r.prompt } : {}),
     ...(r.promptFile !== undefined ? { promptFile: r.promptFile } : {}),
+    ...(r.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),
+    ...(normalizeOptionalString(r.worktree) !== undefined
+      ? { worktree: normalizeOptionalString(r.worktree) }
+      : {}),
+    ...(normalizeOptionalString(r.worktreeBase) !== undefined
+      ? { worktreeBase: normalizeOptionalString(r.worktreeBase) }
+      : {}),
   } satisfies ChildJobRalphTuning;
 };
 
@@ -166,7 +181,7 @@ export const ralphTuningForChildJob = (
  * @description Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
  * @throws Error when values are out of range or backend is unknown.
  */
-const parseEnqueueRalphTuning = (
+export const parseEnqueueRalphTuning = (
   input: RalphPlanRunTuningInput | null | undefined,
 ): RalphNestedRunTuningInput | undefined => {
   if (input == null) return undefined;
@@ -206,6 +221,8 @@ const parseEnqueueRalphTuning = (
   const project = normalizeOptionalString(input.project);
   const prompt = normalizeOptionalString(input.prompt);
   const promptFile = normalizeOptionalString(input.promptFile);
+  const worktree = normalizeOptionalString(input.worktree);
+  const worktreeBase = normalizeOptionalString(input.worktreeBase);
 
   let ralphDebugCli: RalphNestedDebugCli | undefined;
   if (input.ralphDebugCli != null) {
@@ -227,7 +244,10 @@ const parseEnqueueRalphTuning = (
     ...(project !== undefined ? { project } : {}),
     ...(prompt !== undefined ? { prompt } : {}),
     ...(promptFile !== undefined ? { promptFile } : {}),
-    ...(ralphDebugCli !== undefined ? { ralphDebugCli } : {}),
+    ...(ralphDebugCli !== undefined ? { debug: ralphDebugCli } : {}),
+    ...(worktree !== undefined ? { worktree } : {}),
+    ...(worktreeBase !== undefined ? { worktreeBase } : {}),
+    ...(input.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),
   };
 
   if (Object.keys(tuning).length === 0) {
@@ -248,17 +268,27 @@ const resolvePlanRunExecutionBackend = (
  * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
  */
 export const buildRunPlanJobData = (input: {
+  readonly jobRunHooksJson?: string | null;
   readonly planId: string;
+  readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
   readonly ralph: RalphPlanRunTuningInput | null | undefined;
   readonly workingDirectory?: string | null;
 }): RunPlanSpawnJobData => {
   const ralph = parseEnqueueRalphTuning(input.ralph);
   const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
+  const jobRunHooks = jobRunHooksForJobPayload(
+    resolveJobRunHooksForEnqueue({
+      enqueueHooksJson: input.jobRunHooksJson,
+      planHooks: input.planJobRunHooks,
+      workingDirectory: input.workingDirectory,
+    }),
+  );
 
   return {
     executionBackend,
     planId: input.planId,
+    ...(jobRunHooks !== undefined ? { jobRunHooks } : {}),
     ...(ralph !== undefined ? { ralph } : {}),
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),
   };
@@ -269,8 +299,10 @@ export const buildRunPlanJobData = (input: {
  * @throws Error when ids are invalid or task mode constraints fail.
  */
 export const buildRunPlanOrchestratorJobData = (input: {
-  readonly planId: string;
+  readonly jobRunHooksJson?: string | null;
   readonly mode?: 'plan' | 'task' | null;
+  readonly planId: string;
+  readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
@@ -286,6 +318,14 @@ export const buildRunPlanOrchestratorJobData = (input: {
       ? input.taskId.trim()
       : '';
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
+  const jobRunHooks = jobRunHooksForJobPayload(
+    resolveJobRunHooksForEnqueue({
+      enqueueHooksJson: input.jobRunHooksJson,
+      planHooks: input.planJobRunHooks,
+      workingDirectory: input.workingDirectory,
+    }),
+  );
+  const jobRunHooksSpread = jobRunHooks !== undefined ? { jobRunHooks } : {};
 
   if (mode === 'task') {
     if (taskRaw === '') {
@@ -300,6 +340,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
       executionBackend,
       mode: 'task',
       planId,
+      ...jobRunHooksSpread,
       ...(ralph !== undefined ? { ralph } : {}),
       runKind: 'orchestrator',
       taskId: taskRaw,
@@ -317,6 +358,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
     executionBackend,
     planId,
     runKind: 'orchestrator',
+    ...jobRunHooksSpread,
     ...(mode === 'plan' ? { mode: 'plan' } : {}),
     ...(ralph !== undefined ? { ralph } : {}),
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),

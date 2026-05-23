@@ -10,9 +10,9 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 /** One row for the chart: state + count + avgDaysInState. */
 interface PrTimeInStateDatum {
-  readonly avgDaysInState?: number | null | undefined;
-  readonly count: number;
-  readonly state: string;
+  avgDaysInState?: number | null | undefined;
+  count: number;
+  state: string;
 }
 
 const CHART_CONFIG: ChartConfig = {
@@ -23,9 +23,9 @@ const CHART_CONFIG: ChartConfig = {
   count: { color: 'var(--chart-1)', label: 'Count' },
 };
 
-interface DashboardPrTimeInStateCardProps {
-  readonly className?: string;
-  readonly prTimeInStateSummary: ReadonlyArray<PrTimeInStateDatum>;
+export interface DashboardPrTimeInStateCardProps {
+  className?: string;
+  prTimeInStateSummary: PrTimeInStateDatum[];
 }
 
 /**
@@ -33,7 +33,7 @@ interface DashboardPrTimeInStateCardProps {
  */
 export const DashboardPrTimeInStateCard = (
   props: DashboardPrTimeInStateCardProps,
-) => {
+): React.ReactElement => {
   const { className, prTimeInStateSummary } = props;
 
   // Hooks

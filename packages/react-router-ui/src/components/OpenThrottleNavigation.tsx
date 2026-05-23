@@ -5,7 +5,9 @@ export interface OpenThrottleNavigationProps {
   readonly className?: string;
 }
 
-export const OpenThrottleNavigation = (props: OpenThrottleNavigationProps) => {
+export const OpenThrottleNavigation = (
+  props: OpenThrottleNavigationProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

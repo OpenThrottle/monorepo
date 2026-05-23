@@ -5,10 +5,12 @@ import classnames from 'classnames';
  * @deprecated Stub toolbar; commented out in `QueuesIntroduction` until queues list UX is wired.
  */
 export interface QueuesToolbarProps {
-  readonly className?: string;
+  className?: string;
 }
 
-export const QueuesToolbar = (props: QueuesToolbarProps) => {
+export const QueuesToolbar = (
+  props: QueuesToolbarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

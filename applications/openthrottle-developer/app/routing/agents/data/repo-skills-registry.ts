@@ -9,6 +9,17 @@
  */
 export type SkillRegistryLayout = 'agents' | 'cursor';
 
+/**
+ * @description OpenThrottle-specific agent skills that must appear in discovery
+ * and in `OPENTHROTTLE_REPO_SKILL_PATHS` (nestjs-repositories).
+ */
+export const REQUIRED_AGENTS_SKILL_SLUGS = [
+  'openthrottle-generators',
+  'openthrottle-stack',
+  'ot-plans',
+  'workflow-ralph',
+] as const;
+
 export interface RepoSkillEntry {
   readonly layout: SkillRegistryLayout;
   readonly repoRelativePath: string;

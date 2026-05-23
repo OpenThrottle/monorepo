@@ -10,12 +10,12 @@ import {
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
 
-interface PromptsEmptyProps {
+export interface PromptsEmptyProps {
   className?: string;
   search?: string;
 }
 
-export const PromptsEmpty = (props: PromptsEmptyProps) => {
+export const PromptsEmpty = (props: PromptsEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

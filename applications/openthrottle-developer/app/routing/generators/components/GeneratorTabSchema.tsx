@@ -11,22 +11,18 @@ import {
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 
-interface GeneratorTabSchemaProps {
-  readonly generator: GeneratorDetailCardFragment;
+export interface GeneratorTabSchemaProps {
+  generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorTabSchema = (props: GeneratorTabSchemaProps) => {
+export const GeneratorTabSchema = (
+  props: GeneratorTabSchemaProps,
+): React.ReactElement => {
   const { generator } = props;
 
   // Hooks
 
   // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
   const formattedSchema = React.useMemo(() => {
     if (generator.schemaJson == null || generator.schemaJson === '') {
       return null;
@@ -38,6 +34,12 @@ export const GeneratorTabSchema = (props: GeneratorTabSchemaProps) => {
       return generator.schemaJson;
     }
   }, [generator.schemaJson]);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
 
   // 🔌 Short Circuit
 

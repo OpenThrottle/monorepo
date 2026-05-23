@@ -11,13 +11,15 @@ import type { BillingInterval } from '~/routing/pricing/types';
 export type { BillingInterval };
 
 interface PricingToggleProps {
+  readonly className?: string;
   // FIXME: We should remove the string typing here
   readonly onValueChange: (value: BillingInterval | string) => void;
   readonly value: BillingInterval;
-  readonly className?: string;
 }
 
-export const PricingToggle = (props: PricingToggleProps) => {
+export const PricingToggle = (
+  props: PricingToggleProps,
+): React.ReactElement => {
   const { value, onValueChange, className } = props;
 
   return (

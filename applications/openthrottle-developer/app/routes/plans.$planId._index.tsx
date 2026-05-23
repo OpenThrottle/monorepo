@@ -1,10 +1,5 @@
 import * as React from 'react';
-import {
-  Card,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@openthrottle/react-router-shadcn';
+import { Card, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
@@ -13,7 +8,12 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { redirect, useRevalidator, useSearchParams } from 'react-router';
+import {
+  redirect,
+  useFetcher,
+  useRevalidator,
+  useSearchParams,
+} from 'react-router';
 import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
 import type {
   PlanStatusChangedPayload,
@@ -44,8 +44,17 @@ import {
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailIndexLoaderDocument,
   PlanDetailSetPlanStatusDocument,
+  PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
+import {
+  jobRunHookEntriesToDraftRows,
+  normalizeJobRunHookDraftRows,
+  parseJobRunHooksJsonFromPlan,
+  serializeJobRunHooksConfig,
+  validateJobRunHooksDraftRows,
+  type JobRunHookDraftRow,
+} from '~/routing/plans/utils/job-run-hooks-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
@@ -61,7 +70,6 @@ import {
   PLANS_DETAIL_TAB_SEARCH_PARAM,
   parsePlanDetailTab,
   parsePlanTasksView,
-  type PlanDetailTab,
 } from '~/routing/plans/utils/parsers';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
@@ -75,6 +83,7 @@ import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   OpenThrottleClipboard,
   OpenThrottleEmptyState,
+  OpenThrottleTabs,
 } from '@openthrottle/react-router-ui';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
@@ -147,6 +156,10 @@ export default function Component(
     React.useState<WorkflowRalphRunOptionsInput>(() =>
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
+  const [jobRunHookRows, setJobRunHookRows] = React.useState<
+    JobRunHookDraftRow[]
+  >(() => jobRunHookEntriesToDraftRows([]));
+  const fetcherSaveJobRunHooks = useFetcher<typeof action>();
 
   // Setup
   const [fullscreen, setFullscreen] = React.useState(false);
@@ -155,9 +168,6 @@ export default function Component(
   const { TASK_STATUS_CHANGED } = NOTIFICATION_EVENT_NAMES;
   const planTasksView = parsePlanTasksView(searchParams.get('view')) ?? 'table';
   const isBoardView = planTasksView === 'board';
-  const planDetailTab: PlanDetailTab =
-    parsePlanDetailTab(searchParams.get(PLANS_DETAIL_TAB_SEARCH_PARAM)) ??
-    'overview';
 
   const planId = params.planId ?? '';
   const status =
@@ -175,21 +185,30 @@ export default function Component(
     return tuning === undefined ? '' : JSON.stringify(tuning);
   }, [workflowInput, workflowTimeout]);
 
-  // Handlers
-  const onPlanDetailTabChange = (next: string): void => {
-    const parsed = parsePlanDetailTab(next);
-    const tab: PlanDetailTab = parsed ?? 'overview';
-    const nextParams = new URLSearchParams(searchParams);
-
-    if (tab === 'overview') {
-      nextParams.delete(PLANS_DETAIL_TAB_SEARCH_PARAM);
-    } else {
-      nextParams.set(PLANS_DETAIL_TAB_SEARCH_PARAM, tab);
+  const jobRunHooksJson = React.useMemo((): string => {
+    const validation = validateJobRunHooksDraftRows(jobRunHookRows);
+    if (!validation.ok) {
+      return '';
     }
+    try {
+      const entries = normalizeJobRunHookDraftRows(jobRunHookRows);
+      return serializeJobRunHooksConfig(entries);
+    } catch {
+      return '';
+    }
+  }, [jobRunHookRows]);
 
-    setSearchParams(nextParams, { preventScrollReset: true });
-  };
+  const jobRunHooksValidation = validateJobRunHooksDraftRows(jobRunHookRows);
+  const saveJobRunHooksData = fetcherSaveJobRunHooks.data;
+  const saveJobRunHooksError =
+    saveJobRunHooksData != null &&
+    typeof saveJobRunHooksData === 'object' &&
+    'saveJobRunHooksError' in saveJobRunHooksData &&
+    typeof saveJobRunHooksData.saveJobRunHooksError === 'string'
+      ? saveJobRunHooksData.saveJobRunHooksError
+      : undefined;
 
+  // Handlers
   const onResetToDefaults = (): void => {
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
@@ -197,6 +216,17 @@ export default function Component(
 
     setWorkingDirectory('');
     setWorkflowTimeout('');
+  };
+
+  const onSaveJobRunHooks = (): void => {
+    if (!plan?.id || !jobRunHooksValidation.ok) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set('intent', 'saveJobRunHooks');
+    formData.set('jobRunHooksJson', jobRunHooksJson);
+    void fetcherSaveJobRunHooks.submit(formData, { method: 'post' });
   };
 
   const onToggleExpanded = (expanded: boolean): void => {
@@ -256,13 +286,35 @@ export default function Component(
     setWorkflowInput(
       getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
     );
+
     setWorkingDirectory('');
     setWorkflowTimeout('');
-  }, [plan?.id]);
+
+    try {
+      const entries = parseJobRunHooksJsonFromPlan(plan?.jobRunHooksJson);
+      setJobRunHookRows(jobRunHookEntriesToDraftRows(entries));
+    } catch {
+      setJobRunHookRows(jobRunHookEntriesToDraftRows([]));
+    }
+  }, [plan?.id, plan?.jobRunHooksJson]);
 
   // Subscribe to plan/task status-change events so we revalidate when status
   // is updated via openthrottle-mcp or API, keeping plan and tasks in sync.
   // Manual QA: see `PlanTasksBoard.test.tsx` file comment (socket + board/table).
+  React.useEffect(() => {
+    if (fetcherSaveJobRunHooks.state !== 'idle') return;
+
+    const data = fetcherSaveJobRunHooks.data;
+    if (
+      data != null &&
+      typeof data === 'object' &&
+      'saveJobRunHooks' in data &&
+      data.saveJobRunHooks != null
+    ) {
+      revalidator.revalidate();
+    }
+  }, [fetcherSaveJobRunHooks.state, fetcherSaveJobRunHooks.data, revalidator]);
+
   React.useEffect(() => {
     if (!planId || !socketContext?.socket) return;
     const socket = socketContext.socket;
@@ -304,9 +356,7 @@ export default function Component(
             className="mb-4"
             icon={NotebookTextIcon}
             title={plan.title ?? 'Untitled'}
-          >
-            <div></div>
-          </GlobalHeading>
+          />
           <div className="text-sm text-muted-foreground line-clamp-3">
             <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
             {formatPlanDate(plan.updatedAt)}
@@ -315,10 +365,12 @@ export default function Component(
         </div>
 
         <div className="">
-          <Tabs
-            className="w-full"
-            onValueChange={onPlanDetailTabChange}
-            value={planDetailTab}
+          <OpenThrottleTabs
+            urlSync={{
+              defaultValue: 'overview',
+              param: PLANS_DETAIL_TAB_SEARCH_PARAM,
+              parse: (raw) => parsePlanDetailTab(raw) ?? undefined,
+            }}
           >
             <TabsList
               className="mb-8 gap-4 justify-start max-w-full overflow-x-auto overflow-y-hidden w-full"
@@ -361,6 +413,9 @@ export default function Component(
 
             <PlanTabDetails
               fullscreen={fullscreen}
+              jobRunHooksBlocked={!jobRunHooksValidation.ok}
+              jobRunHooksBlockedReason={jobRunHooksValidation.issues[0]}
+              jobRunHooksJson={jobRunHooksJson}
               plan={plan}
               ralphTuningJson={ralphTuningJson}
               recentPlanRuns={recentPlanRuns}
@@ -374,17 +429,27 @@ export default function Component(
             <PlanTabOutput chunks={loaderData.planOutputChunks} />
             <PlanTabConfiguration
               iterationTimeoutText={workflowTimeout}
+              jobRunHookRows={jobRunHookRows}
               onCollapse={() => onToggleExpanded(false)}
               onIterationTimeoutTextChange={setWorkflowTimeout}
+              onJobRunHookRowsChange={setJobRunHookRows}
               onResetToDefaults={onResetToDefaults}
+              onSaveJobRunHooks={onSaveJobRunHooks}
               onValueChange={setWorkflowInput}
               onWorkingDirectoryChange={setWorkingDirectory}
               planId={plan.id}
+              saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
+              saveJobRunHooksPending={fetcherSaveJobRunHooks.state !== 'idle'}
               value={workflowInput}
               workingDirectory={workingDirectory}
             />
+            {saveJobRunHooksError != null ? (
+              <p className="text-destructive text-xs px-4" role="alert">
+                {saveJobRunHooksError}
+              </p>
+            ) : null}
             <PlanTabsMetadata plan={plan} />
-          </Tabs>
+          </OpenThrottleTabs>
         </div>
       </GlobalScreen>
 
@@ -477,6 +542,45 @@ export const action = async (args: Route.ActionArgs) => {
     }
   }
 
+  if (intent === 'saveJobRunHooks') {
+    const hooksRaw = formData.get('jobRunHooksJson');
+    const jobRunHooksJson =
+      typeof hooksRaw === 'string' && hooksRaw.trim() !== ''
+        ? hooksRaw.trim()
+        : JSON.stringify({ hooks: [] });
+
+    try {
+      parseJobRunHooksJsonFromPlan(jobRunHooksJson);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { saveJobRunHooksError: message };
+    }
+
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailUpdatePlanJobRunHooksDocument,
+        {
+          input: {
+            id: planId,
+            jobRunHooksJson,
+          },
+        },
+      );
+
+      if (!result.updatePlan?.id) {
+        return { saveJobRunHooksError: 'Failed to save job run hooks.' };
+      }
+
+      return { saveJobRunHooks: result.updatePlan };
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { saveJobRunHooksError: message };
+    }
+  }
+
   if (intent === 'runPlan') {
     const priorityRaw = formData.get('priority');
     const priority =
@@ -509,12 +613,27 @@ export const action = async (args: Route.ActionArgs) => {
         ? workingDirectoryRaw.trim()
         : undefined;
 
+    const jobRunHooksRaw = formData.get('jobRunHooksJson');
+    let jobRunHooksJson: string | undefined;
+    if (typeof jobRunHooksRaw === 'string' && jobRunHooksRaw.trim() !== '') {
+      try {
+        parseJobRunHooksJsonFromPlan(jobRunHooksRaw.trim());
+        jobRunHooksJson = jobRunHooksRaw.trim();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          runPlanError: `Invalid job run hooks: ${message}`,
+        };
+      }
+    }
+
     try {
       const input = EnqueuePlanRunInputSchema().parse({
         planId,
         priority,
         ...(ralph !== undefined ? { ralph } : {}),
         ...(workingDirectory !== undefined ? { workingDirectory } : {}),
+        ...(jobRunHooksJson !== undefined ? { jobRunHooksJson } : {}),
       });
 
       const result = await executeGraphqlWithAuth(

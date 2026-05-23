@@ -7,6 +7,8 @@ import {
   buildWorkflowRalphDebugBundleText,
   buildWorkflowRalphOptionArgs,
   buildWorkflowRalphTuningDiffLabels,
+  resolveWorkflowRalphWorktreeArgvValue,
+  WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
   formatWorkflowRalphCommandLine,
   formatWorkflowRalphExecutionBackendLabel,
   getDefaultWorkflowRalphRunOptionsInput,
@@ -32,8 +34,12 @@ const basePlanInput = (
   prompt: DEFAULT_RALPH_PROMPT,
   promptFile: '',
   promptLayer: 'named',
+  skipWorktreeSetup: false,
   targetMode: 'plan',
   taskId: '',
+  worktreeBase: '',
+  worktreeCli: 'omit',
+  worktreeName: '',
   ...overrides,
 });
 
@@ -50,8 +56,12 @@ const baseTaskInput = (
   prompt: DEFAULT_RALPH_PROMPT,
   promptFile: '',
   promptLayer: 'named',
+  skipWorktreeSetup: false,
   targetMode: 'task',
   taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
+  worktreeBase: '',
+  worktreeCli: 'omit',
+  worktreeName: '',
   ...overrides,
 });
 
@@ -356,6 +366,81 @@ describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
       ),
     ).toEqual({ model: 'gpt-4' });
   });
+
+  test('includes named worktree and cursor-only flags in enqueue tuning', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({
+          skipWorktreeSetup: true,
+          worktreeBase: 'main',
+          worktreeCli: 'named',
+          worktreeName: 'target-one',
+        }),
+      ),
+    ).toEqual({
+      skipWorktreeSetup: true,
+      worktree: 'target-one',
+      worktreeBase: 'main',
+    });
+  });
+
+  test('omits flag-only worktree from enqueue tuning', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({ worktreeCli: 'flag-only' }),
+      ),
+    ).toBe(undefined);
+  });
+});
+
+describe('buildWorkflowRalphOptionArgs worktree flags', () => {
+  test('appends named --worktree and cursor-only flags', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(
+        basePlanInput({
+          skipWorktreeSetup: true,
+          worktreeBase: 'develop',
+          worktreeCli: 'named',
+          worktreeName: 'wt-a',
+        }),
+      ),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--worktree',
+      'wt-a',
+      '--worktree-base',
+      'develop',
+      '--skip-worktree-setup',
+    ]);
+  });
+
+  test('appends flag-only --worktree without a name', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ worktreeCli: 'flag-only' })),
+    ).toEqual(['--plan', '0c2720a9-920f-4b16-865a-f803eb444e18', '--worktree']);
+  });
+
+  test('resolveWorkflowRalphWorktreeArgvValue maps modes', () => {
+    expect(
+      resolveWorkflowRalphWorktreeArgvValue(
+        basePlanInput({ worktreeCli: 'omit' }),
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveWorkflowRalphWorktreeArgvValue(
+        basePlanInput({ worktreeCli: 'flag-only' }),
+      ),
+    ).toBe(WORKFLOW_RALPH_WORKTREE_FLAG_ONLY);
+    expect(
+      resolveWorkflowRalphWorktreeArgvValue(
+        basePlanInput({
+          worktreeCli: 'named',
+          worktreeName: '  x  ',
+        }),
+      ),
+    ).toBe('x');
+  });
 });
 
 /**
@@ -643,6 +728,43 @@ describe('validateWorkflowRalphRunOptionsState', () => {
       throw new Error('expected validation failure');
     }
     expect(result.issues.some((i) => i.code === 'task_required')).toBe(true);
+  });
+
+  test('fails when named worktree has an empty name', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({ worktreeCli: 'named', worktreeName: '  ' }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'worktree_name_empty')).toBe(
+      true,
+    );
+  });
+
+  test('fails when cursor-only worktree flags are set with claude backend', () => {
+    const result = validateWorkflowRalphRunOptionsState(
+      basePlanInput({
+        executionBackend: 'claude',
+        skipWorktreeSetup: true,
+        worktreeBase: 'main',
+      }),
+      '',
+      { requireCliTargetIds: true },
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error('expected validation failure');
+    }
+    expect(result.issues.some((i) => i.code === 'worktree_base_claude')).toBe(
+      true,
+    );
+    expect(
+      result.issues.some((i) => i.code === 'skip_worktree_setup_claude'),
+    ).toBe(true);
   });
 });
 

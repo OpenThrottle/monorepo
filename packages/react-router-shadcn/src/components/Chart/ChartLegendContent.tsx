@@ -5,12 +5,12 @@ import { getChartColor, readUnknownRecordValue } from '../chart-config';
 import { useChartConfig } from '../chart-config-context';
 
 export interface ChartLegendContentProps {
+  readonly nameKey?: string;
   readonly payload?: ReadonlyArray<{
     color?: string;
     dataKey?: string;
     value?: string;
   }>;
-  readonly nameKey?: string;
 }
 
 /**

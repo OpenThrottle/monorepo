@@ -15,7 +15,9 @@ interface CaseStudyCardProps {
   readonly item: CaseStudyListItem;
 }
 
-export const CaseStudyCard = (props: CaseStudyCardProps) => {
+export const CaseStudyCard = (
+  props: CaseStudyCardProps,
+): React.ReactElement => {
   const { className, item } = props;
 
   // Hooks

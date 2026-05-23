@@ -1,18 +1,22 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { redirect } from 'react-router';
-import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
 } from '~/__generated__/graphql';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { Badge } from '@openthrottle/react-router-shadcn';
+import { ListOrderedIcon } from 'lucide-react';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { parseTaskStatusColor } from '~/routing/plans/utils/parsers';
+import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
+import { redirect } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
@@ -34,10 +38,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
     return [
       { children: 'Plans', to: '/plans' },
-      {
-        children: planTitle,
-        to: `/plans/${id}`,
-      },
+      { children: planTitle, to: `/plans/${id}` },
     ];
   },
 };
@@ -97,6 +98,7 @@ export default function Component(
   // Setup
   const _taskId = params.taskId ?? '';
   const effectivePlanId = task != null ? (task.planId ?? '') : '';
+  const color = parseTaskStatusColor(task?.status ?? '');
 
   // Handlers
 
@@ -115,6 +117,18 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          icon={ListOrderedIcon}
+          title={`Task: ${task.title}`}
+        />
+        <div className="text-sm text-muted-foreground line-clamp-3">
+          <Badge color={color} size="xs">
+            {task.status}
+          </Badge>
+        </div>
+      </div>
       <TaskDetails planId={effectivePlanId} task={task} />
     </GlobalScreen>
   );

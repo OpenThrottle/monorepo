@@ -1,18 +1,18 @@
 import * as React from 'react';
 import { MultiSelect } from '@openthrottle/react-router-shadcn';
 
-interface AssigneeMultiSelectProps {
-  readonly onChange: (value: string[]) => void;
-  readonly options: readonly string[];
-  readonly value: readonly string[];
+export interface AssigneeMultiSelectProps {
+  onChange: (value: string[]) => void;
+  options: readonly string[];
+  value: readonly string[];
 }
 
 /**
  * @description Multi-select dropdown to filter plans by assignee. Label "Assignee"; options shown with @ prefix. Updates URL search params on change.
  */
-export function AssigneeMultiSelect(
+export const AssigneeMultiSelect = (
   props: AssigneeMultiSelectProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { onChange, options, value } = props;
 
   // Hooks
@@ -40,4 +40,4 @@ export function AssigneeMultiSelect(
       value={[...value]}
     />
   );
-}
+};

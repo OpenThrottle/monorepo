@@ -4,9 +4,9 @@ const domain = APP_URL.replace('https://', '');
 const year = new Date().getFullYear();
 
 /**
+ * Adding a personal touch never hurt anyone right, and some shameless
+ * self-promotion isn't all that bad either.
  * @link https://emojicombos.com/yoda-ascii-art
- * @description Adding a personal touch never hurt anyone right, and some
- * shameless self-promotion isn't all that bad either.
  */
 export const artwork = `
 /*

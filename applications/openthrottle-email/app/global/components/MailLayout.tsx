@@ -20,7 +20,7 @@ interface MailLayoutProps {
  * @description Mail-area layout: sidebar (folder nav) + main content area. Renders {@link MailSidebar} and children (typically an `<Outlet />`) using shadcn-ui SidebarProvider/SidebarInset.
  * Wraps content in TooltipProvider for tooltips and renders Toaster for toast feedback. All UI from @openthrottle/react-router-shadcn for consistency.
  */
-export const MailLayout = (props: MailLayoutProps) => {
+export const MailLayout = (props: MailLayoutProps): React.ReactElement => {
   const { children, className, defaultSidebarOpen = true } = props;
 
   // Hooks

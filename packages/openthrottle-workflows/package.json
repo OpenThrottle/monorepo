@@ -36,7 +36,6 @@
       "type:package"
     ],
     "targets": {
-      "__codegen-graphql-watch": {},
       "build": {
         "dependsOn": [
           "^build",

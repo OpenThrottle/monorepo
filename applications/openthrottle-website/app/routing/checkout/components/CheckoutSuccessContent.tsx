@@ -6,7 +6,9 @@ interface CheckoutSuccessContentProps {
   readonly className?: string;
 }
 
-export const CheckoutSuccessContent = (props: CheckoutSuccessContentProps) => {
+export const CheckoutSuccessContent = (
+  props: CheckoutSuccessContentProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

@@ -49,13 +49,15 @@ describe('PlanWorkflowCommand Component', () => {
       `--plan ${planId}`,
     );
     expect(
-      getByRole('button', { name: 'Copy canonical command' }),
+      getByRole('button', {
+        name: `pnpm exec workflow-ralph --plan ${planId}`,
+      }),
     ).toBeInTheDocument();
   });
 
   test('should use canonicalCommandLineOverride when provided', () => {
     const props: PlanWorkflowCommandProps = {
-      canonicalCommandLineOverride:
+      command:
         'pnpm exec workflow-ralph --plan 11111111-1111-4111-8111-111111111111 --model fast',
     };
     const Component = () => <PlanWorkflowCommand {...props} />;
@@ -63,7 +65,7 @@ describe('PlanWorkflowCommand Component', () => {
     const { getByTestId } = render(<RoutesStub />);
 
     expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
-      props.canonicalCommandLineOverride ?? '',
+      props.command ?? '',
     );
   });
 
@@ -71,13 +73,13 @@ describe('PlanWorkflowCommand Component', () => {
     const line =
       'pnpm exec workflow-ralph --plan 0c2720a9-920f-4b16-865a-f803eb444e18';
     const props: PlanWorkflowCommandProps = {
-      canonicalCommandLineOverride: line,
+      command: line,
     };
     const Component = () => <PlanWorkflowCommand {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 
-    fireEvent.click(getByRole('button', { name: 'Copy canonical command' }));
+    fireEvent.click(getByRole('button', { name: line }));
 
     expect(document.execCommand).toHaveBeenCalledWith('copy');
     expect(lastCopiedViaExecCommand).toBe(line);

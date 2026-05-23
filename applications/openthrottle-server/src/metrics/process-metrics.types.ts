@@ -40,8 +40,8 @@ export interface TaskRunMetrics {
 export interface EnhancedTaskRunMetrics extends TaskRunMetrics {
   /** Child process CPU/memory metrics from pidusage polling (if available). */
   readonly childProcessMetrics?: ChildProcessMetrics;
-  /** Wall-clock vs CPU time metrics for determining CPU/IO bound behavior. */
-  readonly wallClockMetrics?: WallClockMetrics;
   /** System-level CPU pressure metrics (load average, PSI on Linux). */
   readonly systemCpuMetrics?: SystemCpuMetrics;
+  /** Wall-clock vs CPU time metrics for determining CPU/IO bound behavior. */
+  readonly wallClockMetrics?: WallClockMetrics;
 }

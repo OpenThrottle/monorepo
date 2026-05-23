@@ -1,28 +1,28 @@
 import * as React from 'react';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { DatabaseIcon } from 'lucide-react';
 
-interface SettingsStorageProps {
-  readonly className?: string;
+export interface SettingsStorageProps {
+  className?: string;
 }
 
-export const SettingsStorage = (props: SettingsStorageProps) => {
-  const { className } = props;
+type StorageEntryRow = {
+  key: string;
+  preview: string;
+};
 
-  type TTemporary = {
-    readonly key: string;
-    readonly preview: string;
-  };
+export const SettingsStorage = (
+  _props: SettingsStorageProps,
+): React.ReactElement => {
+  // const { className } = props;
 
   // Hooks
-  const [localEntries, setLocalEntries] = React.useState<readonly TTemporary[]>([]); // prettier-ignore
-  const [sessionEntries, setSessionEntries] = React.useState<readonly TTemporary[]>([]); // prettier-ignore
+  const [localEntries, setLocalEntries] = React.useState<StorageEntryRow[]>([]);
+  const [sessionEntries, setSessionEntries] = React.useState<StorageEntryRow[]>(
+    [],
+  );
 
   // Setup
 
@@ -39,20 +39,21 @@ export const SettingsStorage = (props: SettingsStorageProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base">Storage: local & session</CardTitle>
-        <Button
-          onClick={handleRefreshStorage}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Refresh
-        </Button>
-      </CardHeader>
+    <OpenThrottleFieldset
+      icon={DatabaseIcon}
+      id="storage"
+      legend="Storage: local & session"
+    >
+      <Button
+        onClick={handleRefreshStorage}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        Refresh
+      </Button>
 
-      <CardContent className="space-y-4 text-sm">
+      <div className="space-y-4 text-sm">
         <div>
           <p className="mb-2 font-medium text-foreground">local storage</p>
           {localEntries.length === 0 ? (
@@ -107,7 +108,7 @@ export const SettingsStorage = (props: SettingsStorageProps) => {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </OpenThrottleFieldset>
   );
 };

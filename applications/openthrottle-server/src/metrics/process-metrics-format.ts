@@ -11,7 +11,7 @@ import type {
 /**
  * @description Returns a one-line summary of task-run metrics (start → end) for logs and plan output.
  */
-function formatTaskRunMetricsSummary(metrics: TaskRunMetrics): string {
+export function formatTaskRunMetricsSummary(metrics: TaskRunMetrics): string {
   const { atStart, atEnd } = metrics;
 
   const rss = `${atStart.rssMb.toFixed(1)}→${atEnd.rssMb.toFixed(1)}`;

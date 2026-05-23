@@ -14,20 +14,28 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import {
   buildGeneratorSupportBundle,
   clearGeneratorLastRun,
+  readGeneratorLastRun,
   writeGeneratorLastRun,
 } from '~/routing/generators/utils/generator-last-run-storage';
 
-interface GeneratorTabDebugProps {
-  readonly className?: string;
-  readonly generator: GeneratorDetailCardFragment;
+export interface GeneratorTabDebugProps {
+  className?: string;
+  generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorTabDebug = (props: GeneratorTabDebugProps) => {
+export const GeneratorTabDebug = (
+  props: GeneratorTabDebugProps,
+): React.ReactElement => {
   const { generator } = props;
 
   // Hooks
   const [cliOutput, setCliOutput] = React.useState('');
-  const [mounted, _setMounted] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  const supportBundle = React.useMemo(
+    () => buildGeneratorSupportBundle(generator.name, cliOutput),
+    [cliOutput, generator.name],
+  );
 
   // Setup
 
@@ -37,14 +45,13 @@ export const GeneratorTabDebug = (props: GeneratorTabDebugProps) => {
     writeGeneratorLastRun(generator.name, next);
   };
 
-  const supportBundle = React.useMemo(
-    () => buildGeneratorSupportBundle(generator.name, cliOutput),
-    [cliOutput, generator.name],
-  );
-
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    setMounted(true);
+    setCliOutput(readGeneratorLastRun(generator.name));
+  }, [generator.name]);
 
   // 🔌 Short Circuit
 

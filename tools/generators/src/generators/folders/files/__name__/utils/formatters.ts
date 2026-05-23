@@ -1,5 +1,5 @@
 /**
- * @description And example formatter...
+ * A example formatter...
  * Build what we need and add them in here as simple testable functions.
  */
 export const format<%= namePascal %>Date = (date: string) => {

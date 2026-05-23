@@ -6,7 +6,7 @@ import { generatorReactRouterForm } from './generator.form';
 describe('remix form generator', () => {
   let tree: Tree;
 
-  const application = 'openthrottle';
+  const application = 'openthrottle-developer';
   const folder = 'routing/home/components';
   const name = 'HomeExampleForm';
 

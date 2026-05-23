@@ -19,11 +19,11 @@ export interface MailFolder {
 }
 
 export interface MailMessageSummary {
-  readonly id: string;
-  readonly subject: string;
-  readonly from: string;
   readonly date: string;
+  readonly from: string;
+  readonly id: string;
   readonly read: boolean;
+  readonly subject: string;
 }
 
 /** Optional attachment info for reading pane; extend when API provides real data. */
@@ -32,12 +32,12 @@ export interface MailAttachment {
 }
 
 export interface MailMessageDetail {
-  readonly id: string;
-  readonly subject: string;
-  readonly from: string;
-  readonly to: string;
-  readonly date: string;
-  readonly body: string;
   /** Placeholder for attachment list in reading pane; wire to API when available. */
   readonly attachments?: readonly MailAttachment[];
+  readonly body: string;
+  readonly date: string;
+  readonly from: string;
+  readonly id: string;
+  readonly subject: string;
+  readonly to: string;
 }

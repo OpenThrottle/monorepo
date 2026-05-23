@@ -52,14 +52,14 @@ export async function getTasksByPlanId(
   await client.connect();
   try {
     const res = await client.query<{
+      category: string | null;
+      created_at: string;
+      description: string | null;
       id: string;
       plan_id: string;
-      title: string;
-      description: string | null;
-      category: string | null;
-      status: string;
       requirements: unknown;
-      created_at: string;
+      status: string;
+      title: string;
       updated_at: string;
     }>(
       `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY created_at`,
@@ -108,14 +108,14 @@ export async function updatePlanStatus(
   await client.connect();
   try {
     const res = await client.query<{
-      id: string;
-      title: string;
       author: string;
       category: string;
+      created_at: string;
       description: string | null;
+      id: string;
       status: string;
       summary: string | null;
-      created_at: string;
+      title: string;
       updated_at: string;
     }>(
       `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,

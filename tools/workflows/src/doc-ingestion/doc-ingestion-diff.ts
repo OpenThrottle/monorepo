@@ -13,18 +13,18 @@ import { getPriorState } from './doc-ingestion-state';
 export interface DocIngestionJobPayload {
   readonly directories?: readonly string[];
   readonly files?: readonly string[];
-  readonly scope?: string;
   readonly repo?: string;
+  readonly scope?: string;
   readonly sha?: string;
 }
 
 /** Result of diffing current filesystem state vs prior ingestion state. */
 export interface DocIngestionDiff {
-  readonly toAdd: readonly string[];
-  readonly toUpdate: readonly string[];
-  readonly toRemove: readonly string[];
   /** Content hash per path for paths in toAdd or toUpdate; used to persist prior state after ingest. */
   readonly currentHashes: ReadonlyMap<string, string>;
+  readonly toAdd: readonly string[];
+  readonly toRemove: readonly string[];
+  readonly toUpdate: readonly string[];
 }
 
 /**
@@ -48,7 +48,7 @@ export async function collectMdPathsUnderDir(
   const out: string[] = [];
   const absoluteDir = join(workspaceRoot, dirRelative);
 
-  let entries: { name: string; isFile: () => boolean }[];
+  let entries: { isFile: () => boolean; name: string }[];
   try {
     entries = await readdir(absoluteDir, { withFileTypes: true });
   } catch {

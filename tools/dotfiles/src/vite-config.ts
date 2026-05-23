@@ -25,25 +25,13 @@ export type PackageType = 'react' | 'react-native' | 'nestjs' | 'node';
  */
 export interface CreateViteConfigOptions {
   /**
-   * @description Type of package (determines plugins and settings)
-   */
-  readonly packageType: PackageType;
-  /**
-   * @description Path to the package directory (used for cache directory calculation)
-   */
-  readonly packagePath: string;
-  /**
-   * @description Custom entry points (defaults to auto-detection)
-   */
-  readonly entry?: readonly string[];
-  /**
    * @description Whether to include CSS code splitting (defaults based on package type)
    */
   readonly cssCodeSplit?: boolean;
   /**
-   * @description Whether to include sourcemap (defaults to true)
+   * @description Custom entry points (defaults to auto-detection)
    */
-  readonly sourcemap?: boolean;
+  readonly entry?: readonly string[];
   /**
    * @description Whether to include nxCopyAssetsPlugin (defaults based on package type)
    */
@@ -52,6 +40,18 @@ export interface CreateViteConfigOptions {
    * @description Custom vite config overrides
    */
   readonly overrides?: Partial<UserConfig>;
+  /**
+   * @description Path to the package directory (used for cache directory calculation)
+   */
+  readonly packagePath: string;
+  /**
+   * @description Type of package (determines plugins and settings)
+   */
+  readonly packageType: PackageType;
+  /**
+   * @description Whether to include sourcemap (defaults to true)
+   */
+  readonly sourcemap?: boolean;
 }
 
 /**

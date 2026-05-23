@@ -8,7 +8,7 @@ const MONOREPO_MARKER_FILES = ['nx.json', 'pnpm-workspace.yaml'] as const;
 /**
  * @description Returns true when `dir` contains the files that identify the OpenThrottle monorepo root.
  */
-const isMonorepoRootDirectory = (
+export const isMonorepoRootDirectory = (
   dir: string,
   exists: (path: string) => boolean = existsSync,
 ): boolean => MONOREPO_MARKER_FILES.every((file) => exists(join(dir, file)));
@@ -16,7 +16,7 @@ const isMonorepoRootDirectory = (
 /**
  * @description Walks upward from `startDir` to find the OpenThrottle monorepo root.
  */
-const findMonorepoRootFromPath = (
+export const findMonorepoRootFromPath = (
   startDir: string,
   exists: (path: string) => boolean = existsSync,
 ): string | null => {

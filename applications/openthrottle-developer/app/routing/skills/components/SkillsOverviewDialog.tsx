@@ -5,14 +5,16 @@ import {
   DialogTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { AgentsSkillsRegistry } from '~/routing/agents/components/AgentsSkillsRegistry';
-import { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
-interface SkillsOverviewDialogProps {
-  readonly children: React.ReactNode;
-  readonly entries?: ReadonlyArray<RepoSkillEntry>;
+export interface SkillsOverviewDialogProps {
+  children: React.ReactNode;
+  entries?: RepoSkillEntry[];
 }
 
-export const SkillsOverviewDialog = (props: SkillsOverviewDialogProps) => {
+export const SkillsOverviewDialog = (
+  props: SkillsOverviewDialogProps,
+): React.ReactElement => {
   const { children, entries } = props;
 
   // Hooks

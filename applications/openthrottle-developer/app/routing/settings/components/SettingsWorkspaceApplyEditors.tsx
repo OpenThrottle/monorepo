@@ -3,11 +3,11 @@ import classnames from 'classnames';
 import { Form, useNavigation } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 
-interface SettingsWorkspaceApplyEditorsProps {
-  readonly actionError?: string | null;
-  readonly actionMessage?: string | null;
-  readonly className?: string;
-  readonly disabled?: boolean;
+export interface SettingsWorkspaceApplyEditorsProps {
+  actionError?: string | null;
+  actionMessage?: string | null;
+  className?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -17,10 +17,22 @@ export const SettingsWorkspaceApplyEditors = (
   props: SettingsWorkspaceApplyEditorsProps,
 ): React.ReactElement => {
   const { actionError, actionMessage, className, disabled } = props;
+
+  // Hooks
   const navigation = useNavigation();
   const isSubmitting =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'applyEditorConfig';
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

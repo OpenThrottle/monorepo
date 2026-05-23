@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from 'classnames';
 import {
   Input,
   Label,
@@ -14,19 +13,20 @@ import {
   type WorkflowRalphRunOptionsInput,
   type WorkflowRalphTargetMode,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
-interface PlanWorkflowConfigTargetProps {
-  readonly className?: string;
-  readonly input: WorkflowRalphRunOptionsInput;
-  readonly setInput: (
+export interface PlanWorkflowConfigTargetProps {
+  heading: string;
+  input: WorkflowRalphRunOptionsInput;
+  setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
 }
 
 export const PlanWorkflowConfigTarget = (
   props: PlanWorkflowConfigTargetProps,
-) => {
-  const { className, input, setInput } = props;
+): React.ReactElement => {
+  const { heading, input, setInput } = props;
 
   // Hooks
 
@@ -53,20 +53,7 @@ export const PlanWorkflowConfigTarget = (
   // 🔌 Short Circuit
 
   return (
-    <fieldset
-      aria-labelledby="workflow-run-target-legend"
-      className={classnames(
-        'space-y-3 rounded-md border border-border p-4',
-        className,
-      )}
-      data-testid="PlanWorkflowConfigTarget"
-    >
-      <legend
-        className="px-1 text-sm font-medium text-foreground"
-        id="workflow-run-target-legend"
-      >
-        Run target
-      </legend>
+    <OpenThrottleFieldset id="workflow-config-target-legend" legend={heading}>
       <p className="text-muted-foreground text-xs">
         For the CLI preview: one of <code className="text-xs">--plan</code> or{' '}
         <code className="text-xs">--task</code>. Queued runs always target this
@@ -74,7 +61,7 @@ export const PlanWorkflowConfigTarget = (
         command, not the BullMQ job.
       </p>
       <div className="space-y-2">
-        <Label htmlFor="workflow-run-target-mode">Target mode</Label>
+        <Label htmlFor="workflow-config-target-mode">Target mode</Label>
         <Select
           onValueChange={(v) => {
             if (v === 'plan' || v === 'task') {
@@ -86,7 +73,7 @@ export const PlanWorkflowConfigTarget = (
           <SelectTrigger
             aria-label="Run target: plan or task"
             className="max-w-md"
-            id="workflow-run-target-mode"
+            id="workflow-config-target-mode"
           >
             <SelectValue placeholder="Target mode" />
           </SelectTrigger>
@@ -150,6 +137,6 @@ export const PlanWorkflowConfigTarget = (
           Value does not match a UUID (v4) pattern; CLI validation may fail.
         </p>
       ) : null}
-    </fieldset>
+    </OpenThrottleFieldset>
   );
 };

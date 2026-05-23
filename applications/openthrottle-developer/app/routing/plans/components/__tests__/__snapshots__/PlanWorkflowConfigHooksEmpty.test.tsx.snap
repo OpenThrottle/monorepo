@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PlanWorkflowConfigHooksEmpty Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      data-testid="PlanWorkflowConfigHooksEmpty"
+    >
+      <p
+        class="text-muted-foreground text-sm"
+      >
+        No hooks configured. The worker runs Ralph only (unchanged from plans without hooks).
+      </p>
+    </div>
+  </div>
+</body>
+`;

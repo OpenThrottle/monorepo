@@ -20,8 +20,8 @@ All generators support interactive prompting.
 # React generator (prompts for sub-generator + inputs)
 pnpm nx g @tools/generators:react --interactive
 
-# Remix generator
-pnpm nx g @tools/generators:remix --interactive
+# React Router generator
+pnpm nx g @tools/generators:react-router --interactive
 
 # NestJS generator
 pnpm nx g @tools/generators:nestjs --interactive
@@ -43,10 +43,10 @@ pnpm nx g @tools/generators:react \
   --name=MyComponent
 ```
 
-#### Remix
+#### React Router
 
 ```bash
-pnpm nx g @tools/generators:remix \
+pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle \
   --folder=global/components \
@@ -96,7 +96,7 @@ Prints a JSON description of the generator interface and exits (no files written
 
 ```bash
 pnpm nx g @tools/generators:react --describe
-pnpm nx g @tools/generators:remix --describe
+pnpm nx g @tools/generators:react-router --describe
 pnpm nx g @tools/generators:nestjs --describe
 ```
 
@@ -108,11 +108,11 @@ Dynamic option sets (project graph / filesystem driven) can be enumerated as JSO
 # React destinations (Nx projects with tag technology:react)
 pnpm nx g @tools/generators:react --list=destinations
 
-# Remix applications (Nx projects with tag type:application)
-pnpm nx g @tools/generators:remix --list=applications
+# React Router applications (Nx projects with tag type:application)
+pnpm nx g @tools/generators:react-router --list=applications
 
-# Remix folders (requires application)
-pnpm nx g @tools/generators:remix --list=componentFolders --application=openthrottle
+# React Router component folders (requires application)
+pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle
 
 # NestJS applications
 pnpm nx g @tools/generators:nestjs --list=nestjsApplications

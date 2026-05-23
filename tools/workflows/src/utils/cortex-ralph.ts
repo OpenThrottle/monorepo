@@ -122,14 +122,14 @@ export async function updatePlanSummary(
   await client.connect();
   try {
     const res = await client.query<{
-      id: string;
-      title: string;
       author: string;
       category: string;
+      created_at: string;
       description: string | null;
+      id: string;
       status: string;
       summary: string | null;
-      created_at: string;
+      title: string;
       updated_at: string;
     }>(
       `UPDATE plans SET summary = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
@@ -185,14 +185,14 @@ export async function getTaskById(
   await client.connect();
   try {
     const res = await client.query<{
+      category: string | null;
+      created_at: string;
+      description: string | null;
       id: string;
       plan_id: string;
-      title: string;
-      description: string | null;
-      category: string | null;
-      status: string;
       requirements: unknown;
-      created_at: string;
+      status: string;
+      title: string;
       updated_at: string;
     }>(
       `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE id = $1`,
@@ -217,10 +217,10 @@ export async function getTaskById(
 }
 
 export interface ListPlansByStatusRow {
-  readonly id: string;
-  readonly title: string;
-  readonly status: string;
   readonly createdAt: string;
+  readonly id: string;
+  readonly status: string;
+  readonly title: string;
 }
 
 /**
@@ -234,10 +234,10 @@ export async function listPlansByStatus(
   await client.connect();
   try {
     const res = await client.query<{
-      id: string;
-      title: string;
-      status: string;
       created_at: string;
+      id: string;
+      status: string;
+      title: string;
     }>(
       `SELECT id, title, status, created_at FROM plans WHERE status = $1 ORDER BY created_at DESC`,
       [status],
@@ -264,14 +264,14 @@ export async function getPlanById(
   await client.connect();
   try {
     const res = await client.query<{
-      id: string;
-      title: string;
       author: string;
       category: string;
+      created_at: string;
       description: string | null;
+      id: string;
       status: string;
       summary: string | null;
-      created_at: string;
+      title: string;
       updated_at: string;
     }>(
       `SELECT id, title, author, category, description, status, summary, created_at, updated_at FROM plans WHERE id = $1`,
@@ -379,14 +379,14 @@ export async function getTasksByPlanId(
   await client.connect();
   try {
     const res = await client.query<{
+      category: string | null;
+      created_at: string;
+      description: string | null;
       id: string;
       plan_id: string;
-      title: string;
-      description: string | null;
-      category: string | null;
-      status: string;
       requirements: unknown;
-      created_at: string;
+      status: string;
+      title: string;
       updated_at: string;
     }>(
       `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY created_at`,
@@ -453,14 +453,14 @@ export async function updateTaskStatus(
   await client.connect();
   try {
     const res = await client.query<{
+      category: string | null;
+      created_at: string;
+      description: string | null;
       id: string;
       plan_id: string;
-      title: string;
-      description: string | null;
-      category: string | null;
-      status: string;
       requirements: unknown;
-      created_at: string;
+      status: string;
+      title: string;
       updated_at: string;
     }>(
       `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, plan_id, title, description, category, status, requirements, created_at, updated_at`,
@@ -503,14 +503,14 @@ export async function updatePlanStatus(
   try {
     if (status === 'IN_PROGRESS') {
       const res = await client.query<{
-        id: string;
-        title: string;
         author: string;
         category: string;
+        created_at: string;
         description: string | null;
+        id: string;
         status: string;
         summary: string | null;
-        created_at: string;
+        title: string;
         updated_at: string;
       }>(
         `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 AND status = 'PENDING' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
@@ -531,14 +531,14 @@ export async function updatePlanStatus(
       };
     }
     const res = await client.query<{
-      id: string;
-      title: string;
       author: string;
       category: string;
+      created_at: string;
       description: string | null;
+      id: string;
       status: string;
       summary: string | null;
-      created_at: string;
+      title: string;
       updated_at: string;
     }>(
       `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
@@ -618,13 +618,13 @@ export async function insertCommitLink(
   await client.connect();
   try {
     const res = await client.query<{
+      created_at: string;
       id: string;
+      message: string | null;
       plan_id: string;
-      task_id: string | null;
       repo: string;
       sha: string;
-      message: string | null;
-      created_at: string;
+      task_id: string | null;
     }>(
       `INSERT INTO commit_links (plan_id, task_id, repo, sha, message)
        VALUES ($1, $2, $3, $4, $5)

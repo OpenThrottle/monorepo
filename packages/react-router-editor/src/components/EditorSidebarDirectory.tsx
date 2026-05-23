@@ -13,7 +13,9 @@ export interface EditorSidebarDirectoryProps {
 /**
  * @description Directory item in the editor sidebar with expandable children.
  */
-export const EditorSidebarDirectory = (props: EditorSidebarDirectoryProps) => {
+export const EditorSidebarDirectory = (
+  props: EditorSidebarDirectoryProps,
+): React.ReactElement => {
   const { children, depth = 0, directory } = props;
 
   // Hooks

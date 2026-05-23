@@ -3,7 +3,9 @@ import { cn } from '../../utils/cn';
 
 export interface AlertDialogFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export const AlertDialogFooter = (props: AlertDialogFooterProps) => {
+export const AlertDialogFooter = (
+  props: AlertDialogFooterProps,
+): React.ReactElement => {
   const { className, ...rest } = props;
 
   // Hooks

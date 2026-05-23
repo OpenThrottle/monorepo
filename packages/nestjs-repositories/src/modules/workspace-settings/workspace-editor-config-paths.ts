@@ -32,7 +32,8 @@ const EDITOR_CONFIG_PATHS: Record<
  */
 export const getWorkspaceEditorConfigPaths = (
   editorId: WorkspaceEditorId,
-): WorkspaceEditorConfigPaths => EDITOR_CONFIG_PATHS[editorId];
+): WorkspaceEditorConfigPaths => {
+  return EDITOR_CONFIG_PATHS[editorId];
+};
 
-export const OPENTHROTTLE_MANIFEST_RELATIVE_PATH =
-  '.openthrottle/workspace-editors.json';
+export const OPENTHROTTLE_MANIFEST_RELATIVE_PATH = `.openthrottle/workspace-editors.json`;

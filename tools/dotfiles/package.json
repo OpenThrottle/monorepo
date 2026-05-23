@@ -26,22 +26,31 @@
     "eslint-plugin-typescript-sort-keys": "^3.3.0",
     "typescript-eslint": "^8.58.0"
   },
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "require": "./dist/src/index.js"
+      "types": "./src/index.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     },
-    "./*": {
-      "import": "./src/*.ts",
-      "require": "./dist/*.js"
+    "./config": {
+      "types": "./src/config.ts",
+      "import": "./dist/src/config.js",
+      "require": "./dist/src/config.js",
+      "default": "./dist/src/config.js"
     },
-    "./config": "./src/config.ts",
-    "./vite-config": "./src/vite-config.ts",
+    "./vite-config": {
+      "types": "./src/vite-config.ts",
+      "import": "./dist/src/vite-config.js",
+      "require": "./dist/src/vite-config.js",
+      "default": "./dist/src/vite-config.js"
+    },
     "./vitest-config": {
-      "types": "./dist/src/vitest-config.d.ts",
+      "types": "./src/vitest-config.ts",
       "import": "./dist/src/vitest-config.js",
+      "require": "./dist/src/vitest-config.js",
       "default": "./dist/src/vitest-config.js"
     }
   },
@@ -69,7 +78,11 @@
       "build": {
         "executor": "@nx/js:tsc"
       },
-      "lint": {},
+      "lint": {
+        "dependsOn": [
+          "build"
+        ]
+      },
       "test": {},
       "typecheck": {},
       "typecheck-tests": {}
