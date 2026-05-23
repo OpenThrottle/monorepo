@@ -130,11 +130,13 @@ export type { ChildProcessMetricsCollector } from './utils/child-process-metrics
 export {
   createBranchInWorktree,
   deriveBranchName,
+  ENSURE_COMMIT_NX_CHECKS,
   isWorktreeClean,
   parentJobAcquireAndCreateBranch,
   parentJobEnsureCommitBeforeRelease,
   slugifyForBranch,
 } from './utils/parent-job';
+export type { EnsureCommitNxCheck } from './utils/parent-job';
 export { runWorktreeWorkflow } from './utils/workflow';
 export { WorktreeTargetsTracker } from './utils/worktree-targets';
 export {

@@ -161,11 +161,11 @@ export type ChildJobResult = ChildJobSuccess | ChildJobFailure;
 export interface ParentJobEnsureCommitOptions {
   /**
    * Base ref for nx affected (e.g. main or origin/main).
-   * When set, runs lint/test/typecheck only for affected projects.
+   * When set, runs lint/typecheck/typecheck-tests only for affected projects.
    */
   readonly base?: string;
   /**
-   * When true (default), run lint, test, and typecheck in the worktree before releasing.
+   * When true (default), run lint, typecheck, and typecheck-tests in the worktree before releasing.
    * When false, only verify working tree is clean.
    */
   readonly runChecks?: boolean;
@@ -183,11 +183,11 @@ export interface ParentJobEnsureCommitFailureDirty {
   readonly detail?: string;
 }
 
-/** Failure: lint, test, or typecheck failed. */
+/** Failure: lint, typecheck, or typecheck-tests failed. */
 export interface ParentJobEnsureCommitFailureChecks {
   readonly ok: false;
   readonly reason: 'checks_failed';
-  readonly check: 'lint' | 'test' | 'typecheck';
+  readonly check: 'lint' | 'typecheck' | 'typecheck-tests';
   readonly stderr?: string;
   readonly stdout?: string;
 }

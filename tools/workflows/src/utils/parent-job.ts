@@ -1,6 +1,6 @@
 /**
  * Parent job: acquire a worktree target and create a branch for the child (Ralph) job.
- * After child completes, ensure working tree is clean and (optionally) lint/test/typecheck pass before release.
+ * After child completes, ensure working tree is clean and (optionally) CI-aligned nx checks pass before release.
  */
 
 import { spawn, spawnSync } from 'child_process';
@@ -167,14 +167,17 @@ export function isWorktreeClean(worktreePath: string): boolean {
   return out.length === 0;
 }
 
-const CHECKS: readonly ['lint', 'test', 'typecheck'] = [
+/** Nx targets run by ensureCommit; aligned with CI (`continuous-integration.yml`). */
+export const ENSURE_COMMIT_NX_CHECKS = [
   'lint',
-  'test',
   'typecheck',
-];
+  'typecheck-tests',
+] as const;
+
+export type EnsureCommitNxCheck = (typeof ENSURE_COMMIT_NX_CHECKS)[number];
 
 /**
- * @description Runs a single nx check (lint, test, or typecheck) with spawn + Promise.
+ * @description Runs a single nx check (lint, typecheck, or typecheck-tests) with spawn + Promise.
  * Supports optional timeout, AbortSignal, and onChunk for progress.
  */
 function runNxCheckAsync(
@@ -272,7 +275,7 @@ function runNxCheckAsync(
 }
 
 /**
- * @description Runs lint, test, and typecheck in the worktree via nx (spawn + Promise).
+ * @description Runs CI-aligned nx checks in the worktree (spawn + Promise).
  * Uses nx affected when base is set. Supports optional timeoutMs, signal, and onChunk.
  */
 async function runLintTestTypecheck(
@@ -284,11 +287,11 @@ async function runLintTestTypecheck(
     readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
   } = {},
 ): Promise<ParentJobEnsureCommitResult> {
-  for (const check of CHECKS) {
+  for (const check of ENSURE_COMMIT_NX_CHECKS) {
     const args =
       base !== undefined && base.length > 0
-        ? ['exec', 'nx', 'affected', '-t', check, '--base', base]
-        : ['exec', 'nx', 'run-many', '-t', check];
+        ? ['exec', 'nx', 'affected', '-t', check, '--base', base, '--parallel']
+        : ['exec', 'nx', 'run-many', '-t', check, '--parallel'];
     // eslint-disable-next-line no-await-in-loop -- checks must run sequentially (lint then test then build)
     const result = await runNxCheckAsync(worktreePath, args, options);
     const stderrTrimmed = result.stderr.trim();
@@ -324,7 +327,7 @@ async function runLintTestTypecheck(
 
 /**
  * @description Parent job step: after child completes, ensure all changes are committed and
- * (optionally) lint/test/typecheck pass before the caller releases the worktree target.
+ * (optionally) lint/typecheck/typecheck-tests pass before the caller releases the worktree target.
  * Call this before releasing the target; on success, release the target.
  * Nx checks run via spawn + Promise with optional timeout, AbortSignal, and onChunk for progress.
  */
