@@ -224,6 +224,7 @@
     },
     "knip": {
       "cache": true,
+      "dependsOn": ["^build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "knip --config knip.jsonc",
@@ -286,7 +287,7 @@
           "coverage": true
         }
       },
-      "dependsOn": ["@tools/dotfiles:build"],
+      "dependsOn": ["^build"],
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^default", "^production"],
       "options": {

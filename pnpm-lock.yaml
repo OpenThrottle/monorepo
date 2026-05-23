@@ -1513,6 +1513,9 @@ importers:
       '@openthrottle/react-router-shadcn':
         specifier: workspace:*
         version: link:../react-router-shadcn
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       framer-motion:
         specifier: ^12.26.2
         version: 12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)

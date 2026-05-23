@@ -4,7 +4,7 @@ A variety of standard modules for NestJS applications. This package provides com
 
 ## Global CLS (`GlobalClsModule`)
 
-Continuation-local storage for the request: `GlobalClsService` exposes a typed store (`app` from headers, optional `user` after auth). Shared helpers include `GlobalClsUser`, `globalClsUserFromJwtLike`, and `applyGlobalClsUser` / `setUser`. Applications typically populate `user` after Passport/JWT validation (see `openthrottle-server` `GlobalClsAuthHook` and `GlobalJwtAuthGuard`).
+Continuation-local storage for the request: `GlobalClsService` exposes a typed store (`app` from headers, optional `user` after auth). Shared helpers include `GlobalClsUser`, `globalClsUserFromJwtLike`, and `applyGlobalClsUser` / `setUser`. Applications typically populate `user` after Passport/JWT validation (see `openthrottle-server` `GlobalClsAuthHook` and `GlobalAuthGuard`).
 
 ## Installation
 
