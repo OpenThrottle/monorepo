@@ -45,7 +45,7 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 - **Agent behavior (plans in OT only; fail loudly):** See [.cursor/rules/README.md](.cursor/rules/README.md) § Agent behavior. That section is the single place for “plans in OpenThrottle only; fail loudly when unavailable”; Cursor and other tooling should follow it.
 
 - **Package READMEs:** For `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Templates live under `tools/generators/src/generators/package/files/`; conventions are summarized in [CONTRIBUTING.md](./CONTRIBUTING.md) and [.cursor/rules/personal-generators.mdc](.cursor/rules/personal-generators.mdc).
-- **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md).
+- **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md). CI gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md).
 
 ## OpenThrottle (OT) — plans knowledge base
 
