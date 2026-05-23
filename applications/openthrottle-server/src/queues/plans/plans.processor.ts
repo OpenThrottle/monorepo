@@ -480,9 +480,6 @@ export class PlansProcessor
 
       const repo = this.plansService.getRepository();
       const plan = await repo.findOne({ where: { id: planId } });
-
-      this.logger.info('🟡 ♦️ 🟡 ♦️ 🟡 ♦️ 🟡 ♦️ ', plan);
-
       const planTitle = plan?.title ?? undefined;
 
       await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
@@ -522,10 +519,6 @@ export class PlansProcessor
       const useWorktree = worktrees.length > 0;
 
       const isPlanOrchestrator = isRunPlanOrchestratorJobData(job.data);
-      this.logger.info('🟡 ♦️ 🟡 ♦️ 🟡 ♦️ 🟡 ♦️ ', {
-        isPlanOrchestrator,
-        worktrees,
-      });
 
       const result = isPlanOrchestrator
         ? await this.processOrchestrator(

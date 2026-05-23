@@ -432,7 +432,7 @@ describe('PlansResolver', () => {
       });
     });
 
-    test('throws when plan does not exist', async () => {
+    test('throws NotFoundException when plan does not exist', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
 
@@ -441,8 +441,8 @@ describe('PlansResolver', () => {
         priority: null,
         workingDirectory: null,
       };
-      await expect(resolver.enqueuePlanRun(input)).rejects.toThrow(
-        'Plan not found: non-existent-id',
+      await expect(resolver.enqueuePlanRun(input)).rejects.toBeInstanceOf(
+        NotFoundException,
       );
     });
 
@@ -741,7 +741,63 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('workflowPlanRun', () => {
+    test('throws NotFoundException when plan does not exist', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(null);
+
+      await expect(
+        resolver.workflowPlanRun({
+          planId: 'non-existent-id',
+          priority: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    test('delegates to enqueuePlanRun with identical result', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+      mockRecordQueuedRun.mockClear();
+
+      const input = {
+        jobRunHooksJson: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        workingDirectory: null,
+      };
+
+      const viaCanonical = await resolver.enqueuePlanRun(input);
+      mockAdd.mockClear();
+      mockRecordQueuedRun.mockClear();
+
+      const viaAlias = await resolver.workflowPlanRun(input);
+
+      expect(viaAlias).toEqual(viaCanonical);
+      expect(mockAdd).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('enqueuePlanRalphOrchestrator', () => {
+    test('throws NotFoundException when plan does not exist', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(null);
+
+      await expect(
+        resolver.enqueuePlanRalphOrchestrator({
+          idempotencyKey: null,
+          mode: null,
+          planId: 'non-existent-id',
+          priority: null,
+          ralph: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
     test('delegates to QueuesService with orchestrator job data', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);

@@ -247,6 +247,7 @@ export class RalphPlanRunTuningInput {
   skipWorktreeSetup!: boolean | null;
 }
 
+/** Input for {@link PlansResolver.enqueuePlanRun} (canonical spawn enqueue). Also accepted by deprecated `workflowPlanRun`. */
 @InputType()
 export class EnqueuePlanRunInput {
   @Field(() => ID, { description: `Plan id to enqueue a run for` })

@@ -1,6 +1,6 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { loader } from '../queues.$queueId.$jobId';
+import { action, loader } from '../queues.$queueId.$jobId';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
@@ -23,55 +23,229 @@ const mockJob = {
   timestamp: 1,
 } as const;
 
+const routeParams = {
+  jobId: 'job-1',
+  queueId: 'Plans',
+} as const;
+
+const actionArgs = (formData: FormData): Route.ActionArgs => ({
+  context: {},
+  params: routeParams,
+  request: new Request('http://localhost/queues/Plans/job-1', {
+    body: formData,
+    method: 'POST',
+  }),
+  unstable_pattern: '/queues/Plans/job-1',
+});
+
 describe('routes/queues.$queueId.$jobId.tsx', () => {
   beforeEach(() => {
     mockExecute.mockReset();
   });
 
-  test('loader fetches job and decodes job id from the path', async () => {
-    mockExecute.mockResolvedValueOnce({ job: mockJob });
+  describe('loader', () => {
+    test('fetches job and decodes job id from the path', async () => {
+      mockExecute.mockResolvedValueOnce({ job: mockJob });
 
-    const args: Route.LoaderArgs = {
-      context: {},
-      params: {
-        jobId: encodeURIComponent('ralph-orch:abc'),
-        queueId: 'Plans',
-      },
-      request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc'),
-      unstable_pattern: '/queues/Plans/ralph-orch%3Aabc',
-    };
+      const args: Route.LoaderArgs = {
+        context: {},
+        params: {
+          jobId: encodeURIComponent('ralph-orch:abc'),
+          queueId: 'Plans',
+        },
+        request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc'),
+        unstable_pattern: '/queues/Plans/ralph-orch%3Aabc',
+      };
 
-    const result = await loader(args);
+      const result = await loader(args);
 
-    expect(result.queueName).toBe('Plans');
-    expect(result.job.id).toBe('job-1');
-    expect(mockExecute).toHaveBeenCalledWith(args.request, expect.any(Object), {
-      jobId: 'ralph-orch:abc',
-      queueName: 'Plans',
+      expect(result.queueName).toBe('Plans');
+      expect(result.job.id).toBe('job-1');
+      expect(mockExecute).toHaveBeenCalledWith(
+        args.request,
+        expect.any(Object),
+        {
+          jobId: 'ralph-orch:abc',
+          queueName: 'Plans',
+        },
+      );
+    });
+
+    test('throws 400 when queue name is missing', async () => {
+      const args: Route.LoaderArgs = {
+        context: {},
+        params: { jobId: 'job-1', queueId: '' },
+        request: new Request('http://localhost'),
+        unstable_pattern: '/queues',
+      };
+
+      await expect(loader(args)).rejects.toMatchObject({ status: 400 });
+    });
+
+    test('throws 400 when job id is missing', async () => {
+      const args: Route.LoaderArgs = {
+        context: {},
+        params: { jobId: '', queueId: 'Plans' },
+        request: new Request('http://localhost/queues/Plans'),
+        unstable_pattern: '/queues/Plans',
+      };
+
+      await expect(loader(args)).rejects.toMatchObject({ status: 400 });
+    });
+
+    test('throws 404 when GraphQL returns no job', async () => {
+      mockExecute.mockResolvedValueOnce({ job: null });
+
+      const args: Route.LoaderArgs = {
+        context: {},
+        params: { jobId: 'missing', queueId: 'Plans' },
+        request: new Request('http://localhost/queues/Plans/missing'),
+        unstable_pattern: '/queues/Plans/missing',
+      };
+
+      await expect(loader(args)).rejects.toMatchObject({ status: 404 });
     });
   });
 
-  test('loader throws 400 when queue name is missing', async () => {
-    const args: Route.LoaderArgs = {
-      context: {},
-      params: { jobId: 'job-1', queueId: '' },
-      request: new Request('http://localhost'),
-      unstable_pattern: '/queues',
-    };
+  describe('action', () => {
+    test('returns error when queue or job id is missing', async () => {
+      const formData = new FormData();
+      formData.set('intent', 'retryJob');
 
-    await expect(loader(args)).rejects.toMatchObject({ status: 400 });
-  });
+      const result = await action({
+        context: {},
+        params: { jobId: '', queueId: 'Plans' },
+        request: new Request('http://localhost', {
+          body: formData,
+          method: 'POST',
+        }),
+        unstable_pattern: '/queues/Plans',
+      });
 
-  test('loader throws 404 when GraphQL returns no job', async () => {
-    mockExecute.mockResolvedValueOnce({ job: null });
+      expect(result).toEqual({ retryJobError: 'Missing queue or job id.' });
+    });
 
-    const args: Route.LoaderArgs = {
-      context: {},
-      params: { jobId: 'missing', queueId: 'Plans' },
-      request: new Request('http://localhost/queues/Plans/missing'),
-      unstable_pattern: '/queues/Plans/missing',
-    };
+    test('calls retryJob with decoded job id and queue name', async () => {
+      const retryPayload = {
+        error: null,
+        jobId: 'job-1',
+        success: true,
+      };
+      mockExecute.mockResolvedValueOnce({ retryJob: retryPayload });
 
-    await expect(loader(args)).rejects.toMatchObject({ status: 404 });
+      const formData = new FormData();
+      formData.set('intent', 'retryJob');
+
+      const args: Route.ActionArgs = {
+        context: {},
+        params: {
+          jobId: encodeURIComponent('ralph-orch:abc'),
+          queueId: 'Plans',
+        },
+        request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc', {
+          body: formData,
+          method: 'POST',
+        }),
+        unstable_pattern: '/queues/Plans/ralph-orch%3Aabc',
+      };
+
+      const result = await action(args);
+
+      expect(mockExecute).toHaveBeenCalledWith(
+        args.request,
+        expect.any(Object),
+        {
+          input: { jobId: 'ralph-orch:abc', queueName: 'Plans' },
+        },
+      );
+      expect(result).toEqual({ retryJob: retryPayload });
+    });
+
+    test('returns retryJobError when retryJob is missing from response', async () => {
+      mockExecute.mockResolvedValueOnce({ retryJob: null });
+
+      const formData = new FormData();
+      formData.set('intent', 'retryJob');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ retryJobError: 'Retry failed.' });
+    });
+
+    test('returns retryJobError when GraphQL throws', async () => {
+      mockExecute.mockRejectedValueOnce(new Error('network down'));
+
+      const formData = new FormData();
+      formData.set('intent', 'retryJob');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ retryJobError: 'network down' });
+    });
+
+    test('calls cancelPlanRun with plan id from form', async () => {
+      const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
+      const cancelPayload = {
+        activeJobIdsCouldNotCancel: [],
+        noMatchingJob: false,
+        planId,
+        planStatusAfter: 'PENDING',
+        removedJobIds: ['job-1'],
+        signaledActiveRunToStop: false,
+      };
+      mockExecute.mockResolvedValueOnce({ cancelPlanRun: cancelPayload });
+
+      const formData = new FormData();
+      formData.set('intent', 'cancelPlanRun');
+      formData.set('planId', planId);
+
+      const args = actionArgs(formData);
+      const result = await action(args);
+
+      expect(mockExecute).toHaveBeenCalledWith(
+        args.request,
+        expect.any(Object),
+        {
+          input: { planId },
+        },
+      );
+      expect(result).toEqual({ cancelPlanRun: cancelPayload });
+    });
+
+    test('returns cancelPlanRunError when cancelPlanRun is missing from response', async () => {
+      mockExecute.mockResolvedValueOnce({ cancelPlanRun: null });
+
+      const formData = new FormData();
+      formData.set('intent', 'cancelPlanRun');
+      formData.set('planId', '80864bba-630a-451d-bfd2-4b25ec202381');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({
+        cancelPlanRunError: 'Failed to cancel plan run.',
+      });
+    });
+
+    test('returns cancelPlanRunError when GraphQL throws', async () => {
+      mockExecute.mockRejectedValueOnce(new Error('cancel failed'));
+
+      const formData = new FormData();
+      formData.set('intent', 'cancelPlanRun');
+      formData.set('planId', '80864bba-630a-451d-bfd2-4b25ec202381');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ cancelPlanRunError: 'cancel failed' });
+    });
+
+    test('returns empty object for unknown intent', async () => {
+      const formData = new FormData();
+      formData.set('intent', 'unknown');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({});
+      expect(mockExecute).not.toHaveBeenCalled();
+    });
   });
 });

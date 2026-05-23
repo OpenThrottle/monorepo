@@ -115,7 +115,7 @@ export class ListPlansByStatusResultObject {
   totalCount!: number;
 }
 
-/** Result of enqueuePlanRun: job id, plan id, and queue position for UI feedback. */
+/** Result of enqueuePlanRun (and deprecated workflowPlanRun alias): job id, plan id, and queue position for UI feedback. */
 @ObjectType()
 export class EnqueuePlanRunResultObject {
   @Field(() => String, {
