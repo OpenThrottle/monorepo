@@ -103,7 +103,8 @@ Examples:
 
 **Examples:**
 
-- `openthrottle/openthrottle-workflows` - Workflows
+- `monorepo` - Workspace root scripts and orchestration (`technology:nodejs`)
+- `@openthrottle/openthrottle-workflows` - Workflows
 
 #### `technology:python`
 
@@ -147,6 +148,7 @@ Examples:
 
 - `@tools/generators` - NX generator templates
 - `@tools/dotfiles` - Configuration package
+- `@tools/ollama-proxy` - Local OpenAI-compatible proxy for Ollama (`production:false`)
 
 ### Specialized Technologies
 
@@ -179,9 +181,16 @@ Projects can have multiple technology tags when they use multiple technologies:
 4. **Be consistent**: Use the exact tag values listed in this document
 5. **Tag all projects**: Every project should have at least one technology tag
 
+## Production tags
+
+Production tags follow `production:true` or `production:false` (exactly one per project). They are defined in [CONTRIBUTING.md](../../../CONTRIBUTING.md#project-tags); `pnpm nx:validate-tags` checks that every Nx project has a valid production tag alongside its technology tags.
+
+- **`production:true`** — Libraries and apps that participate in release, codegen, or production build graphs (most packages and applications).
+- **`production:false`** — Local-only or infrastructure tooling (for example `@tools/ollama-proxy`, `infra`) that is not shipped as a production artifact.
+
 ## Validation
 
-All technology tags should be validated against this reference document. See the tag validation script for automated checking.
+All technology and production tags should be validated against this reference document and [CONTRIBUTING.md](../../../CONTRIBUTING.md#project-tags). Run `pnpm nx:validate-tags` for automated checking.
 
 ## Related Documentation
 

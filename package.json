@@ -315,9 +315,6 @@
       "name:@openthrottle/monorepo",
       "production:true",
       "technology:nodejs",
-      "technology:react-router",
-      "technology:react",
-      "technology:typescript",
       "type:package"
     ],
     "targets": {

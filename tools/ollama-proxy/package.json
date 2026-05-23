@@ -18,8 +18,9 @@
     "sourceRoot": "./",
     "tags": [
       "name:@tools/ollama-proxy",
-      "type:tool",
-      "technology:typescript"
+      "production:false",
+      "technology:typescript",
+      "type:tool"
     ],
     "targets": {
       "build": {
