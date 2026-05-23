@@ -104,8 +104,3 @@ export class GlobalAuthGuard implements CanActivate {
     return true;
   }
 }
-
-/**
- * @description @deprecated Use {@link GlobalAuthGuard}. Kept for imports during rollout.
- */
-export const GlobalJwtAuthGuard = GlobalAuthGuard;

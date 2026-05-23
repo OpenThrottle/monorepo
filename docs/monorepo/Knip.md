@@ -18,18 +18,18 @@ Knip finds unused files, dependencies, and exports across the monorepo. Configur
 
 Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type exports` found **no automated invocations**. Export stripping in the past came from **manual** `knip --fix` / `knip --fix-type exports` (local terminal or agents), not from CI, hooks, or Nx defaults.
 
-| Entry point                                                    | Runs Knip? | Uses `--fix`? | Notes                                                                            |
-| -------------------------------------------------------------- | ---------- | ------------- | -------------------------------------------------------------------------------- |
-| **Nx `monorepo:knip`**                                         | Yes        | **No**        | `nx.json` → `knip --config knip.jsonc` only (report).                            |
-| **Root `package.json` scripts**                                | No         | No            | No `knip` script.                                                                |
+| Entry point                                                    | Runs Knip? | Uses `--fix`? | Notes                                                                                                  |
+| -------------------------------------------------------------- | ---------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| **Nx `monorepo:knip`**                                         | Yes        | **No**        | `nx.json` → `knip --config knip.jsonc` only (report).                                                  |
+| **Root `package.json` scripts**                                | No         | No            | No `knip` script.                                                                                      |
 | **GitHub CI** (`continuous-integration.yml` → `knip-report`)   | Yes        | **No**        | `pnpm nx run monorepo:knip-ci` — report-only; `knip-baseline.json` + `dist/knip-report.json` artifact. |
-| **GitHub release** (`.github/workflows/nx-release.yml`)        | No         | No            | Job disabled (`if: false`).                                                      |
-| **Husky `pre-commit`**                                         | No         | No            | Runs `lint-staged` only.                                                         |
-| **Husky `pre-push`**                                           | No         | No            | Branch protection only.                                                          |
-| **lint-staged** (`.lintstagedrc.js`)                           | No         | No            | Prettier + ESLint `--fix` on staged files; no Knip.                              |
-| **VS Code / Cursor** (`.vscode/settings.json`)                 | No         | No            | `formatOnSave` + `source.fixAll.eslint` on save; no Knip task or Knip extension. |
-| **Cursor / agent rules** (`.cursor/`, `AGENTS.md`, `.agents/`) | No         | No            | No Knip `--fix` guidance or commands.                                            |
-| **tools/workflows, scripts/**                                  | No         | No            | No Knip references.                                                              |
+| **GitHub release** (`.github/workflows/nx-release.yml`)        | No         | No            | Job disabled (`if: false`).                                                                            |
+| **Husky `pre-commit`**                                         | No         | No            | Runs `lint-staged` only.                                                                               |
+| **Husky `pre-push`**                                           | No         | No            | Branch protection only.                                                                                |
+| **lint-staged** (`.lintstagedrc.js`)                           | No         | No            | Prettier + ESLint `--fix` on staged files; no Knip.                                                    |
+| **VS Code / Cursor** (`.vscode/settings.json`)                 | No         | No            | `formatOnSave` + `source.fixAll.eslint` on save; no Knip task or Knip extension.                       |
+| **Cursor / agent rules** (`.cursor/`, `AGENTS.md`, `.agents/`) | No         | No            | No Knip `--fix` guidance or commands.                                                                  |
+| **tools/workflows, scripts/**                                  | No         | No            | No Knip references.                                                                                    |
 
 ### Related save-time tooling (not Knip)
 

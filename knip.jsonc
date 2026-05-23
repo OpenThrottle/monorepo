@@ -7,6 +7,11 @@
   },
   // Exclude exports tagged /** @publicApi */ from unused-export reports (see docs/monorepo/Knip.md).
   "tags": ["-publicApi"],
+  // React Router typegen: @/* → .react-router/types/* (generated at build; not on disk for report-only Knip).
+  "ignoreUnresolved": [
+    "@/app/\\+types/.*",
+    "@/app/routes/\\+types/.*",
+  ],
   "entry": [
     // "applications/**/*.{ts,tsx,js,jsx}", // Uncomment this to include all applications
     // NestJS applications
@@ -51,6 +56,8 @@
     "applications/openthrottle-developer/app/routing/home/components/HomeBuiltWith.tsx",
     "applications/openthrottle-developer/app/routing/home/data/technology.ts",
     "applications/openthrottle-developer/app/routing/queues/components/QueuesToolbar.tsx",
+    // Shared jump-link data for DashboardQuickNavigation (commented on dashboard; unit tests cover routes)
+    "applications/openthrottle-developer/app/routing/navigation/data/workspace-jump-links.ts",
     // Vitest / route test harness (entry globs do not satisfy knip file graph yet)
     "applications/openthrottle-developer/tests/setup.ts",
     "applications/openthrottle-developer/app/testing/route-fixtures.tsx",

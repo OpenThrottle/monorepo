@@ -62,7 +62,7 @@ pnpm exec nx run openthrottle-server:dev   # or: nest start --path ./tsconfig.ap
 
 GraphQL endpoint: `http://localhost:6021/graphql` (or the configured `PORT`). Health and metrics are available via the app’s HTTP routes (see `HealthModule`, `MetricsModule`).
 
-**Stripe webhooks:** `main.ts` uses `rawBody: true` so the HTTP webhook route can verify signatures. Configure the Stripe Dashboard to **`POST {APP_URL}/webhooks/stripe`** (no global prefix in this app; see `@openthrottle/nestjs-stripe` README if you add one). The GraphQL mutation `processStripeWebhook` is also available (base64 raw body + signature) for gateway-style integrations; it is marked public for JWT (`@SetMetadata` aligned with `GlobalJwtAuthGuard`). CORS follows `CORS_ORIGINS` like other routes. The HTTP route remains the supported primary endpoint for Dashboard delivery; GraphQL is an alternative surface that shares the same handler service.
+**Stripe webhooks:** `main.ts` uses `rawBody: true` so the HTTP webhook route can verify signatures. Configure the Stripe Dashboard to **`POST {APP_URL}/webhooks/stripe`** (no global prefix in this app; see `@openthrottle/nestjs-stripe` README if you add one). The GraphQL mutation `processStripeWebhook` is also available (base64 raw body + signature) for gateway-style integrations; it is marked public for JWT (`@SetMetadata` aligned with `GlobalAuthGuard`). CORS follows `CORS_ORIGINS` like other routes. The HTTP route remains the supported primary endpoint for Dashboard delivery; GraphQL is an alternative surface that shares the same handler service.
 
 ## Request-scoped user (CLS)
 
