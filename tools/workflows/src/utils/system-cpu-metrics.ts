@@ -26,7 +26,7 @@ const PSI_CPU_PATH = '/proc/pressure/cpu';
  */
 function parsePsiLine(
   line: string,
-): { avg10: number; avg60: number; avg300: number; total: number } | null {
+): { avg10: number; avg300: number; avg60: number; total: number } | null {
   const match = line.match(
     /avg10=([\d.]+)\s+avg60=([\d.]+)\s+avg300=([\d.]+)\s+total=(\d+)/,
   );
@@ -134,10 +134,10 @@ export function createSystemCpuMetrics(
 export interface SystemCpuMetricsCollector {
   /** Start capturing (call at job start). Returns the start snapshot. */
   start(): Promise<SystemCpuSnapshot>;
-  /** Stop capturing and return complete metrics (call at job end). */
-  stop(): Promise<SystemCpuMetrics>;
   /** Whether the collector has been started. */
   readonly started: boolean;
+  /** Stop capturing and return complete metrics (call at job end). */
+  stop(): Promise<SystemCpuMetrics>;
   /** Whether the collector has been stopped. */
   readonly stopped: boolean;
 }

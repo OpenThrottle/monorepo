@@ -14,7 +14,7 @@ export interface EditorTabProps {
 /**
  * @description Individual tab component representing an open file in the editor.
  */
-export const EditorTab = (props: EditorTabProps) => {
+export const EditorTab = (props: EditorTabProps): React.ReactElement => {
   const { basePath = '/prompts', className, filename, onReorder } = props;
 
   // Hooks

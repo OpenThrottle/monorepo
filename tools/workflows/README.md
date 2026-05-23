@@ -19,7 +19,7 @@ This package makes use of the `bin` folder and package.json conventions to allow
 - `workflow-link-merge` — link the squash commit (after PR merge) to an OpenThrottle (OT) plan; run with `--plan <uuid> --sha <squash-sha> --repo <owner/repo>` (Option A: no pre-merge linking). See **Commit links (Option A workflow)** in `databases/README.md` for when to link and how activity tools use `commit_links`.
 - A future `workflow-commit` script could optionally standardize commits after task completion (conventional message + Plan-Id/Task-Id footer); for now use `/github/commit` or manual `git add` / `git commit` with the footer.
 - `workflow-ralph` — agentic Ralph workflow (plan execution; OT plan/task UUID only). **Typed orchestrator (GraphQL + injected runner):** `@openthrottle/openthrottle-workflows` exports **`createWorkflowRalphOrchestrator`** for the same pipeline without binding to this CLI’s subprocess; see that package’s README. **Debug / hangs:** enable the shim logger via `WORKFLOW_RALPH_DEBUG=1` or `--debug` (see [Debugging Ralph (shim logger)](#debugging-ralph-shim-logger)). **Prompt + run tuning defaults:** optional `.workflow-ralph.json` in the cwd and `WORKFLOW_RALPH_*` env vars (`WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_PROMPT_FILE`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`, `WORKFLOW_RALPH_BACKEND`); precedence is CLI > env > file > built-ins. **Prompt text:** use `--prompt` (command-style, default `/agents/ralph`), or `--prompt-file <path>` / `--prompt-stdin` for UTF-8 body (see `pnpm exec workflow-ralph --help`). Full flags and env are in `--help`.
-- `workflow-nx-validate` — Nx validation.
+- `workflow-nx-validate` — Runs root `pnpm run nx:validate` (`nx:validate-tags`, `nx:validate-projects`, `nx:validate-configurations`). Resolves the monorepo root from `WORKSPACE_ROOT` or by walking up for `pnpm-workspace.yaml`. Optional `--project` verifies the name exists in the Nx graph before the workspace-wide run.
 - `workflow-lighthouse` — Lighthouse audits.
 
 See `docs/oclif-research.md` for past oclif evaluation and migration notes.
@@ -68,6 +68,8 @@ Ralph selects **one** runner implementation per process via `--backend` (default
 | `claude`   | Claude Code CLI `claude --bare --permission-mode acceptEdits -p "<full prompt>"` (optional `--model`; omit when preset is `auto`). Requires `claude` on PATH and auth per Anthropic docs. | Same injected prompt string as `cursor`; layer 1 resolution is unchanged.                                                                                                                                                                                                                                   |
 
 Unknown `--backend` values fail at config parse time with a clear error. Nested runs (`runChildJob`, worktrees) forward `--backend` when it differs from the default so automated runs match manual CLI behavior.
+
+**Agent CLI worktree (`--worktree`):** Optional `-w` / `--worktree [name]` on **cursor-agent** and **claude** per iteration. Precedence: CLI → `WORKFLOW_RALPH_WORKTREE` → `.workflow-ralph.json` → BullMQ handoff `targetId` (when using `runChildJob`) → omit. Physical git worktrees (`WORKTREE_TARGETS`, `cwd`) are unchanged. See [docs/workflows/ralph-worktree-flag.md](../../docs/workflows/ralph-worktree-flag.md).
 
 **Embedded orchestrator (BullMQ / in-process):** Import **`createCursorWorkflowRalphIterationRunner`** from `@tools/workflows` to build a `WorkflowRalphIterationRunner`-compatible object for `createWorkflowRalphOrchestrator` (`@openthrottle/openthrottle-workflows`). It wraps **`runIterationAsync`** with the same field mapping as the plans queue worker; optional **`onChunk`** and **`appendPlanOutput`** (per-chunk text + iteration) forward stdout/stderr for logs or OpenThrottle `append_plan_output` while the resolved promise remains the full iteration string. See `src/utils/cursor-workflow-ralph-iteration-runner.ts`.
 
@@ -203,7 +205,22 @@ Ralph-related execution splits into **three surfaces** (same Cortex plan/task se
 
 Implementation notes: discriminant and argv/context mapping are documented in `applications/openthrottle-server/src/queues/plans/plans.types.ts` (`RunPlanJobData`, `runKind`). The typed orchestrator package (`@openthrottle/openthrottle-workflows`) remains the portable contract; the API worker wires deps via `@openthrottle/openthrottle-agentic-ralph` (`AgenticRalphOrchestratorService`, `plans.processor.ts`).
 
-**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, and run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`). When omitted, nested `workflow-ralph` (spawn path) resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI). Spawn jobs map `job.data.ralph` with `buildWorkflowRalphRunTuningArgv`; orchestrator jobs map it with `buildRalphFlowContextFromPlanRunTuning` (see `plans.types.ts`).
+### Default spawn skips `ensureCommit` (configure `WORKTREE_TARGETS` for post-run checks)
+
+GraphQL **`enqueuePlanRun`** (spawn, `runKind: 'spawn'` or omitted) is the default queue path for Ralph. Whether post-run validation runs depends on **`WORKTREE_TARGETS`** on the **openthrottle-server** worker process (see [`@openthrottle/nestjs-worktrees`](../../packages/nestjs-worktrees/README.md)):
+
+| `WORKTREE_TARGETS` | Plans processor path | Post-run `ensureCommit` |
+| ------------------ | -------------------- | ----------------------- |
+| Unset or empty JSON | **Legacy spawn** — `processInProcessCwd` spawns `pnpm exec workflow-ralph` in `workingDirectory` or workspace root | **Skipped** — no `runWorktreeWorkflow`, no working-tree clean check, no nx lint/test/typecheck |
+| One or more targets | **Worktree workflow** — `processWithWorktree` → acquire → `runChildJob` → **`ensureCommit: { runChecks: true }`** → release | **Runs** after Ralph exits successfully (see [verification-and-reporting.md](docs/verification-and-reporting.md)) |
+
+**`enqueuePlanRalphOrchestrator`** (in-process orchestrator) also does not use `runWorktreeWorkflow`; it has no parent-job `ensureCommit` step.
+
+**Contributors and local dev:** If your environment enqueues spawn jobs without `WORKTREE_TARGETS` (typical minimal local server setup), treat queue-driven Ralph like a manual CLI run: validate before you open a PR. From the monorepo root, run **`pnpm run check:local`** (validate-tags, affected lint, affected typecheck-tests, verify, codegen, knip). That script is the contributor-facing gate aligned with CI; it is not invoked automatically on the legacy spawn path.
+
+**To enable automated post-run checks on the worker:** set `WORKTREE_TARGETS` to registered worktree directories (JSON array of `[id, path]` or `{ id, path }` objects). Example and allocation rules: [docs/worktree-registration-and-allocation.md](docs/worktree-registration-and-allocation.md). Worker concurrency follows target count when targets are configured (`plans.processor.ts`).
+
+**Queue job payload (`openthrottle-server` plans queue):** `RunPlanJobData` includes optional `ralph` (`RalphNestedRunTuningInput` from `@tools/workflows`): prompt profile, `--backend`, run tuning (`iterations`, `iteration-timeout`, `model`, `project`, `ralphDebugCli`), and agent CLI worktree (`worktree`, `worktreeBase`, `skipWorktreeSetup` — see [ralph-worktree-flag.md](../../docs/workflows/ralph-worktree-flag.md)). When omitted, nested `workflow-ralph` (spawn path) resolves defaults via env and `.workflow-ralph.json` in the worktree cwd (same precedence as manual CLI); with `WORKTREE_TARGETS`, spawn defaults agent `--worktree` to `handoff.targetId` unless `ralph.worktree` overrides. Spawn jobs map `job.data.ralph` with `buildWorkflowRalphRunTuningArgv`; orchestrator jobs map it with `buildRalphFlowContextFromPlanRunTuning` (see `plans.types.ts`).
 
 **Deferred (Docker / compose / paths):** Open items such as **`WORKSPACE_ROOT`** when the API is not started from the repo root, compose-side worker layout, and host-specific path assumptions are tracked for investigation under OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** — not finalized in this document.
 

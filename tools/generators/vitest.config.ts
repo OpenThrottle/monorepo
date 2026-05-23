@@ -1,5 +1,12 @@
 import { createVitestConfigNode, getDirname } from '@tools/dotfiles';
+import { mergeConfig } from 'vitest/config';
 
-export default createVitestConfigNode({
+const baseConfig = createVitestConfigNode({
   packagePath: getDirname(import.meta.url),
+});
+
+export default mergeConfig(baseConfig, {
+  test: {
+    exclude: ['**/files/**'],
+  },
 });

@@ -93,8 +93,11 @@ const baseRalphContext = (
   project: '',
   prompt: DEFAULT_RALPH_PROMPT,
   runner: DEFAULT_RALPH_RUNNER,
+  skipWorktreeSetup: undefined,
   taskId: '',
   timeout: undefined,
+  worktree: undefined,
+  worktreeBase: undefined,
   ...overrides,
 });
 

@@ -71,8 +71,8 @@ export type WorkflowDebug = 'omit' | 'debug' | 'verbose';
 export interface WorkflowConfiguration {
   readonly debug: WorkflowDebug;
   readonly iterationMax: number;
-  readonly iterations: number;
   readonly iterationTimeout: number | undefined;
+  readonly iterations: number;
   readonly timeout: number | undefined;
 }
 
@@ -88,7 +88,10 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly project: string | undefined;
   readonly prompt: string;
   readonly runner: WorkflowRunner;
+  readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
+  readonly worktree: string | undefined;
+  readonly worktreeBase: string | undefined;
 }
 
 // export type WorkflowFlowContext = WorkflowRalphContext;

@@ -13,6 +13,7 @@ fragment Plan on PlanObject {
   createdAt
   description
   id
+  jobRunHooksJson
   project
   projectId
   status

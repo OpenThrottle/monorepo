@@ -1,6 +1,6 @@
 # Knip (dead code / unused exports)
 
-Knip finds unused files, dependencies, and exports across the monorepo. Configuration lives in **`knip.jsonc`** at the repo root (used by Nx `monorepo:knip` via `--config knip.jsonc`).
+Knip finds unused files, dependencies, and exports across the monorepo. Configuration lives in **`knip.jsonc`** at the repo root (used by Nx `monorepo:knip` via `--config knip.jsonc`). In CI, Knip is a **P3** gate with a committed baseline — see [CI-quality-gates.md](./CI-quality-gates.md).
 
 ## Safe workflow (report vs fix)
 
@@ -22,7 +22,7 @@ Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type 
 | -------------------------------------------------------------- | ---------- | ------------- | -------------------------------------------------------------------------------- |
 | **Nx `monorepo:knip`**                                         | Yes        | **No**        | `nx.json` → `knip --config knip.jsonc` only (report).                            |
 | **Root `package.json` scripts**                                | No         | No            | No `knip` script.                                                                |
-| **GitHub CI** (`.github/workflows/continuous-integration.yml`) | No         | No            | `nx affected --target=lint,typecheck,typecheck-tests` only.                      |
+| **GitHub CI** (`continuous-integration.yml` → `knip-report`)   | Yes        | **No**        | `pnpm nx run monorepo:knip-ci` — report-only; `knip-baseline.json` + `dist/knip-report.json` artifact. |
 | **GitHub release** (`.github/workflows/nx-release.yml`)        | No         | No            | Job disabled (`if: false`).                                                      |
 | **Husky `pre-commit`**                                         | No         | No            | Runs `lint-staged` only.                                                         |
 | **Husky `pre-push`**                                           | No         | No            | Branch protection only.                                                          |
@@ -45,6 +45,19 @@ pnpm nx run monorepo:knip
 ```
 
 Equivalent: `knip --config knip.jsonc` from the repo root (with the same dummy env vars Nx injects for Expo-related config).
+
+### CI baseline gate (report-only)
+
+CI runs **`pnpm nx run monorepo:knip-ci`**, which:
+
+1. Writes **`dist/knip-report.json`** (JSON reporter; no source changes).
+2. Fails only when Knip’s error-count exceeds **`knip-baseline.json` → `maxIssues`** (via `knip --max-issues`; never `--fix`).
+
+After a reviewed cleanup that reduces issues, lower `maxIssues` in `knip-baseline.json` and commit it with the fixes. To find the current ceiling locally:
+
+```bash
+pnpm exec tsx ./scripts/knip-ci.ts --write-report
+```
 
 Do **not** add `--fix` or `--fix-type exports` to this target without an explicit team decision and review—those flags rewrite source and have removed intentional `export` on component prop types.
 

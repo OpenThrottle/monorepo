@@ -13,14 +13,17 @@ import {
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 
-interface GeneratorNxBridgeProps {
-  readonly className?: string;
-  readonly generator: GeneratorDetailCardFragment;
+export interface GeneratorNxBridgeProps {
+  className?: string;
+  generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorNxBridge = (props: GeneratorNxBridgeProps) => {
+export const GeneratorNxBridge = (
+  props: GeneratorNxBridgeProps,
+): React.ReactElement => {
   const { className, generator } = props;
 
+  // Hooks
   const [_cliOutput, setCliOutput] = React.useState('');
   const [_mounted, setMounted] = React.useState(false);
 
@@ -36,10 +39,19 @@ export const GeneratorNxBridge = (props: GeneratorNxBridgeProps) => {
     }
   }, [generator.schemaJson]);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     setMounted(true);
     setCliOutput(readGeneratorLastRun(generator.name));
   }, [generator.name]);
+
+  // 🔌 Short Circuit
 
   return (
     <div

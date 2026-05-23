@@ -11,18 +11,18 @@ import {
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 
-interface ProjectFormProps {
-  readonly actionData?: { error?: string } | null;
-  readonly className?: string;
+export interface ProjectFormProps {
+  actionData?: { error?: string } | null;
+  className?: string;
 }
 
-export const ProjectForm = (props: ProjectFormProps) => {
+export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
   const { actionData, className } = props;
-  const error = actionData?.error;
 
   // Hooks
 
   // Setup
+  const error = actionData?.error;
 
   // Handlers
 

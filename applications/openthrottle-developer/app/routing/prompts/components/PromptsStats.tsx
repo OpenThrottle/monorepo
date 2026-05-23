@@ -2,14 +2,14 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
-interface PromptsStatsProps {
-  readonly className?: string;
-  readonly countAgents: number;
-  readonly countSkills: number;
-  readonly total: number;
+export interface PromptsStatsProps {
+  className?: string;
+  countAgents: number;
+  countSkills: number;
+  total: number;
 }
 
-export const PromptsStats = (props: PromptsStatsProps) => {
+export const PromptsStats = (props: PromptsStatsProps): React.ReactElement => {
   const { className, countAgents, countSkills, total } = props;
 
   // Hooks

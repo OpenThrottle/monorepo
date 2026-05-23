@@ -85,16 +85,10 @@ describe('SettingsEnvironmentDiagnostics', () => {
     expect(within(table).getByText('APP_URL_DEVELOPER')).toBeInTheDocument();
   });
 
-  it('links to Settings → Debug for devtools context', () => {
-    renderDiagnostics({ env: baseEnv, supportBundle: {} });
-    const link = screen.getByRole('link', { name: /^settings → debug$/i });
-    expect(link).toHaveAttribute('href', '/settings/debug');
-  });
-
   it('links quick reference to monorepo doc anchor', () => {
     renderDiagnostics({ env: baseEnv, supportBundle: {} });
     const link = screen.getByRole('link', {
-      name: /quick reference \(when to enable what\)/i,
+      name: /^quick reference$/i,
     });
     expect(link).toHaveAttribute('href', VITE_DEVTOOLS_DOC_QUICK_REF_HREF);
     expect(link).toHaveAttribute('target', '_blank');

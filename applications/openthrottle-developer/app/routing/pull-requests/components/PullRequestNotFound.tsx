@@ -4,14 +4,16 @@ import { Link } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 
-interface PullRequestNotFoundProps {
-  readonly className?: string;
-  readonly listQuery: string;
-  readonly owner: string;
-  readonly repo: string;
+export interface PullRequestNotFoundProps {
+  className?: string;
+  listQuery: string;
+  owner: string;
+  repo: string;
 }
 
-export const PullRequestNotFound = (props: PullRequestNotFoundProps) => {
+export const PullRequestNotFound = (
+  props: PullRequestNotFoundProps,
+): React.ReactElement => {
   const { className, listQuery, owner, repo } = props;
 
   // Hooks

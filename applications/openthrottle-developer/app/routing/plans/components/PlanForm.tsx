@@ -24,12 +24,12 @@ const PLAN_CATEGORIES = [
   'product',
 ] as const;
 
-interface PlanFormProps {
-  readonly actionData?: { error?: string } | null;
-  readonly plan?: PlanDetailsFragment | null;
+export interface PlanFormProps {
+  actionData?: { error?: string } | null;
+  plan?: PlanDetailsFragment | null;
 }
 
-export const PlanForm = (props: PlanFormProps) => {
+export const PlanForm = (props: PlanFormProps): React.ReactElement => {
   const { actionData, plan } = props;
 
   // Hooks

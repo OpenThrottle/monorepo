@@ -9,6 +9,7 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import type { Route } from '@/app/routes/+types/profile._index';
+import { OPEN_THROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -58,8 +59,8 @@ export default function Component(
           <h2 className="text-xl font-bold">Matthew Scholta</h2>
           <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
             <OpenThrottleClipboard
-              label="matthew@openthrottle.com"
-              text="matthew@openthrottle.com"
+              label={OPEN_THROTTLE_CONTACT_EMAIL}
+              text={OPEN_THROTTLE_CONTACT_EMAIL}
             />
           </h3>
           {/*

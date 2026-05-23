@@ -9,7 +9,7 @@ import { formatProjectDate } from '~/routing/projects/utils/format';
 type ProjectTaskRow =
   GetProjectByIdQuery['projectTasksResult']['tasks'][number];
 
-interface ProjectTasksTableProps {
+export interface ProjectTasksTableProps {
   className?: string;
   tasks: ProjectTaskRow[];
 }
@@ -102,9 +102,20 @@ export const ProjectTasksTable = (
 ): React.ReactElement => {
   const { className, tasks } = props;
 
+  // Hooks
   const columns = React.useMemo(() => buildColumns(), []);
   const data = React.useMemo(() => [...tasks], [tasks]);
   const getRowId = React.useCallback((task: ProjectTaskRow) => task.id, []);
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div

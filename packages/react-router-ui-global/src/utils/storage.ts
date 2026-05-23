@@ -33,8 +33,8 @@ export interface MetricsChartDatum extends ServerMetricsSnapshot {
 }
 
 interface StoredMetricsChartHistoryPayload {
-  readonly savedAt: number;
   readonly samples: readonly MetricsChartDatum[];
+  readonly savedAt: number;
   readonly v: typeof GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION;
 }
 

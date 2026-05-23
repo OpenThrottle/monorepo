@@ -140,6 +140,7 @@ export class PlansProcessor extends WorkerHost {
 ## 4. Thread-safety and concurrency
 
 - **Worktree path vs cwd:** The worktree flow is as safe as the legacy "process cwd" path for concurrency. All spawns use an **explicit cwd** from `handoff.worktreePath` (no `process.cwd()` or shared path). Flow: `runWorktreeWorkflow` → `runLoop(handoff)` → `runChildJob({ handoff })` uses `handoff.worktreePath` for pnpm and `git -C`; parent-job `ensureCommit` uses the same path. There is no shared mutable path between jobs.
+- **Agent CLI `--worktree`:** Nested `workflow-ralph` forwards `--worktree <targetId>` by default (overridable via `ralph.worktree` on enqueue). Iterations pass `-w` / `--worktree` to cursor-agent and claude when configured. See [ralph-worktree-flag.md](./ralph-worktree-flag.md).
 - **Tracker:** The in-memory `WorktreeTargetsTracker` has a TOCTOU gap: `acquire()` is not atomic (between `getAvailableTarget()` and mutating the target). It is safe when only one job runs at a time (e.g. BullMQ `concurrency: 1`). `release(id, lockedBy)` is correctly scoped: only the same `lockedBy` can release; wrong owner or double-release fail.
 - **Raising concurrency:** To run with `CONCURRENCY > 1`, use either a process-local mutex around acquire/release or a Redis-backed `IWorktreeTargetsTracker`. With an atomic tracker, the maximum safe concurrency is the **number of worktree targets** (one job per target).
 

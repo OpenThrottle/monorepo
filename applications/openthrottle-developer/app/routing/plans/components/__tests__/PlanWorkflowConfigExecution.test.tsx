@@ -16,6 +16,7 @@ describe('PlanWorkflowConfigExecution Component', () => {
       planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
     });
     props = {
+      heading: '05. Life Cycle',
       input,
       setInput: () => {},
     };
@@ -26,12 +27,9 @@ describe('PlanWorkflowConfigExecution Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render Layer 2 execution backend runner select', () => {
-    expect(
-      component.getByTestId('PlanWorkflowConfigExecution'),
-    ).toBeInTheDocument();
+  test('should render execution backend runner select', () => {
     const group = component.getByRole('group', {
-      name: 'Layer 2 — Execution backend',
+      name: '05. Life Cycle',
     });
     expect(group).not.toBeDisabled();
     expect(group).toHaveTextContent('workflow-ralph');

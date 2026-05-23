@@ -60,13 +60,13 @@ export default function Component(
         <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
           Controls for the OpenThrottle Developer portal.
         </p>
-        <div className="space-y-8">
-          <SettingsEnvironmentDiagnostics
-            env={loaderData.env}
-            idPrefix="settings-general"
-            supportBundle={loaderData.supportBundle}
-          />
-        </div>
+      </div>
+      <div className="space-y-8">
+        <SettingsEnvironmentDiagnostics
+          env={loaderData.env}
+          idPrefix="settings-general"
+          supportBundle={loaderData.supportBundle}
+        />
       </div>
     </GlobalScreen>
   );

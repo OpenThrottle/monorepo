@@ -19,9 +19,9 @@ export interface RootLoaderFailure {
 
 export interface RootLoaderDiagnostics {
   /** Base URL used server-side for GraphQL (`API_URL_INTERNAL`), for misconfiguration triage. */
-  readonly graphQlRequestBaseUrl?: string;
-  readonly healthLatencyMs?: number;
-  readonly userLatencyMs?: number;
+  graphQlRequestBaseUrl?: string;
+  healthLatencyMs?: number;
+  userLatencyMs?: number;
 }
 
 /**

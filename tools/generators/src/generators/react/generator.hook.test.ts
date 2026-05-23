@@ -10,10 +10,8 @@ describe('hookGenerator', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  const org = `@openthrottle`;
-  const orgName = org.replace('@', '');
-  const packageName = `shared-ui`;
-  const target = `${org}/${packageName}`;
+  const target = '@openthrottle/react-router-ui';
+  const packageName = 'react-router-ui';
   const name = 'useExampleHook';
 
   test('should run successfully', async () => {
@@ -29,8 +27,8 @@ describe('hookGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      `packages/${orgName}/${packageName}/src/hooks/${name}.tsx`,
-      `packages/${orgName}/${packageName}/src/hooks/__tests__/${name}.test.tsx`,
+      `packages/${packageName}/src/hooks/${name}.tsx`,
+      `packages/${packageName}/src/hooks/__tests__/${name}.test.tsx`,
     ]);
   });
 });

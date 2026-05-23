@@ -117,4 +117,34 @@ describe('routes/plans._index.tsx', () => {
     expect(component.getByText('Completed (all)')).toBeInTheDocument();
     expect(component.getAllByText('0').length).toBeGreaterThanOrEqual(3);
   });
+
+  test('should render pagination on /plans with assignee and status filters in links', () => {
+    const Component = () => (
+      <Index
+        actionData={undefined}
+        loaderData={{
+          ...mockLoaderDataWithStats,
+          assignees: ['visormatt'],
+          limit: 10,
+          page: 3,
+          statuses: ['IN_PROGRESS', 'PENDING'],
+          totalCount: 100,
+        }}
+        matches={[] as never}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const view = render(<RoutesStub />);
+
+    expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
+    const pageLink = view.getByRole('link', { name: '3' });
+    const href = pageLink.getAttribute('href') ?? '';
+    expect(href).toContain('/plans?');
+    expect(href).toContain('page=3');
+    expect(href).toContain('limit=10');
+    expect(href).toContain('assignee=visormatt');
+    expect(href).toContain('status=IN_PROGRESS');
+    expect(href).toContain('status=PENDING');
+  });
 });

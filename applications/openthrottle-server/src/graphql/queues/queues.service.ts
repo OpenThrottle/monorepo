@@ -96,14 +96,14 @@ interface EnqueuePlanRalphOrchestratorQueuePayload {
 
 /** @description Shape of a repeatable job returned by getRepeatableJobs for GraphQL mapping. */
 interface RepeatableJobDto {
+  readonly endDate: number | null;
+  readonly every: string | null;
+  readonly id: string | null;
   readonly key: string;
   readonly name: string;
-  readonly id: string | null;
-  readonly endDate: number | null;
-  readonly tz: string | null;
-  readonly pattern: string | null;
-  readonly every: string | null;
   readonly next: number | null;
+  readonly pattern: string | null;
+  readonly tz: string | null;
 }
 
 const VALID_JOB_STATES = [

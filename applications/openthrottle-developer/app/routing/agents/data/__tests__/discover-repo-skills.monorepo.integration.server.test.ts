@@ -5,6 +5,7 @@ import { describe, expect, test } from 'vitest';
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 import {
   getRepoSkillsRegistryCounts,
+  REQUIRED_AGENTS_SKILL_SLUGS,
   type RepoSkillEntry,
 } from '~/routing/agents/data/repo-skills-registry';
 import {
@@ -26,13 +27,6 @@ const countOnDiskSkillFolders = (root: string, skillsDir: string): number => {
       existsSync(join(absoluteDir, dirent.name, 'SKILL.md')),
   ).length;
 };
-
-const REQUIRED_AGENT_SKILL_SLUGS = [
-  'openthrottle-generators',
-  'openthrottle-stack',
-  'ot-plans',
-  'workflow-ralph',
-] as const;
 
 describe('discoverRepoSkills monorepo integration', () => {
   const monorepoRoot = findMonorepoRootFromPath(monorepoRootCandidate);
@@ -58,7 +52,7 @@ describe('discoverRepoSkills monorepo integration', () => {
       const entries = discoverRepoSkills(monorepoRoot);
       const slugs = new Set(entries.map((entry: RepoSkillEntry) => entry.slug));
 
-      for (const slug of REQUIRED_AGENT_SKILL_SLUGS) {
+      for (const slug of REQUIRED_AGENTS_SKILL_SLUGS) {
         expect(slugs.has(slug)).toBe(true);
       }
     },

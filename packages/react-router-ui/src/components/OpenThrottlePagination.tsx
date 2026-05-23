@@ -4,10 +4,17 @@ import {
   Button,
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
 } from '@openthrottle/react-router-shadcn';
 import type { ProjectsSearchParamsExtras } from '../utils/index';
-import { buildProjectsSearchParams } from '../utils/index';
+import {
+  buildPaginationPageItems,
+  buildProjectsSearchParams,
+} from '../utils/index';
+import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react';
+
+const DEFAULT_BASE_PATH = '/projects';
 
 export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras {
   /** Base path for pagination links (default /projects). Use /plans for plans index. */
@@ -20,9 +27,9 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
   readonly total: number;
 }
 
-const DEFAULT_BASE_PATH = '/projects';
-
-export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
+export const OpenThrottlePagination = (
+  props: OpenThrottlePaginationProps,
+): React.ReactElement | null => {
   const {
     assignees,
     basePath = DEFAULT_BASE_PATH,
@@ -81,6 +88,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
 
+  const pageItems = buildPaginationPageItems({ page, totalPages });
+
   // Handlers
 
   // Markup
@@ -88,7 +97,9 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
     <div className={className}>
@@ -107,7 +118,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   variant="ghost"
                 >
                   <Link className="gap-1 pl-2.5" to={prevUrl}>
-                    <span className="sm:inline">Previous</span>
+                    {/* <span className="sm:inline">Previous</span> */}
+                    <ChevronsLeftIcon className="h-4 w-4" />
                   </Link>
                 </Button>
               ) : (
@@ -116,25 +128,36 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   className="pointer-events-none opacity-50"
                   variant="ghost"
                 >
-                  <span className="sm:inline">Previous</span>
+                  {/* <span className="sm:inline">Previous</span> */}
+                  <ChevronsLeftIcon className="h-4 w-4" />
                 </Button>
               )}
             </PaginationItem>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-              const isActive = p === page;
-              const url = `${basePath}?${buildProjectsSearchParams(p, limit, extras)}`;
+            {pageItems.map((item, index) => {
+              if (item.type === 'ellipsis') {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+
+              const pageNumber = item.page;
+              const isActive = pageNumber === page;
+              const url = `${basePath}?${buildProjectsSearchParams(pageNumber, limit, extras)}`;
 
               return (
-                <PaginationItem key={p}>
+                <PaginationItem key={pageNumber}>
                   <Button
+                    aria-current={isActive ? 'page' : undefined}
                     aria-disabled={isActive}
                     asChild={true}
                     className={isActive ? 'pointer-events-none opacity-50' : ''}
                     disabled={isActive}
                     variant="outline"
                   >
-                    <Link to={url}>{p}</Link>
+                    <Link to={url}>{pageNumber}</Link>
                   </Button>
                 </PaginationItem>
               );
@@ -148,8 +171,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   variant="ghost"
                 >
                   <Link className="gap-1 pr-2.5" to={nextUrl}>
-                    {/* <ChevronRight className="h-4 w-4" /> */}
-                    <span className="sm:inline">Next</span>
+                    {/* <span className="sm:inline">Next</span> */}
+                    <ChevronsRightIcon className="h-4 w-4" />
                   </Link>
                 </Button>
               ) : (
@@ -158,9 +181,8 @@ export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
                   className="pointer-events-none opacity-50"
                   variant="ghost"
                 >
-                  <span className="hidden sm:inline">Next</span>
-                  <span className="sm:inline">Next</span>
-                  {/* <ChevronRight className="h-4 w-4" /> */}
+                  {/* <span className="sm:inline">Next</span> */}
+                  <ChevronsRightIcon className="h-4 w-4" />
                 </Button>
               )}
             </PaginationItem>

@@ -98,10 +98,10 @@ export async function loadFilesFromDirectories(
  * Get statistics about loaded markdown documents
  */
 export function getMarkdownDocumentStats(documents: Document[]): {
-  totalDocuments: number;
-  totalCharacters: number;
   averageDocumentLength: number;
   sources: string[];
+  totalCharacters: number;
+  totalDocuments: number;
 } {
   const totalDocuments = documents.length;
   const totalCharacters = documents.reduce(

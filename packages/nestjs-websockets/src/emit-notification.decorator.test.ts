@@ -1,10 +1,22 @@
 import 'reflect-metadata';
+import { Reflector } from '@nestjs/core';
 import { describe, expect, it } from 'vitest';
 import {
   EMIT_NOTIFICATION_KEY,
   type EmitNotificationMetadata,
+  type EmitNotificationMetadataValue,
   EmitNotification,
 } from './emit-notification.decorator';
+
+const reflector = new Reflector();
+
+function getEmitNotificationMetadata(
+  handler: (...args: unknown[]) => unknown,
+): EmitNotificationMetadataValue | undefined {
+  return reflector.get(EMIT_NOTIFICATION_KEY, handler) as
+    | EmitNotificationMetadataValue
+    | undefined;
+}
 
 describe('EmitNotification', () => {
   it('returns a MethodDecorator', () => {
@@ -14,14 +26,12 @@ describe('EmitNotification', () => {
 
   it('sets metadata with event only when given a string', () => {
     class Test {
-      @(EmitNotification('plan.updated') as MethodDecorator)
+      @EmitNotification('plan.updated')
       updatePlan(): void {}
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'updatePlan',
-    ) as EmitNotificationMetadata | undefined;
+    const meta = getEmitNotificationMetadata(Test.prototype.updatePlan) as
+      | EmitNotificationMetadata
+      | undefined;
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('plan.updated');
     expect(meta?.payload).toBeUndefined();
@@ -30,16 +40,14 @@ describe('EmitNotification', () => {
   it('sets metadata with event and payload mapper when given string and mapper', () => {
     const payloadFn = (ret: unknown): unknown => ret;
     class Test {
-      @(EmitNotification('task.completed', payloadFn) as MethodDecorator)
+      @EmitNotification('task.completed', payloadFn)
       completeTask(): unknown {
         return null;
       }
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'completeTask',
-    ) as EmitNotificationMetadata | undefined;
+    const meta = getEmitNotificationMetadata(Test.prototype.completeTask) as
+      | EmitNotificationMetadata
+      | undefined;
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('task.completed');
     expect(meta?.payload).toBe(payloadFn);
@@ -48,17 +56,15 @@ describe('EmitNotification', () => {
   it('sets metadata when given object form', () => {
     const payloadFn = (ret: unknown): unknown => ret ?? null;
     class Test {
-      @(EmitNotification({
+      @EmitNotification({
         event: 'plan.status_changed',
         payload: payloadFn,
-      }) as MethodDecorator)
+      })
       setStatus(): void {}
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'setStatus',
-    ) as EmitNotificationMetadata | undefined;
+    const meta = getEmitNotificationMetadata(Test.prototype.setStatus) as
+      | EmitNotificationMetadata
+      | undefined;
     expect(meta).toBeDefined();
     expect(meta?.event).toBe('plan.status_changed');
     expect(meta?.payload).toBe(payloadFn);
@@ -71,16 +77,14 @@ describe('EmitNotification', () => {
         ? { planId: (ret as { id: string }).id, status: 'COMPLETED' }
         : null;
     class Test {
-      @(EmitNotification([
+      @EmitNotification([
         { event: 'plan.updated', payload: payload1 },
         { event: 'plan.status_changed', payload: payload2 },
-      ]) as MethodDecorator)
+      ])
       setPlanStatus(): void {}
     }
-    const meta = Reflect.getMetadata(
-      EMIT_NOTIFICATION_KEY,
-      Test.prototype,
-      'setPlanStatus',
+    const meta = getEmitNotificationMetadata(
+      Test.prototype.setPlanStatus,
     ) as EmitNotificationMetadata[];
     expect(Array.isArray(meta)).toBe(true);
     expect(meta).toHaveLength(2);

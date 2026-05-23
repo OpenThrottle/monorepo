@@ -5,10 +5,10 @@ import { SearchTaskCard } from '~/routing/search/components/SearchTaskCard';
 import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 
-interface SearchCardProps {
+export interface SearchCardProps {
   className?: string;
-  readonly defaultOpenWhy?: boolean;
-  readonly rankMeta?: SearchRankMeta;
+  defaultOpenWhy?: boolean;
+  rankMeta?: SearchRankMeta;
   result: SearchChunk;
 }
 
@@ -28,7 +28,7 @@ function normalizeSource(source: string): SearchSource {
 /**
  * @description Delegates by result.source to SearchPlanCard, SearchTaskCard, or SearchDocumentationCard.
  */
-export const SearchCard = (props: SearchCardProps) => {
+export const SearchCard = (props: SearchCardProps): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks

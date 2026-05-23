@@ -10,12 +10,14 @@ export const isPlanStatusKey = (value: string): value is PlanStatusKey => {
   return Object.prototype.hasOwnProperty.call(planStatusValues, value);
 };
 
-interface PlanStatusBadgeProps {
-  readonly className?: string;
-  readonly status: PlanStatusKey;
+export interface PlanStatusBadgeProps {
+  className?: string;
+  status: PlanStatusKey;
 }
 
-export const PlanStatusBadge = (props: PlanStatusBadgeProps) => {
+export const PlanStatusBadge = (
+  props: PlanStatusBadgeProps,
+): React.ReactElement => {
   const { className, status } = props;
 
   // Hooks

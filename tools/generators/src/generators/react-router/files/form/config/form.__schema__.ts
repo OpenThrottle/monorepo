@@ -3,8 +3,8 @@ import type { ObjectSchema } from 'yup';
 import { InferType, object, string } from 'yup';
 
 /**
+ * Reference the doc above for details on how to use forms.
  * @link https://github.com/OpenThrottle/monorepo/blob/main/docs/Forms.md
- * @description Reference the doc above for details on how to use forms.
  */
 
 type XxxxXxxx = {

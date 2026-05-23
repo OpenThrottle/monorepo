@@ -2,16 +2,16 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { USAGE_DAILY_STATS_SERIES } from '~/routing/usage/data/daily-stats-series-glossary';
 
-interface UsageDailyActivityOverviewProps {
-  readonly rangeDays: number;
+export interface UsageDailyActivityOverviewProps {
+  rangeDays: number;
 }
 
 /**
  * @description Explains what the Usage chart includes, defines each stacked series, and lists deliberate analytics gaps (prompt runs, tokens, local IDE skills).
  */
-export function UsageDailyActivityOverview(
+export const UsageDailyActivityOverview = (
   props: UsageDailyActivityOverviewProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { rangeDays } = props;
 
   // Hooks
@@ -51,4 +51,4 @@ export function UsageDailyActivityOverview(
       </dl>
     </div>
   );
-}
+};

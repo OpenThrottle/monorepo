@@ -3,8 +3,8 @@ import { Row } from '@tanstack/react-table';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTaskInlineActions } from '~/routing/plans/components/PlanTaskInlineActions';
 
-interface PlanTasksTableCellActionsProps {
-  readonly row: Row<PlanTaskRowFragment>;
+export interface PlanTasksTableCellActionsProps {
+  row: Row<PlanTaskRowFragment>;
 }
 
 export const PlanTasksTableCellActions = (

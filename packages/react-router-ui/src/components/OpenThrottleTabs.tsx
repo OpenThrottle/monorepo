@@ -1,33 +1,70 @@
 import * as React from 'react';
-import classnames from 'classnames';
+import { Tabs, cn } from '@openthrottle/react-router-shadcn';
+import { useUrlSyncedTabValue } from '../hooks/useUrlSyncedTabValue';
+import type {
+  OpenThrottleTabsProps as OpenThrottleTabsPropsContract,
+  UrlSyncedTabConfig,
+} from '../tabs/open-throttle-tabs.api';
 
-export interface OpenThrottleTabsProps {
-  readonly className?: string;
+/** @see ../tabs/open-throttle-tabs.api.ts */
+export type OpenThrottleTabsProps = OpenThrottleTabsPropsContract;
+
+type TabsRestProps = Omit<OpenThrottleTabsProps, 'urlSync'>;
+
+function isFullyControlled(
+  value: TabsRestProps['value'],
+  onValueChange: TabsRestProps['onValueChange'],
+): boolean {
+  return value !== undefined && onValueChange !== undefined;
 }
 
-export const OpenThrottleTabs = (
-  props: OpenThrottleTabsProps,
-): React.ReactElement => {
-  const { className } = props;
+interface OpenThrottleTabsWithUrlSyncProps extends TabsRestProps {
+  readonly urlSync: UrlSyncedTabConfig;
+}
 
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+const OpenThrottleTabsWithUrlSync = React.forwardRef<
+  React.ComponentRef<typeof Tabs>,
+  OpenThrottleTabsWithUrlSyncProps
+>((props, ref): React.ReactElement => {
+  const { className, onValueChange, urlSync, value, ...rest } = props;
+  const synced = useUrlSyncedTabValue(urlSync);
+  const controlled = isFullyControlled(value, onValueChange);
 
   return (
-    <div
-      className={classnames('p-4', className)}
-      data-testid="OpenThrottleTabs"
-    >
-      <h2>OpenThrottleTabs</h2>
-    </div>
+    <Tabs
+      className={cn('w-full', className)}
+      onValueChange={controlled ? onValueChange : synced.onValueChange}
+      ref={ref}
+      value={controlled ? value : synced.value}
+      {...rest}
+    />
   );
-};
+});
+
+OpenThrottleTabsWithUrlSync.displayName = 'OpenThrottleTabsWithUrlSync';
+
+/**
+ * @description Controlled Radix tabs with optional URL search-param sync (Approach A).
+ * Use {@link TabsList}, {@link TabsTrigger}, and {@link TabsContent} from shadcn as children.
+ */
+export const OpenThrottleTabs = React.forwardRef<
+  React.ComponentRef<typeof Tabs>,
+  OpenThrottleTabsProps
+>((props, ref): React.ReactElement => {
+  const { className, urlSync, ...rest } = props;
+
+  if (urlSync) {
+    return (
+      <OpenThrottleTabsWithUrlSync
+        className={className}
+        ref={ref}
+        urlSync={urlSync}
+        {...rest}
+      />
+    );
+  }
+
+  return <Tabs className={cn('w-full', className)} ref={ref} {...rest} />;
+});
+
+OpenThrottleTabs.displayName = 'OpenThrottleTabs';

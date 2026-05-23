@@ -32,8 +32,8 @@ interface JobTaskRunMetricsData {
   readonly job?: {
     readonly id: string;
     readonly taskRunMetrics?: {
-      readonly atStart: ProcessMetricsSnapshot;
       readonly atEnd: ProcessMetricsSnapshot;
+      readonly atStart: ProcessMetricsSnapshot;
     } | null;
   } | null;
 }
@@ -56,7 +56,7 @@ export async function fetchJobTaskRunMetrics(
   });
 
   // FIXME: Tighten this up
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const json = (await res.json()) as GraphqlResponse<JobTaskRunMetricsData>;
   if (!res.ok) {
     const message = json.errors?.[0]?.message ?? res.statusText;

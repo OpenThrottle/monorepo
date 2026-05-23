@@ -16,17 +16,9 @@ else
   unset -v WORKTREE_ID
 fi
 
-# Match only the line that defines OPENAI_API_KEY (^OPENAI_API_KEY=), not comment lines
-# that mention OPENAI_API_KEY. Use -f 2- so the value can contain '='.
-OPENAI_API_KEY=$(grep -E '^OPENAI_API_KEY=' .env | cut -d '=' -f 2-)
-if [ -z "$OPENAI_API_KEY" ];
-then
-  # https://platform.openai.com/account/api-keys to get one
-  echo "OPENAI_API_KEY is not set"
-  exit 1
-fi
-
-export OPENAI_API_KEY
+# Semantic search embeddings are configured on openthrottle-server (OPENAI_API_KEY or
+# OLLAMA_* in applications/openthrottle-server/.env), not in this launcher. See
+# docs/openthrottle/run-locally-oss.md and packages/mcp-developer/docs/verification-environment.md.
 
 # pnpm nx run @openthrottle/mcp-developer:build 1>&2
 exec node packages/mcp-developer/dist/src/bin.js

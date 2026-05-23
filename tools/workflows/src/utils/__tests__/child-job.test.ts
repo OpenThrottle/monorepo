@@ -50,8 +50,8 @@ vi.mock('child_process', () => ({
  */
 function createMockRalphChild(behavior: {
   readonly status: number;
-  readonly stdout?: string;
   readonly stderr?: string;
+  readonly stdout?: string;
 }): ReturnType<typeof spawn> {
   let closeListener: (
     code: number | null,
@@ -372,6 +372,8 @@ describe('runChildJob', () => {
           '--plan',
           '2f94f33c-562d-4a70-8c08-c6d9510317e5',
           '--verbose',
+          '--worktree',
+          'wt1',
         ],
         expect.objectContaining({ cwd: dir, shell: true }),
       );
@@ -428,9 +430,82 @@ describe('runChildJob', () => {
           'my-app',
           '--iteration-timeout',
           '600',
+          '--worktree',
+          'wt1',
         ],
         expect.objectContaining({ cwd: dir, shell: true }),
       );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('defaults agent --worktree to handoff targetId when not overridden', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+    };
+    try {
+      await runChildJob(input);
+      const argv = vi.mocked(spawn).mock.calls[0]?.[1] as string[];
+      expect(argv).toContain('--worktree');
+      expect(argv).toContain('wt1');
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('forwards explicit worktree over handoff targetId', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      worktree: 'custom-name',
+    };
+    try {
+      await runChildJob(input);
+      const argv = vi.mocked(spawn).mock.calls[0]?.[1] as string[];
+      expect(argv).toEqual(
+        expect.arrayContaining(['--worktree', 'custom-name']),
+      );
+      expect(argv).not.toContain('wt1');
     } finally {
       rmSync(dir, { force: true, recursive: true });
     }
@@ -473,6 +548,8 @@ describe('runChildJob', () => {
           '2f94f33c-562d-4a70-8c08-c6d9510317e5',
           '--prompt-file',
           '.cursor/commands/agents/ralph.md',
+          '--worktree',
+          'wt1',
         ],
         expect.objectContaining({ cwd: dir, shell: true }),
       );
@@ -615,7 +692,7 @@ describe('runChildJob', () => {
       } as ReturnType<typeof spawnSync>);
     mockCortexState.tasks = [{ status: 'COMPLETED' }];
 
-    const chunks: Array<{ stream: 'stdout' | 'stderr'; data: string }> = [];
+    const chunks: Array<{ data: string; stream: 'stdout' | 'stderr' }> = [];
     const dir = createTempDir();
     const input: ChildJobInput = {
       handoff: handoff(dir),

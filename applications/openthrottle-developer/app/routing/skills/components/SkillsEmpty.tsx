@@ -1,21 +1,15 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import {
-  Button,
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from '@openthrottle/react-router-shadcn';
+import { Button, Empty } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import { SearchAlertIcon } from 'lucide-react';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-interface SkillsEmptyProps {
+export interface SkillsEmptyProps {
   className?: string;
   search?: string;
 }
 
-export const SkillsEmpty = (props: SkillsEmptyProps) => {
+export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks
@@ -32,17 +26,22 @@ export const SkillsEmpty = (props: SkillsEmptyProps) => {
 
   return (
     <Empty className={classnames('my-8', className)}>
-      <EmptyMedia variant="icon">
+      <GlobalHeading
+        heading="h3"
+        title={
+          search
+            ? 'No skills found, try clearing the search to see all skills.'
+            : 'No skills found, create your first skill to get started.'
+        }
+      />
+      {/* <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
-      <EmptyTitle>
-        {search ? 'No skills match your filters' : 'No skills yet'}
-      </EmptyTitle>
       <EmptyDescription>
         {search
           ? 'Try clearing the search to see all skills.'
           : 'Create your first skill to get started.'}
-      </EmptyDescription>
+      </EmptyDescription> */}
       <Button asChild={true} variant="secondary">
         {search ? (
           <Link to="/skills">Clear filters</Link>

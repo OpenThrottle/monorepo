@@ -7,11 +7,11 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 
-interface PlanTaskNotFoundProps {}
+export interface PlanTaskNotFoundProps {}
 
-export const PlanTaskNotFound = (_props: PlanTaskNotFoundProps) => {
-  // const { className } = props;
-
+export const PlanTaskNotFound = (
+  _props: PlanTaskNotFoundProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

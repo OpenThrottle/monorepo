@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { ARTWORK_RALPH } from '../config/index';
-import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
+import { getNxProjectNames } from '../utils/projects';
+import {
+  resolveWorkspaceRoot,
+  runNxValidateScripts,
+} from '../utils/nx-validate-workspace';
 
 interface NxValidateOptions {
   project?: string;
@@ -11,25 +14,39 @@ interface NxValidateOptions {
 /**
  * @description Commander-based Nx validation workflow entry point.
  */
-const main = (): void => {
+const main = async (): Promise<void> => {
   const program = new Command();
 
   program
     .name('workflow-nx-validate')
-    .description('Nx validation workflow')
+    .description(
+      'Run monorepo Nx validation (nx:validate-tags, nx:validate-projects, nx:validate-configurations)',
+    )
     .option(
       '-p, --project <name>',
-      'Optional Nx project to validate (e.g. @tools/workflows)',
+      'Optional Nx project to verify exists in the graph before workspace validation',
     )
-    .action((options: NxValidateOptions) => {
-      console.log(ARTWORK_RALPH);
-      console.log('🔍 Parsed arguments:', options);
-      console.log(MESSAGE_INTRO);
-      console.log(MESSAGE_COMPLETED);
-      process.exit(0);
+    .action(async (options: NxValidateOptions) => {
+      const workspaceRoot = resolveWorkspaceRoot(process.cwd());
+
+      if (options.project) {
+        const names = await getNxProjectNames();
+        if (!names.includes(options.project)) {
+          console.error(
+            `Unknown Nx project "${options.project}". Known application/package projects include: ${names.slice(0, 10).join(', ')}${names.length > 10 ? ', …' : ''}`,
+          );
+          process.exit(1);
+        }
+      }
+
+      console.log(`Running pnpm run nx:validate in ${workspaceRoot}`);
+      process.exit(runNxValidateScripts(workspaceRoot));
     });
 
-  program.parse();
+  await program.parseAsync();
 };
 
-main();
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});

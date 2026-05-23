@@ -10,12 +10,14 @@ import {
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
 
-interface PlanTasksEmptyProps {
+export interface PlanTasksEmptyProps {
   className?: string;
   search?: string;
 }
 
-export const PlanTasksEmpty = (props: PlanTasksEmptyProps) => {
+export const PlanTasksEmpty = (
+  props: PlanTasksEmptyProps,
+): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

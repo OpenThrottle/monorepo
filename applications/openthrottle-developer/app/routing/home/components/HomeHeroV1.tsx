@@ -1,11 +1,11 @@
 import * as React from 'react';
 import classnames from 'classnames';
 
-interface HomeHeroV1Props {
+export interface HomeHeroV1Props {
   className?: string;
 }
 
-export const HomeHeroV1 = (props: HomeHeroV1Props) => {
+export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
   const { className } = props;
 
   // Hooks

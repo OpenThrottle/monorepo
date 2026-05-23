@@ -108,9 +108,9 @@ const resolveProject = (raw: string | null | undefined): string => {
  */
 export function resolveWorkflowRunOptions(params: {
   readonly executionBackend?: string | null;
+  readonly mode?: WorkflowContext['mode'];
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowContext['mode'];
   readonly taskId?: string;
 }): WorkflowContext {
   const r = params.ralph ?? {};
@@ -121,6 +121,9 @@ export function resolveWorkflowRunOptions(params: {
   const iterationTimeout = resolveIterationTimeoutSeconds(
     r.iterationTimeoutSeconds,
   );
+
+  const worktree = r.worktree?.trim() ?? '';
+  const worktreeBase = r.worktreeBase?.trim() ?? '';
 
   return {
     debug: resolveDebug(r.ralphDebugCli),
@@ -134,8 +137,11 @@ export function resolveWorkflowRunOptions(params: {
     project: resolveProject(r.project),
     prompt: resolvePrompt(r.prompt),
     runner: resolveExecutionBackend(r.backend ?? params.executionBackend),
+    skipWorktreeSetup: r.skipWorktreeSetup === true ? true : undefined,
     taskId,
     timeout: iterationTimeout,
+    worktree: worktree !== '' ? worktree : undefined,
+    worktreeBase: worktreeBase !== '' ? worktreeBase : undefined,
   };
 }
 
@@ -164,9 +170,9 @@ export function buildRalphFlowContextFromRunOptionsShape(
  */
 export function buildRalphFlowContextFromPlanRunTuning(params: {
   readonly executionBackend?: string | null;
+  readonly mode?: WorkflowContext['mode'];
   readonly planId: string;
   readonly ralph?: RalphPlanRunTuningInput | null | undefined;
-  readonly mode?: WorkflowContext['mode'];
   readonly taskId?: string;
 }): WorkflowContext {
   return buildRalphFlowContextFromRunOptionsShape(

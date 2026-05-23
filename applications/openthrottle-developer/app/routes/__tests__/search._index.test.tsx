@@ -34,17 +34,37 @@ describe('routes/search._index.tsx', () => {
       <SearchIndex
         actionData={undefined}
         loaderData={searchIndexLoaderFixturePaginated}
-        matches={[] as any}
+        matches={[] as never}
         params={{}}
       />,
     );
 
     expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
-    const nextLink = view.getByRole('link', { name: /next/i });
-    expect(nextLink).toHaveAttribute(
-      'href',
-      expect.stringContaining('/search'),
+    const nextLink = view.getByRole('link', { name: 'Go to next page' });
+    const href = nextLink.getAttribute('href') ?? '';
+    expect(href).toContain('/search?');
+    expect(href).toContain('page=2');
+    expect(href).toContain('q=test');
+  });
+
+  test('should preserve ranking details in pagination links when enabled', () => {
+    const view = renderRoutesStub(
+      <SearchIndex
+        actionData={undefined}
+        loaderData={{
+          ...searchIndexLoaderFixturePaginated,
+          expandRankingDetails: true,
+          page: 1,
+        }}
+        matches={[] as never}
+        params={{}}
+      />,
     );
+
+    const nextLink = view.getByRole('link', { name: 'Go to next page' });
+    const href = nextLink.getAttribute('href') ?? '';
+    expect(href).toContain('details=ranking');
+    expect(href).toContain('q=test');
   });
 
   test('should render a result card for each chunk (SearchCard delegates by source)', () => {

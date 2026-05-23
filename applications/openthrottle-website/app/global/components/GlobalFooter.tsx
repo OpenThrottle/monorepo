@@ -8,7 +8,7 @@ import {
 
 interface GlobalFooterProps {}
 
-export const GlobalFooter = (_props: GlobalFooterProps) => {
+export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

@@ -7,7 +7,7 @@ export interface NotificationPermissionAvailableProps {
 
 export const NotificationPermissionAvailable = (
   props: NotificationPermissionAvailableProps,
-) => {
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

@@ -14,7 +14,9 @@ export interface GlobalSidebarFooterProps {
   readonly health?: ServerHealthObject;
 }
 
-export const GlobalSidebarFooter = (props: GlobalSidebarFooterProps) => {
+export const GlobalSidebarFooter = (
+  props: GlobalSidebarFooterProps,
+): React.ReactElement => {
   const { health } = props;
 
   // Hooks

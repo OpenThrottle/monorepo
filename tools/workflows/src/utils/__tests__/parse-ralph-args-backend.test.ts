@@ -17,6 +17,9 @@ vi.mock('../ralph-runtime-config', async (importOriginal) => {
       project: undefined,
       prompt: '/agents/ralph',
       promptFile: undefined,
+      skipWorktreeSetup: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
     })),
   };
 });

@@ -4,9 +4,11 @@ Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed
 
 For schema, embeddings, and local Postgres setup, see [databases/README.md](../../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
 
+**Cursor launcher:** [`scripts/run-mcp-developer.sh`](../../scripts/run-mcp-developer.sh) does not require a root **`OPENAI_API_KEY`**; configure **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **openthrottle-server** for semantic search. See [docs/verification-environment.md](docs/verification-environment.md) and [run-locally-oss.md](../../docs/openthrottle/run-locally-oss.md).
+
 ## Authentication
 
-Authenticated GraphQL calls use a token from the environment. Set **`MCP_DEVELOPER_AUTH_TOKEN`** to your JWT or API token so tools can call `executeGraphqlWithAuth`. See [docs/AUTH.md](docs/AUTH.md) for details and Cursor MCP config. For local verification (services, env vars, smoke checklist), see [docs/verification-environment.md](docs/verification-environment.md).
+Authenticated GraphQL calls use a bearer token from the environment. Set **`MCP_DEVELOPER_AUTH_TOKEN`** to a service account token (`ot_sa_<prefix>_<secret>`) minted via `pnpm run database:bootstrap-service-accounts` or admin GraphQL — not a short-lived human JWT. See [docs/AUTH.md](docs/AUTH.md) for setup, rotation, and Cursor MCP config. For local verification (services, env vars, smoke checklist), see [docs/verification-environment.md](docs/verification-environment.md).
 
 ## Installation
 

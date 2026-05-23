@@ -7,7 +7,7 @@ import {
 /**
  * @description localStorage key for persisted event subscription toggles (developer app).
  */
-const EVENT_SUBSCRIPTIONS_STORAGE_KEY =
+export const EVENT_SUBSCRIPTIONS_STORAGE_KEY =
   'openthrottle-developer:settings:event-subscriptions:v1';
 
 const isEventSubscriptionId = (
@@ -32,7 +32,7 @@ const readOwnBoolean = (obj: object, key: string): boolean | undefined => {
  * non-objects, wrong shapes, and unknown keys are ignored; only known ids with boolean
  * values override defaults.
  */
-const mergeEventSubscriptionPreferencesFromUnknown = (
+export const mergeEventSubscriptionPreferencesFromUnknown = (
   stored: unknown,
   defaults: Readonly<Record<EventSubscriptionId, boolean>>,
 ): Record<EventSubscriptionId, boolean> => {

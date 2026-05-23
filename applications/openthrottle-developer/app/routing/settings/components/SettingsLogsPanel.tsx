@@ -29,23 +29,21 @@ import {
   getEmptyServerSnapshot,
 } from '~/routing/settings/utils/settings.support';
 import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
-interface SettingsLogsPanelProps {}
+export interface SettingsLogsPanelProps {}
 
-export function SettingsLogsPanel(
+export const SettingsLogsPanel = (
   _props: SettingsLogsPanelProps,
-): React.ReactElement {
-  // const { className } = props;
-
+): React.ReactElement => {
   // Hooks
   const logPreRef = React.useRef<HTMLPreElement>(null);
   const searchFieldId = React.useId();
   const [isClient, setIsClient] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-
-  const [levelSelection, setLevelSelection] = React.useState<
-    readonly ClientLogLevel[]
-  >([...CLIENT_LOG_LEVELS]);
+  const [levelSelection, setLevelSelection] = React.useState<ClientLogLevel[]>([
+    ...CLIENT_LOG_LEVELS,
+  ]);
 
   const entries = React.useSyncExternalStore(
     subscribeClientLogSink,
@@ -85,20 +83,10 @@ export function SettingsLogsPanel(
           ? 'no-match'
           : 'none';
 
-  // Handlers
-
   const logText = React.useMemo(
     () => filteredEntries.map(formatEntryLine).join('\n'),
     [filteredEntries],
   );
-
-  React.useEffect(() => {
-    const el = logPreRef.current;
-    if (!el) {
-      return;
-    }
-    el.scrollTop = el.scrollHeight;
-  }, [filteredEntries]);
 
   // Handlers
   const handleCopyLines = async (): Promise<void> => {
@@ -152,15 +140,26 @@ export function SettingsLogsPanel(
     return logText;
   };
 
+  // Life Cycle
+  React.useEffect(() => {
+    const el = logPreRef.current;
+    if (!el) {
+      return;
+    }
+    el.scrollTop = el.scrollHeight;
+  }, [filteredEntries]);
+
   React.useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // 🔌 Short Circuit
 
   return (
     <>
       <div>
         <GlobalHeading
-          className="mb-2"
+          className="mb-4"
           heading="h3"
           icon={ScrollText}
           title="Logs"
@@ -171,7 +170,7 @@ export function SettingsLogsPanel(
           Server workflow and agent streams are described below—when an operator
           API exists, optional tailing can plug into the same bundle shape.
         </p>
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
+        <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
           Logs may include URLs or user-visible strings. Only copy or export
           what you intend to share; the support bundle redacts env secrets but
           not every substring inside log lines.
@@ -285,13 +284,11 @@ export function SettingsLogsPanel(
 
       <SettingsSupportBundle />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Workflow &amp; agent logs (server)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
+      <OpenThrottleFieldset
+        id="workflow-agent-logs"
+        legend="Workflow & Server Logs"
+      >
+        <div className="space-y-3 text-sm text-muted-foreground">
           <p>
             A tail or subscription to workflow-ralph stderr, queue worker logs,
             or plan-output streams is not wired to this UI yet. Until an
@@ -312,8 +309,8 @@ export function SettingsLogsPanel(
             operator; correlation IDs linking queue jobs, plan IDs, and task
             IDs; no raw secrets in payloads.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </OpenThrottleFieldset>
     </>
   );
-}
+};

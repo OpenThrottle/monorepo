@@ -19,7 +19,9 @@ export interface GlobalSidebarProps {
   data?: Record<string, GlobalSidebarLinkProps[]>;
 }
 
-export const GlobalSidebar = (props: GlobalSidebarProps) => {
+export const GlobalSidebar = (
+  props: GlobalSidebarProps,
+): React.ReactElement => {
   const { data } = props;
 
   // Hooks
@@ -30,7 +32,7 @@ export const GlobalSidebar = (props: GlobalSidebarProps) => {
   // Handlers
 
   // Markup
-  const renderLink = (item: GlobalSidebarLinkProps) => {
+  const renderLink = (item: GlobalSidebarLinkProps): React.ReactElement => {
     const Icon = item.icon;
     const toPath = getPathFromTo(item.to);
 

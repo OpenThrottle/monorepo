@@ -1,0 +1,72 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ProjectsEmpty Component > should render 1`] = `
+<body>
+  <div>
+    <div
+      class="flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed p-6 text-center text-balance md:p-12 my-8"
+      data-slot="empty"
+    >
+      <div
+        class="mb-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-6"
+        data-slot="empty-icon"
+        data-variant="icon"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-search-alert size-6"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="11"
+            cy="11"
+            r="8"
+          />
+          <path
+            d="m21 21-4.3-4.3"
+          />
+          <path
+            d="M11 7v4"
+          />
+          <path
+            d="M11 15h.01"
+          />
+        </svg>
+      </div>
+      <h3
+        class="text-lg font-medium tracking-tight"
+        data-slot="empty-title"
+      >
+        No projects yet
+      </h3>
+      <p
+        class="text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary"
+        data-slot="empty-description"
+      >
+        Create your first project to get started.
+      </p>
+      <a
+        data-discover="true"
+        href="/projects/create"
+      >
+        <button
+          class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 h-9 px-4 py-2 has-[>svg]:px-3 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          data-size="default"
+          data-slot="button"
+          data-variant="secondary"
+        >
+          New project
+        </button>
+      </a>
+    </div>
+  </div>
+</body>
+`;

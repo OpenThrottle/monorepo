@@ -2,12 +2,14 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ChartAreaIcon } from 'lucide-react';
 
-interface UsageIntroductionProps {
-  readonly className?: string;
-  readonly rangeDays: number;
+export interface UsageIntroductionProps {
+  className?: string;
+  rangeDays: number;
 }
 
-export const UsageIntroduction = (props: UsageIntroductionProps) => {
+export const UsageIntroduction = (
+  props: UsageIntroductionProps,
+): React.ReactElement => {
   const { className, rangeDays } = props;
 
   // Hooks

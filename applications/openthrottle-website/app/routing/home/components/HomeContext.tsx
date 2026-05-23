@@ -10,7 +10,7 @@ interface HomeContextProps {
   className?: string;
 }
 
-export const HomeContext = (props: HomeContextProps) => {
+export const HomeContext = (props: HomeContextProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

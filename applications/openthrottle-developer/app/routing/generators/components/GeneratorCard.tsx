@@ -9,12 +9,14 @@ import {
 import { Link } from 'react-router';
 import { GeneratorCardFragment } from '~/__generated__/graphql';
 
-interface GeneratorCardProps {
+export interface GeneratorCardProps {
   className?: string;
   generator: GeneratorCardFragment;
 }
 
-export const GeneratorCard = (props: GeneratorCardProps) => {
+export const GeneratorCard = (
+  props: GeneratorCardProps,
+): React.ReactElement => {
   const { className, generator } = props;
 
   // Hooks

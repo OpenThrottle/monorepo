@@ -1,5 +1,5 @@
 /**
- * @description Splits a comma-separated string into normalized values.
+ * Splits a comma-separated string into normalized values.
  * Collapses repeated spaces, trims items, and supports `a,b` and `a, b`.
  */
 export const parseCommaSeparatedValues = (value: string): string[] => {

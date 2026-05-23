@@ -30,6 +30,17 @@ describe('roles', () => {
       expect(viewerPerms).toContain(PERMISSIONS.USERS_READ);
       expect(viewerPerms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
+
+    it('mcp and workflow-ralph have plans read/write only', () => {
+      for (const role of [ROLES.MCP, ROLES.WORKFLOW_RALPH] as const) {
+        const perms = ROLE_PERMISSIONS[role];
+        expect(perms).toEqual([
+          PERMISSIONS.PLANS_READ,
+          PERMISSIONS.PLANS_WRITE,
+        ]);
+        expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
+      }
+    });
   });
 
   describe('roleHasPermission', () => {
@@ -58,8 +69,10 @@ describe('roles', () => {
     it('uses custom mapping when provided', () => {
       const customMapping = {
         [ROLES.ADMIN]: [PERMISSIONS.USERS_READ] as const,
+        [ROLES.MCP]: [] as const,
         [ROLES.USER]: [PERMISSIONS.USERS_READ] as const,
         [ROLES.VIEWER]: [] as const,
+        [ROLES.WORKFLOW_RALPH]: [] as const,
       };
       expect(
         roleHasPermission(ROLES.ADMIN, PERMISSIONS.USERS_WRITE, customMapping),

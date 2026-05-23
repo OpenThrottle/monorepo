@@ -16,12 +16,12 @@ import {
   type RepoSkillEntry,
 } from '~/routing/agents/data/repo-skills-registry';
 
-interface AgentsSkillsRegistryProps {
-  readonly className?: string;
-  readonly entries?: ReadonlyArray<RepoSkillEntry>;
+export interface AgentsSkillsRegistryProps {
+  className?: string;
+  entries?: ReadonlyArray<RepoSkillEntry>;
 }
 
-function filterEntries(
+export function filterEntries(
   entries: ReadonlyArray<RepoSkillEntry>,
   query: string,
 ): RepoSkillEntry[] {
@@ -37,9 +37,9 @@ function filterEntries(
   );
 }
 
-function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
-  readonly agents: RepoSkillEntry[];
-  readonly cursor: RepoSkillEntry[];
+export function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
+  agents: RepoSkillEntry[];
+  cursor: RepoSkillEntry[];
 } {
   const agents: RepoSkillEntry[] = [];
   const cursor: RepoSkillEntry[] = [];
@@ -58,24 +58,28 @@ function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
 /**
  * @description Maps repo `.agents/skills` and `.cursor/skills` layouts to GitHub links and copy-friendly paths for debugging misaligned skill picks.
  */
-export function AgentsSkillsRegistry(
+export const AgentsSkillsRegistry = (
   props: AgentsSkillsRegistryProps,
-): React.ReactElement {
+): React.ReactElement => {
   const { className, entries = [] } = props;
+
+  // Hooks
   const [filterQuery, setFilterQuery] = React.useState('');
 
+  // Setup
   const filtered = React.useMemo(
     () => filterEntries(entries, filterQuery),
     [entries, filterQuery],
   );
-
-  const { agents, cursor } = groupByLayout(filtered);
 
   const layoutCounts = React.useMemo(
     () => getRepoSkillsRegistryCounts(entries),
     [entries],
   );
 
+  const { agents, cursor } = groupByLayout(filtered);
+
+  // Handlers
   const handleCopyPath = async (path: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(path);
@@ -84,6 +88,7 @@ export function AgentsSkillsRegistry(
     }
   };
 
+  // Markup
   const renderGrid = (items: readonly RepoSkillEntry[]): React.ReactElement => (
     <ul className="grid gap-3 md:grid-cols-2">
       {items.map((entry) => (
@@ -126,6 +131,10 @@ export function AgentsSkillsRegistry(
       ))}
     </ul>
   );
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <div className={className ? `space-y-6 ${className}` : 'space-y-6'}>
@@ -214,4 +223,4 @@ export function AgentsSkillsRegistry(
       </section>
     </div>
   );
-}
+};

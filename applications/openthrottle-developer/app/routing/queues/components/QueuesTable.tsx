@@ -12,9 +12,9 @@ import classnames from 'classnames';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { backlogForQueue } from '~/routing/queues/utils/queue-stats-chart';
 
-interface QueuesTableProps {
-  readonly className?: string;
-  readonly queues: QueueCardFragment[];
+export interface QueuesTableProps {
+  className?: string;
+  queues: QueueCardFragment[];
 }
 
 function queueDetailHref(name: string): string {
@@ -24,7 +24,7 @@ function queueDetailHref(name: string): string {
 const queueRowId = (queue: QueueCardFragment, _index: number): string =>
   queue.name;
 
-export const QueuesTable = (props: QueuesTableProps) => {
+export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
   const { className, queues } = props;
 
   // Hooks

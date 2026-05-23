@@ -534,12 +534,12 @@ const extractAuditIssues = (
     ) {
       const auditObj = audit as {
         readonly description?: string;
-        readonly displayValue?: string;
         readonly details?: {
           readonly items?: readonly unknown[];
-          readonly overallSavingsMs?: number;
           readonly overallSavingsBytes?: number;
+          readonly overallSavingsMs?: number;
         };
+        readonly displayValue?: string;
         readonly score: number | null;
         readonly title: string;
       };

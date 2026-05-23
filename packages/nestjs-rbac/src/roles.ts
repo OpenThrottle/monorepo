@@ -9,8 +9,10 @@
 /** Built-in role identifiers. */
 export const ROLES = {
   ADMIN: 'admin',
+  MCP: 'mcp',
   USER: 'user',
   VIEWER: 'viewer',
+  WORKFLOW_RALPH: 'workflow-ralph',
 } as const;
 
 /** Role type (one of the keys of ROLES). */
@@ -18,6 +20,8 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 /** Built-in permission identifiers (resource:action style). */
 export const PERMISSIONS = {
+  PLANS_READ: 'plans:read',
+  PLANS_WRITE: 'plans:write',
   SETTINGS_READ: 'settings:read',
   SETTINGS_WRITE: 'settings:write',
   USERS_READ: 'users:read',
@@ -44,6 +48,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     PERMISSIONS.USERS_READ,
   ],
   [ROLES.VIEWER]: [PERMISSIONS.SETTINGS_READ, PERMISSIONS.USERS_READ],
+  [ROLES.MCP]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
+  [ROLES.WORKFLOW_RALPH]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
 };
 
 /**

@@ -12,10 +12,11 @@ export const links: Route.LinksFunction = () => {
 };
 
 /**
+ * We only need to revalidate when we login or logout which is already taken
+ * care of by the auth routes. So we don't need to revalidate (refetch) to data
+ * at this level.
+ *
  * @external https://remix.run/docs/en/main/route/should-revalidate
- * @description We only need to revalidate when we login or logout which
- * is already taken care of by the auth routes. So we don't need to revalidate
- * (refetch) to data at this level.
  */
 export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
   return false;

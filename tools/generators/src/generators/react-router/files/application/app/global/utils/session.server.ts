@@ -4,7 +4,7 @@ import { IS_PRODUCTION } from '@openthrottle/react-router-utils';
 const COOKIE_SECRET = process.env.COOKIE_SECRET ?? 'default_secret';
 
 /**
- * @description lifted directly from the remix documentation
+ * lifted directly from the remix documentation
  * @link https://remix.run/docs/en/v1/api/remix#sessions
  */
 export const { getSession, commitSession, destroySession } =

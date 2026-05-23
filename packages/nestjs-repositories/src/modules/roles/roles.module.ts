@@ -5,6 +5,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { ServiceAccount } from '../service-accounts/service-account.entity';
 import { User } from '../users/user.entity';
 import { Permission } from './permission.entity';
 import { PermissionsService } from './permissions.service';
@@ -14,7 +15,10 @@ import { RolesService } from './roles.service';
 @Module({
   controllers: [],
   exports: [PermissionsService, RolesService],
-  imports: [LoggerModule, TypeOrmModule.forFeature([Permission, Role, User])],
+  imports: [
+    LoggerModule,
+    TypeOrmModule.forFeature([Permission, Role, ServiceAccount, User]),
+  ],
   providers: [PermissionsService, RolesService],
 })
 export class RolesModule {}

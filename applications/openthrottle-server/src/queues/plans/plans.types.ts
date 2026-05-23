@@ -2,6 +2,7 @@ import type { Job } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
 import type {
   ChildProcessMetrics,
+  JobRunHooksConfig,
   RalphExecutionBackendId,
   RalphNestedRunTuningInput,
   WallClockMetrics,
@@ -44,6 +45,10 @@ export interface RunPlanSpawnJobData {
    * Execution backend selected once for this run. Optional only for previously persisted BullMQ jobs.
    */
   readonly executionBackend?: RalphExecutionBackendId;
+  /**
+   * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
+   */
+  readonly jobRunHooks?: JobRunHooksConfig;
   readonly planId: string;
   /**
    * Optional Ralph runtime (layers 1–3): prompt profile, execution backend, run tuning.

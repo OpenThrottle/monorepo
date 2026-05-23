@@ -1,0 +1,42 @@
+fragment ServiceAccountCredentialFields on ServiceAccountCredentialObject {
+  createdAt
+  expiresAt
+  id
+  label
+  lastUsedAt
+  prefix
+  revokedAt
+  serviceAccountId
+}
+
+fragment ServiceAccountListItem on ServiceAccountObject {
+  createdAt
+  description
+  disabledAt
+  id
+  name
+}
+
+query getSettingsKeys($serviceAccountId: ID!) {
+  serviceAccounts {
+    ...ServiceAccountListItem
+  }
+  serviceAccountCredentials(serviceAccountId: $serviceAccountId) {
+    ...ServiceAccountCredentialFields
+  }
+}
+
+mutation createServiceAccountCredential(
+  $input: CreateServiceAccountCredentialInput!
+) {
+  createServiceAccountCredential(input: $input) {
+    credential {
+      ...ServiceAccountCredentialFields
+    }
+    token
+  }
+}
+
+mutation revokeServiceAccountCredential($credentialId: ID!) {
+  revokeServiceAccountCredential(credentialId: $credentialId)
+}

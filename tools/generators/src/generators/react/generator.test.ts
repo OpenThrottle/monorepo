@@ -11,7 +11,7 @@ describe('reactGenerator', () => {
   });
 
   const type = 'component';
-  const target = '@openthrottle/shared-ui';
+  const target = '@openthrottle/react-router-ui';
   const name = 'TestComponentName';
 
   test('should run successfully', async () => {
@@ -30,8 +30,8 @@ describe('reactGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      `packages/openthrottle/${folderName}/src/components/${name}.tsx`,
-      `packages/openthrottle/${folderName}/src/components/__tests__/${name}.test.tsx`,
+      `packages/${folderName}/src/components/${name}.tsx`,
+      `packages/${folderName}/src/components/__tests__/${name}.test.tsx`,
     ]);
   });
 });

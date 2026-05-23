@@ -26,10 +26,10 @@ export interface SimpleAreaChartProps<
   /** Opacity of the filled area (0–1). */
   readonly fillOpacity?: number;
   readonly margin?: {
-    readonly top?: number;
-    readonly right?: number;
     readonly bottom?: number;
     readonly left?: number;
+    readonly right?: number;
+    readonly top?: number;
   };
   /** Key in each datum for the area value. */
   readonly valueKey: keyof T & string;

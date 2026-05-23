@@ -1,7 +1,4 @@
-import type {
-  PlanFragment,
-  TaskFragment,
-} from '../../../__generated__/graphql.js';
+import type { PlanFragment } from '../../../__generated__/graphql.js';
 
 /**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with
@@ -9,7 +6,9 @@ import type {
  */
 export const formatPlanAndTasksForPrompt = (
   plan: PlanFragment,
-  tasks: readonly TaskFragment[],
+  // FIXME: __OT_UPDATE__ Lets fix this one
+  tasks: any[],
+  // tasks: readonly TaskFragment[],
 ): string => {
   const lines: string[] = [
     '--- OpenThrottle plan (injected by Ralph from Postgres)',

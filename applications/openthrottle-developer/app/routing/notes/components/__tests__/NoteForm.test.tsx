@@ -5,7 +5,7 @@ import { NoteForm } from '../NoteForm';
 import type { NoteFormProps } from '../NoteForm';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
-describe('NoteForm', () => {
+describe('NoteForm Component', () => {
   describe('when action is create', () => {
     let component: RenderResult;
 

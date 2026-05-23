@@ -29,31 +29,35 @@ import {
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 
-interface PlanToolbarProps {
-  readonly className?: string;
-  readonly planId: string;
+export interface PlanToolbarProps {
+  className?: string;
+  /**
+   * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
+   */
+  jobRunHooksJson?: string;
+  planId: string;
+  planStatus?: string;
   /**
    * @description Display title for Kill run confirmation (defaults when omitted).
    */
-  readonly planTitle?: string;
-  readonly planStatus?: string;
+  planTitle?: string;
   /**
    * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
    */
-  readonly ralphTuningJson?: string;
+  ralphTuningJson?: string;
+  /**
+   * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
+   */
+  workflowRunBlocked?: boolean;
+  /**
+   * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
+   */
+  workflowRunBlockedReason?: string;
   /**
    * @description Optional absolute path to a local project directory for multi-workspace runs.
    * Passed through to the enqueuePlanRun mutation as workingDirectory.
    */
-  readonly workingDirectory?: string;
-  /**
-   * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
-   */
-  readonly workflowRunBlocked?: boolean;
-  /**
-   * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
-   */
-  readonly workflowRunBlockedReason?: string;
+  workingDirectory?: string;
 }
 
 /**
@@ -66,6 +70,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     planId,
     planTitle = 'Untitled',
     planStatus,
+    jobRunHooksJson = '',
     ralphTuningJson = '',
     workingDirectory,
     workflowRunBlocked = false,
@@ -202,6 +207,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
             <fetcherRunPlan.Form method="post">
               <Input name="intent" type="hidden" value="runPlan" />
               <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
+              {jobRunHooksJson !== '' ? (
+                <Input
+                  name="jobRunHooksJson"
+                  type="hidden"
+                  value={jobRunHooksJson}
+                />
+              ) : null}
               {workingDirectory != null && workingDirectory !== '' && (
                 <Input
                   name="workingDirectory"

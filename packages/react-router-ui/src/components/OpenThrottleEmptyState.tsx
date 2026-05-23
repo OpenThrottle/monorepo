@@ -1,4 +1,6 @@
 import * as React from 'react';
+import classnames from 'classnames';
+import { ARTWORK_YODA } from '../data/data.artwork';
 
 export interface OpenThrottleEmptyStateProps {
   readonly className?: string;
@@ -6,7 +8,9 @@ export interface OpenThrottleEmptyStateProps {
   readonly title: string;
 }
 
-export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
+export const OpenThrottleEmptyState = (
+  props: OpenThrottleEmptyStateProps,
+): React.ReactElement => {
   const { className, description, title } = props;
 
   // Hooks
@@ -22,9 +26,18 @@ export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div className={className} data-testid="OpenThrottleEmptyState">
-      <h2 className="text-lg font-bold mb-2">{title}</h2>
+    <div
+      className={classnames('p-4', className)}
+      data-testid="OpenThrottleEmptyState"
+    >
+      <h2 className="text-base text-foreground mb-4">{title}</h2>
       <p className="text-sm text-muted-foreground">{description}</p>
+
+      <div className="w-full flex">
+        <pre className="text-[6px] md:text-xs text-muted-foreground/50 my-8 mx-auto">
+          {ARTWORK_YODA}
+        </pre>
+      </div>
     </div>
   );
 };

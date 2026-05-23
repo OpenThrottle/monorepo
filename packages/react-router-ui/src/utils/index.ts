@@ -1,3 +1,9 @@
+export {
+  buildPaginationPageItems,
+  type BuildPaginationPageItemsOptions,
+  type PaginationPageItem,
+} from './pagination-page-items';
+
 export interface ProjectsSearchParamsExtras {
   /** Plan list assignee filter. When set, multiple assignee params are appended. */
   readonly assignees?: readonly string[];

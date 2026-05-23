@@ -14,9 +14,9 @@ import { SIDEBAR_WIDTH_MOBILE } from './sidebar-constants';
 import { useSidebar } from './useSidebar';
 
 export type SidebarProps = React.ComponentProps<'div'> & {
+  readonly collapsible?: 'offcanvas' | 'icon' | 'none';
   readonly side?: 'left' | 'right';
   readonly variant?: 'sidebar' | 'floating' | 'inset';
-  readonly collapsible?: 'offcanvas' | 'icon' | 'none';
 };
 
 export function Sidebar({

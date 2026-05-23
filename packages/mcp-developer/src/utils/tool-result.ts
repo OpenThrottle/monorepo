@@ -13,7 +13,7 @@ import type { GenericResult } from '../types/index.js';
  */
 export async function runTool<T extends Record<string, unknown>>(
   toolName: string,
-  run: () => Promise<{ text: string; structuredContent: T } | null>,
+  run: () => Promise<{ structuredContent: T; text: string } | null>,
 ): Promise<GenericResult<T>> {
   try {
     const result = await run();

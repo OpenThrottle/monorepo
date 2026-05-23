@@ -11,6 +11,10 @@ import { ARTWORK_LINE, COLORS } from '../config/index';
 import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
 import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
+import {
+  appendRalphWorktreeShellFlags,
+  type RalphWorktreeCliOptions,
+} from '../utils/ralph-worktree-cli';
 
 /** Chunk from runner stdout or stderr when using async spawn. */
 export interface CursorAgentChunk {
@@ -27,12 +31,18 @@ export interface RunIterationConfig {
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
   model?: string;
-  /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
-  timeoutMs?: number;
-  /** Optional AbortSignal to cancel the iteration (async path only). */
-  signal?: AbortSignal;
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
+  /** Optional AbortSignal to cancel the iteration (async path only). */
+  signal?: AbortSignal;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  skipWorktreeSetup?: boolean;
+  /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
+  timeoutMs?: number;
+  /** Agent CLI worktree (`-w` / `--worktree`); see `docs/workflows/ralph-worktree-flag.md`. */
+  worktree?: RalphWorktreeCliOptions['worktree'];
+  /** Cursor-only: `--worktree-base`. */
+  worktreeBase?: string;
 }
 
 /** Grace period in ms after SIGTERM before sending SIGKILL (runner child). */
@@ -63,11 +73,17 @@ function escapeForShellDoubleQuoted(prompt: string): string {
  * @description Cursor: non-interactive iteration (`cursor-agent --force -p …`).
  */
 const buildCursorShellCommand = (config: RunIterationConfig): string => {
-  const { agentPrompt, model } = config;
+  const { agentPrompt, model, skipWorktreeSetup, worktree, worktreeBase } =
+    config;
   const modelFlag = model ? ` --model ${model}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
+  const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
 
-  return `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+  return appendRalphWorktreeShellFlags(base, 'cursor', {
+    skipWorktreeSetup,
+    worktree,
+    worktreeBase,
+  });
 };
 
 /**
@@ -77,13 +93,14 @@ const buildCursorShellCommand = (config: RunIterationConfig): string => {
  * Omits `--model` when unset or `auto` (Claude uses its own defaults / aliases).
  */
 const buildClaudeShellCommand = (config: RunIterationConfig): string => {
-  const { agentPrompt, model } = config;
+  const { agentPrompt, model, worktree } = config;
   const modelNorm = model?.trim() ?? '';
   const modelFlag =
     modelNorm !== '' && modelNorm !== 'auto' ? ` --model ${modelNorm}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
+  const base = `claude --bare --permission-mode acceptEdits -p "${safePrompt}"${modelFlag}`;
 
-  return `claude --bare --permission-mode acceptEdits -p "${safePrompt}"${modelFlag}`;
+  return appendRalphWorktreeShellFlags(base, 'claude', { worktree });
 };
 
 /**

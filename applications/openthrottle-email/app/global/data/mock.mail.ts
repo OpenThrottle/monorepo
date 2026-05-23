@@ -106,6 +106,17 @@ function recordToDetail(r: MockMessageRecord): MailMessageDetail {
 }
 
 /**
+ * @description Unread counts per folder for sidebar badges (mock until API is wired).
+ */
+export function getMockUnreadCountByFolder(): Record<MailFolderId, number> {
+  const entries = (Object.keys(MOCK_RECORDS_BY_FOLDER) as MailFolderId[]).map(
+    (id) => [id, MOCK_RECORDS_BY_FOLDER[id].filter((r) => !r.read).length],
+  );
+
+  return Object.fromEntries(entries) as Record<MailFolderId, number>;
+}
+
+/**
  * @description Returns mock message list for a folder (inbox, sent, drafts, trash). Omit folderId for all messages (legacy); prefer passing folderId.
  */
 export function getMockMessages(folderId?: MailFolderId): MailMessageSummary[] {

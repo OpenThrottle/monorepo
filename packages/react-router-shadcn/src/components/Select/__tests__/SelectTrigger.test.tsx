@@ -1,24 +1,28 @@
 import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SelectTrigger } from '../SelectTrigger';
+import { Select, SelectTrigger } from '../index';
 import type { SelectTriggerProps } from '../SelectTrigger';
 
 describe('SelectTrigger Component', () => {
-  let component: RenderResult;
   let props: SelectTriggerProps;
 
   beforeEach(() => {
     props = {};
-
-    const Component = () => <SelectTrigger {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render trigger inside Select', () => {
+    const Component = () => (
+      <Select>
+        <SelectTrigger {...props}>Choose</SelectTrigger>
+      </Select>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const { container } = render(<RoutesStub />);
+
+    const trigger = container.querySelector('button');
+    expect(trigger).toBeInTheDocument();
+    expect(trigger).toHaveTextContent('Choose');
+    expect(trigger).toHaveClass('flex', 'h-10', 'w-full');
   });
 });

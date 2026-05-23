@@ -59,8 +59,16 @@ export const WORKFLOW_RALPH_ENV_VARS = {
   project: 'WORKFLOW_RALPH_PROJECT',
   prompt: 'WORKFLOW_RALPH_PROMPT',
   promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
+  skipWorktreeSetup: 'WORKFLOW_RALPH_SKIP_WORKTREE_SETUP',
   verbose: 'WORKFLOW_RALPH_VERBOSE',
+  worktree: 'WORKFLOW_RALPH_WORKTREE',
+  worktreeBase: 'WORKFLOW_RALPH_WORKTREE_BASE',
 } as const;
+
+/**
+ * @description Sentinel for `--worktree` with no name; aligned with `RALPH_WORKTREE_FLAG_ONLY` in `tools/workflows`.
+ */
+export const WORKFLOW_RALPH_WORKTREE_FLAG_ONLY = '' as const;
 
 /**
  * @description BullMQ queue name for plan Ralph jobs (`run-plan`, orchestrator). Same as the server `PLANS_QUEUE_NAME` constant.
@@ -80,6 +88,11 @@ export type WorkflowRalphPromptLayer = 'named' | 'file';
 export type WorkflowRalphDebugCli = 'omit' | 'debug' | 'verbose';
 
 /**
+ * @description Agent CLI `--worktree` mode: omit (BullMQ may default to acquired target id), flag-only, or named.
+ */
+export type WorkflowRalphWorktreeCli = 'flag-only' | 'named' | 'omit';
+
+/**
  * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link WORKFLOW_RALPH_KNOWN_BACKENDS}.
  */
 export type WorkflowRalphExecutionBackendUi =
@@ -88,8 +101,8 @@ export type WorkflowRalphExecutionBackendUi =
 export interface WorkflowRalphRunOptionsInput {
   readonly debugCli: WorkflowRalphDebugCli;
   readonly executionBackend: WorkflowRalphExecutionBackendUi;
-  readonly iterations: number;
   readonly iterationTimeoutSeconds: number | undefined;
+  readonly iterations: number;
   readonly model: string;
   readonly planId: string;
   readonly project: string;
@@ -98,8 +111,15 @@ export interface WorkflowRalphRunOptionsInput {
   readonly promptFile: string;
   /** @description `--prompt` (named profile) vs `--prompt-file` — matches CLI mutual exclusion. */
   readonly promptLayer: WorkflowRalphPromptLayer;
+  /** @description Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup: boolean;
   readonly targetMode: WorkflowRalphTargetMode;
   readonly taskId: string;
+  /** @description Cursor-only: `--worktree-base`. */
+  readonly worktreeBase: string;
+  /** @description Agent CLI worktree: omit, `--worktree` only, or `--worktree <name>`. */
+  readonly worktreeCli: WorkflowRalphWorktreeCli;
+  readonly worktreeName: string;
 }
 
 /**
@@ -117,7 +137,7 @@ export const isUuid = (value: string): boolean => {
  * `--plan` / `--task` target as {@link input}, with every other field reset like
  * {@link getDefaultWorkflowRalphRunOptionsInput}.
  */
-const getWorkflowRalphUiBaselineForDiff = (
+export const getWorkflowRalphUiBaselineForDiff = (
   input: WorkflowRalphRunOptionsInput,
 ): WorkflowRalphRunOptionsInput => {
   const seeded = getDefaultWorkflowRalphRunOptionsInput({
@@ -214,7 +234,91 @@ export const buildWorkflowRalphTuningDiffLabels = (
     );
   }
 
+  if (cur.worktreeCli !== refMerged.worktreeCli) {
+    lines.push(
+      `Agent worktree: ${refMerged.worktreeCli} → ${cur.worktreeCli} (--worktree)`,
+    );
+  } else if (
+    cur.worktreeCli === 'named' &&
+    cur.worktreeName.trim() !== refMerged.worktreeName.trim()
+  ) {
+    lines.push(
+      `Agent worktree name: ${
+        refMerged.worktreeName.trim() === ''
+          ? 'omit'
+          : refMerged.worktreeName.trim()
+      } → ${cur.worktreeName.trim()} (--worktree)`,
+    );
+  }
+
+  if (cur.worktreeBase.trim() !== refMerged.worktreeBase.trim()) {
+    lines.push(
+      `Worktree base: ${
+        refMerged.worktreeBase.trim() === ''
+          ? 'omit'
+          : refMerged.worktreeBase.trim()
+      } → ${
+        cur.worktreeBase.trim() === '' ? 'omit' : cur.worktreeBase.trim()
+      } (--worktree-base, Cursor only)`,
+    );
+  }
+
+  if (cur.skipWorktreeSetup !== refMerged.skipWorktreeSetup) {
+    lines.push(
+      `Skip worktree setup: ${refMerged.skipWorktreeSetup} → ${cur.skipWorktreeSetup} (--skip-worktree-setup, Cursor only)`,
+    );
+  }
+
   return lines;
+};
+
+/**
+ * @description Resolves agent CLI worktree for argv / GraphQL (flag-only uses {@link WORKFLOW_RALPH_WORKTREE_FLAG_ONLY}).
+ */
+export const resolveWorkflowRalphWorktreeArgvValue = (
+  input: WorkflowRalphRunOptionsInput,
+): string | undefined => {
+  switch (input.worktreeCli) {
+    case 'flag-only':
+      return WORKFLOW_RALPH_WORKTREE_FLAG_ONLY;
+
+    case 'named': {
+      const name = input.worktreeName.trim();
+      return name !== '' ? name : undefined;
+    }
+
+    case 'omit':
+      return undefined;
+  }
+};
+
+const appendWorkflowRalphWorktreeOptionArgs = (
+  args: string[],
+  input: WorkflowRalphRunOptionsInput,
+): void => {
+  const worktree = resolveWorkflowRalphWorktreeArgvValue(input);
+  if (worktree === undefined) {
+    return;
+  }
+
+  if (worktree === WORKFLOW_RALPH_WORKTREE_FLAG_ONLY) {
+    args.push('--worktree');
+  } else {
+    args.push('--worktree', worktree);
+  }
+
+  if (input.executionBackend !== 'cursor') {
+    return;
+  }
+
+  const base = input.worktreeBase.trim();
+  if (base !== '') {
+    args.push('--worktree-base', base);
+  }
+
+  if (input.skipWorktreeSetup) {
+    args.push('--skip-worktree-setup');
+  }
 };
 
 export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
@@ -237,8 +341,12 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
     prompt: DEFAULT_RALPH_PROMPT,
     promptFile: '',
     promptLayer: 'named',
+    skipWorktreeSetup: false,
     targetMode,
     taskId,
+    worktreeBase: '',
+    worktreeCli: 'omit',
+    worktreeName: '',
   };
 };
 
@@ -309,6 +417,8 @@ export const buildWorkflowRalphOptionArgs = (
       break;
   }
 
+  appendWorkflowRalphWorktreeOptionArgs(args, input);
+
   return args;
 };
 
@@ -359,8 +469,8 @@ export const validateWorkflowRalphRunOptionsState = (
 ):
   | { readonly ok: true }
   | {
-      readonly ok: false;
       readonly issues: readonly WorkflowRalphValidationIssue[];
+      readonly ok: false;
     } => {
   const requireCliTargetIds = options?.requireCliTargetIds === true;
   const issues: WorkflowRalphValidationIssue[] = [];
@@ -412,6 +522,31 @@ export const validateWorkflowRalphRunOptionsState = (
       issues.push({
         code: 'prompt_file_empty',
         message: '--prompt-file requires a non-empty path',
+      });
+    }
+  }
+
+  if (input.worktreeCli === 'named' && input.worktreeName.trim() === '') {
+    issues.push({
+      code: 'worktree_name_empty',
+      message:
+        'Agent CLI worktree name is required when using named --worktree',
+    });
+  }
+
+  if (input.executionBackend !== 'cursor') {
+    if (input.worktreeBase.trim() !== '') {
+      issues.push({
+        code: 'worktree_base_claude',
+        message: '--worktree-base is only supported when backend is cursor',
+      });
+    }
+
+    if (input.skipWorktreeSetup) {
+      issues.push({
+        code: 'skip_worktree_setup_claude',
+        message:
+          '--skip-worktree-setup is only supported when backend is cursor',
       });
     }
   }
@@ -573,6 +708,25 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
     const prompt = input.prompt.trim();
     if (prompt !== '' && prompt !== DEFAULT_RALPH_PROMPT) {
       ralph.prompt = prompt;
+    }
+  }
+
+  const worktree = resolveWorkflowRalphWorktreeArgvValue(input);
+  if (
+    worktree !== undefined &&
+    worktree !== WORKFLOW_RALPH_WORKTREE_FLAG_ONLY
+  ) {
+    ralph.worktree = worktree;
+  }
+
+  if (input.executionBackend === 'cursor') {
+    const worktreeBase = input.worktreeBase.trim();
+    if (worktreeBase !== '') {
+      ralph.worktreeBase = worktreeBase;
+    }
+
+    if (input.skipWorktreeSetup) {
+      ralph.skipWorktreeSetup = true;
     }
   }
 

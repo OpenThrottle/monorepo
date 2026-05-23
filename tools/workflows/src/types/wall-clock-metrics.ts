@@ -11,24 +11,12 @@
  * - Ratio > 5 suggests significant idle time (network, disk, or external waits).
  */
 export interface WallClockMetrics {
-  /** Wall-clock duration in milliseconds (end - start timestamp). */
-  readonly wallClockMs: number;
-  /** CPU user time delta in milliseconds (from process.cpuUsage). */
-  readonly cpuUserMs: number;
   /** CPU system time delta in milliseconds (from process.cpuUsage). */
   readonly cpuSystemMs: number;
   /** Total CPU time (user + system) in milliseconds. */
   readonly cpuTimeMs: number;
-  /**
-   * Ratio of wall-clock to CPU time: wallClockMs / cpuTimeMs.
-   * - ~1: CPU-bound (little idle time)
-   * - 2-5: I/O or mixed workload
-   * - 5: Significant wait time (network, external processes)
-   * If cpuTimeMs is 0, ratio is Infinity (pure idle/wait).
-   */
-  readonly wallClockToCpuRatio: number;
-  /** Start timestamp (Date.now()) when job began. */
-  readonly startTimestamp: number;
+  /** CPU user time delta in milliseconds (from process.cpuUsage). */
+  readonly cpuUserMs: number;
   /** End timestamp (Date.now()) when job completed. */
   readonly endTimestamp: number;
   /**
@@ -39,16 +27,28 @@ export interface WallClockMetrics {
    * - 'idle': cpuTimeMs is 0 or negligible
    */
   readonly interpretation: 'cpu_bound' | 'mixed' | 'io_bound' | 'idle';
+  /** Start timestamp (Date.now()) when job began. */
+  readonly startTimestamp: number;
+  /** Wall-clock duration in milliseconds (end - start timestamp). */
+  readonly wallClockMs: number;
+  /**
+   * Ratio of wall-clock to CPU time: wallClockMs / cpuTimeMs.
+   * - ~1: CPU-bound (little idle time)
+   * - 2-5: I/O or mixed workload
+   * - 5: Significant wait time (network, external processes)
+   * If cpuTimeMs is 0, ratio is Infinity (pure idle/wait).
+   */
+  readonly wallClockToCpuRatio: number;
 }
 
 /**
  * @description Creates WallClockMetrics from start/end timestamps and CPU usage deltas.
  */
 export function createWallClockMetrics(params: {
-  readonly startTimestamp: number;
-  readonly endTimestamp: number;
-  readonly cpuUserDeltaMs: number;
   readonly cpuSystemDeltaMs: number;
+  readonly cpuUserDeltaMs: number;
+  readonly endTimestamp: number;
+  readonly startTimestamp: number;
 }): WallClockMetrics {
   const { startTimestamp, endTimestamp, cpuUserDeltaMs, cpuSystemDeltaMs } =
     params;

@@ -134,6 +134,22 @@ describe('RalphFlowContext from GraphQL / run options', () => {
     expect(ctx.debug).toBe('omit');
   });
 
+  it('maps worktree tuning into orchestrator context', () => {
+    const ctx = buildRalphFlowContextFromPlanRunTuning({
+      mode: 'plan',
+      planId,
+      ralph: {
+        skipWorktreeSetup: true,
+        worktree: 'target-one',
+        worktreeBase: 'main',
+      },
+    });
+
+    expect(ctx.worktree).toBe('target-one');
+    expect(ctx.worktreeBase).toBe('main');
+    expect(ctx.skipWorktreeSetup).toBe(true);
+  });
+
   it('ignores promptFile on tuning (layer-1 argv only; not on RalphFlowContext)', () => {
     const ctx = buildRalphFlowContextFromPlanRunTuning({
       mode: 'plan',
@@ -234,8 +250,11 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
       project: 'openthrottle-workflows',
       prompt: '/agents/custom',
       runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
       taskId: '',
       timeout: 90,
+      worktree: undefined,
+      worktreeBase: undefined,
     };
 
     const ctx = buildRalphFlowContextFromRunOptionsShape(uiLike);
@@ -270,8 +289,11 @@ describe('RalphFlowContext argv-equivalent shape (UI → buildRalphFlowContextFr
       project: '',
       prompt: DEFAULT_RALPH_PROMPT,
       runner: DEFAULT_RALPH_RUNNER,
+      skipWorktreeSetup: undefined,
       taskId,
       timeout: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
     };
 
     const ctx = buildRalphFlowContextFromRunOptionsShape(uiLike);

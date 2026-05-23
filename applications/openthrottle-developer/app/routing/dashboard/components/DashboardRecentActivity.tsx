@@ -11,9 +11,12 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { DashboardActivityCardFragment } from '~/__generated__/graphql';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  isPlanStatusKey,
+  PlanStatusBadge,
+} from '~/routing/plans/components/PlanStatusBadge';
 
-interface DashboardRecentActivityProps {
+export interface DashboardRecentActivityProps {
   className?: string;
   data: DashboardActivityCardFragment;
 }
@@ -154,30 +157,13 @@ function outputLinkAriaLabel(row: ActivityRow): string {
 
 export const DashboardRecentActivity = (
   props: DashboardRecentActivityProps,
-) => {
+): React.ReactElement => {
   const { className, data } = props;
 
   // Hooks
 
   // Setup
   const activityRows = toActivityRows(data);
-
-  const VALID_TASK_STATUSES = [
-    'BACKLOG',
-    'BLOCKED',
-    'CANCELED',
-    'COMPLETED',
-    'IN_PROGRESS',
-    'PENDING',
-    'QUEUED',
-    'SKIPPED',
-  ] as const;
-
-  const isValidTaskStatus = (
-    s: string | null,
-  ): s is (typeof VALID_TASK_STATUSES)[number] =>
-    s != null &&
-    VALID_TASK_STATUSES.includes(s as (typeof VALID_TASK_STATUSES)[number]);
 
   // Handlers
 
@@ -258,8 +244,8 @@ export const DashboardRecentActivity = (
               const statusBadge =
                 row.type === 'task' &&
                 row.status != null &&
-                isValidTaskStatus(row.status) ? (
-                  <PlanStatusBadge status={row.status as any} />
+                isPlanStatusKey(row.status) ? (
+                  <PlanStatusBadge status={row.status} />
                 ) : null;
 
               return (

@@ -1,24 +1,30 @@
 import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SelectContent } from '../SelectContent';
+import { Select, SelectContent, SelectTrigger, SelectValue } from '../index';
 import type { SelectContentProps } from '../SelectContent';
 
 describe('SelectContent Component', () => {
-  let component: RenderResult;
   let props: SelectContentProps;
 
   beforeEach(() => {
     props = {};
-
-    const Component = () => <SelectContent {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render content when Select is open', () => {
+    const Component = () => (
+      <Select defaultOpen={true}>
+        <SelectTrigger>
+          <SelectValue placeholder="Pick" />
+        </SelectTrigger>
+        <SelectContent {...props}>Options</SelectContent>
+      </Select>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    const content = document.body.querySelector('.relative.z-50');
+    expect(content).toBeInTheDocument();
+    expect(content).toHaveTextContent('Options');
   });
 });

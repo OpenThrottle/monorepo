@@ -23,8 +23,8 @@ export type CortexParseBlock =
       readonly text: string;
     }
   | {
-      readonly kind: 'list_item';
       readonly depth: number;
+      readonly kind: 'list_item';
       readonly text: string;
     }
   | {
@@ -32,8 +32,8 @@ export type CortexParseBlock =
       readonly text: string;
     }
   | {
-      readonly kind: 'table';
       readonly headers: readonly string[];
+      readonly kind: 'table';
       readonly rows: readonly (readonly string[])[];
     };
 

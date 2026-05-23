@@ -4,7 +4,9 @@ import { Link } from 'react-router';
 
 interface HomeMoveFasterProps {}
 
-export const HomeMoveFaster = (_props: HomeMoveFasterProps) => {
+export const HomeMoveFaster = (
+  _props: HomeMoveFasterProps,
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

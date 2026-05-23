@@ -82,6 +82,10 @@ export interface NestjsLoggingModuleOptions {
    */
   readonly isGlobal?: boolean | undefined;
   /**
+   * @description Minimum levels written to JSONL and emitted on the hub (inclusive).
+   */
+  readonly levels?: ReadonlyArray<NestjsLoggingLevel> | undefined;
+  /**
    * @description Absolute or process-relative directory for JSONL files.
    */
   readonly logDirectory: string;
@@ -93,10 +97,6 @@ export interface NestjsLoggingModuleOptions {
    * @description Maximum line count to replay from tail of the JSONL file.
    */
   readonly maxReplayLines?: number | undefined;
-  /**
-   * @description Minimum levels written to JSONL and emitted on the hub (inclusive).
-   */
-  readonly levels?: ReadonlyArray<NestjsLoggingLevel> | undefined;
   /**
    * @description Rotation policy for the JSONL sink.
    */
@@ -195,7 +195,6 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- runtime guard narrows unknown
   const opts = options as Record<string, unknown>;
   const logDirectory = opts.logDirectory;
 
@@ -289,7 +288,6 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
       throw new NestjsLoggingError('rotation must be an object when provided.');
     }
 
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const rot = rotation as Record<string, unknown>;
     const type = rot.type;
 
@@ -334,14 +332,10 @@ export const validateNestjsLoggingModuleOptions = (options: unknown): void => {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const ws = websocket as Record<string, unknown>;
     const enabled = ws.enabled;
 
-    if (
-      enabled !== undefined &&
-      typeof enabled !== 'boolean'
-    ) {
+    if (enabled !== undefined && typeof enabled !== 'boolean') {
       throw new NestjsLoggingError(
         'websocket.enabled, when provided, must be a boolean.',
       );
@@ -409,6 +403,5 @@ export const parseNestjsLoggingModuleOptions = (
 ): NestjsLoggingModuleOptions => {
   validateNestjsLoggingModuleOptions(input);
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- narrowed after validate
   return input as NestjsLoggingModuleOptions;
 };

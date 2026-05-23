@@ -22,7 +22,7 @@ interface PricingCardProps {
   readonly yearly: boolean;
 }
 
-export const PricingCard = (props: PricingCardProps) => {
+export const PricingCard = (props: PricingCardProps): React.ReactElement => {
   const { className, ctaTo, index, product, yearly } = props;
 
   // Hooks

@@ -27,6 +27,9 @@ describe('resolveRalphPromptFromSeed', () => {
       project: undefined,
       prompt: '/agents/seo',
       promptFile: undefined,
+      skipWorktreeSetup: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
     });
     expect(r.promptProfileKind).toBe('named');
     expect(r.prompt).toBe('/agents/seo');
@@ -46,6 +49,9 @@ describe('resolveRalphPromptFromSeed', () => {
         project: undefined,
         prompt: DEFAULT_RALPH_PROMPT,
         promptFile: 'custom.md',
+        skipWorktreeSetup: undefined,
+        worktree: undefined,
+        worktreeBase: undefined,
       });
       expect(r.promptProfileKind).toBe('file');
       expect(r.prompt).toBe('Hello from file\n');

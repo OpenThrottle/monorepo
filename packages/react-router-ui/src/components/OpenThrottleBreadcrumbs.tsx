@@ -18,7 +18,7 @@ export interface OpenThrottleBreadcrumbsProps {
 
 export const OpenThrottleBreadcrumbs = (
   props: OpenThrottleBreadcrumbsProps,
-) => {
+): React.ReactElement => {
   const { children, className, links } = props;
 
   // Hooks
