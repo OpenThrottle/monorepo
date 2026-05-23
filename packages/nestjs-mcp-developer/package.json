@@ -43,9 +43,6 @@
         ],
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
-        "executor": "@nx/js:tsc"
-      },
       "dev": {
         "continuous": true,
         "executor": "@nx/js:tsc",
