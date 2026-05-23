@@ -125,6 +125,7 @@
       "name:vscode-openthrottle",
       "production:true",
       "publish:false",
+      "technology:nodejs",
       "technology:typescript",
       "type:package"
     ],

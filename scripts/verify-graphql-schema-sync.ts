@@ -3,7 +3,6 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const workspaceRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-
 const rootSchemaPath = join(workspaceRoot, 'schema.gql');
 const serverSchemaPath = join(
   workspaceRoot,
@@ -11,7 +10,7 @@ const serverSchemaPath = join(
 );
 
 /**
- * @description Exits non-zero when repo-root schema.gql diverges from the server-generated copy.
+ * Exits non-zero when repo-root schema.gql diverges from the server-generated copy.
  */
 const main = (): void => {
   console.log(
