@@ -35,7 +35,6 @@ Duration ~86–89s (full suite).
 | `app/routes/__tests__/search._index.test.tsx`                              |      1 |      3 | Missing `role="main"`                        |
 | `app/routes/__tests__/settings.debug.test.tsx`                             |      1 |      1 | Diagnostics copy drift                       |
 | `app/routing/projects/components/__tests__/ProjectsToolbar.test.tsx`       |      1 |      3 | Create project link role/name                |
-| `app/routing/projects/components/__tests__/ProjectEmpty.test.tsx`          |      1 |      0 | New project link                             |
 | `app/routing/dashboard/components/__tests__/DashboardToolbar.test.tsx`     |      1 |      0 | Toolbar heading accessible name              |
 | `app/routing/plans/utils/__tests__/parsers.test.ts`                        |      1 |      8 | Tab search param constant                    |
 | `app/routes/__tests__/notifications._index.test.tsx`                       |      1 |      0 | Placeholder stub                             |
@@ -101,12 +100,12 @@ These files contain commented-out real tests and a failing placeholder:
 
 ### 6. Copy / constant drift (~4 tests)
 
-| Area                               | Test expectation                                     | Actual                                             |
-| ---------------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
-| `parsers.test.ts`                  | `PLANS_DETAIL_TAB_SEARCH_PARAM === 'plansDetailTab'` | `'tab'` in `parsers.ts`                            |
-| `settings.debug.test.tsx`          | Text `/localStorage & sessionStorage/i`              | Section removed or renamed in `SettingsDebugPanel` |
-| `ProjectsToolbar` / `ProjectEmpty` | `link` name `/create project/i`                      | Link absent or different accessible name           |
-| `search._index`                    | Pagination text `Showing 1-1 of 1 results`           | May have changed with layout                       |
+| Area                      | Test expectation                                     | Actual                                             |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| `parsers.test.ts`         | `PLANS_DETAIL_TAB_SEARCH_PARAM === 'plansDetailTab'` | `'tab'` in `parsers.ts`                            |
+| `settings.debug.test.tsx` | Text `/localStorage & sessionStorage/i`              | Section removed or renamed in `SettingsDebugPanel` |
+| `ProjectsToolbar`         | `link` name `/create project/i`                      | Link absent or different accessible name           |
+| `search._index`           | Pagination text `Showing 1-1 of 1 results`           | May have changed with layout                       |
 
 **Fix strategy:** Update spec to match intentional product change, or revert constant/copy if rename was accidental.
 
@@ -119,7 +118,7 @@ These files contain commented-out real tests and a failing placeholder:
 1. **Plans table/board** — `PlansTable`, `PlanTasksTable`, `PlanTasksBoard` (~30 failures).
 2. **Workflow + parsers** — `PlanWorkflowConfigPrompt`, `PlanWorkflowConfigTuning`, `parsers.test.ts`.
 3. **Plans routes** — `plans._index`, `plans.$planId._index`.
-4. **Projects** — `ProjectsTable`, `ProjectsToolbar`, `ProjectEmpty`, `projects._index`, `projects.$projectId`.
+4. **Projects** — `ProjectsTable`, `ProjectsToolbar`, `projects._index`, `projects.$projectId`.
 5. **Dashboard** — `DashboardToolbar`, `DashboardQueueStats`.
 6. **Settings / search / notifications / skill** — stub routes + `settings.debug` + `search._index`.
 7. **Verify** — full `pnpm nx run openthrottle-developer:test`; document 13 intentional skips under `app/routes/__tests__/` (`it.skip` / todo routes).
