@@ -188,6 +188,19 @@ If you need to update technology tags for an existing project:
 
 When you add or keep an export that is part of a **package public API** (see `package.json` → `exports`) or a documented cross-workspace helper, tag it with JSDoc **`@publicApi`** so Knip does not report or auto-remove it. Component prop types (`*Props`, `*Options`) do not need this tag; intentional `export` on those types is expected. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md) for the full report-vs-fix workflow. Run **`pnpm nx run monorepo:knip`** for reports only—do not run **`knip --fix-type exports`** on application UI. **`knip --fix-type dependencies`** is optional and only after reviewing the `package.json` diff.
 
+## Testing: `typecheck-tests` versus `test`
+
+Nx exposes two different targets for test-related work. They are **not** interchangeable.
+
+| Target                | What it does                                                                              | Executes test bodies?                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **`typecheck-tests`** | `tsc --noEmit -p tsconfig.test.json` in the project root (see `nx.json` `targetDefaults`) | **No** — only type-checks `*.test.ts`, `*.spec.ts`, and other files included by `tsconfig.test.json` |
+| **`test`**            | Vitest via `@nx/vitest:test` and each project’s `vitest.config.ts`                        | **Yes** — runs `describe` / `it` / `expect` and reports pass or fail                                 |
+
+**`typecheck-tests` does not run Vitest and does not execute test bodies.** A green `typecheck-tests` result only means test files compile; it does not prove assertions pass or that mocks behave correctly. Use **`pnpm nx run <project>:test`** (or `pnpm nx affected --target=test`) when you need real test execution.
+
+CI runs both at different priorities: P0 affected **`lint`**, **`typecheck`**, and **`typecheck-tests`** on every PR; P2 runs **`test`** only for phased projects (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Locally, **`pnpm run check:local`** runs affected `typecheck-tests` and affected `test` as separate steps.
+
 ## Additional Resources
 
 - **[MONOREPO.md](./MONOREPO.md)**: Comprehensive monorepo structure, organization, and contribution guidelines
