@@ -17,6 +17,7 @@ if (isDevelopment && !url) {
 const config: CodegenConfig = {
   documents: [
     '../../applications/openthrottle-developer/app/**/*.graphql',
+    // '../../packages/*/src/**/*.graphql',
     // 'src/graphql/ralph/**/*.graphql',
     '!src/__generated__/**/*',
   ],
@@ -28,19 +29,19 @@ const config: CodegenConfig = {
         fragmentMasking: false,
       },
     },
-    './src/__generated__/schemas.ts': {
-      config: {
-        importFrom: './graphql.js',
-        scalars: {
-          DateTime: Date,
-        },
-        schema: 'zod',
-        strictScalars: true,
-        zodImportPath: 'zod/v3', // FIXME: See zodImportPath ~ https://www.npmjs.com/package/graphql-codegen-typescript-validation-schema
-      },
-      overwrite: true,
-      plugins: ['typescript-validation-schema'],
-    },
+    // './src/__generated__/schemas.ts': {
+    //   config: {
+    //     importFrom: './graphql.js',
+    //     scalars: {
+    //       DateTime: Date,
+    //     },
+    //     schema: 'zod',
+    //     strictScalars: true,
+    //     zodImportPath: 'zod/v3', // FIXME: See zodImportPath ~ https://www.npmjs.com/package/graphql-codegen-typescript-validation-schema
+    //   },
+    //   overwrite: true,
+    //   plugins: ['typescript-validation-schema'],
+    // },
   },
 
   hooks: {

@@ -19,7 +19,7 @@ import {
   validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
-import { RalphNestedDebugCli } from '~/__generated__/graphql';
+import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
 
 const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},

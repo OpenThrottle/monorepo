@@ -28,13 +28,16 @@ export function parsePromptsSortFromSearchParams(
   };
 }
 
-export const PROMPTS_TYPE_FILTER_OPTIONS = [
+export const PROMPTS_TYPE_FILTER_OPTIONS: readonly {
+  label: string;
+  value: CustomPromptType;
+}[] = [
   { label: 'Agents', value: CustomPromptType.Agents },
   { label: 'Commands', value: CustomPromptType.Commands },
   { label: 'Prompts', value: CustomPromptType.Prompts },
   { label: 'Rules', value: CustomPromptType.Rules },
   { label: 'Skills', value: CustomPromptType.Skills },
-] as const;
+];
 
 export const PROMPTS_VALID_TYPES = new Set(
   PROMPTS_TYPE_FILTER_OPTIONS.map((opt) => opt.value),
