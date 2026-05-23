@@ -26,6 +26,7 @@ const config: CodegenConfig = {
       overwrite: true,
       preset: 'client',
       presetConfig: {
+        enumsAsTypes: true,
         fragmentMasking: false,
       },
     },

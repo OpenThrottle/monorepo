@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@graphql-typed-document-node/core": "^3.2.0",
+    "@graphql-typed-document-node/core": "3.2.0",
     "graphql": "^16.13.2"
   },
   "devDependencies": {},
