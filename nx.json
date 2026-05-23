@@ -237,6 +237,7 @@
     },
     "lint": {
       "cache": true,
+      "dependsOn": ["@tools/dotfiles:build"],
       "executor": "nx:run-commands",
       "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
