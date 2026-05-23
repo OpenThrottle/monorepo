@@ -398,6 +398,11 @@
       "keytar",
       "msgpackr-extract",
       "weak",
+      "zeromq",
+      "@scarf/scarf",
+      "keytar",
+      "msgpackr-extract",
+      "weak",
       "zeromq"
     ],
     "overrides": {
@@ -470,6 +475,7 @@
     "check:local:verify": "pnpm nx run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen",
     "nx:validate-tags": "tsx ./scripts/nx-validate-tags.ts",
     "preinstall": "npx only-allow pnpm",
+    "prepare": "husky",
     "start": "pnpm run database:start",
     "__sync:openthrottle:profile:force": "git push openthrottle-profile `git subtree split --prefix applications/openthrottle main`:main --force",
     "sync:openthrottle": "pnpm run \"/^sync:openthrottle:.*/\"",
