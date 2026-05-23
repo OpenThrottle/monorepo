@@ -18,7 +18,7 @@ export interface EditorProps extends MonacoEditorProps {
 /**
  * @description Main editor component combining toolbar, tabs, editor window, and sidebar.
  */
-export const Editor = (props: EditorProps): React.ReactElement => {
+export const Editor = (props: EditorProps): React.ReactElement | null => {
   const {
     basePath = '/prompts',
     onFileCreated,
@@ -40,7 +40,9 @@ export const Editor = (props: EditorProps): React.ReactElement => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!IS_BROWSER) return null;
+  if (!IS_BROWSER) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col flex-1" data-testid="Editor">

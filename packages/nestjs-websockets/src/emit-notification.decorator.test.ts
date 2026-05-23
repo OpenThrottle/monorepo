@@ -11,12 +11,11 @@ import {
 const reflector = new Reflector();
 
 function getEmitNotificationMetadata(
-  handler: object,
+  handler: (...args: unknown[]) => unknown,
 ): EmitNotificationMetadataValue | undefined {
-  return reflector.get<EmitNotificationMetadataValue | undefined>(
-    EMIT_NOTIFICATION_KEY,
-    handler,
-  );
+  return reflector.get(EMIT_NOTIFICATION_KEY, handler) as
+    | EmitNotificationMetadataValue
+    | undefined;
 }
 
 describe('EmitNotification', () => {
@@ -27,7 +26,7 @@ describe('EmitNotification', () => {
 
   it('sets metadata with event only when given a string', () => {
     class Test {
-      @(EmitNotification('plan.updated') as MethodDecorator)
+      @EmitNotification('plan.updated')
       updatePlan(): void {}
     }
     const meta = getEmitNotificationMetadata(Test.prototype.updatePlan) as
@@ -41,7 +40,7 @@ describe('EmitNotification', () => {
   it('sets metadata with event and payload mapper when given string and mapper', () => {
     const payloadFn = (ret: unknown): unknown => ret;
     class Test {
-      @(EmitNotification('task.completed', payloadFn) as MethodDecorator)
+      @EmitNotification('task.completed', payloadFn)
       completeTask(): unknown {
         return null;
       }
@@ -57,10 +56,10 @@ describe('EmitNotification', () => {
   it('sets metadata when given object form', () => {
     const payloadFn = (ret: unknown): unknown => ret ?? null;
     class Test {
-      @(EmitNotification({
+      @EmitNotification({
         event: 'plan.status_changed',
         payload: payloadFn,
-      }) as MethodDecorator)
+      })
       setStatus(): void {}
     }
     const meta = getEmitNotificationMetadata(Test.prototype.setStatus) as
@@ -78,10 +77,10 @@ describe('EmitNotification', () => {
         ? { planId: (ret as { id: string }).id, status: 'COMPLETED' }
         : null;
     class Test {
-      @(EmitNotification([
+      @EmitNotification([
         { event: 'plan.updated', payload: payload1 },
         { event: 'plan.status_changed', payload: payload2 },
-      ]) as MethodDecorator)
+      ])
       setPlanStatus(): void {}
     }
     const meta = getEmitNotificationMetadata(

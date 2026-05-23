@@ -24,7 +24,7 @@ interface FetcherData {
  */
 export const EditorNewFileForm = (
   props: EditorNewFileFormProps,
-): React.ReactElement => {
+): React.ReactElement | null => {
   const {
     basePath = '/prompts',
     className,
@@ -106,7 +106,9 @@ export const EditorNewFileForm = (
   }, [fetcher.data, onSuccess]);
 
   // 🔌 Short Circuit
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div

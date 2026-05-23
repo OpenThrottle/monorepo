@@ -11,7 +11,9 @@ export interface EditorWindowProps extends MonacoEditorProps {
 /**
  * @description Monaco editor wrapper component with sensible defaults for prompt editing.
  */
-export const EditorWindow = (props: EditorWindowProps): React.ReactElement => {
+export const EditorWindow = (
+  props: EditorWindowProps,
+): React.ReactElement | null => {
   const { className, ...rest } = props;
 
   // Hooks
@@ -29,7 +31,9 @@ export const EditorWindow = (props: EditorWindowProps): React.ReactElement => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!IS_BROWSER) return null;
+  if (!IS_BROWSER) {
+    return null;
+  }
 
   return (
     <MonacoEditor
