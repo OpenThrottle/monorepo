@@ -890,7 +890,7 @@ export type Mutation = {
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
   /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
   enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;
-  /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
+  /** Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
@@ -940,7 +940,10 @@ export type Mutation = {
   updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
   updateWorkspaceProfile: UserWorkspaceProfileObject;
-  /** Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position. */
+  /**
+   * Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
+   * @deprecated Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.
+   */
   workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];

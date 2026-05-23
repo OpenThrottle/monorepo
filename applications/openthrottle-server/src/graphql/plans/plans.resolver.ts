@@ -20,6 +20,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   PlansService,
@@ -612,9 +613,9 @@ export class PlansResolver {
     return (result.affected ?? 0) > 0;
   }
 
-  // @ProfileResponseTime('PlansResolver.enqueuePlanRun')
+  @ProfileResponseTime('PlansResolver.enqueuePlanRun')
   @Mutation(() => EnqueuePlanRunResultObject, {
-    description: `Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.`,
+    description: `Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead.`,
   })
   @EmitNotification([
     {
@@ -650,7 +651,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      throw new Error(`Plan not found: ${planId}`);
+      throw new NotFoundException(`Plan not found: ${planId}`);
     }
 
     let jobData: RunPlanJobData;
@@ -726,118 +727,19 @@ export class PlansResolver {
     return result;
   }
 
-  // @ProfileResponseTime('PlansResolver.enqueuePlanRun')
+  /** Timing is captured by {@link PlansResolver.enqueuePlanRun} (this alias delegates there). */
   @Mutation(() => EnqueuePlanRunResultObject, {
-    description: `Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.`,
+    deprecationReason: `Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.`,
+    description: `Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.`,
   })
-  @EmitNotification([
-    {
-      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        ret != null
-          ? {
-              message: 'Plan queued for run',
-              planId: (ret as EnqueuePlanRunResultObject).planId,
-              severity: 'info' as const,
-            }
-          : null,
-    },
-    {
-      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) =>
-        ret != null
-          ? {
-              planId: (ret as EnqueuePlanRunResultObject).planId,
-              status: 'QUEUED',
-            }
-          : null,
-    },
-  ])
   async workflowPlanRun(
     @Args('input', { type: () => EnqueuePlanRunInput })
     input: EnqueuePlanRunInput,
   ): Promise<EnqueuePlanRunResultObject> {
-    const { jobRunHooksJson, planId, priority, ralph, workingDirectory } =
-      input;
-
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
-
-    if (!plan) {
-      throw new Error(`Plan not found: ${planId}`);
-    }
-
-    let jobData: RunPlanJobData;
-    try {
-      jobData = buildRunPlanJobData({
-        jobRunHooksJson,
-        planId,
-        planJobRunHooks: plan.jobRunHooks,
-        ralph,
-        workingDirectory,
-      });
-    } catch (error) {
-      const isError = error instanceof Error;
-      const message = isError ? error.message : String(error);
-
-      throw new BadRequestException(message);
-    }
-
-    const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
-    const job = await this.plansQueue.add(RUN_PLAN_SPAWN_JOB_NAME, jobData, {
-      priority: jobPriority,
-    });
-    const jobId = String(job.id ?? job.name);
-
-    await this.planRunsService.recordQueuedRun({
-      bullmqJobId: jobId,
-      executionBackend: jobData.executionBackend ?? 'cursor',
-      planId,
-      queueName: PLANS_QUEUE_NAME,
-      runKind: 'spawn',
-    });
-
-    await repo.update({ id: planId }, { status: 'QUEUED' });
-
-    const taskRepo = this.tasksService.getRepository();
-    const statusesToReset = [
-      'PENDING',
-      'IN_PROGRESS',
-      'BLOCKED',
-      'BACKLOG',
-      'SKIPPED',
-      'CANCELED',
-    ] as const;
-    await taskRepo.update(
-      {
-        planId,
-        status: In(statusesToReset),
-      },
-      { status: 'QUEUED' },
-    );
-
-    const waitingCount = await this.plansQueue.getWaitingCount();
-    const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
-    const jobIndex = waitingJobs.findIndex((j) => j.id === job.id);
-    const queuePosition = jobIndex >= 0 ? jobIndex + 1 : waitingCount;
-    const queueTotal = waitingCount;
-
-    this.notificationsService.emitPlanEnqueued({
-      planId,
-      queuePosition,
-      queueTotal,
-    });
-
-    const result = new EnqueuePlanRunResultObject();
-    result.executionBackend = jobData.executionBackend ?? 'cursor';
-    result.jobId = jobId;
-    result.planId = planId;
-    result.queuePosition = queuePosition;
-    result.queueTotal = queueTotal;
-
-    return result;
+    return this.enqueuePlanRun(input);
   }
 
+  @ProfileResponseTime('PlansResolver.enqueuePlanRalphOrchestrator')
   @Mutation(() => EnqueuePlanRunResultObject, {
     description: `Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.`,
   })
@@ -883,7 +785,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      throw new Error(`Plan not found: ${planId}`);
+      throw new NotFoundException(`Plan not found: ${planId}`);
     }
 
     const taskRepo = this.tasksService.getRepository();

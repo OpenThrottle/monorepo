@@ -2009,14 +2009,14 @@ type Mutation {
   deletePlan(input: DeletePlanInput!): Boolean!
 
   """
-  Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
+  Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead.
   """
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
 
   """
-  Enqueue a plan-run job for the given plan. Used by Cortex UI "Run plan" action. Returns job id, plan id, and queue position.
+  Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
   """
-  workflowPlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
+  workflowPlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject! @deprecated(reason: "Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.")
 
   """
   Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.
