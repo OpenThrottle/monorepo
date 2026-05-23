@@ -53,6 +53,7 @@
           ]
         }
       },
+      "lint": {},
       "serve": {
         "cache": false,
         "executor": "nx:run-commands",
