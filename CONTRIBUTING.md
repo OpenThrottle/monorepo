@@ -188,6 +188,75 @@ If you need to update technology tags for an existing project:
 
 When you add or keep an export that is part of a **package public API** (see `package.json` → `exports`) or a documented cross-workspace helper, tag it with JSDoc **`@publicApi`** so Knip does not report or auto-remove it. Component prop types (`*Props`, `*Options`) do not need this tag; intentional `export` on those types is expected. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md) for the full report-vs-fix workflow. Run **`pnpm nx run monorepo:knip`** for reports only—do not run **`knip --fix-type exports`** on application UI. **`knip --fix-type dependencies`** is optional and only after reviewing the `package.json` diff.
 
+## GraphQL schema and codegen
+
+The API schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`). Consumers (React Router apps, MCP, workflows, and other packages) read the committed **`schema.gql` at the repo root**. CI fails when schema or generated client code drifts; use this checklist after changing GraphQL types, resolvers, or `.graphql` documents.
+
+### When you change the server schema
+
+1. **Regenerate the server copy** — Start the server so NestJS writes `applications/openthrottle-server/schema.gql` (for example `pnpm nx run openthrottle-server:dev`, wait for bootstrap, then stop).
+2. **Sync the repo-root schema** — Root `schema.gql` must match the server file byte-for-byte:
+
+   ```bash
+   cp applications/openthrottle-server/schema.gql schema.gql
+   ```
+
+3. **Regenerate consumer outputs** — Run GraphQL and React Router codegen for affected projects:
+
+   ```bash
+   pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel
+   ```
+
+   To refresh all production-tagged consumers in one pass:
+
+   ```bash
+   pnpm run build:graphql
+   ```
+
+4. **Commit schema and generated files** — Include `schema.gql`, `applications/openthrottle-server/schema.gql`, and any updated `__generated__` trees under apps or packages you touched.
+
+**Schema compatibility:** Do not remove or change types on existing GraphQL fields without a migration plan. Mark unused fields **`@deprecated(reason: "...")`** instead. See [personal-general.mdc](.cursor/rules/personal-general.mdc) (API applications) and `applications/openthrottle-server/docs/SCHEMA_AUDIT.md`.
+
+### Projects with committed GraphQL codegen
+
+These targets read root `schema.gql` via each project’s `codegen.ts`:
+
+| Area                    | Nx project(s)                                                                                                     | Generated output (typical)                           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Developer UI            | `openthrottle-developer`, `@openthrottle/openthrottle-developer-codegen`                                          | `app/__generated__/` or package `src/__generated__/` |
+| Other React Router apps | `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`                                                | `app/__generated__/`                                 |
+| MCP / Ralph / workflows | `@openthrottle/mcp-developer`, `@openthrottle/openthrottle-agentic-ralph`, `@openthrottle/openthrottle-workflows` | `src/__generated__/`                                 |
+| Editor extension        | `@openthrottle/vscode-openthrottle`                                                                               | extension `src/__generated__/`                       |
+
+**CI drift guards for committed package output:** `@openthrottle/mcp-developer` and `@openthrottle/openthrottle-agentic-ralph` must keep `src/__generated__/` in sync with the schema (regenerate with `pnpm nx run <project>:codegen-graphql` and commit, or CI’s `verify-graphql-codegen` fails).
+
+Per-project watch mode during development: `pnpm nx run <project>:codegen-graphql-watch` (and `codegen-react-router-watch` for React Router apps).
+
+### Verify locally (mirror CI)
+
+From the repo root after `pnpm install`:
+
+```bash
+# Schema sync (root vs server)
+pnpm nx run openthrottle-server:verify-graphql-schema-sync
+
+# Package-specific generated GraphQL clients
+pnpm nx run-many --target=verify-graphql-codegen \
+  --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/mcp-developer
+
+# Affected codegen + ensure working tree is clean
+pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel
+git diff --exit-code
+```
+
+`pnpm run check:local:verify` runs the schema-sync and package verify targets; `pnpm run check:local:codegen` runs affected codegen. Full contributor parity with CI gates: `pnpm run check:local` (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)).
+
+### Further reading
+
+- [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md) — P0/P1 gate commands and owners
+- [applications/openthrottle-server/README.md](applications/openthrottle-server/README.md) — running the API
+- [.agents/skills/openthrottle-stack/SKILL.md](.agents/skills/openthrottle-stack/SKILL.md) — server GraphQL conventions
+
 ## Testing: `typecheck-tests` versus `test`
 
 Nx exposes two different targets for test-related work. They are **not** interchangeable.
