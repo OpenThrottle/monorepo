@@ -18,8 +18,10 @@
     "sourceRoot": "./",
     "tags": [
       "name:@tools/ollama-proxy",
-      "type:tool",
-      "technology:typescript"
+      "production:false",
+      "technology:nodejs",
+      "technology:typescript",
+      "type:tool"
     ],
     "targets": {
       "build": {
@@ -52,6 +54,7 @@
           ]
         }
       },
+      "lint": {},
       "serve": {
         "cache": false,
         "executor": "nx:run-commands",

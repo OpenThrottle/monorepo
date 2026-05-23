@@ -2046,6 +2046,11 @@ export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
+  /**
+   * Deprecated alias for api. Kept for backwards compatibility.
+   * @deprecated Use api instead. Example field demonstrating the GraphQL deprecation policy.
+   */
+  apiStatus: Scalars['String']['output'];
   /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */

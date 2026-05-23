@@ -22,6 +22,7 @@
     "tags": [
       "name:@tools/<%= name %>",
       "production:true",
+      "technology:nodejs",
       "technology:typescript",
       "type:tool"
     ],

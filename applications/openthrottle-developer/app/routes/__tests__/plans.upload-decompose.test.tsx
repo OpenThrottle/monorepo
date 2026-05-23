@@ -1,25 +1,95 @@
+// @vitest-environment node
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../plans.upload-decompose';
+import { action } from '../plans.upload-decompose';
 
 describe('routes/plans.upload-decompose.tsx', () => {
-  // let component: RenderResult;
+  describe('action', () => {
+    test('parse returns error when no file is uploaded', async () => {
+      const formData = new FormData();
+      formData.set('intent', 'parse');
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+      const request = new Request('http://localhost/plans/upload-decompose', {
+        body: formData,
+        method: 'POST',
+      });
 
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/upload-decompose',
+      });
 
-  test('should render', async () => {
-    expect(true).toBe(true);
+      expect(result).toEqual({
+        error: 'Choose a non-empty file.',
+        proposal: undefined,
+      });
+    });
+
+    test('parse returns a stub proposal for a valid file', async () => {
+      const file = new File(['# Plan'], 'roadmap.md', {
+        type: 'text/markdown',
+      });
+      const formData = new FormData();
+      formData.set('intent', 'parse');
+      formData.set('document', file);
+
+      const request = new Request('http://localhost/plans/upload-decompose', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/upload-decompose',
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(result.proposal?.planTitle).toBe('Imported: roadmap.md');
+      expect(result.proposal?.tasks).toHaveLength(2);
+    });
+
+    test('commit returns error when proposal payload is missing', async () => {
+      const formData = new FormData();
+      formData.set('intent', 'commit');
+
+      const request = new Request('http://localhost/plans/upload-decompose', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/upload-decompose',
+      });
+
+      expect(result).toEqual({
+        error: 'Missing proposal payload.',
+        proposal: undefined,
+      });
+    });
+
+    test('returns error for unknown intent', async () => {
+      const formData = new FormData();
+      formData.set('intent', 'unknown');
+
+      const request = new Request('http://localhost/plans/upload-decompose', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/upload-decompose',
+      });
+
+      expect(result).toEqual({ error: 'Unknown action.', proposal: undefined });
+    });
   });
 });

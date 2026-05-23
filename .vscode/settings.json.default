@@ -27,13 +27,16 @@
   "terminal.integrated.shellArgs.osx": ["-l"],
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "workbench.colorCustomizations": {
-    "tab.activeBackground": "#000000",
+    // "tab.activeBackground": "#000000",
     "tab.activeBorderTop": "#0088ff",
-    "tab.activeForeground": "#FFFFFF",
+    // "tab.activeForeground": "#FFFFFF",
     "titleBar.activeBackground": "#0088ff",
-    "titleBar.activeForeground": "#333",
+    "titleBar.activeForeground": "#FFFF",
     "titleBar.inactiveBackground": "#0088ff",
-    "titleBar.inactiveForeground": "#333"
+    "titleBar.inactiveForeground": "#FFFF"
   },
+  "window.zoomLevel": 1,
+  "workbench.activityBar.compact": true,
+  "workbench.secondarySideBar.showLabels": true,
   "workbench.sideBar.location": "right"
 }

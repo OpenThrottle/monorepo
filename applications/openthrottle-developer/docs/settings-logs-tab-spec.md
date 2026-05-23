@@ -2,7 +2,7 @@
 
 **Status:** PRD-ready for implementation and regression review.
 
-**Route:** `/settings/logs`  
+**Route:** `/settings/logs`
 **Components:** `app/routes/settings.logs.tsx`, `app/routing/settings/components/SettingsLogsPanel.tsx`, `app/routing/settings/client-log-sink.ts` (capture), `app/routing/settings/utils/sanitize-client-env.ts` (bundle env).
 
 ## 1. Problem and audience
@@ -43,7 +43,7 @@ Developers need **browser-side** log lines and a **paste-safe JSON bundle** for 
 
 **Intent:** One payload shape for **copy** and **download** so support can compare env + client logs + page context without raw `.env`.
 
-**Payload kind:** `openthrottle-developer-support-bundle`, **version** `1` (bump version when adding breaking fields).
+**Payload kind:** `support`, **version** `1` (bump version when adding breaking fields).
 
 **Fields (conceptual)**
 

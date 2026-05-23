@@ -41,7 +41,7 @@ describe('SettingsLogsPanel', () => {
 
   test('buildSupportBundlePayload includes kind and workflow placeholder', () => {
     const payload = buildSupportBundlePayload();
-    expect(payload.kind).toBe('openthrottle-developer-support-bundle');
+    expect(payload.kind).toBe('support');
     expect(payload.version).toBe(1);
     expect(payload.workflowLogs.apiStatus).toBe('not_available');
     expect(Object.keys(payload.env).length).toBeGreaterThan(0);

@@ -160,11 +160,6 @@ type PlanObject {
   createdAt: DateTime!
   description: String
   id: String!
-
-  """
-  JSON string of job-run lifecycle hooks ({ hooks: [...] }), versioned with the plan.
-  """
-  jobRunHooksJson: String!
   project: String
 
   """
@@ -183,6 +178,9 @@ type PlanObject {
   taskCount: Int!
   title: String!
   updatedAt: DateTime!
+
+  """Job-run lifecycle hooks stored on the plan ({ hooks: [...] })."""
+  jobRunHooksJson: String!
 }
 
 type PlanStatusCountObject {
@@ -382,6 +380,53 @@ type LastActivityResultObject {
   taskUpdate: LastActivityTaskUpdatePartObject
 }
 
+type AgentsChatTurnResult {
+  """
+  Assistant-visible reply text. Null when the turn failed (see errorMessage).
+  """
+  assistantText: String
+
+  """
+  Echo of the client conversation id from the request input when provided; null when omitted.
+  """
+  conversationId: String
+
+  """
+  Validation or business-rule error for this turn (no throw). Null when the turn succeeded.
+  """
+  errorMessage: String
+
+  """
+  MCP developer tool name selected for this turn (e.g. semantic_search, health). Null when the turn failed before routing (e.g. empty message).
+  """
+  mcpTool: String
+
+  """
+  True when routed write tools are not permitted unless AGENTS_CHAT_ALLOW_MUTATIONS is enabled on the server (default read-only policy).
+  """
+  readOnlyAgentsChat: Boolean!
+
+  """
+  Router confidence in [0, 1] for the selected tool; null when the turn failed before routing.
+  """
+  routingConfidence: Float
+
+  """
+  Router reason label (e.g. heuristic name or llm_fallback:…); null when the turn failed before routing.
+  """
+  routingReason: String
+
+  """
+  JSON-encoded MCP structuredContent from the tool result when present on a successful tool call; null otherwise.
+  """
+  structuredPayloadJson: String
+
+  """
+  JSON-encoded tool envelope: tool name, arguments, optional confidence and routeReason, optional structuredContent, and isError when the MCP tool reported failure.
+  """
+  toolMetadataJson: String
+}
+
 type LoginResultObject {
   """JWT access token to send in Authorization header or cookie"""
   accessToken: String!
@@ -536,6 +581,9 @@ Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket.
 type ServerHealthObject {
   """API status. "ok" when the resolver runs."""
   api: String!
+
+  """Deprecated alias for api. Kept for backwards compatibility."""
+  apiStatus: String! @deprecated(reason: "Use api instead. Example field demonstrating the GraphQL deprecation policy.")
 
   """
   OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
@@ -1015,6 +1063,63 @@ type PlanOutputStreamChunkObject {
   planId: String!
 }
 
+type ServiceAccountCredentialObject {
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  label: String
+  lastUsedAt: DateTime
+
+  """Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens."""
+  prefix: String!
+  revokedAt: DateTime
+  serviceAccountId: ID!
+}
+
+type CreateServiceAccountCredentialResultObject {
+  """Saved credential metadata (secret hash is never returned)."""
+  credential: ServiceAccountCredentialObject!
+
+  """
+  Plaintext ot_sa_<prefix>_<secret> token; store securely — not retrievable again.
+  """
+  token: String!
+}
+
+type ServiceAccountObject {
+  createdAt: DateTime!
+  description: String
+
+  """When set, the service account cannot authenticate."""
+  disabledAt: DateTime
+  id: String!
+
+  """Stable identifier (e.g. mcp-developer, workflow-ralph)."""
+  name: String!
+}
+
+type PermissionObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """Permission identifier (e.g. users:read, settings:write)"""
+  name: String!
+}
+
+type RoleObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """Role identifier (e.g. admin, user, viewer)"""
+  name: String!
+
+  """Permissions assigned to this role"""
+  permissions: [PermissionObject!]!
+  updatedAt: DateTime!
+}
+
 type SearchChunk {
   """Chunk content (plan or task text)."""
   content: String!
@@ -1107,6 +1212,78 @@ type UserObject {
   githubUsername: String!
   id: String!
   updatedAt: DateTime!
+}
+
+"""Per-user workspace profile: contact fields and enabled editors."""
+type UserWorkspaceProfileObject {
+  """Display name for notifications and workspace attribution."""
+  contactDisplayName: String
+
+  """Contact email for workspace profile (distinct from auth email)."""
+  contactEmail: String
+  createdAt: DateTime!
+
+  """Editors the user wants OpenThrottle to configure in linked repos."""
+  enabledEditors: [WorkspaceEditorId!]!
+  updatedAt: DateTime!
+  userId: ID!
+}
+
+"""
+Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode.
+"""
+enum WorkspaceEditorId {
+  """Cursor IDE"""
+  CURSOR
+
+  """Visual Studio Code"""
+  VSCODE
+}
+
+"""
+A local filesystem checkout registered under the user's workspace settings.
+"""
+type WorkspaceLocalRepositoryObject {
+  id: ID!
+  userId: ID!
+
+  """Canonical absolute path on the server host."""
+  filesystemPath: String!
+  displayName: String!
+
+  """Optional git remote URL (origin)."""
+  gitRemoteUrl: String
+  gitDefaultBranch: String
+
+  """Optional Cortex project linked to this checkout."""
+  projectId: ID
+  project: ProjectObject
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Workspace settings for the authenticated user: profile and local repositories.
+"""
+type WorkspaceSettingsObject {
+  profile: UserWorkspaceProfileObject!
+  localRepositories: [WorkspaceLocalRepositoryObject!]!
+}
+
+"""
+Result of applying editor configuration for one linked repository and editor.
+"""
+type WorkspaceEditorConfigApplicationObject {
+  repositoryId: ID!
+  filesystemPath: String!
+  editor: WorkspaceEditorId!
+  filesWritten: [String!]!
+  warnings: [String!]!
+}
+
+"""Aggregate result of applying workspace editor configuration."""
+type ApplyWorkspaceEditorConfigurationResultObject {
+  applications: [WorkspaceEditorConfigApplicationObject!]!
 }
 
 type Query {
@@ -1318,6 +1495,23 @@ type Query {
   """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
 
+  """List all service accounts (admin, human only)."""
+  serviceAccounts: [ServiceAccountObject!]!
+
+  """Get a service account by ID (admin, human only)."""
+  serviceAccount(id: ID!): ServiceAccountObject
+
+  """
+  List credentials for a service account, including revoked (admin, human only).
+  """
+  serviceAccountCredentials(serviceAccountId: ID!): [ServiceAccountCredentialObject!]!
+
+  """Roles assigned to a service account (admin, human only)."""
+  rolesForServiceAccount(serviceAccountId: ID!): [RoleObject!]!
+
+  """Permission names for a service account (union of role permissions)."""
+  permissionsForServiceAccount(serviceAccountId: ID!): [String!]!
+
   """
   Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama).
   """
@@ -1366,6 +1560,17 @@ type Query {
 
   """List all users, ordered by createdAt descending"""
   users: [UserObject!]!
+
+  """
+  Workspace settings for the authenticated user (profile and local repositories).
+  """
+  workspaceSettings: WorkspaceSettingsObject!
+
+  """Get a local repository by id for the authenticated user."""
+  workspaceLocalRepository(id: ID!): WorkspaceLocalRepositoryObject
+
+  """List local repositories for the authenticated user."""
+  workspaceLocalRepositories: [WorkspaceLocalRepositoryObject!]!
 }
 
 input ActivityByDateInput {
@@ -1705,6 +1910,11 @@ type Mutation {
   triggerDevJsonlLogSample: Boolean!
 
   """
+  Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
+  """
+  agentsRunChatTurn(input: AgentsRunChatTurnInput!): AgentsChatTurnResult!
+
+  """
   Sign in with email and password. Returns JWT access token for Authorization header or cookie.
   """
   login(input: LoginInput!): LoginResultObject!
@@ -1832,6 +2042,30 @@ type Mutation {
   """
   deleteProject(input: DeleteProjectInput!): Boolean!
 
+  """Create a service account (admin, human only)."""
+  createServiceAccount(input: CreateServiceAccountInput!): ServiceAccountObject!
+
+  """Update a service account (admin, human only)."""
+  updateServiceAccount(input: UpdateServiceAccountInput!): ServiceAccountObject
+
+  """Disable a service account (admin, human only)."""
+  disableServiceAccount(id: ID!): ServiceAccountObject
+
+  """Re-enable a disabled service account (admin, human only)."""
+  enableServiceAccount(id: ID!): ServiceAccountObject
+
+  """Create a credential; returns plaintext token once (admin, human only)."""
+  createServiceAccountCredential(input: CreateServiceAccountCredentialInput!): CreateServiceAccountCredentialResultObject
+
+  """Revoke a service account credential (admin, human only)."""
+  revokeServiceAccountCredential(credentialId: ID!): Boolean!
+
+  """Assign a role to a service account (admin, human only)."""
+  assignRoleToServiceAccount(input: AssignRoleToServiceAccountInput!): Boolean!
+
+  """Remove a role from a service account (admin, human only)."""
+  removeRoleFromServiceAccount(input: RemoveRoleFromServiceAccountInput!): Boolean!
+
   """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
 
@@ -1852,6 +2086,42 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
+
+  """
+  Update contact fields and/or enabled editors on the authenticated user's workspace profile.
+  """
+  updateWorkspaceProfile(input: UpdateWorkspaceProfileInput!): UserWorkspaceProfileObject!
+
+  """Register a local filesystem repository for the authenticated user."""
+  createWorkspaceLocalRepository(input: CreateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
+
+  """
+  Update metadata for a local repository owned by the authenticated user.
+  """
+  updateWorkspaceLocalRepository(input: UpdateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
+
+  """
+  Assign, change, or clear the Cortex project link for a local repository.
+  """
+  setWorkspaceLocalRepositoryProject(input: SetWorkspaceLocalRepositoryProjectInput!): WorkspaceLocalRepositoryObject!
+
+  """
+  Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories.
+  """
+  applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigurationInput): ApplyWorkspaceEditorConfigurationResultObject!
+
+  """Remove a local repository owned by the authenticated user."""
+  deleteWorkspaceLocalRepository(id: ID!): Boolean!
+}
+
+input AgentsRunChatTurnInput {
+  """
+  Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns.
+  """
+  conversationId: String
+
+  """User message text for this turn."""
+  message: String!
 }
 
 input LoginInput {
@@ -2051,11 +2321,6 @@ input UpdatePlanInput {
 
   """Plan id to update"""
   id: ID!
-
-  """
-  JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.
-  """
-  jobRunHooksJson: String
   project: String
 
   """
@@ -2065,6 +2330,11 @@ input UpdatePlanInput {
   status: String
   summary: String
   title: String
+
+  """
+  JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.
+  """
+  jobRunHooksJson: String
 }
 
 input SetPlanStatusInput {
@@ -2134,9 +2404,6 @@ input RalphPlanRunTuningInput {
   """Whether to pass --debug / --verbose to nested workflow-ralph."""
   ralphDebugCli: RalphNestedDebugCli
 
-  """Cursor-only: pass --skip-worktree-setup to cursor-agent."""
-  skipWorktreeSetup: Boolean
-
   """
   Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id.
   """
@@ -2144,14 +2411,17 @@ input RalphPlanRunTuningInput {
 
   """Cursor-only: branch/ref for --worktree-base."""
   worktreeBase: String
+
+  """Cursor-only: pass --skip-worktree-setup to cursor-agent."""
+  skipWorktreeSetup: Boolean
 }
 
 """
 Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.
 """
 enum RalphNestedDebugCli {
-  omit
   debug
+  omit
   verbose
 }
 
@@ -2228,6 +2498,37 @@ input DeleteProjectInput {
   id: ID!
 }
 
+input CreateServiceAccountInput {
+  description: String
+
+  """Stable name (e.g. mcp-developer). Must be unique."""
+  name: String!
+}
+
+input UpdateServiceAccountInput {
+  description: String
+  id: ID!
+
+  """Display name. Pass null to leave unchanged."""
+  name: String
+}
+
+input CreateServiceAccountCredentialInput {
+  expiresAt: DateTime
+  serviceAccountId: ID!
+  label: String
+}
+
+input AssignRoleToServiceAccountInput {
+  roleId: ID!
+  serviceAccountId: ID!
+}
+
+input RemoveRoleFromServiceAccountInput {
+  roleId: ID!
+  serviceAccountId: ID!
+}
+
 input CreateTaskInput {
   assignee: String
   category: String
@@ -2291,4 +2592,42 @@ input UpdateUserInput {
 
   """User id to update"""
   id: ID!
+}
+
+input UpdateWorkspaceProfileInput {
+  contactDisplayName: String
+  contactEmail: String
+  enabledEditors: [WorkspaceEditorId!]
+}
+
+input CreateWorkspaceLocalRepositoryInput {
+  """Absolute path to an existing directory on the server host."""
+  filesystemPath: String!
+  displayName: String!
+  gitRemoteUrl: String
+  gitDefaultBranch: String
+  projectId: ID
+}
+
+input UpdateWorkspaceLocalRepositoryInput {
+  id: ID!
+  displayName: String
+  gitRemoteUrl: String
+  gitDefaultBranch: String
+  projectId: ID
+}
+
+input SetWorkspaceLocalRepositoryProjectInput {
+  id: ID!
+
+  """Cortex project id, or null to clear the link."""
+  projectId: ID
+}
+
+"""
+Optional filter: apply only to these local repository ids. Omit to apply to all linked repos.
+"""
+input ApplyWorkspaceEditorConfigurationInput {
+  """When set, only these repositories receive editor configuration."""
+  repositoryIds: [ID!]
 }
