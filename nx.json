@@ -13,7 +13,8 @@
     }
   },
   "namedInputs": {
-    "noMarkdown": ["!{projectRoot}/**/*.md"]
+    "noMarkdown": ["!{projectRoot}/**/*.md"],
+    "production": ["default", "!{projectRoot}/jest.config.ts"]
   },
   "plugins": [
     {
