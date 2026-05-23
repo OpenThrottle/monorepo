@@ -100,8 +100,10 @@ jobs:
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@v4
 
-      # - name: '🧩 Codegen Tasks'
-      #   run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router,codegen-supabase-expo,codegen-supabase-web --parallel --verbose || echo "No codegen tasks required"
+      - name: '🧩 Codegen Tasks'
+        run: |
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel --verbose
+          git diff --exit-code
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel --verbose
