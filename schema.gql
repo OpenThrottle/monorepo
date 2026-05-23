@@ -2417,8 +2417,8 @@ input RalphPlanRunTuningInput {
 Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.
 """
 enum RalphNestedDebugCli {
-  omit
   debug
+  omit
   verbose
 }
 
