@@ -14,8 +14,13 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/legal._index';
 import { opensource } from '~/routing/legal/data/data.opensource';
+import {
+  OPEN_THROTTLE_CONTACT_EMAIL,
+  OPEN_THROTTLE_CONTACT_PORTFOLIO,
+  OPEN_THROTTLE_CONTACT_PORTFOLIO_REF,
+} from '@openthrottle/react-router-utils';
+import type { Route } from '@/app/routes/+types/legal._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -94,10 +99,7 @@ export default function Component(
           <p className="text-sm text-muted-foreground">
             Created by{' '}
             <strong>
-              <Link
-                target="_blank"
-                to="https://mattscholta.com?ref=openthrottle-developer"
-              >
+              <Link target="_blank" to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}>
                 Matthew Scholta
               </Link>
             </strong>
@@ -145,16 +147,13 @@ export default function Component(
           <h2 className="text-xl font-bold mb-4">Matthew Scholta</h2>
           <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
             <OpenThrottleClipboard
-              label="matthew@openthrottle.com"
-              text="matthew@openthrottle.com"
+              label={OPEN_THROTTLE_CONTACT_EMAIL}
+              text={OPEN_THROTTLE_CONTACT_EMAIL}
             />
           </h3>
           <div className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-            <Link
-              target="_blank"
-              to="https://mattscholta.com?ref=openthrottle-developer"
-            >
-              mattscholta.com
+            <Link target="_blank" to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}>
+              {OPEN_THROTTLE_CONTACT_PORTFOLIO}
             </Link>
           </div>
         </div>

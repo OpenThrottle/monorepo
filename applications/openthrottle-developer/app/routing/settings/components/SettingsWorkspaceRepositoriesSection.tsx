@@ -13,7 +13,7 @@ import type {
   GetWorkspaceSettingsQuery,
 } from '~/__generated__/graphql';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { FolderOpenIcon } from 'lucide-react';
+import { FolderGit2Icon } from 'lucide-react';
 
 type ProjectOption = GetWorkspaceSettingsQuery['projects'][number];
 
@@ -182,7 +182,7 @@ export const SettingsWorkspaceRepositoriesSection = (
 
   return (
     <OpenThrottleFieldset
-      icon={FolderOpenIcon}
+      icon={FolderGit2Icon}
       id="local-repositories"
       legend="Local Repositories"
     >

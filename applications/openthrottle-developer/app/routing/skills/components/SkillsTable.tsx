@@ -21,7 +21,6 @@ export const SkillsTable = (props: SkillsTableProps) => {
 
   // Setup
   const data = React.useMemo(() => [...entries], [entries]);
-
   const getRowId = React.useCallback(getSkillsTableRowId, []);
 
   // Handlers

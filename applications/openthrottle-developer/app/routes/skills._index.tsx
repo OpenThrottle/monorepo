@@ -62,6 +62,7 @@ export default function Component(
         <div className="flex flex-col gap-4">
           <SkillsToolbar />
           <SkillsTable entries={entries} />
+          {/* <SkillsTable entries={[]} /> */}
         </div>
 
         {/* <AgentsSectionQuickLinks /> */}
