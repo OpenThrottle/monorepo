@@ -14,6 +14,8 @@ import {
 } from '../utils/index';
 import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react';
 
+const DEFAULT_BASE_PATH = '/projects';
+
 export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras {
   /** Base path for pagination links (default /projects). Use /plans for plans index. */
   readonly basePath?: string;
@@ -25,11 +27,9 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
   readonly total: number;
 }
 
-const DEFAULT_BASE_PATH = '/projects';
-
 export const OpenThrottlePagination = (
   props: OpenThrottlePaginationProps,
-): React.ReactElement => {
+): React.ReactElement | null => {
   const {
     assignees,
     basePath = DEFAULT_BASE_PATH,
@@ -97,7 +97,9 @@ export const OpenThrottlePagination = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
     <div className={className}>

@@ -29,7 +29,7 @@ export interface PlanFormProps {
   plan?: PlanDetailsFragment | null;
 }
 
-export const PlanForm = (props: PlanFormProps) => {
+export const PlanForm = (props: PlanFormProps): React.ReactElement => {
   const { actionData, plan } = props;
 
   // Hooks

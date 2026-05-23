@@ -6,7 +6,9 @@ export interface PullRequestStatsProps {
   className?: string;
 }
 
-export const PullRequestStats = (props: PullRequestStatsProps) => {
+export const PullRequestStats = (
+  props: PullRequestStatsProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

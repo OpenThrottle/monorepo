@@ -7,3 +7,5 @@ declare module 'eslint-plugin-typescript-sort-keys';
 // declare module 'eslint-config-expo/flat';
 // declare module 'eslint-plugin-import';
 // declare module 'eslint-plugin-react-hooks';
+
+export {};

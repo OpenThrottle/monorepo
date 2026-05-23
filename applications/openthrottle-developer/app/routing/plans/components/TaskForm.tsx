@@ -19,7 +19,7 @@ export interface TaskFormProps {
   task?: GetTaskByIdQuery['task'] | null;
 }
 
-export const TaskForm = (props: TaskFormProps) => {
+export const TaskForm = (props: TaskFormProps): React.ReactElement => {
   const { actionData, className, planId, task } = props;
 
   // Hooks

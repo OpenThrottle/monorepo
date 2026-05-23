@@ -15,7 +15,9 @@ export interface PlanStatusBadgeProps {
   status: PlanStatusKey;
 }
 
-export const PlanStatusBadge = (props: PlanStatusBadgeProps) => {
+export const PlanStatusBadge = (
+  props: PlanStatusBadgeProps,
+): React.ReactElement => {
   const { className, status } = props;
 
   // Hooks

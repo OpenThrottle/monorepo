@@ -18,7 +18,9 @@ export interface PlanTasksColumnProps {
 /**
  * @description Single status column: header plus scrollable task cards with an empty state.
  */
-export const PlanTasksColumn = (props: PlanTasksColumnProps) => {
+export const PlanTasksColumn = (
+  props: PlanTasksColumnProps,
+): React.ReactElement => {
   const {
     children,
     className,

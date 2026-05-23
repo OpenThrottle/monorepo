@@ -74,8 +74,8 @@ describe('showSystemNotification', () => {
   let mockNotificationCtor: ReturnType<typeof vi.fn>;
   let notificationApi: { permission: string };
   let mockNotificationInstance: {
-    onclick: (() => void) | null;
     close: ReturnType<typeof vi.fn>;
+    onclick: (() => void) | null;
   };
   let documentVisibilityState: string;
   let mockNavigate: NavigateFunction;
@@ -116,7 +116,8 @@ describe('showSystemNotification', () => {
       }
 
       close(): void {
-        mockNotificationInstance.close();
+        // FIXME:
+        (mockNotificationInstance.close as () => void)();
       }
     }
 

@@ -45,7 +45,9 @@ interface DraggablePlanTaskCardProps {
 /**
  * @description Draggable wrapper; whole card is a drag handle (links remain clickable without starting a drag).
  */
-const DraggablePlanTaskCard = (props: DraggablePlanTaskCardProps) => {
+const DraggablePlanTaskCard = (
+  props: DraggablePlanTaskCardProps,
+): React.ReactElement => {
   const { planId, task } = props;
 
   // Hooks
@@ -100,7 +102,9 @@ interface PlanTasksColumnDropProps {
 /**
  * @description Drop target for a status column; highlights when a task can be dropped here.
  */
-const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
+const PlanTasksColumnDrop = (
+  props: PlanTasksColumnDropProps,
+): React.ReactElement => {
   const {
     acceptsDrop,
     children,
@@ -164,7 +168,9 @@ const PlanTasksColumnDrop = (props: PlanTasksColumnDropProps) => {
 /**
  * @description Inner board: grouping, optimistic status updates, and react-dnd (must sit under {@link DndProvider}).
  */
-export const PlanTasksBoard = (props: PlanTasksBoardProps) => {
+export const PlanTasksBoard = (
+  props: PlanTasksBoardProps,
+): React.ReactElement => {
   const { className, planId, tasks } = props;
 
   // Hooks

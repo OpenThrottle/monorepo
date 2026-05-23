@@ -9,7 +9,9 @@ export interface SearchIntroductionProps {
   onExpandRankingChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const SearchIntroduction = (props: SearchIntroductionProps) => {
+export const SearchIntroduction = (
+  props: SearchIntroductionProps,
+): React.ReactElement => {
   const {
     className,
     expandRankingDetails = false,

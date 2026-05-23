@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
@@ -53,7 +54,10 @@ describe('OpenThrottleAuthForm Component', () => {
     await user.type(password, 'secret');
     const form = screen.getByTestId('OpenThrottleAuthForm');
     await user.click(
-      within(form).getByRole('button', { exact: true, name: 'Sign in' }),
+      within(form).getByRole('button', {
+        // exact: true,
+        name: 'Sign in',
+      }),
     );
 
     expect(onSubmit).toHaveBeenCalledTimes(1);

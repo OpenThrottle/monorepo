@@ -10,7 +10,9 @@ export interface AssigneeMultiSelectProps {
 /**
  * @description Multi-select dropdown to filter plans by assignee. Label "Assignee"; options shown with @ prefix. Updates URL search params on change.
  */
-export const AssigneeMultiSelect = (props: AssigneeMultiSelectProps) => {
+export const AssigneeMultiSelect = (
+  props: AssigneeMultiSelectProps,
+): React.ReactElement => {
   const { onChange, options, value } = props;
 
   // Hooks

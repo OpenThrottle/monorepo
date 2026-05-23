@@ -26,7 +26,9 @@ export interface StatusMultiSelectProps {
 /**
  * @description Multi-select dropdown to filter plans by status. Clean trigger "Status…" (or "Status (n)" when compact); selected items as Badges below unless compact; Popover + Command for options. Labels show underscores as spaces.
  */
-export const StatusMultiSelect = (props: StatusMultiSelectProps) => {
+export const StatusMultiSelect = (
+  props: StatusMultiSelectProps,
+): React.ReactElement => {
   const {
     'data-testid': dataTestId,
     compact = false,

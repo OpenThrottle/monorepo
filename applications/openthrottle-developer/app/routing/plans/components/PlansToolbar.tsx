@@ -24,7 +24,7 @@ export interface PlansToolbarProps {
 /**
  * @description Single-row compact toolbar: URL-driven search (q), semantic switch, status toggle group, assignee dropdown, sort dropdown, Create plan. Preserves role=search, data-testid, and URL-driven state.
  */
-export const PlansToolbar = (props: PlansToolbarProps) => {
+export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
   const {
     assigneeOptions,
     assignees,

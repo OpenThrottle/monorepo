@@ -6,7 +6,9 @@ export interface PlansIntroductionProps {
   className?: string;
 }
 
-export const PlansIntroduction = (props: PlansIntroductionProps) => {
+export const PlansIntroduction = (
+  props: PlansIntroductionProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

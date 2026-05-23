@@ -22,7 +22,7 @@ export interface PlanTaskCardProps {
   task: PlanTaskRowFragment;
 }
 
-export const PlanTaskCard = (props: PlanTaskCardProps) => {
+export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
   const { className, task } = props;
 
   // Hooks

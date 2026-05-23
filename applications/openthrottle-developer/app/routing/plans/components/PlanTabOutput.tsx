@@ -10,7 +10,9 @@ export interface PlanTabOutputProps {
   className?: string;
 }
 
-export const PlanTabOutput = (props: PlanTabOutputProps) => {
+export const PlanTabOutput = (
+  props: PlanTabOutputProps,
+): React.ReactElement => {
   const { chunks, className: _className } = props;
 
   // Hooks

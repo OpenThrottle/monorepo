@@ -4,14 +4,14 @@ import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
 export interface PlansStatsProps {
   className?: string;
-  countInProgress: number;
   countCompleted: number;
+  countInProgress: number;
   totalCount: number;
   totalCountAll: number;
   totalCountQueued: number;
 }
 
-export const PlansStats = (props: PlansStatsProps) => {
+export const PlansStats = (props: PlansStatsProps): React.ReactElement => {
   const {
     className,
     countInProgress,

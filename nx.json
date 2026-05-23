@@ -155,6 +155,32 @@
       },
       "outputs": ["{projectRoot}/dist/package.json"]
     },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "configurations": {
+        "graphql": {
+          "command": "graphql-codegen",
+          "dependsOn": ["^build"]
+        },
+        "graphql-watch": {
+          "command": "graphql-codegen --watch",
+          "continuous": true,
+          "dependsOn": ["^build"]
+        },
+        "react-router": {
+          "command": "react-router typegen",
+          "dependsOn": ["^build"]
+        },
+        "react-router-watch": {
+          "command": "react-router typegen --watch",
+          "continuous": true,
+          "dependsOn": ["^build"]
+        }
+      },
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
     "codegen-graphql": {
       "executor": "nx:run-commands",
       "options": {
@@ -213,6 +239,34 @@
       "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "nestjs": {
+      "executor": "nx:run-commands",
+      "configurations": {
+        "build": {
+          "command": "nest build --path ./tsconfig.app.json",
+          "dependsOn": ["^build"]
+        },
+        "debug": {
+          "continuous": true,
+          "command": "NEST_DEBUG nest start --debug --path ./tsconfig.app.json --watch",
+          "dependsOn": ["^dev"]
+        },
+        "dev": {
+          "continuous": true,
+          "command": "nest start --path ./tsconfig.app.json --watch",
+          "dependsOn": ["^dev"]
+        },
+        "repl": {
+          "command": "nest start --entryFile ./src/repl.js --path ./tsconfig.app.json --watch"
+        },
+        "start": {
+          "command": "nest start --path ./tsconfig.app.json"
+        }
+      },
+      "options": {
         "cwd": "{projectRoot}"
       }
     },

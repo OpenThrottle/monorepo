@@ -21,7 +21,7 @@ export interface SortDropdownProps {
 /**
  * @description Single dropdown to sort plans (combines sortBy and sortOrder). Matches OpenThrottle API SortDropdown: value (sortBy + sortOrder), onChange(sortBy, sortOrder).
  */
-export const SortDropdown = (props: SortDropdownProps) => {
+export const SortDropdown = (props: SortDropdownProps): React.ReactElement => {
   const { onChange, sortBy, sortOrder } = props;
 
   // Hooks

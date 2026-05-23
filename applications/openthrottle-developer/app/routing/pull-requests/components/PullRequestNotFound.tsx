@@ -11,7 +11,9 @@ export interface PullRequestNotFoundProps {
   repo: string;
 }
 
-export const PullRequestNotFound = (props: PullRequestNotFoundProps) => {
+export const PullRequestNotFound = (
+  props: PullRequestNotFoundProps,
+): React.ReactElement => {
   const { className, listQuery, owner, repo } = props;
 
   // Hooks

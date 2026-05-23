@@ -7,7 +7,9 @@ export interface PullRequestStatusProps {
   state: PullRequestCardFragment['state'];
 }
 
-export const PullRequestStatus = (props: PullRequestStatusProps) => {
+export const PullRequestStatus = (
+  props: PullRequestStatusProps,
+): React.ReactElement => {
   const { state } = props;
 
   // Hooks

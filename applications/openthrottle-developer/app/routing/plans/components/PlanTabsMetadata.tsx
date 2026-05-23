@@ -10,7 +10,9 @@ export interface PlanTabsMetadataProps {
   plan: PlanDetailsFragment;
 }
 
-export const PlanTabsMetadata = (props: PlanTabsMetadataProps) => {
+export const PlanTabsMetadata = (
+  props: PlanTabsMetadataProps,
+): React.ReactElement => {
   const { className, plan } = props;
   const { projectRelation: project } = plan;
 

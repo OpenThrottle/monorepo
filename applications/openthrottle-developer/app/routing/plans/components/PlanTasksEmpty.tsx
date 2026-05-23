@@ -15,7 +15,9 @@ export interface PlanTasksEmptyProps {
   search?: string;
 }
 
-export const PlanTasksEmpty = (props: PlanTasksEmptyProps) => {
+export const PlanTasksEmpty = (
+  props: PlanTasksEmptyProps,
+): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

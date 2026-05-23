@@ -13,7 +13,9 @@ export interface PlanTabRequirementsProps {
   tasks: PlanTaskRowFragment[];
 }
 
-export const PlanTabRequirements = (props: PlanTabRequirementsProps) => {
+export const PlanTabRequirements = (
+  props: PlanTabRequirementsProps,
+): React.ReactElement => {
   const { className, plan: _plan, tasks } = props;
 
   // Hooks

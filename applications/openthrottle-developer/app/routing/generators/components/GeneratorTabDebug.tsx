@@ -23,7 +23,9 @@ export interface GeneratorTabDebugProps {
   generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorTabDebug = (props: GeneratorTabDebugProps) => {
+export const GeneratorTabDebug = (
+  props: GeneratorTabDebugProps,
+): React.ReactElement => {
   const { generator } = props;
 
   // Hooks

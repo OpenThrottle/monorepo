@@ -9,7 +9,9 @@ import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 
 export interface PlanTaskNotFoundProps {}
 
-export const PlanTaskNotFound = (_props: PlanTaskNotFoundProps) => {
+export const PlanTaskNotFound = (
+  _props: PlanTaskNotFoundProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup
