@@ -355,7 +355,7 @@
   "scripts": {
     "build": "pnpm run build:packages",
     "build:docker": "pnpm nx run openthrottle-server:docker-build",
-    "build:graphql": "nx run-many --target \"codegen:build\" --projects tag:production:true",
+    "build:graphql": "pnpm nx run-many --target=codegen-graphql,codegen-react-router --projects tag:production:true --parallel",
     "build:licenses": "pnpm dlx license-checker --csv --production --out \"$(basename $PWD)-licenses.csv\"",
     "build:packages": "nx run-many --target build --projects tag:type:package,tag:type:tool",
     "caddy": "caddy run --config tools/caddy/Caddyfile",

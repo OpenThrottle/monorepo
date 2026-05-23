@@ -74,6 +74,6 @@ const grouping = groups[jobIndex - 1];
 if (grouping.length > 0) {
   const tags = grouping.map((project) => `!tag:name:${project}`).join(',');
 
-  console.log(`${tags} codegen:build`);
+  console.log(`${tags} codegen-graphql,codegen-react-router`);
   console.log(`${tags} ${target}`);
 }
