@@ -94,6 +94,17 @@ Examples:
 - `openthrottle-server` - NestJS GraphQL API application
 - `@openthrottle/nestjs-graphql` - NestJS GraphQL package
 
+#### `technology:nodejs`
+
+**When to use:**
+
+- Basic NodeJS packages or scripts
+- NodeJS Packages that are intended to be use Client and Server side
+
+**Examples:**
+
+- `openthrottle/openthrottle-workflows` - Workflows
+
 #### `technology:python`
 
 **When to use:**

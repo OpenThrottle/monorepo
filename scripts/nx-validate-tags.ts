@@ -7,11 +7,13 @@ const VALID_TECHNOLOGY_TAGS = [
   'expo',
   'llm',
   'nestjs',
+  'nodejs',
   'python',
   'react-native',
   'react-router',
   'react',
   'supabase',
+  'terraform',
   'typescript',
 ] as const;
 
