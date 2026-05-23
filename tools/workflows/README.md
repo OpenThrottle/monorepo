@@ -195,6 +195,18 @@ On the plan detail page, expand the **Workflow configuration** card. The **Works
 
 ## Worktree + BullMQ workflow (fan-out/fan-in)
 
+### GraphQL plan-run mutations (canonical)
+
+| Mutation                           | Role                                                                                                                       | Used by                                                    |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **`enqueuePlanRun`**               | **Canonical** spawn enqueue — nested `pnpm exec workflow-ralph` in the worker (`runKind: 'spawn'`)                         | Developer app **Run plan**, scripts, MCP clients           |
+| **`enqueuePlanRalphOrchestrator`** | In-process Ralph orchestrator (`runKind: 'orchestrator'`) — no nested CLI child                                            | Advanced / server-side orchestrator path                   |
+| **`workflowPlanRun`**              | **Deprecated alias** for `enqueuePlanRun` (same input and result; schema `deprecationReason` points to canonical mutation) | Legacy clients only — do not use in new UI or integrations |
+
+**Response-time profiling:** `PlansResolver.enqueuePlanRun` and `PlansResolver.enqueuePlanRalphOrchestrator` use `@ProfileResponseTime` from `@openthrottle/nestjs-profiling` (logs `[PlansResolver.<mutation>] <ms>`). The deprecated `workflowPlanRun` alias delegates to `enqueuePlanRun` and is intentionally not separately profiled.
+
+Both spawn and orchestrator mutations accept `EnqueuePlanRunInput` / `EnqueuePlanRalphOrchestratorInput` tuning fields documented on the GraphQL types.
+
 Ralph-related execution splits into **three surfaces** (same Cortex plan/task semantics; different host process):
 
 | Surface                        | What runs                                                                                                                                                                                                          | Typical trigger                                                                           |
@@ -209,9 +221,9 @@ Implementation notes: discriminant and argv/context mapping are documented in `a
 
 GraphQL **`enqueuePlanRun`** (spawn, `runKind: 'spawn'` or omitted) is the default queue path for Ralph. Whether post-run validation runs depends on **`WORKTREE_TARGETS`** on the **openthrottle-server** worker process (see [`@openthrottle/nestjs-worktrees`](../../packages/nestjs-worktrees/README.md)):
 
-| `WORKTREE_TARGETS` | Plans processor path | Post-run `ensureCommit` |
-| ------------------ | -------------------- | ----------------------- |
-| Unset or empty JSON | **Legacy spawn** — `processInProcessCwd` spawns `pnpm exec workflow-ralph` in `workingDirectory` or workspace root | **Skipped** — no `runWorktreeWorkflow`, no working-tree clean check, no nx lint/test/typecheck |
+| `WORKTREE_TARGETS`  | Plans processor path                                                                                                        | Post-run `ensureCommit`                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Unset or empty JSON | **Legacy spawn** — `processInProcessCwd` spawns `pnpm exec workflow-ralph` in `workingDirectory` or workspace root          | **Skipped** — no `runWorktreeWorkflow`, no working-tree clean check, no nx lint/test/typecheck                    |
 | One or more targets | **Worktree workflow** — `processWithWorktree` → acquire → `runChildJob` → **`ensureCommit: { runChecks: true }`** → release | **Runs** after Ralph exits successfully (see [verification-and-reporting.md](docs/verification-and-reporting.md)) |
 
 **`enqueuePlanRalphOrchestrator`** (in-process orchestrator) also does not use `runWorktreeWorkflow`; it has no parent-job `ensureCommit` step.

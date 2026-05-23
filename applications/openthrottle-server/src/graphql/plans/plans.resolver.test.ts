@@ -754,6 +754,30 @@ describe('PlansResolver', () => {
         }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
+
+    test('delegates to enqueuePlanRun with identical result', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      mockAdd.mockClear();
+      mockRecordQueuedRun.mockClear();
+
+      const input = {
+        jobRunHooksJson: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        workingDirectory: null,
+      };
+
+      const viaCanonical = await resolver.enqueuePlanRun(input);
+      mockAdd.mockClear();
+      mockRecordQueuedRun.mockClear();
+
+      const viaAlias = await resolver.workflowPlanRun(input);
+
+      expect(viaAlias).toEqual(viaCanonical);
+      expect(mockAdd).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('enqueuePlanRalphOrchestrator', () => {
