@@ -403,7 +403,7 @@
     "check:local:codegen": "pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel",
     "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:validate-tags": "pnpm nx:validate-tags",
-    "check:local:verify": "pnpm nx run openthrottle-server:verify-graphql-schema-sync && pnpm nx run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen",
+    "check:local:verify": "pnpm nx run openthrottle-server:verify-graphql-schema-sync && pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/mcp-developer",
     "nx:validate-tags": "tsx ./scripts/nx-validate-tags.ts",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky",

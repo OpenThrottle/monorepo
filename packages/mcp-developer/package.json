@@ -97,7 +97,15 @@
       },
       "test": {},
       "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck-tests": {},
+      "verify-graphql-codegen": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "(cd packages/mcp-developer && pnpm exec graphql-codegen) && git diff --exit-code -- packages/mcp-developer/src/__generated__",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
   "peerDependencies": {},
