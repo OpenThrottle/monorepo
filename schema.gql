@@ -582,6 +582,9 @@ type ServerHealthObject {
   """API status. "ok" when the resolver runs."""
   api: String!
 
+  """Deprecated alias for api. Kept for backwards compatibility."""
+  apiStatus: String! @deprecated(reason: "Use api instead. Example field demonstrating the GraphQL deprecation policy.")
+
   """
   OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
   """

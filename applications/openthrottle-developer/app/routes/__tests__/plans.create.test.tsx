@@ -1,21 +1,83 @@
-import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../plans.create';
+// @vitest-environment node
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import { action } from '../plans.create';
+
+vi.mock('@openthrottle/react-router-graphql');
+
+const mockExecuteGraphqlWithAuth = vi.mocked(
+  graphqlWithAuth.executeGraphqlWithAuth,
+);
 
 describe('routes/plans.create.tsx', () => {
-  // let component: RenderResult;
+  beforeEach(() => {
+    mockExecuteGraphqlWithAuth.mockReset();
+  });
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/plans/new/create`]}
-  //       path="/plans/:planId/create"
-  //     />,
-  //   );
-  // });
+  describe('action', () => {
+    test('returns error when category is missing', async () => {
+      const formData = new FormData();
+      formData.set('title', 'New plan');
 
-  test('should render', async () => {
-    expect(true).toBe(true);
+      const request = new Request('http://localhost/plans/create', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/create',
+      });
+
+      expect(result).toEqual({ error: 'Category is required.' });
+      expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+
+    test('returns error when title is missing', async () => {
+      const formData = new FormData();
+      formData.set('category', 'feature');
+
+      const request = new Request('http://localhost/plans/create', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/create',
+      });
+
+      expect(result).toEqual({ error: 'Title is required.' });
+      expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+
+    test('creates a plan and redirects', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        createPlan: { id: 'plan-new' },
+      });
+
+      const formData = new FormData();
+      formData.set('author', 'visormatt');
+      formData.set('category', 'feature');
+      formData.set('title', 'New plan');
+
+      const request = new Request('http://localhost/plans/create', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: {},
+        params: {},
+        request,
+        unstable_pattern: '/plans/create',
+      });
+
+      expect((result as Response).status).toBe(302);
+    });
   });
 });

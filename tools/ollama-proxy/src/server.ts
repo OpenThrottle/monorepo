@@ -14,10 +14,53 @@ const TARGET_MODEL =
   process.env.OLLAMA_PROXY_TARGET_MODEL ?? 'qwen3-coder-next';
 
 interface ChatCompletionsBody {
-  model?: string;
-  messages?: unknown[];
-  stream?: boolean;
   [key: string]: unknown;
+  messages?: unknown[];
+  model?: string;
+  stream?: boolean;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+interface OllamaModelTag {
+  readonly name: string;
+}
+
+interface OllamaTagsResponse {
+  readonly models?: readonly OllamaModelTag[];
+}
+
+function parseOllamaTagsResponse(value: unknown): OllamaTagsResponse | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const rawModels = value['models'];
+  if (rawModels === undefined) {
+    return {};
+  }
+
+  if (!Array.isArray(rawModels)) {
+    return null;
+  }
+
+  const models: OllamaModelTag[] = [];
+  for (const item of rawModels) {
+    if (!isRecord(item)) {
+      return null;
+    }
+
+    const name = item['name'];
+    if (typeof name !== 'string') {
+      return null;
+    }
+
+    models.push({ name });
+  }
+
+  return { models };
 }
 
 function parseBody(req: http.IncomingMessage): Promise<string> {
@@ -47,7 +90,12 @@ async function handleChatCompletions(
   let parsed: ChatCompletionsBody;
 
   try {
-    parsed = JSON.parse(body) as ChatCompletionsBody;
+    const value: unknown = JSON.parse(body);
+    if (!isRecord(value)) {
+      writeJson(res, 400, { error: { message: 'Invalid JSON body' } });
+      return;
+    }
+    parsed = value;
   } catch {
     writeJson(res, 400, { error: { message: 'Invalid JSON body' } });
     return;
@@ -147,9 +195,15 @@ async function handleModels(res: http.ServerResponse): Promise<void> {
     return;
   }
 
-  let tags: { models?: { name: string }[] };
+  let tags: OllamaTagsResponse;
   try {
-    tags = (await upstream.json()) as { models?: { name: string }[] };
+    const value: unknown = await upstream.json();
+    const parsedTags = parseOllamaTagsResponse(value);
+    if (parsedTags === null) {
+      writeJson(res, 502, { error: { message: 'Invalid upstream response' } });
+      return;
+    }
+    tags = parsedTags;
   } catch {
     writeJson(res, 502, { error: { message: 'Invalid upstream response' } });
     return;

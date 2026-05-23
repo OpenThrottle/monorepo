@@ -1,4 +1,4 @@
-# 🐙 Monorepo
+# 🤖 OpenThrottle | AI
 
 [![Continuous Integration](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
 [![NX Release](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
@@ -7,7 +7,7 @@ After years of development, I've refined my tech stack to focus on a core set of
 
 **See also:** [docs/](./docs/) for detailed guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
-- [🐙 Monorepo](#-monorepo)
+- [🤖 OpenThrottle | AI](#-openthrottle--ai)
   - [🤖 Ralph Loops](#-ralph-loops)
   - [🏠 Architecture](#-architecture)
   - [⚙️ Installation](#️-installation)

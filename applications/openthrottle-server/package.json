@@ -73,7 +73,15 @@
         }
       },
       "test": {},
-      "typecheck": {}
+      "typecheck": {},
+      "verify-graphql-schema-sync": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm exec tsx ./scripts/verify-graphql-schema-sync.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
   "private": true,

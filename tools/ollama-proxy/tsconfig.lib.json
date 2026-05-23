@@ -13,5 +13,10 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "dist"
+  ],
+  "references": [
+    {
+      "path": "../dotfiles/tsconfig.lib.json"
+    }
   ]
 }

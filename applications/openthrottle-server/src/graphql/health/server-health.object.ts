@@ -18,6 +18,13 @@ export class ServerHealthObject {
   api!: string;
 
   @Field(() => String, {
+    deprecationReason:
+      'Use api instead. Example field demonstrating the GraphQL deprecation policy.',
+    description: `Deprecated alias for api. Kept for backwards compatibility.`,
+  })
+  apiStatus!: string;
+
+  @Field(() => String, {
     description: `OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.`,
   })
   database!: string;
