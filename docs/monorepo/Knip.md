@@ -2,23 +2,6 @@
 
 Knip finds unused files, dependencies, and exports across the monorepo. Configuration lives in **`knip.jsonc`** at the repo root (used by Nx `monorepo:knip` via `--config knip.jsonc`). In CI, Knip is a **P3** gate with a committed baseline — see [CI-quality-gates.md](./CI-quality-gates.md).
 
-## Prerequisites: build `@tools/dotfiles` first
-
-Many workspace **`vite.config.ts`**, **`vitest.config.ts`**, and **`eslint.config.ts`** files import **`@tools/dotfiles`**. That package’s **`package.json` → `exports`** resolve runtime imports to **`dist/`** (see [tools/dotfiles/README.md](../../tools/dotfiles/README.md)). If **`tools/dotfiles/dist`** is missing, Knip fails while loading those configs—for example:
-
-```text
-Cannot find module '.../node_modules/@tools/dotfiles/dist/src/index.js'
-```
-
-**Before** `pnpm nx run monorepo:knip` or `pnpm nx run monorepo:knip-ci`, build dotfiles:
-
-```bash
-pnpm nx run @tools/dotfiles:build
-pnpm nx run monorepo:knip
-```
-
-Nx **`test`** targets already **`dependsOn: ["@tools/dotfiles:build"]`** in `nx.json`; the shared **`knip`** target does not—run the build explicitly on a clean checkout or when `dist/` was removed. CI and local flows that already built dotfiles earlier in the same session may not need a second build.
-
 ## Safe workflow (report vs fix)
 
 | Goal                         | Command                                            | Notes                                                                                                                              |
