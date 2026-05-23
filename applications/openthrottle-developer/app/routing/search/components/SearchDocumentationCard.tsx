@@ -21,7 +21,7 @@ export interface SearchDocumentationCardProps {
 
 export const SearchDocumentationCard = (
   props: SearchDocumentationCardProps,
-) => {
+): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks

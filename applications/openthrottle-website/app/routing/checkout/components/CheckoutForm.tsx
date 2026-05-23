@@ -17,7 +17,7 @@ interface CheckoutFormProps {
   readonly isPending?: boolean;
 }
 
-export const CheckoutForm = (props: CheckoutFormProps) => {
+export const CheckoutForm = (props: CheckoutFormProps): React.ReactElement => {
   const { actionData, className, isPending = false } = props;
 
   // Hooks

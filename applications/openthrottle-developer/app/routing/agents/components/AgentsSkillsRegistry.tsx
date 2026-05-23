@@ -21,7 +21,7 @@ export interface AgentsSkillsRegistryProps {
   entries?: ReadonlyArray<RepoSkillEntry>;
 }
 
-function filterEntries(
+export function filterEntries(
   entries: ReadonlyArray<RepoSkillEntry>,
   query: string,
 ): RepoSkillEntry[] {
@@ -37,7 +37,7 @@ function filterEntries(
   );
 }
 
-function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
+export function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
   agents: RepoSkillEntry[];
   cursor: RepoSkillEntry[];
 } {
@@ -58,13 +58,15 @@ function groupByLayout(entries: ReadonlyArray<RepoSkillEntry>): {
 /**
  * @description Maps repo `.agents/skills` and `.cursor/skills` layouts to GitHub links and copy-friendly paths for debugging misaligned skill picks.
  */
-export const AgentsSkillsRegistry = (props: AgentsSkillsRegistryProps) => {
+export const AgentsSkillsRegistry = (
+  props: AgentsSkillsRegistryProps,
+): React.ReactElement => {
   const { className, entries = [] } = props;
 
   // Hooks
-
   const [filterQuery, setFilterQuery] = React.useState('');
 
+  // Setup
   const filtered = React.useMemo(
     () => filterEntries(entries, filterQuery),
     [entries, filterQuery],
@@ -75,12 +77,9 @@ export const AgentsSkillsRegistry = (props: AgentsSkillsRegistryProps) => {
     [entries],
   );
 
-  // Setup
-
   const { agents, cursor } = groupByLayout(filtered);
 
   // Handlers
-
   const handleCopyPath = async (path: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(path);
@@ -89,6 +88,7 @@ export const AgentsSkillsRegistry = (props: AgentsSkillsRegistryProps) => {
     }
   };
 
+  // Markup
   const renderGrid = (items: readonly RepoSkillEntry[]): React.ReactElement => (
     <ul className="grid gap-3 md:grid-cols-2">
       {items.map((entry) => (
@@ -131,8 +131,6 @@ export const AgentsSkillsRegistry = (props: AgentsSkillsRegistryProps) => {
       ))}
     </ul>
   );
-
-  // Markup
 
   // Life Cycle
 

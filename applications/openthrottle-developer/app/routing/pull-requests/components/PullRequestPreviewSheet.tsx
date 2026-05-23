@@ -31,7 +31,7 @@ export interface PullRequestPreviewSheetProps {
  */
 export const PullRequestPreviewSheet = (
   props: PullRequestPreviewSheetProps,
-) => {
+): React.ReactElement => {
   const { filters, listQuery, prPreviewNumber, prPreviewPull } = props;
 
   // Hooks

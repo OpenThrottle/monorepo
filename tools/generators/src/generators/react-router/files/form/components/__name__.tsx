@@ -14,7 +14,7 @@ export interface <%= name %>Props extends FormProps {
   initialValues?: FormSchema;
 }
 
-export const <%= name %> = (props: <%= name %>Props) => {
+export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
   const { className, debug = false, initialValues } = props;
 
   // Hooks

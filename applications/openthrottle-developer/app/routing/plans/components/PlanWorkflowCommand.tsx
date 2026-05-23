@@ -17,7 +17,9 @@ export interface PlanWorkflowCommandProps {
   onReset?: () => void;
 }
 
-export const PlanWorkflowCommand = (props: PlanWorkflowCommandProps) => {
+export const PlanWorkflowCommand = (
+  props: PlanWorkflowCommandProps,
+): React.ReactElement => {
   const { className, command, onReset } = props;
 
   // Hooks

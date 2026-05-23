@@ -16,7 +16,9 @@ export interface PullRequestsTableProps {
   pulls: PullRequestCardFragment[];
 }
 
-export const PullRequestsTable = (props: PullRequestsTableProps) => {
+export const PullRequestsTable = (
+  props: PullRequestsTableProps,
+): React.ReactElement => {
   const { className, filters, listQuery, pulls } = props;
 
   // Hooks

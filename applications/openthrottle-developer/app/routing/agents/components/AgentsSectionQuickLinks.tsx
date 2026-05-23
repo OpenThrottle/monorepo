@@ -17,7 +17,7 @@ export interface AgentsSectionQuickLinksProps {}
  */
 export const AgentsSectionQuickLinks = (
   _props: AgentsSectionQuickLinksProps,
-) => {
+): React.ReactElement => {
   // Hooks
 
   // Setup

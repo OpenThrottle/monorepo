@@ -8,7 +8,9 @@ export interface SkillsIntroductionProps {
   entries?: RepoSkillEntry[];
 }
 
-export const SkillsIntroduction = (props: SkillsIntroductionProps) => {
+export const SkillsIntroduction = (
+  props: SkillsIntroductionProps,
+): React.ReactElement => {
   const { entries } = props;
 
   // Hooks

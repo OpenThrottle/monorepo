@@ -72,7 +72,7 @@ interface MessageListProps {
  * @description Inbox (and folder) message list: table with optional loading skeleton, empty state, selection, and bulk actions.
  * Uses shadcn-ui Table, Empty, Skeleton, Button, DropdownMenu. Preserve data-testid and code comments for future integration.
  */
-export const MessageList = (props: MessageListProps) => {
+export const MessageList = (props: MessageListProps): React.ReactElement => {
   const {
     className,
     folderId = MAIL_FOLDER_IDS.inbox,

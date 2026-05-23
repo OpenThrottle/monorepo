@@ -6,7 +6,7 @@ import * as React from 'react';
 
 export interface GlobalFooterProps {}
 
-export const GlobalFooter = (_props: GlobalFooterProps) => {
+export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // Hooks
 
   // Setup

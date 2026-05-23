@@ -9,7 +9,7 @@ export interface PlanTasksTableCellTitleProps {
 
 export const PlanTasksTableCellTitle = (
   props: PlanTasksTableCellTitleProps,
-) => {
+): React.ReactElement => {
   const { row } = props;
 
   // Hooks

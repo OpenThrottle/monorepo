@@ -11,7 +11,7 @@ export interface NotesToolbarProps {
 /**
  * @description Compact toolbar: URL-driven search (q) and Create note link. Preserves role=search, data-testid, and URL-driven state.
  */
-export const NotesToolbar = (props: NotesToolbarProps) => {
+export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

@@ -4,7 +4,9 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
 export interface UsageAnalyticsGapsProps {}
 
-export const UsageAnalyticsGaps = (_props: UsageAnalyticsGapsProps) => {
+export const UsageAnalyticsGaps = (
+  _props: UsageAnalyticsGapsProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

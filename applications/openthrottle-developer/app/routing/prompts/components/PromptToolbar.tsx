@@ -29,7 +29,9 @@ export interface PromptToolbarProps {
 /**
  * @description Toolbar for prompts list: URL-driven search (q), type filter dropdown, sort dropdown, and Create button. Preserves role=search, data-testid, and URL-driven state.
  */
-export const PromptToolbar = (props: PromptToolbarProps) => {
+export const PromptToolbar = (
+  props: PromptToolbarProps,
+): React.ReactElement => {
   const { className, limit, page, sortBy, sortOrder, types } = props;
 
   // Hooks

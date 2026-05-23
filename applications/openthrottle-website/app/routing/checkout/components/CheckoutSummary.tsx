@@ -15,7 +15,9 @@ interface CheckoutSummaryProps {
   readonly title?: string;
 }
 
-export const CheckoutSummary = (props: CheckoutSummaryProps) => {
+export const CheckoutSummary = (
+  props: CheckoutSummaryProps,
+): React.ReactElement => {
   const { className, lineItems, title = 'Order summary' } = props;
 
   // Hooks

@@ -11,7 +11,7 @@ export interface SettingsKeysIntroductionProps {
  */
 export const SettingsKeysIntroduction = (
   _props: SettingsKeysIntroductionProps,
-) => {
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

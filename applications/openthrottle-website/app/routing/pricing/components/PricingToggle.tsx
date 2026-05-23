@@ -17,7 +17,9 @@ interface PricingToggleProps {
   readonly className?: string;
 }
 
-export const PricingToggle = (props: PricingToggleProps) => {
+export const PricingToggle = (
+  props: PricingToggleProps,
+): React.ReactElement => {
   const { value, onValueChange, className } = props;
 
   return (

@@ -4,7 +4,7 @@ export interface PlanWorkflowConfigHooksEmptyProps {}
 
 export const PlanWorkflowConfigHooksEmpty = (
   _props: PlanWorkflowConfigHooksEmptyProps,
-) => {
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

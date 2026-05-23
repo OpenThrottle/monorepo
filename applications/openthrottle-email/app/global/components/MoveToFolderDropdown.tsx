@@ -21,7 +21,9 @@ interface MoveToFolderDropdownProps {
 /**
  * @description Renders a "Move to folder" submenu for use inside a DropdownMenu. Lists folders as menu items; onSelect is called when user picks a folder. Wire to move-message API in reading pane and list bulk actions.
  */
-export const MoveToFolderDropdown = (props: MoveToFolderDropdownProps) => {
+export const MoveToFolderDropdown = (
+  props: MoveToFolderDropdownProps,
+): React.ReactElement => {
   const {
     currentFolderId,
     folders,

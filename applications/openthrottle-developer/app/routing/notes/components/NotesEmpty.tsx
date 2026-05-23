@@ -15,7 +15,7 @@ export interface NotesEmptyProps {
   search?: string;
 }
 
-export const NotesEmpty = (props: NotesEmptyProps) => {
+export const NotesEmpty = (props: NotesEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

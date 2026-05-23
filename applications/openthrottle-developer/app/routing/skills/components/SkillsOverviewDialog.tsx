@@ -12,7 +12,9 @@ export interface SkillsOverviewDialogProps {
   entries?: RepoSkillEntry[];
 }
 
-export const SkillsOverviewDialog = (props: SkillsOverviewDialogProps) => {
+export const SkillsOverviewDialog = (
+  props: SkillsOverviewDialogProps,
+): React.ReactElement => {
   const { children, entries } = props;
 
   // Hooks

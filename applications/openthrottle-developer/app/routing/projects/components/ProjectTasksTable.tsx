@@ -97,7 +97,9 @@ function buildColumns(): ColumnDef<
   ];
 }
 
-export const ProjectTasksTable = (props: ProjectTasksTableProps) => {
+export const ProjectTasksTable = (
+  props: ProjectTasksTableProps,
+): React.ReactElement => {
   const { className, tasks } = props;
 
   // Hooks

@@ -4,7 +4,9 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
 export interface NotesIntroductionProps {}
 
-export const NotesIntroduction = (_props: NotesIntroductionProps) => {
+export const NotesIntroduction = (
+  _props: NotesIntroductionProps,
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

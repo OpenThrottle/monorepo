@@ -15,7 +15,7 @@ export interface PromptsEmptyProps {
   search?: string;
 }
 
-export const PromptsEmpty = (props: PromptsEmptyProps) => {
+export const PromptsEmpty = (props: PromptsEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

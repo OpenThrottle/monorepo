@@ -26,7 +26,7 @@ export interface PlanWorkflowConfigPromptProps {
 
 export const PlanWorkflowConfigPrompt = (
   props: PlanWorkflowConfigPromptProps,
-) => {
+): React.ReactElement => {
   const {
     className,
     heading,

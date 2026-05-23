@@ -10,7 +10,9 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 
 export interface SettingsBuildToolsProps {}
 
-export const SettingsBuildTools = (_props: SettingsBuildToolsProps) => {
+export const SettingsBuildTools = (
+  _props: SettingsBuildToolsProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

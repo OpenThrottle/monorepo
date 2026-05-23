@@ -20,7 +20,9 @@ export interface DashboardToolbarProps {
   className?: string;
 }
 
-export const DashboardToolbar = (props: DashboardToolbarProps) => {
+export const DashboardToolbar = (
+  props: DashboardToolbarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

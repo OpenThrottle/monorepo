@@ -33,7 +33,7 @@ export interface DashboardPrTimeInStateCardProps {
  */
 export const DashboardPrTimeInStateCard = (
   props: DashboardPrTimeInStateCardProps,
-) => {
+): React.ReactElement => {
   const { className, prTimeInStateSummary } = props;
 
   // Hooks

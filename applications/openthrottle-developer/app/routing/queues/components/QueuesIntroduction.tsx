@@ -6,7 +6,9 @@ export interface QueuesIntroductionProps {
   className?: string;
 }
 
-export const QueuesIntroduction = (props: QueuesIntroductionProps) => {
+export const QueuesIntroduction = (
+  props: QueuesIntroductionProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

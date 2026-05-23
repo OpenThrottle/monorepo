@@ -35,7 +35,7 @@ function formatTaskDate(value: string | number | unknown): string {
     : format(date, 'MMM d, yyyy h:mm a');
 }
 
-export const TaskDetails = (props: TaskDetailsProps) => {
+export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
   const { className, planId, task } = props;
 
   // Hooks

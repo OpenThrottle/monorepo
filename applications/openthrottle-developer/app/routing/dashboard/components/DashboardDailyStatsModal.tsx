@@ -5,7 +5,7 @@ export interface DashboardDailyStatsModalProps {}
 
 export const DashboardDailyStatsModal = (
   _props: DashboardDailyStatsModalProps,
-) => {
+): React.ReactElement => {
   // Hooks
 
   // Setup

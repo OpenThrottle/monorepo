@@ -9,7 +9,7 @@ export interface SkillsEmptyProps {
   search?: string;
 }
 
-export const SkillsEmpty = (props: SkillsEmptyProps) => {
+export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

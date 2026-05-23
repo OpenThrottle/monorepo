@@ -3,12 +3,14 @@ import { SendAgentMessageDocument } from '@openthrottle/openthrottle-developer-c
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';
 
-interface CallSendAgentMessageParams {
+export interface CallSendAgentMessageParams {
   readonly conversationId?: string | null;
   readonly message: string;
 }
 
-const emptyTurn = (overrides: Partial<ChatTurnResult>): ChatTurnResult => ({
+export const emptyTurn = (
+  overrides: Partial<ChatTurnResult>,
+): ChatTurnResult => ({
   assistantText: null,
   conversationId: null,
   errorMessage: null,

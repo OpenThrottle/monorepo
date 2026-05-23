@@ -11,7 +11,7 @@ export interface UsageDailyActivityOverviewProps {
  */
 export const UsageDailyActivityOverview = (
   props: UsageDailyActivityOverviewProps,
-) => {
+): React.ReactElement => {
   const { rangeDays } = props;
 
   // Hooks

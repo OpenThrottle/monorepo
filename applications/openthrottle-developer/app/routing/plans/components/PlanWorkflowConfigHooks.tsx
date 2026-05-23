@@ -39,7 +39,7 @@ export interface PlanWorkflowConfigHooksProps {
   savePending?: boolean;
 }
 
-const updateRow = (
+export const updateRow = (
   rows: readonly JobRunHookDraftRow[],
   draftId: string,
   patch: Partial<JobRunHookDraftRow>,
@@ -48,7 +48,7 @@ const updateRow = (
     row.draftId === draftId ? { ...row, ...patch } : row,
   ) as JobRunHookDraftRow[];
 
-const moveRowWithinPhase = (
+export const moveRowWithinPhase = (
   rows: readonly JobRunHookDraftRow[],
   draftId: string,
   direction: -1 | 1,
@@ -78,7 +78,7 @@ const moveRowWithinPhase = (
 
 export const PlanWorkflowConfigHooks = (
   props: PlanWorkflowConfigHooksProps,
-) => {
+): React.ReactElement => {
   const {
     heading,
     hooks,

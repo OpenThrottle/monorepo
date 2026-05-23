@@ -5,7 +5,9 @@ export interface OpenThrottleTabLinkProps {
   className?: string;
 }
 
-export const OpenThrottleTabLink = (props: OpenThrottleTabLinkProps) => {
+export const OpenThrottleTabLink = (
+  props: OpenThrottleTabLinkProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

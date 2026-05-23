@@ -21,7 +21,9 @@ export interface UsageSnapshotProps {
 /**
  * @description Lets operators attach the same coarse usage data to tickets without new analytics APIs.
  */
-export const UsageSnapshot = (props: UsageSnapshotProps) => {
+export const UsageSnapshot = (
+  props: UsageSnapshotProps,
+): React.ReactElement => {
   const { dailyStats, rangeDays, rangeEndIso, rangeStartIso } = props;
 
   // Hooks

@@ -31,7 +31,9 @@ export interface GlobalErrorBoundaryProps {
 /**
  * @link https://remix.run/docs/en/main/route/error-boundary
  */
-export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
+export const GlobalErrorBoundary = (
+  props: GlobalErrorBoundaryProps,
+): React.ReactElement => {
   const {
     className = 'flex flex-col h-full p-8 overflow-auto',
     homePath = '/',

@@ -44,7 +44,7 @@ const formatFinishedOn = (finishedOn: number | null | undefined): string => {
  */
 export const PlanWorkflowRunTransparency = (
   props: PlanWorkflowRunTransparencyProps,
-) => {
+): React.ReactElement => {
   const {
     canonicalWorkflowCommand,
     planId,

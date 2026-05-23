@@ -20,7 +20,7 @@ export interface PlansTableProps {
   statusFilterUrls?: Record<string, string>;
 }
 
-export const PlansTable = (props: PlansTableProps) => {
+export const PlansTable = (props: PlansTableProps): React.ReactElement => {
   const { className, plans, statusFilterUrls } = props;
 
   // Hooks

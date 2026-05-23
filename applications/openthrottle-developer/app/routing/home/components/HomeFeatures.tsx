@@ -12,7 +12,7 @@ export interface HomeFeaturesProps {
   className?: string;
 }
 
-export const HomeFeatures = (props: HomeFeaturesProps) => {
+export const HomeFeatures = (props: HomeFeaturesProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

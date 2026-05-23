@@ -27,7 +27,9 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
 
 const DEFAULT_BASE_PATH = '/projects';
 
-export const OpenThrottlePagination = (props: OpenThrottlePaginationProps) => {
+export const OpenThrottlePagination = (
+  props: OpenThrottlePaginationProps,
+): React.ReactElement => {
   const {
     assignees,
     basePath = DEFAULT_BASE_PATH,

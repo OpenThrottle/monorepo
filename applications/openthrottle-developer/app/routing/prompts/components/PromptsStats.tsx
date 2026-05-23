@@ -9,7 +9,7 @@ export interface PromptsStatsProps {
   total: number;
 }
 
-export const PromptsStats = (props: PromptsStatsProps) => {
+export const PromptsStats = (props: PromptsStatsProps): React.ReactElement => {
   const { className, countAgents, countSkills, total } = props;
 
   // Hooks

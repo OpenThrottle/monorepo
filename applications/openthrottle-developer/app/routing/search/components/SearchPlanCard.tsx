@@ -21,7 +21,9 @@ export interface SearchPlanCardProps {
 
 const TITLE_CLASS = 'text-lg leading-tight tracking-tight';
 
-export const SearchPlanCard = (props: SearchPlanCardProps) => {
+export const SearchPlanCard = (
+  props: SearchPlanCardProps,
+): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks

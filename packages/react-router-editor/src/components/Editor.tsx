@@ -18,7 +18,7 @@ export interface EditorProps extends MonacoEditorProps {
 /**
  * @description Main editor component combining toolbar, tabs, editor window, and sidebar.
  */
-export const Editor = (props: EditorProps) => {
+export const Editor = (props: EditorProps): React.ReactElement => {
   const {
     basePath = '/prompts',
     onFileCreated,

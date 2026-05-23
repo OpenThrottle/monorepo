@@ -25,7 +25,9 @@ export interface TypeMultiSelectProps {
 /**
  * @description Multi-select dropdown to filter prompts by type. Shows "Type…" or "Type (n)" when compact; selected items as Badges below unless compact.
  */
-export const TypeMultiSelect = (props: TypeMultiSelectProps) => {
+export const TypeMultiSelect = (
+  props: TypeMultiSelectProps,
+): React.ReactElement => {
   const { compact = false, 'data-testid': dataTestId, onChange, value } = props;
 
   // Hooks

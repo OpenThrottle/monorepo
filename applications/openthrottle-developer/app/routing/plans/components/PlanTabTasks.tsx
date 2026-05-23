@@ -12,7 +12,7 @@ export interface PlanTabTasksProps {
   tasks: PlanTaskRowFragment[];
 }
 
-export const PlanTabTasks = (props: PlanTabTasksProps) => {
+export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
   const { tasks } = props;
 
   // Hooks

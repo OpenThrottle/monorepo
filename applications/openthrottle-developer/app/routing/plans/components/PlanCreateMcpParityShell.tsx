@@ -11,7 +11,7 @@ export interface PlanCreateMcpParityShellProps {
 
 export const PlanCreateMcpParityShell = (
   props: PlanCreateMcpParityShellProps,
-) => {
+): React.ReactElement => {
   const { children, className } = props;
 
   // Hooks

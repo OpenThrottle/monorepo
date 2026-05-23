@@ -15,7 +15,9 @@ export interface SearchFiltersProps {
  * @description Filter controls for search. Limit (results per page) is wired to URL params.
  * Future: source filter when API supports filtering by chunk source.
  */
-export const SearchFilters = (props: SearchFiltersProps) => {
+export const SearchFilters = (
+  props: SearchFiltersProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

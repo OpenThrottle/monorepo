@@ -31,7 +31,7 @@ export interface DashboardOpenPrsByAuthorCardProps {
  */
 export const DashboardOpenPrsByAuthorCard = (
   props: DashboardOpenPrsByAuthorCardProps,
-) => {
+): React.ReactElement => {
   const { className, githubStats } = props;
   const { closedPrCountByAuthor, openPrCountByAuthor } = githubStats;
 

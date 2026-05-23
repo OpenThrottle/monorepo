@@ -8,7 +8,9 @@ export interface QueuesToolbarProps {
   className?: string;
 }
 
-export const QueuesToolbar = (props: QueuesToolbarProps) => {
+export const QueuesToolbar = (
+  props: QueuesToolbarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

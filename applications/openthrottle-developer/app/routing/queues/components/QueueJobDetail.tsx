@@ -58,7 +58,9 @@ export interface QueueJobDetailProps {
 /**
  * @description Full job introspection: payload, correlation, plan/task links, retry and cancel.
  */
-export const QueueJobDetail = (props: QueueJobDetailProps) => {
+export const QueueJobDetail = (
+  props: QueueJobDetailProps,
+): React.ReactElement => {
   const { job, queueName } = props;
 
   // Hooks

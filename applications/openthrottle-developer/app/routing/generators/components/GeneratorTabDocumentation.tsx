@@ -15,7 +15,7 @@ export interface GeneratorTabDocumentationProps {
 
 export const GeneratorTabDocumentation = (
   _props: GeneratorTabDocumentationProps,
-) => {
+): React.ReactElement => {
   // Hooks
 
   // Setup

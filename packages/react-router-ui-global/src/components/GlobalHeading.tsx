@@ -10,7 +10,9 @@ export interface GlobalHeadingProps extends React.PropsWithChildren {
   title: string;
 }
 
-export const GlobalHeading = (props: GlobalHeadingProps) => {
+export const GlobalHeading = (
+  props: GlobalHeadingProps,
+): React.ReactElement => {
   const { children, className, heading = 'h2', icon, title } = props;
 
   // Hooks

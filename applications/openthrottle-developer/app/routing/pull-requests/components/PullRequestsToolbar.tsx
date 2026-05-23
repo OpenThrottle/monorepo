@@ -10,7 +10,9 @@ export interface PullRequestsToolbarProps {
   filters: PullRequestsListFilters;
 }
 
-export const PullRequestsToolbar = (props: PullRequestsToolbarProps) => {
+export const PullRequestsToolbar = (
+  props: PullRequestsToolbarProps,
+): React.ReactElement => {
   const { className, filters } = props;
 
   // Hooks

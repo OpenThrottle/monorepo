@@ -5,7 +5,9 @@ export interface HomeGetStartedProps {
   className?: string;
 }
 
-export const HomeGetStarted = (props: HomeGetStartedProps) => {
+export const HomeGetStarted = (
+  props: HomeGetStartedProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

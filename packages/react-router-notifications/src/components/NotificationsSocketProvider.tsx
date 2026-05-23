@@ -24,7 +24,7 @@ export interface NotificationsSocketProviderProps {
 
 export const NotificationsSocketProvider = (
   props: NotificationsSocketProviderProps,
-) => {
+): React.ReactElement => {
   const { children, onNotification, webSocketUrl } = props;
 
   // Hooks

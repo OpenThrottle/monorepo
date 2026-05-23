@@ -51,7 +51,9 @@ export interface GlobalMetricsProps {
   readonly showSamplingDetails?: boolean;
 }
 
-export const GlobalMetrics = (props: GlobalMetricsProps) => {
+export const GlobalMetrics = (
+  props: GlobalMetricsProps,
+): React.ReactElement => {
   const {
     className,
     definitionsHref,

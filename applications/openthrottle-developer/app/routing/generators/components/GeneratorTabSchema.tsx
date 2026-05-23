@@ -15,10 +15,14 @@ export interface GeneratorTabSchemaProps {
   generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorTabSchema = (props: GeneratorTabSchemaProps) => {
+export const GeneratorTabSchema = (
+  props: GeneratorTabSchemaProps,
+): React.ReactElement => {
   const { generator } = props;
 
   // Hooks
+
+  // Setup
   const formattedSchema = React.useMemo(() => {
     if (generator.schemaJson == null || generator.schemaJson === '') {
       return null;
@@ -30,8 +34,6 @@ export const GeneratorTabSchema = (props: GeneratorTabSchemaProps) => {
       return generator.schemaJson;
     }
   }, [generator.schemaJson]);
-
-  // Setup
 
   // Handlers
 

@@ -9,7 +9,9 @@ export interface GlobalSidebarHeaderProps {
   readonly to?: string;
 }
 
-export const GlobalSidebarHeader = (props: GlobalSidebarHeaderProps) => {
+export const GlobalSidebarHeader = (
+  props: GlobalSidebarHeaderProps,
+): React.ReactElement => {
   const { className, name, to = '/' } = props;
 
   // Hooks

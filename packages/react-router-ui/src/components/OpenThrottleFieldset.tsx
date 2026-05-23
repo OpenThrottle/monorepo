@@ -9,7 +9,9 @@ export interface OpenThrottleFieldsetProps extends React.PropsWithChildren {
   legend: string;
 }
 
-export const OpenThrottleFieldset = (props: OpenThrottleFieldsetProps) => {
+export const OpenThrottleFieldset = (
+  props: OpenThrottleFieldsetProps,
+): React.ReactElement => {
   const { className, children, icon, id, legend } = props;
 
   // Hooks

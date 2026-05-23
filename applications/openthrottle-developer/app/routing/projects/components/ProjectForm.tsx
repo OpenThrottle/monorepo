@@ -16,7 +16,7 @@ export interface ProjectFormProps {
   className?: string;
 }
 
-export const ProjectForm = (props: ProjectFormProps) => {
+export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
   const { actionData, className } = props;
 
   // Hooks

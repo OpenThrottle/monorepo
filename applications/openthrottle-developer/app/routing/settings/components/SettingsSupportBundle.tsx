@@ -9,7 +9,9 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface SettingsSupportBundleProps {}
 
-export const SettingsSupportBundle = (_props: SettingsSupportBundleProps) => {
+export const SettingsSupportBundle = (
+  _props: SettingsSupportBundleProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

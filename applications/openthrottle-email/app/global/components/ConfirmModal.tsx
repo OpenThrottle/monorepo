@@ -32,7 +32,7 @@ interface ConfirmModalProps {
 /**
  * @description Reusable confirmation modal using shadcn-ui AlertDialog. Use for archive, delete, or other destructive/reversible actions that require user confirmation.
  */
-export const ConfirmModal = (props: ConfirmModalProps) => {
+export const ConfirmModal = (props: ConfirmModalProps): React.ReactElement => {
   const {
     open,
     onConfirm,

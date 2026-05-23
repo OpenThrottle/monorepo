@@ -18,7 +18,9 @@ export interface GeneratorNxBridgeProps {
   generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorNxBridge = (props: GeneratorNxBridgeProps) => {
+export const GeneratorNxBridge = (
+  props: GeneratorNxBridgeProps,
+): React.ReactElement => {
   const { className, generator } = props;
 
   // Hooks

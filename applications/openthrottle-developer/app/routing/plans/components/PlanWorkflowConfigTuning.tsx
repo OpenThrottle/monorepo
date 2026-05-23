@@ -31,7 +31,7 @@ export interface PlanWorkflowConfigTuningProps {
 
 export const PlanWorkflowConfigTuning = (
   props: PlanWorkflowConfigTuningProps,
-) => {
+): React.ReactElement => {
   const {
     heading,
     input,

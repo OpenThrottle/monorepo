@@ -9,7 +9,7 @@ export interface QueueFormProps {
   className?: string;
 }
 
-export const QueueForm = (props: QueueFormProps) => {
+export const QueueForm = (props: QueueFormProps): React.ReactElement => {
   const { actionData, className } = props;
 
   // Hooks

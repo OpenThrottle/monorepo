@@ -67,7 +67,9 @@ export interface OpenThrottleCommanderProps {
   readonly emptyStateMessage?: React.ReactNode;
 }
 
-export const OpenThrottleCommander = (props: OpenThrottleCommanderProps) => {
+export const OpenThrottleCommander = (
+  props: OpenThrottleCommanderProps,
+): React.ReactElement => {
   const {
     className,
     defaultOpen = false,

@@ -14,7 +14,7 @@ export interface EditorTabsProps {
 /**
  * @description Container component for editor tabs with drag-and-drop reordering.
  */
-export const EditorTabs = (props: EditorTabsProps) => {
+export const EditorTabs = (props: EditorTabsProps): React.ReactElement => {
   const { basePath = '/prompts', className } = props;
 
   // Hooks

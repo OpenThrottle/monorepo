@@ -41,7 +41,9 @@ type StorageEntryRow = {
   preview: string;
 };
 
-export const SettingsDebugPanel = (props: SettingsDebugPanelProps) => {
+export const SettingsDebugPanel = (
+  props: SettingsDebugPanelProps,
+): React.ReactElement => {
   const { envSnapshot, graphQL } = props;
 
   // Hooks
@@ -176,7 +178,9 @@ export interface SettingsGraphQLHealthCardProps {
   revalidateState: 'idle' | 'loading';
 }
 
-const SettingsGraphQLHealthCard = (props: SettingsGraphQLHealthCardProps) => {
+const SettingsGraphQLHealthCard = (
+  props: SettingsGraphQLHealthCardProps,
+): React.ReactElement => {
   const { graphQL, onRecheck, revalidateState } = props;
 
   // Hooks

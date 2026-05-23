@@ -7,7 +7,9 @@ export interface DashboardIntroductionProps {
   className?: string;
 }
 
-export const DashboardIntroduction = (props: DashboardIntroductionProps) => {
+export const DashboardIntroduction = (
+  props: DashboardIntroductionProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

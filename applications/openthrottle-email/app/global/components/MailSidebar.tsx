@@ -72,7 +72,7 @@ function pathToFolderId(path: string): MailFolderId | null {
   return null;
 }
 
-export const MailSidebar = (props: MailSidebarProps) => {
+export const MailSidebar = (props: MailSidebarProps): React.ReactElement => {
   const { className, folderUnreadCounts } = props;
 
   // Hooks

@@ -14,7 +14,9 @@ export interface GeneratorTabPresetsProps {
   generator: GeneratorDetailCardFragment;
 }
 
-export const GeneratorTabPresets = (props: GeneratorTabPresetsProps) => {
+export const GeneratorTabPresets = (
+  props: GeneratorTabPresetsProps,
+): React.ReactElement => {
   const { generator } = props;
 
   // Hooks

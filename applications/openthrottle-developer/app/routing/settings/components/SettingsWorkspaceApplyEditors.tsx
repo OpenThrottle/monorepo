@@ -15,7 +15,7 @@ export interface SettingsWorkspaceApplyEditorsProps {
  */
 export const SettingsWorkspaceApplyEditors = (
   props: SettingsWorkspaceApplyEditorsProps,
-) => {
+): React.ReactElement => {
   const { actionError, actionMessage, className, disabled } = props;
 
   // Hooks

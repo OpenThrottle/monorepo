@@ -5,7 +5,9 @@ export interface PromptsToolbarProps {
   className?: string;
 }
 
-export const PromptsToolbar = (props: PromptsToolbarProps) => {
+export const PromptsToolbar = (
+  props: PromptsToolbarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

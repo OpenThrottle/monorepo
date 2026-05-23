@@ -26,7 +26,7 @@ export interface PlanWorkflowConfigWorktreeProps {
 
 export const PlanWorkflowConfigWorktree = (
   props: PlanWorkflowConfigWorktreeProps,
-) => {
+): React.ReactElement => {
   const { heading, input, setInput } = props;
 
   // Hooks

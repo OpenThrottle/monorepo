@@ -23,7 +23,9 @@ export interface ProjectsToolbarProps {
 /**
  * @description Single-row compact toolbar: URL-driven search (q), view toggle, sort, Create project. One form with role=search; preserves page/limit/sort/view on submit.
  */
-export const ProjectsToolbar = (props: ProjectsToolbarProps) => {
+export const ProjectsToolbar = (
+  props: ProjectsToolbarProps,
+): React.ReactElement => {
   const { className, limit, page, search, sortBy, sortOrder, view } = props;
 
   // Hooks

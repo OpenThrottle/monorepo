@@ -15,7 +15,7 @@ export interface ProjectEmptyProps {
   search?: string;
 }
 
-export const ProjectEmpty = (props: ProjectEmptyProps) => {
+export const ProjectEmpty = (props: ProjectEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

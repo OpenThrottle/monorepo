@@ -9,7 +9,9 @@ export interface UsageOverviewProps {
   rangeDays: number;
 }
 
-export const UsageOverview = (props: UsageOverviewProps) => {
+export const UsageOverview = (
+  props: UsageOverviewProps,
+): React.ReactElement => {
   const { className, rangeDays } = props;
 
   // Hooks

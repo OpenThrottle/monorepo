@@ -10,7 +10,7 @@ export interface SearchFormProps {
   preserveRankingDetails?: boolean;
 }
 
-export const SearchForm = (props: SearchFormProps) => {
+export const SearchForm = (props: SearchFormProps): React.ReactElement => {
   const {
     className,
     defaultQuery = '',

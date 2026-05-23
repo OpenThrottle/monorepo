@@ -20,7 +20,7 @@ export interface PromptCardProps {
   prompt: PromptCardFragment;
 }
 
-export const PromptCard = (props: PromptCardProps) => {
+export const PromptCard = (props: PromptCardProps): React.ReactElement => {
   const { className, prompt } = props;
 
   // Hooks

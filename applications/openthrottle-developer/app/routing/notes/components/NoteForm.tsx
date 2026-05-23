@@ -15,7 +15,7 @@ export interface NoteFormProps {
   note?: NoteCardFragment;
 }
 
-export const NoteForm = (props: NoteFormProps) => {
+export const NoteForm = (props: NoteFormProps): React.ReactElement => {
   const { action, className, note } = props;
 
   // Hooks

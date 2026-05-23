@@ -5,7 +5,9 @@ export interface OpenThrottleTabsNavProps {
   className?: string;
 }
 
-export const OpenThrottleTabsNav = (props: OpenThrottleTabsNavProps) => {
+export const OpenThrottleTabsNav = (
+  props: OpenThrottleTabsNavProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

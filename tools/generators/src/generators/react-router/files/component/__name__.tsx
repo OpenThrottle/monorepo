@@ -5,7 +5,7 @@ export interface <%= name %>Props {
   // className?: string;
 }
 
-export const <%= name %> = (props: <%= name %>Props) => {
+export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
   const {  } = props;
 
   // Hooks

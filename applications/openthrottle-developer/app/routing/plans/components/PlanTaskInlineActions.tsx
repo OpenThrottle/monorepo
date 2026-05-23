@@ -15,7 +15,9 @@ export interface PlanTaskInlineActionsProps {
 /**
  * @description View + Details popover shared by the tasks table actions column and board cards.
  */
-export const PlanTaskInlineActions = (props: PlanTaskInlineActionsProps) => {
+export const PlanTaskInlineActions = (
+  props: PlanTaskInlineActionsProps,
+): React.ReactElement => {
   const { task } = props;
 
   // Hooks

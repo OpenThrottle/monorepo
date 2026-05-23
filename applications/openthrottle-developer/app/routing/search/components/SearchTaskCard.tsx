@@ -18,7 +18,9 @@ export interface SearchTaskCardProps {
   result: SearchChunk;
 }
 
-export const SearchTaskCard = (props: SearchTaskCardProps) => {
+export const SearchTaskCard = (
+  props: SearchTaskCardProps,
+): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks

@@ -64,7 +64,7 @@ export interface PlanToolbarProps {
  * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group),
  * and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
  */
-export const PlanToolbar = (props: PlanToolbarProps) => {
+export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
     className,
     planId,

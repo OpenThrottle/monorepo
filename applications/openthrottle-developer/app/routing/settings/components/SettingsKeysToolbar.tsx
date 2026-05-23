@@ -25,7 +25,9 @@ export interface SettingsKeysToolbarProps {
 /**
  * @description Account picker (when multiple) and primary control to open the create-credential dialog.
  */
-export const SettingsKeysToolbar = (props: SettingsKeysToolbarProps) => {
+export const SettingsKeysToolbar = (
+  props: SettingsKeysToolbarProps,
+): React.ReactElement => {
   const {
     canCreate = false,
     className,

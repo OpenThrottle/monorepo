@@ -21,7 +21,9 @@ export interface PromptSortDropdownProps {
 /**
  * @description Single dropdown to sort prompts (combines sortBy and sortOrder).
  */
-export const PromptSortDropdown = (props: PromptSortDropdownProps) => {
+export const PromptSortDropdown = (
+  props: PromptSortDropdownProps,
+): React.ReactElement => {
   const { sortBy, sortOrder, onChange } = props;
 
   // Hooks

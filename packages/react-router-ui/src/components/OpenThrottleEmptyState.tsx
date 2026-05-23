@@ -8,7 +8,9 @@ export interface OpenThrottleEmptyStateProps {
   readonly title: string;
 }
 
-export const OpenThrottleEmptyState = (props: OpenThrottleEmptyStateProps) => {
+export const OpenThrottleEmptyState = (
+  props: OpenThrottleEmptyStateProps,
+): React.ReactElement => {
   const { className, description, title } = props;
 
   // Hooks

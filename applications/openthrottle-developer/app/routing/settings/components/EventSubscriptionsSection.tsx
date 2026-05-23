@@ -21,7 +21,7 @@ export interface EventSubscriptionsSectionProps {
  */
 export const EventSubscriptionsSection = (
   props: EventSubscriptionsSectionProps,
-) => {
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

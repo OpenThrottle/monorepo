@@ -13,7 +13,7 @@ export interface DashboardQuickNavigationProps {
  */
 export const DashboardQuickNavigation = (
   props: DashboardQuickNavigationProps,
-) => {
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

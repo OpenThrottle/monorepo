@@ -15,7 +15,9 @@ export interface OpenThrottleStatCardProps {
   readonly value: number;
 }
 
-export const OpenThrottleStatCard = (props: OpenThrottleStatCardProps) => {
+export const OpenThrottleStatCard = (
+  props: OpenThrottleStatCardProps,
+): React.ReactElement => {
   const { className = 'p-4 md:p-8', color, subValue, title, value } = props;
 
   // Hooks

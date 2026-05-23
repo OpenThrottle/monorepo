@@ -14,7 +14,7 @@ export interface WorkspaceEditorMultiSelectProps {
  */
 export const WorkspaceEditorMultiSelect = (
   props: WorkspaceEditorMultiSelectProps,
-) => {
+): React.ReactElement => {
   const { name = 'enabledEditors', onChange, value } = props;
 
   // Hooks

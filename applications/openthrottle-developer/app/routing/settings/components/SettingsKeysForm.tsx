@@ -36,7 +36,9 @@ export interface SettingsKeysFormProps {
 /**
  * @description Create-credential dialog: form fields and one-time token display after success.
  */
-export const SettingsKeysForm = (props: SettingsKeysFormProps) => {
+export const SettingsKeysForm = (
+  props: SettingsKeysFormProps,
+): React.ReactElement => {
   const {
     actionData,
     className,

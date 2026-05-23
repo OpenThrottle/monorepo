@@ -59,7 +59,7 @@ function buildPromptDebugSnapshotJson(
  */
 export const PromptDetailMetadataPanel = (
   props: PromptDetailMetadataPanelProps,
-) => {
+): React.ReactElement => {
   const { contentLength, debugContent, prompt } = props;
 
   // Hooks

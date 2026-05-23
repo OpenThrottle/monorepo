@@ -40,7 +40,7 @@ const mockTask = (
   ...overrides,
 });
 
-const renderBoard = (props: PlanTasksBoardProps) => {
+const renderBoard = (props: PlanTasksBoardProps): React.ReactElement => {
   const Component = () => (
     <DndProvider backend={HTML5Backend}>
       <PlanTasksBoard {...props} />

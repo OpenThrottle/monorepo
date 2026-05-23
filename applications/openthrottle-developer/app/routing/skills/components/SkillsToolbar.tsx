@@ -13,7 +13,9 @@ export interface SkillsToolbarProps {
   className?: string;
 }
 
-export const SkillsToolbar = (props: SkillsToolbarProps) => {
+export const SkillsToolbar = (
+  props: SkillsToolbarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

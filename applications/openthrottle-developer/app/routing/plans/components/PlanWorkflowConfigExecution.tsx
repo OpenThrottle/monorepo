@@ -24,7 +24,7 @@ export interface PlanWorkflowConfigExecutionProps {
 
 export const PlanWorkflowConfigExecution = (
   props: PlanWorkflowConfigExecutionProps,
-) => {
+): React.ReactElement => {
   const { heading, input, setInput } = props;
 
   // Hooks

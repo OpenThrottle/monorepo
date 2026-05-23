@@ -40,7 +40,7 @@ export interface SettingsEnvironmentDiagnosticsProps extends SettingsDiagnostics
  */
 export const SettingsEnvironmentDiagnostics = (
   props: SettingsEnvironmentDiagnosticsProps,
-) => {
+): React.ReactElement => {
   const { env, idPrefix = 'settings-diagnostics', supportBundle } = props;
 
   // Hooks

@@ -7,7 +7,9 @@ export interface SettingsWorkspaceIntroProps {
   className?: string;
 }
 
-export const SettingsWorkspaceIntro = (props: SettingsWorkspaceIntroProps) => {
+export const SettingsWorkspaceIntro = (
+  props: SettingsWorkspaceIntroProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

@@ -10,7 +10,9 @@ import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 
 export interface ProjectNotFoundProps {}
 
-export const ProjectNotFound = (_props: ProjectNotFoundProps) => {
+export const ProjectNotFound = (
+  _props: ProjectNotFoundProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

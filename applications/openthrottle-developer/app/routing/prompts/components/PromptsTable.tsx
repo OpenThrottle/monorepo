@@ -18,7 +18,7 @@ export interface PromptsTableProps {
   search?: string;
 }
 
-export const PromptsTable = (props: PromptsTableProps) => {
+export const PromptsTable = (props: PromptsTableProps): React.ReactElement => {
   const { className, prompts, search } = props;
 
   // Hooks

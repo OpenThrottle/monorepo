@@ -24,7 +24,7 @@ function queueDetailHref(name: string): string {
 const queueRowId = (queue: QueueCardFragment, _index: number): string =>
   queue.name;
 
-export const QueuesTable = (props: QueuesTableProps) => {
+export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
   const { className, queues } = props;
 
   // Hooks

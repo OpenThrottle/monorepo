@@ -9,7 +9,7 @@ export interface SettingsKeysServiceAccountCredentialsProps {
 
 export const SettingsKeysServiceAccountCredentials = (
   _props: SettingsKeysServiceAccountCredentialsProps,
-) => {
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

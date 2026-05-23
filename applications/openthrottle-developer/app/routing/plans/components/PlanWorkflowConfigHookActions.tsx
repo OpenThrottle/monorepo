@@ -7,7 +7,7 @@ export interface PlanWorkflowConfigHookActionsProps {
 
 export const PlanWorkflowConfigHookActions = (
   props: PlanWorkflowConfigHookActionsProps,
-) => {
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

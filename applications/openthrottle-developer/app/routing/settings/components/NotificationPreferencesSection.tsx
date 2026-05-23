@@ -20,7 +20,7 @@ export interface NotificationPreferencesSectionProps {
  */
 export const NotificationPreferencesSection = (
   props: NotificationPreferencesSectionProps,
-) => {
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

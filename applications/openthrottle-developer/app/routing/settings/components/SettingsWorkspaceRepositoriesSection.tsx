@@ -34,7 +34,7 @@ export interface WorkspaceRepositoriesProjectSelectProps {
 
 const WorkspaceRepositoriesProjectSelect = (
   props: WorkspaceRepositoriesProjectSelectProps,
-) => {
+): React.ReactElement => {
   const { currentProjectId, name, projects } = props;
 
   // Hooks
@@ -73,7 +73,7 @@ export interface WorkspaceRepositoriesLocalRepositoryRowProps {
 
 const WorkspaceRepositoriesLocalRepositoryRow = (
   props: WorkspaceRepositoriesLocalRepositoryRowProps,
-) => {
+): React.ReactElement => {
   const { actionError, projects, repo } = props;
 
   // Hooks
@@ -161,7 +161,7 @@ const WorkspaceRepositoriesLocalRepositoryRow = (
 
 export const SettingsWorkspaceRepositoriesSection = (
   props: SettingsWorkspaceRepositoriesSectionProps,
-) => {
+): React.ReactElement => {
   const { actionError, className, localRepositories, projects } = props;
 
   // Hooks

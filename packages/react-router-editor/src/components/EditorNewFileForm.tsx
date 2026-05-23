@@ -22,7 +22,9 @@ interface FetcherData {
 /**
  * @description Form component for creating new prompt files.
  */
-export const EditorNewFileForm = (props: EditorNewFileFormProps) => {
+export const EditorNewFileForm = (
+  props: EditorNewFileFormProps,
+): React.ReactElement => {
   const {
     basePath = '/prompts',
     className,
@@ -76,7 +78,7 @@ export const EditorNewFileForm = (props: EditorNewFileFormProps) => {
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     // FIXME: Tighten this up
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
     setPromptType(e.target.value as PromptType);
   };
 

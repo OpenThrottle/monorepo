@@ -38,7 +38,9 @@ export interface GlobalLayoutHeaderProps {
   readonly searchValue?: string;
 }
 
-export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
+export const GlobalLayoutHeader = (
+  props: GlobalLayoutHeaderProps,
+): React.ReactElement => {
   const {
     className,
     onSearchChromeEvent,

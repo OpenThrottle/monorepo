@@ -15,7 +15,7 @@ export interface NoteCardProps {
   note: NoteCardFragment;
 }
 
-export const NoteCard = (props: NoteCardProps) => {
+export const NoteCard = (props: NoteCardProps): React.ReactElement => {
   const { className, note } = props;
 
   // Hooks

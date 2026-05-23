@@ -6,7 +6,7 @@ export interface NotificationPermissionUnsupportedProps {
 
 export const NotificationPermissionUnsupported = (
   _props: NotificationPermissionUnsupportedProps,
-) => {
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

@@ -11,7 +11,7 @@ export interface OpenThrottleSidebarHeaderProps {
 
 export const OpenThrottleSidebarHeader = (
   props: OpenThrottleSidebarHeaderProps,
-) => {
+): React.ReactElement => {
   const { className, name, to = '/' } = props;
 
   // Hooks

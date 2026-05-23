@@ -8,7 +8,7 @@ import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { NoteCardFragment } from '~/__generated__/graphql';
 
-function notePreviewLabel(content: string): string {
+export function notePreviewLabel(content: string): string {
   const firstLine = content.split('\n')[0]?.trim() ?? '';
   const stripped = firstLine.replace(/^#+\s*/, '').trim();
 
@@ -25,7 +25,7 @@ function notePreviewLabel(content: string): string {
   return trimmed.length > 80 ? `${trimmed.slice(0, 80)}…` : trimmed;
 }
 
-function formatNoteDate(raw: NoteCardFragment['updatedAt']): string {
+export function formatNoteDate(raw: NoteCardFragment['updatedAt']): string {
   if (raw == null) {
     return '—';
   }
@@ -44,7 +44,7 @@ export interface NotesTableProps {
   notes: NoteCardFragment[];
 }
 
-export const NotesTable = (props: NotesTableProps) => {
+export const NotesTable = (props: NotesTableProps): React.ReactElement => {
   const { className, notes } = props;
 
   // Hooks

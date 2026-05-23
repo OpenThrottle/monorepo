@@ -8,7 +8,9 @@ export interface SettingsEnvironmentProps {
   envSnapshot: Record<string, string>;
 }
 
-export const SettingsEnvironment = (props: SettingsEnvironmentProps) => {
+export const SettingsEnvironment = (
+  props: SettingsEnvironmentProps,
+): React.ReactElement => {
   const { envSnapshot } = props;
 
   // Hooks

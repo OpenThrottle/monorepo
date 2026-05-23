@@ -16,7 +16,7 @@ export interface SettingsWorkspaceProfileFormProps {
 
 export const SettingsWorkspaceProfileForm = (
   props: SettingsWorkspaceProfileFormProps,
-) => {
+): React.ReactElement => {
   const { actionError, className, profile } = props;
 
   // Hooks

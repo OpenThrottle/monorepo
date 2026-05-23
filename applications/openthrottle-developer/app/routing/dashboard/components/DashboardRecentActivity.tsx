@@ -157,7 +157,7 @@ function outputLinkAriaLabel(row: ActivityRow): string {
 
 export const DashboardRecentActivity = (
   props: DashboardRecentActivityProps,
-) => {
+): React.ReactElement => {
   const { className, data } = props;
 
   // Hooks

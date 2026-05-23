@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 
-const COLUMNS: Array<{
+export interface Column {
   key: keyof Pick<
     DashboardQueueStatsCardFragment,
     | 'waitingCount'
@@ -16,7 +16,9 @@ const COLUMNS: Array<{
     | 'delayedCount'
   >;
   label: string;
-}> = [
+}
+
+export const COLUMNS: Column[] = [
   { key: 'waitingCount', label: 'Waiting' },
   { key: 'activeCount', label: 'Active' },
   { key: 'completedCount', label: 'Completed' },
@@ -25,18 +27,20 @@ const COLUMNS: Array<{
 ];
 
 /**
- * @description Formats queue stats for tooltip (full labels and counts).
+ * Formats queue stats for tooltip (full labels and counts).
  */
-function formatQueueStatsTooltip(
+export function formatQueueStatsTooltip(
   queue: DashboardQueueStatsCardFragment,
 ): string {
   return COLUMNS.map((col) => `${col.label}: ${queue[col.key]}`).join(', ');
 }
 
 /**
- * @description Compact inline summary for a single queue (W:2 A:1 C:10 F:0 D:0).
+ * Compact inline summary for a single queue (W:2 A:1 C:10 F:0 D:0).
  */
-function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
+export function formatCompactSummary(
+  queue: DashboardQueueStatsCardFragment,
+): string {
   return `W:${queue.waitingCount} A:${queue.activeCount} C:${queue.completedCount} F:${queue.failedCount} D:${queue.delayedCount}`;
 }
 
@@ -48,7 +52,9 @@ export interface DashboardQueueStatsProps {
   data: DashboardQueueStatsCardFragment[];
 }
 
-export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
+export const DashboardQueueStats = (
+  props: DashboardQueueStatsProps,
+): React.ReactElement => {
   const { className, data } = props;
 
   // Hooks

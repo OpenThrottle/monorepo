@@ -8,7 +8,9 @@ export interface ProjectsStatsProps {
   totalProjects: number;
 }
 
-export const ProjectsStats = (props: ProjectsStatsProps) => {
+export const ProjectsStats = (
+  props: ProjectsStatsProps,
+): React.ReactElement => {
   const { className, plansLinkedCount, totalProjects } = props;
 
   // Hooks

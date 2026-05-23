@@ -5,7 +5,9 @@ export interface OpenThrottleSidebarProps {
   readonly className?: string;
 }
 
-export const OpenThrottleSidebar = (props: OpenThrottleSidebarProps) => {
+export const OpenThrottleSidebar = (
+  props: OpenThrottleSidebarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

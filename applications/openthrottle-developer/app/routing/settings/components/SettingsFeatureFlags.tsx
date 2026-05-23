@@ -7,7 +7,9 @@ export interface SettingsFeatureFlagsProps {
   className?: string;
 }
 
-export const SettingsFeatureFlags = (_props: SettingsFeatureFlagsProps) => {
+export const SettingsFeatureFlags = (
+  _props: SettingsFeatureFlagsProps,
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

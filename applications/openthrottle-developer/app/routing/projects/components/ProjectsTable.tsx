@@ -91,7 +91,9 @@ export interface ProjectsTableProps {
   projects: ProjectCardFragment[];
 }
 
-export const ProjectsTable = (props: ProjectsTableProps) => {
+export const ProjectsTable = (
+  props: ProjectsTableProps,
+): React.ReactElement => {
   const { className, projects } = props;
 
   // Hooks

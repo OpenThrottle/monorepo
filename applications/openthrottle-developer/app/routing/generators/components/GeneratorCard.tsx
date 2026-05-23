@@ -14,7 +14,9 @@ export interface GeneratorCardProps {
   generator: GeneratorCardFragment;
 }
 
-export const GeneratorCard = (props: GeneratorCardProps) => {
+export const GeneratorCard = (
+  props: GeneratorCardProps,
+): React.ReactElement => {
   const { className, generator } = props;
 
   // Hooks

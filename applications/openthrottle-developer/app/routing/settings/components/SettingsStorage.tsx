@@ -13,7 +13,9 @@ type StorageEntryRow = {
   preview: string;
 };
 
-export const SettingsStorage = (_props: SettingsStorageProps) => {
+export const SettingsStorage = (
+  _props: SettingsStorageProps,
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

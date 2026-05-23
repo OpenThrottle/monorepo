@@ -28,7 +28,7 @@ function normalizeSource(source: string): SearchSource {
 /**
  * @description Delegates by result.source to SearchPlanCard, SearchTaskCard, or SearchDocumentationCard.
  */
-export const SearchCard = (props: SearchCardProps) => {
+export const SearchCard = (props: SearchCardProps): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks

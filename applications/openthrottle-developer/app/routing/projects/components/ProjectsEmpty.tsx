@@ -14,7 +14,9 @@ export interface ProjectsEmptyProps {
   className?: string;
 }
 
-export const ProjectsEmpty = (props: ProjectsEmptyProps) => {
+export const ProjectsEmpty = (
+  props: ProjectsEmptyProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

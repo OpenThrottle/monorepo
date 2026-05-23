@@ -21,7 +21,9 @@ export interface ProjectsSortDropdownProps {
 /**
  * @description Single dropdown to sort projects (combines sortBy and sortOrder). Uses shadcn Select; matches plans SortDropdown API: onChange(sortBy, sortOrder).
  */
-export const ProjectsSortDropdown = (props: ProjectsSortDropdownProps) => {
+export const ProjectsSortDropdown = (
+  props: ProjectsSortDropdownProps,
+): React.ReactElement => {
   const { sortBy, sortOrder, onChange } = props;
 
   // Hooks

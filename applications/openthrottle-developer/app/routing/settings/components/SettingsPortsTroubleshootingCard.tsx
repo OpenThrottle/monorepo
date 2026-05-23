@@ -20,7 +20,7 @@ export interface SettingsPortsTroubleshootingCardProps {}
  */
 export const SettingsPortsTroubleshootingCard = (
   _props: SettingsPortsTroubleshootingCardProps,
-) => {
+): React.ReactElement => {
   // Hooks
 
   // Setup

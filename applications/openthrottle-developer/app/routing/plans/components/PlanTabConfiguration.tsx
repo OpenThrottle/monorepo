@@ -73,7 +73,9 @@ export interface PlanTabConfigurationProps {
   workingDirectory?: string;
 }
 
-export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
+export const PlanTabConfiguration = (
+  props: PlanTabConfigurationProps,
+): React.ReactElement => {
   const {
     iterationTimeoutText: iterationTimeoutTextProp,
     onCollapse: _onCollapse, // FIXME: Trim this bad boy

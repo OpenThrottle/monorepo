@@ -36,7 +36,9 @@ export interface GlobalSidebarContentProps {
   readonly sectionDefaultExpanded?: Readonly<Partial<Record<string, boolean>>>;
 }
 
-export const GlobalSidebarContent = (props: GlobalSidebarContentProps) => {
+export const GlobalSidebarContent = (
+  props: GlobalSidebarContentProps,
+): React.ReactElement => {
   const { data, defaultSectionsExpanded, sectionDefaultExpanded } = props;
 
   // Hooks

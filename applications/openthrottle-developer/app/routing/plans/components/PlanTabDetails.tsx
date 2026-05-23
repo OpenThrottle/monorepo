@@ -39,7 +39,9 @@ export interface PlanTabDetailsProps {
   workflowTimeout: string;
 }
 
-export const PlanTabDetails = (props: PlanTabDetailsProps) => {
+export const PlanTabDetails = (
+  props: PlanTabDetailsProps,
+): React.ReactElement => {
   const {
     fullscreen,
     jobRunHooksBlocked = false,

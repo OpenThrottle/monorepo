@@ -225,7 +225,9 @@ const SettingsKeysTableEmpty = (): React.ReactElement => (
   </Empty>
 );
 
-export const SettingsKeysTable = (props: SettingsKeysTableProps) => {
+export const SettingsKeysTable = (
+  props: SettingsKeysTableProps,
+): React.ReactElement => {
   const { actionError, canRevoke = false, className, credentials = [] } = props;
 
   // Hooks

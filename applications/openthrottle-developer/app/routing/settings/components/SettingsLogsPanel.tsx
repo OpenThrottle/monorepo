@@ -33,7 +33,9 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface SettingsLogsPanelProps {}
 
-export const SettingsLogsPanel = (_props: SettingsLogsPanelProps) => {
+export const SettingsLogsPanel = (
+  _props: SettingsLogsPanelProps,
+): React.ReactElement => {
   // Hooks
   const logPreRef = React.useRef<HTMLPreElement>(null);
   const searchFieldId = React.useId();

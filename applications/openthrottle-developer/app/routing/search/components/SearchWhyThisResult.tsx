@@ -24,7 +24,9 @@ function formatRankSummary(meta: SearchRankMeta): string {
 /**
  * @description Power-user affordance: explains semantic ranking and surfaces chunk metadata for support and debugging.
  */
-export const SearchWhyThisResult = (props: SearchWhyThisResultProps) => {
+export const SearchWhyThisResult = (
+  props: SearchWhyThisResultProps,
+): React.ReactElement => {
   const { className, defaultOpen, rankMeta, result } = props;
 
   // Hooks

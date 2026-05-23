@@ -24,7 +24,7 @@ export interface PlanWorkflowConfigWorkspaceProps {
 
 export const PlanWorkflowConfigWorkspace = (
   props: PlanWorkflowConfigWorkspaceProps,
-) => {
+): React.ReactElement => {
   const { heading, onChange, value } = props;
 
   // Hooks

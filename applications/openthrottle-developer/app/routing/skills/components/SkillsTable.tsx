@@ -14,7 +14,7 @@ export interface SkillsTableProps {
   entries?: RepoSkillEntry[];
 }
 
-export const SkillsTable = (props: SkillsTableProps) => {
+export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
   const { className, entries = [] } = props;
 
   // Hooks

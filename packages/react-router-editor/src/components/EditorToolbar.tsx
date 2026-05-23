@@ -25,7 +25,9 @@ export interface EditorToolbarProps {
 /**
  * @description Toolbar component with search, filter, and new file actions.
  */
-export const EditorToolbar = (props: EditorToolbarProps) => {
+export const EditorToolbar = (
+  props: EditorToolbarProps,
+): React.ReactElement => {
   const {
     basePath = '/prompts',
     className,

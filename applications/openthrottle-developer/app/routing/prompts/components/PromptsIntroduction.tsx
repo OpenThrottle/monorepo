@@ -4,7 +4,9 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
 export interface PromptsIntroductionProps {}
 
-export const PromptsIntroduction = (_props: PromptsIntroductionProps) => {
+export const PromptsIntroduction = (
+  _props: PromptsIntroductionProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

@@ -3,7 +3,9 @@ import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
 export interface DashboardStatsProps {}
 
-export const DashboardStats = (_props: DashboardStatsProps) => {
+export const DashboardStats = (
+  _props: DashboardStatsProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

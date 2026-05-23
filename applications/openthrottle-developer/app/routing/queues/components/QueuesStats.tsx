@@ -24,7 +24,7 @@ export interface QueuesStatsProps {
   queues: QueueCardFragment[];
 }
 
-export const QueuesStats = (props: QueuesStatsProps) => {
+export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
   const { className, queues } = props;
 
   // Hooks

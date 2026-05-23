@@ -6,7 +6,7 @@ export interface PullRequestsIntroductionProps {}
 
 export const PullRequestsIntroduction = (
   _props: PullRequestsIntroductionProps,
-) => {
+): React.ReactElement => {
   // Hooks
 
   // Setup
