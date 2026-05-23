@@ -108,6 +108,18 @@ jobs:
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel --verbose
 
+      # Phased Vitest gate (P2): openthrottle-server, @openthrottle/mcp-developer, @tools/workflows only.
+      # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
+      - name: '🧪 NX affected Vitest (phased gate)'
+        run: |
+          pnpm dlx nx@${{ env.NX_VERSION }} affected \
+            --target=test \
+            --exclude='*,!openthrottle-server,!@openthrottle/mcp-developer,!@tools/workflows' \
+            --parallel \
+            --outputStyle=static \
+            --verbose \
+            --nxBail
+
       - name: '🔒 Agentic Ralph GraphQL codegen drift guard'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run @openthrottle/openthrottle-agentic-ralph:verify-graphql-codegen
 
