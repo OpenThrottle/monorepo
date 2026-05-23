@@ -60,7 +60,6 @@
       "publish:false",
       "technology:nodejs",
       "technology:typescript",
-      "type:tool",
       "type:package"
     ],
     "targets": {

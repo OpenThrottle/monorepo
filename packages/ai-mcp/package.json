@@ -42,7 +42,6 @@
       "production:true",
       "publish:false",
       "technology:typescript",
-      "type:tool",
       "type:package"
     ],
     "targets": {
