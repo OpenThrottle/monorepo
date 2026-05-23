@@ -3,11 +3,13 @@ import classnames from 'classnames';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { CircleIcon } from 'lucide-react';
 
-interface PullRequestStatusProps {
-  readonly state: PullRequestCardFragment['state'];
+export interface PullRequestStatusProps {
+  state: PullRequestCardFragment['state'];
 }
 
-export const PullRequestStatus = (props: PullRequestStatusProps) => {
+export const PullRequestStatus = (
+  props: PullRequestStatusProps,
+): React.ReactElement => {
   const { state } = props;
 
   // Hooks

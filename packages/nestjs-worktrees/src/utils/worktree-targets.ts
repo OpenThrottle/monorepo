@@ -20,9 +20,9 @@ import type {
 
 interface TargetState {
   readonly id: string;
+  lockedBy: string | undefined;
   readonly path: string;
   status: 'available' | 'locked';
-  lockedBy: string | undefined;
 }
 
 /**

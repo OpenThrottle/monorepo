@@ -11,7 +11,7 @@ import type { SemanticSearchChunk } from '../cortex-client.js';
 import { getChunkById } from '../cortex-client.js';
 
 type ChunkResult = {
-  contents: Array<{ type: 'text'; text: string; uri: string }>;
+  contents: Array<{ text: string; type: 'text'; uri: string }>;
 };
 
 async function readKnowledgeBaseChunk(

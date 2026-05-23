@@ -5,7 +5,9 @@ export interface OpenThrottleTableProps {
   className?: string;
 }
 
-export const OpenThrottleTable = (props: OpenThrottleTableProps) => {
+export const OpenThrottleTable = (
+  props: OpenThrottleTableProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

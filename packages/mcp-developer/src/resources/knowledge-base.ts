@@ -11,7 +11,7 @@ import { GetDocumentDocument } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/get-auth-token.js';
 
 type ChunkResult = {
-  contents: Array<{ type: 'text'; text: string; uri: string }>;
+  contents: Array<{ text: string; type: 'text'; uri: string }>;
 };
 
 export const knowledgeBaseChunkUriTemplate = 'knowledge-base://chunk/{id}';

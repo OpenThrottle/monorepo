@@ -8,3 +8,4 @@ Your job is to create a new **plan** in Cortex using the ai-mcp MCP server. Opti
 - **ALWAYS** use **`create_plan`** from the ai-mcp MCP server with required fields: `title`, `author` (GitHub handle), `category`; optional: `description`, `status` (default: `pending`)
 - If the user provides initial tasks, use **`create_task`** for each with `planId` (from the created plan) and `title`; optional: `description`, `category`, `status`, `requirements`
 - **ALWAYS** report the created plan (id, title, and any created task ids/titles) in a clear, readable format
+- **NEVER** start a task or plan unless explicitly told to do so.

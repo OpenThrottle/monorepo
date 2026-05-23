@@ -16,7 +16,7 @@ interface ContactFormProps {
   readonly className?: string;
 }
 
-export const ContactForm = (props: ContactFormProps) => {
+export const ContactForm = (props: ContactFormProps): React.ReactElement => {
   const { actionData, className } = props;
   const error = actionData?.error;
 

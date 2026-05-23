@@ -12,7 +12,9 @@ export interface EditorSidebarFileProps {
 /**
  * @description Individual file item in the editor sidebar.
  */
-export const EditorSidebarFile = (props: EditorSidebarFileProps) => {
+export const EditorSidebarFile = (
+  props: EditorSidebarFileProps,
+): React.ReactElement => {
   const { basePath = '/prompts', filename, id } = props;
 
   // Hooks

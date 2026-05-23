@@ -43,7 +43,7 @@ interface MailToolbarProps {
  * @description Toolbar for the mail area: search, navigation (breadcrumb), and action buttons. Uses shadcn-ui components.
  * Search: form submit and debounced input navigate to /mail/search?q=... so results are shareable and update as you type.
  */
-export const MailToolbar = (props: MailToolbarProps) => {
+export const MailToolbar = (props: MailToolbarProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

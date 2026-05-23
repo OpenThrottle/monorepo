@@ -1,3 +1,4 @@
+import { BadgeProps } from '@openthrottle/react-router-shadcn';
 import {
   PLANS_SORT_ORDER,
   PlansSortBy,
@@ -72,3 +73,23 @@ export function parsePlansSortFromSearch(searchParams: URLSearchParams): {
       : 'desc',
   };
 }
+
+export const parseTaskStatusColor = (status: string): BadgeProps['color'] => {
+  switch (status) {
+    case 'CANCELED':
+      return 'violet';
+    case 'COMPLETED':
+      return 'lime';
+    case 'IN_PROGRESS':
+      return 'yellow';
+    case 'PENDING':
+      return 'blue';
+    case 'QUEUED':
+      return 'orange';
+    case 'SKIPPED':
+      return 'red';
+
+    default:
+      return 'default';
+  }
+};

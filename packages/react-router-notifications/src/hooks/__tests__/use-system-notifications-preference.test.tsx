@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
 import { useNotificationsSystemPreferences } from '../use-system-notifications-preference';
 
@@ -40,28 +40,8 @@ function TestConsumer(): React.ReactElement {
 }
 
 describe('useNotificationsSystemPreferences', () => {
-  let storage: Record<string, string>;
-
   beforeEach(() => {
-    storage = {};
-    vi.stubGlobal('localStorage', {
-      clear: () => {
-        for (const key of Object.keys(storage)) delete storage[key];
-      },
-      getItem: (key: string) => storage[key] ?? null,
-      key: () => null,
-      length: 0,
-      removeItem: (key: string) => {
-        delete storage[key];
-      },
-      setItem: (key: string, value: string) => {
-        storage[key] = value;
-      },
-    });
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
+    window.localStorage.clear();
   });
 
   test('defaults to disabled when localStorage is empty', () => {
@@ -77,14 +57,22 @@ describe('useNotificationsSystemPreferences', () => {
 
     await user.click(getByTestId('toggle-enabled'));
     expect(getByTestId('enabled').textContent).toBe('true');
-    expect(JSON.parse(storage[NOTIFICATIONS_STORAGE_KEY] ?? '{}')).toEqual({
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) ?? '{}',
+      ),
+    ).toEqual({
       enabled: true,
       onlyWhenBackground: undefined,
     });
 
     await user.click(getByTestId('toggle-only-background'));
     expect(getByTestId('only-background').textContent).toBe('true');
-    expect(JSON.parse(storage[NOTIFICATIONS_STORAGE_KEY] ?? '{}')).toEqual({
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) ?? '{}',
+      ),
+    ).toEqual({
       enabled: true,
       onlyWhenBackground: true,
     });
@@ -94,7 +82,10 @@ describe('useNotificationsSystemPreferences', () => {
     const { getByTestId } = render(<TestConsumer />);
     expect(getByTestId('enabled').textContent).toBe('false');
 
-    storage[NOTIFICATIONS_STORAGE_KEY] = JSON.stringify({ enabled: true });
+    window.localStorage.setItem(
+      NOTIFICATIONS_STORAGE_KEY,
+      JSON.stringify({ enabled: true }),
+    );
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: NOTIFICATIONS_STORAGE_KEY,
@@ -113,7 +104,7 @@ describe('useNotificationsSystemPreferences', () => {
     const { getByTestId } = render(<TestConsumer />);
     expect(getByTestId('enabled').textContent).toBe('false');
 
-    storage['other-key'] = JSON.stringify({ enabled: true });
+    window.localStorage.setItem('other-key', JSON.stringify({ enabled: true }));
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: 'other-key',

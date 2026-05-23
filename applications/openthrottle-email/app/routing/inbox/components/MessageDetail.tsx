@@ -60,7 +60,9 @@ interface MessageDetailProps extends MessageDetailActionCallbacks {
  * @description Reading pane: displays a single message with metadata, body, actions bar (reply, forward, archive, delete), and optional attachments placeholder.
  * Uses shadcn-ui Card, Button, DropdownMenu, Skeleton, Badge. Reply/Forward link to compose route with query params for future integration.
  */
-export const MessageDetail = (props: MessageDetailProps) => {
+export const MessageDetail = (
+  props: MessageDetailProps,
+): React.ReactElement => {
   const {
     className,
     loading = false,

@@ -20,9 +20,9 @@ interface OpenPrCountByAuthor {
  * in that state.
  */
 interface PrTimeInStateSummary {
-  readonly state: string;
-  readonly count: number;
   readonly avgDaysInState: number | null;
+  readonly count: number;
+  readonly state: string;
 }
 
 /** Period bucket: week "YYYY-Www" or month "YYYY-MM" (UTC). */
@@ -97,9 +97,9 @@ interface ReviewCycleTimeOptions {
  */
 interface ReviewCycleTimeRow {
   readonly medianDays: number | null;
+  readonly p90Days: number | null;
   readonly period: string | null;
   readonly prCount: number;
-  readonly p90Days: number | null;
 }
 
 /**

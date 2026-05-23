@@ -3,12 +3,14 @@ import { SendAgentMessageDocument } from '@openthrottle/openthrottle-developer-c
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';
 
-interface CallSendAgentMessageParams {
+export interface CallSendAgentMessageParams {
   readonly conversationId?: string | null;
   readonly message: string;
 }
 
-const emptyTurn = (overrides: Partial<ChatTurnResult>): ChatTurnResult => ({
+export const emptyTurn = (
+  overrides: Partial<ChatTurnResult>,
+): ChatTurnResult => ({
   assistantText: null,
   conversationId: null,
   errorMessage: null,
@@ -63,7 +65,7 @@ export async function handleSendAgentMessageIntent(
 /**
  * @description Call `agentsRunChatTurn` on openthrottle-server with auth from the request cookie.
  */
-async function callSendAgentMessage(
+export async function callSendAgentMessage(
   request: Request,
   params: CallSendAgentMessageParams,
 ): Promise<ChatTurnResult> {

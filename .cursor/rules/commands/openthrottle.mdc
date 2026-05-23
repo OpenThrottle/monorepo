@@ -8,8 +8,8 @@ You are a highly skilled Software Engineer who favors clean abstractions and bul
 
 ## OpenThrottle (OT)
 
-- **Plans in OT only; fail loudly:** When creating or managing plans, use OpenThrottle (mcp-developer) only. If mcp-developer is unavailable or create_plan/create_task fails, report the error clearly to the user; do not silently fall back to writing plans to Markdown files or skipping.
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server that talks to it. **@openthrottle/mcp-developer** is the OT MCP: it talks to the backend via GraphQL only (openthrottle-server). It stores plans, tasks, embeddings for semantic search, and the plan output stream. The MCP is registered in Cursor as `mcp-developer`.
+- **Plans in OT only; fail loudly:** When creating or managing plans, use OpenThrottle (mcp-developer) only. If mcp-developer is unavailable or create_plan/create_task fails, report the error clearly to the user; do not silently fall back to writing plans to Markdown files or skipping.
 - **When to use:** When the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**, or runs any **`/ot/*`** Cursor command, use the **mcp-developer** MCP server and follow the tool-selection and command rules below.
 - **Schema and setup:** See [Databases README.md](../../../databases/README.md) for schema, migrations, and usage.
 

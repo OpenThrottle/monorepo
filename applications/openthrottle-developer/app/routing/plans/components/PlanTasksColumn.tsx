@@ -6,19 +6,21 @@ import {
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
 
-interface PlanTasksColumnProps {
-  readonly children: React.ReactNode;
-  readonly className?: string;
-  readonly columnId: string;
-  readonly droppableRef?: React.Ref<HTMLElement>;
-  readonly emptyLabel?: string;
-  readonly title: string;
+export interface PlanTasksColumnProps {
+  children: React.ReactNode;
+  className?: string;
+  columnId: string;
+  droppableRef?: React.Ref<HTMLElement>;
+  emptyLabel?: string;
+  title: string;
 }
 
 /**
  * @description Single status column: header plus scrollable task cards with an empty state.
  */
-export const PlanTasksColumn = (props: PlanTasksColumnProps) => {
+export const PlanTasksColumn = (
+  props: PlanTasksColumnProps,
+): React.ReactElement => {
   const {
     children,
     className,

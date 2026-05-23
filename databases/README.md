@@ -40,6 +40,14 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:migrate
    ```
 
+   **Service account bootstrap (after migrate, when using `APP_ENABLE_AUTHENTICATION=true`):** Migration `045_seed_service_accounts_bootstrap.sql` creates `mcp-developer` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
+
+   ```bash
+   pnpm run database:bootstrap-service-accounts
+   ```
+
+   Copy the printed values into `MCP_DEVELOPER_AUTH_TOKEN` (Cursor MCP / mcp-developer) and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (BullMQ Ralph worker GraphQL). Format: `ot_sa_<prefix>_<secret>`. See [packages/mcp-developer/docs/AUTH.md](../packages/mcp-developer/docs/AUTH.md).
+
    **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON` — see [docs/openthrottle/database-backup-scheduled-job-spec.md](../docs/openthrottle/database-backup-scheduled-job-spec.md).
 
 4. **Reset the database (optional, before a fresh ingest)**
@@ -84,10 +92,13 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 - **documentation_embeddings** – Vector embeddings for doc chunks (semantic search): `id`, `documentation_id` (FK to documentation), `content` (TEXT; chunk text), `embedding` (vector 1536), `metadata` (JSONB), `created_at`. Same pattern as plan_embeddings / task_embeddings; HNSW index on embedding, GIN on metadata.
 - **doc_ingestion_state** – Prior state for diff-based doc ingestion (BullMQ job): `scope` (TEXT), `path` (TEXT), `content_hash` (TEXT; e.g. SHA-256), `updated_at` (TIMESTAMPTZ). One row per (scope, path); primary key (scope, path). Used to determine to-add / to-update / to-remove when re-ingesting markdown. See `docs/openthrottle/doc-ingestion-job-spec.md` and migration `030_create_doc_ingestion_state_table.sql`.
 - **users** – User accounts for auth and assignment: `id`, `created_at`, `updated_at`, `email` (TEXT, nullable; unique when set for login), `github_username` (TEXT NOT NULL), `password_hash` (TEXT, nullable; bcrypt for OpenThrottle local auth). See migrations `026_create_users_table.sql`, `031_add_users_password_hash_and_email_unique.sql`. Optional: table can be dropped and recreated with a stricter schema (e.g. email NOT NULL for new auth users); see migration 031 comments.
-- **permissions** – RBAC permission definitions: `id`, `name` (TEXT, unique), `description` (TEXT, nullable), `created_at`. Seeded with `settings:read`, `settings:write`, `users:read`, `users:write`. See migration `034_create_roles_and_permissions_tables.sql`.
-- **roles** – RBAC roles: `id`, `name` (TEXT, unique), `description` (TEXT, nullable), `created_at`, `updated_at`. Seeded with `admin`, `user`, `viewer`. See migration 034.
+- **permissions** – RBAC permission definitions: `id`, `name` (TEXT, unique), `description` (TEXT, nullable), `created_at`. Seeded with `settings:read`, `settings:write`, `users:read`, `users:write` (migration 034) and `plans:read`, `plans:write` (migration 045).
+- **roles** – RBAC roles: `id`, `name` (TEXT, unique), `description` (TEXT, nullable), `created_at`, `updated_at`. Seeded with `admin`, `user`, `viewer` (034) and automation roles `mcp`, `workflow-ralph` (045).
 - **role_permissions** – Join table role_id ↔ permission_id (many-to-many). See migration 034.
 - **user_roles** – Join table user_id ↔ role_id (many-to-many). See migration 034.
+- **service_accounts** – Machine/service actors for system-to-system auth (MCP, CI, workers): `id`, `name` (unique), `description`, `disabled_at`, `created_at`. Bearer tokens use prefix `ot_sa_`. See migration `044_create_service_accounts_tables.sql`.
+- **service_account_credentials** – Hashed secrets for service accounts: `id`, `service_account_id` (FK), `prefix` (unique; lookup key in bearer token), `secret_hash`, `label`, `expires_at`, `last_used_at`, `revoked_at`, `created_at`. Plaintext secret returned only at create time.
+- **service_account_roles** – Join table service_account_id ↔ role_id (many-to-many; same `roles` as humans). See migration 044.
 - **subscriptions** – Stripe subscription state for OpenThrottle payments: `id`, `user_id` (FK), `stripe_customer_id`, `stripe_subscription_id`, `stripe_price_id`, `status`, `current_period_start`, `current_period_end`, `cancel_at_period_end`, `created_at`, `updated_at`. See migration `035_create_subscriptions_table.sql`.
 - **custom_prompts** – Custom prompt documents for AI workflow customization (Agents.md, skills, commands, prompts, rules): `id`, `title`, `content`, `description` (optional), `prompt_type` (enum-like: agents, skills, commands, prompts, rules), `labels` (JSONB array of strings), `file_path` (optional; path relative to workspace), `user_id` (optional FK to users), `project_id` (optional FK to projects), `deleted_at` (soft delete), `created_at`, `updated_at`. See migration `036_create_custom_prompts_table.sql`.
 - **custom_prompt_embeddings** – Vector embeddings for custom prompt content (semantic search): `id`, `custom_prompt_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`. Same pattern as plan_embeddings / documentation_embeddings. See migration `037_create_custom_prompt_embeddings_table.sql`.

@@ -9,19 +9,18 @@ import {
 import type { SkillsTableColumnValue } from '~/routing/skills/config/skills-table-columns';
 import { SkillsEmpty } from '~/routing/skills/components/SkillsEmpty';
 
-interface SkillsTableProps {
-  readonly className?: string;
-  readonly entries?: readonly RepoSkillEntry[];
+export interface SkillsTableProps {
+  className?: string;
+  entries?: RepoSkillEntry[];
 }
 
-export const SkillsTable = (props: SkillsTableProps) => {
+export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
   const { className, entries = [] } = props;
 
   // Hooks
 
   // Setup
   const data = React.useMemo(() => [...entries], [entries]);
-
   const getRowId = React.useCallback(getSkillsTableRowId, []);
 
   // Handlers
@@ -31,9 +30,6 @@ export const SkillsTable = (props: SkillsTableProps) => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (entries.length === 0) {
-    return <SkillsEmpty />;
-  }
 
   return (
     <div
@@ -43,6 +39,7 @@ export const SkillsTable = (props: SkillsTableProps) => {
       <DataTable<RepoSkillEntry, SkillsTableColumnValue>
         columns={skillsTableColumns}
         data={data}
+        emptyState={<SkillsEmpty />}
         getRowId={getRowId}
       />
     </div>

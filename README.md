@@ -22,6 +22,7 @@ After years of development, I've refined my tech stack to focus on a core set of
 
 Specific Reads:
 
+- [local-quickstart.md](./docs/openthrottle/local-quickstart.md) — env, migrate, bootstrap, server, MCP verify
 - [first-time-onboarding.md](./docs/openthrottle/first-time-onboarding.md)
 - [HTML vs Markdown for agents (Ralph research, WIP)](./docs/openthrottle/research/html-over-markdown-for-agents.md)
 
@@ -43,7 +44,7 @@ While many [NX](https://nx.dev/) monorepo implementations specialize in either `
 ```bash
 ├── .env.default           # Default environment variables (in VC)
 ├── applications           # NodeJS client and server applications
-├── databases              # Supabase databases for local development
+├── databases              # OpenThrottle Postgres schema, migrations, and local DB scripts
 ├── design                 # Reserved for design assets (future)
 ├── docs                   # Markdown documentation (see docs/)
 ├── infra                  # Infrastructure as code (e.g. GCP, Terraform)
@@ -72,13 +73,16 @@ While many [NX](https://nx.dev/) monorepo implementations specialize in either `
 Monorepos streamline our development process by centralizing code management, enabling faster feedback cycles, and promoting code reuse. With shared tooling, consistent standards, and atomic commits, we can maintain high velocity while ensuring quality. The unified build system and dependency management reduce context switching and eliminate version conflicts, making the development experience both efficient and enjoyable.
 
 ```bash
-# 🧠 Postgres and Redis databases
-docker compose up openthrottle-redis openthrottle-postgres --detach
-
-# 🚀 A React Router application
+# OpenThrottle local stack (full walkthrough: docs/openthrottle/local-quickstart.md)
+pnpm run database:start
+pnpm run database:migrate
+pnpm nx run openthrottle-server:dev
 pnpm nx run openthrottle-developer:dev
 
-# 📱 If we need to access it over our local network
+# Stop Postgres + Redis when finished
+pnpm run database:stop
+
+# Developer UI on the local network
 pnpm nx run openthrottle-developer:dev -- --host
 ```
 
@@ -201,10 +205,12 @@ We can always re-run the setup script `./scripts/setup.sh`
 
 **2. Database Issues?**
 
-Try stopping and starting the Database with our pnpm scripts:
+Try stopping and starting Postgres + Redis with the root pnpm scripts:
 
-- `pnpm database:stop`
-- `pnpm database:start`
+- `pnpm run database:stop`
+- `pnpm run database:start`
+
+See [databases/README.md](./databases/README.md) and [local-quickstart.md](./docs/openthrottle/local-quickstart.md).
 
 **3. Version mismatches?**
 
@@ -212,6 +218,6 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 
 - e.g. `pnpm list react`
 
-**1. Other issues?**
+**4. Other issues?**
 
 Let me know and we'll get to the bottom of things 🤷

@@ -12,20 +12,21 @@ describe('PlanWorkflowConfigTarget Component', () => {
   test('renders run target fieldset with legend and stable ids', () => {
     const input = getDefaultWorkflowRalphRunOptionsInput();
     const Component = () => (
-      <PlanWorkflowConfigTarget input={input} setInput={() => {}} />
+      <PlanWorkflowConfigTarget
+        heading="01. Target"
+        input={input}
+        setInput={() => {}}
+      />
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
     expect(
-      component.getByTestId('PlanWorkflowConfigTarget'),
+      component.getByRole('group', { name: '01. Target' }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('group', { name: 'Run target' }),
-    ).toBeInTheDocument();
-    expect(
-      document.getElementById('workflow-run-target-legend'),
-    ).toHaveTextContent('Run target');
+      document.getElementById('workflow-config-target-legend'),
+    ).toHaveTextContent('01. Target');
   });
 
   test('shows --plan input with value when input.planId is set in plan mode', () => {
@@ -33,7 +34,11 @@ describe('PlanWorkflowConfigTarget Component', () => {
       planId: PLAN_ID_FIXTURE,
     });
     const Component = () => (
-      <PlanWorkflowConfigTarget input={input} setInput={() => {}} />
+      <PlanWorkflowConfigTarget
+        heading="01. Target"
+        input={input}
+        setInput={() => {}}
+      />
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
@@ -49,7 +54,13 @@ describe('PlanWorkflowConfigTarget Component', () => {
       const [state, setState] = React.useState(
         getDefaultWorkflowRalphRunOptionsInput(),
       );
-      return <PlanWorkflowConfigTarget input={state} setInput={setState} />;
+      return (
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={state}
+          setInput={setState}
+        />
+      );
     };
     const RoutesStub = createRoutesStub([{ Component: Harness, path: '/' }]);
     const { getByLabelText, getByRole } = render(<RoutesStub />);
@@ -69,7 +80,13 @@ describe('PlanWorkflowConfigTarget Component', () => {
       const [state, setState] = React.useState(
         getDefaultWorkflowRalphRunOptionsInput(),
       );
-      return <PlanWorkflowConfigTarget input={state} setInput={setState} />;
+      return (
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={state}
+          setInput={setState}
+        />
+      );
     };
     const RoutesStub = createRoutesStub([{ Component: Harness, path: '/' }]);
     const { findByRole, getByRole, getByTestId, getByLabelText } = render(
@@ -92,7 +109,13 @@ describe('PlanWorkflowConfigTarget Component', () => {
       const [state, setState] = React.useState(
         getDefaultWorkflowRalphRunOptionsInput(),
       );
-      return <PlanWorkflowConfigTarget input={state} setInput={setState} />;
+      return (
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={state}
+          setInput={setState}
+        />
+      );
     };
     const RoutesStub = createRoutesStub([{ Component: Harness, path: '/' }]);
     const { findByRole, getByLabelText, getByRole } = render(<RoutesStub />);

@@ -35,7 +35,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 - **What it spawns:**
   - **Git:** `git -C <worktreePath> ...` via `spawnSync` (no shell) for `rev-parse` (branch name, HEAD SHA). Short, fast calls.
-  - **Ralph:** `pnpm exec workflow-ralph --plan <planId>` plus optional argv from `buildWorkflowRalphRunTuningArgv` (e.g. `--backend`, `--iterations`) with `cwd: worktreePath`, via **`spawn`** + Promise (`runRalphAsync`). Optional `onChunk` forwards stdout/stderr; optional timeout and `AbortSignal`.
+  - **Ralph:** `pnpm exec workflow-ralph --plan <planId>` plus optional argv from `buildWorkflowRalphRunTuningArgv` (e.g. `--backend`, `--iterations`, `--worktree` defaulting to `handoff.targetId`) with `cwd: worktreePath`, via **`spawn`** + Promise (`runRalphAsync`). Each iteration inside nested Ralph may pass agent `-w/--worktree` to cursor-agent/claude when configured. Optional `onChunk` forwards stdout/stderr; optional timeout and `AbortSignal`.
 - **Blocking:** The caller awaits the Promise until `workflow-ralph` exits. Inner iteration runners (`cursor-agent` / `claude`) are spawned by the nested CLI per `--backend`.
 - **Where streaming/async would help:** Chunk forwarding and `streamToCortex` already use `onChunk`; further work could push more progress surfaces without changing the spawn model.
 

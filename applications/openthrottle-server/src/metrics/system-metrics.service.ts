@@ -26,7 +26,7 @@ const PSI_CPU_PATH = '/proc/pressure/cpu';
  */
 function parsePsiLine(
   line: string,
-): { avg10: number; avg60: number; avg300: number } | null {
+): { avg10: number; avg300: number; avg60: number } | null {
   const match = line.match(/avg10=([\d.]+)\s+avg60=([\d.]+)\s+avg300=([\d.]+)/);
   if (!match) return null;
 

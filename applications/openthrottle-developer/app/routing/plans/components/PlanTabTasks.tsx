@@ -1,29 +1,18 @@
 import * as React from 'react';
-import {
-  DataTable,
-  TabsContent,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
+import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import {
-  formatDateShort,
-  formatUpdatedAt,
-  getRequirementsCount,
-} from '~/routing/plans/utils/formatters';
+import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
-import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
+import type { ColumnDef } from '@tanstack/react-table';
 
-interface PlanTabTasksProp {
-  readonly tasks: PlanTaskRowFragment[];
+export interface PlanTabTasksProps {
+  tasks: PlanTaskRowFragment[];
 }
 
-export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
+export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
   const { tasks } = props;
 
   // Hooks
@@ -50,13 +39,6 @@ export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (tasks.length === 0) {
-    return (
-      <TabsContent value="tasks">
-        <PlanTasksEmpty />
-      </TabsContent>
-    );
-  }
 
   return (
     <TabsContent value="tasks">
@@ -67,6 +49,7 @@ export const PlanTabTasks = (props: PlanTabTasksProp): React.ReactElement => {
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
           data={data}
+          emptyState={<PlanTasksEmpty />}
           getRowId={getRowId}
           getRowProps={getRowProps}
         />
@@ -85,18 +68,14 @@ PlanTabTasks.buildTable = (): ColumnDef<
       cell: ({ row }) => {
         const status = row.original.status;
         return (
-          <div className="px-4 py-2">
+          <div className="p-2">
             <PlanStatusBadge
               status={status as Parameters<typeof PlanStatusBadge>[0]['status']}
             />
           </div>
         );
       },
-      header: () => (
-        <span className="px-4 py-2 inline-block w-full text-center">
-          Status
-        </span>
-      ),
+      header: () => <span className="p-2 text-center">Status</span>,
     },
     {
       accessorKey: 'title',
@@ -112,25 +91,25 @@ PlanTabTasks.buildTable = (): ColumnDef<
       ),
       header: () => 'Category',
     },
-    {
-      accessorKey: 'projectRelation',
-      cell: ({ row }) => {
-        const project = row.original.projectRelation;
-        if (project == null) {
-          return <span className="text-muted-foreground">—</span>;
-        }
-        return (
-          <Link
-            className="text-xs underline underline-offset-2 hover:text-primary"
-            to={`/projects/${project.id}`}
-            viewTransition={true}
-          >
-            {project.name}
-          </Link>
-        );
-      },
-      header: () => 'Project',
-    },
+    // {
+    //   accessorKey: 'projectRelation',
+    //   cell: ({ row }) => {
+    //     const project = row.original.projectRelation;
+    //     if (project == null) {
+    //       return <span className="text-muted-foreground">—</span>;
+    //     }
+    //     return (
+    //       <Link
+    //         className="text-xs underline underline-offset-2 hover:text-primary"
+    //         to={`/projects/${project.id}`}
+    //         viewTransition={true}
+    //       >
+    //         {project.name}
+    //       </Link>
+    //     );
+    //   },
+    //   header: () => 'Project',
+    // },
     {
       accessorKey: 'requirementsJson',
       cell: ({ row }) => {
@@ -145,44 +124,44 @@ PlanTabTasks.buildTable = (): ColumnDef<
         <span className="inline-block w-full text-center">Requirements</span>
       ),
     },
-    {
-      accessorKey: 'updatedAt',
-      cell: ({ row }) => {
-        const task = row.original;
-        const relative = formatUpdatedAt(task.updatedAt);
-        const exact = formatDateShort(task.updatedAt);
+    // {
+    //   accessorKey: 'updatedAt',
+    //   cell: ({ row }) => {
+    //     const task = row.original;
+    //     const relative = formatUpdatedAt(task.updatedAt);
+    //     const exact = formatDateShort(task.updatedAt);
 
-        if (relative == null) {
-          return <span className="text-muted-foreground text-xs">—</span>;
-        }
+    //     if (relative == null) {
+    //       return <span className="text-muted-foreground text-xs">—</span>;
+    //     }
 
-        const content = (
-          <span className="text-muted-foreground text-xs whitespace-nowrap">
-            {relative}
-          </span>
-        );
+    //     const content = (
+    //       <span className="text-muted-foreground text-xs whitespace-nowrap">
+    //         {relative}
+    //       </span>
+    //     );
 
-        if (exact != null) {
-          return (
-            <Tooltip>
-              <TooltipTrigger asChild={true}>
-                <span className="cursor-default">{content}</span>
-              </TooltipTrigger>
-              <TooltipContent>
-                Updated {exact}
-                {formatDateShort(task.createdAt) != null
-                  ? ` · Created ${formatDateShort(task.createdAt)}`
-                  : ''}
-              </TooltipContent>
-            </Tooltip>
-          );
-        }
-        return content;
-      },
-      header: () => (
-        <span className="inline-block w-full text-right">Updated</span>
-      ),
-    },
+    //     if (exact != null) {
+    //       return (
+    //         <Tooltip>
+    //           <TooltipTrigger asChild={true}>
+    //             <span className="cursor-default">{content}</span>
+    //           </TooltipTrigger>
+    //           <TooltipContent>
+    //             Updated {exact}
+    //             {formatDateShort(task.createdAt) != null
+    //               ? ` · Created ${formatDateShort(task.createdAt)}`
+    //               : ''}
+    //           </TooltipContent>
+    //         </Tooltip>
+    //       );
+    //     }
+    //     return content;
+    //   },
+    //   header: () => (
+    //     <span className="inline-block w-full text-right">Updated</span>
+    //   ),
+    // },
     {
       cell: ({ row }) => <PlanTasksTableCellActions row={row} />,
       header: () => 'Actions',

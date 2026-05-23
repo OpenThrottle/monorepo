@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { Link, useFetcher, useRevalidator } from 'react-router';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleClipboard,
+  OpenThrottleFieldset,
+} from '@openthrottle/react-router-ui';
 import {
   Badge,
   Button,
@@ -21,6 +24,7 @@ import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/
 import { describeCancelPlanRunResult } from '~/routing/plans/utils/describe-cancel-plan-run-result';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
+import { HeartHandshakeIcon } from 'lucide-react';
 
 const JOB_STATE_BADGE_VARIANT: Record<
   string,
@@ -37,11 +41,6 @@ const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
 
 type QueueJobDetailJob = NonNullable<GetQueueJobDetailsQuery['job']>;
 
-interface QueueJobDetailProps {
-  readonly job: QueueJobDetailJob;
-  readonly queueName: string;
-}
-
 /** Action payload from `queues.$queueId.$jobId` route for mutation feedback. */
 type QueueJobDetailActionData =
   | { cancelPlanRunError: string }
@@ -51,15 +50,25 @@ type QueueJobDetailActionData =
     }
   | { retryJob: QueueJobDetailRetryMutation['retryJob'] };
 
+export interface QueueJobDetailProps {
+  job: QueueJobDetailJob;
+  queueName: string;
+}
+
 /**
  * @description Full job introspection: payload, correlation, plan/task links, retry and cancel.
  */
-export const QueueJobDetail = (props: QueueJobDetailProps) => {
+export const QueueJobDetail = (
+  props: QueueJobDetailProps,
+): React.ReactElement => {
   const { job, queueName } = props;
+
+  // Hooks
   const fetcher = useFetcher<QueueJobDetailActionData>();
   const revalidator = useRevalidator();
   const handledSubmissionRef = React.useRef(false);
 
+  // Setup
   const parsed = parseQueueJobDataString(job.data);
   const canRetry = job.state === 'failed';
   const canCancel =
@@ -95,6 +104,26 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
     queueName,
   ]);
 
+  const formatTs = (unix?: number | null): string | null => {
+    if (unix == null) return null;
+    return new Date(unix).toISOString();
+  };
+
+  const returnValuePretty = React.useMemo((): string | null => {
+    if (job.returnvalue == null || job.returnvalue === '') return null;
+    try {
+      const o = JSON.parse(job.returnvalue) as unknown;
+      return JSON.stringify(o, null, 2);
+    } catch {
+      return job.returnvalue;
+    }
+  }, [job.returnvalue]);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     if (fetcher.state === 'submitting' || fetcher.state === 'loading') {
       handledSubmissionRef.current = true;
@@ -149,20 +178,7 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
     }
   }, [fetcher.data, fetcher.state, revalidator]);
 
-  const formatTs = (unix?: number | null): string | null => {
-    if (unix == null) return null;
-    return new Date(unix).toISOString();
-  };
-
-  const returnValuePretty = React.useMemo((): string | null => {
-    if (job.returnvalue == null || job.returnvalue === '') return null;
-    try {
-      const o = JSON.parse(job.returnvalue) as unknown;
-      return JSON.stringify(o, null, 2);
-    } catch {
-      return job.returnvalue;
-    }
-  }, [job.returnvalue]);
+  // 🔌 Short Circuit
 
   return (
     <div className="space-y-6" data-testid="QueueJobDetail">
@@ -208,15 +224,16 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="p-4 pb-2">
-          <CardTitle className="text-base">Correlation & support</CardTitle>
-          <CardDescription>
+      <OpenThrottleFieldset
+        icon={HeartHandshakeIcon}
+        id="correlation-and-support"
+        legend="Correlation & Support"
+      >
+        <div className="space-y-2 text-sm">
+          <p className="text-sm text-muted-foreground">
             Use these values when matching logs, workers, or support tickets.
             Job id is the BullMQ id for this queue.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 p-4 pt-0 text-sm">
+          </p>
           <p>
             <span className="text-muted-foreground">Queue</span>{' '}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
@@ -276,15 +293,16 @@ export const QueueJobDetail = (props: QueueJobDetailProps) => {
                 </Link>
               </p>
             )}
-          <div className="pt-2">
-            <OpenThrottleClipboard
-              className="h-8"
-              label="Copy support bundle"
-              text={supportBundle}
-            />
+          <div className="flex justify-end">
+            <Badge color="red">
+              <OpenThrottleClipboard
+                label="Copy support bundle"
+                text={supportBundle}
+              />
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </OpenThrottleFieldset>
 
       {parsed.parseError != null && (
         <div className="rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">

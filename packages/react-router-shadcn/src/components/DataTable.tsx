@@ -20,6 +20,7 @@ import {
 export interface DataTableProps<TData, TValue> {
   readonly columns: ColumnDef<TData, TValue>[];
   readonly data: TData[];
+  readonly emptyState?: string | React.ReactElement;
   /** Optional: custom row id for React keys and row props (e.g. for in-page anchors). */
   readonly getRowId?: (original: TData, index: number) => string;
   /** Optional: props to spread onto each body TableRow (e.g. id for hash links). */
@@ -34,7 +35,13 @@ export interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>(
   props: DataTableProps<TData, TValue>,
 ): React.ReactElement {
-  const { columns, data, getRowId, getRowProps } = props;
+  const {
+    columns,
+    data,
+    emptyState = 'No results.',
+    getRowId,
+    getRowProps,
+  } = props;
 
   // Hooks
   const table = useReactTable({
@@ -45,6 +52,7 @@ export function DataTable<TData, TValue>(
   });
 
   // Setup
+  const rows = table.getRowModel().rows ?? [];
 
   // Handlers
 
@@ -73,8 +81,8 @@ export function DataTable<TData, TValue>(
         ))}
       </TableHeader>
       <TableBody>
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
+        {rows?.length ? (
+          rows.map((row) => (
             <TableRow
               data-state={row.getIsSelected() ? 'selected' : undefined}
               key={row.id}
@@ -90,7 +98,7 @@ export function DataTable<TData, TValue>(
         ) : (
           <TableRow>
             <TableCell className="h-24 text-center" colSpan={columns.length}>
-              No results.
+              {emptyState}
             </TableCell>
           </TableRow>
         )}

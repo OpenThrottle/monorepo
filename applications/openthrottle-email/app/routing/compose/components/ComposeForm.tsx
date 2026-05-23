@@ -23,7 +23,7 @@ interface ComposeFormProps extends FormProps {
  * @description New-message form (To, Subject, Body). Uses shadcn-ui Button, Input, Label, TextArea.
  * Reply/forward: prefill from query params (?replyTo=id, ?replyAll=1, ?forward=id) in compose route; wire initialValues from loader when backend is ready.
  */
-export const ComposeForm = (props: ComposeFormProps) => {
+export const ComposeForm = (props: ComposeFormProps): React.ReactElement => {
   const { className, debug = false, initialValues } = props;
 
   // Hooks

@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import type { Job, Queue } from 'bullmq';
 import { createMock } from '@golevelup/ts-vitest';
+import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
 import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants';
@@ -102,6 +103,13 @@ describe('QueuesService', () => {
     removeRepeatableByKey: mockRemoveRepeatableByKey,
   });
 
+  const mockDatabaseBackupQueue = createMock<Queue>({
+    getJobCounts: mockGetJobCounts,
+    getJobs: mockGetJobs,
+    getRepeatableJobs: mockGetRepeatableJobs,
+    removeRepeatableByKey: mockRemoveRepeatableByKey,
+  });
+
   const mockConfigService = createMock<ConfigService>({
     get: vi.fn((key: string) => {
       if (key === 'redis.host') return undefined;
@@ -123,6 +131,10 @@ describe('QueuesService', () => {
         {
           provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
           useValue: mockDailyStatsQueue,
+        },
+        {
+          provide: getQueueToken(DATABASE_BACKUP_QUEUE_NAME),
+          useValue: mockDatabaseBackupQueue,
         },
         {
           provide: getQueueToken(DOC_INGESTION_QUEUE_NAME),
@@ -352,6 +364,10 @@ describe('QueuesService', () => {
             useValue: mockDailyStatsQueue,
           },
           {
+            provide: getQueueToken(DATABASE_BACKUP_QUEUE_NAME),
+            useValue: mockDatabaseBackupQueue,
+          },
+          {
             provide: getQueueToken(DOC_INGESTION_QUEUE_NAME),
             useValue: mockDocIngestionQueue,
           },
@@ -426,10 +442,13 @@ describe('QueuesService', () => {
 
       const result = await service.getStats();
 
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(4);
       const plansStats = result.find((s) => s.name === PLANS_QUEUE_NAME);
       const dailyStatsStats = result.find(
         (s) => s.name === DAILY_STATS_QUEUE_NAME,
+      );
+      const databaseBackupStats = result.find(
+        (s) => s.name === DATABASE_BACKUP_QUEUE_NAME,
       );
       const docIngestionStats = result.find(
         (s) => s.name === DOC_INGESTION_QUEUE_NAME,
@@ -458,7 +477,15 @@ describe('QueuesService', () => {
         name: DOC_INGESTION_QUEUE_NAME,
         waitingCount: 3,
       });
-      expect(mockGetJobCounts).toHaveBeenCalledTimes(2);
+      expect(databaseBackupStats).toMatchObject({
+        activeCount: 1,
+        completedCount: 10,
+        delayedCount: 0,
+        failedCount: 2,
+        name: DATABASE_BACKUP_QUEUE_NAME,
+        waitingCount: 3,
+      });
+      expect(mockGetJobCounts).toHaveBeenCalledTimes(3);
       expect(mockDailyStatsGetJobCounts).toHaveBeenCalledTimes(1);
     });
 

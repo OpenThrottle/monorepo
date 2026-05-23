@@ -8,7 +8,7 @@ interface HomeBuiltByProps {
   className?: string;
 }
 
-export const HomeBuiltBy = (props: HomeBuiltByProps) => {
+export const HomeBuiltBy = (props: HomeBuiltByProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

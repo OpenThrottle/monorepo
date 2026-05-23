@@ -1,18 +1,16 @@
 import * as React from 'react';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { Button, toast } from '@openthrottle/react-router-shadcn';
+import { SquareAsteriskIcon } from 'lucide-react';
 
-interface SettingsEnvironmentProps {
-  readonly className?: string;
-  readonly envSnapshot: Record<string, string>;
+export interface SettingsEnvironmentProps {
+  className?: string;
+  envSnapshot: Record<string, string>;
 }
 
-export const SettingsEnvironment = (props: SettingsEnvironmentProps) => {
+export const SettingsEnvironment = (
+  props: SettingsEnvironmentProps,
+): React.ReactElement => {
   const { envSnapshot } = props;
 
   // Hooks
@@ -25,8 +23,10 @@ export const SettingsEnvironment = (props: SettingsEnvironmentProps) => {
 
     try {
       await navigator.clipboard.writeText(text);
+
+      toast.success('Env snapshot copied to clipboard');
     } catch {
-      // ignore
+      toast.error('Failed to copy env snapshot to clipboard');
     }
   };
 
@@ -37,9 +37,12 @@ export const SettingsEnvironment = (props: SettingsEnvironmentProps) => {
   // 🔌 Short Circuit
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base">Sanitized env snapshot</CardTitle>
+    <OpenThrottleFieldset
+      icon={SquareAsteriskIcon}
+      id="sanitized-env-snapshot"
+      legend="Sanitized env snapshot"
+    >
+      <div>
         <Button
           onClick={handleCopyEnv}
           size="sm"
@@ -48,12 +51,9 @@ export const SettingsEnvironment = (props: SettingsEnvironmentProps) => {
         >
           Copy JSON
         </Button>
-      </CardHeader>
-
-      <CardContent>
-        <div className="max-h-64 overflow-auto rounded-md border">
+        <div className="max-h-64-- overflow-auto rounded-md border">
           <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-muted/80">
+            <thead>
               <tr>
                 <th className="p-2 font-medium">Key</th>
                 <th className="p-2 font-medium">Value</th>
@@ -71,7 +71,7 @@ export const SettingsEnvironment = (props: SettingsEnvironmentProps) => {
             </tbody>
           </table>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </OpenThrottleFieldset>
   );
 };

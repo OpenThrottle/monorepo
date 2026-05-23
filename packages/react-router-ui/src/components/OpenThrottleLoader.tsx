@@ -5,7 +5,9 @@ export interface OpenThrottleLoaderProps {
   readonly className?: string;
 }
 
-export const OpenThrottleLoader = (props: OpenThrottleLoaderProps) => {
+export const OpenThrottleLoader = (
+  props: OpenThrottleLoaderProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

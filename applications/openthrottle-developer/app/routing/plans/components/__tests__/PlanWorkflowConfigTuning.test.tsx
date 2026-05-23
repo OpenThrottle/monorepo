@@ -15,6 +15,7 @@ describe('PlanWorkflowConfigTuning Component', () => {
 
   beforeEach(() => {
     props = {
+      heading: '07. Run Tuning',
       input: getDefaultWorkflowRalphRunOptionsInput(),
       iterationTimeoutText: '',
       setInput: vi.fn(),
@@ -22,15 +23,14 @@ describe('PlanWorkflowConfigTuning Component', () => {
     };
   });
 
-  test('should render Layer 3 fieldset with tuning controls', () => {
+  test('should render run tuning fieldset with tuning controls', () => {
     const Component = () => <PlanWorkflowConfigTuning {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
     expect(
-      component.getByTestId('PlanWorkflowConfigTuning'),
+      component.getByRole('group', { name: '07. Run Tuning' }),
     ).toBeInTheDocument();
-    expect(component.getByText('Layer 3 — Run tuning')).toBeInTheDocument();
     expect(
       component.getByLabelText('Iteration count for --iterations'),
     ).toBeInTheDocument();

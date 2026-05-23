@@ -10,7 +10,7 @@ export interface GlobalFooterProps {
   // readonly health?: ServerHealthObject;
 }
 
-export const GlobalFooter = (props: GlobalFooterProps) => {
+export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
   const { health } = props;
 
   // Hooks

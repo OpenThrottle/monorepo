@@ -12,7 +12,7 @@ import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisRe
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
 
-interface SearchPlanCardProps {
+export interface SearchPlanCardProps {
   className?: string;
   defaultOpenWhy?: boolean;
   rankMeta?: SearchRankMeta;
@@ -21,7 +21,9 @@ interface SearchPlanCardProps {
 
 const TITLE_CLASS = 'text-lg leading-tight tracking-tight';
 
-export const SearchPlanCard = (props: SearchPlanCardProps) => {
+export const SearchPlanCard = (
+  props: SearchPlanCardProps,
+): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
 
   // Hooks

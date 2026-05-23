@@ -1,6 +1,6 @@
 /**
  * Parent job: acquire a worktree target and create a branch for the child (Ralph) job.
- * After child completes, ensure working tree is clean and (optionally) lint/test/typecheck pass before release.
+ * After child completes, ensure working tree is clean and (optionally) CI-aligned nx checks pass before release.
  *
  * Thread-safety: All git and pnpm spawns use explicit worktreePath (git -C, spawn cwd). Path comes from
  * acquireResult.target.path and handoff; no process.cwd() or shared path; safe for concurrent jobs.
@@ -226,24 +226,25 @@ export function pushBranchToRemote(
   };
 }
 
-const CHECKS: readonly ['lint', 'typecheck'] = [
+/** Nx targets run by ensureCommit; aligned with CI (`continuous-integration.yml`). */
+const ENSURE_COMMIT_NX_CHECKS = [
   'lint',
-  // 'test',
   'typecheck',
-];
+  'typecheck-tests',
+] as const;
 
 /**
- * @description Runs lint, test, and typecheck in the worktree via nx. Uses nx affected when base is set.
+ * @description Runs CI-aligned nx checks in the worktree via nx. Uses nx affected when base is set.
  */
 function runLintTestTypecheck(
   worktreePath: string,
   base: string | undefined,
 ): ParentJobEnsureCommitResult {
-  for (const check of CHECKS) {
+  for (const check of ENSURE_COMMIT_NX_CHECKS) {
     const args =
       base !== undefined && base.length > 0
-        ? ['exec', 'nx', 'affected', '-t', check, '--base', base]
-        : ['exec', 'nx', 'run-many', '-t', check];
+        ? ['exec', 'nx', 'affected', '-t', check, '--base', base, '--parallel']
+        : ['exec', 'nx', 'run-many', '-t', check, '--parallel'];
 
     const child = spawnSync('pnpm', args, {
       cwd: worktreePath,

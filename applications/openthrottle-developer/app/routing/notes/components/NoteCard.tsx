@@ -10,12 +10,12 @@ import {
 import { Link } from 'react-router';
 import { NoteCardFragment } from '~/__generated__/graphql';
 
-interface NoteCardProps {
+export interface NoteCardProps {
   className?: string;
   note: NoteCardFragment;
 }
 
-export const NoteCard = (props: NoteCardProps) => {
+export const NoteCard = (props: NoteCardProps): React.ReactElement => {
   const { className, note } = props;
 
   // Hooks

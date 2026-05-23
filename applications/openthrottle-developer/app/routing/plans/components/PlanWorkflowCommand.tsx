@@ -1,31 +1,32 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { useAtomValue } from 'jotai';
-import { Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { RefreshCcwIcon } from 'lucide-react';
 
-interface PlanWorkflowCommandProps {
-  readonly className?: string;
+export interface PlanWorkflowCommandProps {
+  className?: string;
 
   /**
    * @description When set (controlled workflow config), the preview and clipboard use this
    * string; otherwise {@link workflowRalphCanonicalCommandLineAtom} supplies the line.
    */
-  readonly canonicalCommandLineOverride?: string;
+  command?: string;
+  onReset?: () => void;
 }
 
-export const PlanWorkflowCommand = (props: PlanWorkflowCommandProps) => {
-  const { canonicalCommandLineOverride, className } = props;
+export const PlanWorkflowCommand = (
+  props: PlanWorkflowCommandProps,
+): React.ReactElement => {
+  const { className, command, onReset } = props;
 
   // Hooks
-  const atomCanonicalCommandLine = useAtomValue(
-    workflowRalphCanonicalCommandLineAtom,
-  );
+  const atomCommand = useAtomValue(workflowRalphCanonicalCommandLineAtom);
 
   // Setup
-  const canonicalCommandLine =
-    canonicalCommandLineOverride ?? atomCanonicalCommandLine;
+  const canonicalCommandLine = command ?? atomCommand;
 
   // Handlers
 
@@ -40,22 +41,33 @@ export const PlanWorkflowCommand = (props: PlanWorkflowCommandProps) => {
       className={classnames('space-y-2', className)}
       data-testid="PlanWorkflowCommand"
     >
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <Label htmlFor="workflow-run-preview">Canonical CLI (preview)</Label>
-        <OpenThrottleClipboard
-          className="text-primary hover:text-primary/90 text-sm font-medium underline underline-offset-4"
-          label="Copy canonical command"
-          text={canonicalCommandLine}
-        />
+      <h2>Canonical CLI (preview)</h2>
+      <div className="flex gap-2 items-center w-full">
+        <pre
+          className="bg-background border flex-1 overflow-x-auto overflow-y-auto rounded-md py-2 px-4 leading-none"
+          data-testid="workflow-run-cli-preview"
+          id="workflow-run-preview"
+        >
+          <OpenThrottleClipboard
+            className="text-primary text-xs hover:text-primary/90"
+            label={canonicalCommandLine}
+            text={canonicalCommandLine}
+          />
+        </pre>
+        <Button
+          aria-label="Reset workflow run options to defaults"
+          data-testid="workflow-run-options-reset"
+          disabled={onReset == null}
+          onClick={onReset}
+          // size="lg"
+          variant="outline"
+        >
+          {/* Reset to defaults */}
+          <RefreshCcwIcon />
+        </Button>
       </div>
-      <pre
-        className="bg-muted max-h-40 overflow-x-auto overflow-y-auto rounded-md p-3 text-xs leading-relaxed"
-        data-testid="workflow-run-cli-preview"
-        id="workflow-run-preview"
-      >
-        {canonicalCommandLine}
-      </pre>
-      <p className="text-muted-foreground text-xs" role="note">
+
+      <p className="text-muted-foreground text-xs mt-4" role="note">
         <span className="font-medium text-foreground">Toolbar queue:</span> Run
         / Add to Queue uses the tuning fields in this section (or defaults if
         you have not changed them). The worker always runs this plan;{' '}

@@ -10,7 +10,9 @@ export interface OpenThrottleEntranceProps {
 /**
  * @description Lightweight entrance animation (fade + slight upward slide) for page sections or hero copy.
  */
-export const OpenThrottleEntrance = (props: OpenThrottleEntranceProps) => {
+export const OpenThrottleEntrance = (
+  props: OpenThrottleEntranceProps,
+): React.ReactElement => {
   const { children, className } = props;
 
   return (

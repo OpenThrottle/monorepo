@@ -11,10 +11,10 @@ import * as os from 'os';
  * Represents average number of processes in the run queue over 1, 5, and 15 minutes.
  */
 export interface LoadAverageSnapshot {
+  readonly cpuCount: number;
+  readonly load15m: number;
   readonly load1m: number;
   readonly load5m: number;
-  readonly load15m: number;
-  readonly cpuCount: number;
   readonly perCoreLoad1m: number;
 }
 
@@ -24,12 +24,12 @@ export interface LoadAverageSnapshot {
  * Null values indicate PSI is unavailable (non-Linux or cgroup v1).
  */
 export interface PsiSnapshot {
-  readonly some10s: number | null;
-  readonly some60s: number | null;
-  readonly some300s: number | null;
   readonly full10s: number | null;
-  readonly full60s: number | null;
   readonly full300s: number | null;
+  readonly full60s: number | null;
+  readonly some10s: number | null;
+  readonly some300s: number | null;
+  readonly some60s: number | null;
 }
 
 /**
@@ -37,8 +37,8 @@ export interface PsiSnapshot {
  */
 export interface ActiveProcessesSummary {
   readonly activeWorktreeCount: number;
-  readonly totalWorktreeCount: number;
   readonly lockedWorktrees: readonly string[];
+  readonly totalWorktreeCount: number;
 }
 
 /**
@@ -50,13 +50,13 @@ export type PressureLevel = 'low' | 'moderate' | 'high' | 'unknown';
  * @description Complete system metrics snapshot for the /metrics/system endpoint.
  */
 export interface SystemMetricsSnapshot {
-  readonly timestamp: number;
-  readonly platform: NodeJS.Platform;
+  readonly activeProcesses: ActiveProcessesSummary;
   readonly loadAverage: LoadAverageSnapshot;
+  readonly platform: NodeJS.Platform;
+  readonly pressureLevel: PressureLevel;
   readonly psi: PsiSnapshot;
   readonly psiAvailable: boolean;
-  readonly pressureLevel: PressureLevel;
-  readonly activeProcesses: ActiveProcessesSummary;
+  readonly timestamp: number;
 }
 
 /**

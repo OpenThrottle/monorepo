@@ -6,7 +6,7 @@ export interface MarkdownProps {
   contentEditable?: boolean;
 }
 
-export const Markdown = (props: MarkdownProps) => {
+export const Markdown = (props: MarkdownProps): React.ReactElement => {
   const { className, content = {}, contentEditable = false } = props;
 
   // Hooks

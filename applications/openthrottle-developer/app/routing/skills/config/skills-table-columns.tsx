@@ -4,6 +4,7 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScanEyeIcon } from 'lucide-react';
+import { formatPromptType } from '~/routing/prompts/utils/formatters';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['layout']
@@ -33,7 +34,7 @@ export const skillsTableColumns: ColumnDef<
       return (
         <div className="p-2">
           <Badge color={isAgent ? 'blue' : 'green'} size="xs">
-            {row.original.layout}
+            {formatPromptType(row.original.layout)}
           </Badge>
         </div>
       );
@@ -57,7 +58,7 @@ export const skillsTableColumns: ColumnDef<
   {
     accessorKey: 'actions',
     cell: ({ row }) => (
-      <div className="flex gap-2">
+      <div className="p-2 flex gap-2">
         <Button size="xs" variant="outline">
           <OpenThrottleClipboard
             label="Copy path"
@@ -70,6 +71,6 @@ export const skillsTableColumns: ColumnDef<
         </Button>
       </div>
     ),
-    header: () => <div className="text-center">Actions</div>,
+    header: () => <div className="p-2 text-center">Actions</div>,
   },
 ];

@@ -220,7 +220,10 @@ export const createWorkflowRalphOrchestrator = (
             onChunk,
             runner: context.runner,
             signal: abortSignal,
+            skipWorktreeSetup: context.skipWorktreeSetup,
             timeoutMs,
+            worktree: context.worktree,
+            worktreeBase: context.worktreeBase,
           });
         } catch {
           return onFailure('unhandled');

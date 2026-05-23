@@ -11,7 +11,9 @@ export interface EditorSidebarProps {
 /**
  * @description Sidebar component displaying the file tree for the editor.
  */
-export const EditorSidebar = (props: EditorSidebarProps) => {
+export const EditorSidebar = (
+  props: EditorSidebarProps,
+): React.ReactElement => {
   const { basePath = '/prompts', className } = props;
 
   // Hooks

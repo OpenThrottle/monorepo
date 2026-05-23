@@ -16,7 +16,7 @@ interface GlobalServerHealthBannerProps {
  */
 export const GlobalServerHealthBanner = (
   props: GlobalServerHealthBannerProps,
-) => {
+): React.ReactElement | null => {
   const { health, suppress } = props;
 
   // Hooks
@@ -37,7 +37,9 @@ export const GlobalServerHealthBanner = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (suppress || !isUnhealthy || dismissed) return null;
+  if (suppress || !isUnhealthy || dismissed) {
+    return null;
+  }
 
   return (
     <div

@@ -16,9 +16,9 @@ const compoundKey = (queueName: string, jobId: string): string =>
 const DEFAULT_MAX_OPEN_FILES = 64;
 
 export interface KeyedJsonlWriterOptions {
-  readonly runOutputBaseDirectory: string;
-  readonly maxOpenFiles?: number;
   readonly lineFormat?: 'jsonl' | 'raw';
+  readonly maxOpenFiles?: number;
+  readonly runOutputBaseDirectory: string;
 }
 
 /**

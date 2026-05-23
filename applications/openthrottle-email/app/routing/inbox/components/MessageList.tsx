@@ -30,7 +30,7 @@ import { MAIL_FOLDER_IDS } from '~/types/mail';
 /** Copy for empty state per folder. Used when messages.length === 0. */
 const EMPTY_COPY: Record<
   MailFolderId,
-  { readonly title: string; readonly description: string }
+  { readonly description: string; readonly title: string }
 > = {
   [MAIL_FOLDER_IDS.inbox]: {
     description: 'New messages will appear here.',
@@ -51,9 +51,9 @@ const EMPTY_COPY: Record<
 };
 
 interface MessageListProps {
+  readonly className?: string;
   /** Current folder for empty-state copy and future behavior (e.g. bulk actions). */
   readonly folderId?: MailFolderId;
-  readonly className?: string;
   /** When true, show skeleton rows instead of content. For future loader defer or navigation pending. */
   readonly loading?: boolean;
   readonly messages?: readonly MailMessageSummary[];
@@ -72,7 +72,7 @@ interface MessageListProps {
  * @description Inbox (and folder) message list: table with optional loading skeleton, empty state, selection, and bulk actions.
  * Uses shadcn-ui Table, Empty, Skeleton, Button, DropdownMenu. Preserve data-testid and code comments for future integration.
  */
-export const MessageList = (props: MessageListProps) => {
+export const MessageList = (props: MessageListProps): React.ReactElement => {
   const {
     className,
     folderId = MAIL_FOLDER_IDS.inbox,

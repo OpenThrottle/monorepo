@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createBranchInWorktree,
   deriveBranchName,
+  ENSURE_COMMIT_NX_CHECKS,
   isWorktreeClean,
   parentJobAcquireAndCreateBranch,
   parentJobEnsureCommitBeforeRelease,
@@ -464,6 +465,16 @@ describe('isWorktreeClean', () => {
     } finally {
       rmSync(dir, { force: true, recursive: true });
     }
+  });
+});
+
+describe('ENSURE_COMMIT_NX_CHECKS', () => {
+  it('matches CI continuous-integration affected targets', () => {
+    expect([...ENSURE_COMMIT_NX_CHECKS]).toEqual([
+      'lint',
+      'typecheck',
+      'typecheck-tests',
+    ]);
   });
 });
 

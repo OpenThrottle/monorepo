@@ -3,7 +3,7 @@ import { Card } from '@openthrottle/react-router-shadcn';
 
 interface HomeVelocityProps {}
 
-export const HomeVelocity = (_props: HomeVelocityProps) => {
+export const HomeVelocity = (_props: HomeVelocityProps): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

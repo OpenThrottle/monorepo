@@ -5,7 +5,9 @@ interface HomeWorkflowsProps {
   className?: string;
 }
 
-export const HomeWorkflows = (props: HomeWorkflowsProps) => {
+export const HomeWorkflows = (
+  props: HomeWorkflowsProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

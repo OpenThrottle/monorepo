@@ -2,13 +2,15 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 
-interface ProjectsStatsProps {
+export interface ProjectsStatsProps {
   className?: string;
   plansLinkedCount?: number | null;
   totalProjects: number;
 }
 
-export const ProjectsStats = (props: ProjectsStatsProps) => {
+export const ProjectsStats = (
+  props: ProjectsStatsProps,
+): React.ReactElement => {
   const { className, plansLinkedCount, totalProjects } = props;
 
   // Hooks

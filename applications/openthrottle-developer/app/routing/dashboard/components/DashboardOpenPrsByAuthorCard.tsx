@@ -21,9 +21,9 @@ type DashboardPrsByAuthorGithubStats = Pick<
   'closedPrCountByAuthor' | 'openPrCountByAuthor'
 >;
 
-interface DashboardOpenPrsByAuthorCardProps {
-  readonly className?: string;
-  readonly githubStats: DashboardPrsByAuthorGithubStats;
+export interface DashboardOpenPrsByAuthorCardProps {
+  className?: string;
+  githubStats: DashboardPrsByAuthorGithubStats;
 }
 
 /**
@@ -31,7 +31,7 @@ interface DashboardOpenPrsByAuthorCardProps {
  */
 export const DashboardOpenPrsByAuthorCard = (
   props: DashboardOpenPrsByAuthorCardProps,
-) => {
+): React.ReactElement => {
   const { className, githubStats } = props;
   const { closedPrCountByAuthor, openPrCountByAuthor } = githubStats;
 

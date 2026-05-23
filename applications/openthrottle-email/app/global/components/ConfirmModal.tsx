@@ -11,28 +11,28 @@ import {
 } from '@openthrottle/react-router-shadcn';
 
 interface ConfirmModalProps {
-  /** When true, the modal is open. */
-  readonly open: boolean;
-  /** Callback when the user confirms (primary action). */
-  readonly onConfirm: () => void;
-  /** Callback when the user cancels or closes the modal. */
-  readonly onCancel: () => void;
-  /** Title of the modal. */
-  readonly title: string;
-  /** Description or body text. */
-  readonly description: string;
-  /** Label for the confirm button (e.g. "Delete", "Archive"). */
-  readonly confirmLabel: string;
   /** Label for the cancel button. Defaults to "Cancel". */
   readonly cancelLabel?: string;
+  /** Label for the confirm button (e.g. "Delete", "Archive"). */
+  readonly confirmLabel: string;
+  /** Description or body text. */
+  readonly description: string;
   /** When true, the confirm button uses destructive styling. */
   readonly destructive?: boolean;
+  /** Callback when the user cancels or closes the modal. */
+  readonly onCancel: () => void;
+  /** Callback when the user confirms (primary action). */
+  readonly onConfirm: () => void;
+  /** When true, the modal is open. */
+  readonly open: boolean;
+  /** Title of the modal. */
+  readonly title: string;
 }
 
 /**
  * @description Reusable confirmation modal using shadcn-ui AlertDialog. Use for archive, delete, or other destructive/reversible actions that require user confirmation.
  */
-export const ConfirmModal = (props: ConfirmModalProps) => {
+export const ConfirmModal = (props: ConfirmModalProps): React.ReactElement => {
   const {
     open,
     onConfirm,

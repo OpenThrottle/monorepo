@@ -11,7 +11,7 @@ import { SITE_NAME } from '~/global/config/settings';
 
 interface GlobalFooterProps {}
 
-export const GlobalFooter = (_props: GlobalFooterProps) => {
+export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

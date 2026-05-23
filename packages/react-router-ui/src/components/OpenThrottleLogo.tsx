@@ -9,7 +9,9 @@ export interface OpenThrottleLogoProps {
   readonly to?: string;
 }
 
-export const OpenThrottleLogo = (props: OpenThrottleLogoProps) => {
+export const OpenThrottleLogo = (
+  props: OpenThrottleLogoProps,
+): React.ReactElement => {
   const { className, name, to } = props;
 
   // Hooks

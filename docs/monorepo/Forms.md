@@ -131,7 +131,7 @@ export interface XxxxXxxxFormProps {
   className?: string;
 }
 
-export const XxxxXxxxForm = (props: XxxxXxxxFormProps) => {
+export const XxxxXxxxForm = (props: XxxxXxxxFormProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

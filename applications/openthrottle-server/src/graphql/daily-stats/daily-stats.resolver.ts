@@ -10,16 +10,16 @@ import {
 } from './daily-stats.object';
 
 function toDailyStatsObject(row: {
-  date: Date;
-  plansCreated: number;
-  plansCompleted: number;
-  plansUpdated: number;
-  tasksCreated: number;
-  tasksCompleted: number;
-  tasksUpdated: number;
-  plansByStatus: Record<string, number>;
-  tasksByStatus: Record<string, number>;
   createdAt: Date;
+  date: Date;
+  plansByStatus: Record<string, number>;
+  plansCompleted: number;
+  plansCreated: number;
+  plansUpdated: number;
+  tasksByStatus: Record<string, number>;
+  tasksCompleted: number;
+  tasksCreated: number;
+  tasksUpdated: number;
 }): DailyStatsObject {
   const obj = new DailyStatsObject();
 

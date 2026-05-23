@@ -81,9 +81,10 @@ export function setSystemNotificationsPreference(
 function isSupportedAndGranted(): boolean {
   if (!IS_BROWSER) return false;
   if (!window.isSecureContext) return false;
-  if (!('Notification' in window)) return false;
+  const NotificationCtor = window.Notification;
+  if (NotificationCtor == null) return false;
 
-  return Notification.permission === 'granted';
+  return NotificationCtor.permission === 'granted';
 }
 
 /**

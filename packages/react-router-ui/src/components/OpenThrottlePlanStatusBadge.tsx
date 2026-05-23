@@ -7,7 +7,7 @@ export interface OpenThrottlePlanStatusBadgeProps {
 
 export const OpenThrottlePlanStatusBadge = (
   props: OpenThrottlePlanStatusBadgeProps,
-) => {
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

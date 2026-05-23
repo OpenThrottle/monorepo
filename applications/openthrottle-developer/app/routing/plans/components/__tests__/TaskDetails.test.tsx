@@ -44,8 +44,7 @@ describe('TaskDetails Component', () => {
     expect(component.getByTestId('TaskDetails')).toBeInTheDocument();
   });
 
-  test('should show task title and metadata labels', () => {
-    expect(component.getByText('Test Task')).toBeInTheDocument();
+  test('should show metadata labels', () => {
     expect(component.getByText('Assignee')).toBeInTheDocument();
     expect(component.getByText('Category')).toBeInTheDocument();
     expect(component.getByText('Plan')).toBeInTheDocument();

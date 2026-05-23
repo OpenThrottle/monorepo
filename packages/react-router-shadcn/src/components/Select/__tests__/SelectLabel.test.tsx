@@ -1,24 +1,41 @@
 import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SelectLabel } from '../SelectLabel';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '../index';
 import type { SelectLabelProps } from '../SelectLabel';
 
 describe('SelectLabel Component', () => {
-  let component: RenderResult;
   let props: SelectLabelProps;
 
   beforeEach(() => {
     props = {};
-
-    const Component = () => <SelectLabel {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render label inside SelectGroup when Select is open', () => {
+    const Component = () => (
+      <Select defaultOpen={true}>
+        <SelectTrigger>
+          <SelectValue placeholder="Pick" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel {...props}>Group label</SelectLabel>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    const label = document.body.querySelector('.font-semibold');
+    expect(label).toBeInTheDocument();
+    expect(label).toHaveTextContent('Group label');
   });
 });

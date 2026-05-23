@@ -2,11 +2,11 @@ import * as React from 'react';
 import { BrainIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-interface PromptsIntroductionProps {}
+export interface PromptsIntroductionProps {}
 
-export const PromptsIntroduction = (_props: PromptsIntroductionProps) => {
-  // const { className } = props;
-
+export const PromptsIntroduction = (
+  _props: PromptsIntroductionProps,
+): React.ReactElement => {
   // Hooks
 
   // Setup

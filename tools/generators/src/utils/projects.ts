@@ -6,9 +6,8 @@ import { MESSAGE_ON_CANCEL } from '../config/index';
 const PROJECT_TAGS = ['type:application', 'type:package'] as const;
 
 /**
- * @description Returns NX project names from the project graph
- * (applications and packages). Use for --project option or validation
- * in workflow and OpenThrottle Server.
+ * Returns NX project names from the project graph (applications and packages).
+ * Use for --project option or validation in workflow and OpenThrottle Server.
  */
 export const getNxProjectNames = async (): Promise<string[]> => {
   const { nodes } = await createProjectGraphAsync();

@@ -10,12 +10,12 @@ import {
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
 
-interface ProjectEmptyProps {
+export interface ProjectEmptyProps {
   className?: string;
   search?: string;
 }
 
-export const ProjectEmpty = (props: ProjectEmptyProps) => {
+export const ProjectEmpty = (props: ProjectEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
   // Hooks

@@ -14,21 +14,21 @@ import {
   cn,
 } from '@openthrottle/react-router-shadcn';
 
-interface StatusMultiSelectProps {
+export interface StatusMultiSelectProps {
   /** When true, trigger shows "Status (n)" and badges below are hidden for a compact toolbar row. */
-  readonly compact?: boolean;
-  readonly 'data-testid'?: string;
-  readonly onChange: (value: string[]) => void;
-  readonly options: readonly string[];
-  readonly value: readonly string[];
+  compact?: boolean;
+  'data-testid'?: string;
+  onChange: (value: string[]) => void;
+  options: readonly string[];
+  value: readonly string[];
 }
 
 /**
  * @description Multi-select dropdown to filter plans by status. Clean trigger "Status…" (or "Status (n)" when compact); selected items as Badges below unless compact; Popover + Command for options. Labels show underscores as spaces.
  */
-export function StatusMultiSelect(
+export const StatusMultiSelect = (
   props: StatusMultiSelectProps,
-): React.ReactElement {
+): React.ReactElement => {
   const {
     'data-testid': dataTestId,
     compact = false,
@@ -166,4 +166,4 @@ export function StatusMultiSelect(
       ) : null}
     </Label>
   );
-}
+};

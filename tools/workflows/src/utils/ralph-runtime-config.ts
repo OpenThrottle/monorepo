@@ -30,6 +30,9 @@ export const WORKFLOW_RALPH_ENV = {
   prompt: 'WORKFLOW_RALPH_PROMPT',
   /** Path to UTF-8 file whose contents become layer-1 prompt text (same as `--prompt-file`). */
   promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
+  skipWorktreeSetup: 'WORKFLOW_RALPH_SKIP_WORKTREE_SETUP',
+  worktree: 'WORKFLOW_RALPH_WORKTREE',
+  worktreeBase: 'WORKFLOW_RALPH_WORKTREE_BASE',
 } as const;
 
 /** Repo-local JSON file (cwd); optional. */
@@ -48,6 +51,12 @@ export interface WorkflowRalphDefaultsFileJson {
   readonly prompt?: string;
   /** Repo-relative or absolute path; file body is the prompt (mutually exclusive with `prompt` in file). */
   readonly promptFile?: string;
+  /** Cursor-only: `--skip-worktree-setup`. */
+  readonly skipWorktreeSetup?: boolean;
+  /** Agent CLI worktree name (same as `--worktree <name>`). */
+  readonly worktree?: string;
+  /** Cursor-only: `--worktree-base`. */
+  readonly worktreeBase?: string;
 }
 
 /** @internal Mutable builder for {@link WorkflowRalphDefaultsFileJson} (TS forbids assigning to readonly props). */
@@ -71,6 +80,9 @@ export interface RalphRuntimeSeed {
    * merged `prompt` from env + file (see {@link mergeRalphRuntimeSeed}).
    */
   readonly promptFile: string | undefined;
+  readonly skipWorktreeSetup: boolean | undefined;
+  readonly worktree: string | undefined;
+  readonly worktreeBase: string | undefined;
 }
 
 const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>
@@ -175,6 +187,33 @@ const normalizeDefaultsFile = (
     }
   }
 
+  if ('worktree' in o && o.worktree !== undefined) {
+    if (typeof o.worktree !== 'string') {
+      throw new Error(`${filePath}: "worktree" must be a string`);
+    }
+    const w = o.worktree.trim();
+    if (w !== '') {
+      out.worktree = w;
+    }
+  }
+
+  if ('worktreeBase' in o && o.worktreeBase !== undefined) {
+    if (typeof o.worktreeBase !== 'string') {
+      throw new Error(`${filePath}: "worktreeBase" must be a string`);
+    }
+    const b = o.worktreeBase.trim();
+    if (b !== '') {
+      out.worktreeBase = b;
+    }
+  }
+
+  if ('skipWorktreeSetup' in o && o.skipWorktreeSetup !== undefined) {
+    if (typeof o.skipWorktreeSetup !== 'boolean') {
+      throw new Error(`${filePath}: "skipWorktreeSetup" must be a boolean`);
+    }
+    out.skipWorktreeSetup = o.skipWorktreeSetup;
+  }
+
   return out as WorkflowRalphDefaultsFileJson;
 };
 
@@ -250,6 +289,40 @@ export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
     out.project = projectRaw.trim();
   }
 
+  const worktreeRaw = process.env[WORKFLOW_RALPH_ENV.worktree];
+  if (worktreeRaw !== undefined && worktreeRaw.trim() !== '') {
+    out.worktree = worktreeRaw.trim();
+  }
+
+  const worktreeBaseRaw = process.env[WORKFLOW_RALPH_ENV.worktreeBase];
+  if (worktreeBaseRaw !== undefined && worktreeBaseRaw.trim() !== '') {
+    out.worktreeBase = worktreeBaseRaw.trim();
+  }
+
+  const skipRaw = process.env[WORKFLOW_RALPH_ENV.skipWorktreeSetup]?.trim();
+  if (skipRaw !== undefined && skipRaw !== '') {
+    const lower = skipRaw.toLowerCase();
+    if (
+      lower === '1' ||
+      lower === 'true' ||
+      lower === 'yes' ||
+      lower === 'on'
+    ) {
+      out.skipWorktreeSetup = true;
+    } else if (
+      lower === '0' ||
+      lower === 'false' ||
+      lower === 'no' ||
+      lower === 'off'
+    ) {
+      out.skipWorktreeSetup = false;
+    } else {
+      throw new Error(
+        `${WORKFLOW_RALPH_ENV.skipWorktreeSetup} must be a boolean (1|0|true|false); got "${skipRaw}"`,
+      );
+    }
+  }
+
   return out as WorkflowRalphDefaultsFileJson;
 }
 
@@ -293,5 +366,8 @@ export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
     project,
     prompt,
     promptFile,
+    skipWorktreeSetup: env.skipWorktreeSetup ?? file.skipWorktreeSetup,
+    worktree: env.worktree ?? file.worktree,
+    worktreeBase: env.worktreeBase ?? file.worktreeBase,
   };
 }

@@ -6,7 +6,9 @@ export interface HomeOpenSourceProps {
   className?: string;
 }
 
-export const HomeOpenSource = (_props: HomeOpenSourceProps) => {
+export const HomeOpenSource = (
+  _props: HomeOpenSourceProps,
+): React.ReactElement => {
   // const { className } = props;
 
   // Hooks

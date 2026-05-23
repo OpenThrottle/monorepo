@@ -18,12 +18,12 @@ const PLAN_RUN_SCAN_STATES: readonly JobType[] = [
 ];
 
 interface CancelPlanRunJobsResult {
+  /** BullMQ job ids that were active/locked and could not be removed without worker cooperation. */
+  readonly lockedActiveJobIds: readonly string[];
   /** Number of plan Ralph jobs whose payload matched `planId` (before removal attempts). */
   readonly matchingJobCount: number;
   /** BullMQ job ids successfully removed (waiting, delayed, paused, prioritized). */
   readonly removedJobIds: readonly string[];
-  /** BullMQ job ids that were active/locked and could not be removed without worker cooperation. */
-  readonly lockedActiveJobIds: readonly string[];
 }
 
 /**

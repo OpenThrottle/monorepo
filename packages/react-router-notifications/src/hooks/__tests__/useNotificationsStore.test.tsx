@@ -1,24 +1,30 @@
+import * as React from 'react';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import type { UseNotificationsStoreOptions } from '../useNotificationsStore';
+import { NotificationsStoreProvider } from '../../components/NotificationsStoreProvider';
 import { useNotificationsStore } from '../useNotificationsStore';
 
 describe('useNotificationsStore', () => {
-  let options: UseNotificationsStoreOptions;
-
-  beforeEach(async () => {
-    options = {};
-
-    const { result: _result } = renderHook(() =>
-      useNotificationsStore(options),
-    );
-
-    // await act(async () => {
-    //   result.current.actions.signOut();
-    // });
+  beforeEach(() => {
+    window.localStorage.clear();
   });
 
-  test('FIXME: should be defined', () => {
-    expect(useNotificationsStore).toBeDefined();
+  test('returns store context when used within NotificationsStoreProvider', () => {
+    const { result } = renderHook(() => useNotificationsStore(), {
+      wrapper: ({ children }) => (
+        <NotificationsStoreProvider persist={false}>
+          {children}
+        </NotificationsStoreProvider>
+      ),
+    });
+
+    expect(result.current.notifications).toEqual([]);
+    expect(result.current.unreadCount).toBe(0);
+  });
+
+  test('throws when used outside NotificationsStoreProvider', () => {
+    expect(() => renderHook(() => useNotificationsStore())).toThrow(
+      'useNotificationsStore must be used within a NotificationsStoreProvider',
+    );
   });
 });

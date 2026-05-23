@@ -6,8 +6,8 @@
 @source "../../../packages/**/*.{css,ts,tsx}";
 
 :root {
-  --brand: hsl(0, 100%, 50%);
-  /* --brand: hsl(208 100% 50%); */
+  /* --brand: hsl(0, 100%, 50%); */
+  --brand: hsl(208 100% 50%);
 }
 
 @utility text-highlight {

@@ -8,8 +8,8 @@ import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
  * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
  */
 enum RalphNestedDebugCliGraphQL {
-  omit = 'omit',
   debug = 'debug',
+  omit = 'omit',
   verbose = 'verbose',
 }
 
@@ -100,6 +100,12 @@ export class UpdatePlanInput {
 
   @Field(() => String, { nullable: true })
   title!: string | null;
+
+  @Field(() => String, {
+    description: `JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.`,
+    nullable: true,
+  })
+  jobRunHooksJson!: string | null;
 }
 
 @InputType()
@@ -221,6 +227,24 @@ export class RalphPlanRunTuningInput {
     nullable: true,
   })
   ralphDebugCli!: RalphNestedDebugCliGraphQL | null;
+
+  @Field(() => String, {
+    description: `Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id.`,
+    nullable: true,
+  })
+  worktree!: string | null;
+
+  @Field(() => String, {
+    description: `Cursor-only: branch/ref for --worktree-base.`,
+    nullable: true,
+  })
+  worktreeBase!: string | null;
+
+  @Field(() => Boolean, {
+    description: `Cursor-only: pass --skip-worktree-setup to cursor-agent.`,
+    nullable: true,
+  })
+  skipWorktreeSetup!: boolean | null;
 }
 
 @InputType()
@@ -245,6 +269,12 @@ export class EnqueuePlanRunInput {
     nullable: true,
   })
   workingDirectory!: string | null;
+
+  @Field(() => String, {
+    description: `Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set.`,
+    nullable: true,
+  })
+  jobRunHooksJson!: string | null;
 }
 
 @InputType()
@@ -289,6 +319,12 @@ export class EnqueuePlanRalphOrchestratorInput {
     nullable: true,
   })
   workingDirectory!: string | null;
+
+  @Field(() => String, {
+    description: `Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan.`,
+    nullable: true,
+  })
+  jobRunHooksJson!: string | null;
 }
 
 @InputType()

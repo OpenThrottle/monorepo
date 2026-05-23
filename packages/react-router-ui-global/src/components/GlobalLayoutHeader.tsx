@@ -15,13 +15,14 @@ import { Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
+import { NotificationBell } from '@openthrottle/react-router-notifications';
 
 /**
  * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.
  */
 export type GlobalLayoutHeaderSearchEvent =
   | { readonly type: 'engage' }
-  | { readonly type: 'submit'; readonly query: string };
+  | { readonly query: string; readonly type: 'submit' };
 
 export interface GlobalLayoutHeaderProps {
   readonly className?: string;
@@ -37,7 +38,9 @@ export interface GlobalLayoutHeaderProps {
   readonly searchValue?: string;
 }
 
-export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
+export const GlobalLayoutHeader = (
+  props: GlobalLayoutHeaderProps,
+): React.ReactElement => {
   const {
     className,
     onSearchChromeEvent,
@@ -149,6 +152,7 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
         </Tooltip>
         <GlobalLayoutBreadcrumbs />
       </div>
+
       <ChatDialog
         title="OpenThrottle Assistant"
         triggerLabel="Chat"
@@ -169,6 +173,8 @@ export const GlobalLayoutHeader = (props: GlobalLayoutHeaderProps) => {
           </Link>
         </>
       ) : null}
+
+      <NotificationBell />
     </nav>
   );
 };

@@ -43,7 +43,10 @@ export interface WorkflowContext extends WorkflowConfig {
   readonly planId: string;
   readonly project: string | undefined;
   readonly runner: WorkflowRunner;
+  readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
+  readonly worktree: string | undefined;
+  readonly worktreeBase: string | undefined;
 }
 
 /**

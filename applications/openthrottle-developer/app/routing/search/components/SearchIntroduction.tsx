@@ -2,13 +2,11 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SearchIcon } from 'lucide-react';
 
-interface SearchIntroductionProps {
-  readonly className?: string;
-  readonly expandRankingDetails?: boolean;
-  readonly hasQuery?: boolean;
-  readonly onExpandRankingChange?: (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => void;
+export interface SearchIntroductionProps {
+  className?: string;
+  expandRankingDetails?: boolean;
+  hasQuery?: boolean;
+  onExpandRankingChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const SearchIntroduction = (

@@ -26,7 +26,7 @@ export interface GlobalHeaderProps {
   className?: string;
 }
 
-export const GlobalHeader = (props: GlobalHeaderProps) => {
+export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks

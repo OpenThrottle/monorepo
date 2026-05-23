@@ -1,3 +1,3 @@
-import { eslintConfig } from './src/index.js';
+import { eslintConfig } from './dist/src/index.js';
 
 export default [{ ignores: ['!**/*'] }, ...eslintConfig];

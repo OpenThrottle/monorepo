@@ -102,7 +102,6 @@ interface MockLogSocket {
  * tests need the public handler surface for typechecking. Payload/result shapes are asserted in tests.
  */
 interface CompiledNestjsLoggingWebsocketGateway {
-  server: Server;
   handleConnection(client: Socket): void;
   handleDisconnect(client: Socket): void;
   onLogsHistory(payload: unknown): Promise<any>;
@@ -111,6 +110,7 @@ interface CompiledNestjsLoggingWebsocketGateway {
   onLogsTail(client: Socket, payload: unknown): Promise<any>;
   onLogsUnsubscribe(client: Socket, payload: unknown): any;
   onModuleDestroy(): void;
+  server: Server;
 }
 
 /**

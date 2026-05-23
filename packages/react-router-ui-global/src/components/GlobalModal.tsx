@@ -7,7 +7,7 @@ export interface GlobalModalProps extends React.PropsWithChildren {
   readonly value: string;
 }
 
-export const GlobalModal = (props: GlobalModalProps) => {
+export const GlobalModal = (props: GlobalModalProps): React.ReactElement => {
   const { children, param: paramProp = 'modal', value } = props;
 
   const { onOpenChange, open } = useUrlSyncedOverlay({

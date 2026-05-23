@@ -6,8 +6,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 
-const COLUMNS: ReadonlyArray<{
-  readonly key: keyof Pick<
+export interface Column {
+  key: keyof Pick<
     DashboardQueueStatsCardFragment,
     | 'waitingCount'
     | 'activeCount'
@@ -15,8 +15,10 @@ const COLUMNS: ReadonlyArray<{
     | 'failedCount'
     | 'delayedCount'
   >;
-  readonly label: string;
-}> = [
+  label: string;
+}
+
+export const COLUMNS: Column[] = [
   { key: 'waitingCount', label: 'Waiting' },
   { key: 'activeCount', label: 'Active' },
   { key: 'completedCount', label: 'Completed' },
@@ -25,18 +27,20 @@ const COLUMNS: ReadonlyArray<{
 ];
 
 /**
- * @description Formats queue stats for tooltip (full labels and counts).
+ * Formats queue stats for tooltip (full labels and counts).
  */
-function formatQueueStatsTooltip(
+export function formatQueueStatsTooltip(
   queue: DashboardQueueStatsCardFragment,
 ): string {
   return COLUMNS.map((col) => `${col.label}: ${queue[col.key]}`).join(', ');
 }
 
 /**
- * @description Compact inline summary for a single queue (W:2 A:1 C:10 F:0 D:0).
+ * Compact inline summary for a single queue (W:2 A:1 C:10 F:0 D:0).
  */
-function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
+export function formatCompactSummary(
+  queue: DashboardQueueStatsCardFragment,
+): string {
   return `W:${queue.waitingCount} A:${queue.activeCount} C:${queue.completedCount} F:${queue.failedCount} D:${queue.delayedCount}`;
 }
 
@@ -44,12 +48,14 @@ function formatCompactSummary(queue: DashboardQueueStatsCardFragment): string {
  * @deprecated Temporarily commented out on dashboard index; restore when re-enabling queue stats grid.
  */
 export interface DashboardQueueStatsProps {
-  // readonly className?: string;
-  readonly data: ReadonlyArray<DashboardQueueStatsCardFragment>;
+  className?: string;
+  data: DashboardQueueStatsCardFragment[];
 }
 
-export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
-  const { data } = props;
+export const DashboardQueueStats = (
+  props: DashboardQueueStatsProps,
+): React.ReactElement => {
+  const { className, data } = props;
 
   // Hooks
 
@@ -65,7 +71,7 @@ export const DashboardQueueStats = (props: DashboardQueueStatsProps) => {
   // 🔌 Short Circuit
 
   return (
-    <div data-testid="DashboardQueueStats">
+    <div className={className} data-testid="DashboardQueueStats">
       <h2 className="mb-4">Queue Stats</h2>
       {isEmpty ? (
         <p className="mt-2 text-sm text-muted-foreground">No queues</p>

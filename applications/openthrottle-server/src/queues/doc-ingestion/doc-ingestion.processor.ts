@@ -168,7 +168,7 @@ export class DocIngestionProcessor
           const contentHash = diff.currentHashes.get(path);
           return contentHash != null ? { contentHash, path } : null;
         })
-        .filter((e): e is { path: string; contentHash: string } => e !== null);
+        .filter((e): e is { contentHash: string; path: string } => e !== null);
       await savePriorState(connectionString, scope, stateEntries);
     }
 

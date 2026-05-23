@@ -58,7 +58,7 @@ type StepTaskMarkInProgressResult =
   | StepFailure<'task.mark_in_progress'>;
 
 type StepIterationRunResult =
-  | StepSuccess<'iteration.run', { readonly iteration: number; readonly agentOutput: string }> // prettier-ignore
+  | StepSuccess<'iteration.run', { readonly agentOutput: string, readonly iteration: number; }> // prettier-ignore
   | StepFailure<'iteration.run'>;
 
 type StepTasksApplyCompletionsResult =

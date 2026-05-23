@@ -14,20 +14,21 @@ import {
   removeRecentWorkspacePath,
   validateWorkspacePathClient,
 } from '~/routing/plans/utils/workspace-path';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
-interface PlanWorkflowConfigWorkspaceProps {
-  readonly className?: string;
-  readonly onChange: (path: string) => void;
-  readonly value: string;
+export interface PlanWorkflowConfigWorkspaceProps {
+  heading: string;
+  onChange: (path: string) => void;
+  value: string;
 }
 
 export const PlanWorkflowConfigWorkspace = (
   props: PlanWorkflowConfigWorkspaceProps,
-) => {
-  const { className, onChange, value } = props;
+): React.ReactElement => {
+  const { heading, onChange, value } = props;
 
   // Hooks
-  const [recentPaths, setRecentPaths] = React.useState<readonly string[]>([]);
+  const [recentPaths, setRecentPaths] = React.useState<string[]>([]);
   const [recentOpen, setRecentOpen] = React.useState(false);
 
   // Setup
@@ -67,20 +68,7 @@ export const PlanWorkflowConfigWorkspace = (
   // 🔌 Short Circuit
 
   return (
-    <fieldset
-      aria-labelledby="workflow-run-workspace-legend"
-      className={classnames(
-        'space-y-3 rounded-md border border-border p-4',
-        className,
-      )}
-      data-testid="PlanWorkflowConfigWorkspace"
-    >
-      <legend
-        className="px-1 text-sm font-medium text-foreground"
-        id="workflow-run-workspace-legend"
-      >
-        Workspace directory
-      </legend>
+    <OpenThrottleFieldset id="workflow-run-workspace-legend" legend={heading}>
       <p className="text-muted-foreground text-xs">
         Absolute path to a local project folder for multi-workspace runs. When
         empty, the worker uses the monorepo root (
@@ -191,6 +179,6 @@ export const PlanWorkflowConfigWorkspace = (
           )}
         </p>
       </div>
-    </fieldset>
+    </OpenThrottleFieldset>
   );
 };

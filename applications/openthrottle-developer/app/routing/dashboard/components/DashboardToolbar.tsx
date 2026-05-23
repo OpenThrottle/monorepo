@@ -16,11 +16,13 @@ import {
 } from '~/routing/dashboard/config/config.dashboard';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 
-interface DashboardToolbarProps {
-  readonly className?: string;
+export interface DashboardToolbarProps {
+  className?: string;
 }
 
-export const DashboardToolbar = (props: DashboardToolbarProps) => {
+export const DashboardToolbar = (
+  props: DashboardToolbarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

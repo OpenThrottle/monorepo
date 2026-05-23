@@ -1,12 +1,8 @@
 import * as React from 'react';
 import { useAtom } from 'jotai';
-// import classnames from 'classnames';
 import {
-  Button,
   Card,
   CardContent,
-  // CardDescription,
-  CardHeader,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 import {
@@ -16,17 +12,17 @@ import {
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
   validateWorkflowRalphRunOptionsState,
-  // WORKFLOW_RALPH_DEFAULTS_FILE_NAME,
-  // WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
-  // WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
+import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
+import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
+import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 import {
   workflowRalphRunOptionsAtom,
   workflowRunIterationTimeoutTextAtom,
@@ -37,48 +33,61 @@ import {
  * with canonical preview/copy. When the parent controls state (plan detail), the
  * same values are serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped).
  */
-interface PlanTabConfigurationProps {
-  readonly className?: string;
-  readonly iterationTimeoutText?: string;
+export interface PlanTabConfigurationProps {
+  className?: string;
+  iterationTimeoutText?: string;
 
+  /** Controlled: job-run lifecycle hooks (parent owns for enqueue + save). */
+  jobRunHookRows?: readonly JobRunHookDraftRow[];
   /**
    * @description When set (plan detail URL-driven panel), shows a control to collapse the section.
    */
-  readonly onCollapse?: () => void;
-  readonly onIterationTimeoutTextChange?: (next: string) => void;
-  readonly onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
-  readonly onWorkingDirectoryChange?: (next: string) => void;
+  onCollapse?: () => void;
+  onIterationTimeoutTextChange?: (next: string) => void;
+  onJobRunHookRowsChange: (next: JobRunHookDraftRow[]) => void;
 
   /**
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
    */
-  readonly onResetToDefaults?: () => void;
+  onResetToDefaults?: () => void;
+
+  onSaveJobRunHooks: () => void;
+
+  onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
+
+  onWorkingDirectoryChange: (next: string) => void;
 
   /** When set (e.g. plan detail), seeds `--plan` and default target mode. */
-  readonly planId?: string;
-
+  planId?: string;
+  saveJobRunHooksDisabled?: boolean;
+  saveJobRunHooksPending?: boolean;
   /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
-  readonly taskId?: string;
-
+  taskId?: string;
   /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
-  readonly value?: WorkflowRalphRunOptionsInput;
-
+  value?: WorkflowRalphRunOptionsInput;
   /**
    * @description Optional absolute path for multi-workspace runs. Passed to
    * the enqueue mutation as `workingDirectory`. Empty string = monorepo root.
    */
-  readonly workingDirectory?: string;
+  workingDirectory?: string;
 }
 
-export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
+export const PlanTabConfiguration = (
+  props: PlanTabConfigurationProps,
+): React.ReactElement => {
   const {
     iterationTimeoutText: iterationTimeoutTextProp,
-    onCollapse,
+    onCollapse: _onCollapse, // FIXME: Trim this bad boy
     onIterationTimeoutTextChange,
+    jobRunHookRows,
+    onJobRunHookRowsChange,
     onResetToDefaults,
+    onSaveJobRunHooks,
     onValueChange,
     onWorkingDirectoryChange,
     planId,
+    saveJobRunHooksDisabled,
+    saveJobRunHooksPending,
     taskId,
     value: valueProp,
     workingDirectory = '',
@@ -88,6 +97,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   const [atomRunOptions, setAtomRunOptions] = useAtom(
     workflowRalphRunOptionsAtom,
   );
+
   const [atomIterationTimeoutText, setAtomIterationTimeoutText] = useAtom(
     workflowRunIterationTimeoutTextAtom,
   );
@@ -136,7 +146,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   const uncontrolledSessionStartedRef = React.useRef(false);
 
   // Setup
-  const canonicalCommandLineOverride = isControlled
+  const command = isControlled
     ? formatWorkflowRalphCommandLine(
         buildWorkflowRalphOptionArgs({
           ...input,
@@ -164,6 +174,7 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
     setAtomRunOptions(
       getDefaultWorkflowRalphRunOptionsInput({ planId, taskId }),
     );
+
     if (!uncontrolledSessionStartedRef.current) {
       setAtomIterationTimeoutText('');
       uncontrolledSessionStartedRef.current = true;
@@ -179,199 +190,98 @@ export const PlanTabConfiguration = (props: PlanTabConfigurationProps) => {
   // 🔌 Short Circuit
 
   return (
-    <TabsContent
-      className="bg-card rounded-lg border border-card-border"
-      value="configuration"
-    >
-      <Card>
-        <CardHeader className="pb-2 mb-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1.5">
-              {/* <h2
-                className="text-base font-semibold leading-none tracking-tight"
-                id="workflow-run-options-title"
-              >
-                Configuration
-              </h2>
-              <CardDescription className="space-y-2">
-                <p>
-                  Compose flags aligned with{' '}
-                  <code className="text-xs">
-                    pnpm exec workflow-ralph --help
-                  </code>{' '}
-                  and{' '}
-                  <span className="text-xs">
-                    tools/workflows (parseRalphArgs)
-                  </span>
-                  . Resolution when fields are left blank here:{' '}
-                  {WORKFLOW_RALPH_DEFAULT_PRECEDENCE}. Enqueue uses the same
-                  tuning; unchanged values fall back to worktree / server
-                  defaults.
-                </p>
-                <p className="text-xs">
-                  Env mirror (see CLI help): backend →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.backend}
-                  </code>
-                  ; iterations →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.iterations}
-                  </code>
-                  ; iteration timeout (seconds) →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.iterationTimeout}
-                  </code>
-                  ; model →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.model}
-                  </code>
-                  ; project →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.project}
-                  </code>
-                  ; prompt / prompt file →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.prompt}
-                  </code>{' '}
-                  /{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.promptFile}
-                  </code>
-                  ; debug →{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.debug}
-                  </code>
-                  ,{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.debugAlias}
-                  </code>
-                  ,{' '}
-                  <code className="text-xs">
-                    {WORKFLOW_RALPH_ENV_VARS.verbose}
-                  </code>
-                  . <code className="text-xs">--debug=verbose</code> matches{' '}
-                  <code className="text-xs">--verbose</code> in the CLI.
-                </p>
-                <p className="text-xs">
-                  Optional{' '}
-                  <code className="text-xs">
-                    ./{WORKFLOW_RALPH_DEFAULTS_FILE_NAME}
-                  </code>{' '}
-                  in the shell cwd merges before argv (
-                  <code className="text-xs">mergeRalphRuntimeSeed</code>,{' '}
-                  <code className="text-xs">tools/workflows</code>
-                  ): JSON keys <code className="text-xs">backend</code>,{' '}
-                  <code className="text-xs">iterations</code>,{' '}
-                  <code className="text-xs">iterationTimeout</code> (seconds —
-                  same unit as{' '}
-                  <code className="text-xs">--iteration-timeout</code>),{' '}
-                  <code className="text-xs">model</code>,{' '}
-                  <code className="text-xs">project</code>, and either{' '}
-                  <code className="text-xs">prompt</code> or{' '}
-                  <code className="text-xs">promptFile</code> (not both —
-                  matches CLI <code className="text-xs">--prompt</code> /{' '}
-                  <code className="text-xs">--prompt-file</code> mutual
-                  exclusion).
-                </p>
-              </CardDescription> */}
-            </div>
+    <TabsContent value="configuration">
+      <div className="flex flex-col gap-4 md:gap-8 max-w-3xl">
+        <Card className="p-4">
+          <PlanWorkflowCommand command={command} onReset={onResetToDefaults} />
+        </Card>
 
-            {onResetToDefaults != null || onCollapse != null ? (
-              <div className="flex shrink-0 items-center gap-2">
-                {onResetToDefaults != null ? (
-                  <Button
-                    aria-label="Reset workflow run options to defaults"
-                    data-testid="workflow-run-options-reset"
-                    onClick={onResetToDefaults}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    Reset to defaults
-                  </Button>
-                ) : null}
+        <div className="space-y-4 md:space-y-8">
+          <CardContent className="flex flex-col flex-1 gap-4">
+            {!validation.ok ? (
+              <div
+                className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                data-testid="workflow-run-validation"
+                role="alert"
+              >
+                <p className="font-medium">
+                  Workflow options blocked until fixed
+                </p>
+                <ul className="mt-1 list-inside list-disc text-xs">
+                  {validation.issues.map((issue, index) => (
+                    <li key={`${issue.code}-${index}`}>{issue.message}</li>
+                  ))}
+                </ul>
               </div>
             ) : null}
-          </div>
-        </CardHeader>
+          </CardContent>
+        </div>
 
-        <CardContent className="flex flex-col flex-1 gap-4">
-          {!validation.ok ? (
-            <div
-              className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              data-testid="workflow-run-validation"
-              role="alert"
-            >
-              <p className="font-medium">
-                Workflow options blocked until fixed
-              </p>
-              <ul className="mt-1 list-inside list-disc text-xs">
-                {validation.issues.map((issue, index) => (
-                  <li key={`${issue.code}-${index}`}>{issue.message}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={input}
+          setInput={setInput}
+        />
 
-      {/* <Card className="mt-8">
-        <CardHeader className="pb-2 mb-4">
-          PlanWorkflowConfigExecution
-        </CardHeader>
-        <CardContent>
-        </CardContent>
-      </Card> */}
-      <PlanWorkflowConfigTarget input={input} setInput={setInput} />
-      {onWorkingDirectoryChange != null && (
         <PlanWorkflowConfigWorkspace
+          heading="02. Workspace"
           onChange={onWorkingDirectoryChange}
           value={workingDirectory}
         />
-      )}
 
-      <PlanWorkflowConfigPrompt
-        onPromptChange={(next) =>
-          setInput((prev) => ({ ...prev, prompt: next }))
-        }
-        onPromptFileChange={(next) =>
-          setInput((prev) => ({ ...prev, promptFile: next }))
-        }
-        onPromptLayerChange={(next) => {
-          setInput((prev) => {
-            if (next === 'named') {
-              return { ...prev, promptFile: '', promptLayer: 'named' };
-            }
+        <PlanWorkflowConfigHooks
+          heading="03. Lifecycle"
+          hooks={jobRunHookRows ?? []}
+          onChange={onJobRunHookRowsChange}
+          onSave={onSaveJobRunHooks}
+          saveDisabled={saveJobRunHooksDisabled}
+          savePending={saveJobRunHooksPending}
+        />
 
-            return {
-              ...prev,
-              prompt: DEFAULT_RALPH_PROMPT,
-              promptLayer: 'file',
-            };
-          });
-        }}
-        prompt={input.prompt}
-        promptFile={input.promptFile}
-        promptLayer={input.promptLayer}
-      />
+        <PlanWorkflowConfigPrompt
+          heading="04. Prompt"
+          onPromptChange={(next) =>
+            setInput((prev) => ({ ...prev, prompt: next }))
+          }
+          onPromptFileChange={(next) =>
+            setInput((prev) => ({ ...prev, promptFile: next }))
+          }
+          onPromptLayerChange={(next) => {
+            setInput((prev) => {
+              if (next === 'named') {
+                return { ...prev, promptFile: '', promptLayer: 'named' };
+              }
 
-      <PlanWorkflowConfigExecution input={input} setInput={setInput} />
+              return {
+                ...prev,
+                prompt: DEFAULT_RALPH_PROMPT,
+                promptLayer: 'file',
+              };
+            });
+          }}
+          prompt={input.prompt}
+          promptFile={input.promptFile}
+          promptLayer={input.promptLayer}
+        />
 
-      <PlanWorkflowConfigTuning
-        input={input}
-        iterationTimeoutText={iterationTimeoutText}
-        setInput={setInput}
-        setIterationTimeoutText={setIterationTimeoutText}
-      />
-
-      <Card className="mt-8">
-        <CardHeader className="pb-2 mb-4">PlanWorkflowCommand</CardHeader>
-        <CardContent>
-          <PlanWorkflowCommand
-            canonicalCommandLineOverride={canonicalCommandLineOverride}
-          />
-        </CardContent>
-      </Card>
+        <PlanWorkflowConfigExecution
+          heading="05. Life Cycle"
+          input={input}
+          setInput={setInput}
+        />
+        <PlanWorkflowConfigWorktree
+          heading="06. Worktree"
+          input={input}
+          setInput={setInput}
+        />
+        <PlanWorkflowConfigTuning
+          heading="07. Run Tuning"
+          input={input}
+          iterationTimeoutText={iterationTimeoutText}
+          setInput={setInput}
+          setIterationTimeoutText={setIterationTimeoutText}
+        />
+      </div>
     </TabsContent>
   );
 };

@@ -7,7 +7,7 @@ We use the TypeScript compiler only (no bundler). Two things make `.js` in sourc
 1. **TypeScript does not rewrite import paths.** Whatever you write (e.g. `from './utils.js'`) is emitted as-is. The emitted `.js` file is what Node runs.
 2. **Node ESM resolution** requires explicit file extensions for relative specifiers. `import x from './utils'` fails at runtime; Node does not try `./utils.js`. So the **emitted** file must contain `from './utils.js'`, which means you must write `.js` in the **source**.
 
-So for Node ESM with a plain `tsc` build, use `.js` in relative local imports (e.g. `from '../utils/tool-result.js'`). Package imports (e.g. `from 'zod'`) stay extensionless.
+So for Node ESM with a plain `tsc` build, use `.js` in relative local imports (e.g. `from '../utils/tool-result.js'`). Package imports (e.g. `from 'zod'`) stay extension-less.
 
 ## Shared config
 

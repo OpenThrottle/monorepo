@@ -72,5 +72,5 @@ Long-lived JSON keys are convenient but carry theft and rotation overhead. Googl
 
 ## Related docs
 
-- [Nx GCS cache setup](./nx-gcs-cache-setup.md) — Nx bucket and activation key (`NX_KEY`)
+- [Nx GCS cache setup](./gcs-nx-cache-verify.md) — Nx bucket and activation key (`NX_KEY`)
 - [gcloud two profiles](./gcloud-two-profiles.md) — ADC vs `GOOGLE_APPLICATION_CREDENTIALS` for local tooling

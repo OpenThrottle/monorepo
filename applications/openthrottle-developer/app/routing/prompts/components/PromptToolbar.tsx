@@ -1,9 +1,15 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
+import {
+  Button,
+  Input,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
 import { Link, useSearchParams } from 'react-router';
-import { PlusIcon } from 'lucide-react';
+import { FilePlusIcon } from 'lucide-react';
 import { TypeMultiSelect } from './TypeMultiSelect';
 import { PromptSortDropdown } from './PromptSortDropdown';
 import {
@@ -11,19 +17,21 @@ import {
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
-interface PromptToolbarProps {
-  readonly className?: string;
-  readonly limit: number;
-  readonly page: number;
-  readonly sortBy: PromptsSortBy;
-  readonly sortOrder: PromptsSortOrder;
-  readonly types: readonly string[];
+export interface PromptToolbarProps {
+  className?: string;
+  limit: number;
+  page: number;
+  sortBy: PromptsSortBy;
+  sortOrder: PromptsSortOrder;
+  types: string[];
 }
 
 /**
  * @description Toolbar for prompts list: URL-driven search (q), type filter dropdown, sort dropdown, and Create button. Preserves role=search, data-testid, and URL-driven state.
  */
-export const PromptToolbar = (props: PromptToolbarProps) => {
+export const PromptToolbar = (
+  props: PromptToolbarProps,
+): React.ReactElement => {
   const { className, limit, page, sortBy, sortOrder, types } = props;
 
   // Hooks
@@ -163,16 +171,22 @@ export const PromptToolbar = (props: PromptToolbarProps) => {
           </Button>
         ) : null}
         <div className="flex-1 min-w-0" />
-        <Button
-          asChild={true}
-          className="shrink-0"
-          data-testid="PromptToolbar-create-button"
-          variant="outline"
-        >
-          <Link to="/prompts/create">
-            <PlusIcon className="w-4 h-4" /> Create prompt
-          </Link>
-        </Button>
+
+        <Tooltip delayDuration={1_000}>
+          <TooltipTrigger asChild={true}>
+            <Button
+              asChild={true}
+              className="shrink-0"
+              data-testid="PromptToolbar-create-button"
+              variant="outline"
+            >
+              <Link to="/prompts/create">
+                <FilePlusIcon className="size-4" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Create new prompt</TooltipContent>
+        </Tooltip>
       </form>
     </div>
   );

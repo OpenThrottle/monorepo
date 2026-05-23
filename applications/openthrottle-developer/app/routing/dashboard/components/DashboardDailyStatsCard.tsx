@@ -10,17 +10,17 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 /** One row of chart data: date plus the six series. */
-interface DailyStatsChartDatum {
-  readonly date: string;
-  readonly plansCompleted: number;
-  readonly plansCreated: number;
-  readonly plansUpdated: number;
-  readonly tasksCompleted: number;
-  readonly tasksCreated: number;
-  readonly tasksUpdated: number;
+export interface DailyStatsChartDatum {
+  date: string;
+  plansCompleted: number;
+  plansCreated: number;
+  plansUpdated: number;
+  tasksCompleted: number;
+  tasksCreated: number;
+  tasksUpdated: number;
 }
 
-const CHART_CONFIG: ChartConfig = {
+export const CHART_CONFIG: ChartConfig = {
   plansCompleted: { color: 'var(--chart-2)', label: 'Plans completed' },
   plansCreated: { color: 'var(--chart-1)', label: 'Plans created' },
   plansUpdated: { color: 'var(--chart-3)', label: 'Plans updated' },
@@ -32,8 +32,9 @@ const CHART_CONFIG: ChartConfig = {
 /**
  * @description Formats YYYY-MM-DD for X-axis display (e.g. "Feb 11").
  */
-function formatChartDate(value: string): string {
+export function formatChartDate(value: string): string {
   const d = new Date(value + 'T00:00:00');
+
   return Number.isNaN(d.getTime())
     ? value
     : d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
@@ -42,8 +43,8 @@ function formatChartDate(value: string): string {
 /**
  * @description Maps DashboardDailyStatsCardFragment[] to chart data and config for Recharts.
  */
-function mapToChartData(
-  items: ReadonlyArray<DashboardDailyStatsCardFragment>,
+export function mapToChartData(
+  items: DashboardDailyStatsCardFragment[],
 ): DailyStatsChartDatum[] {
   return items.map((item) => ({
     date: item.date,
@@ -56,25 +57,25 @@ function mapToChartData(
   }));
 }
 
-interface DashboardDailyStatsCardProps {
-  readonly className?: string;
-  readonly dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;
+export interface DashboardDailyStatsCardProps {
+  className?: string;
+  dailyStats: DashboardDailyStatsCardFragment[];
 }
 
 export const DashboardDailyStatsCard = (
   props: DashboardDailyStatsCardProps,
-) => {
+): React.ReactElement => {
   const { className, dailyStats } = props;
 
   // Hooks
 
   // Setup
-
-  // Handlers
   const chartData = React.useMemo(
     () => mapToChartData(dailyStats),
     [dailyStats],
   );
+
+  // Handlers
 
   // Markup
 

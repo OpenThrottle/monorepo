@@ -33,7 +33,7 @@ export const validateWorkspacePathClient = (
  * @description Reads recently used workspace paths from localStorage. Returns an
  * empty array on error or when nothing is stored.
  */
-export const getRecentWorkspacePaths = (): readonly string[] => {
+export const getRecentWorkspacePaths = (): string[] => {
   try {
     const raw = localStorage.getItem(RECENT_WORKSPACE_PATHS_STORAGE_KEY);
     if (raw == null) return [];

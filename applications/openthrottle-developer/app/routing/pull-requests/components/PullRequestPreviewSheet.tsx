@@ -19,11 +19,11 @@ import {
   githubPullConversationUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
 
-interface PullRequestPreviewSheetProps {
-  readonly filters: PullRequestsListFilters;
-  readonly listQuery: string;
-  readonly prPreviewNumber: number | null;
-  readonly prPreviewPull: PullRequestCardFragment | null;
+export interface PullRequestPreviewSheetProps {
+  filters: PullRequestsListFilters;
+  listQuery: string;
+  prPreviewNumber: number | null;
+  prPreviewPull: PullRequestCardFragment | null;
 }
 
 /**
@@ -34,9 +34,18 @@ export const PullRequestPreviewSheet = (
 ): React.ReactElement => {
   const { filters, listQuery, prPreviewNumber, prPreviewPull } = props;
 
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Setup
   const isOpen = prPreviewNumber !== null;
 
+  const fullPagePath =
+    listQuery === ''
+      ? `/pull-requests/${prPreviewNumber ?? ''}`
+      : `/pull-requests/${prPreviewNumber ?? ''}?${listQuery}`;
+
+  // Handlers
   const onOpenChange = (open: boolean): void => {
     if (!open) {
       const next = new URLSearchParams(searchParams);
@@ -45,10 +54,11 @@ export const PullRequestPreviewSheet = (
     }
   };
 
-  const fullPagePath =
-    listQuery === ''
-      ? `/pull-requests/${prPreviewNumber ?? ''}`
-      : `/pull-requests/${prPreviewNumber ?? ''}?${listQuery}`;
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <Sheet onOpenChange={onOpenChange} open={isOpen}>

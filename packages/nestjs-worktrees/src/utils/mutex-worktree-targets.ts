@@ -22,20 +22,20 @@ import type {
  * acquire and release return Promises (they hold the mutex while operating).
  */
 export interface IMutexWorktreeTargetsTracker {
-  /** All registered targets and their current status (no mutex needed for read). */
-  listTargets(): readonly WorktreeTarget[];
-
-  /** Whether at least one target is available (no mutex needed for read). */
-  hasAvailableTarget(): boolean;
-
-  /** First available target, or undefined if none (no mutex needed for read). */
-  getAvailableTarget(): WorktreeTargetAvailable | undefined;
-
   /**
    * Lock a target atomically: acquires mutex, then calls underlying tracker.acquire().
    * Safe for concurrent calls (serialized through mutex).
    */
   acquire(options: { id?: string; lockedBy: string }): Promise<AcquireResult>;
+
+  /** First available target, or undefined if none (no mutex needed for read). */
+  getAvailableTarget(): WorktreeTargetAvailable | undefined;
+
+  /** Whether at least one target is available (no mutex needed for read). */
+  hasAvailableTarget(): boolean;
+
+  /** All registered targets and their current status (no mutex needed for read). */
+  listTargets(): readonly WorktreeTarget[];
 
   /**
    * Unlock a target atomically: acquires mutex, then calls underlying tracker.release().

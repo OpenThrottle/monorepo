@@ -5,7 +5,7 @@ export interface <%= name %>Props {}
 
 export const <%= name %> = (
   _props: <%= name %>Props,
-) => {
+): React.ReactElement => {
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
 

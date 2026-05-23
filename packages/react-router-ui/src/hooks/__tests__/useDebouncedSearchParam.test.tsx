@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
@@ -55,52 +54,52 @@ describe('useDebouncedSearchParam', () => {
   });
 
   test('commits trimmed q after debounce when typing', async () => {
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime,
-    });
     const RoutesStub = createRoutesStub([
       { Component: SearchHarness, path: '/' },
     ]);
 
     render(<RoutesStub initialEntries={['/']} />);
 
-    await user.type(screen.getByTestId('search-input'), 'abc');
+    fireEvent.change(screen.getByTestId('search-input'), {
+      target: { value: 'abc' },
+    });
 
     expect(screen.getByTestId('committed-q')).toHaveTextContent('');
 
-    await vi.advanceTimersByTimeAsync(299);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(299);
+    });
 
     expect(screen.getByTestId('committed-q')).toHaveTextContent('');
 
-    await vi.advanceTimersByTimeAsync(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
 
     expect(screen.getByTestId('committed-q')).toHaveTextContent('abc');
   });
 
   test('commitNow writes immediately without waiting for debounce', async () => {
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime,
-    });
     const RoutesStub = createRoutesStub([
       { Component: SearchHarness, path: '/' },
     ]);
 
     render(<RoutesStub initialEntries={['/']} />);
 
-    await user.type(screen.getByTestId('search-input'), 'fast');
+    fireEvent.change(screen.getByTestId('search-input'), {
+      target: { value: 'fast' },
+    });
 
     expect(screen.getByTestId('committed-q')).toHaveTextContent('');
 
-    await user.click(screen.getByTestId('commit-now'));
+    await act(() => {
+      fireEvent.click(screen.getByTestId('commit-now'));
+    });
 
     expect(screen.getByTestId('committed-q')).toHaveTextContent('fast');
   });
 
   test('applies transformCommittedParams on commit', async () => {
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime,
-    });
-
     function HarnessWithTransform() {
       const [searchParams] = useSearchParams();
       const hook = useDebouncedSearchParam({
@@ -130,8 +129,13 @@ describe('useDebouncedSearchParam', () => {
 
     render(<RoutesStub initialEntries={['/']} />);
 
-    await user.type(screen.getByTestId('search-input'), 'x');
-    await vi.advanceTimersByTimeAsync(300);
+    fireEvent.change(screen.getByTestId('search-input'), {
+      target: { value: 'x' },
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     const query = screen.getByTestId('full-query').textContent ?? '';
     expect(query).toContain('q=x');

@@ -31,7 +31,9 @@ export interface GlobalErrorBoundaryProps {
 /**
  * @link https://remix.run/docs/en/main/route/error-boundary
  */
-export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
+export const GlobalErrorBoundary = (
+  props: GlobalErrorBoundaryProps,
+): React.ReactElement => {
   const {
     className = 'flex flex-col h-full p-8 overflow-auto',
     homePath = '/',
@@ -237,9 +239,7 @@ export const GlobalErrorBoundary = (props: GlobalErrorBoundaryProps) => {
     const subtype = inferJavascriptErrorSubtype(error);
     return (
       <div className={className}>
-        <h1 className="text-title text-2xl">
-          {javascriptErrorBoundaryTitle(subtype)}
-        </h1>
+        <h1 className="text-lg">{javascriptErrorBoundaryTitle(subtype)}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {javascriptErrorBoundaryHint(subtype)}
         </p>

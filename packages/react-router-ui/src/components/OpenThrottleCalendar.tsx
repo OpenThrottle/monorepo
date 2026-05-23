@@ -5,7 +5,9 @@ export interface OpenThrottleCalendarProps {
   className?: string;
 }
 
-export const OpenThrottleCalendar = (props: OpenThrottleCalendarProps) => {
+export const OpenThrottleCalendar = (
+  props: OpenThrottleCalendarProps,
+): React.ReactElement => {
   const { className } = props;
 
   // Hooks

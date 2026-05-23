@@ -10,10 +10,10 @@ describe('parseDashboardGithubParams', () => {
   });
 
   test('should parse valid owner and repo', () => {
-    const params = new URLSearchParams('owner=shiftsmartinc&repo=native-apps');
+    const params = new URLSearchParams('owner=openthrottle&repo=monorepo');
     expect(parseDashboardGithubParams(params)).toEqual({
-      owner: 'shiftsmartinc',
-      repo: 'native-apps',
+      owner: 'openthrottle',
+      repo: 'monorepo',
     });
   });
 

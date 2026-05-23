@@ -29,13 +29,15 @@ describe('routes/_layout.mail.search.tsx', () => {
   });
 
   test('should show search results heading and no-results empty state when query has no matches', () => {
-    const RoutesStub = createRoutesStub([
-      {
-        Component: (props: any) => <Route {...props} />,
-        loader: () => ({ messages: [], query: 'test query' }),
-        path: '/',
-      },
-    ]);
+    const Component = () => (
+      <Route
+        actionData={undefined}
+        loaderData={{ messages: [], query: 'test query' }}
+        matches={[] as never[]}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     const component = render(<RoutesStub />);
 

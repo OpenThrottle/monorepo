@@ -90,12 +90,12 @@ export function saveToStorage(
 }
 
 type NotificationsStoreAction =
-  | { type: 'add'; event: NotificationEventName; payload: NotificationPayload }
-  | { type: 'markRead'; id: string }
+  | { event: NotificationEventName; payload: NotificationPayload; type: 'add' }
+  | { id: string; type: 'markRead' }
   | { type: 'markAllRead' }
-  | { type: 'dismiss'; id: string }
+  | { id: string; type: 'dismiss' }
   | { type: 'dismissAll' }
-  | { type: 'hydrate'; notifications: NotificationInstance[] };
+  | { notifications: NotificationInstance[]; type: 'hydrate' };
 
 export function reducer(
   state: readonly NotificationInstance[],

@@ -11,7 +11,7 @@ describe('reactRouterGenerator', () => {
   });
 
   const type = 'component';
-  const application = 'openthrottle';
+  const application = 'openthrottle-website';
   const folder = 'global/components';
   const name = 'TestComponentName';
 
@@ -31,8 +31,8 @@ describe('reactRouterGenerator', () => {
       'package.json',
       'nx.json',
       'tsconfig.base.json',
-      'applications/openthrottle/app/global/components/TestComponentName.tsx',
-      'applications/openthrottle/app/global/components/__tests__/TestComponentName.test.tsx',
+      'applications/openthrottle-website/app/global/components/TestComponentName.tsx',
+      'applications/openthrottle-website/app/global/components/__tests__/TestComponentName.test.tsx',
     ]);
   });
 });

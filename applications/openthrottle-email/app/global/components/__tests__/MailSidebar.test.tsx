@@ -28,7 +28,10 @@ describe('MailSidebar Component', () => {
     const sidebars = component.getAllByTestId('MailSidebar');
     expect(sidebars.length).toBeGreaterThanOrEqual(1);
     const sidebar = sidebars[0];
-    expect(sidebar).toHaveAttribute('data-state', 'expanded');
+    expect(sidebar.closest('[data-state]')).toHaveAttribute(
+      'data-state',
+      'expanded',
+    );
     expect(component.getByRole('link', { name: /inbox/i })).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: /compose/i }),
