@@ -7,11 +7,13 @@ const VALID_TECHNOLOGY_TAGS = [
   'expo',
   'llm',
   'nestjs',
+  'nodejs',
   'python',
   'react-native',
   'react-router',
   'react',
   'supabase',
+  'terraform',
   'typescript',
 ] as const;
 
@@ -33,12 +35,35 @@ const extractTechnologyTags = (tags: readonly string[]): string[] => {
     .map((tag) => tag.replace('technology:', ''));
 };
 
+const VALID_PRODUCTION_VALUES = ['true', 'false'] as const;
+
+type ValidProductionValue = (typeof VALID_PRODUCTION_VALUES)[number];
+
 /**
- * @description Validates technology tags for a single project
+ * @description Extracts production tag values from project tags
+ */
+const extractProductionTags = (tags: readonly string[]): string[] => {
+  return tags
+    .filter((tag) => tag.startsWith('production:'))
+    .map((tag) => tag.replace('production:', ''));
+};
+
+const isValidProductionValue = (
+  value: string,
+): value is ValidProductionValue => {
+  return VALID_PRODUCTION_VALUES.includes(value as ValidProductionValue);
+};
+
+/**
+ * @description Validates technology and production tags for a single project
  */
 interface ValidationResult {
+  readonly conflictingNodejsTypescript: boolean;
+  readonly hasProductionTag: boolean;
   readonly hasTechnologyTag: boolean;
-  readonly invalidTags: readonly string[];
+  readonly invalidProductionTags: readonly string[];
+  readonly invalidTechnologyTags: readonly string[];
+  readonly multipleProductionTags: boolean;
   readonly projectName: string;
   readonly technologyTags: readonly string[];
 }
@@ -48,13 +73,24 @@ const validateProjectTags = (
   tags: readonly string[],
 ): ValidationResult => {
   const technologyTags = extractTechnologyTags(tags);
-  const invalidTags = technologyTags.filter(
+  const productionTags = extractProductionTags(tags);
+  const invalidTechnologyTags = technologyTags.filter(
     (tag) => !isValidTechnologyTag(tag),
   );
+  const invalidProductionTags = productionTags.filter(
+    (tag) => !isValidProductionValue(tag),
+  );
+
+  const hasNodejs = technologyTags.includes('nodejs');
+  const hasTypescript = technologyTags.includes('typescript');
 
   return {
+    conflictingNodejsTypescript: hasNodejs && hasTypescript,
+    hasProductionTag: productionTags.length === 1,
     hasTechnologyTag: technologyTags.length > 0,
-    invalidTags,
+    invalidProductionTags,
+    invalidTechnologyTags,
+    multipleProductionTags: productionTags.length > 1,
     projectName,
     technologyTags,
   };
@@ -64,34 +100,102 @@ const validateProjectTags = (
  * @description Formats validation results for display
  */
 const formatResults = (results: readonly ValidationResult[]): string => {
-  const missingTags = results.filter((r) => !r.hasTechnologyTag);
-  const invalidTags = results.filter((r) => r.invalidTags.length > 0);
+  const missingTechnologyTags = results.filter((r) => !r.hasTechnologyTag);
+  const missingProductionTags = results.filter((r) => !r.hasProductionTag);
+  const multipleProductionTags = results.filter(
+    (r) => r.multipleProductionTags,
+  );
+  const invalidTechnologyTags = results.filter(
+    (r) => r.invalidTechnologyTags.length > 0,
+  );
+  const invalidProductionTags = results.filter(
+    (r) => r.invalidProductionTags.length > 0,
+  );
+  const conflictingNodejsTypescript = results.filter(
+    (r) => r.conflictingNodejsTypescript,
+  );
 
   const lines: string[] = [];
 
-  if (missingTags.length > 0) {
+  if (missingTechnologyTags.length > 0) {
     lines.push('❌ Projects missing technology tags:');
     lines.push('');
-    missingTags.forEach((result) => {
+    missingTechnologyTags.forEach((result) => {
       lines.push(`  - ${result.projectName}`);
     });
     lines.push('');
   }
 
-  if (invalidTags.length > 0) {
+  if (missingProductionTags.length > 0) {
+    lines.push('❌ Projects missing or duplicate production tags:');
+    lines.push('');
+    missingProductionTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+  }
+
+  if (multipleProductionTags.length > 0) {
+    lines.push('❌ Projects with multiple production tags:');
+    lines.push('');
+    multipleProductionTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+  }
+
+  if (invalidTechnologyTags.length > 0) {
     lines.push('❌ Projects with invalid technology tags:');
     lines.push('');
-    invalidTags.forEach((result) => {
+    invalidTechnologyTags.forEach((result) => {
       lines.push(`  - ${result.projectName}:`);
-      result.invalidTags.forEach((tag) => {
+      result.invalidTechnologyTags.forEach((tag) => {
         lines.push(`    • technology:${tag} (not in reference document)`);
       });
     });
     lines.push('');
   }
 
-  if (missingTags.length === 0 && invalidTags.length === 0) {
-    lines.push('✅ All projects have valid technology tags!');
+  if (invalidProductionTags.length > 0) {
+    lines.push('❌ Projects with invalid production tags:');
+    lines.push('');
+    invalidProductionTags.forEach((result) => {
+      lines.push(`  - ${result.projectName}:`);
+      result.invalidProductionTags.forEach((tag) => {
+        lines.push(`    • production:${tag} (must be true or false)`);
+      });
+    });
+    lines.push('');
+  }
+
+  if (conflictingNodejsTypescript.length > 0) {
+    lines.push(
+      '❌ Projects with both technology:nodejs and technology:typescript:',
+    );
+    lines.push('');
+    conflictingNodejsTypescript.forEach((result) => {
+      lines.push(`  - ${result.projectName}`);
+    });
+    lines.push('');
+    lines.push(
+      '   Use technology:nodejs only for isomorphic shared libraries or monorepo root.',
+    );
+    lines.push(
+      '   Use technology:typescript for Node-only TypeScript packages.',
+    );
+    lines.push('');
+  }
+
+  const hasErrors =
+    missingTechnologyTags.length > 0 ||
+    missingProductionTags.length > 0 ||
+    multipleProductionTags.length > 0 ||
+    invalidTechnologyTags.length > 0 ||
+    invalidProductionTags.length > 0 ||
+    conflictingNodejsTypescript.length > 0;
+
+  if (!hasErrors) {
+    lines.push('✅ All projects have valid technology and production tags!');
     lines.push('');
     lines.push(`Validated ${results.length} projects`);
   }
@@ -145,7 +249,9 @@ const getAllProjectNames = (): readonly string[] => {
  * @description Main function to validate technology tags across all projects
  */
 const main = async (): Promise<void> => {
-  console.log('🔍 Validating technology tags across all NX projects...\n');
+  console.log(
+    '🔍 Validating technology and production tags across all NX projects...\n',
+  );
 
   try {
     const projectNames = getAllProjectNames();
@@ -163,9 +269,15 @@ const main = async (): Promise<void> => {
     const output = formatResults(results);
     console.log(output);
 
-    const hasTechnologyTag = results.some((r) => r.hasTechnologyTag);
-    const hasInvalidTags = results.some((r) => r.invalidTags.length > 0);
-    const hasErrors = !hasTechnologyTag || hasInvalidTags;
+    const hasErrors = results.some(
+      (r) =>
+        !r.hasTechnologyTag ||
+        !r.hasProductionTag ||
+        r.multipleProductionTags ||
+        r.invalidTechnologyTags.length > 0 ||
+        r.invalidProductionTags.length > 0 ||
+        r.conflictingNodejsTypescript,
+    );
 
     if (hasErrors) {
       console.log('📚 For more information, see: docs/monorepo/NX/tags.md');

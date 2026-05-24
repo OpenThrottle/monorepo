@@ -1,5 +1,10 @@
 import { Test } from '@nestjs/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@openthrottle/nodejs-graphql', () => ({
+  executeGraphql: vi.fn(),
+  executeGraphqlWithAuth: vi.fn(),
+}));
 import { McpTransportType } from '@rekog/mcp-nest';
 import { McpDeveloperMcpSurface } from './mcp-developer-mcp-surface.js';
 import { NestjsMcpDeveloperModule } from './nestjs-mcp-developer.module.js';

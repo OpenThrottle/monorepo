@@ -94,6 +94,23 @@ Examples:
 - `openthrottle-server` - NestJS GraphQL API application
 - `@openthrottle/nestjs-graphql` - NestJS GraphQL package
 
+#### `technology:nodejs`
+
+**When to use:**
+
+- Workspace root orchestration and scripts (`monorepo`)
+- TypeScript libraries meant to run on **both** server and client (isomorphic / shared GraphQL clients, utilities consumed by apps and packages)
+
+**When not to use:**
+
+- Node-only tools, MCP servers, VS Code extensions, or workflow libraries — use `technology:typescript` instead
+- Do **not** combine with `technology:typescript` on the same project (`pnpm nx:validate-tags` enforces this)
+
+**Examples:**
+
+- `monorepo` - Workspace root scripts and orchestration
+- `@openthrottle/nodejs-graphql` - GraphQL client used from NestJS apps, MCP, and React Router loaders
+
 #### `technology:python`
 
 **When to use:**
@@ -130,12 +147,15 @@ Examples:
 - Build tools and generators written in TypeScript
 - Utility packages that are framework-agnostic
 
-**Note:** Do NOT use `technology:typescript` for projects that already have a framework tag (e.g., `technology:react`, `technology:nestjs`). Framework tags imply TypeScript usage.
+**Note:** Do NOT use `technology:typescript` for projects that already have a framework tag (e.g., `technology:react`, `technology:nestjs`). Framework tags imply TypeScript usage. Do **not** combine with `technology:nodejs` on the same project.
 
 **Examples:**
 
 - `@tools/generators` - NX generator templates
 - `@tools/dotfiles` - Configuration package
+- `@tools/ollama-proxy` - Local OpenAI-compatible proxy for Ollama (`production:false`)
+- `@openthrottle/mcp-developer` - MCP server (Node-only TypeScript)
+- `@tools/workflows` - Ralph and workflow CLI (`production:false` where applicable)
 
 ### Specialized Technologies
 
@@ -165,12 +185,20 @@ Projects can have multiple technology tags when they use multiple technologies:
 1. **Always tag by primary technology**: Use the most specific tag that applies
 2. **Use multiple tags when appropriate**: If a project uses multiple technologies, tag it with all relevant tags
 3. **Don't duplicate**: Don't use `technology:typescript` if the project already has a framework tag (React, NestJS, etc.)
-4. **Be consistent**: Use the exact tag values listed in this document
-5. **Tag all projects**: Every project should have at least one technology tag
+4. **nodejs vs typescript**: Use `technology:nodejs` only for isomorphic shared libraries or the workspace root; use `technology:typescript` for Node-only TypeScript packages. Never apply both on one project.
+5. **Be consistent**: Use the exact tag values listed in this document
+6. **Tag all projects**: Every project should have at least one technology tag
+
+## Production tags
+
+Production tags follow `production:true` or `production:false` (exactly one per project). They are defined in [CONTRIBUTING.md](../../../CONTRIBUTING.md#project-tags); `pnpm nx:validate-tags` checks that every Nx project has a valid production tag alongside its technology tags.
+
+- **`production:true`** — Libraries and apps that participate in release, codegen, or production build graphs (most packages and applications).
+- **`production:false`** — Local-only or infrastructure tooling (for example `@tools/ollama-proxy`, `infra`) that is not shipped as a production artifact.
 
 ## Validation
 
-All technology tags should be validated against this reference document. See the tag validation script for automated checking.
+All technology and production tags should be validated against this reference document and [CONTRIBUTING.md](../../../CONTRIBUTING.md#project-tags). Run `pnpm nx:validate-tags` for automated checking.
 
 ## Related Documentation
 

@@ -311,6 +311,7 @@
           "command": "maestro test --config tests/maestro.yml -c"
         }
       },
+      "dependsOn": ["^build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "maestro test --config tests/maestro.yml",

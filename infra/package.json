@@ -7,8 +7,9 @@
     "sourceRoot": "./",
     "tags": [
       "name:infra",
-      "type:infrastructure",
-      "technology:terraform"
+      "production:false",
+      "technology:terraform",
+      "type:infrastructure"
     ],
     "targets": {}
   },
