@@ -169,17 +169,27 @@ export function toastForNotification(
   payload: NotificationPayload,
   navigate?: (path: string) => void,
 ): void {
-  const method =
-    payload.severity === 'error'
-      ? 'error'
-      : payload.severity === 'warning'
-        ? 'warning'
-        : payload.severity === 'success'
-          ? 'success'
-          : 'info';
+  let method: keyof typeof toast = 'info';
+
+  switch (payload.severity) {
+    case 'error':
+      method = 'error';
+      break;
+    case 'success':
+      method = 'success';
+      break;
+    case 'info':
+      method = 'info';
+      break;
+    case 'warning':
+      method = 'warning';
+      break;
+  }
+
   const action =
     payload.link && navigate
       ? { label: 'View', onClick: () => navigate(payload.link!) }
       : undefined;
+
   toast[method](payload.message, action !== undefined ? { action } : undefined);
 }
