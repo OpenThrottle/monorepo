@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { createRoutesStub, useSearchParams, type UIMatch } from 'react-router';
+import { createRoutesStub, type UIMatch } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import PlanDetail from '../plans.$planId._index';
 
@@ -61,6 +61,7 @@ describe('routes/plans.$planId._index run config hydration', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}
@@ -81,9 +82,9 @@ describe('routes/plans.$planId._index run config hydration', () => {
       ).toHaveTextContent('Claude Code CLI');
     });
 
-    expect(screen.getByLabelText('Iteration count for --iterations')).toHaveValue(
-      7,
-    );
+    expect(
+      screen.getByLabelText('Iteration count for --iterations'),
+    ).toHaveValue(7);
     expect(screen.getByLabelText('NX project name for --project')).toHaveValue(
       'packages/foo',
     );

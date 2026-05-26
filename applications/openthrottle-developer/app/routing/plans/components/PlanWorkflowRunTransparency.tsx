@@ -22,8 +22,7 @@ import { buildPlanRunSnapshotDiffLabels } from '~/routing/plans/utils/plan-run-c
 type RecentRun =
   PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
 
-type PlanRunAuditRow =
-  PlanDetailIndexLoaderQuery['planRunsByPlanId'][number];
+type PlanRunAuditRow = PlanDetailIndexLoaderQuery['planRunsByPlanId'][number];
 
 export interface PlanWorkflowRunTransparencyProps {
   canonicalWorkflowCommand: string;
@@ -175,8 +174,9 @@ export const PlanWorkflowRunTransparency = (
           <div className="overflow-x-auto">
             <table className="text-muted-foreground w-full min-w-[28rem] border-collapse text-xs mt-8">
               <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
-                Queued run audit (persisted plan_runs rows). Snapshot diff compares
-                enqueue-time config to current Configuration tab values.
+                Queued run audit (persisted plan_runs rows). Snapshot diff
+                compares enqueue-time config to current Configuration tab
+                values.
               </caption>
               <thead>
                 <tr className="border-border border-b text-left">

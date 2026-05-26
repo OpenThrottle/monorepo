@@ -78,4 +78,66 @@ describe('PlanWorkflowRunTransparency', () => {
     expect(jobLink).toHaveAttribute('href', '/queues/Plans/job-abc');
     expect(getByText('Cursor (cursor-agent)')).toBeInTheDocument();
   });
+
+  test('renders queued audit rows with snapshot match label when config matches', () => {
+    const planRunAuditRows: PlanWorkflowRunTransparencyProps['planRunAuditRows'] =
+      [
+        {
+          __typename: 'PlanRunObject',
+          bullmqJobId: 'job-snap-1',
+          createdAt: '2024-01-02T03:04:05.000Z',
+          executionBackend: 'cursor',
+          id: 'run-1',
+          runConfigSnapshotJson: JSON.stringify({
+            ralph: { executionBackend: 'cursor' },
+            target: { mode: 'plan', taskId: '' },
+            version: 1,
+            workspace: { workingDirectory: '' },
+          }),
+          runKind: 'spawn',
+          status: 'QUEUED',
+        },
+      ];
+
+    const { getByText, getByRole } = renderTransparency({ planRunAuditRows });
+
+    expect(getByRole('link', { name: 'job-snap-1' })).toHaveAttribute(
+      'href',
+      '/queues/Plans/job-snap-1',
+    );
+    expect(getByText('Matches current config')).toBeInTheDocument();
+  });
+
+  test('renders queued audit rows with diff labels when snapshot differs', () => {
+    const planRunAuditRows: PlanWorkflowRunTransparencyProps['planRunAuditRows'] =
+      [
+        {
+          __typename: 'PlanRunObject',
+          bullmqJobId: 'job-snap-2',
+          createdAt: '2024-01-02T03:04:05.000Z',
+          executionBackend: 'claude',
+          id: 'run-2',
+          runConfigSnapshotJson: JSON.stringify({
+            ralph: { executionBackend: 'claude', iterations: 25 },
+            target: { mode: 'plan', taskId: '' },
+            version: 1,
+            workspace: { workingDirectory: '/tmp/other' },
+          }),
+          runKind: 'orchestrator',
+          status: 'QUEUED',
+        },
+      ];
+
+    const { getByText } = renderTransparency({ planRunAuditRows });
+
+    expect(
+      getByText(
+        /Backend: Claude Code .* → Cursor \(cursor-agent\) \(current\)/,
+      ),
+    ).toBeInTheDocument();
+    expect(getByText(/Iterations: 25 → 10 \(current\)/)).toBeInTheDocument();
+    expect(
+      getByText(/Workspace: \/tmp\/other → \(monorepo root\) \(current\)/),
+    ).toBeInTheDocument();
+  });
 });

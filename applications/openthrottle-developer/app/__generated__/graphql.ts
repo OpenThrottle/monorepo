@@ -1293,6 +1293,8 @@ export type PlanRunObject = {
   id: Scalars['String']['output'];
   planId: Scalars['String']['output'];
   queueName: Scalars['String']['output'];
+  /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
+  runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
   /** Ralph run implementation: spawn or orchestrator. */
   runKind: Scalars['String']['output'];
   status: Scalars['String']['output'];
@@ -3070,6 +3072,16 @@ export type PlanDetailIndexLoaderQuery = {
       } | null;
     }>;
   };
+  planRunsByPlanId: Array<{
+    __typename?: 'PlanRunObject';
+    bullmqJobId: string;
+    createdAt: any;
+    executionBackend: string;
+    id: string;
+    runConfigSnapshotJson?: string | null;
+    runKind: string;
+    status: string;
+  }>;
 };
 
 export type UpdatePlanMutationVariables = Exact<{
@@ -6824,6 +6836,52 @@ export const PlanDetailIndexLoaderDocument = {
                     ],
                   },
                 },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planRunsByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'limit' },
+                      value: { kind: 'IntValue', value: '10' },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'runConfigSnapshotJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },

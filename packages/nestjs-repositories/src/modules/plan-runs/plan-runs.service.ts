@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
 import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
@@ -48,7 +49,10 @@ export class PlanRunsService {
     };
     const row = repo.create(rowInput);
 
-    await repo.upsert(rowInput, ['queueName', 'bullmqJobId']);
+    await repo.upsert(rowInput as QueryDeepPartialEntity<PlanRun>, [
+      'queueName',
+      'bullmqJobId',
+    ]);
 
     return (
       (await repo.findOne({

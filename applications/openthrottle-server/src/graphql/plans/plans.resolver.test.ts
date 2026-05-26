@@ -53,7 +53,9 @@ describe('PlansResolver', () => {
     jobRunHooks: { hooks: [] },
     project: null,
     projectId: null,
-    runConfig: getDefaultPlanRunConfigStorage({ planId: '80864bba-630a-451d-bfd2-4b25ec202381' }),
+    runConfig: getDefaultPlanRunConfigStorage({
+      planId: '80864bba-630a-451d-bfd2-4b25ec202381',
+    }),
     status: 'pending',
     summary: null,
     title: 'Test plan',
@@ -839,6 +841,12 @@ describe('PlansResolver', () => {
         executionBackend: 'cursor',
         planId: mockPlan.id,
         queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: expect.objectContaining({
+          ralph: { executionBackend: 'cursor' },
+          target: { mode: 'plan', taskId: '' },
+          version: 1,
+          workspace: { workingDirectory: '' },
+        }),
         runKind: 'orchestrator',
       });
       expect(mockAdd).not.toHaveBeenCalled();

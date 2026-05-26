@@ -64,6 +64,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [mockTask],
           }}
@@ -102,6 +103,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}
@@ -132,6 +134,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: null,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}
@@ -157,6 +160,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [mockTask],
           }}
@@ -193,6 +197,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}
