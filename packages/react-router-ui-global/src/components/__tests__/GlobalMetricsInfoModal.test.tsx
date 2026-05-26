@@ -75,19 +75,38 @@ describe('GlobalMetricsInfoModal Component', () => {
         within(dialog).getByText('What you are looking at'),
       ).toBeInTheDocument();
       expect(
-        within(dialog).getByText(/serverMetrics/, { selector: 'code' }),
-      ).toBeInTheDocument();
-      expect(
         within(dialog).getByText('openthrottle-server'),
       ).toBeInTheDocument();
     });
 
-    test('renders each stat card title from GLOBAL_METRICS_STAT_CARD_DOCS', () => {
+    test('renders the inline <code>serverMetrics</code> element in the intro copy', () => {
+      const dialog = screen.getByRole('dialog');
+      const inlineCode = within(dialog).getByText('serverMetrics', {
+        selector: 'code',
+      });
+      expect(inlineCode).toBeInTheDocument();
+      expect(inlineCode.tagName).toBe('CODE');
+      expect(inlineCode).toHaveTextContent('serverMetrics');
+    });
+
+    test('renders all three section headings ("What you are looking at", "Stat cards", "Poll & chart")', () => {
+      const dialog = screen.getByRole('dialog');
+      expect(
+        within(dialog).getByText('What you are looking at'),
+      ).toBeInTheDocument();
+      expect(within(dialog).getByText('Stat cards')).toBeInTheDocument();
+      expect(within(dialog).getByText('Poll & chart')).toBeInTheDocument();
+    });
+
+    test('renders each title and body from GLOBAL_METRICS_STAT_CARD_DOCS', () => {
       const dialog = screen.getByRole('dialog');
       expect(within(dialog).getByText('Stat cards')).toBeInTheDocument();
 
       for (const doc of GLOBAL_METRICS_STAT_CARD_DOCS) {
         expect(within(dialog).getByText(doc.title)).toBeInTheDocument();
+        expect(
+          within(dialog).getByText(doc.body, { exact: false }),
+        ).toBeInTheDocument();
       }
     });
 
@@ -128,6 +147,26 @@ describe('GlobalMetricsInfoModal Component', () => {
         '/settings/debug#server-metrics-definitions',
       );
       expect(link).toHaveTextContent('Open full definitions in Settings');
+    });
+
+    test('wraps the Settings deep link in a bordered footer paragraph', () => {
+      renderHarness(
+        { definitionsHref: '/settings/debug#server-metrics-definitions' },
+        ['/?modal=ServerMetricsInfo'],
+      );
+
+      const link = screen.getByTestId(
+        'GlobalMetricsInfoModal-definitions-link',
+      );
+      const footer = link.closest('p');
+
+      expect(footer).not.toBeNull();
+      expect(footer?.tagName).toBe('P');
+      expect(footer).toHaveClass('border-t');
+      expect(footer).toHaveClass('pt-3');
+      expect(footer?.textContent).toContain(
+        'Open full definitions in Settings',
+      );
     });
   });
 
