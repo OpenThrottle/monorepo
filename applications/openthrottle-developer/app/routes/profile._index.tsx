@@ -1,15 +1,15 @@
 import * as React from 'react';
-import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { OPEN_THROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import type { Route } from '@/app/routes/+types/profile._index';
-import { OPEN_THROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

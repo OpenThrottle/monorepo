@@ -110,7 +110,7 @@ export default function Component(
         </div>
       </div>
 
-      {/* <ul className="mt-6 list-disc space-y-2 pl-5 text-sm">
+      <ul className="mt-6 list-disc space-y-2 pl-5 text-sm">
         <li>
           <Link
             className="text-primary underline-offset-4 hover:underline"
@@ -135,7 +135,7 @@ export default function Component(
             Terms of use
           </Link>
         </li>
-      </ul> */}
+      </ul>
 
       <div className="py-8 relative flex flex-col gap-8">
         <Avatar className="size-24 md:size-32 mx-auto m-4">
