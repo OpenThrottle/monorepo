@@ -38,7 +38,10 @@ import {
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
 import { formatCpuMs, formatMb } from '../utils/utils.global';
-import { GlobalMetricsTooltip } from './GlobalMetricsTooltip';
+import {
+  GlobalMetricsInfoModal,
+  GlobalMetricsInfoTrigger,
+} from './GlobalMetricsInfoModal';
 
 export interface GlobalMetricsProps {
   readonly className?: string;
@@ -194,7 +197,7 @@ export const GlobalMetrics = (
         <div className="flex flex-wrap items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-muted-foreground">Server metrics</h2>
-            <GlobalMetricsTooltip definitionsHref={definitionsHref} />
+            <GlobalMetricsInfoTrigger />
           </div>
           <Label className="flex items-center gap-2">
             <span>Poll</span>
@@ -222,6 +225,8 @@ export const GlobalMetrics = (
             </Select>
           </Label>
         </div>
+
+        <GlobalMetricsInfoModal definitionsHref={definitionsHref} />
 
         {/* <p
           className="text-xs text-muted-foreground max-w-3xl leading-relaxed"
