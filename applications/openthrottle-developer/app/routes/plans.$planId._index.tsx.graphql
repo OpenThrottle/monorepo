@@ -29,6 +29,7 @@ fragment PlanDetails on PlanObject {
   description
   id
   jobRunHooksJson
+  runConfigJson
   projectId
   projectRelation {
     ...ProjectDetails
@@ -95,6 +96,14 @@ mutation PlanDetailUpdatePlanJobRunHooks($input: UpdatePlanInput!) {
   }
 }
 
+mutation PlanDetailUpdatePlanRunConfig($input: UpdatePlanInput!) {
+  updatePlan(input: $input) {
+    id
+    runConfigJson
+    updatedAt
+  }
+}
+
 query PlanDetailIndexLoader($planId: ID!) {
   plan(id: $planId) {
     ...PlanDetails
@@ -120,5 +129,14 @@ query PlanDetailIndexLoader($planId: ID!) {
         }
       }
     }
+  }
+  planRunsByPlanId(input: { planId: $planId, limit: 10 }) {
+    bullmqJobId
+    createdAt
+    executionBackend
+    id
+    runConfigSnapshotJson
+    runKind
+    status
   }
 }

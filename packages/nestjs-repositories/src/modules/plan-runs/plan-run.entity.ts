@@ -2,6 +2,7 @@
  * @description TypeORM entity for Cortex plan_runs table. Matches databases/migrations/038.
  */
 
+import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
 import {
   Column,
   CreateDateColumn,
@@ -51,6 +52,10 @@ export class PlanRun {
 
   @Column({ default: 'spawn', name: 'run_kind', type: 'text' })
   runKind!: PlanRunKind;
+
+  /** @description Resolved enqueue configuration (PlanRunConfigSnapshot v1). Null for legacy rows. */
+  @Column({ name: 'run_config_snapshot', nullable: true, type: 'jsonb' })
+  runConfigSnapshot!: PlanRunConfigSnapshot | null;
 
   @Column({ default: 'QUEUED', name: 'status', type: 'text' })
   status!: string;

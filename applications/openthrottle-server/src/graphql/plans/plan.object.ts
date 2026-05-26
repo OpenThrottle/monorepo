@@ -94,6 +94,13 @@ export class PlanRunObject implements PlanRunData {
   queueName!: string;
 
   @Field(() => String, {
+    description:
+      'Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.',
+    nullable: true,
+  })
+  runConfigSnapshotJson!: string | null;
+
+  @Field(() => String, {
     description: 'Ralph run implementation: spawn or orchestrator.',
   })
   runKind!: 'orchestrator' | 'spawn';

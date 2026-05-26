@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  getDefaultPlanRunConfigStorage,
   PlanEmbeddingsService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
@@ -179,6 +180,47 @@ describe('PlanCreationService', () => {
         delete process.env.GITHUB_USER;
       }
     }
+  });
+
+  it('persists default runConfig when runConfigJson is omitted', async () => {
+    const saved = {
+      assignee: null,
+      author: 'visormatt',
+      category: 'feature',
+      createdAt: new Date(),
+      description: null,
+      id: 'p-run-config',
+      project: null,
+      projectId: null,
+      status: 'PENDING',
+      summary: null,
+      title: 'Plan',
+      updatedAt: new Date(),
+    } as Plan;
+
+    planRepo.create.mockReturnValue(saved);
+    planRepo.save.mockResolvedValue(saved);
+
+    const input: CreatePlanInput = {
+      assignee: null,
+      author: 'visormatt',
+      category: 'feature',
+      description: null,
+      project: null,
+      projectId: null,
+      runConfigJson: null,
+      status: null,
+      summary: null,
+      title: 'Plan',
+    };
+
+    await service.createPlanFromInput(input);
+
+    expect(planRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        runConfig: getDefaultPlanRunConfigStorage(),
+      }),
+    );
   });
 
   it('stores null assignee when input is not a valid GitHub login', async () => {

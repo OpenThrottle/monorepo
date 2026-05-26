@@ -23,9 +23,14 @@ import {
 import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
+  getDefaultPlanRunConfigStorage,
+  parsePlanRunConfigJson,
   PlansService,
   PlanRunsService,
+  planRunConfigFromPlanStorage,
   ProjectsService,
+  serializePlanRunConfigForGraphql,
+  serializePlanRunConfigSnapshotForGraphql,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
@@ -52,6 +57,7 @@ import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
 } from './enqueue-plan-ralph-tuning';
+import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 import {
   CancelPlanRunInput,
   CreatePlanInput,
@@ -136,6 +142,17 @@ export class PlansResolver {
     return serializeJobRunHooksForGraphql({ hooks: [] });
   }
 
+  @ResolveField(() => String, {
+    description: `Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).`,
+  })
+  runConfigJson(@Parent() parent: PlanObject): string {
+    const stored = (parent as PlanObject & { runConfig?: unknown }).runConfig;
+    return serializePlanRunConfigForGraphql(
+      stored as Parameters<typeof serializePlanRunConfigForGraphql>[0],
+      { planId: parent.id },
+    );
+  }
+
   // @ProfileResponseTime('PlansResolver.taskCount')
   @ResolveField(() => Int, {
     description: 'Number of tasks belonging to this plan',
@@ -155,6 +172,9 @@ export class PlansResolver {
     out.id = planRun.id;
     out.planId = planRun.planId;
     out.queueName = planRun.queueName;
+    out.runConfigSnapshotJson = serializePlanRunConfigSnapshotForGraphql(
+      planRun.runConfigSnapshot,
+    );
     out.runKind = planRun.runKind;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
@@ -534,6 +554,25 @@ export class PlansResolver {
         }
       }
     }
+    if (input.runConfigJson !== undefined) {
+      const next = parsePlanRunConfigJson(input.runConfigJson);
+      if (next !== undefined) {
+        const resolved =
+          input.runConfigJson === null
+            ? getDefaultPlanRunConfigStorage({ planId: entity.id })
+            : next;
+        const prevJson = JSON.stringify(
+          planRunConfigFromPlanStorage(entity.runConfig, {
+            planId: entity.id,
+          }),
+        );
+        const nextJson = JSON.stringify(resolved);
+        if (prevJson !== nextJson) {
+          entity.runConfig = resolved;
+          touched = true;
+        }
+      }
+    }
 
     if (!touched && inProgressBlocked) {
       throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
@@ -675,12 +714,14 @@ export class PlansResolver {
       priority: jobPriority,
     });
     const jobId = String(job.id ?? job.name);
+    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
 
     await this.planRunsService.recordQueuedRun({
       bullmqJobId: jobId,
       executionBackend: jobData.executionBackend ?? 'cursor',
       planId,
       queueName: PLANS_QUEUE_NAME,
+      runConfigSnapshot,
       runKind: 'spawn',
     });
 
@@ -849,6 +890,7 @@ export class PlansResolver {
       executionBackend: jobData.executionBackend ?? 'cursor',
       planId,
       queueName: PLANS_QUEUE_NAME,
+      runConfigSnapshot: buildPlanRunConfigSnapshotFromJobData(jobData),
       runKind: 'orchestrator',
     });
 

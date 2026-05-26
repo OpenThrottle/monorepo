@@ -297,6 +297,8 @@ export type CreatePlanInput = {
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults. */
+  runConfigJson?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
@@ -1240,6 +1242,8 @@ export type PlanObject = {
   projectId?: Maybe<Scalars['String']['output']>;
   /** Resolved project entity when projectId is set; null when projectId is unset. */
   projectRelation?: Maybe<ProjectObject>;
+  /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
+  runConfigJson: Scalars['String']['output'];
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
   /** Number of tasks belonging to this plan. Resolved from tasks table. */
@@ -2259,6 +2263,8 @@ export type UpdatePlanInput = {
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Pass null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged. */
+  runConfigJson?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
@@ -2825,6 +2831,7 @@ export type PlanDetailsFragment = {
   description?: string | null;
   id: string;
   jobRunHooksJson: string;
+  runConfigJson: string;
   projectId?: string | null;
   status: string;
   summary?: string | null;
@@ -2852,6 +2859,7 @@ export type GetPlanByIdQuery = {
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
+    runConfigJson: string;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -2981,6 +2989,20 @@ export type PlanDetailUpdatePlanJobRunHooksMutation = {
   } | null;
 };
 
+export type PlanDetailUpdatePlanRunConfigMutationVariables = Exact<{
+  input: UpdatePlanInput;
+}>;
+
+export type PlanDetailUpdatePlanRunConfigMutation = {
+  __typename?: 'Mutation';
+  updatePlan?: {
+    __typename?: 'PlanObject';
+    id: string;
+    runConfigJson: string;
+    updatedAt: any;
+  } | null;
+};
+
 export type PlanDetailIndexLoaderQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
 }>;
@@ -2996,6 +3018,7 @@ export type PlanDetailIndexLoaderQuery = {
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
+    runConfigJson: string;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -4373,6 +4396,7 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -6107,6 +6131,7 @@ export const GetPlanByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -6568,6 +6593,65 @@ export const PlanDetailUpdatePlanJobRunHooksDocument = {
   PlanDetailUpdatePlanJobRunHooksMutation,
   PlanDetailUpdatePlanJobRunHooksMutationVariables
 >;
+export const PlanDetailUpdatePlanRunConfigDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailUpdatePlanRunConfig' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdatePlanInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updatePlan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'runConfigJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailUpdatePlanRunConfigMutation,
+  PlanDetailUpdatePlanRunConfigMutationVariables
+>;
 export const PlanDetailIndexLoaderDocument = {
   kind: 'Document',
   definitions: [
@@ -6778,6 +6862,7 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',

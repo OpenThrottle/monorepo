@@ -3,6 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
 import {
+  getDefaultPlanRunConfigStorage,
   PlansService,
   PlanRunsService,
   ProjectsService,
@@ -52,6 +53,7 @@ describe('PlansResolver', () => {
     jobRunHooks: { hooks: [] },
     project: null,
     projectId: null,
+    runConfig: getDefaultPlanRunConfigStorage({ planId: '80864bba-630a-451d-bfd2-4b25ec202381' }),
     status: 'pending',
     summary: null,
     title: 'Test plan',
@@ -423,13 +425,19 @@ describe('PlansResolver', () => {
       expect(result.planId).toBe(mockPlan.id);
       expect(result.queuePosition).toBe(1);
       expect(result.queueTotal).toBe(1);
-      expect(mockRecordQueuedRun).toHaveBeenCalledWith({
-        bullmqJobId: 'job-1',
-        executionBackend: 'cursor',
-        planId: mockPlan.id,
-        queueName: PLANS_QUEUE_NAME,
-        runKind: 'spawn',
-      });
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bullmqJobId: 'job-1',
+          executionBackend: 'cursor',
+          planId: mockPlan.id,
+          queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: expect.objectContaining({
+            ralph: { executionBackend: 'cursor' },
+            target: { mode: 'plan', taskId: '' },
+          }),
+          runKind: 'spawn',
+        }),
+      );
     });
 
     test('throws NotFoundException when plan does not exist', async () => {
@@ -903,6 +911,12 @@ describe('PlansResolver', () => {
           id: 'run-1',
           planId: mockPlan.id,
           queueName: PLANS_QUEUE_NAME,
+          runConfigSnapshot: {
+            ralph: { executionBackend: 'claude', iterations: 3 },
+            target: { mode: 'plan', taskId: '' },
+            version: 1,
+            workspace: { workingDirectory: '' },
+          },
           runKind: 'spawn',
           status: 'QUEUED',
           updatedAt,
@@ -920,6 +934,7 @@ describe('PlansResolver', () => {
           bullmqJobId: 'job-claude-1',
           executionBackend: 'claude',
           planId: mockPlan.id,
+          runConfigSnapshotJson: expect.stringContaining('"iterations":3'),
         }),
       ]);
     });
@@ -1172,6 +1187,32 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('runConfigJson', () => {
+    test('serializes plan run_config column', () => {
+      const json = resolver.runConfigJson(mockPlan);
+      const parsed = JSON.parse(json) as {
+        target: { mode: string };
+        version: number;
+      };
+      expect(parsed.version).toBe(1);
+      expect(parsed.target.mode).toBe('plan');
+    });
+
+    test('normalizes legacy version-only shell from DB', () => {
+      const planShellOnly = {
+        ...mockPlan,
+        runConfig: { version: 1 },
+      } as Plan;
+      const json = resolver.runConfigJson(planShellOnly);
+      const parsed = JSON.parse(json) as {
+        ralph: { executionBackend: string };
+        version: number;
+      };
+      expect(parsed.version).toBe(1);
+      expect(parsed.ralph.executionBackend).toBeDefined();
+    });
+  });
+
   describe('jobRunHooksJson', () => {
     test('serializes plan job_run_hooks column', () => {
       const planWithHooks = {
@@ -1194,6 +1235,64 @@ describe('PlansResolver', () => {
   });
 
   describe('updatePlan', () => {
+    test('persists runConfigJson on update', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      const updatedConfig = {
+        ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
+        ralph: {
+          ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).ralph,
+          iterations: 42,
+        },
+      };
+      const configJson = JSON.stringify(updatedConfig);
+      vi.mocked(repo.save).mockImplementation(async (entity) => entity as Plan);
+
+      await resolver.updatePlan({
+        id: mockPlan.id,
+        runConfigJson: configJson,
+      } as UpdatePlanInput);
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          runConfig: expect.objectContaining({
+            ralph: expect.objectContaining({ iterations: 42 }),
+          }),
+        }),
+      );
+    });
+
+    test('resets runConfigJson to defaults when null', async () => {
+      const repo = plansService.getRepository();
+      const planWithCustomConfig = {
+        ...mockPlan,
+        runConfig: {
+          ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
+          ralph: {
+            ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).ralph,
+            iterations: 99,
+          },
+        },
+      } as Plan;
+      vi.mocked(repo.findOne).mockResolvedValue(planWithCustomConfig);
+      vi.mocked(repo.save).mockImplementation(async (entity) => entity as Plan);
+
+      await resolver.updatePlan({
+        id: mockPlan.id,
+        runConfigJson: null,
+      } as UpdatePlanInput);
+
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          runConfig: expect.objectContaining({
+            ralph: expect.objectContaining({
+              iterations: 10,
+            }),
+          }),
+        }),
+      );
+    });
+
     test('persists jobRunHooksJson on update', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);

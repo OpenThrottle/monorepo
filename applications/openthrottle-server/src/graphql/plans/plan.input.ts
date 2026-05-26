@@ -64,6 +64,12 @@ export class CreatePlanInput {
 
   @Field(() => String)
   title!: string;
+
+  @Field(() => String, {
+    description: `JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults.`,
+    nullable: true,
+  })
+  runConfigJson!: string | null;
 }
 
 @InputType()
@@ -106,6 +112,12 @@ export class UpdatePlanInput {
     nullable: true,
   })
   jobRunHooksJson!: string | null;
+
+  @Field(() => String, {
+    description: `JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.`,
+    nullable: true,
+  })
+  runConfigJson!: string | null;
 }
 
 @InputType()

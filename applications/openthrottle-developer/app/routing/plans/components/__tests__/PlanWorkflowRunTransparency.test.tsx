@@ -26,9 +26,11 @@ function renderTransparency(
   const props: PlanWorkflowRunTransparencyProps = {
     canonicalWorkflowCommand,
     planId,
+    planRunAuditRows: overrides.planRunAuditRows ?? [],
     recentPlanRuns: overrides.recentPlanRuns ?? [],
     workflowInput,
     workflowTimeout: overrides.workflowTimeout ?? '',
+    workingDirectory: overrides.workingDirectory ?? '',
     ...overrides,
   };
 

@@ -17,17 +17,22 @@ import {
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { buildPlanRunSnapshotDiffLabels } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
 
 type RecentRun =
   PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
 
+type PlanRunAuditRow =
+  PlanDetailIndexLoaderQuery['planRunsByPlanId'][number];
+
 export interface PlanWorkflowRunTransparencyProps {
   canonicalWorkflowCommand: string;
-  className?: string;
   planId: string;
+  planRunAuditRows: PlanRunAuditRow[];
   recentPlanRuns: RecentRun[];
   workflowInput: WorkflowRalphRunOptionsInput;
   workflowTimeout: string;
+  workingDirectory: string;
 }
 
 const formatFinishedOn = (finishedOn: number | null | undefined): string => {
@@ -48,8 +53,10 @@ export const PlanWorkflowRunTransparency = (
   const {
     canonicalWorkflowCommand,
     planId,
+    planRunAuditRows,
     recentPlanRuns,
     workflowInput,
+    workingDirectory,
     workflowTimeout,
   } = props;
 
@@ -163,6 +170,83 @@ export const PlanWorkflowRunTransparency = (
                 ))}
               </ul>
             )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="text-muted-foreground w-full min-w-[28rem] border-collapse text-xs mt-8">
+              <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
+                Queued run audit (persisted plan_runs rows). Snapshot diff compares
+                enqueue-time config to current Configuration tab values.
+              </caption>
+              <thead>
+                <tr className="border-border border-b text-left">
+                  <th className="text-foreground py-1.5 pr-2 font-medium">
+                    Job id
+                  </th>
+                  <th className="text-foreground py-1.5 pr-2 font-medium">
+                    Queued (UTC)
+                  </th>
+                  <th className="text-foreground py-1.5 pr-2 font-medium">
+                    Kind
+                  </th>
+                  <th className="text-foreground py-1.5 font-medium">
+                    vs current config
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {planRunAuditRows.length === 0 ? (
+                  <tr>
+                    <td className="py-2 text-[0.7rem]" colSpan={4}>
+                      No queued run audit rows yet. After you enqueue from the
+                      toolbar, each run records its resolved configuration here.
+                    </td>
+                  </tr>
+                ) : (
+                  planRunAuditRows.map((row) => {
+                    const diffLabels = buildPlanRunSnapshotDiffLabels(
+                      row.runConfigSnapshotJson,
+                      { workflowInput, workingDirectory },
+                    );
+
+                    return (
+                      <tr
+                        className="border-border/60 border-b last:border-0"
+                        key={row.id}
+                      >
+                        <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
+                          <Link
+                            className="text-primary underline-offset-2 hover:underline"
+                            to={planRunJobDetailPath(row.bullmqJobId)}
+                          >
+                            {row.bullmqJobId}
+                          </Link>
+                        </td>
+                        <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
+                          {row.createdAt}
+                        </td>
+                        <td className="py-1.5 pr-2 align-top text-[0.65rem]">
+                          {row.runKind}
+                        </td>
+                        <td className="py-1.5 align-top text-[0.65rem]">
+                          {row.runConfigSnapshotJson == null ? (
+                            '—'
+                          ) : diffLabels.length === 0 ? (
+                            'Matches current config'
+                          ) : (
+                            <ul className="list-inside list-disc">
+                              {diffLabels.map((line, index) => (
+                                <li key={`${row.id}-${index}`}>{line}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="overflow-x-auto">

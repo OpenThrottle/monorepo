@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
+import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
 import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
 
@@ -10,6 +11,7 @@ interface RecordQueuedPlanRunInput {
   readonly executionBackend: PlanRunExecutionBackend;
   readonly planId: string;
   readonly queueName: string;
+  readonly runConfigSnapshot?: PlanRunConfigSnapshot | null;
   readonly runKind: PlanRunKind;
 }
 
@@ -40,6 +42,7 @@ export class PlanRunsService {
       executionBackend: input.executionBackend,
       planId: input.planId,
       queueName: input.queueName,
+      runConfigSnapshot: input.runConfigSnapshot ?? null,
       runKind: input.runKind,
       status: 'QUEUED',
     };

@@ -17,6 +17,7 @@ import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity';
 import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity';
 import type { Project } from '../projects/project.entity';
 import type { Task } from '../tasks/task.entity';
+import type { PlanRunConfigStorage } from './plan-run-config/plan-run-config-storage.types';
 
 /** Scalar/column fields of Plan (no relations). Use this to type GraphQL objects or DTOs that mirror the entity. */
 /** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
@@ -78,6 +79,14 @@ export class Plan {
     type: 'jsonb',
   })
   jobRunHooks!: PlanJobRunHooksStorage;
+
+  /** @description Stored shape for `plans.run_config` (validated in openthrottle-server). */
+  @Column({
+    default: () => '\'{"version":1}\'::jsonb',
+    name: 'run_config',
+    type: 'jsonb',
+  })
+  runConfig!: PlanRunConfigStorage;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

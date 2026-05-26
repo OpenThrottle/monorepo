@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
+  getDefaultPlanRunConfigStorage,
+  parsePlanRunConfigJson,
   PlanEmbeddingsService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
@@ -77,6 +79,10 @@ export class PlanCreationService {
 
     const assignee = normalizeAssignee(input.assignee ?? null);
 
+    const parsedRunConfig = parsePlanRunConfigJson(input.runConfigJson);
+    const runConfig =
+      parsedRunConfig ?? getDefaultPlanRunConfigStorage();
+
     const repo = this.plansService.getRepository();
     const entity = repo.create({
       assignee,
@@ -85,6 +91,7 @@ export class PlanCreationService {
       description: input.description ?? null,
       project: input.project ?? null,
       projectId: input.projectId ?? null,
+      runConfig,
       status: (input.status ?? 'PENDING').toUpperCase(),
       summary: input.summary ?? null,
       title,

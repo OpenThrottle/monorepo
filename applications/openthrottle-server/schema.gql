@@ -181,6 +181,9 @@ type PlanObject {
 
   """Job-run lifecycle hooks stored on the plan ({ hooks: [...] })."""
   jobRunHooksJson: String!
+
+  """Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1)."""
+  runConfigJson: String!
 }
 
 type PlanStatusCountObject {
@@ -198,6 +201,11 @@ type PlanRunObject {
   id: String!
   planId: String!
   queueName: String!
+
+  """
+  Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
+  """
+  runConfigSnapshotJson: String
 
   """Ralph run implementation: spawn or orchestrator."""
   runKind: String!
@@ -2198,6 +2206,9 @@ input CreatePlanInput {
   Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
   """
   projectId: ID
+
+  """JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults."""
+  runConfigJson: String
   status: String
   summary: String
   title: String!
@@ -2335,6 +2346,11 @@ input UpdatePlanInput {
   JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.
   """
   jobRunHooksJson: String
+
+  """
+  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.
+  """
+  runConfigJson: String
 }
 
 input SetPlanStatusInput {
