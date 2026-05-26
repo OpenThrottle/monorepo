@@ -6,6 +6,7 @@ import { ENV_SOURCE } from './environment';
  */
 export const APP_ENV = ENV_SOURCE.APP_ENV;
 export const APP_NAME = ENV_SOURCE.APP_NAME;
+export const APP_NAME_SHORT = ENV_SOURCE.APP_NAME_SHORT;
 export const APP_URL = ENV_SOURCE.APP_URL;
 export const APP_URL_ADMIN = ENV_SOURCE.APP_URL_ADMIN;
 export const APP_URL_CMS = ENV_SOURCE.APP_URL_CMS;
