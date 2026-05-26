@@ -186,4 +186,94 @@ describe('GlobalMetrics Component', () => {
       'Metrics interpretation help',
     );
   });
+
+  describe('header layout', () => {
+    test('should render the Server metrics heading alongside the info trigger button (same container)', () => {
+      const heading = component.getByRole('heading', {
+        name: /server metrics/i,
+      });
+      const trigger = component.getByTestId('GlobalMetrics-info-trigger');
+
+      expect(heading).toBeInTheDocument();
+      expect(trigger).toBeInTheDocument();
+      /**
+       * @description The header groups the `<h2>` and the info `<button>` in a
+       * single flex container so the icon visually anchors to the heading.
+       */
+      expect(heading.parentElement).toBe(trigger.parentElement);
+    });
+  });
+
+  describe('regression guard: legacy tooltip markup is gone', () => {
+    test('should not render the legacy GlobalMetrics-visibility-hint paragraph', () => {
+      expect(
+        component.queryByTestId('GlobalMetrics-visibility-hint'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('should not render the legacy GlobalMetrics-definitions-link anchor', () => {
+      expect(
+        component.queryByTestId('GlobalMetrics-definitions-link'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the URL does not contain modal=ServerMetricsInfo', () => {
+    test('should not render the dialog content even though the modal is mounted', () => {
+      expect(
+        component.queryByTestId('GlobalMetricsInfoModal'),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the URL contains modal=ServerMetricsInfo and definitionsHref is passed', () => {
+    beforeEach(() => {
+      cleanup();
+      const Component = () => (
+        <GlobalProviders>
+          <GlobalMetrics definitionsHref="/settings/debug#server-metrics-definitions" />
+        </GlobalProviders>
+      );
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      render(<RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />);
+    });
+
+    test('should mount the modal content', () => {
+      expect(screen.getByTestId('GlobalMetricsInfoModal')).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    test('should thread definitionsHref from GlobalMetrics → GlobalMetricsInfoModal as a deep link', () => {
+      const dialog = screen.getByRole('dialog');
+      const link = within(dialog).getByTestId(
+        'GlobalMetricsInfoModal-definitions-link',
+      );
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute(
+        'href',
+        '/settings/debug#server-metrics-definitions',
+      );
+    });
+  });
+
+  describe('when the URL contains modal=ServerMetricsInfo but no definitionsHref is passed', () => {
+    beforeEach(() => {
+      cleanup();
+      const Component = () => (
+        <GlobalProviders>
+          <GlobalMetrics />
+        </GlobalProviders>
+      );
+      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+      render(<RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />);
+    });
+
+    test('should mount the modal content without the Settings deep link', () => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('GlobalMetricsInfoModal-definitions-link'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });
