@@ -9,7 +9,7 @@ export * from './components/GlobalLayoutHeader';
 export * from './components/GlobalLogging';
 // export * from './components/GlobalLogo';
 export * from './components/GlobalMetrics';
-export * from './components/GlobalMetricsTooltip';
+export * from './components/GlobalMetricsInfoModal';
 export * from './components/GlobalModal';
 export * from './components/GlobalProviders';
 // export * from './components/GlobalNavigation';

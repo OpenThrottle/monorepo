@@ -105,8 +105,7 @@ GlobalMetricsInfoModal.key = MODAL_KEY;
  * @description Click-to-open trigger button that sets `modal=ServerMetricsInfo` in the URL
  * (preserving any other params). Pair with {@link GlobalMetricsInfoModal} rendered elsewhere
  * in the tree; the URL is the source of truth, so the trigger and the dialog do not need to
- * share React state. Styling, `data-testid`, and `aria-label` mirror the legacy
- * `GlobalMetricsTooltip` trigger so existing tests and selectors keep working.
+ * share React state.
  */
 export const GlobalMetricsInfoTrigger = (
   props: GlobalMetricsInfoTriggerProps,
