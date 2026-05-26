@@ -13,6 +13,9 @@ export const GlobalModal = (props: GlobalModalProps): React.ReactElement => {
   const { onOpenChange, open } = useUrlSyncedOverlay({
     openValue: value,
     param: paramProp,
+    setSearchParamsOptions: {
+      preventScrollReset: true,
+    },
   });
 
   return (
