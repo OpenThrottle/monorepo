@@ -7,6 +7,7 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { GLOBAL_METRICS_STAT_CARD_DOCS } from '../../config';
@@ -16,10 +17,15 @@ import {
 } from '../GlobalMetricsInfoModal';
 import type { GlobalMetricsInfoModalProps } from '../GlobalMetricsInfoModal';
 
+interface RenderHarnessResult {
+  readonly component: RenderResult;
+  readonly user: ReturnType<typeof userEvent.setup>;
+}
+
 const renderHarness = (
   modalProps: GlobalMetricsInfoModalProps = {},
   initialEntries: readonly string[] = ['/'],
-): { readonly user: ReturnType<typeof userEvent.setup> } => {
+): RenderHarnessResult => {
   const Component = (): React.ReactElement => {
     const [searchParams] = useSearchParams();
 
@@ -35,9 +41,9 @@ const renderHarness = (
 
   const user = userEvent.setup();
 
-  render(<RoutesStub initialEntries={[...initialEntries]} />);
+  const component = render(<RoutesStub initialEntries={[...initialEntries]} />);
 
-  return { user };
+  return { component, user };
 };
 
 describe('GlobalMetricsInfoModal Component', () => {
@@ -232,6 +238,98 @@ describe('GlobalMetricsInfoModal Component', () => {
       );
       expect(qs.has('modal')).toBe(false);
       expect(qs.get('foo')).toBe('bar');
+    });
+  });
+});
+
+describe('GlobalMetricsInfoTrigger Component', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  describe('accessibility attributes on the trigger button', () => {
+    test('exposes the expected aria-label for screen readers', () => {
+      const { component } = renderHarness({}, ['/']);
+
+      const trigger = component.getByTestId('GlobalMetrics-info-trigger');
+
+      expect(trigger).toHaveAttribute(
+        'aria-label',
+        'Metrics interpretation help',
+      );
+    });
+
+    test('uses a non-submitting button (type="button") to avoid stray form submissions', () => {
+      const { component } = renderHarness({}, ['/']);
+
+      const trigger = component.getByTestId('GlobalMetrics-info-trigger');
+
+      expect(trigger.tagName).toBe('BUTTON');
+      expect(trigger).toHaveAttribute('type', 'button');
+    });
+  });
+
+  describe('when the trigger is clicked from a URL with no params', () => {
+    test('updates the URL to include modal=ServerMetricsInfo', async () => {
+      const { component, user } = renderHarness({}, ['/']);
+
+      const currentSearch = component.getByTestId('current-search');
+      expect(currentSearch.textContent).toBe('');
+
+      await user.click(component.getByTestId('GlobalMetrics-info-trigger'));
+
+      await waitFor(() => {
+        const qs = new URLSearchParams(currentSearch.textContent ?? '');
+        expect(qs.get('modal')).toBe('ServerMetricsInfo');
+      });
+    });
+  });
+
+  describe('when the trigger is clicked from a URL with unrelated params', () => {
+    test('appends modal=ServerMetricsInfo without clobbering existing params', async () => {
+      const { component, user } = renderHarness({}, ['/?foo=bar']);
+
+      const currentSearch = component.getByTestId('current-search');
+      expect(currentSearch.textContent).toBe('foo=bar');
+
+      await user.click(component.getByTestId('GlobalMetrics-info-trigger'));
+
+      await waitFor(() => {
+        const qs = new URLSearchParams(currentSearch.textContent ?? '');
+        expect(qs.get('modal')).toBe('ServerMetricsInfo');
+        expect(qs.get('foo')).toBe('bar');
+      });
+    });
+  });
+
+  describe('when the trigger is clicked while modal=ServerMetricsInfo is already set', () => {
+    /**
+     * @description When the dialog is open, Radix masks the outside trigger
+     * with `pointer-events: none`, so disable the pointer-events guard for
+     * this case in order to exercise the click handler directly and verify
+     * the underlying URL update is itself a no-op.
+     */
+    test('the URL params are unchanged (no-op)', async () => {
+      const { component } = renderHarness({}, [
+        '/?modal=ServerMetricsInfo&keep=v',
+      ]);
+      const noPointerCheckUser = userEvent.setup({ pointerEventsCheck: 0 });
+
+      const currentSearch = component.getByTestId('current-search');
+      const beforeParams = new URLSearchParams(currentSearch.textContent ?? '');
+      expect(beforeParams.get('modal')).toBe('ServerMetricsInfo');
+      expect(beforeParams.get('keep')).toBe('v');
+
+      await noPointerCheckUser.click(
+        component.getByTestId('GlobalMetrics-info-trigger'),
+      );
+
+      const afterParams = new URLSearchParams(currentSearch.textContent ?? '');
+      expect(afterParams.get('modal')).toBe('ServerMetricsInfo');
+      expect(afterParams.get('keep')).toBe('v');
+      expect([...afterParams.keys()].sort()).toEqual(
+        [...beforeParams.keys()].sort(),
+      );
     });
   });
 });
