@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -57,6 +63,11 @@ describe('GlobalMetricsInfoModal Component', () => {
       renderHarness({}, ['/?modal=ServerMetricsInfo']);
     });
 
+    test('renders the dialog content (data-testid=GlobalMetricsInfoModal) in the document', () => {
+      expect(screen.getByTestId('GlobalMetricsInfoModal')).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
     test('renders the dialog with the heading and intro copy', () => {
       const dialog = screen.getByRole('dialog');
       expect(dialog).toBeInTheDocument();
@@ -85,6 +96,19 @@ describe('GlobalMetricsInfoModal Component', () => {
       expect(within(dialog).getByText(/Poll & chart/)).toBeInTheDocument();
       expect(within(dialog).getByText('Poll interval')).toBeInTheDocument();
       expect(within(dialog).getByText('Metrics over time')).toBeInTheDocument();
+    });
+  });
+
+  describe('when the URL has modal set to a non-matching value', () => {
+    beforeEach(() => {
+      renderHarness({}, ['/?modal=SomethingElse']);
+    });
+
+    test('does not render the dialog content (exact-match on openValue)', () => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('GlobalMetricsInfoModal'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -153,18 +177,22 @@ describe('GlobalMetricsInfoModal Component', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    test('via the Escape key removes the modal param from the URL', async () => {
-      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
+    test('via the Escape key removes only the modal param and preserves sibling params', async () => {
+      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo&foo=bar']);
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       await user.keyboard('{Escape}');
 
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
       const qs = new URLSearchParams(
         screen.getByTestId('current-search').textContent ?? '',
       );
       expect(qs.has('modal')).toBe(false);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(qs.get('foo')).toBe('bar');
     });
   });
 });
