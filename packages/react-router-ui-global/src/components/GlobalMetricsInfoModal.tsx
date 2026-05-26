@@ -29,6 +29,18 @@ export const GlobalMetricsInfoModal = (
 ): React.ReactElement => {
   const { definitionsHref } = props;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalModal param={MODAL_PARAM} value={MODAL_KEY}>
       <div data-testid="GlobalMetricsInfoModal">
@@ -113,8 +125,12 @@ export const GlobalMetricsInfoTrigger = (
   const { className } = props;
 
   const { setOpen } = useUrlSyncedOverlay({
+    // clearParamsOnClose: ['keep'],
     openValue: MODAL_KEY,
     param: MODAL_PARAM,
+    setSearchParamsOptions: {
+      preventScrollReset: true,
+    },
   });
 
   const handleClick = React.useCallback((): void => {

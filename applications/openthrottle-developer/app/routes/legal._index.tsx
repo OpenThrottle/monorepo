@@ -110,33 +110,6 @@ export default function Component(
         </div>
       </div>
 
-      <ul className="mt-6 list-disc space-y-2 pl-5 text-sm">
-        <li>
-          <Link
-            className="text-primary underline-offset-4 hover:underline"
-            to="/legal/license"
-          >
-            License
-          </Link>
-        </li>
-        <li>
-          <Link
-            className="text-primary underline-offset-4 hover:underline"
-            to="/legal/privacy-policy"
-          >
-            Privacy policy
-          </Link>
-        </li>
-        <li>
-          <Link
-            className="text-primary underline-offset-4 hover:underline"
-            to="/legal/terms-of-use"
-          >
-            Terms of use
-          </Link>
-        </li>
-      </ul>
-
       <div className="py-8 relative flex flex-col gap-8">
         <Avatar className="size-24 md:size-32 mx-auto m-4">
           <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
