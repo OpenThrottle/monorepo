@@ -333,3 +333,161 @@ describe('GlobalMetricsInfoTrigger Component', () => {
     });
   });
 });
+
+describe('GlobalMetricsInfoModal Accessibility', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  describe('when the dialog is opened via the URL', () => {
+    test('exposes role="dialog" on the Radix content with an accessible name from the title', () => {
+      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+
+      const dialog = screen.getByRole('dialog');
+
+      expect(dialog).toBeInTheDocument();
+      expect(dialog).toHaveAttribute('role', 'dialog');
+      // Radix v1 wires modality via inert siblings rather than aria-modal;
+      // assert a connected accessible name instead so screen readers announce
+      // the dialog by its title.
+      expect(dialog).toHaveAccessibleName('What you are looking at');
+    });
+
+    test('moves focus into the dialog (focus is on the dialog or a descendant)', async () => {
+      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+
+      const dialog = screen.getByRole('dialog');
+
+      await waitFor(() => {
+        const active = document.activeElement;
+        expect(active).not.toBeNull();
+        expect(dialog === active || dialog.contains(active)).toBe(true);
+      });
+    });
+  });
+
+  describe('when the user presses Escape while the dialog is open', () => {
+    test('closes the dialog and removes the modal param from the URL', async () => {
+      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
+      const qs = new URLSearchParams(
+        screen.getByTestId('current-search').textContent ?? '',
+      );
+      expect(qs.has('modal')).toBe(false);
+    });
+  });
+
+  describe('close button accessibility', () => {
+    test('exposes an accessible name of "Close"', () => {
+      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+
+      const dialog = screen.getByRole('dialog');
+      const closeButton = within(dialog).getByRole('button', {
+        name: 'Close',
+      });
+
+      expect(closeButton).toBeInTheDocument();
+      expect(closeButton).toHaveAccessibleName('Close');
+    });
+
+    test('is reachable via the keyboard (focusable, not tabindex="-1")', async () => {
+      renderHarness({}, ['/?modal=ServerMetricsInfo']);
+
+      const dialog = screen.getByRole('dialog');
+      const closeButton = within(dialog).getByRole('button', {
+        name: 'Close',
+      });
+
+      expect(closeButton).not.toHaveAttribute('tabindex', '-1');
+
+      closeButton.focus();
+
+      await waitFor(() => {
+        expect(closeButton).toHaveFocus();
+      });
+    });
+  });
+
+  describe('keyboard activation of the trigger button', () => {
+    test('pressing Enter while the trigger has focus opens the dialog', async () => {
+      const { user } = renderHarness({}, ['/']);
+
+      const trigger = screen.getByTestId('GlobalMetrics-info-trigger');
+      trigger.focus();
+      expect(trigger).toHaveFocus();
+
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      const qs = new URLSearchParams(
+        screen.getByTestId('current-search').textContent ?? '',
+      );
+      expect(qs.get('modal')).toBe('ServerMetricsInfo');
+    });
+
+    test('pressing Space while the trigger has focus opens the dialog', async () => {
+      const { user } = renderHarness({}, ['/']);
+
+      const trigger = screen.getByTestId('GlobalMetrics-info-trigger');
+      trigger.focus();
+      expect(trigger).toHaveFocus();
+
+      await user.keyboard(' ');
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      const qs = new URLSearchParams(
+        screen.getByTestId('current-search').textContent ?? '',
+      );
+      expect(qs.get('modal')).toBe('ServerMetricsInfo');
+    });
+  });
+
+  describe('focus restoration after the dialog closes', () => {
+    /**
+     * @description The URL-driven open pattern does not use `<DialogTrigger>`,
+     * so Radix Dialog's built-in trigger-ref restoration is a no-op (it
+     * prevents focus-scope default and then calls `triggerRef.current?.focus()`
+     * which is null). Verify the achievable contract: after closing, focus is
+     * no longer trapped inside the (now-removed) dialog content and the
+     * trigger remains in the DOM and is programmatically focusable so the
+     * user can re-engage it.
+     */
+    test('removes focus trap and leaves the trigger focusable after closing via Escape', async () => {
+      const { user } = renderHarness({}, ['/?modal=ServerMetricsInfo']);
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toBeInTheDocument();
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
+      // The previously-focused content (the close button inside the dialog)
+      // is no longer the active element.
+      expect(document.activeElement).not.toBe(dialog);
+      expect(dialog.contains(document.activeElement)).toBe(false);
+
+      // The trigger is still mounted and accepts focus.
+      const trigger = screen.getByTestId('GlobalMetrics-info-trigger');
+      expect(trigger).toBeInTheDocument();
+      trigger.focus();
+      expect(trigger).toHaveFocus();
+    });
+  });
+});
