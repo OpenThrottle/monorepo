@@ -32,16 +32,17 @@ import {
   GlobalMetrics,
   GlobalLayoutHeader,
 } from '@openthrottle/react-router-ui-global';
-import { GaugeIcon } from 'lucide-react';
 import {
   GetMeDocument,
   LoginDocument,
+  ServerHealthObject,
   SignoutDocument,
   UserObject,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
+import { dataNavigation } from '~/global/data/data.navigation';
 
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -92,7 +93,15 @@ export const loader = async (args: Route.LoaderArgs) => {
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
-  return { canonical, env, user };
+  const serverHealth: ServerHealthObject = {
+    api: 'ok',
+    apiStatus: 'ok',
+    database: 'ok',
+    redis: 'ok',
+    websocket: 'ok',
+  };
+
+  return { canonical, env, serverHealth, user };
 };
 
 /**
@@ -177,6 +186,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App(): React.ReactElement {
   // Hooks
+  const data = useRouteLoaderData<typeof loader>('root');
   const { pathname } = useLocation();
 
   // Setup
@@ -202,15 +212,8 @@ export default function App(): React.ReactElement {
     <>
       <GlobalProviders>
         <GlobalLayout
-          data={{
-            items: [
-              {
-                children: 'Dashboard',
-                icon: GaugeIcon,
-                to: '/dashboard',
-              },
-            ],
-          }}
+          data={dataNavigation}
+          health={data?.serverHealth}
           overrides={{ footer: isFooterHidden }}
         >
           {!isHeaderHidden ? <GlobalLayoutHeader /> : null}

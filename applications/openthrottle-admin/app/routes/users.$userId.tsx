@@ -32,7 +32,11 @@ import {
 import { Link, useFetcher } from 'react-router';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   AssignRoleToUserDocument,
   DisableUserDocument,
@@ -46,6 +50,8 @@ import {
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/users.$userId';
+import { UserIcon } from 'lucide-react';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 interface AssignRoleSelectFormProps {
   readonly availableRoles: Array<{ id: string; name: string }>;
@@ -95,6 +101,19 @@ function AssignRoleSelectForm(
   );
 }
 
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) =>
+    _match.loaderData?.user?.githubUsername ?? 'User Details',
+  links: (_match) => [
+    {
+      children: 'Users',
+      to: '/users',
+    },
+  ],
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const { request, params } = args;
   const userId = params.userId;
@@ -111,6 +130,7 @@ export const loader = async (args: Route.LoaderArgs) => {
         executeGraphqlWithAuth(request, ListRolesForAssignDocument, {}),
       ],
     );
+
     return {
       rolesForUser: rolesForUserResult.rolesForUser,
       rolesList: rolesListResult.roles,
@@ -126,6 +146,10 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     throw error;
   }
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta = (_args: Route.MetaArgs) => {
@@ -179,201 +203,207 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <p className="text-sm text-muted-foreground">
-        <Link
-          className="underline underline-offset-2 hover:text-primary"
-          to="/users"
-          viewTransition={true}
-        >
-          ← Back to users
-        </Link>
-      </p>
-      <Card data-testid="user-detail">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">{user.githubUsername}</CardTitle>
-          {isDisabled ? (
-            <Badge variant="secondary">Disabled</Badge>
-          ) : (
-            <Badge variant="outline">Active</Badge>
-          )}
-        </CardHeader>
-
-        <CardContent className="grid gap-4">
-          <div>
-            <span className="text-muted-foreground text-sm">Email</span>
-            <p>{user.email ?? '—'}</p>
-          </div>
-          <div>
-            <span className="text-muted-foreground text-sm">
-              GitHub username
-            </span>
-            <p>{user.githubUsername}</p>
-          </div>
-          <div>
-            <span className="text-muted-foreground text-sm">Created</span>
-            <p>{formatDate(user.createdAt, 'MMM d, yyyy')}</p>
-          </div>
-
-          {user.updatedAt ? (
-            <div>
-              <span className="text-muted-foreground text-sm">Updated</span>
-              <p>{formatDate(user.updatedAt, 'MMM d, yyyy')}</p>
-            </div>
-          ) : null}
-
-          {user.disabledAt ? (
-            <div>
-              <span className="text-muted-foreground text-sm">Disabled at</span>
-              <p>{formatDate(user.disabledAt, 'MMM d, yyyy')}</p>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Sheet onOpenChange={setEditOpen} open={editOpen}>
-          <SheetTrigger asChild={true}>
-            <Button type="button" variant="outline">
-              Edit user
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Edit user</SheetTitle>
-            </SheetHeader>
-            <UpdateForm method="post">
-              <input name="intent" type="hidden" value="updateUser" />
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-githubUsername">GitHub username</Label>
-                  <Input
-                    defaultValue={user.githubUsername}
-                    id="edit-githubUsername"
-                    name="githubUsername"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-email">Email (optional)</Label>
-                  <Input
-                    defaultValue={user.email ?? ''}
-                    id="edit-email"
-                    name="email"
-                    type="email"
-                  />
-                </div>
-              </div>
-              {fetcher.data != null && 'error' in fetcher.data ? (
-                <p className="text-destructive text-sm" role="alert">
-                  {fetcher.data.error}
-                </p>
-              ) : null}
-              <div className="flex justify-end gap-2">
-                <Button
-                  onClick={() => setEditOpen(false)}
-                  type="button"
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-                <Button disabled={fetcher.state !== 'idle'} type="submit">
-                  {fetcher.state !== 'idle' ? 'Saving…' : 'Save'}
-                </Button>
-              </div>
-            </UpdateForm>
-          </SheetContent>
-        </Sheet>
-
-        {isDisabled ? (
-          <ActionForm method="post">
-            <input name="intent" type="hidden" value="enableUser" />
-            <Button
-              disabled={fetcher.state !== 'idle'}
-              type="submit"
-              variant="outline"
-            >
-              {fetcher.state !== 'idle' ? 'Enabling…' : 'Enable user'}
-            </Button>
-          </ActionForm>
-        ) : (
-          <AlertDialog>
-            <AlertDialogTrigger asChild={true}>
-              <Button
-                disabled={fetcher.state !== 'idle'}
-                type="button"
-                variant="destructive"
-              >
-                Disable user
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Disable user</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will disable the user account. They will no longer be
-                  able to sign in until the account is re-enabled.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <ActionForm method="post">
-                  <input name="intent" type="hidden" value="disableUser" />
-                  <AlertDialogAction asChild={true}>
-                    <button disabled={fetcher.state !== 'idle'} type="submit">
-                      {fetcher.state !== 'idle' ? 'Disabling…' : 'Disable'}
-                    </button>
-                  </AlertDialogAction>
-                </ActionForm>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={UserIcon}
+          title="User Details"
+        />
+        <p className="text-muted-foreground text-sm">
+          View and manage user details.
+        </p>
       </div>
 
-      <Card data-testid="user-roles">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Roles</CardTitle>
-          {availableRoles.length > 0 ? (
-            <AssignRoleSelectForm
-              availableRoles={availableRoles}
-              fetcher={fetcher}
-            />
-          ) : null}
-        </CardHeader>
-        <CardContent>
-          {rolesForUser.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              No roles assigned. Assign one above.
-            </p>
-          ) : (
-            <ul className="flex flex-wrap gap-2">
-              {rolesForUser.map((r) => (
-                <li className="flex items-center gap-1" key={r.id}>
-                  <Link
-                    className="font-medium underline underline-offset-2 hover:text-primary"
-                    to={`/roles/${r.id}`}
-                    viewTransition={true}
+      <OpenThrottleFieldset
+        icon={UserIcon}
+        id="user-detail"
+        legend={user.githubUsername}
+      >
+        <div data-testid="user-detail">
+          <div className="grid gap-4">
+            <div>
+              <span className="text-muted-foreground text-sm">Email</span>
+              <p>{user.email ?? '—'}</p>
+            </div>
+            <Badge color={isDisabled ? 'red' : 'green'}>
+              {isDisabled ? 'Disabled' : 'Active'}
+            </Badge>
+
+            <div>
+              <span className="text-muted-foreground text-sm">
+                GitHub username
+              </span>
+              <p>{user.githubUsername}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground text-sm">Created</span>
+              <p>{formatDate(user.createdAt, 'MMM d, yyyy')}</p>
+            </div>
+
+            {user.updatedAt ? (
+              <div>
+                <span className="text-muted-foreground text-sm">Updated</span>
+                <p>{formatDate(user.updatedAt, 'MMM d, yyyy')}</p>
+              </div>
+            ) : null}
+
+            {user.disabledAt ? (
+              <div>
+                <span className="text-muted-foreground text-sm">
+                  Disabled at
+                </span>
+                <p>{formatDate(user.disabledAt, 'MMM d, yyyy')}</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Sheet onOpenChange={setEditOpen} open={editOpen}>
+            <SheetTrigger asChild={true}>
+              <Button type="button" variant="outline">
+                Edit user
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Edit user</SheetTitle>
+              </SheetHeader>
+              <UpdateForm method="post">
+                <input name="intent" type="hidden" value="updateUser" />
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-githubUsername">GitHub username</Label>
+                    <Input
+                      defaultValue={user.githubUsername}
+                      id="edit-githubUsername"
+                      name="githubUsername"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-email">Email (optional)</Label>
+                    <Input
+                      defaultValue={user.email ?? ''}
+                      id="edit-email"
+                      name="email"
+                      type="email"
+                    />
+                  </div>
+                </div>
+                {fetcher.data != null && 'error' in fetcher.data ? (
+                  <p className="text-destructive text-sm" role="alert">
+                    {fetcher.data.error}
+                  </p>
+                ) : null}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    onClick={() => setEditOpen(false)}
+                    type="button"
+                    variant="outline"
                   >
-                    {r.name}
-                  </Link>
-                  <fetcher.Form method="post">
-                    <input name="intent" type="hidden" value="removeRole" />
-                    <input name="roleId" type="hidden" value={r.id} />
-                    <Button
-                      aria-label={`Remove role ${r.name}`}
-                      disabled={fetcher.state !== 'idle'}
-                      size="icon"
-                      type="submit"
-                      variant="ghost"
-                    >
-                      ×
-                    </Button>
-                  </fetcher.Form>
-                </li>
-              ))}
-            </ul>
+                    Cancel
+                  </Button>
+                  <Button disabled={fetcher.state !== 'idle'} type="submit">
+                    {fetcher.state !== 'idle' ? 'Saving…' : 'Save'}
+                  </Button>
+                </div>
+              </UpdateForm>
+            </SheetContent>
+          </Sheet>
+
+          {isDisabled ? (
+            <ActionForm method="post">
+              <input name="intent" type="hidden" value="enableUser" />
+              <Button
+                disabled={fetcher.state !== 'idle'}
+                type="submit"
+                variant="outline"
+              >
+                {fetcher.state !== 'idle' ? 'Enabling…' : 'Enable user'}
+              </Button>
+            </ActionForm>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild={true}>
+                <Button
+                  disabled={fetcher.state !== 'idle'}
+                  type="button"
+                  variant="destructive"
+                >
+                  Disable user
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Disable user</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will disable the user account. They will no longer be
+                    able to sign in until the account is re-enabled.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <ActionForm method="post">
+                    <input name="intent" type="hidden" value="disableUser" />
+                    <AlertDialogAction asChild={true}>
+                      <button disabled={fetcher.state !== 'idle'} type="submit">
+                        {fetcher.state !== 'idle' ? 'Disabling…' : 'Disable'}
+                      </button>
+                    </AlertDialogAction>
+                  </ActionForm>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        <Card data-testid="user-roles">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Roles</CardTitle>
+            {availableRoles.length > 0 ? (
+              <AssignRoleSelectForm
+                availableRoles={availableRoles}
+                fetcher={fetcher}
+              />
+            ) : null}
+          </CardHeader>
+          <CardContent>
+            {rolesForUser.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                No roles assigned. Assign one above.
+              </p>
+            ) : (
+              <ul className="flex flex-wrap gap-2">
+                {rolesForUser.map((r) => (
+                  <li className="flex items-center gap-1" key={r.id}>
+                    <Link
+                      className="font-medium underline underline-offset-2 hover:text-primary"
+                      to={`/roles/${r.id}`}
+                      viewTransition={true}
+                    >
+                      {r.name}
+                    </Link>
+                    <fetcher.Form method="post">
+                      <input name="intent" type="hidden" value="removeRole" />
+                      <input name="roleId" type="hidden" value={r.id} />
+                      <Button
+                        aria-label={`Remove role ${r.name}`}
+                        disabled={fetcher.state !== 'idle'}
+                        size="icon"
+                        type="submit"
+                        variant="ghost"
+                      >
+                        ×
+                      </Button>
+                    </fetcher.Form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </OpenThrottleFieldset>
     </GlobalScreen>
   );
 }

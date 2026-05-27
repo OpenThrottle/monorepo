@@ -109,6 +109,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   let serverHealth: ServerHealthObject = {
     api: 'ok',
+    apiStatus: 'ok',
     database: 'ok',
     redis: 'ok',
     websocket: 'ok',
@@ -117,6 +118,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const diagnostics: RootLoaderDiagnostics = {
     graphQlRequestBaseUrl: env.API_URL_INTERNAL.replace(/\/$/, ''),
   };
+
   let rootLoaderFailure: RootLoaderFailure | null = null;
 
   const authToken = getAuthTokenFromCookie(cookieHeader);

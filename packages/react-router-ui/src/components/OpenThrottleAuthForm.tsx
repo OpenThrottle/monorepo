@@ -88,7 +88,7 @@ export const OpenThrottleAuthForm = (
 
           <CardHeader>
             <CardTitle className="text-lg">{title}</CardTitle>
-            <CardDescription>
+            <CardDescription className="mb-4">
               {isLogin
                 ? 'Enter your email and password to sign in.'
                 : 'Enter your email and password to register.'}
@@ -128,7 +128,7 @@ export const OpenThrottleAuthForm = (
             </div>
           </CardContent>
 
-          <CardFooter>
+          <CardFooter className="mt-4">
             <Button
               className="w-full"
               disabled={isLoading}

@@ -6,6 +6,7 @@ fragment HealthCard on ServerHealthObject {
 }
 
 query getRootHealth {
+  databaseHealth
   serverHealth {
     ...HealthCard
   }
@@ -58,10 +59,8 @@ mutation signout {
 }
 
 query adminHealthTest {
+  databaseHealth
   serverHealth {
-    api
-    database
-    redis
-    websocket
+    ...HealthCard
   }
 }

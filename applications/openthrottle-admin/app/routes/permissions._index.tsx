@@ -4,23 +4,35 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GetPermissionsDocument } from '~/__generated__/graphql';
-import { SITE_TITLE } from '~/global/config/settings';
+import { GetPermissionsDocument } from '~/__generated__/testing';
+import { KeyRoundIcon } from 'lucide-react';
 import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/permissions._index';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Permissions',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
 
   try {
     const data = await executeGraphqlWithAuth(request, GetPermissionsDocument);
+    console.log('data', data);
 
     return { permissions: data.permissions };
   } catch (error) {
     const isError = error instanceof Error;
     const message = isError ? error.message : String(error);
+    console.log('🔴 message', message);
 
     if (isError && (message.includes('401') || message.includes('403'))) {
       return redirect('/');
@@ -58,13 +70,18 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl text-highlight">Permissions</h1>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={KeyRoundIcon}
+          title="Permissions"
+        />
+        <p className="text-muted-foreground text-sm">
+          System permissions that can be assigned to roles. Manage
+          role-permission assignments on each role&apos;s detail page.
+        </p>
       </div>
-      <p className="text-muted-foreground text-sm">
-        System permissions that can be assigned to roles. Manage role-permission
-        assignments on each role&apos;s detail page.
-      </p>
       <PermissionsTable permissions={permissions} />
     </GlobalScreen>
   );

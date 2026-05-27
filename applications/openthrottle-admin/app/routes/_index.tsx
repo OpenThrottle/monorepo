@@ -3,13 +3,27 @@ import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
 } from '@openthrottle/react-router-ui';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalLayoutBreadcrumbsHandle,
+} from '@openthrottle/react-router-ui-global';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => undefined,
+  links: (_match) => [],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
@@ -52,8 +66,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

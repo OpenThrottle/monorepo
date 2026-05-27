@@ -1,19 +1,49 @@
 import * as React from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  DataTable,
-} from '@openthrottle/react-router-shadcn';
+import classnames from 'classnames';
+import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { formatDate } from 'date-fns';
 import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import { formatDate } from 'date-fns';
 import type { UserRowFragment } from '~/__generated__/graphql';
 
-function buildUserTableColumns(): ColumnDef<
+export interface UsersTableProps {
+  readonly className?: string;
+  readonly users: UserRowFragment[];
+}
+
+export const UsersTable = (props: UsersTableProps): React.ReactElement => {
+  const { className, users } = props;
+
+  // Hooks
+
+  // Setup
+  const columns = React.useMemo(() => UsersTable.buildTable(), []);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="UsersTable"
+    >
+      <DataTable<UserRowFragment, string | number | null | undefined>
+        columns={columns}
+        data={users}
+      />
+    </div>
+  );
+};
+
+UsersTable.buildTable = (): ColumnDef<
   UserRowFragment,
   string | number | null | undefined
->[] {
+>[] => {
   return [
     {
       accessorKey: 'githubUsername',
@@ -45,10 +75,11 @@ function buildUserTableColumns(): ColumnDef<
       accessorKey: 'disabledAt',
       cell: ({ row }) => {
         const disabledAt = row.original.disabledAt;
-        return disabledAt != null ? (
-          <Badge variant="secondary">Disabled</Badge>
-        ) : (
-          <Badge variant="outline">Active</Badge>
+
+        return (
+          <Badge color={disabledAt != null ? 'red' : 'green'} size="xs">
+            {disabledAt != null ? 'Disabled' : 'Active'}
+          </Badge>
         );
       },
       header: () => 'Status',
@@ -57,6 +88,11 @@ function buildUserTableColumns(): ColumnDef<
       accessorKey: 'createdAt',
       cell: ({ row }) => formatDate(row.original.createdAt, 'MMM d, yyyy'),
       header: () => 'Created',
+    },
+    {
+      accessorKey: 'updatedAt',
+      cell: ({ row }) => formatDate(row.original.updatedAt, 'MMM d, yyyy'),
+      header: () => 'Updated',
     },
     {
       cell: ({ row }) => {
@@ -73,35 +109,4 @@ function buildUserTableColumns(): ColumnDef<
       id: 'actions',
     },
   ];
-}
-
-interface UsersTableProps {
-  readonly className?: string;
-  readonly users: UserRowFragment[];
-}
-
-export const UsersTable = (props: UsersTableProps): React.ReactElement => {
-  const { className, users } = props;
-
-  // Hooks
-
-  // Setup
-  const columns = React.useMemo(() => buildUserTableColumns(), []);
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <Card className={className} data-testid="UsersTable">
-      <DataTable<UserRowFragment, string | number | null | undefined>
-        columns={columns}
-        data={users}
-      />
-    </Card>
-  );
 };
