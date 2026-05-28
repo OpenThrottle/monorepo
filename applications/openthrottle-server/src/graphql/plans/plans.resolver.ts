@@ -690,7 +690,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      throw new NotFoundException(`Plan not found: ${planId}`);
+      throw new NotFoundException(`🟡 3 - Plan not found: ${planId}`);
     }
 
     let jobData: RunPlanJobData;
@@ -826,7 +826,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      throw new NotFoundException(`Plan not found: ${planId}`);
+      throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
     }
 
     const taskRepo = this.tasksService.getRepository();
@@ -983,7 +983,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: input.planId } });
 
     if (!plan) {
-      throw new NotFoundException(`Plan not found: ${input.planId}`);
+      throw new NotFoundException(`🟡 2 - Plan not found: ${input.planId}`);
     }
 
     const queueResult = await cancelPlanRunJobsForPlan(

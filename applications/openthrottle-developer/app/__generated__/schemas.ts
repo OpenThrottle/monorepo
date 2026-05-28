@@ -2,10 +2,12 @@ import { z } from 'zod/v3';
 import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
+  AddPermissionToRoleInput,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
   ApplyWorkspaceEditorConfigurationInput,
   AssignRoleToServiceAccountInput,
+  AssignRoleToUserInput,
   CancelPlanRunInput,
   CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
@@ -16,6 +18,7 @@ import {
   CreatePlanInput,
   CreateProjectInput,
   CreateQueueInput,
+  CreateRoleInput,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
   CreateTaskInput,
@@ -57,8 +60,10 @@ import {
   RalphPlanRunTuningInput,
   RegisterInput,
   RemainingTasksByPlanIdInput,
+  RemovePermissionFromRoleInput,
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
+  RemoveRoleFromUserInput,
   RepeatableJobsInput,
   RetryJobInput,
   ReviewCycleTimeInput,
@@ -73,6 +78,7 @@ import {
   UpdateNoteInput,
   UpdatePlanInput,
   UpdateProjectInput,
+  UpdateRoleInput,
   UpdateServiceAccountInput,
   UpdateTaskInput,
   UpdateUserInput,
@@ -131,6 +137,15 @@ export function ActivityByDateRangeInputSchema(): z.ZodObject<
   });
 }
 
+export function AddPermissionToRoleInputSchema(): z.ZodObject<
+  Properties<AddPermissionToRoleInput>
+> {
+  return z.object({
+    permissionId: z.string(),
+    roleId: z.string(),
+  });
+}
+
 export function AgentsRunChatTurnInputSchema(): z.ZodObject<
   Properties<AgentsRunChatTurnInput>
 > {
@@ -164,6 +179,15 @@ export function AssignRoleToServiceAccountInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     serviceAccountId: z.string(),
+  });
+}
+
+export function AssignRoleToUserInputSchema(): z.ZodObject<
+  Properties<AssignRoleToUserInput>
+> {
+  return z.object({
+    roleId: z.string(),
+    userId: z.string(),
   });
 }
 
@@ -269,6 +293,15 @@ export function CreateQueueInputSchema(): z.ZodObject<
   Properties<CreateQueueInput>
 > {
   return z.object({
+    name: z.string(),
+  });
+}
+
+export function CreateRoleInputSchema(): z.ZodObject<
+  Properties<CreateRoleInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
     name: z.string(),
   });
 }
@@ -651,6 +684,15 @@ export function RemainingTasksByPlanIdInputSchema(): z.ZodObject<
   });
 }
 
+export function RemovePermissionFromRoleInputSchema(): z.ZodObject<
+  Properties<RemovePermissionFromRoleInput>
+> {
+  return z.object({
+    permissionId: z.string(),
+    roleId: z.string(),
+  });
+}
+
 export function RemoveRepeatableJobInputSchema(): z.ZodObject<
   Properties<RemoveRepeatableJobInput>
 > {
@@ -666,6 +708,15 @@ export function RemoveRoleFromServiceAccountInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     serviceAccountId: z.string(),
+  });
+}
+
+export function RemoveRoleFromUserInputSchema(): z.ZodObject<
+  Properties<RemoveRoleFromUserInput>
+> {
+  return z.object({
+    roleId: z.string(),
+    userId: z.string(),
   });
 }
 
@@ -812,6 +863,16 @@ export function UpdateProjectInputSchema(): z.ZodObject<
     id: z.string(),
     name: z.string().nullish(),
     nxProjectName: z.string().nullish(),
+  });
+}
+
+export function UpdateRoleInputSchema(): z.ZodObject<
+  Properties<UpdateRoleInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    id: z.string(),
+    name: z.string().nullish(),
   });
 }
 

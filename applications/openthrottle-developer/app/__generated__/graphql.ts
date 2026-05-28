@@ -103,6 +103,13 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type AddPermissionToRoleInput = {
+  /** Permission id to add */
+  permissionId: Scalars['ID']['input'];
+  /** Role id to add the permission to */
+  roleId: Scalars['ID']['input'];
+};
+
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -156,6 +163,13 @@ export type ApplyWorkspaceEditorConfigurationResultObject = {
 export type AssignRoleToServiceAccountInput = {
   roleId: Scalars['ID']['input'];
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type AssignRoleToUserInput = {
+  /** Role id to assign */
+  roleId: Scalars['ID']['input'];
+  /** User id to assign the role to */
+  userId: Scalars['ID']['input'];
 };
 
 export type CancelPlanRunInput = {
@@ -324,6 +338,12 @@ export type CreateQueueResultObject = {
   queueName?: Maybe<Scalars['String']['output']>;
   /** Whether the queue was created (or accepted for registration). */
   success: Scalars['Boolean']['output'];
+};
+
+export type CreateRoleInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Role name (e.g. admin, user, viewer). Must be unique. */
+  name: Scalars['String']['input'];
 };
 
 export type CreateServiceAccountCredentialInput = {
@@ -834,6 +854,8 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Add a permission to a role */
+  addPermissionToRole: Scalars['Boolean']['output'];
   /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
@@ -842,6 +864,8 @@ export type Mutation = {
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Assign a role to a service account (admin, human only). */
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
+  /** Assign a role to a user */
+  assignRoleToUser: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
@@ -856,6 +880,8 @@ export type Mutation = {
   createProject: ProjectObject;
   /** Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error. */
   createQueue: CreateQueueResultObject;
+  /** Create a role */
+  createRole: RoleObject;
   /** Create a service account (admin, human only). */
   createServiceAccount: ServiceAccountObject;
   /** Create a credential; returns plaintext token once (admin, human only). */
@@ -874,6 +900,8 @@ export type Mutation = {
   deletePlan: Scalars['Boolean']['output'];
   /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
   deleteProject: Scalars['Boolean']['output'];
+  /** Delete a role */
+  deleteRole: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
   /** Remove a local repository owned by the authenticated user. */
@@ -904,10 +932,14 @@ export type Mutation = {
   previewCortexDocumentIngest: PreviewCortexDocumentIngestResultObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
+  /** Remove a permission from a role */
+  removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
   /** Remove a role from a service account (admin, human only). */
   removeRoleFromServiceAccount: Scalars['Boolean']['output'];
+  /** Remove a role from a user */
+  removeRoleFromUser: Scalars['Boolean']['output'];
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
@@ -932,6 +964,8 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
+  /** Update a role */
+  updateRole?: Maybe<RoleObject>;
   /** Update a service account (admin, human only). */
   updateServiceAccount?: Maybe<ServiceAccountObject>;
   /** Update a task */
@@ -951,6 +985,10 @@ export type Mutation = {
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
 };
 
+export type MutationAddPermissionToRoleArgs = {
+  input: AddPermissionToRoleInput;
+};
+
 export type MutationAgentsRunChatTurnArgs = {
   input: AgentsRunChatTurnInput;
 };
@@ -965,6 +1003,10 @@ export type MutationApplyWorkspaceEditorConfigurationArgs = {
 
 export type MutationAssignRoleToServiceAccountArgs = {
   input: AssignRoleToServiceAccountInput;
+};
+
+export type MutationAssignRoleToUserArgs = {
+  input: AssignRoleToUserInput;
 };
 
 export type MutationCancelPlanRunArgs = {
@@ -993,6 +1035,10 @@ export type MutationCreateProjectArgs = {
 
 export type MutationCreateQueueArgs = {
   input: CreateQueueInput;
+};
+
+export type MutationCreateRoleArgs = {
+  input: CreateRoleInput;
 };
 
 export type MutationCreateServiceAccountArgs = {
@@ -1029,6 +1075,10 @@ export type MutationDeletePlanArgs = {
 
 export type MutationDeleteProjectArgs = {
   input: DeleteProjectInput;
+};
+
+export type MutationDeleteRoleArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationDeleteTaskArgs = {
@@ -1091,12 +1141,20 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationRemovePermissionFromRoleArgs = {
+  input: RemovePermissionFromRoleInput;
+};
+
 export type MutationRemoveRepeatableJobArgs = {
   input: RemoveRepeatableJobInput;
 };
 
 export type MutationRemoveRoleFromServiceAccountArgs = {
   input: RemoveRoleFromServiceAccountInput;
+};
+
+export type MutationRemoveRoleFromUserArgs = {
+  input: RemoveRoleFromUserInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -1133,6 +1191,10 @@ export type MutationUpdatePlanArgs = {
 
 export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
+};
+
+export type MutationUpdateRoleArgs = {
+  input: UpdateRoleInput;
 };
 
 export type MutationUpdateServiceAccountArgs = {
@@ -1512,6 +1574,8 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
+  /** Get permission names for the current user */
+  myPermissions: Array<Scalars['String']['output']>;
   /** Get a note by ID */
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
@@ -1520,8 +1584,12 @@ export type Query = {
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
   /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
+  /** List all permissions */
+  permissions: Array<PermissionObject>;
   /** Permission names for a service account (union of role permissions). */
   permissionsForServiceAccount: Array<Scalars['String']['output']>;
+  /** Get permission names for a user (union of all their roles' permissions) */
+  permissionsForUser: Array<Scalars['String']['output']>;
   /** Get a plan by ID */
   plan?: Maybe<PlanObject>;
   /** Plan count per status for sidebar/filters */
@@ -1562,8 +1630,14 @@ export type Query = {
   repeatableJobs: Array<RepeatableJobObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
+  /** Get a role by ID */
+  role?: Maybe<RoleObject>;
+  /** List all roles with their permissions */
+  roles: Array<RoleObject>;
   /** Roles assigned to a service account (admin, human only). */
   rolesForServiceAccount: Array<RoleObject>;
+  /** Get roles assigned to a user */
+  rolesForUser: Array<RoleObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
@@ -1684,6 +1758,10 @@ export type QueryPermissionsForServiceAccountArgs = {
   serviceAccountId: Scalars['ID']['input'];
 };
 
+export type QueryPermissionsForUserArgs = {
+  userId: Scalars['ID']['input'];
+};
+
 export type QueryPlanArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1748,8 +1826,16 @@ export type QueryReviewCycleTimeArgs = {
   input: ReviewCycleTimeInput;
 };
 
+export type QueryRoleArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type QueryRolesForServiceAccountArgs = {
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type QueryRolesForUserArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 export type QuerySearchArgs = {
@@ -1899,6 +1985,13 @@ export type RemainingTasksByPlanIdInput = {
   planId: Scalars['ID']['input'];
 };
 
+export type RemovePermissionFromRoleInput = {
+  /** Permission id to remove */
+  permissionId: Scalars['ID']['input'];
+  /** Role id to remove the permission from */
+  roleId: Scalars['ID']['input'];
+};
+
 export type RemoveRepeatableJobInput = {
   /** Repeatable job key (from repeatableJobs query). Required to remove a repeatable job. */
   key: Scalars['String']['input'];
@@ -1917,6 +2010,13 @@ export type RemoveRepeatableJobResultObject = {
 export type RemoveRoleFromServiceAccountInput = {
   roleId: Scalars['ID']['input'];
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type RemoveRoleFromUserInput = {
+  /** Role id to remove */
+  roleId: Scalars['ID']['input'];
+  /** User id to remove the role from */
+  userId: Scalars['ID']['input'];
 };
 
 export type RepeatableJobObject = {
@@ -2279,6 +2379,14 @@ export type UpdateProjectInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   /** NX project name (e.g. applications/openthrottle-server) */
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateRoleInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Role id to update */
+  id: Scalars['ID']['input'];
+  /** Role name. Pass null to leave unchanged. */
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateServiceAccountInput = {

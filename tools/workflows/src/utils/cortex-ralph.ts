@@ -15,7 +15,7 @@ export interface WorkflowRalphConfig {
 export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
-export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 ';
+export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 🚨 🚨 ';
 
 /** Shared message when Cortex env is missing. Used by getCortexConfigOrExit and all workflow bins/scripts. */
 export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
@@ -278,6 +278,8 @@ export async function getPlanById(
       [id],
     );
     const row = res.rows[0];
+    console.log('🤖 🔴 🤖 🔴 🤖 getPlanById row', row);
+
     if (!row) return null;
     return {
       author: row.author,
@@ -291,6 +293,7 @@ export async function getPlanById(
       updatedAt: row.updated_at,
     };
   } finally {
+    console.log('🤖 🔴 🤖 🔴 🤖 getPlanById end', config.connectionString);
     await client.end();
   }
 }
