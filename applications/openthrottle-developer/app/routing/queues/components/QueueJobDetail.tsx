@@ -26,15 +26,12 @@ import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import { HeartHandshakeIcon } from 'lucide-react';
 
-const JOB_STATE_BADGE_VARIANT: Record<
-  string,
-  'default' | 'destructive' | 'outline' | 'secondary'
-> = {
-  active: 'default',
-  completed: 'secondary',
-  delayed: 'outline',
-  failed: 'destructive',
-  waiting: 'outline',
+const JOB_STATE_BADGE_VARIANT: Record<string, 'green' | 'red' | 'yellow'> = {
+  active: 'yellow',
+  completed: 'green',
+  delayed: 'yellow',
+  failed: 'red',
+  waiting: 'yellow',
 };
 
 const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
@@ -184,7 +181,7 @@ export const QueueJobDetail = (
     <div className="space-y-6" data-testid="QueueJobDetail">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}>
+          <Badge color={JOB_STATE_BADGE_VARIANT[job.state] ?? 'default'}>
             {job.state}
           </Badge>
           {job.name != null && job.name !== '' && (

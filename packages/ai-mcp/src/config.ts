@@ -30,13 +30,13 @@ export function resolveCortexPostgresConnectionStringFromEnv(
 ): string | undefined {
   const ot = env[OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]?.trim();
   if (ot) {
-    console.log('🤖 🤖 🤖 🤖 🤖 OT', ot);
+    console.log('🤖 🤖 🤖 🤖 🤖 OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV', ot);
     return ot;
   }
 
   const url = env.POSTGRES_URL?.trim();
   if (url) {
-    console.log('🤖 🤖 🤖 🤖 🤖 URL', url);
+    console.log('🤖 🤖 🤖 🤖 🤖 POSTGRES_URL', url);
     return url;
   }
 
@@ -47,15 +47,13 @@ export function resolveCortexPostgresConnectionStringFromEnv(
   const user = env.POSTGRES_USER;
 
   if (!db || !host || !password || !port || !user) {
-    console.log('🤖 🤖 🤖 🤖 🤖 undefined');
-
     return undefined;
   }
 
   const encodedPassword = encodeURIComponent(password);
   const connectionString = `postgresql://${user}:${encodedPassword}@${host}:${port}/${db}`;
-
   console.log('🤖 🤖 🤖 🤖 🤖 connectionString', connectionString);
+  // postgresql://openthrottle_user:openthrottle_password@localhost:6010/opettle
 
   return connectionString;
 }
