@@ -1523,6 +1523,9 @@ importers:
 
   packages/react-router-ui:
     dependencies:
+      '@openthrottle/openthrottle-notifications':
+        specifier: workspace:*
+        version: link:../openthrottle-notifications
       '@openthrottle/react-router-shadcn':
         specifier: workspace:*
         version: link:../react-router-shadcn
@@ -5979,6 +5982,7 @@ packages:
         integrity: sha512-Mb6vmLE4a7LLkH/flxNJgzNXCbrLH/osAvuplXTRqfsysfL8/EjtN7B98kuj/4HwLtBpn8pUQ5HbJIRXLrhP8Q==,
       }
     engines: { node: '>=20' }
+    deprecated: This package has been deprecated. See https://github.com/langchain-ai/langchainjs-community/issues/61 for more info
     peerDependencies:
       '@arcjet/redact': ^v1.2.0
       '@aws-crypto/sha256-js': ^5.0.0
@@ -7345,6 +7349,7 @@ packages:
       {
         integrity: sha512-wjN0Vz5HSRjTHjywi9kWOgD9AvmT8s8UfQdG5fF6C1SZrs8dYbhxAFoLDd88X+w4QFJY0+oqtm+LLn2iI3iuTA==,
       }
+    deprecated: This package has been deprecated. See https://nx.dev/docs/reference/deprecated/self-hosted-cache-packages for details
     peerDependencies:
       nx: '>= 18 < 23'
 
@@ -9811,10 +9816,10 @@ packages:
         integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==,
       }
 
-  '@react-grab/cli@0.1.34':
+  '@react-grab/cli@0.1.37':
     resolution:
       {
-        integrity: sha512-L2eAxN46Vq2Ss3nDegrH7wQVMeWH03ahawp+OdzUtQWqL3cq6Bt149q9XhY3cWc9fJsxuWjLfCn+3T9uApIlBA==,
+        integrity: sha512-1ln28VkVHUbd5qy+ccXG68voWc0mgZMhBnwG0umxfD+wbkXUcvRzVrLjSqao7N8hCrDqp+Pt5j9Tsqef+9yQQQ==,
       }
     hasBin: true
 
@@ -14076,10 +14081,10 @@ packages:
     peerDependencies:
       react: 19.2.4
 
-  bippy@0.5.40:
+  bippy@0.5.41:
     resolution:
       {
-        integrity: sha512-3QPSDG5tgd7FCIkcKsUqmbGdlHxBxP7II5drXPNp1I0rpA9+4+/VjQOigDTbzeqTi6Xkaf1Dq7x4E8vbOuwOkA==,
+        integrity: sha512-jCP2pXXLhXqPrAN+iSEFZmLI4uUM4fjSqajh0K+TmM062VehfDT3ZJNkrTGyN701Z5XMejs9qAudSqkMGhSMKg==,
       }
     peerDependencies:
       react: 19.2.4
@@ -23705,10 +23710,10 @@ packages:
         integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==,
       }
 
-  react-grab@0.1.34:
+  react-grab@0.1.37:
     resolution:
       {
-        integrity: sha512-jtdOdv0kb90oqL+pMszSh9DOLgVRaX4ZE6XN4GkDEpNNUqveQfZT014+EeJraljpqQfuWKW+96NrrRqUD93D2g==,
+        integrity: sha512-XVAc/qPyxsDT8Putu9UnP7iVHmAORMzvaN/3GDTOfbuLIRXWdOt7vebPOzM9RVTVUjucXv0135JI++kSVPSfYg==,
       }
     hasBin: true
     peerDependencies:
@@ -34734,7 +34739,7 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.34':
+  '@react-grab/cli@0.1.37':
     dependencies:
       commander: 14.0.3
       ignore: 7.0.5
@@ -37488,7 +37493,7 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  bippy@0.5.40(react@19.2.4):
+  bippy@0.5.41(react@19.2.4):
     dependencies:
       react: 19.2.4
 
@@ -44042,10 +44047,10 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.34(react@19.2.4):
+  react-grab@0.1.37(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.34
-      bippy: 0.5.40(react@19.2.4)
+      '@react-grab/cli': 0.1.37
+      bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
 
@@ -44197,7 +44202,7 @@ snapshots:
       prompts: 2.4.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.34(react@19.2.4)
+      react-grab: 0.1.37(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 2.1.0
