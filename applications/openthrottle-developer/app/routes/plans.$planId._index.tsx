@@ -464,18 +464,14 @@ export default function Component(
               </TabsTrigger>
               <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
                 <LayoutListIcon />
-                Tasks
+                Tasks ({tasks.length})
               </TabsTrigger>
               <TabsTrigger
                 className="flex-0 cursor-pointer"
                 value="requirements"
               >
                 <BadgeCheckIcon />
-                Requirements
-              </TabsTrigger>
-              <TabsTrigger className="flex-0 cursor-pointer" value="output">
-                <TerminalSquareIcon />
-                Output
+                Requirements ({tasks.length})
               </TabsTrigger>
               {/* {loaderData.planOutputChunks.length > 0 ? (
               ) : null} */}
@@ -490,6 +486,10 @@ export default function Component(
               <TabsTrigger className="flex-0 cursor-pointer" value="metadata">
                 <FileIcon />
                 Metadata
+              </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="output">
+                <TerminalSquareIcon />
+                Output
               </TabsTrigger>
             </TabsList>
 

@@ -17,7 +17,6 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
 
   // Hooks
   const columns = React.useMemo(() => PlanTabTasks.buildTable(), []);
-  const [data, _setData] = React.useState(tasks);
 
   // Setup
   const getRowId = React.useCallback(
@@ -48,7 +47,7 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
       >
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
-          data={data}
+          data={tasks}
           emptyState={<PlanTasksEmpty />}
           getRowId={getRowId}
           getRowProps={getRowProps}

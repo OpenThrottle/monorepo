@@ -148,6 +148,7 @@ export default function Component(
         <SettingsKeysTable
           actionError={actionError}
           canRevoke={canManageCredentials}
+          className="bg-card"
           credentials={credentials}
         />
       </div>

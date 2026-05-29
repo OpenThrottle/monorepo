@@ -33,6 +33,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {};
 };
 
+export const links: Route.LinksFunction = () => {
+  return [];
+};
+
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
 };
