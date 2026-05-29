@@ -12,6 +12,7 @@ export * from './components/OpenThrottleLogo';
 export * from './components/OpenThrottleModal';
 export * from './components/OpenThrottleNavigation';
 export * from './components/OpenThrottlePagination';
+export * from './components/OpenThrottlePaginationSimple';
 export * from './components/OpenThrottlePlanStatusBadge';
 export * from './components/OpenThrottleSidebar';
 export * from './components/OpenThrottleSidebarHeader';

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { useRevalidator } from 'react-router';
 import {
   GlobalHeading,
@@ -197,30 +197,34 @@ const SettingsGraphQLHealthCard = (
 
   return (
     <OpenThrottleFieldset
+      className="relative"
       icon={DatabaseIcon}
       id="graphql-endpoint-health"
       legend="GraphQL endpoint health"
     >
-      <Button
-        disabled={revalidateState === 'loading'}
-        onClick={onRecheck}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        {revalidateState === 'loading' ? 'Checking…' : 'Re-check'}
-      </Button>
-
       {graphQL.status === 'ok' ? (
         <>
-          <p className="text-muted-foreground">
-            <span className="font-medium text-foreground">getRootHealth</span>{' '}
-            succeeded in{' '}
-            <code className="bg-accent-foreground px-1.5 py-0.5 rounded-lg text-xs">
-              {graphQL.latencyMs} ms
-            </code>
-            .
-          </p>
+          <div className="flex gap-4 items-center">
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">getRootHealth</span>{' '}
+              succeeded in{' '}
+              <code className="bg-accent-foreground px-1.5 py-0.5 rounded-lg text-xs">
+                {graphQL.latencyMs} ms
+              </code>
+              .
+            </p>
+            <button
+              // className="absolute right-4 bottom-0"
+              disabled={revalidateState === 'loading'}
+              onClick={onRecheck}
+              type="button"
+            >
+              <Badge color="green">
+                {revalidateState === 'loading' ? 'Checking…' : 'Re-check'}
+              </Badge>
+            </button>
+          </div>
+
           <ul className="list-inside list-disc space-y-1 font-mono text-xs text-muted-foreground">
             <li>api: {graphQL.serverHealth.api}</li>
             <li>database: {graphQL.serverHealth.database}</li>

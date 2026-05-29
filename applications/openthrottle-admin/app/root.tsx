@@ -127,7 +127,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
 
-  const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/orange/favicon.ico`;
+  const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/yellow/favicon.ico`;
   const manifest = '/manifest.json';
 
   const isProduction = process.env.NODE_ENV === 'production';

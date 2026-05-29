@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-  OpenThrottleAuthForm,
-  OpenThrottleLogo,
-} from '@openthrottle/react-router-ui';
+import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -35,15 +32,10 @@ export default function Component(
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
-  const [count, setCount] = React.useState(0);
 
   // Setup
-  const isFormEnabled = count >= 5;
 
   // Handlers
-  const onIncrementCount = () => {
-    setCount(count + 1);
-  };
 
   // Markup
 
@@ -52,15 +44,9 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <div
-      className="mx-auto flex-1 max-w-xl w-full flex flex-col justify-center p-4 md:p-8 lg:p-12"
-      onClick={onIncrementCount}
-    >
+    <div className="mx-auto flex-1 max-w-xl w-full flex flex-col justify-center p-4 md:p-8 lg:p-12">
       <div className="flex flex-col justify-center gap-8 flex-1 h-full items-center">
         <OpenThrottleLogo className="text-2xl mx-auto" name={SITE_SUBDOMAIN} />
-        {isFormEnabled ? (
-          <OpenThrottleAuthForm action="/" title="Sign in" />
-        ) : null}
       </div>
     </div>
   );
