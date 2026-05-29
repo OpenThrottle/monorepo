@@ -87,6 +87,10 @@ const mockWorktreeTracker = {
 
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
+const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
+const mockSyncParentPlanToInProgressWhenTaskInProgress = vi
+  .fn()
+  .mockResolvedValue(false);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -102,7 +106,10 @@ const mockTasksService = createMock<TasksService>({
   getRepository: () =>
     ({
       find: vi.fn().mockResolvedValue([]),
+      findOne: mockTaskRepoFindOne,
     }) as unknown as ReturnType<TasksService['getRepository']>,
+  syncParentPlanToInProgressWhenTaskInProgress:
+    mockSyncParentPlanToInProgressWhenTaskInProgress,
 });
 
 const snapshotStub = {
@@ -704,6 +711,79 @@ describe('PlansProcessor', () => {
 
       expect(mockGetJobs).not.toHaveBeenCalled();
       expect(mockRepoUpdate).not.toHaveBeenCalled();
+    });
+
+    it('promotes QUEUED plans that have an IN_PROGRESS task and emits plan status changed', async () => {
+      const divergedPlanId = 'queued-plan-with-in-progress-task';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: divergedPlanId, status: 'QUEUED', title: 'Diverged' },
+        ]);
+      mockTaskRepoFindOne.mockResolvedValueOnce({
+        id: 'task-in-progress',
+        planId: divergedPlanId,
+        status: 'IN_PROGRESS',
+      });
+      mockSyncParentPlanToInProgressWhenTaskInProgress.mockResolvedValueOnce(
+        true,
+      );
+
+      await processor.onModuleInit();
+
+      expect(
+        mockSyncParentPlanToInProgressWhenTaskInProgress,
+      ).toHaveBeenCalledWith(divergedPlanId);
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+      expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+        planId: divergedPlanId,
+        status: 'IN_PROGRESS',
+      });
+    });
+
+    it('does not emit when QUEUED plan has IN_PROGRESS task but sync is a no-op', async () => {
+      const divergedPlanId = 'queued-plan-sync-noop';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: divergedPlanId, status: 'QUEUED', title: 'Diverged' },
+        ]);
+      mockTaskRepoFindOne.mockResolvedValueOnce({
+        id: 'task-in-progress',
+        planId: divergedPlanId,
+        status: 'IN_PROGRESS',
+      });
+      mockSyncParentPlanToInProgressWhenTaskInProgress.mockResolvedValueOnce(
+        false,
+      );
+
+      await processor.onModuleInit();
+
+      expect(
+        mockSyncParentPlanToInProgressWhenTaskInProgress,
+      ).toHaveBeenCalledWith(divergedPlanId);
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+      expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('skips QUEUED plans with no IN_PROGRESS tasks', async () => {
+      const queuedPlanId = 'queued-plan-idle';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: queuedPlanId, status: 'QUEUED', title: 'Waiting' },
+        ]);
+      mockTaskRepoFindOne.mockResolvedValueOnce(null);
+
+      await processor.onModuleInit();
+
+      expect(
+        mockSyncParentPlanToInProgressWhenTaskInProgress,
+      ).not.toHaveBeenCalled();
     });
   });
 

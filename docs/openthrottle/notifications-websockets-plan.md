@@ -83,6 +83,30 @@ For keeping the plans detail route in sync without manual refresh (e.g. when sta
 - **Usage:** Server emits these when plan or task status is updated (in addition to existing `plan.updated` / `task.completed` for toasts). Developer app: on `plans/$planId`, subscribe to both events; when `payload.planId === params.planId`, revalidate loader or refetch so plan and tasks stay in sync.
 - **Types:** `PlanStatusChangedPayload`, `TaskStatusChangedPayload`, `StatusChangePayload` (discriminated union with `kind: 'plan_status_changed' | 'task_status_changed'` for a single handler). See `packages/openthrottle/notifications/src/events.ts`.
 
+### Status-change emission inventory
+
+Paths that change `plans.status` or `tasks.status`, and whether they emit `plan.status_changed` / `task.status_changed` on the OpenThrottle server WebSocket:
+
+| Path                                                                   | Changes                                        | `plan.status_changed`                     | `task.status_changed`                                                   |
+| ---------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
+| GraphQL `updatePlan`, `setPlanStatus`                                  | plan                                           | `@EmitNotification`                       | —                                                                       |
+| GraphQL `enqueuePlanRun`, `enqueuePlanRalphOrchestrator`               | plan → QUEUED; bulk tasks → QUEUED             | `@EmitNotification`                       | `updateMatchingTasksAndEmitStatusChanged` (one event per affected task) |
+| GraphQL `cancelPlanRun`                                                | plan → PENDING; QUEUED tasks → PENDING         | `@EmitNotification`                       | `updateMatchingTasksAndEmitStatusChanged`                               |
+| GraphQL `createTask`, `updateTask`                                     | task; may promote plan                         | manual `emitPlanStatusChanged` on promote | `@EmitNotification`                                                     |
+| `PlansProcessor` / `WorkflowProcessor` `process()`                     | plan → IN_PROGRESS                             | `emitPlanStatusChanged`                   | —                                                                       |
+| Processors `reconcilePlanStatusOnStartup`                              | plan → QUEUED                                  | `emitPlanStatusChanged`                   | —                                                                       |
+| Processors `reconcilePlansQueuedWithInProgressTasks`                   | plan → IN_PROGRESS                             | `emitPlanStatusChanged`                   | —                                                                       |
+| Processors `resetPlanStatusToQueued` (failed, stalled, worktree delay) | plan → QUEUED                                  | `emitPlanStatusChanged`                   | —                                                                       |
+| Job-run hooks `before_run` block                                       | plan → BLOCKED                                 | `emitPlanStatusChanged`                   | —                                                                       |
+| In-process Ralph orchestrator (`enqueuePlanRalphOrchestrator`)         | task/plan via GraphQL mutations                | via GraphQL decorators                    | via GraphQL decorators                                                  |
+| Spawn Ralph (`enqueuePlanRun` → nested `workflow-ralph`)               | task/plan via direct Postgres (`cortex-ralph`) | **No** (bypasses server)                  | **No** (bypasses server)                                                |
+| MCP / GraphQL clients                                                  | task/plan                                      | via resolvers above                       | via resolvers above                                                     |
+| `tools/workflows/scripts/update-plan-status.ts`                        | plan (direct DB)                               | **No**                                    | —                                                                       |
+
+**Known gap (by design):** nested spawn Ralph and one-off scripts write Cortex directly; the developer app will not receive socket events until the next GraphQL-driven change or a full revalidate. Orchestrator and MCP paths stay in sync via GraphQL.
+
+**Helper:** `applications/openthrottle-server/src/notifications/emit-bulk-task-status-changes.ts` — bulk task status updates that must fan out `task.status_changed` events (enqueue and cancel).
+
 ## Env / config
 
 - **API_URL_EXTERNAL** — Server base URL for Socket.IO (same host as GraphQL; Socket.IO serves at path `/socket.io`). Used by the developer app only.

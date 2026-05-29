@@ -50,6 +50,24 @@ vi.mock('pg', () => ({
           });
         }
 
+        if (sql.includes('UPDATE tasks SET status')) {
+          return Promise.resolve({
+            rows: [
+              {
+                category: null,
+                created_at: '2026-01-01T00:00:00.000Z',
+                description: null,
+                id: 'task-1',
+                plan_id: 'plan-1',
+                requirements: [],
+                status: 'IN_PROGRESS',
+                title: 'Task',
+                updated_at: '2026-01-02T00:00:00.000Z',
+              },
+            ],
+          });
+        }
+
         if (sql.includes('UPDATE plans SET status = $1')) {
           return Promise.resolve({
             rows: [{ ...planRow, status: mockState.planStatus }],
@@ -86,6 +104,53 @@ describe('ensureCortexReachable', () => {
   });
 });
 
+describe('promotePlanToInProgressIfNeeded', () => {
+  beforeEach(() => {
+    mockState.planStatus = 'PENDING';
+    mockState.queryLog = [];
+    vi.resetModules();
+  });
+
+  it('returns true when plan is promoted from PENDING', async () => {
+    const { promotePlanToInProgressIfNeeded } =
+      await import('../cortex-ralph.js');
+
+    const promoted = await promotePlanToInProgressIfNeeded(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(promoted).toBe(true);
+    expect(mockState.queryLog[0]).toContain("status != 'IN_PROGRESS'");
+  });
+
+  it('returns true when plan is promoted from QUEUED', async () => {
+    mockState.planStatus = 'QUEUED';
+    const { promotePlanToInProgressIfNeeded } =
+      await import('../cortex-ralph.js');
+
+    const promoted = await promotePlanToInProgressIfNeeded(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(promoted).toBe(true);
+  });
+
+  it('returns false when plan is already IN_PROGRESS', async () => {
+    mockState.planStatus = 'IN_PROGRESS';
+    const { promotePlanToInProgressIfNeeded } =
+      await import('../cortex-ralph.js');
+
+    const promoted = await promotePlanToInProgressIfNeeded(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(promoted).toBe(false);
+  });
+});
+
 describe('updatePlanStatus', () => {
   beforeEach(() => {
     mockState.planStatus = 'PENDING';
@@ -119,5 +184,26 @@ describe('updatePlanStatus', () => {
     const row = await updatePlanStatus(mockConfig, 'plan-1', 'IN_PROGRESS');
 
     expect(row).toBeNull();
+  });
+});
+
+describe('updateTaskStatus', () => {
+  beforeEach(() => {
+    mockState.planStatus = 'QUEUED';
+    mockState.queryLog = [];
+    vi.resetModules();
+  });
+
+  it('promotes parent plan when task becomes IN_PROGRESS', async () => {
+    const { updateTaskStatus } = await import('../cortex-ralph.js');
+
+    await updateTaskStatus(mockConfig, 'task-1', 'IN_PROGRESS');
+
+    expect(mockState.queryLog.some((sql) => sql.includes('UPDATE tasks'))).toBe(
+      true,
+    );
+    expect(
+      mockState.queryLog.some((sql) => sql.includes("status != 'IN_PROGRESS'")),
+    ).toBe(true);
   });
 });

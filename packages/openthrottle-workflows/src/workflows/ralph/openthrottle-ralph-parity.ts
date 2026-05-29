@@ -36,13 +36,14 @@
  * - `updatePlanProjectId` → `updatePlan` with `projectId` / `project` fields (`mutations.graphql`)
  * - `updatePlanSummary` → `updatePlan` with `summary`
  * - `updatePlanStatus` → `updatePlan` with `status` (see behavioral note below)
+ * - `promotePlanToInProgressIfNeeded` → `updatePlan` with `status: IN_PROGRESS` (same predicate as `updatePlanStatus` / `syncParentPlanToInProgressWhenTaskInProgress`)
  * - `updateTaskStatus` → `updateTask` with `status`
  * - `updateTaskSummary` → `updateTask` with `summary`
  *
  * ## `ralph.ts` main() path (minimal subset)
  *
  * Uses only: `getTaskById`, `getPlanById`, `getTasksByPlanId`, `formatPlanAndTasksForPrompt` (pure),
- * `updatePlanStatus`, `updateTaskStatus`. GraphQL covers all data access except prompt formatting.
+ * `promotePlanToInProgressIfNeeded`, `updatePlanStatus`, `updateTaskStatus`. GraphQL covers all data access except prompt formatting.
  *
  * ## Related workflow bins (same `cortex-ralph` module)
  *

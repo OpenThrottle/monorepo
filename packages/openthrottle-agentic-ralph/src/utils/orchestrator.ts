@@ -46,6 +46,19 @@ const onFailure = (
 });
 
 /**
+ * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
+ * `cortex-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanToInProgressWhenTaskInProgress`).
+ */
+const promotePlanToInProgressIfNeeded = async (
+  executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
+  planId: string,
+): Promise<void> => {
+  await executeGraphqlV2(UpdatePlanDocument, {
+    input: { id: planId, status: 'IN_PROGRESS' },
+  });
+};
+
+/**
  * @description GraphQL-backed Ralph pipeline: resolves plan, loads state, guards terminal plans,
  * marks progress, runs iterations via {@link WorkflowRalphOrchestratorDeps.iterationRunner}, applies
  * task completions, and interprets `<promise>` markers (parity with `tools/workflows/src/bin/ralph.ts`
@@ -112,9 +125,7 @@ export const createWorkflowRalphOrchestrator = (
       }
 
       // plan.mark_in_progress
-      await executeGraphqlV2(UpdatePlanDocument, {
-        input: { id: effectivePlanId, status: 'IN_PROGRESS' },
-      });
+      await promotePlanToInProgressIfNeeded(executeGraphqlV2, effectivePlanId);
 
       // task.mark_in_progress
       if (taskIdTrim) {
@@ -199,6 +210,11 @@ export const createWorkflowRalphOrchestrator = (
               await executeGraphqlV2(UpdateTaskDocument, {
                 input: { id: taskForIteration.id, status: 'IN_PROGRESS' },
               });
+            } else {
+              await promotePlanToInProgressIfNeeded(
+                executeGraphqlV2,
+                effectivePlanId,
+              );
             }
 
             agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;

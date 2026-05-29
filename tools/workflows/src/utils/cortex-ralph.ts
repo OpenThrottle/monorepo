@@ -445,7 +445,23 @@ export function formatPlanAndTasksForPrompt(
 }
 
 /**
+ * @description Promotes a plan to `IN_PROGRESS` when its status is not already `IN_PROGRESS`.
+ * Mirrors `TasksService.syncParentPlanToInProgressWhenTaskInProgress` (same SQL predicate as
+ * {@link updatePlanStatus} for `IN_PROGRESS`).
+ *
+ * @returns `true` when a plan row was updated.
+ */
+export async function promotePlanToInProgressIfNeeded(
+  config: WorkflowRalphConfig,
+  planId: string,
+): Promise<boolean> {
+  const row = await updatePlanStatus(config, planId, 'IN_PROGRESS');
+  return row !== null;
+}
+
+/**
  * @description Updates a task's status (and optionally other fields). Returns updated row or null if not found.
+ * When the task becomes `IN_PROGRESS`, promotes the parent plan via {@link promotePlanToInProgressIfNeeded}.
  */
 export async function updateTaskStatus(
   config: WorkflowRalphConfig,
@@ -471,7 +487,7 @@ export async function updateTaskStatus(
     );
     const row = res.rows[0];
     if (!row) return null;
-    return {
+    const taskRow: TaskRow = {
       category: row.category,
       createdAt: row.created_at,
       description: row.description,
@@ -482,6 +498,10 @@ export async function updateTaskStatus(
       title: row.title,
       updatedAt: row.updated_at,
     };
+    if (status === 'IN_PROGRESS') {
+      await promotePlanToInProgressIfNeeded(config, taskRow.planId);
+    }
+    return taskRow;
   } finally {
     await client.end();
   }

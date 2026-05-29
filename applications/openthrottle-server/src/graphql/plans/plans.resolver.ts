@@ -35,8 +35,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { In } from 'typeorm';
 import type { Project } from '@openthrottle/nestjs-repositories';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
 import { NotificationsService } from '../../notifications/notifications.service';
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
@@ -84,6 +84,16 @@ const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;
 const MAX_PLAN_RUNS_LIMIT = 100;
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
+
+/** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
+const ENQUEUE_TASK_STATUSES_TO_RESET = [
+  'PENDING',
+  'IN_PROGRESS',
+  'BLOCKED',
+  'BACKLOG',
+  'SKIPPED',
+  'CANCELED',
+] as const;
 
 /**
  * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
@@ -729,22 +739,14 @@ export class PlansResolver {
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
     const taskRepo = this.tasksService.getRepository();
-    const statusesToReset = [
-      'PENDING',
-      'IN_PROGRESS',
-      'BLOCKED',
-      'BACKLOG',
-      'SKIPPED',
-      'CANCELED',
-    ] as const;
 
-    await taskRepo.update(
-      {
-        planId,
-        status: In(statusesToReset),
-      },
-      { status: 'QUEUED' },
-    );
+    await updateMatchingTasksAndEmitStatusChanged({
+      fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
+      notifications: this.notificationsService,
+      planId,
+      taskRepo,
+      toStatus: 'QUEUED',
+    });
 
     const waitingCount = await this.plansQueue.getWaitingCount();
     const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
@@ -897,21 +899,13 @@ export class PlansResolver {
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
-    const statusesToReset = [
-      'PENDING',
-      'IN_PROGRESS',
-      'BLOCKED',
-      'BACKLOG',
-      'SKIPPED',
-      'CANCELED',
-    ] as const;
-    await taskRepo.update(
-      {
-        planId,
-        status: In(statusesToReset),
-      },
-      { status: 'QUEUED' },
-    );
+    await updateMatchingTasksAndEmitStatusChanged({
+      fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
+      notifications: this.notificationsService,
+      planId,
+      taskRepo,
+      toStatus: 'QUEUED',
+    });
 
     const waitingCount = await this.plansQueue.getWaitingCount();
     const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
@@ -1011,10 +1005,13 @@ export class PlansResolver {
       await repo.update({ id: input.planId }, { status: 'PENDING' });
 
       const taskRepo = this.tasksService.getRepository();
-      await taskRepo.update(
-        { planId: input.planId, status: 'QUEUED' },
-        { status: 'PENDING' },
-      );
+      await updateMatchingTasksAndEmitStatusChanged({
+        fromStatuses: ['QUEUED'],
+        notifications: this.notificationsService,
+        planId: input.planId,
+        taskRepo,
+        toStatus: 'PENDING',
+      });
 
       const refreshed = await repo.findOne({ where: { id: input.planId } });
       out.planStatusAfter = refreshed?.status ?? 'PENDING';

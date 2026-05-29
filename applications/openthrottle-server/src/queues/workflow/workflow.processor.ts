@@ -247,6 +247,7 @@ export class WorkflowProcessor
     }
 
     await this.reconcilePlanStatusOnStartup();
+    await this.reconcilePlansQueuedWithInProgressTasks();
   }
 
   /**
@@ -286,6 +287,53 @@ export class WorkflowProcessor
       this.notifications.emitPlanStatusChanged({
         planId: plan.id,
         status: 'QUEUED',
+      });
+    }
+  }
+
+  /**
+   * @description On startup, promote QUEUED plans that still have IN_PROGRESS tasks (e.g. after stall/requeue reset the plan but not tasks). Mirrors downward reconcile in {@link reconcilePlanStatusOnStartup}.
+   */
+  private async reconcilePlansQueuedWithInProgressTasks(): Promise<void> {
+    const planRepo = this.plansService.getRepository();
+    const taskRepo = this.tasksService.getRepository();
+    const queuedPlans = await planRepo.find({
+      where: { status: 'QUEUED' },
+    });
+
+    if (queuedPlans.length === 0) {
+      return;
+    }
+
+    for (const plan of queuedPlans) {
+      // eslint-disable-next-line no-await-in-loop
+      const inProgressTask = await taskRepo.findOne({
+        select: ['id'],
+        where: { planId: plan.id, status: 'IN_PROGRESS' },
+      });
+
+      if (!inProgressTask) {
+        continue;
+      }
+
+      const promoted =
+        // eslint-disable-next-line no-await-in-loop
+        await this.tasksService.syncParentPlanToInProgressWhenTaskInProgress(
+          plan.id,
+        );
+
+      if (!promoted) {
+        continue;
+      }
+
+      this.logger.info(
+        `Plan status reconciliation: promoting plan ${plan.id} from QUEUED to IN_PROGRESS (task ${inProgressTask.id} is IN_PROGRESS).`,
+        WorkflowProcessor.name,
+      );
+
+      this.notifications.emitPlanStatusChanged({
+        planId: plan.id,
+        status: 'IN_PROGRESS',
       });
     }
   }

@@ -22,6 +22,7 @@ import {
   getPlanById,
   getTaskById,
   getTasksByPlanId,
+  promotePlanToInProgressIfNeeded,
   updatePlanStatus,
   updateTaskStatus,
   RALPH_WORKFLOW_FATAL_PREFIX,
@@ -139,7 +140,7 @@ export const main = async (): Promise<void> => {
     process.exit(0);
   }
 
-  await updatePlanStatus(cortexConfig, effectivePlanId, 'IN_PROGRESS');
+  await promotePlanToInProgressIfNeeded(cortexConfig, effectivePlanId);
 
   if (task) {
     await updateTaskStatus(cortexConfig, task, 'IN_PROGRESS');
@@ -212,6 +213,8 @@ export const main = async (): Promise<void> => {
             console.warn(message);
           }
         } else {
+          // eslint-disable-next-line no-await-in-loop
+          await promotePlanToInProgressIfNeeded(cortexConfig, effectivePlanId);
           const message = ` - 📌 Resuming task ${COLORS.green}${taskForIteration.id}${COLORS.reset} (already IN_PROGRESS).`;
           console.log(message);
         }

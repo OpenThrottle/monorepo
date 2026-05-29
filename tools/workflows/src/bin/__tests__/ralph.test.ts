@@ -55,6 +55,7 @@ vi.mock('../../utils/cortex-ralph', async (importOriginal) => {
     getCortexConfigOrExit: vi.fn(() => mockConfig),
     getPlanById: vi.fn().mockResolvedValue(mockPlan),
     getTasksByPlanId: vi.fn().mockResolvedValue(mockTasks),
+    promotePlanToInProgressIfNeeded: vi.fn().mockResolvedValue(true),
     updatePlanStatus: vi.fn().mockResolvedValue(undefined),
     updateTaskStatus: updateTaskStatusMock,
   };

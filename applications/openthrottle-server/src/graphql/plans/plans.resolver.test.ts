@@ -116,11 +116,18 @@ describe('PlansResolver', () => {
   });
 
   const taskRepo = {
+    find: vi.fn().mockResolvedValue([]),
     findOne: vi.fn().mockResolvedValue(null),
     update: vi.fn().mockResolvedValue(undefined),
   };
   const mockTasksService = createMock<TasksService>({
     getRepository: vi.fn().mockReturnValue(taskRepo),
+  });
+
+  const mockEmitTaskStatusChanged = vi.fn();
+  const mockNotificationsService = createMock<NotificationsService>({
+    emitPlanEnqueued: vi.fn(),
+    emitTaskStatusChanged: mockEmitTaskStatusChanged,
   });
 
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
@@ -149,7 +156,7 @@ describe('PlansResolver', () => {
         },
         {
           provide: NotificationsService,
-          useValue: createMock<NotificationsService>(),
+          useValue: mockNotificationsService,
         },
         {
           provide: PlanRunCancellationService,
@@ -410,6 +417,13 @@ describe('PlansResolver', () => {
   });
 
   describe('enqueuePlanRun', () => {
+    beforeEach(() => {
+      taskRepo.find.mockReset();
+      taskRepo.find.mockResolvedValue([]);
+      taskRepo.update.mockClear();
+      mockEmitTaskStatusChanged.mockClear();
+    });
+
     test('returns job id, plan id, and queue position when plan exists', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
@@ -459,6 +473,7 @@ describe('PlansResolver', () => {
     test('sets non-completed tasks to QUEUED (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED)', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      taskRepo.find.mockResolvedValueOnce([{ id: 'task-a' }, { id: 'task-b' }]);
       taskRepo.update.mockClear();
 
       await resolver.enqueuePlanRun({
@@ -467,6 +482,7 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
+      expect(taskRepo.find).toHaveBeenCalledOnce();
       expect(taskRepo.update).toHaveBeenCalledTimes(1);
       const [criteria, set] = taskRepo.update.mock.calls[0] as [
         { planId: string; status: { value: readonly string[] } },
@@ -483,12 +499,24 @@ describe('PlansResolver', () => {
         'SKIPPED',
         'CANCELED',
       ]);
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledTimes(2);
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
+        planId: mockPlan.id,
+        status: 'QUEUED',
+        taskId: 'task-a',
+      });
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
+        planId: mockPlan.id,
+        status: 'QUEUED',
+        taskId: 'task-b',
+      });
     });
 
     test('does not update COMPLETED tasks to QUEUED', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
-      taskRepo.update.mockClear();
+      taskRepo.find.mockResolvedValueOnce([]);
+      taskRepo.find.mockClear();
 
       await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -496,17 +524,19 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
-      const [criteria] = taskRepo.update.mock.calls[0] as [
-        { planId: string; status: { value: readonly string[] } },
-        { status: string },
-      ];
-      expect(criteria.status.value).not.toContain('COMPLETED');
+      expect(taskRepo.find).toHaveBeenCalledOnce();
+      const findArgs = taskRepo.find.mock.calls[0]?.[0] as {
+        where: { planId: string; status: { value: readonly string[] } };
+      };
+      expect(findArgs.where.status.value).not.toContain('COMPLETED');
     });
 
     test('re-queue calls task update again (idempotent behavior)', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      taskRepo.find.mockResolvedValue([{ id: 'task-1' }]);
       taskRepo.update.mockClear();
+      taskRepo.find.mockClear();
 
       await resolver.enqueuePlanRun({
         planId: mockPlan.id,
@@ -519,6 +549,7 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
+      expect(taskRepo.find).toHaveBeenCalledTimes(2);
       expect(taskRepo.update).toHaveBeenCalledTimes(2);
       expect(taskRepo.update).toHaveBeenNthCalledWith(
         1,
@@ -951,6 +982,8 @@ describe('PlansResolver', () => {
   describe('cancelPlanRun', () => {
     beforeEach(() => {
       mockPlanRunCancellationAbort.mockReturnValue(false);
+      taskRepo.find.mockResolvedValue([]);
+      mockEmitTaskStatusChanged.mockClear();
     });
 
     test('throws NotFoundException when plan does not exist', async () => {
@@ -991,6 +1024,7 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne)
         .mockResolvedValueOnce(mockPlan)
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      taskRepo.find.mockResolvedValueOnce([{ id: 'task-queued' }]);
       taskRepo.update.mockClear();
 
       const result = await resolver.cancelPlanRun({ planId: mockPlan.id });
@@ -1004,10 +1038,18 @@ describe('PlansResolver', () => {
         { id: mockPlan.id },
         { status: 'PENDING' },
       );
-      expect(taskRepo.update).toHaveBeenCalledWith(
-        { planId: mockPlan.id, status: 'QUEUED' },
-        { status: 'PENDING' },
-      );
+      expect(taskRepo.update).toHaveBeenCalledOnce();
+      const [criteria, set] = taskRepo.update.mock.calls[0] as [
+        { planId: string; status: unknown },
+        { status: string },
+      ];
+      expect(criteria.planId).toBe(mockPlan.id);
+      expect(set).toEqual({ status: 'PENDING' });
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
+        planId: mockPlan.id,
+        status: 'PENDING',
+        taskId: 'task-queued',
+      });
     });
 
     test('reports active job ids when remove fails for locked job', async () => {
@@ -1054,6 +1096,7 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne)
         .mockResolvedValueOnce(mockPlan)
         .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      taskRepo.find.mockResolvedValueOnce([{ id: 'task-queued' }]);
       taskRepo.update.mockClear();
       vi.mocked(repo.update).mockClear();
 
@@ -1067,10 +1110,17 @@ describe('PlansResolver', () => {
         { id: mockPlan.id },
         { status: 'PENDING' },
       );
-      expect(taskRepo.update).toHaveBeenCalledWith(
-        { planId: mockPlan.id, status: 'QUEUED' },
-        { status: 'PENDING' },
-      );
+      expect(taskRepo.update).toHaveBeenCalledOnce();
+      const [, set] = taskRepo.update.mock.calls[0] as [
+        { planId: string; status: unknown },
+        { status: string },
+      ];
+      expect(set).toEqual({ status: 'PENDING' });
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
+        planId: mockPlan.id,
+        status: 'PENDING',
+        taskId: 'task-queued',
+      });
     });
   });
 
