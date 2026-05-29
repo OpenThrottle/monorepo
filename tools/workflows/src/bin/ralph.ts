@@ -10,6 +10,7 @@ import {
   buildForeignWorkspacePromptLayer,
   resolveForeignWorkspaceContext,
 } from '../utils/foreign-workspace-context';
+import { RALPH_SHELL_COMMAND_GUARDRAIL } from '../utils/ralph-shell-misparse';
 import { getNxProjectNames } from '../utils/projects';
 import type { RalphArgs } from '../utils/parsers';
 import {
@@ -133,6 +134,7 @@ export const main = async (): Promise<void> => {
   const basePrompt =
     `${prompt}\n\n` +
     (foreignWorkspaceLayer ? `${foreignWorkspaceLayer}\n\n` : '') +
+    `${RALPH_SHELL_COMMAND_GUARDRAIL}\n\n` +
     `${injectedContext}\n\n` +
     `Plan-Id: ${effectivePlanId}.` +
     (task ? ` Task-Id: ${task}.` : '') +

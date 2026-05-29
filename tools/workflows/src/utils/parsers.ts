@@ -29,6 +29,7 @@ import {
   resolveRalphPromptFromSeed,
   type RalphPromptProfileKind,
 } from './ralph-prompt-resolution';
+import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =
@@ -412,7 +413,22 @@ export const parseRalphResponse = (
   iteration: number,
   plan: string,
 ): void => {
-  console.log(result);
+  /**
+   * Collapse `/bin/sh` command-misparse spam (cursor-agent's Shell tool feeding multiline prose to
+   * the shell; plan 65a8dd25 finding #1) before echoing, but still detect terminal markers from the
+   * original, unsanitized result so completion/error signals are never altered.
+   */
+  const { sanitized, collapsedBlockCount, suppressedLineCount } =
+    sanitizeRalphShellNoise(result);
+  console.log(sanitized);
+
+  if (collapsedBlockCount > 0) {
+    ralphDebugLogger.debug('parseRalphResponse: suppressed /bin/sh noise', {
+      collapsedBlockCount,
+      iteration,
+      suppressedLineCount,
+    });
+  }
 
   const markers = getRalphOutputMarkerFlags(result);
   const hasErr = markers.hasPromiseError;
