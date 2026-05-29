@@ -16,10 +16,10 @@ import {
   QueueJobDetailRetryDocument,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { ListOrderedIcon } from 'lucide-react';
 import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
-import { ListOrderedIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
