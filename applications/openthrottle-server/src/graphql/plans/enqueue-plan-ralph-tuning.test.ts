@@ -1,15 +1,25 @@
-import { mkdtempSync, writeFileSync } from 'fs';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { RalphPlanRunTuningInput } from './plan.input';
 import {
+  assertWorkingDirectoryIsNxWorkspaceRoot,
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
   parseEnqueueRalphTuning,
   ralphTuningForChildJob,
   validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
+
+/**
+ * @description Creates a temp directory that looks like an Nx workspace root (has nx.json).
+ */
+const makeNxWorkspaceDir = (): string => {
+  const dir = mkdtempSync(join(tmpdir(), 'ot-nx-'));
+  writeFileSync(join(dir, 'nx.json'), '{}');
+  return dir;
+};
 
 const emptyTuningInput = (): RalphPlanRunTuningInput => ({
   backend: null,
@@ -296,7 +306,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
   });
 
   test('includes workingDirectory when provided', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    const tempDir = makeNxWorkspaceDir();
     expect(
       buildRunPlanOrchestratorJobData({
         planId: SAMPLE_PLAN_ID,
@@ -372,8 +382,8 @@ describe('buildRunPlanJobData with workingDirectory', () => {
     expect(result).not.toHaveProperty('workingDirectory');
   });
 
-  test('includes workingDirectory for a valid directory', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+  test('includes workingDirectory for a valid Nx workspace directory', () => {
+    const tempDir = makeNxWorkspaceDir();
     const result = buildRunPlanJobData({
       planId: 'p1',
       ralph: null,
@@ -386,6 +396,17 @@ describe('buildRunPlanJobData with workingDirectory', () => {
     });
   });
 
+  test('throws when workingDirectory is not an Nx workspace root', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    expect(() =>
+      buildRunPlanJobData({
+        planId: 'p1',
+        ralph: null,
+        workingDirectory: tempDir,
+      }),
+    ).toThrow(/not an Nx workspace root/);
+  });
+
   test('throws for an invalid workingDirectory', () => {
     expect(() =>
       buildRunPlanJobData({
@@ -394,5 +415,49 @@ describe('buildRunPlanJobData with workingDirectory', () => {
         workingDirectory: '/no/such/dir/ot-test',
       }),
     ).toThrow(/does not exist/);
+  });
+});
+
+describe('assertWorkingDirectoryIsNxWorkspaceRoot', () => {
+  const ORIGINAL_ALLOW = process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR;
+
+  beforeEach(() => {
+    delete process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR;
+  });
+
+  afterEach(() => {
+    if (ORIGINAL_ALLOW === undefined) {
+      delete process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR;
+    } else {
+      process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR = ORIGINAL_ALLOW;
+    }
+  });
+
+  test('passes when the directory contains nx.json', () => {
+    const dir = makeNxWorkspaceDir();
+    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).not.toThrow();
+  });
+
+  test('throws and points at the ancestor when a parent is the Nx root', () => {
+    const root = makeNxWorkspaceDir();
+    const subDir = join(root, 'services', 'native-apps');
+    mkdirSync(subDir, { recursive: true });
+
+    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(subDir)).toThrow(
+      new RegExp(`nearest Nx workspace root is ${root}`),
+    );
+  });
+
+  test('throws when no nx.json is found at or above the directory', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ot-not-nx-'));
+    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).toThrow(
+      /no nx\.json .* found at or above/,
+    );
+  });
+
+  test('bypasses the check when OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR=1', () => {
+    process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'ot-not-nx-'));
+    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).not.toThrow();
   });
 });

@@ -70,11 +70,13 @@ export const PlanWorkflowConfigWorkspace = (
   return (
     <OpenThrottleFieldset id="workflow-run-workspace-legend" legend={heading}>
       <p className="text-muted-foreground text-xs">
-        Absolute path to a local project folder for multi-workspace runs. When
-        empty, the worker uses the monorepo root (
-        <code className="text-xs">WORKSPACE_ROOT</code> or{' '}
-        <code className="text-xs">process.cwd()</code>). Server validates the
-        path exists and is a directory.
+        Absolute path to a local project folder for multi-workspace runs. It
+        must be an <strong>Nx workspace root</strong> — the directory that
+        contains <code className="text-xs">nx.json</code> — not a parent folder
+        or an inner subdirectory. When empty, the worker uses the monorepo root
+        (<code className="text-xs">WORKSPACE_ROOT</code> or{' '}
+        <code className="text-xs">process.cwd()</code>). The server validates
+        the path exists, is a directory, and is an Nx workspace root on enqueue.
       </p>
 
       <div className="space-y-2">
@@ -173,7 +175,7 @@ export const PlanWorkflowConfigWorkspace = (
           {validationError != null ? (
             <span className="text-destructive">{validationError}</span>
           ) : hasValue ? (
-            'Custom workspace directory; server validates on enqueue.'
+            'Must be an Nx workspace root (contains nx.json); server validates on enqueue.'
           ) : (
             'Empty = monorepo root (default).'
           )}
