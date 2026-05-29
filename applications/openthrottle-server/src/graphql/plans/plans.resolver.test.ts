@@ -681,7 +681,9 @@ describe('PlansResolver', () => {
     /**
      * @description Enqueue with a real directory outside the OT tree so `buildRunPlanJobData` validation
      * passes; BullMQ payload must carry `workingDirectory` for the processor spawn cwd (regression:
-     * nested CLI must still use worker POSTGRES / canonical Cortex URL).
+     * nested CLI must still use worker POSTGRES / canonical Cortex URL). The external dir is made an
+     * Nx workspace root (writes `nx.json`) to satisfy the cross-repo working-directory contract
+     * (plan 65a8dd25 finding #3: a foreign `workingDirectory` must be an Nx workspace root).
      */
     test('includes external workingDirectory in queue job data (enqueue → processor contract)', async () => {
       const repo = plansService.getRepository();
@@ -691,6 +693,7 @@ describe('PlansResolver', () => {
       const externalDir = fs.mkdtempSync(
         path.join(os.tmpdir(), 'ot-external-wd-'),
       );
+      fs.writeFileSync(path.join(externalDir, 'nx.json'), '{}\n');
       try {
         await resolver.enqueuePlanRun({
           planId: mockPlan.id,

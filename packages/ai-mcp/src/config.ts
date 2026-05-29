@@ -4,7 +4,6 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 export interface CortexPostgresConfig {
   readonly connectionString: string;
@@ -74,15 +73,18 @@ const walkUpForWorkspaceRoot = (startDir: string): string | undefined => {
 };
 
 /**
- * @description Returns the directory of this module, or undefined when it cannot be resolved (e.g. exotic bundlers). Walking up from here lands in the OpenThrottle monorepo regardless of `cwd`.
+ * @description Returns the directory of this module, or undefined when it cannot be resolved.
+ * Walking up from here lands in the OpenThrottle monorepo regardless of `cwd`.
+ *
+ * The cross-repo spawn/Nx consumers of this code (`@tools/workflows`, `openthrottle-server`)
+ * are compiled and run under CommonJS, where `__dirname` is the file's directory. We resolve
+ * via `__dirname` (guarded with `typeof`) rather than `import.meta.url` so this file also
+ * compiles under the CommonJS `module` setting those projects use — `import.meta` is rejected
+ * there (TS1343). Under native ESM (`__dirname` undefined) this returns undefined and callers
+ * fall back to the `WORKSPACE_ROOT`/`cwd` strategies.
  */
-const getModuleDir = (): string | undefined => {
-  try {
-    return path.dirname(fileURLToPath(import.meta.url));
-  } catch {
-    return undefined;
-  }
-};
+const getModuleDir = (): string | undefined =>
+  typeof __dirname === 'string' ? __dirname : undefined;
 
 /**
  * @description Resolves the OpenThrottle monorepo root, in priority order:
