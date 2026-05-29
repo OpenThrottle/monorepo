@@ -17,7 +17,7 @@ export const RolesTable = (props: RolesTableProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const columns = React.useMemo(() => RolesTable.buildTable(), []);
+  const columns = React.useMemo(() => RolesTable.buildTable(), [roles]);
 
   // Handlers
 

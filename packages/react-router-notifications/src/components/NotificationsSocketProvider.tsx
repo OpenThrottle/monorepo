@@ -11,6 +11,7 @@ import {
 } from '../components/NotificationsSocketContext';
 import { NOTIFICATIONS_SOCKET_EVENTS } from '../config/index';
 import { NotificationSocketStatus } from '../types';
+import { createNotificationSocketSubscriberRegistry } from '../utils/notification-socket-subscribers';
 
 export interface NotificationsSocketProviderProps {
   readonly children: React.ReactNode;
@@ -29,15 +30,23 @@ export const NotificationsSocketProvider = (
 
   // Hooks
   const onNotificationRef = React.useRef(onNotification);
+  const subscriberRegistryRef = React.useRef(
+    createNotificationSocketSubscriberRegistry(),
+  );
   const [socket, setSocket] = React.useState<Socket | null>(null);
   const [status, setStatus] = React.useState<NotificationSocketStatus>('disconnected'); // prettier-ignore
 
   // Setup
   onNotificationRef.current = onNotification;
 
+  const subscribeToNotifications = React.useMemo(
+    () => subscriberRegistryRef.current.subscribe,
+    [],
+  );
+
   const value: NotificationsSocketContextValue = React.useMemo(
-    () => ({ socket, status }),
-    [socket, status],
+    () => ({ socket, status, subscribeToNotifications }),
+    [socket, status, subscribeToNotifications],
   );
 
   // Handlers
@@ -73,6 +82,7 @@ export const NotificationsSocketProvider = (
     const unsubscribes = NOTIFICATIONS_SOCKET_EVENTS.map((eventName) => {
       const handler = (payload: NotificationPayload): void => {
         onNotificationRef.current?.(eventName, payload);
+        subscriberRegistryRef.current.notify(eventName, payload);
       };
 
       s.on(eventName, handler);

@@ -17,7 +17,7 @@ export const UsersTable = (props: UsersTableProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const columns = React.useMemo(() => UsersTable.buildTable(), []);
+  const columns = React.useMemo(() => UsersTable.buildTable(), [users]);
 
   // Handlers
 

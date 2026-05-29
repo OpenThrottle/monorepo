@@ -18,7 +18,10 @@ export const PermissionsTable = (
   // Hooks
 
   // Setup
-  const columns = React.useMemo(() => PermissionsTable.buildTable(), []);
+  const columns = React.useMemo(
+    () => PermissionsTable.buildTable(),
+    [permissions],
+  );
 
   // Handlers
 

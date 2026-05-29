@@ -46,6 +46,7 @@ vi.mock('@openthrottle/react-router-notifications', () => ({
   useNotificationsSocket: () => ({
     socket: mockSocket,
     status: 'connected' as const,
+    subscribeToNotifications: () => () => {},
   }),
 }));
 

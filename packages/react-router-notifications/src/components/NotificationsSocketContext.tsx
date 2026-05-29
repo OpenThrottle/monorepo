@@ -1,10 +1,20 @@
 import * as React from 'react';
 import type { Socket } from 'socket.io-client';
-import { NotificationSocketStatus } from '../types';
+import type {
+  NotificationSocketEventListener,
+  NotificationSocketStatus,
+} from '../types';
 
 export interface NotificationsSocketContextValue {
   readonly socket: Socket | null;
   readonly status: NotificationSocketStatus;
+  /**
+   * @description Subscribe to notification events from the provider's single Socket.IO
+   * subscription (avoids duplicate `socket.on` handlers for debugger / diagnostics).
+   */
+  readonly subscribeToNotifications: (
+    listener: NotificationSocketEventListener,
+  ) => () => void;
 }
 
 /**

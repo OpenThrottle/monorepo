@@ -16,7 +16,7 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
   const { tasks } = props;
 
   // Hooks
-  const columns = React.useMemo(() => PlanTabTasks.buildTable(), []);
+  const columns = React.useMemo(() => PlanTabTasks.buildTable(), [tasks]);
 
   // Setup
   const getRowId = React.useCallback(

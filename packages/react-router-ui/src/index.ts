@@ -22,6 +22,7 @@ export * from './components/OpenThrottleTabs';
 export * from './components/OpenThrottleTabLink';
 export * from './components/OpenThrottleTabsNav';
 export * from './components/OpenThrottleWebsocketDebugger';
+export * from './components/websocket-debugger';
 
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';

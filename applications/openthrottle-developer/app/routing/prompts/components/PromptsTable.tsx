@@ -24,7 +24,7 @@ export const PromptsTable = (props: PromptsTableProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const columns = React.useMemo(() => PromptsTable.buildTable(), []);
+  const columns = React.useMemo(() => PromptsTable.buildTable(), [prompts]);
 
   // Handlers
 
