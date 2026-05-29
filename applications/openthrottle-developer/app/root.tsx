@@ -332,6 +332,7 @@ export default function App(): React.ReactElement {
 
   // Setup
   const isAuthRoute = pathname.startsWith('/auth');
+  const isLegalRoute = pathname.startsWith('/legal');
   const isPromptsRoute = pathname.startsWith('/prompts/');
   const isProfileRoute = pathname.startsWith('/profile');
   const isSettingsRoute = pathname.startsWith('/settings');
@@ -341,6 +342,7 @@ export default function App(): React.ReactElement {
   const _isHeaderHidden = isAuthRoute || isPromptsRoute;
   const isMetricsHidden =
     isAuthRoute ||
+    isLegalRoute ||
     isProfileRoute ||
     isPromptsRoute ||
     isSettingsRoute ||
