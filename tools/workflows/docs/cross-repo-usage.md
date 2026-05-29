@@ -34,6 +34,12 @@ Ralph injects full plan/task context from Postgres into the prompt; no `@file` o
 - **Invocation:** Use the workflow binary from the other repo, e.g. `pnpm exec ../../../../monorepo/node_modules/.bin/workflow-ralph --plan <plan-uuid>`.
 - **Debug / verbose (manual CLI):** `--debug`, `--debug=verbose`, and `--verbose` are valid on `workflow-ralph` (same as `WORKFLOW_RALPH_DEBUG` / `WORKFLOW_RALPH_VERBOSE`). Shim lines go to stderr with the `[workflow-ralph:debug]` prefix. See [README § Debugging Ralph](../README.md#debugging-ralph-shim-logger).
 
+## Prompt scoping (foreign cwd)
+
+When `workingDirectory` resolves outside the OpenThrottle monorepo, Ralph prepends an explicit **repository-scope layer** to the agent prompt before the injected Cortex context. It tells the agent it is operating in the target repository (not OpenThrottle) and must not reference OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. `applications/openthrottle-developer`, `tools/workflows`, `@tools/generators`, `/skills`). This prevents OpenThrottle-developer path/command inventory from bleeding into a cross-repo run.
+
+The foreign root is detected via `resolveForeignWorkspaceContext` (which uses `resolveOpenThrottleRoot`: `WORKFLOW_RALPH_OT_ROOT` → `WORKSPACE_ROOT` → module walk-up → cwd). When a foreign cwd is detected, Ralph also logs a `🧭 Foreign workspace:` line for observability. Runs inside the monorepo are unaffected (no extra layer).
+
 ## Manual E2E (foreign cwd)
 
 From another checkout, export OpenThrottle's Cortex URL, invoke this monorepo's binary, and confirm plan load plus debug output:

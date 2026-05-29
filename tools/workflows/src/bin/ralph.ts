@@ -6,6 +6,10 @@
 
 import { ARTWORK_RALPH, COLORS } from '../config/index';
 import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
+import {
+  buildForeignWorkspacePromptLayer,
+  resolveForeignWorkspaceContext,
+} from '../utils/foreign-workspace-context';
 import { getNxProjectNames } from '../utils/projects';
 import type { RalphArgs } from '../utils/parsers';
 import {
@@ -116,8 +120,20 @@ export const main = async (): Promise<void> => {
   }
 
   const injectedContext = formatPlanAndTasksForPrompt(planRow, tasksRows);
+
+  /**
+   * Scope the agent to the target repo when `cwd` is a foreign checkout (outside OpenThrottle) so the
+   * nested agent does not bleed OpenThrottle-developer paths/commands/rules into a cross-repo run.
+   */
+  const foreignWorkspaceContext = resolveForeignWorkspaceContext();
+  const foreignWorkspaceLayer = buildForeignWorkspacePromptLayer(
+    foreignWorkspaceContext,
+  );
+
   const basePrompt =
-    `${prompt}\n\n${injectedContext}\n\n` +
+    `${prompt}\n\n` +
+    (foreignWorkspaceLayer ? `${foreignWorkspaceLayer}\n\n` : '') +
+    `${injectedContext}\n\n` +
     `Plan-Id: ${effectivePlanId}.` +
     (task ? ` Task-Id: ${task}.` : '') +
     ' Use the plan and tasks above (injected from Cortex by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
@@ -129,6 +145,12 @@ export const main = async (): Promise<void> => {
   console.log(
     ` - 📝 Context: ${COLORS.green}Plan-Id: ${effectivePlanId}${task ? ` Task-Id: ${task}` : ''}${COLORS.reset}`,
   );
+
+  if (foreignWorkspaceLayer) {
+    console.log(
+      ` - 🧭 Foreign workspace: ${COLORS.green}${foreignWorkspaceContext.workingDirectory}${COLORS.reset} is outside OpenThrottle; scoping agent prompt to the target repo.`,
+    );
+  }
 
   console.log(MESSAGE_INTRO);
   showConfiguration(parsedArgs);
