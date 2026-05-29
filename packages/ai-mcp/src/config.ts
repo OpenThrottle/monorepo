@@ -2,6 +2,10 @@
  * @description Builds Postgres connection config from env (POSTGRES_URL or POSTGRES_*).
  */
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export interface CortexPostgresConfig {
   readonly connectionString: string;
 }
@@ -20,6 +24,145 @@ export const WORKFLOW_RALPH_SPAWN_HOME_ENV = `WORKFLOW_RALPH_SPAWN_HOME`;
  * @description When set on the worker, nested Ralph children receive this as `XDG_CONFIG_HOME` for tools that read config from XDG paths instead of `HOME` alone.
  */
 export const WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV = `WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME`;
+
+/**
+ * @description Explicit absolute path to the OpenThrottle monorepo root, used to locate the `workflow-ralph` binary (`<root>/node_modules/.bin`) so nested spawns resolve it deterministically — even when `cwd` is a foreign checkout and the dev shell PATH is not inherited (clean/Docker envs). Set this when the marker file (`pnpm-workspace.yaml`) is not reachable by walking up from the module or `cwd`.
+ */
+export const WORKFLOW_RALPH_OT_ROOT_ENV = `WORKFLOW_RALPH_OT_ROOT`;
+
+/** Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root. */
+const OT_WORKSPACE_MARKER = `pnpm-workspace.yaml`;
+
+/**
+ * @description Returns true when `dir` exists and is a directory. Never throws.
+ */
+const isDirectory = (dir: string): boolean => {
+  try {
+    return fs.statSync(dir).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * @description Returns true when `dir` contains the OpenThrottle workspace marker ({@link OT_WORKSPACE_MARKER}).
+ */
+const hasWorkspaceMarker = (dir: string): boolean =>
+  fs.existsSync(path.join(dir, OT_WORKSPACE_MARKER));
+
+/**
+ * @description Walks up from `startDir` to find the OpenThrottle monorepo root (the first ancestor containing {@link OT_WORKSPACE_MARKER}). Returns undefined when no marker is found. Never throws.
+ */
+const walkUpForWorkspaceRoot = (startDir: string): string | undefined => {
+  let dir: string;
+  try {
+    dir = path.resolve(startDir);
+  } catch {
+    return undefined;
+  }
+
+  for (;;) {
+    if (hasWorkspaceMarker(dir)) {
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      return undefined;
+    }
+    dir = parent;
+  }
+};
+
+/**
+ * @description Returns the directory of this module, or undefined when it cannot be resolved (e.g. exotic bundlers). Walking up from here lands in the OpenThrottle monorepo regardless of `cwd`.
+ */
+const getModuleDir = (): string | undefined => {
+  try {
+    return path.dirname(fileURLToPath(import.meta.url));
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @description Resolves the OpenThrottle monorepo root, in priority order:
+ * 1. {@link WORKFLOW_RALPH_OT_ROOT_ENV} (explicit; trusted when the directory exists),
+ * 2. `WORKSPACE_ROOT` (when it contains {@link OT_WORKSPACE_MARKER}),
+ * 3. walk up from this module's location (always inside OpenThrottle),
+ * 4. walk up from `process.cwd()` (last resort).
+ * @returns Absolute path to the OpenThrottle root, or undefined when it cannot be determined.
+ */
+export const resolveOpenThrottleRoot = (
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined => {
+  const explicit = env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim();
+  if (explicit && isDirectory(explicit)) {
+    return explicit;
+  }
+
+  const workspaceRoot = env.WORKSPACE_ROOT?.trim();
+  if (workspaceRoot && hasWorkspaceMarker(workspaceRoot)) {
+    return workspaceRoot;
+  }
+
+  const moduleDir = getModuleDir();
+  if (moduleDir) {
+    const fromModule = walkUpForWorkspaceRoot(moduleDir);
+    if (fromModule) {
+      return fromModule;
+    }
+  }
+
+  return walkUpForWorkspaceRoot(process.cwd());
+};
+
+/**
+ * @description Resolves the OpenThrottle `node_modules/.bin` directory that contains the `workflow-ralph` binary, using {@link resolveOpenThrottleRoot}. Returns undefined when the root or bin directory cannot be found, so callers can leave PATH untouched.
+ */
+export const resolveWorkflowRalphBinDir = (
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined => {
+  const root = resolveOpenThrottleRoot(env);
+  if (!root) {
+    return undefined;
+  }
+
+  const binDir = path.join(root, 'node_modules', '.bin');
+  return isDirectory(binDir) ? binDir : undefined;
+};
+
+/**
+ * @description Returns a copy of `env` with `dir` prepended to PATH. Returns `env` unchanged when `dir` is already on PATH so resolution stays idempotent.
+ */
+const prependDirToPath = (
+  env: NodeJS.ProcessEnv,
+  dir: string,
+): NodeJS.ProcessEnv => {
+  const currentPath = env.PATH ?? '';
+  const parts = currentPath.split(path.delimiter).filter((p) => p.length > 0);
+  if (parts.includes(dir)) {
+    return env;
+  }
+
+  const nextPath =
+    currentPath.length > 0 ? `${dir}${path.delimiter}${currentPath}` : dir;
+
+  return { ...env, PATH: nextPath };
+};
+
+/**
+ * @description Prepends the OpenThrottle `node_modules/.bin` directory ({@link resolveWorkflowRalphBinDir}) to PATH so `pnpm exec workflow-ralph` resolves the binary from the OpenThrottle monorepo regardless of `cwd`, without relying on the dev shell PATH bleeding in. No-op when the bin directory cannot be resolved or is already on PATH.
+ */
+export const applyWorkflowRalphBinPath = (
+  env: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv => {
+  const binDir = resolveWorkflowRalphBinDir(env);
+  if (binDir === undefined) {
+    return env;
+  }
+
+  return prependDirToPath(env, binDir);
+};
 
 /**
  * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
@@ -87,7 +230,7 @@ export interface BuildWorkflowRalphSpawnEnvOptions {
 }
 
 /**
- * @description Env passed to nested `pnpm exec workflow-ralph`: canonical Cortex URL from the worker plus overrides so child cwd cannot point Ralph at a different database.
+ * @description Env passed to nested `pnpm exec workflow-ralph`: canonical Cortex URL from the worker plus overrides so child cwd cannot point Ralph at a different database, and a PATH that includes the OpenThrottle `node_modules/.bin` so `workflow-ralph` resolves deterministically from a foreign `cwd` (see {@link applyWorkflowRalphBinPath}).
  */
 export function buildWorkflowRalphSpawnEnv(
   workerEnv: NodeJS.ProcessEnv,
@@ -108,7 +251,9 @@ export function buildWorkflowRalphSpawnEnv(
           POSTGRES_URL: conn,
         };
 
-  return applyWorkflowRalphSpawnIdentityOverrides(withPostgres);
+  const withBinPath = applyWorkflowRalphBinPath(withPostgres);
+
+  return applyWorkflowRalphSpawnIdentityOverrides(withBinPath);
 }
 
 /**
