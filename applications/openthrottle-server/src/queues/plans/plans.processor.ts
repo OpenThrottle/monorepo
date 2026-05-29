@@ -907,6 +907,7 @@ export class PlansProcessor
               PLANS_QUEUE_NAME,
               jobId,
               chunk,
+              { logContext, logger: this.logger },
             );
           },
           planId,

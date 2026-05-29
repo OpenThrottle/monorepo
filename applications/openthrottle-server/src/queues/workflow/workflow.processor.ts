@@ -843,6 +843,7 @@ export class WorkflowProcessor
               WORKFLOW_NAME,
               jobId,
               chunk,
+              { logContext, logger: this.logger },
             );
           },
           planId,
