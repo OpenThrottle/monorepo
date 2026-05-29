@@ -83,7 +83,7 @@ import {
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;
 const MAX_PLAN_RUNS_LIMIT = 100;
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`;
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 
 /**
  * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
@@ -93,11 +93,12 @@ function normalizePlanStatusForPolicy(status: string): string {
 }
 
 /**
- * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status = 'PENDING'`. Also allows idempotent `IN_PROGRESS` when already `IN_PROGRESS`.
+ * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
+ * Allows `PENDING`, `QUEUED`, and idempotent `IN_PROGRESS` → `IN_PROGRESS`.
  */
 function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
   const s = normalizePlanStatusForPolicy(currentStatus);
-  return s === 'PENDING' || s === 'IN_PROGRESS';
+  return s === 'PENDING' || s === 'IN_PROGRESS' || s === 'QUEUED';
 }
 
 @Resolver(() => PlanObject)

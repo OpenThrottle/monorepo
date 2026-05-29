@@ -37,7 +37,7 @@ vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
 }));
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
-  'Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.';
+  'Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.';
 
 describe('PlansResolver', () => {
   let resolver: PlansResolver;
@@ -1180,6 +1180,44 @@ describe('PlansResolver', () => {
       );
     });
 
+    test('transitions QUEUED to IN_PROGRESS and persists', async () => {
+      const repo = plansService.getRepository();
+      const queued = { ...mockPlan, status: 'QUEUED' } as Plan;
+      const saved = { ...queued, status: 'IN_PROGRESS' } as Plan;
+      vi.mocked(repo.findOne).mockResolvedValue(queued);
+      vi.mocked(repo.save).mockResolvedValue(saved);
+
+      const result = await resolver.setPlanStatus({
+        planId: mockPlan.id,
+        status: 'IN_PROGRESS',
+      });
+
+      expect(result?.status).toBe('IN_PROGRESS');
+      expect(repo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: mockPlan.id,
+          status: 'IN_PROGRESS',
+        }),
+      );
+    });
+
+    test('throws BadRequestException when COMPLETED plan requests IN_PROGRESS', async () => {
+      const repo = plansService.getRepository();
+      const completed = { ...mockPlan, status: 'COMPLETED' } as Plan;
+      vi.mocked(repo.findOne).mockResolvedValue(completed);
+      vi.mocked(repo.save).mockClear();
+
+      await expect(
+        resolver.setPlanStatus({
+          planId: mockPlan.id,
+          status: 'IN_PROGRESS',
+        }),
+      ).rejects.toMatchObject({
+        message: IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE,
+      });
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
     test('returns null when plan does not exist', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
@@ -1407,6 +1445,50 @@ describe('PlansResolver', () => {
         const input = {
           id: mockPlan.id,
           status: 'in_progress',
+        } as UpdatePlanInput;
+
+        await resolver.updatePlan(input);
+
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: 'IN_PROGRESS' }),
+        );
+      });
+
+      test('transitions QUEUED to IN_PROGRESS and persists', async () => {
+        const repo = plansService.getRepository();
+        const queued = { ...mockPlan, status: 'QUEUED' } as Plan;
+        const saved = { ...queued, status: 'IN_PROGRESS' } as Plan;
+        vi.mocked(repo.findOne).mockResolvedValue(queued);
+        vi.mocked(repo.save).mockClear();
+        vi.mocked(repo.save).mockResolvedValue(saved);
+
+        const input = {
+          id: mockPlan.id,
+          status: 'IN_PROGRESS',
+        } as UpdatePlanInput;
+
+        const result = await resolver.updatePlan(input);
+
+        expect(repo.save).toHaveBeenCalledTimes(1);
+        expect(repo.save).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: mockPlan.id,
+            status: 'IN_PROGRESS',
+          }),
+        );
+        expect(result?.status).toBe('IN_PROGRESS');
+      });
+
+      test('accepts lowercase queued for QUEUED → IN_PROGRESS', async () => {
+        const repo = plansService.getRepository();
+        const queued = { ...mockPlan, status: 'queued' } as Plan;
+        const saved = { ...queued, status: 'IN_PROGRESS' } as Plan;
+        vi.mocked(repo.findOne).mockResolvedValue(queued);
+        vi.mocked(repo.save).mockResolvedValue(saved);
+
+        const input = {
+          id: mockPlan.id,
+          status: 'IN_PROGRESS',
         } as UpdatePlanInput;
 
         await resolver.updatePlan(input);

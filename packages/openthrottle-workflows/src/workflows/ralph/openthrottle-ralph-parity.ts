@@ -54,8 +54,8 @@
  * Source of truth: `applications/openthrottle-server/src/graphql/plans/plans.resolver.ts`
  * (`updatePlan`, `setPlanStatus`, `canApplyInProgressAsTargetStatus`).
  *
- * - **Direct Postgres (`cortex-ralph`):** `UPDATE … SET status = 'IN_PROGRESS' WHERE id = $2 AND status = 'PENDING'` — only `PENDING` rows change; no match → `null` (already `IN_PROGRESS` is not a no-op row update, unlike GraphQL below).
- * - **`updatePlan`:** Requesting `IN_PROGRESS` updates status only when current status is `PENDING` or already `IN_PROGRESS` (idempotent `IN_PROGRESS` → `IN_PROGRESS`). Otherwise the invalid transition is skipped (status unchanged); other input fields still apply. If nothing else changed and `IN_PROGRESS` was the only invalid request → `400` with `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`
+ * - **Direct Postgres (`cortex-ralph`):** `UPDATE … SET status = 'IN_PROGRESS' WHERE id = $2 AND status != 'IN_PROGRESS'` — promotes `PENDING`, `QUEUED`, and other non-terminal statuses; no match → `null` (already `IN_PROGRESS` is not a no-op row update, unlike GraphQL below).
+ * - **`updatePlan`:** Requesting `IN_PROGRESS` updates status only when current status is `PENDING`, `QUEUED`, or already `IN_PROGRESS` (idempotent `IN_PROGRESS` → `IN_PROGRESS`). Otherwise the invalid transition is skipped (status unchanged); other input fields still apply. If nothing else changed and `IN_PROGRESS` was the only invalid request → `400` with `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`
  * - **`setPlanStatus`:** Validates `IN_PROGRESS` first and throws that same `400` when invalid **before** the same-status early return. Valid `IN_PROGRESS` → `IN_PROGRESS` returns the entity without persisting.
  *
  * ## `RalphFlowContext` from GraphQL / queue tuning (`ralph-plan-run-context.ts`, re-exported from `workflow-graphql.ts`)

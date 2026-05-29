@@ -489,12 +489,14 @@ export async function updateTaskStatus(
 
 /**
  * @description Updates a plan's status in Postgres. For `IN_PROGRESS`, applies
- * `UPDATE … WHERE id = $2 AND status = 'PENDING'` (aligned with
- * `PlansResolver.canApplyInProgressAsTargetStatus` in `plans.resolver.ts`). Returns the
- * updated row, or `null` if the plan id is missing or no row matched (including `IN_PROGRESS`
- * when the plan is not currently `PENDING`). Unlike GraphQL `updatePlan` / `setPlanStatus`,
- * this helper does not treat `IN_PROGRESS` → `IN_PROGRESS` as a no-op: an already-in-progress
- * plan yields no update and `null`. Other target statuses use an unconditional update by id.
+ * `UPDATE … WHERE id = $2 AND status != 'IN_PROGRESS'` (aligned with
+ * `PlansResolver.canApplyInProgressAsTargetStatus` and
+ * `TasksService.syncParentPlanToInProgressWhenTaskInProgress` in openthrottle-server).
+ * Returns the updated row, or `null` if the plan id is missing or no row matched (including
+ * `IN_PROGRESS` when the plan is already `IN_PROGRESS`). Unlike GraphQL `updatePlan` /
+ * `setPlanStatus`, this helper does not treat `IN_PROGRESS` → `IN_PROGRESS` as a no-op: an
+ * already-in-progress plan yields no update and `null`. Other target statuses use an
+ * unconditional update by id.
  */
 export async function updatePlanStatus(
   config: WorkflowRalphConfig,
@@ -516,7 +518,7 @@ export async function updatePlanStatus(
         title: string;
         updated_at: string;
       }>(
-        `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 AND status = 'PENDING' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
+        `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 AND status != 'IN_PROGRESS' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
         [status, planId],
       );
       const row = res.rows[0];
