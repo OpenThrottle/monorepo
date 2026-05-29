@@ -9,11 +9,11 @@ import { isAbsolute } from 'path';
 import type {
   ChildJobInput,
   RalphExecutionBackendId,
-  RalphNestedDebugCli,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
 import {
   DEFAULT_RALPH_RUNNER,
+  normalizeRalphNestedDebugCli,
   parseRalphExecutionBackendId,
 } from '@tools/workflows';
 import type {
@@ -156,9 +156,10 @@ export const ralphTuningForChildJob = (
   r: RalphNestedRunTuningInput | undefined,
 ): ChildJobRalphTuning => {
   if (!r) return {};
+  const ralphDebugCli = normalizeRalphNestedDebugCli(r.debug);
   return {
     ...(r.backend != null ? { backend: r.backend } : {}),
-    ...(r.debug !== undefined ? { ralphDebugCli: r.debug } : {}),
+    ...(ralphDebugCli !== undefined ? { ralphDebugCli } : {}),
     ...(r.iterationTimeoutSeconds != null
       ? { iterationTimeoutSeconds: r.iterationTimeoutSeconds }
       : {}),
@@ -224,13 +225,7 @@ export const parseEnqueueRalphTuning = (
   const worktree = normalizeOptionalString(input.worktree);
   const worktreeBase = normalizeOptionalString(input.worktreeBase);
 
-  let ralphDebugCli: RalphNestedDebugCli | undefined;
-  if (input.ralphDebugCli != null) {
-    const d = input.ralphDebugCli;
-    if (d === 'omit' || d === 'debug' || d === 'verbose') {
-      ralphDebugCli = d;
-    }
-  }
+  const ralphDebugCli = normalizeRalphNestedDebugCli(input.ralphDebugCli);
 
   const tuning: RalphNestedRunTuningInput = {
     ...(backendRaw !== undefined
@@ -244,7 +239,9 @@ export const parseEnqueueRalphTuning = (
     ...(project !== undefined ? { project } : {}),
     ...(prompt !== undefined ? { prompt } : {}),
     ...(promptFile !== undefined ? { promptFile } : {}),
-    ...(ralphDebugCli !== undefined ? { debug: ralphDebugCli } : {}),
+    ...(ralphDebugCli !== undefined && ralphDebugCli !== 'omit'
+      ? { debug: ralphDebugCli }
+      : {}),
     ...(worktree !== undefined ? { worktree } : {}),
     ...(worktreeBase !== undefined ? { worktreeBase } : {}),
     ...(input.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),

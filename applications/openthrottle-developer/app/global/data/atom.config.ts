@@ -1,8 +1,9 @@
+import { APP_NAME } from '@openthrottle/react-router-utils';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 
 /** localStorage key for persisted appearance preferences. */
-export const CONFIG_STORAGE_KEY = 'openthrottle-developer-appearance';
+export const CONFIG_STORAGE_KEY = `${APP_NAME}:settings:appearance`;
 
 /**
  * Default brand token from `app/styles.css` (`:root { --brand }`).

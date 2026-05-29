@@ -108,16 +108,9 @@ export const main = async (): Promise<void> => {
   ]);
 
   if (!planRow) {
-    console.error('__________ NO PLAN ROW FOUND __________');
-    console.error('🟠 🟠 🟠 🟠 🟠 🟠 🟠 🟠');
-
     console.error(
-      `${RALPH_WORKFLOW_FATAL_PREFIX} ---- Plan not found: ${effectivePlanId}`,
+      `${RALPH_WORKFLOW_FATAL_PREFIX}Plan not found: ${effectivePlanId}`,
     );
-
-    console.error('🟠 planRow -' + JSON.stringify(planRow, null, 2));
-    console.error('🟠 tasksRows -' + JSON.stringify(tasksRows, null, 2));
-
     process.exit(1);
   }
 

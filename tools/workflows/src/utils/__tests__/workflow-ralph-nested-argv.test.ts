@@ -7,7 +7,39 @@ import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 import {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
+  normalizeRalphNestedDebugCli,
 } from '../workflow-ralph-nested-argv';
+
+describe('normalizeRalphNestedDebugCli', () => {
+  it('returns lowercase debug and verbose values', () => {
+    expect(normalizeRalphNestedDebugCli('debug')).toBe('debug');
+    expect(normalizeRalphNestedDebugCli('verbose')).toBe('verbose');
+    expect(normalizeRalphNestedDebugCli('omit')).toBe('omit');
+  });
+
+  it('normalizes legacy uppercase DEBUG and VERBOSE', () => {
+    expect(normalizeRalphNestedDebugCli('DEBUG')).toBe('debug');
+    expect(normalizeRalphNestedDebugCli('VERBOSE')).toBe('verbose');
+  });
+
+  it('maps truthy aliases to debug and verbose', () => {
+    expect(normalizeRalphNestedDebugCli('1')).toBe('debug');
+    expect(normalizeRalphNestedDebugCli('true')).toBe('debug');
+    expect(normalizeRalphNestedDebugCli('2')).toBe('verbose');
+    expect(normalizeRalphNestedDebugCli('all')).toBe('verbose');
+  });
+
+  it('maps omit aliases to omit', () => {
+    expect(normalizeRalphNestedDebugCli('0')).toBe('omit');
+    expect(normalizeRalphNestedDebugCli('false')).toBe('omit');
+    expect(normalizeRalphNestedDebugCli('off')).toBe('omit');
+  });
+
+  it('returns undefined for unknown values', () => {
+    expect(normalizeRalphNestedDebugCli('maybe')).toBeUndefined();
+    expect(normalizeRalphNestedDebugCli(null)).toBeUndefined();
+  });
+});
 
 describe('buildWorkflowRalphRunTuningArgv', () => {
   it('returns empty when input is empty', () => {
@@ -54,6 +86,15 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     expect(buildWorkflowRalphRunTuningArgv({ debug: 'verbose' })).toEqual([
       '--verbose',
     ]);
+  });
+
+  it('normalizes legacy uppercase DEBUG and VERBOSE debug values', () => {
+    expect(
+      buildWorkflowRalphRunTuningArgv({ debug: 'DEBUG' as 'debug' }),
+    ).toEqual(['--debug']);
+    expect(
+      buildWorkflowRalphRunTuningArgv({ debug: 'VERBOSE' as 'verbose' }),
+    ).toEqual(['--verbose']);
   });
 
   it('includes --worktree argv when set', () => {
@@ -112,5 +153,22 @@ describe('mergeRalphNestedRunTuningWithExecutionBackend', () => {
     ).toEqual({
       backend: 'cursor',
     });
+  });
+
+  it('normalizes legacy uppercase debug on merge', () => {
+    expect(
+      mergeRalphNestedRunTuningWithExecutionBackend(
+        { debug: 'VERBOSE' as 'verbose' },
+        'cursor',
+      ),
+    ).toEqual({ backend: 'cursor', debug: 'verbose' });
+    expect(
+      buildWorkflowRalphRunTuningArgv(
+        mergeRalphNestedRunTuningWithExecutionBackend(
+          { debug: 'DEBUG' as 'debug' },
+          'cursor',
+        ),
+      ),
+    ).toEqual(['--debug']);
   });
 });

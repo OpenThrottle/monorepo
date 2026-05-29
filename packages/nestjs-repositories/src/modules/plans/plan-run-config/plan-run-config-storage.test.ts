@@ -119,10 +119,7 @@ describe('parsePlanRunConfigJson', () => {
 
 describe('planRunConfigFromPlanStorage', () => {
   it('fills legacy version-only shell from DB', () => {
-    const config = planRunConfigFromPlanStorage(
-      { version: 1 },
-      { planId },
-    );
+    const config = planRunConfigFromPlanStorage({ version: 1 }, { planId });
     expect(config).toEqual(getDefaultPlanRunConfigStorage({ planId }));
   });
 });
@@ -134,11 +131,12 @@ describe('serializePlanRunConfigForGraphql', () => {
   });
 
   it('normalizes legacy version-only shell', () => {
-    const json = serializePlanRunConfigForGraphql(
-      { version: 1 } as never,
-      { planId },
+    const json = serializePlanRunConfigForGraphql({ version: 1 } as never, {
+      planId,
+    });
+    expect(JSON.parse(json)).toEqual(
+      getDefaultPlanRunConfigStorage({ planId }),
     );
-    expect(JSON.parse(json)).toEqual(getDefaultPlanRunConfigStorage({ planId }));
   });
 });
 
@@ -214,7 +212,7 @@ describe('buildRalphPlanRunTuningFromPlanRunConfig', () => {
       model: 'fast',
       project: 'openthrottle-workflows',
       prompt: '/custom',
-      ralphDebugCli: 'DEBUG',
+      ralphDebugCli: 'debug',
       worktree: 'my-worktree',
     });
   });

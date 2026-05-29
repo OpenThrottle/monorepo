@@ -95,10 +95,7 @@ export const workflowUiStateFromPlanRunConfig = (
     promptLayer: parsed.ralph.promptLayer,
     skipWorktreeSetup: parsed.ralph.skipWorktreeSetup,
     targetMode: parsed.target.mode,
-    taskId:
-      parsed.target.mode === 'task'
-        ? parsed.target.taskId
-        : seedTaskId,
+    taskId: parsed.target.mode === 'task' ? parsed.target.taskId : seedTaskId,
     worktreeBase: parsed.ralph.worktreeBase,
     worktreeCli: parsed.ralph.worktreeCli,
     worktreeName: parsed.ralph.worktreeName,
@@ -179,11 +176,11 @@ export const buildRalphPlanRunTuningFromPlanRunConfig = (
 
   switch (ralph.debugCli) {
     case 'debug':
-      tuning.ralphDebugCli = 'DEBUG';
+      tuning.ralphDebugCli = 'debug';
       break;
 
     case 'verbose':
-      tuning.ralphDebugCli = 'VERBOSE';
+      tuning.ralphDebugCli = 'verbose';
       break;
 
     case 'omit':

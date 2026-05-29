@@ -52,7 +52,7 @@ describe('plan run config enqueue tuning parity', () => {
       model: 'sonnet',
       project: 'nestjs-repositories',
       prompt: '/agents/custom',
-      ralphDebugCli: 'VERBOSE',
+      ralphDebugCli: 'verbose',
       worktree: 'feature-x',
     });
   });

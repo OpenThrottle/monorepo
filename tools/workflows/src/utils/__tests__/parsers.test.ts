@@ -223,6 +223,26 @@ describe('parseRalphArgs (shim debug CLI)', () => {
     expect(ralphDebugLogger.level).toBe('verbose');
   });
 
+  it('sets verbose level from --verbose=verbose', () => {
+    process.argv = [
+      'node',
+      'ralph.js',
+      '--plan',
+      PLAN_UUID,
+      '--verbose=verbose',
+    ];
+    const args = parseRalphArgs();
+    expect(args.ralphDebugLevel).toBe('verbose');
+    expect(ralphDebugLogger.level).toBe('verbose');
+  });
+
+  it('throws when --verbose= has an invalid value', () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--verbose=maybe'];
+    expect(() => parseRalphArgs()).toThrow(
+      /expects "verbose" or a truthy verbose flag/,
+    );
+  });
+
   it('sets verbose level from --debug=verbose', () => {
     process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--debug=verbose'];
     const args = parseRalphArgs();
@@ -265,5 +285,20 @@ describe('parseRalphArgs (shim debug CLI)', () => {
     expect(() => parseRalphArgs()).toThrow(
       /expects "verbose" or a truthy debug flag/,
     );
+  });
+
+  it('rejects uppercase --DEBUG and --VERBOSE argv (lowercase only)', () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--DEBUG'];
+    expect(() => parseRalphArgs()).toThrow(/Unknown flag: --DEBUG/);
+
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--VERBOSE'];
+    expect(() => parseRalphArgs()).toThrow(/Unknown flag: --VERBOSE/);
+  });
+
+  it('sets verbose level from --verbose=true', () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--verbose=true'];
+    const args = parseRalphArgs();
+    expect(args.ralphDebugLevel).toBe('verbose');
+    expect(ralphDebugLogger.level).toBe('verbose');
   });
 });

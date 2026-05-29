@@ -59,6 +59,7 @@ export { runChildJob } from './utils/child-job';
 export {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
+  normalizeRalphNestedDebugCli,
 } from './utils/workflow-ralph-nested-argv';
 export type {
   RalphNestedDebugCli,

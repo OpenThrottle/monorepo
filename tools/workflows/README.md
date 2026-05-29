@@ -119,7 +119,7 @@ Implementation: [`src/utils/ralph-debug-logger.ts`](src/utils/ralph-debug-logger
 
 ### Cross-repo usage
 
-Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `POSTGRES_URL` or `POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details.
+Ralph can be invoked from another repo by pointing at this monorepo's workflow binary. **Cortex is required:** set `POSTGRES_URL` or `POSTGRES_*` in the environment (e.g. export from this monorepo's `.env` or a shared config). When the foreign repo's own `.env` would point at a different Postgres, set **`OPENTHROTTLE_CORTEX_POSTGRES_URL`** (or override `POSTGRES_URL`) to OpenThrottle's Cortex connection string before invoking Ralph; queue spawns inject this automatically. Ralph injects plan and tasks into the prompt; **do not write a ref file**—the workflow never writes one and invokers rely on planId-in-prompt only. See [docs/cross-repo-usage.md](docs/cross-repo-usage.md) for details. For Dev UI → BullMQ spawn debugging (auth, `postgresIdentity`, cold/warm runs), see [docs/workflows/ralph-queue-auth-progress.md](../../docs/workflows/ralph-queue-auth-progress.md).
 
 ### Multi-workspace plans (`workingDirectory`)
 

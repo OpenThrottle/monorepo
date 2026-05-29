@@ -12,8 +12,13 @@ import { runChildJob } from '../child-job';
 
 const mockConfig = { connectionString: 'postgres://localhost/cortex' };
 
+const buildWorkflowRalphSpawnEnvMock = vi.fn((env: NodeJS.ProcessEnv) => env);
+
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
-  buildWorkflowRalphSpawnEnv: vi.fn((env: NodeJS.ProcessEnv) => env),
+  buildWorkflowRalphSpawnEnv: (
+    env: NodeJS.ProcessEnv,
+    options?: { canonicalCortexPostgresUrl?: string },
+  ) => buildWorkflowRalphSpawnEnvMock(env, options),
   getPostgresConfig: vi.fn(() => mockConfig),
 }));
 
@@ -241,6 +246,7 @@ describe('runChildJob', () => {
   afterEach(() => {
     vi.mocked(spawn).mockReset();
     vi.mocked(spawnSync).mockReset();
+    buildWorkflowRalphSpawnEnvMock.mockClear();
     mockCortexState.tasks = [];
     mockCortexState.updatePlanStatusCalls = [];
   });
@@ -337,6 +343,51 @@ describe('runChildJob', () => {
     }
   });
 
+  it('passes --debug when ralphDebugCli is DEBUG (legacy uppercase)', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      ralphDebugCli: 'DEBUG' as 'debug',
+    };
+    try {
+      await runChildJob(input);
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        [
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+          '--debug',
+          '--worktree',
+          'wt1',
+        ],
+        expect.objectContaining({ cwd: dir, shell: true }),
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
   it('passes --verbose when ralphDebugCli is verbose', async () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChild({ status: 0, stdout: '' }),
@@ -379,6 +430,55 @@ describe('runChildJob', () => {
       );
     } finally {
       rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('injects canonical Cortex Postgres URL into nested spawn env when cwd is foreign (regression: Plan not found)', async () => {
+    const canonicalUrl =
+      'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
+    const foreignCwd = createTempDir();
+
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const input: ChildJobInput = {
+      canonicalCortexPostgresUrl: canonicalUrl,
+      handoff: handoff(foreignCwd),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+    };
+    try {
+      await runChildJob(input);
+
+      expect(buildWorkflowRalphSpawnEnvMock).toHaveBeenCalledWith(process.env, {
+        canonicalCortexPostgresUrl: canonicalUrl,
+      });
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        expect.arrayContaining([
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+        ]),
+        expect.objectContaining({ cwd: foreignCwd, shell: true }),
+      );
+    } finally {
+      rmSync(foreignCwd, { force: true, recursive: true });
     }
   });
 

@@ -207,8 +207,26 @@ export const parseRalphArgs = (): RalphArgs => {
       } else if (cliDebug !== 'verbose') {
         cliDebug = 'debug';
       }
-    } else if (arg === '--verbose') {
-      cliDebug = 'verbose';
+    } else if (arg === '--verbose' || arg.startsWith('--verbose=')) {
+      if (arg.startsWith('--verbose=')) {
+        const value = arg.slice('--verbose='.length).trim().toLowerCase();
+        if (
+          value === 'verbose' ||
+          value === '2' ||
+          value === 'all' ||
+          value === '' ||
+          value === '1' ||
+          value === 'true' ||
+          value === 'on'
+        ) {
+          cliDebug = 'verbose';
+        } else {
+          const message = `--verbose=value expects "verbose" or a truthy verbose flag; got "${value}"`;
+          throw new Error(message);
+        }
+      } else {
+        cliDebug = 'verbose';
+      }
     } else if (arg === '--iterations' && i + 1 < args.length) {
       const value = parseInt(args[i + 1] ?? '', 10);
       if (isNaN(value) || value < 1) {

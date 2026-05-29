@@ -21,6 +21,49 @@ import {
 export type RalphNestedDebugCli = 'omit' | 'debug' | 'verbose';
 
 /**
+ * @description Normalizes debug CLI tuning to lowercase GraphQL/argv values.
+ * Accepts legacy uppercase `DEBUG` / `VERBOSE` and truthy aliases (`1`, `true`, `on`).
+ */
+export const normalizeRalphNestedDebugCli = (
+  value: string | null | undefined,
+): RalphNestedDebugCli | undefined => {
+  if (value == null) {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === '') {
+    return undefined;
+  }
+
+  if (normalized === 'verbose' || normalized === '2' || normalized === 'all') {
+    return 'verbose';
+  }
+
+  if (
+    normalized === 'debug' ||
+    normalized === '1' ||
+    normalized === 'true' ||
+    normalized === 'on' ||
+    normalized === 'yes'
+  ) {
+    return 'debug';
+  }
+
+  if (
+    normalized === 'omit' ||
+    normalized === '0' ||
+    normalized === 'false' ||
+    normalized === 'off' ||
+    normalized === 'no'
+  ) {
+    return 'omit';
+  }
+
+  return undefined;
+};
+
+/**
  * @description Layer 1 (prompt profile), layer 2 (backend), and layer 3 (run tuning) for nested `pnpm exec workflow-ralph`.
  * All fields optional; omitted fields do not produce argv (defaults resolved in the child process).
  */
@@ -101,7 +144,7 @@ export const buildWorkflowRalphRunTuningArgv = (
     );
   }
 
-  switch (input.debug) {
+  switch (normalizeRalphNestedDebugCli(input.debug)) {
     case 'debug':
       ralphArgs.push('--debug');
       break;
@@ -146,5 +189,10 @@ export const mergeRalphNestedRunTuningWithExecutionBackend = (
     base.backend != null
       ? base.backend
       : (executionBackend ?? DEFAULT_RALPH_RUNNER);
-  return { ...base, backend };
+  const debug = normalizeRalphNestedDebugCli(base.debug);
+  return {
+    ...base,
+    backend,
+    ...(debug !== undefined ? { debug } : {}),
+  };
 };

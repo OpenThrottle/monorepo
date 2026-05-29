@@ -7,6 +7,7 @@ import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
   parseEnqueueRalphTuning,
+  ralphTuningForChildJob,
   validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
 
@@ -83,6 +84,45 @@ describe('parseEnqueueRalphTuning', () => {
         ralphDebugCli: 'debug',
       }),
     ).toEqual({ debug: 'debug' });
+  });
+
+  test('normalizes legacy uppercase ralphDebugCli to nested debug', () => {
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'DEBUG' as 'debug',
+      }),
+    ).toEqual({ debug: 'debug' });
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'VERBOSE' as 'verbose',
+      }),
+    ).toEqual({ debug: 'verbose' });
+  });
+
+  test('omits debug when ralphDebugCli is omit or unknown', () => {
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'omit',
+      }),
+    ).toBeUndefined();
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'DEBUGG' as 'debug',
+      }),
+    ).toBeUndefined();
+  });
+
+  test('ralphTuningForChildJob normalizes legacy uppercase debug on job payload', () => {
+    expect(
+      ralphTuningForChildJob({ debug: 'DEBUG' as 'debug', iterations: 2 }),
+    ).toEqual({ iterations: 2, ralphDebugCli: 'debug' });
+    expect(ralphTuningForChildJob({ debug: 'VERBOSE' as 'verbose' })).toEqual({
+      ralphDebugCli: 'verbose',
+    });
   });
 
   test('parses worktree tuning for nested argv and orchestrator', () => {

@@ -1,4 +1,5 @@
 export { CommitLink } from './modules/commit-links/commit-link.entity';
+export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
 export { CommitLinksService } from './modules/commit-links/commit-links.service';
 export {
@@ -76,7 +77,6 @@ export { User } from './modules/users/user.entity';
 export { usersFactory } from './modules/users/users.factory';
 export { UsersService } from './modules/users/users.service';
 export { vectorTransformer } from './common/vector.transformer';
-export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export type {
   CustomPromptData,
   CustomPromptType,

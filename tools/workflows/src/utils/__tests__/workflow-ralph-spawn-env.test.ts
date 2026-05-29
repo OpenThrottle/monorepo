@@ -3,9 +3,22 @@ import { describe, expect, it } from 'vitest';
 import {
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   buildWorkflowRalphSpawnEnv,
+  resolveCortexPostgresConnectionStringFromEnv,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
 } from '../../../../../packages/ai-mcp/src/config';
+
+describe('resolveCortexPostgresConnectionStringFromEnv', () => {
+  it('prefers OPENTHROTTLE_CORTEX_POSTGRES_URL over POSTGRES_URL', () => {
+    const conn = resolveCortexPostgresConnectionStringFromEnv({
+      [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+        'postgresql://cortex@db.example:5432/openthrottle',
+      POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
+    });
+
+    expect(conn).toBe('postgresql://cortex@db.example:5432/openthrottle');
+  });
+});
 
 describe('buildWorkflowRalphSpawnEnv', () => {
   it('returns the same env reference when postgres is unresolved and spawn overrides are absent', () => {
