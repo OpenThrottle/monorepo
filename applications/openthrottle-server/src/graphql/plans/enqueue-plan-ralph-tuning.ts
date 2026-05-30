@@ -32,6 +32,28 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
+ * @description Default run kind for queued plan runs. `orchestrator` (in-process GraphQL orchestrator,
+ * dispatched through the AgenticWorkflowBase registry) is the default; `spawn` (nested `workflow-ralph`)
+ * is the explicit legacy opt-in. Stage (a) rollback: set `OPENTHROTTLE_DEFAULT_RUN_KIND=spawn` to revert
+ * the default to spawn without code changes; the spawn path code remains intact.
+ */
+export type PlanRunKind = 'orchestrator' | 'spawn';
+
+/** @description The orchestrator-by-default value when the env override is unset/invalid. */
+export const DEFAULT_PLAN_RUN_KIND: PlanRunKind = 'orchestrator';
+
+/**
+ * @description Resolves the default {@link PlanRunKind} for queued runs from
+ * `OPENTHROTTLE_DEFAULT_RUN_KIND`. Returns {@link DEFAULT_PLAN_RUN_KIND} (`orchestrator`) unless the env
+ * is explicitly `spawn` (case-insensitive). Any other value falls back to the orchestrator default.
+ */
+export const resolveDefaultPlanRunKind = (): PlanRunKind => {
+  const raw = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND?.trim().toLowerCase();
+  if (raw === 'spawn') return 'spawn';
+  return DEFAULT_PLAN_RUN_KIND;
+};
+
+/**
  * @description Returns true when `value` is a plausible Cortex plan/task UUID.
  */
 const isCortexPlanTaskUuid = (value: string): boolean =>

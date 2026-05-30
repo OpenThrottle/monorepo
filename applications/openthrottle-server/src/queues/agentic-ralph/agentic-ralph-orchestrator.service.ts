@@ -1,13 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { WorkflowRunCorrelation } from '@openthrottle/nestjs-agentic-workflow';
-import { AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS } from '@openthrottle/nestjs-agentic-workflow';
+import type {
+  AgenticWorkflowRegistry,
+  WorkflowRunCorrelation,
+} from '@openthrottle/nestjs-agentic-workflow';
 import {
-  buildRalphFlowContextFromPlanRunTuning,
-  createWorkflowRalphOrchestrator,
-} from '@openthrottle/openthrottle-agentic-ralph';
+  AGENTIC_WORKFLOW_RALPH_ID,
+  AGENTIC_WORKFLOW_REGISTRY,
+} from '@openthrottle/nestjs-agentic-workflow';
+import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   WorkflowContext,
-  WorkflowRalphOrchestratorDeps,
+  WorkflowOrchestrator,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
@@ -17,15 +20,17 @@ type PlanRunTuningInput = NonNullable<
 >;
 
 /**
- * @description In-process Ralph for the `plans` queue: injects {@link AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS}
- * from {@link AgenticRalphModule} with {@link createWorkflowRalphOrchestrator} from
- * `@openthrottle/openthrottle-agentic-ralph` (not the legacy `@openthrottle/openthrottle-workflows` orchestrator).
+ * @description In-process Ralph for the `plans` queue. Resolves the Ralph workflow from the
+ * {@link AGENTIC_WORKFLOW_REGISTRY} by id ({@link AGENTIC_WORKFLOW_RALPH_ID}, `'ralph'`) and builds its
+ * orchestrator via {@link AgenticWorkflowBase.createOrchestrator}. The registry indirection is
+ * behavior-neutral: id `'ralph'` yields exactly today's `createWorkflowRalphOrchestrator(deps)` wiring
+ * (`@openthrottle/openthrottle-agentic-ralph`, not the legacy `@openthrottle/openthrottle-workflows`).
  */
 @Injectable()
 export class AgenticRalphOrchestratorService {
   constructor(
-    @Inject(AGENTIC_WORKFLOW_RALPH_ORCHESTRATOR_DEPS)
-    private readonly ralphOrchestratorDeps: WorkflowRalphOrchestratorDeps,
+    @Inject(AGENTIC_WORKFLOW_REGISTRY)
+    private readonly workflowRegistry: AgenticWorkflowRegistry,
   ) {}
 
   /**
@@ -38,9 +43,9 @@ export class AgenticRalphOrchestratorService {
     readonly signal?: AbortSignal;
   }): Promise<WorkflowRunResult> {
     const { correlation, jobData, signal } = params;
-    const orchestrator = createWorkflowRalphOrchestrator(
-      this.ralphOrchestratorDeps,
-    );
+    const orchestrator = this.workflowRegistry
+      .resolve(AGENTIC_WORKFLOW_RALPH_ID)
+      .createOrchestrator() as WorkflowOrchestrator;
 
     const baseContext = buildRalphFlowContextFromPlanRunTuning({
       executionBackend: jobData.executionBackend,

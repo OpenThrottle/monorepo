@@ -13,7 +13,15 @@ import type { Plan } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
+import {
+  afterEach,
+  describe,
+  expect,
+  beforeAll,
+  test,
+  vi,
+  beforeEach,
+} from 'vitest';
 import type { Queue } from 'bullmq';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
@@ -416,12 +424,26 @@ describe('PlansResolver', () => {
     });
   });
 
-  describe('enqueuePlanRun', () => {
+  describe('enqueuePlanRun (legacy spawn default)', () => {
+    let prevDefaultRunKind: string | undefined;
+
     beforeEach(() => {
+      // These assertions cover the spawn path; force spawn so the orchestrator-by-default flip
+      // (resolveDefaultPlanRunKind) does not reroute them. Stage (a) rollback flag.
+      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
       taskRepo.find.mockReset();
       taskRepo.find.mockResolvedValue([]);
       taskRepo.update.mockClear();
       mockEmitTaskStatusChanged.mockClear();
+    });
+
+    afterEach(() => {
+      if (prevDefaultRunKind === undefined) {
+        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      } else {
+        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
+      }
     });
 
     test('returns job id, plan id, and queue position when plan exists', async () => {
@@ -785,7 +807,88 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('enqueuePlanRun (orchestrator by default)', () => {
+    let prevDefaultRunKind: string | undefined;
+
+    beforeEach(() => {
+      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      taskRepo.find.mockReset();
+      taskRepo.find.mockResolvedValue([]);
+      mockAdd.mockClear();
+      mockEnqueuePlanRalphOrchestrator.mockClear();
+      mockEnqueuePlanRalphOrchestrator.mockResolvedValue({
+        jobId: 'job-orch-1',
+      });
+    });
+
+    afterEach(() => {
+      if (prevDefaultRunKind === undefined) {
+        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      } else {
+        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
+      }
+    });
+
+    test('routes to the orchestrator path (no spawn) when default run kind is orchestrator', async () => {
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+
+      const result = await resolver.enqueuePlanRun({
+        jobRunHooksJson: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        workingDirectory: null,
+      });
+
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledTimes(1);
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobData: expect.objectContaining({
+            planId: mockPlan.id,
+            runKind: 'orchestrator',
+          }),
+        }),
+      );
+      expect(mockAdd).not.toHaveBeenCalled();
+      expect(result.jobId).toBe('job-orch-1');
+    });
+
+    test('OPENTHROTTLE_DEFAULT_RUN_KIND=spawn reverts to the spawn path (rollback flag)', async () => {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
+      const repo = plansService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+
+      await resolver.enqueuePlanRun({
+        jobRunHooksJson: null,
+        planId: mockPlan.id,
+        priority: null,
+        ralph: null,
+        workingDirectory: null,
+      });
+
+      expect(mockAdd).toHaveBeenCalledTimes(1);
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+  });
+
   describe('workflowPlanRun', () => {
+    let prevDefaultRunKind: string | undefined;
+
+    beforeEach(() => {
+      prevDefaultRunKind = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'spawn';
+    });
+
+    afterEach(() => {
+      if (prevDefaultRunKind === undefined) {
+        delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+      } else {
+        process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = prevDefaultRunKind;
+      }
+    });
+
     test('throws NotFoundException when plan does not exist', async () => {
       const repo = plansService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);

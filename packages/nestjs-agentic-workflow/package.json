@@ -10,6 +10,7 @@
   "dependencies": {
     "@graphql-typed-document-node/core": "3.2.0",
     "@openthrottle/nodejs-graphql": "workspace:*",
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:*",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:*"
   },
   "exports": {

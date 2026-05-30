@@ -7,8 +7,10 @@ import {
   assertWorkingDirectoryIsNxWorkspaceRoot,
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
+  DEFAULT_PLAN_RUN_KIND,
   parseEnqueueRalphTuning,
   ralphTuningForChildJob,
+  resolveDefaultPlanRunKind,
   validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
 
@@ -459,5 +461,35 @@ describe('assertWorkingDirectoryIsNxWorkspaceRoot', () => {
     process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR = '1';
     const dir = mkdtempSync(join(tmpdir(), 'ot-not-nx-'));
     expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).not.toThrow();
+  });
+});
+
+describe('resolveDefaultPlanRunKind', () => {
+  const ORIGINAL = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+
+  afterEach(() => {
+    if (ORIGINAL === undefined) {
+      delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+    } else {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = ORIGINAL;
+    }
+  });
+
+  test('defaults to orchestrator when unset', () => {
+    delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+    expect(resolveDefaultPlanRunKind()).toBe('orchestrator');
+    expect(DEFAULT_PLAN_RUN_KIND).toBe('orchestrator');
+  });
+
+  describe('when OPENTHROTTLE_DEFAULT_RUN_KIND is set', () => {
+    test('returns spawn for the explicit spawn rollback value (case-insensitive)', () => {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'SPAWN';
+      expect(resolveDefaultPlanRunKind()).toBe('spawn');
+    });
+
+    test('falls back to orchestrator for any other value', () => {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'nonsense';
+      expect(resolveDefaultPlanRunKind()).toBe('orchestrator');
+    });
   });
 });

@@ -56,6 +56,7 @@ import {
 import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
+  resolveDefaultPlanRunKind,
 } from './enqueue-plan-ralph-tuning';
 import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 import {
@@ -702,6 +703,23 @@ export class PlansResolver {
 
     if (!plan) {
       throw new NotFoundException(`🟡 3 - Plan not found: ${planId}`);
+    }
+
+    // Orchestrator-by-default: queued runs use the in-process GraphQL orchestrator (resolved as
+    // AgenticWorkflowRalph through the AgenticWorkflowBase registry) unless the deployment opts back
+    // into spawn via OPENTHROTTLE_DEFAULT_RUN_KIND=spawn (Stage (a) rollback flag).
+    if (resolveDefaultPlanRunKind() === 'orchestrator') {
+      const orchestratorInput = new EnqueuePlanRalphOrchestratorInput();
+      orchestratorInput.idempotencyKey = null;
+      orchestratorInput.jobRunHooksJson = jobRunHooksJson;
+      orchestratorInput.mode = null;
+      orchestratorInput.planId = planId;
+      orchestratorInput.priority = priority;
+      orchestratorInput.ralph = ralph;
+      orchestratorInput.taskId = null;
+      orchestratorInput.workingDirectory = workingDirectory;
+
+      return this.enqueuePlanRalphOrchestrator(orchestratorInput);
     }
 
     let jobData: RunPlanJobData;
