@@ -1,6 +1,9 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import type { NotificationPayload } from '@openthrottle/openthrottle-notifications';
+import type {
+  NotificationEventName,
+  NotificationPayload,
+} from '@openthrottle/openthrottle-notifications';
 import { useWebsocketDebuggerSocketSubscription } from '../use-websocket-debugger-socket-subscription';
 import type { WebsocketDebuggerSocket } from '../types';
 
@@ -13,10 +16,21 @@ describe('useWebsocketDebuggerSocketSubscription', () => {
       on: socketOn,
     };
     const subscribeToEvents = vi.fn(
-      (listener: (event: string, payload: NotificationPayload) => void) => {
+      (
+        listener: (
+          event: NotificationEventName,
+          payload: NotificationPayload,
+        ) => void,
+      ) => {
         listener('plan.status_changed', {
+          data: {},
+          jobType: 'test',
+          message: 'example message',
           planId: 'p1',
-        } as NotificationPayload);
+          queuePosition: 1,
+          severity: 'info',
+          timestamp: new Date().toISOString(),
+        });
 
         return vi.fn();
       },

@@ -11,6 +11,7 @@ import {
   normalizeWorkflowRalphDefaultsFileV1,
   readWorkflowRalphConfigEnv,
 } from '../config/load-workflow-ralph-config.js';
+import type { Writable } from '../type';
 
 export {
   DEFAULT_RALPH_ITERATIONS,
@@ -67,7 +68,8 @@ export interface RalphRuntimeSeed {
 const pickRunTuningFromV1 = (
   v1: ReturnType<typeof loadWorkflowRalphDefaultsFileV1>,
 ): WorkflowRalphDefaultsFileJson => {
-  const out: WorkflowRalphDefaultsFileJson = {};
+  const out: Writable<WorkflowRalphDefaultsFileJson> = {};
+
   if (v1.backend !== undefined) {
     out.backend = v1.backend;
   }

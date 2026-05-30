@@ -11,6 +11,7 @@ const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 
 const mockConfig: WorkflowRalphConfig = {
   connectionString: 'postgres://localhost/cortex',
+  transport: 'postgres-direct',
 };
 
 const mockPlan: PlanRow = {
@@ -108,8 +109,8 @@ describe('Ralph main (max-iterations cleanup)', () => {
     exitSpy.mockRestore();
   });
 
-  it('calls updateTaskStatus with PENDING for current task when max iterations reached and task was not completed', async () => {
-    const { main } = await import('../ralph');
+  it('calls updateTaskStatus with PENDING for current task when msax iterations reached and task was not completed', async () => {
+    const { main } = await import('../ralph.js');
 
     await main();
 
@@ -125,7 +126,7 @@ describe('Ralph main (max-iterations cleanup)', () => {
     runIterationMock.mockReturnValue(
       `<ralph:task-complete>${TASK_ID}</ralph:task-complete>`,
     );
-    const { main } = await import('../ralph');
+    const { main } = await import('../ralph.js');
 
     await main();
 
@@ -158,8 +159,8 @@ describe('Ralph main (Cortex before NX project graph)', () => {
 
   it('resolves Cortex config before NX project validation when --project is set', async () => {
     const callOrder: string[] = [];
-    const cortexRalph = await import('../../utils/cortex-ralph');
-    const parsers = await import('../../utils/parsers');
+    const cortexRalph = await import('../../utils/cortex-ralph.js');
+    const parsers = await import('../../utils/parsers.js');
 
     vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
       callOrder.push('cortex');
@@ -186,7 +187,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
       return ['my-app'];
     });
 
-    const { main } = await import('../ralph');
+    const { main } = await import('../ralph.js');
     await main();
 
     expect(callOrder).toEqual(['cortex', 'nx']);
@@ -215,8 +216,8 @@ describe('Ralph main (Cortex before NX project graph)', () => {
 
   it('resolves Cortex config before NX project validation when --project is set', async () => {
     const callOrder: string[] = [];
-    const cortexRalph = await import('../../utils/cortex-ralph');
-    const parsers = await import('../../utils/parsers');
+    const cortexRalph = await import('../../utils/cortex-ralph.js');
+    const parsers = await import('../../utils/parsers.js');
 
     vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
       callOrder.push('cortex');
@@ -243,7 +244,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
       return ['my-app'];
     });
 
-    const { main } = await import('../ralph');
+    const { main } = await import('../ralph.js');
     await main();
 
     expect(callOrder).toEqual(['cortex', 'nx']);

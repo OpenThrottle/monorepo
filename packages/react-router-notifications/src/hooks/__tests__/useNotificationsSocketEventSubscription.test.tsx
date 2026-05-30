@@ -24,7 +24,11 @@ describe('useNotificationsSocketEventSubscription', () => {
       socket: null,
       status: 'connected',
       subscribeToNotifications: (listener) => {
-        capturedListener = listener;
+        // FIXME: This is a workaround to fix the type <error className=""></error>
+        capturedListener = listener as (
+          event: string,
+          payload: unknown,
+        ) => void;
 
         return () => {
           capturedListener = undefined;

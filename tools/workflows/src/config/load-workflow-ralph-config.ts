@@ -34,6 +34,7 @@ import {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
 } from '../utils/ot-diagnostics.js';
+import type { Writable } from '../type.js';
 
 export const DEFAULT_RALPH_PROMPT = '/agents/ralph' as const;
 export const DEFAULT_RALPH_ITERATIONS = 10;
@@ -210,7 +211,7 @@ const normalizeDiagnosticsFile = (
     throw new Error(`${filePath}: "diagnostics" must be a JSON object`);
   }
   assertKnownKeys(value, DIAGNOSTICS_KNOWN_KEYS, filePath, 'diagnostics');
-  const out: WorkflowRalphDefaultsDiagnosticsJson = {};
+  const out: Writable<WorkflowRalphDefaultsDiagnosticsJson> = {};
 
   if ('ot' in value && value.ot !== undefined) {
     if (typeof value.ot !== 'boolean') {
@@ -432,34 +433,41 @@ const isDiagnosticsEnvTruthy = (value: string | undefined): boolean => {
 const readDiagnosticsFromEnv = (
   env: NodeJS.ProcessEnv,
 ): WorkflowRalphDefaultsDiagnosticsJson => {
-  const out: WorkflowRalphDefaultsDiagnosticsJson = {};
+  const out: Writable<WorkflowRalphDefaultsDiagnosticsJson> = {};
+
   const otRaw = env[WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV];
   if (otRaw !== undefined && otRaw.trim() !== '') {
     out.ot = isDiagnosticsEnvTruthy(otRaw);
   }
+
   const spawnRaw = env[OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV];
   if (spawnRaw !== undefined && spawnRaw.trim() !== '') {
     out.spawn = isDiagnosticsEnvTruthy(spawnRaw);
   }
+
   return out;
 };
 
 const readSpawnFromEnv = (
   env: NodeJS.ProcessEnv,
 ): WorkflowRalphDefaultsSpawnJson => {
-  const out: WorkflowRalphDefaultsSpawnJson = {};
+  const out: Writable<WorkflowRalphDefaultsSpawnJson> = {};
+
   const home = env[WORKFLOW_RALPH_CONFIG_ENV.spawnHome]?.trim();
   if (home !== undefined && home !== '') {
     out.home = home;
   }
+
   const xdg = env[WORKFLOW_RALPH_CONFIG_ENV.spawnXdgConfigHome]?.trim();
   if (xdg !== undefined && xdg !== '') {
     out.xdgConfigHome = xdg;
   }
+
   const otRoot = env[WORKFLOW_RALPH_CONFIG_ENV.spawnOtRoot]?.trim();
   if (otRoot !== undefined && otRoot !== '') {
     out.otRoot = otRoot;
   }
+
   return out;
 };
 
@@ -470,6 +478,7 @@ const readLifecycleHooksChildJobsFromEnv = (
   if (raw === undefined || raw === '') {
     return undefined;
   }
+
   return raw.toLowerCase() !== 'false';
 };
 
@@ -495,9 +504,11 @@ export const readWorkflowRalphConfigEnv = (
       `${WORKFLOW_RALPH_ENV.prompt} and ${WORKFLOW_RALPH_ENV.promptFile} cannot both be set`,
     );
   }
+
   if (hasNamed) {
     out.prompt = promptRaw!.trim();
   }
+
   if (hasFile) {
     out.promptFile = promptFileRaw!.trim();
   }

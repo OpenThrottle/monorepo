@@ -10,7 +10,13 @@ describe('createNotificationSocketSubscriberRegistry', () => {
     registry.subscribe(first);
     registry.subscribe(second);
 
-    registry.notify('plan.status_changed', { planId: 'abc' });
+    registry.notify('plan.status_changed', {
+      message: 'test',
+      planId: 'abc',
+      severity: 'info',
+      taskId: 't1',
+      timestamp: new Date().toISOString(),
+    });
 
     expect(first).toHaveBeenCalledWith('plan.status_changed', {
       planId: 'abc',
@@ -27,7 +33,18 @@ describe('createNotificationSocketSubscriberRegistry', () => {
     const unsubscribe = registry.subscribe(listener);
     unsubscribe();
 
-    registry.notify('task.updated', { taskId: 't1' });
+    registry.notify('task.status_changed', {
+      data: {
+        planId: 'abc',
+        taskId: 't1',
+      },
+      link: '/plans/abc',
+      message: 'test',
+      planId: 'abc',
+      severity: 'info',
+      taskId: 't1',
+      timestamp: new Date().toISOString(),
+    });
 
     expect(listener).not.toHaveBeenCalled();
   });
