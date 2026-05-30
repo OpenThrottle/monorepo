@@ -13,7 +13,7 @@ We want composable **lifecycle hooks** so plans can, for example:
 - Summarize or file follow-ups via a prompt profile after the job finishes
 - Eventually react to **GitHub** events (PR opened, CI done, merge) with the same hook runner
 
-**Phase 1 (this plan):** `before_run` and `after_run` on BullMQ plan jobs (`WorkflowProcessor`, spawn + orchestrator).  
+**Phase 1 (this plan):** `before_run` and `after_run` on BullMQ plan jobs (`PlansProcessor`, spawn + orchestrator).  
 **Phase 2 (backlog):** GitHub webhooks / lifecycle triggers reusing the same hook configuration and runner.
 
 > **Jest-style lifecycle (plan `a1c55a0a`, task `c8896177`):** the design to evolve these run-level
@@ -53,7 +53,7 @@ We want composable **lifecycle hooks** so plans can, for example:
 | Area               | Location                                                                                                   |
 | ------------------ | ---------------------------------------------------------------------------------------------------------- |
 | Enqueue plan run   | `PlansResolver.enqueuePlanRun` (canonical; `workflowPlanRun` is a deprecated alias), `buildRunPlanJobData` |
-| Job processing     | `WorkflowProcessor.process` (`applications/openthrottle-server/src/queues/workflow/workflow.processor.ts`) |
+| Job processing     | `PlansProcessor.process` (`applications/openthrottle-server/src/queues/plans/plans.processor.ts`)          |
 | Job payload tuning | `RalphNestedRunTuningInput` in `applications/openthrottle-server/src/queues/plans/plans.types.ts`          |
 | UI run config      | `PlanTabConfiguration`, `PlanWorkflowConfigPrompt`                                                         |
 | Prompt resolution  | `tools/workflows/src/utils/ralph-prompt-resolution.ts`                                                     |
@@ -64,7 +64,7 @@ sequenceDiagram
   participant UI as Developer UI
   participant API as openthrottle-server
   participant Q as BullMQ plans queue
-  participant W as WorkflowProcessor
+  participant W as PlansProcessor
   participant H as Hook runner
   participant R as Ralph / orchestrator
 
@@ -328,13 +328,13 @@ A webhook affects zero or more plans. Draft rules (product TBD):
 
 ### Relationship to phase 1 job hooks
 
-| Aspect         | Phase 1 (`before_run` / `after_run`)   | Phase 2 (GitHub triggers)                 |
-| -------------- | -------------------------------------- | ----------------------------------------- |
-| Invoker        | `WorkflowProcessor` / `PlansProcessor` | Webhook → BullMQ worker                   |
-| Main Ralph run | Always (unless `before_run` blocks)    | None by default                           |
-| Conditions     | `runKinds`, `whenMainRunSucceeded`     | `baseBranches`, labels, repo match        |
-| cwd            | Job `workingDirectory` / worktree      | Plan workspace root or default clone path |
-| Output stream  | Yes                                    | Yes, with github prefix                   |
+| Aspect         | Phase 1 (`before_run` / `after_run`) | Phase 2 (GitHub triggers)                 |
+| -------------- | ------------------------------------ | ----------------------------------------- |
+| Invoker        | `PlansProcessor`                     | Webhook → BullMQ worker                   |
+| Main Ralph run | Always (unless `before_run` blocks)  | None by default                           |
+| Conditions     | `runKinds`, `whenMainRunSucceeded`   | `baseBranches`, labels, repo match        |
+| cwd            | Job `workingDirectory` / worktree    | Plan workspace root or default clone path |
+| Output stream  | Yes                                  | Yes, with github prefix                   |
 
 ### Implementation checklist (when scoped)
 
@@ -411,7 +411,7 @@ pnpm nx run openthrottle-developer:test
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-05-20 | Initial scaffold (plan `0bd23aba-ace8-464c-ae77-363356451b3a`)                                                                                                                                                                                         |
 | 2026-05-20 | Canonical hook types + validation in `@tools/workflows` (task `9b475ece-83c3-47c1-9688-f10c2fc76970`)                                                                                                                                                  |
-| 2026-05-20 | `before_run` execution in `WorkflowProcessor` / `PlansProcessor` via `executeJobRunHooksPhase` + `runBeforeRunHooksAndHandleBlock` (task `1d469579-5412-4b35-85c8-97d44767aa95`)                                                                       |
+| 2026-05-20 | `before_run` execution in `PlansProcessor` via `executeJobRunHooksPhase` + `runBeforeRunHooksAndHandleBlock` (task `1d469579-5412-4b35-85c8-97d44767aa95`)                                                                                             |
 | 2026-05-20 | `after_run` via `runAfterRunHooks` / `runAfterRunHooksThenNotify` + `completePlanRunWithHooks` on all terminal paths (spawn, orchestrator, worktree); blocked runs run `after_run` before BLOCKED notify (task `4c05a32b-fe85-499e-a409-efe09f537524`) |
 | 2026-05-20 | Hook runner: `resolveJobRunHookLayer1Prompt`, skill frontmatter strip, `buildJobRunHookAgentPrompt`, server `executePlanJobRunHooks` single iteration (task `2271cd77-3ba9-4fc9-9977-2645b26ee2fa`)                                                    |
 | 2026-05-20 | Tests + manual acceptance table: validation limits, `execute-plan-job-run-hooks.test.ts`, processor/enqueue/UI tests documented (task `fc4bf925-bc18-4237-9100-73a6129e0c72`)                                                                          |

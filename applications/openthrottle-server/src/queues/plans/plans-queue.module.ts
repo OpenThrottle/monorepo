@@ -9,10 +9,7 @@ import { MetricsModule } from '../../metrics/metrics.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module';
 import { PlanLifecycleHooksQueueModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
-import {
-  PLANS_QUEUE_NAME,
-  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
-} from './plans.constants';
+import { PLANS_QUEUE_NAME } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
 
@@ -29,8 +26,6 @@ import { PlansProcessor } from './plans.processor';
     AgenticRalphModule,
     LoggerModule,
     MetricsModule,
-    NestjsBullmqModule.registerQueue(RUN_PLAN_ORCHESTRATOR_JOB_NAME),
-    NestjsBullmqBoardModule.forFeature(RUN_PLAN_ORCHESTRATOR_JOB_NAME),
     NestjsBullmqModule.registerQueue(PLANS_QUEUE_NAME),
     NestjsBullmqBoardModule.forFeature(PLANS_QUEUE_NAME),
     NestjsRepositoriesModule,

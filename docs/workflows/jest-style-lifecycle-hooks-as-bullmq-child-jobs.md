@@ -193,7 +193,7 @@ _host_ changes from "in-process inside the worker" to "a dedicated child job".
 
 | Job                        | Queue                        | `name`                       | Data discriminant                       |
 | -------------------------- | ---------------------------- | ---------------------------- | --------------------------------------- |
-| Parent plan run (existing) | `plans` (`WORKFLOW_NAME`)    | `run-plan` / `Agentic Ralph` | `runKind: 'spawn' \| 'orchestrator'`    |
+| Parent plan run (existing) | `Plans` (`PLANS_QUEUE_NAME`) | `run-plan` / `Agentic Ralph` | `runKind: 'spawn' \| 'orchestrator'`    |
 | Lifecycle hook child       | `plan-lifecycle-hooks` (new) | `lifecycle-hook`             | `{ phase, hookIndex, planId, taskId? }` |
 
 A dedicated child queue keeps hook concurrency, rate limits, and retention independent of the plan
@@ -259,7 +259,7 @@ stays transport-free and only calls `runTask` / `runPlan`.
 `afterAll` must run on **every** terminal path — success, failure, `beforeAll`-block, loop failure,
 ensure-commit failure, and **cancellation**. Today this is centralized in
 `completePlanRunWithHooks` / `runAfterRunHooksThenNotify`, called on all terminal branches of
-`WorkflowProcessor`. Phase 2 keeps that single funnel and routes it through the child-job dispatcher.
+`PlansProcessor`. Phase 2 keeps that single funnel and routes it through the child-job dispatcher.
 
 - **Cancellation:** when the parent `abortSignal` fires, the loop stops, but the parent still
   enqueues `afterAll` children. `afterEach` for an in-flight task runs only if the task already
@@ -351,7 +351,7 @@ migration. No stored data needs rewriting — parsing maps legacy values on the 
 | Orchestrator boundary calls (`runTask` at task transitions) | `@openthrottle/openthrottle-agentic-ralph` (`utils/orchestrator.ts`)                   |
 | Child-job FlowProducer + dispatcher implementation          | `openthrottle-server` queues (`plan-lifecycle-hooks` queue + processor)                |
 | Nest DI tokens for the dispatcher / child queue             | `@openthrottle/nestjs-agentic-workflow`                                                |
-| Terminal funnel (`afterAll` always runs)                    | `WorkflowProcessor.completePlanRunWithHooks` (existing single funnel)                  |
+| Terminal funnel (`afterAll` always runs)                    | `PlansProcessor.completePlanRunWithHooks` (existing single funnel)                     |
 | Persistence + GraphQL + UI                                  | migration 043 (unchanged), `PlanObject` / `UpdatePlanInput`, `PlanWorkflowConfigHooks` |
 
 ## Alignment with the broader plan

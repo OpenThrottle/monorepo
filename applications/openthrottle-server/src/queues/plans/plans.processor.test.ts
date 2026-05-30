@@ -315,7 +315,9 @@ describe('PlansProcessor', () => {
 
   it('should inject canonical Cortex Postgres URL into nested workflow-ralph env when POSTGRES_URL is set', async () => {
     const prevUrl = process.env.POSTGRES_URL;
+    const prevTransport = process.env.WORKFLOW_RALPH_TRANSPORT;
     process.env.POSTGRES_URL = 'postgresql://u:p@localhost:5432/cortex_test';
+    process.env.WORKFLOW_RALPH_TRANSPORT = 'postgres-direct';
 
     try {
       await processor.process(mockJob);
@@ -336,6 +338,11 @@ describe('PlansProcessor', () => {
       );
     } finally {
       process.env.POSTGRES_URL = prevUrl;
+      if (prevTransport === undefined) {
+        delete process.env.WORKFLOW_RALPH_TRANSPORT;
+      } else {
+        process.env.WORKFLOW_RALPH_TRANSPORT = prevTransport;
+      }
     }
   });
 
@@ -363,8 +370,10 @@ describe('PlansProcessor', () => {
 
   it('should inject canonical Cortex Postgres into nested env when workingDirectory is a foreign cwd (regression: Plan not found)', async () => {
     const prevUrl = process.env.POSTGRES_URL;
+    const prevTransport = process.env.WORKFLOW_RALPH_TRANSPORT;
     process.env.POSTGRES_URL =
       'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
+    process.env.WORKFLOW_RALPH_TRANSPORT = 'postgres-direct';
 
     mockJob = {
       data: {
@@ -397,6 +406,11 @@ describe('PlansProcessor', () => {
       );
     } finally {
       process.env.POSTGRES_URL = prevUrl;
+      if (prevTransport === undefined) {
+        delete process.env.WORKFLOW_RALPH_TRANSPORT;
+      } else {
+        process.env.WORKFLOW_RALPH_TRANSPORT = prevTransport;
+      }
     }
   });
 
@@ -981,6 +995,12 @@ describe('PlansProcessor', () => {
             provide: BullMqRunOutputRetentionService,
             useValue: createMock<BullMqRunOutputRetentionService>({
               maybePruneAfterJobClose: vi.fn(),
+            }),
+          },
+          {
+            provide: WorkflowLifecycleDispatcherFactory,
+            useValue: createMock<WorkflowLifecycleDispatcherFactory>({
+              create: vi.fn(),
             }),
           },
         ],

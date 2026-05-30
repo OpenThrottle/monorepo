@@ -61,11 +61,11 @@ Use this section when choosing an auth strategy (task `2af0a6ce-0072-4319-8cde-d
 
 ### Where the child is spawned
 
-| Path                                             | Command                                            | `cwd`                                                          | `env`                                                                                                                                                                                                                                                                               |
-| ------------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Local CLI**                                    | User runs `pnpm exec workflow-ralph …`             | Whatever the shell’s current directory is                      | Full shell / login session env                                                                                                                                                                                                                                                      |
-| **Plans queue — legacy** (`processInProcessCwd`) | `pnpm` + `['exec','workflow-ralph','--plan',…]`    | `job.data.workingDirectory ?? WORKSPACE_ROOT ?? process.cwd()` | `buildWorkflowRalphSpawnEnv(process.env, { canonicalCortexPostgresUrl: getCortexPostgresUrl() })` — see `applications/openthrottle-server/src/queues/plans/plans.processor.ts` and the same pattern in `applications/openthrottle-server/src/queues/workflow/workflow.processor.ts` |
-| **Plans queue — worktree**                       | `@tools/workflows` `runChildJob` → `runRalphAsync` | `handoff.worktreePath`                                         | Same helper from `process.env` + optional `canonicalCortexPostgresUrl` from `getCortexPostgresUrl()` on the processor — see `tools/workflows/src/utils/child-job.ts`                                                                                                                |
+| Path                                             | Command                                            | `cwd`                                                          | `env`                                                                                                                                                                          |
+| ------------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Local CLI**                                    | User runs `pnpm exec workflow-ralph …`             | Whatever the shell’s current directory is                      | Full shell / login session env                                                                                                                                                 |
+| **Plans queue — legacy** (`processInProcessCwd`) | `pnpm` + `['exec','workflow-ralph','--plan',…]`    | `job.data.workingDirectory ?? WORKSPACE_ROOT ?? process.cwd()` | `buildWorkflowRalphSpawnEnv(process.env, { canonicalCortexPostgresUrl: getCortexPostgresUrl() })` — see `applications/openthrottle-server/src/queues/plans/plans.processor.ts` |
+| **Plans queue — worktree**                       | `@tools/workflows` `runChildJob` → `runRalphAsync` | `handoff.worktreePath`                                         | Same helper from `process.env` + optional `canonicalCortexPostgresUrl` from `getCortexPostgresUrl()` on the processor — see `tools/workflows/src/utils/child-job.ts`           |
 
 Argv for nested runs is built with `buildWorkflowRalphRunTuningArgv` / `mergeRalphNestedRunTuningWithExecutionBackend` (queue) so flags match manual CLI omission rules; defaults still resolve from child **`cwd`** via `.workflow-ralph.json` and env when flags are omitted.
 
@@ -97,7 +97,6 @@ Use this when you believe auth is fixed; adjust commands to match your local com
 ## References (code)
 
 - `applications/openthrottle-server/src/queues/plans/plans.processor.ts` (log context `PlansProcessor`; spawn + `buildWorkflowRalphSpawnEnv`)
-- `applications/openthrottle-server/src/queues/workflow/workflow.processor.ts` (`WorkflowProcessor`; same spawn pattern when used)
 - `packages/nestjs-worktrees/src/utils/child-job.ts` (and app-local copies under `tools/workflows` if applicable)
 - `tools/workflows/README.md`
 

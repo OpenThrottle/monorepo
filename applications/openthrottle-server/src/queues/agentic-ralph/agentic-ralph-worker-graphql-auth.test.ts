@@ -8,7 +8,6 @@ describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', (
     delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN;
     delete process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN;
     delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
-    delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN;
   };
 
   afterEach(() => {
@@ -45,20 +44,8 @@ describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', (
     );
   });
 
-  it('uses OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN when non-production and no primary', () => {
+  it('returns undefined when no auth token env vars are set', () => {
     clearAuthTokenEnv();
-    process.env.NODE_ENV = 'development';
-    process.env.OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN = 'placeholder';
-
-    expect(resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token).toBe(
-      'placeholder',
-    );
-  });
-
-  it('ignores OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN in production', () => {
-    clearAuthTokenEnv();
-    process.env.NODE_ENV = 'production';
-    process.env.OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN = 'placeholder';
 
     expect(
       resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token,
@@ -83,6 +70,7 @@ describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (graphql url)', 
   });
 
   it('falls back to OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL', () => {
+    delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_URL;
     process.env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL = 'http://wf/graphql';
 
     expect(

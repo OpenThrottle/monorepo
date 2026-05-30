@@ -85,7 +85,7 @@ import {
 const RALPH_SIGKILL_GRACE_MS = 10_000;
 
 /**
- * @description Derives worker concurrency from WORKTREE_TARGETS env at module load time.
+ * Derives worker concurrency from WORKTREE_TARGETS env at module load time.
  * When worktrees are configured, concurrency matches the number of worktrees so jobs
  * can run in parallel across different worktrees. Defaults to 1 when no worktrees configured.
  */
@@ -101,7 +101,7 @@ const CONCURRENCY = getWorkerConcurrency();
 const RALPH_CMD = 'workflow-ralph';
 
 /**
- * @description Resolves the monorepo root so we can run `pnpm exec workflow-ralph` from there.
+ * Resolves the monorepo root so we can run `pnpm exec workflow-ralph` from there.
  * Set WORKSPACE_ROOT when the API is not started from the repo root (e.g. in Docker).
  */
 function getWorkspaceRoot(): string {
@@ -114,7 +114,7 @@ interface SpawnAndWaitResult {
 }
 
 /**
- * @description Waits for the child process to exit. When `signal` aborts, sends SIGTERM then SIGKILL
+ * Waits for the child process to exit. When `signal` aborts, sends SIGTERM then SIGKILL
  * and sets `cancelled` so the processor can emit a user-cancel path (aligned with `runChildJob`).
  */
 function spawnAndWait(
@@ -138,6 +138,7 @@ function spawnAndWait(
 
     const killChild = (): void => {
       if (child.killed) return;
+
       child.kill('SIGTERM');
       const killTimeout = setTimeout(() => {
         try {
@@ -146,7 +147,10 @@ function spawnAndWait(
           /* process may have exited */
         }
       }, RALPH_SIGKILL_GRACE_MS);
-      child.once('close', () => clearTimeout(killTimeout));
+
+      child.once('close', () => {
+        clearTimeout(killTimeout);
+      });
     };
 
     const onAbort = (): void => {
@@ -158,6 +162,7 @@ function spawnAndWait(
 
     child.on('close', (code, sig) => {
       signal?.removeEventListener('abort', onAbort);
+
       const cancelled = signal?.aborted === true;
       const exitCode = sig != null ? null : (code ?? null);
 
@@ -167,7 +172,7 @@ function spawnAndWait(
 }
 
 /**
- * @description Processes plan-run jobs for the plans queue. Concurrency is derived from the number
+ * Processes plan-run jobs for the plans queue. Concurrency is derived from the number
  * of configured worktrees (WORKTREE_TARGETS env), defaulting to 1 when no worktrees are configured.
  * When WORKTREE_TARGETS is set, runs the worktree workflow (acquire target → Ralph in worktree →
  * ensure commit → release). Jobs with {@link RunPlanJobData.runKind} `orchestrator` use the
@@ -187,7 +192,7 @@ function spawnAndWait(
 @Processor(PLANS_QUEUE_NAME, {
   concurrency: CONCURRENCY,
   /**
-   * @description Sets a hard limit on how often a worker picks up new jobs,
+   * Sets a hard limit on how often a worker picks up new jobs,
    * effectively creating a forced delay between the completion of one job
    * and the start of another.
    */
@@ -259,13 +264,14 @@ export class PlansProcessor
   }
 
   /**
-   * @description On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart). Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
+   * On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart). Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
    */
   private async reconcilePlanStatusOnStartup(): Promise<void> {
     const repo = this.plansService.getRepository();
     const inProgressPlans = await repo.find({
       where: { status: 'IN_PROGRESS' },
     });
+
     if (inProgressPlans.length === 0) {
       return;
     }
@@ -298,20 +304,19 @@ export class PlansProcessor
   }
 
   /**
-   * @description On startup, promote QUEUED plans that still have IN_PROGRESS tasks (e.g. after stall/requeue reset the plan but not tasks). Mirrors downward reconcile in {@link reconcilePlanStatusOnStartup}.
+   * On startup, promote QUEUED plans that still have IN_PROGRESS
+   * tasks (e.g. after stall/requeue reset the plan but not tasks). Mirrors downward reconcile in {@link reconcilePlanStatusOnStartup}.
    */
   private async reconcilePlansQueuedWithInProgressTasks(): Promise<void> {
     const planRepo = this.plansService.getRepository();
     const taskRepo = this.tasksService.getRepository();
-    const queuedPlans = await planRepo.find({
-      where: { status: 'QUEUED' },
-    });
+    const plansQueued = await planRepo.find({ where: { status: 'QUEUED' } });
 
-    if (queuedPlans.length === 0) {
+    if (plansQueued.length === 0) {
       return;
     }
 
-    for (const plan of queuedPlans) {
+    for (const plan of plansQueued) {
       // eslint-disable-next-line no-await-in-loop
       const inProgressTask = await taskRepo.findOne({
         select: ['id'],
@@ -345,7 +350,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description When a plan job fails, reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. The job may be retried by BullMQ; if not, the user can re-enqueue.
+   * When a plan job fails, reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. The job may be retried by BullMQ; if not, the user can re-enqueue.
    * Handles both payload shapes: { job, error } (NestJS) or (job, error) as separate args from BullMQ Worker.
    */
   @OnWorkerEvent('failed')
@@ -364,7 +369,9 @@ export class PlansProcessor
   }
 
   /**
-   * @description When a plan job is marked stalled (e.g. worker died or lock expired), reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. BullMQ will move the job back to waiting for retry.
+   * When a plan job is marked stalled (e.g. worker died or lock expired),
+   * reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. BullMQ
+   * will move the job back to waiting for retry.
    */
   @OnWorkerEvent('stalled')
   async onPlanJobStalled(jobId: string): Promise<void> {
@@ -377,7 +384,8 @@ export class PlansProcessor
   }
 
   /**
-   * @description Returns the current plan status (e.g. IN_PROGRESS, COMPLETED) or null if not found. Does not throw.
+   * Returns the current plan status (e.g. IN_PROGRESS, COMPLETED) or null if
+   * not found. Does not throw.
    */
   private async getPlanStatus(planId: string): Promise<string | null> {
     try {
@@ -391,7 +399,8 @@ export class PlansProcessor
   }
 
   /**
-   * @description Builds a child-job lifecycle dispatcher when orchestrator path + feature flag are enabled.
+   * Builds a child-job lifecycle dispatcher when orchestrator path + feature
+   * flag are enabled.
    */
   private createLifecycleDispatcherForJob(
     job: RunPlanJob,
@@ -423,7 +432,8 @@ export class PlansProcessor
   }
 
   /**
-   * @description Runs `afterAll` hooks for the terminal main-run outcome, then emits queue job completed.
+   * Runs `afterAll` hooks for the terminal main-run outcome, then emits
+   * queue job completed.
    */
   private async completePlanRunWithHooks(params: {
     readonly cancelSignal?: AbortSignal;
@@ -470,7 +480,8 @@ export class PlansProcessor
   }
 
   /**
-   * @description Returns message and severity for queue job completed: if plan is still IN_PROGRESS (e.g. iteration limit), suggest re-run; otherwise success.
+   * Returns message and severity for queue job completed: if plan is still
+   * IN_PROGRESS (e.g. iteration limit), suggest re-run; otherwise success.
    */
   private async getJobCompletedMessageAndSeverity(
     planId: string,
@@ -494,7 +505,8 @@ export class PlansProcessor
   }
 
   /**
-   * @description Updates plan status to QUEUED and emits notification. Does not throw; logs on failure.
+   * Updates plan status to QUEUED and emits notification. Does not throw;
+   * logs on failure.
    */
   private async resetPlanStatusToQueued(
     planId: string,
@@ -520,7 +532,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description Handles the case when all worktrees are locked. Instead of failing immediately,
+   * Handles the case when all worktrees are locked. Instead of failing immediately,
    * moves the job to delayed state with a 30-second delay so it can retry when a worktree becomes
    * available. Resets plan status to QUEUED and emits a "waiting for worktree" notification.
    * Throws DelayedError to signal BullMQ that the job was moved (not failed).
@@ -644,8 +656,13 @@ export class PlansProcessor
 
       const worktrees = this.worktreeTracker.listTargets();
       const useWorktree = worktrees.length > 0;
-
       const isPlanOrchestrator = isRunPlanOrchestratorJobData(job.data);
+
+      this.logger.log('🌳 🌳 🌳 useWorktree', {
+        isPlanOrchestrator,
+        useWorktree,
+        worktrees,
+      });
 
       const result = isPlanOrchestrator
         ? await this.processOrchestrator(
@@ -695,7 +712,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description Builds an EnhancedTaskRunMetrics object from PlanRunJobResult.
+   * Builds an EnhancedTaskRunMetrics object from PlanRunJobResult.
    * Combines taskRunMetrics with optional childProcessMetrics and wallClockMetrics.
    */
   private buildEnhancedMetrics(
@@ -720,8 +737,10 @@ export class PlansProcessor
   }
 
   /**
-   * @description Appends a one-line task-run metrics summary to the plan's output stream so it appears in get_plan_output and activity. Does not throw; logs on failure.
-   * Uses formatEnhancedTaskRunMetricsSummary to include child process peak CPU%, wall-clock ratio, and system load when available.
+   * Appends a one-line task-run metrics summary to the plan's output stream
+   * so it appears in get_plan_output and activity. Does not throw; logs on failure.
+   * Uses formatEnhancedTaskRunMetricsSummary to include child process peak CPU%,
+   * wall-clock ratio, and system load when available.
    */
   private async appendTaskRunMetricsToPlanOutput(
     planId: string,
@@ -749,7 +768,8 @@ export class PlansProcessor
   }
 
   /**
-   * @description Logs one structured JSON line for external collection (e.g. log aggregators). Includes planId and enhanced taskRunMetrics with child process and wall-clock metrics.
+   * Logs one structured JSON line for external collection (e.g. log aggregators).
+   * Includes planId and enhanced taskRunMetrics with child process and wall-clock metrics.
    */
   private logTaskRunMetrics(
     planId: string,
@@ -768,7 +788,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description Structured JSON log for in-process Ralph orchestrator lifecycle. Uses
+   * Structured JSON log for in-process Ralph orchestrator lifecycle. Uses
    * {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}; pair with {@link AGENTIC_WORKFLOW_METRICS_EVENT} via shared
    * `correlationId` / `jobId`. Plan id is included here at the application layer only.
    */
@@ -800,7 +820,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
+   * In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
    * `@openthrottle/openthrottle-agentic-ralph`. Does not use worktrees or `workflow-ralph` spawn;
    * iteration uses `runIterationAsync` (Cursor or Claude per job `executionBackend`) in the server process.
    */
@@ -944,7 +964,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description Worktree workflow: acquire target, run Ralph in worktree, ensure commit, release.
+   * Worktree workflow: acquire target, run Ralph in worktree, ensure commit, release.
    * Returns the workflow result so BullMQ stores it as job returnvalue (API can expose via job query).
    * Attaches task-run metrics (atStart, atEnd) for "CPU and memory while running".
    * Also captures childProcessMetrics and wallClockMetrics from runChildJob for detailed resource usage.
@@ -1207,7 +1227,7 @@ export class PlansProcessor
   }
 
   /**
-   * @description Legacy: run Ralph in process cwd (no worktrees configured).
+   * Legacy: run Ralph in process cwd (no worktrees configured).
    * Returns task-run metrics so job returnvalue includes CPU/memory at start and end.
    * Forwards optional `job.data.ralph` run-tuning argv so queue runs match worktree path and manual CLI omission rules.
    */
