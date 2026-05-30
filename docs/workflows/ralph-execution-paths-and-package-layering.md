@@ -188,4 +188,6 @@ GraphQL when surfaces #1/#2 are folded under the Nest/GraphQL abstraction:
   `docs/workflows/ralph-workflow-runtime-config.md`.
 - Lifecycle hooks (today's `before_run` / `after_run`): `JOB_RUN_LIFECYCLE_HOOKS.md`
   (Phase 2 expands these to Jest-style `beforeAll` / `beforeEach` / `afterEach` / `afterAll`).
+- Jest-style lifecycle hooks as BullMQ child jobs (Phase 2 design):
+  [`jest-style-lifecycle-hooks-as-bullmq-child-jobs.md`](./jest-style-lifecycle-hooks-as-bullmq-child-jobs.md).
 - Parent plan: `a1c55a0a-735c-4f60-965a-7f122acbdc8f`.

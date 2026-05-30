@@ -16,6 +16,13 @@ We want composable **lifecycle hooks** so plans can, for example:
 **Phase 1 (this plan):** `before_run` and `after_run` on BullMQ plan jobs (`WorkflowProcessor`, spawn + orchestrator).  
 **Phase 2 (backlog):** GitHub webhooks / lifecycle triggers reusing the same hook configuration and runner.
 
+> **Jest-style lifecycle (plan `a1c55a0a`, task `c8896177`):** the design to evolve these run-level
+> hooks into `beforeAll` / `beforeEach` / `afterEach` / `afterAll` (scoped to the plan and its
+> **tasks**, each hook run as a **child BullMQ job**) lives in
+> [`docs/workflows/jest-style-lifecycle-hooks-as-bullmq-child-jobs.md`](./docs/workflows/jest-style-lifecycle-hooks-as-bullmq-child-jobs.md).
+> There, `before_run` maps to `beforeAll` and `after_run` maps to `afterAll`; per-task
+> `beforeEach` / `afterEach` (an explicit phase-1 non-goal below) are added at task boundaries.
+
 ## Glossary
 
 | Term         | Meaning                                                                                                                                 |
