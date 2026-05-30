@@ -2,7 +2,7 @@
 name: workflow-ralph
 description: >-
   OpenThrottle Ralph CLI and queue workflows: pnpm exec workflow-ralph with
-  Cortex plan/task UUIDs; injected /agents/ralph prompt layer; spawn worker vs
+  OpenThrottle plan/task UUIDs; injected /agents/ralph prompt layer; spawn worker vs
   in-process orchestrator (enqueuePlanRun vs enqueuePlanRalphOrchestrator);
   BullMQ and worktree docs in tools/workflows; commit cadence and post-merge
   link_commit; WORKFLOW_RALPH_DEBUG and --debug. USE WHEN running Ralph,
@@ -17,17 +17,17 @@ description: >-
 
 Use when work touches **running Ralph**, **queue-triggered plan runs**, or **how Ralph differs from direct OT MCP usage**. Canonical detail lives in **`tools/workflows/README.md`**; this skill is the agent-facing summary and pointer map.
 
-## Cortex is required
+## OpenThrottle is required
 
-Ralph has **no DB-optional mode**. Plan and tasks live in **OpenThrottle (Cortex) Postgres**. The CLI checks DB reachability at startup (`POSTGRES_URL` or `POSTGRES_*`). See **`tools/workflows/README.md`** (Workflow Ralph section) for exit conditions, iteration behavior, and max-iteration caveats.
+Ralph has **no DB-optional mode**. Plan and tasks live in **OpenThrottle (OpenThrottle) Postgres**. The CLI checks DB reachability at startup (`POSTGRES_URL` or `POSTGRES_*`). See **`tools/workflows/README.md`** (Workflow Ralph section) for exit conditions, iteration behavior, and max-iteration caveats.
 
 ## CLI usage (UUIDs)
 
 Run from the monorepo root (or a configured workspace directory):
 
 ```bash
-pnpm exec workflow-ralph --plan <cortex-plan-uuid>
-pnpm exec workflow-ralph --task <cortex-task-uuid>
+pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>
+pnpm exec workflow-ralph --task <openthrottle-task-uuid>
 ```
 
 - **`--plan`:** Plan-centric mode; tasks are picked and updated across iterations.
@@ -47,7 +47,7 @@ When Ralph injects **Plan-Id**, tasks, and **current task** into the prompt, tre
 
 Ralph parses agent output for:
 
-- **`<ralph:task-complete>TASK_UUID</ralph:task-complete>`** — marks the task completed in Cortex when emitted for the current task.
+- **`<ralph:task-complete>TASK_UUID</ralph:task-complete>`** — marks the task completed in OpenThrottle when emitted for the current task.
 - **`<promise>COMPLETE</promise>`** — completion signal; Ralph can align task status when the tag above is omitted (see **`tools/workflows/README.md`**).
 
 On **ERROR** or **INPUT_REQUIRED**, Ralph exits non-zero per parser rules.
@@ -58,17 +58,17 @@ After each task or logical chunk: **commit** with conventional messages and **`P
 
 ## Spawn vs orchestrator (API queue)
 
-Same Cortex semantics; different host process (see **`tools/workflows/README.md`** section **Worktree + BullMQ workflow**):
+Same OpenThrottle semantics; different host process (see **`tools/workflows/README.md`** section **Worktree + BullMQ workflow**):
 
 | Trigger / path                       | What runs                                                                                                                                |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Local terminal                       | **`pnpm exec workflow-ralph`** — Cursor (or configured backend) per iteration; Cortex via **this process** `POSTGRES_*`                  |
+| Local terminal                       | **`pnpm exec workflow-ralph`** — Cursor (or configured backend) per iteration; OpenThrottle via **this process** `POSTGRES_*`            |
 | **`enqueuePlanRun`** (default spawn) | Worker runs **nested** `pnpm exec workflow-ralph` (e.g. `runChildJob`), optionally in a **worktree** when configured                     |
 | **`enqueuePlanRalphOrchestrator`**   | **No** nested CLI child: **in-process** orchestrator (`createWorkflowRalphOrchestrator` / server integration) with the same logical loop |
 
 Payload tuning (`RalphNestedRunTuningInput`, argv mapping) is documented in **`applications/openthrottle-server/src/queues/plans/plans.types.ts`** and the README.
 
-**Multi-workspace / foreign cwd:** Plans can pass **`workingDirectory`** (absolute path) so the worker spawns Ralph in another checkout; the worker injects **`OPENTHROTTLE_CORTEX_POSTGRES_URL` / `POSTGRES_URL`** so nested Ralph hits the same Cortex DB. See **`tools/workflows/README.md`** (Multi-workspace plans).
+**Multi-workspace / foreign cwd:** Plans can pass **`workingDirectory`** (absolute path) so the worker spawns Ralph in another checkout; the worker injects **`OPENTHROTTLE_CORTEX_POSTGRES_URL` / `POSTGRES_URL`** so nested Ralph hits the same OpenThrottle DB. See **`tools/workflows/README.md`** (Multi-workspace plans).
 
 ## Debugging hangs
 

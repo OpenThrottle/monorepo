@@ -18,7 +18,7 @@ export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 🚨 🚨 ';
 
 /** Shared message when Cortex env is missing. Used by getCortexConfigOrExit and all workflow bins/scripts. */
-export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
+export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}OpenThrottle is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
 export const RALPH_FATAL_UNREACHABLE_SUFFIX =
@@ -419,9 +419,10 @@ export function formatPlanAndTasksForPrompt(
   tasks: TaskRow[],
 ): string {
   const lines: string[] = [
-    '--- Cortex plan (injected by Ralph from Postgres)',
+    '--- OpenThrottle plan (injected by Ralph from Postgres)',
     '',
   ];
+
   if (plan) {
     lines.push(`Plan-Id: ${plan.id}`);
     lines.push(`Title: ${plan.title}`);
@@ -429,6 +430,7 @@ export function formatPlanAndTasksForPrompt(
     if (plan.status) lines.push(`Status: ${plan.status}`);
     lines.push('');
   }
+
   lines.push('Tasks:');
   if (tasks.length === 0) {
     lines.push('  (none)');
@@ -606,7 +608,7 @@ export interface CommitLinkRow {
 }
 
 /**
- * @description Appends a chunk of streaming output to a plan (same as Cortex MCP append_plan_output). Used by child-job when streamToCortex is enabled so plan_output_stream is updated in real time.
+ * @description Appends a chunk of streaming output to a plan (same as OpenThrottle MCP append_plan_output). Used by child-job when streamToCortex is enabled so plan_output_stream is updated in real time.
  */
 export async function appendPlanOutput(
   config: WorkflowRalphConfig,
