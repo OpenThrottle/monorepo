@@ -12,7 +12,12 @@ import { runChildJob } from '../child-job';
 
 const mockConfig = { connectionString: 'postgres://localhost/cortex' };
 
-const buildWorkflowRalphSpawnEnvMock = vi.fn((env: NodeJS.ProcessEnv) => env);
+const buildWorkflowRalphSpawnEnvMock = vi.fn(
+  (
+    env: NodeJS.ProcessEnv,
+    _options?: { canonicalCortexPostgresUrl?: string },
+  ) => env,
+);
 
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
   buildWorkflowRalphSpawnEnv: (

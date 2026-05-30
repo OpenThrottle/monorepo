@@ -215,34 +215,27 @@ export interface ChildJobFailure {
 /** Result of running the child job (Ralph loop); returned to BullMQ parent for commit checks and release. */
 export type ChildJobResult = ChildJobSuccess | ChildJobFailure;
 
-/** Options for parent job: ensure commit and checks before releasing target. */
+/**
+ * Options for parent job: ensure commit before releasing target.
+ *
+ * @description ensureCommit is now commit/clean-only; these fields are retained for
+ * backwards-compatible call sites but no longer trigger any checks. lint/typecheck/test
+ * enforcement moved to the Stage (d) after-phase hooks (which run the TARGET repo's own checks).
+ */
 export interface ParentJobEnsureCommitOptions {
-  /**
-   * Base ref for nx affected (e.g. main or origin/main).
-   * When set, runs lint/typecheck/typecheck-tests only for affected projects.
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly base?: string;
-  /**
-   * Optional callback invoked for each stdout/stderr chunk during nx checks (progress).
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
-  /**
-   * When true (default), run lint, typecheck, and typecheck-tests in the worktree before releasing.
-   * When false, only verify working tree is clean.
-   */
+  /** @deprecated No longer used; ensureCommit is always commit/clean-only now. */
   readonly runChecks?: boolean;
-  /**
-   * Optional AbortSignal; when aborted the nx check child is killed (SIGTERM then SIGKILL after grace).
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly signal?: AbortSignal;
-  /**
-   * Optional timeout in ms for nx checks (each of lint/typecheck/typecheck-tests).
-   * On expiry the child is killed (SIGTERM then SIGKILL after grace).
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly timeoutMs?: number;
 }
 
-/** Success: working tree clean and checks (if requested) passed. */
+/** Success: working tree clean. */
 export interface ParentJobEnsureCommitSuccess {
   readonly ok: true;
 }
@@ -254,7 +247,11 @@ export interface ParentJobEnsureCommitFailureDirty {
   readonly reason: 'working_tree_dirty';
 }
 
-/** Failure: lint, typecheck, or typecheck-tests failed. */
+/**
+ * Failure: lint, typecheck, or typecheck-tests failed.
+ * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
+ * Retained in the union so existing consumer narrowing keeps type-checking during transition.
+ */
 export interface ParentJobEnsureCommitFailureChecks {
   readonly check: 'lint' | 'typecheck' | 'typecheck-tests';
   readonly ok: false;
@@ -263,7 +260,10 @@ export interface ParentJobEnsureCommitFailureChecks {
   readonly stdout?: string;
 }
 
-/** Failure: nx checks timed out. */
+/**
+ * Failure: nx checks timed out.
+ * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
+ */
 export interface ParentJobEnsureCommitFailureTimeout {
   readonly ok: false;
   readonly reason: 'checks_timed_out';
@@ -271,7 +271,10 @@ export interface ParentJobEnsureCommitFailureTimeout {
   readonly stdout?: string;
 }
 
-/** Failure: nx checks were cancelled (AbortSignal). */
+/**
+ * Failure: nx checks were cancelled (AbortSignal).
+ * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
+ */
 export interface ParentJobEnsureCommitFailureCancelled {
   readonly ok: false;
   readonly reason: 'checks_cancelled';
@@ -279,7 +282,11 @@ export interface ParentJobEnsureCommitFailureCancelled {
   readonly stdout?: string;
 }
 
-/** Result of ensure-commit-before-release step. */
+/**
+ * Result of ensure-commit-before-release step. At runtime this is now only
+ * {@link ParentJobEnsureCommitSuccess} or {@link ParentJobEnsureCommitFailureDirty};
+ * the checks_* variants are retained for back-compat narrowing only (never produced).
+ */
 export type ParentJobEnsureCommitResult =
   | ParentJobEnsureCommitSuccess
   | ParentJobEnsureCommitFailureDirty
@@ -303,7 +310,7 @@ export type WorkflowLoopResult =
 export interface WorktreeWorkflowOptions {
   /** Options for acquire + create-branch step. */
   readonly acquire: ParentJobAcquireOptions;
-  /** Options for ensure-commit-before-release (base for nx affected, runChecks). Default: runChecks true. */
+  /** Options for ensure-commit-before-release. Now commit/clean-only (checks moved to Stage (d) hooks). */
   readonly ensureCommit?: ParentJobEnsureCommitOptions;
   /**
    * Run the loop in the worktree (e.g. Ralph child job). Receives handoff from acquire step.
