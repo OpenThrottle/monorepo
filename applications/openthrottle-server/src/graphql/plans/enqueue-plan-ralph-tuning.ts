@@ -5,7 +5,7 @@
  */
 
 import { existsSync, statSync } from 'fs';
-import { dirname, isAbsolute, join } from 'path';
+import { isAbsolute } from 'path';
 import type {
   ChildJobInput,
   RalphExecutionBackendId,
@@ -137,81 +137,6 @@ export const validateWorkingDirectory = (
   }
 
   return trimmed;
-};
-
-/**
- * @description Filesystem marker that identifies an Nx workspace root. `nx.json` is
- * authoritative for the Nx CLI / project graph; `pnpm-workspace.yaml` is a secondary
- * signal used only to improve walk-up guidance messaging.
- */
-const NX_WORKSPACE_ROOT_MARKER = 'nx.json';
-const PNPM_WORKSPACE_MARKER = 'pnpm-workspace.yaml';
-
-/**
- * @description Returns true when `dir` itself looks like an Nx workspace root.
- */
-const isNxWorkspaceRoot = (dir: string): boolean =>
-  existsSync(join(dir, NX_WORKSPACE_ROOT_MARKER));
-
-/**
- * @description Walks up from `dir` (inclusive) looking for the nearest ancestor that
- * contains `nx.json`. Returns the matching directory, or `null` when none is found.
- */
-const findNearestNxWorkspaceRoot = (dir: string): string | null => {
-  let current = dir;
-  for (;;) {
-    if (isNxWorkspaceRoot(current)) {
-      return current;
-    }
-    const parent = dirname(current);
-    if (parent === current) {
-      return null;
-    }
-    current = parent;
-  }
-};
-
-/**
- * @description When set truthy (`1`/`true`), skips the Nx-workspace-root assertion so a
- * non-Nx working directory can still be enqueued (escape hatch for advanced/local use).
- */
-const shouldSkipNxWorkspaceCheck = (): boolean => {
-  const raw = process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR?.trim();
-  return raw === '1' || raw?.toLowerCase() === 'true';
-};
-
-/**
- * @description Asserts that a (already validated) absolute `workingDirectory` is an Nx
- * workspace root — i.e. it contains `nx.json`. Cross-repo plan runs require this so the
- * nested `workflow-ralph`/Nx CLI resolves the project graph and `--project` validation
- * against the intended workspace (diagnosis finding #3: wrong workingDirectory depth).
- *
- * Throws an actionable error when the directory is not a workspace root:
- * - if an ancestor contains `nx.json`, the message points at that ancestor;
- * - otherwise it reports that no Nx workspace was found at or above the path.
- *
- * Bypass with `OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR=1`.
- */
-export const assertWorkingDirectoryIsNxWorkspaceRoot = (
-  workingDirectory: string,
-): void => {
-  if (shouldSkipNxWorkspaceCheck()) return;
-  if (isNxWorkspaceRoot(workingDirectory)) return;
-
-  const ancestorRoot = findNearestNxWorkspaceRoot(dirname(workingDirectory));
-  if (ancestorRoot !== null) {
-    throw new Error(
-      `workingDirectory is not an Nx workspace root (no ${NX_WORKSPACE_ROOT_MARKER}): ${workingDirectory}. ` +
-        `The nearest Nx workspace root is ${ancestorRoot}; set workingDirectory to that path. ` +
-        `To allow a non-Nx directory anyway, set OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR=1.`,
-    );
-  }
-
-  throw new Error(
-    `workingDirectory is not an Nx workspace root: no ${NX_WORKSPACE_ROOT_MARKER} (or ${PNPM_WORKSPACE_MARKER}) found at or above ${workingDirectory}. ` +
-      `Point workingDirectory at the root of an Nx workspace, ` +
-      `or set OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR=1 to bypass this check.`,
-  );
 };
 
 /**
@@ -371,9 +296,6 @@ export const buildRunPlanJobData = (input: {
   const ralph = parseEnqueueRalphTuning(input.ralph);
   const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
-  if (workingDirectory !== undefined) {
-    assertWorkingDirectoryIsNxWorkspaceRoot(workingDirectory);
-  }
   const jobRunHooks = jobRunHooksForJobPayload(
     resolveJobRunHooksForEnqueue({
       enqueueHooksJson: input.jobRunHooksJson,
@@ -415,9 +337,6 @@ export const buildRunPlanOrchestratorJobData = (input: {
       ? input.taskId.trim()
       : '';
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
-  if (workingDirectory !== undefined) {
-    assertWorkingDirectoryIsNxWorkspaceRoot(workingDirectory);
-  }
   const jobRunHooks = jobRunHooksForJobPayload(
     resolveJobRunHooksForEnqueue({
       enqueueHooksJson: input.jobRunHooksJson,

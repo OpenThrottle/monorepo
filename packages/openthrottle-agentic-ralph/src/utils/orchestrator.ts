@@ -1,6 +1,9 @@
 /* eslint-disable no-await-in-loop */ // FIXME: We can better handle these instances
 
-import type { WorkflowRunResult } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowRunResult,
+  WorkflowLifecycleTaskContext,
+} from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
@@ -28,6 +31,18 @@ const REMAINING_TASK_STATUS = new Set([
   'IN_PROGRESS',
   'BLOCKED',
 ]);
+
+const toLifecycleTaskContext = (task: {
+  readonly category?: string | null;
+  readonly id: string;
+  readonly status: string;
+  readonly title: string;
+}): WorkflowLifecycleTaskContext => ({
+  category: task.category ?? undefined,
+  id: task.id,
+  status: task.status,
+  title: task.title,
+});
 
 const onFinished = (
   reason: WorkflowFinishedReason,
@@ -154,6 +169,8 @@ export const createWorkflowRalphOrchestrator = (
       let lastIterationTaskId: string | undefined;
       let lastIterationTaskCompleted = false;
 
+      const lifecycleDispatcher = context.lifecycleDispatcher;
+
       /**
        * This is where we run our guarded loop (max iterations) chipping away
        * at the plan and its tasks.
@@ -210,6 +227,33 @@ export const createWorkflowRalphOrchestrator = (
               await executeGraphqlV2(UpdateTaskDocument, {
                 input: { id: taskForIteration.id, status: 'IN_PROGRESS' },
               });
+
+              if (lifecycleDispatcher) {
+                const beforeEachResult = await lifecycleDispatcher.runTask({
+                  phase: 'beforeEach',
+                  task: toLifecycleTaskContext({
+                    ...taskForIteration,
+                    status: 'IN_PROGRESS',
+                  }),
+                });
+
+                if (beforeEachResult.blocked) {
+                  await executeGraphqlV2(UpdateTaskDocument, {
+                    input: { id: taskForIteration.id, status: 'BLOCKED' },
+                  });
+
+                  await lifecycleDispatcher.runTask({
+                    phase: 'afterEach',
+                    task: toLifecycleTaskContext({
+                      ...taskForIteration,
+                      status: 'BLOCKED',
+                    }),
+                    taskOutcome: 'blocked',
+                  });
+
+                  continue;
+                }
+              }
             } else {
               await promotePlanToInProgressIfNeeded(
                 executeGraphqlV2,
@@ -280,6 +324,25 @@ export const createWorkflowRalphOrchestrator = (
             await executeGraphqlV2(UpdateTaskDocument, {
               input: { id: taskId, status: 'COMPLETED' },
             });
+
+            if (lifecycleDispatcher && !isTaskCentric) {
+              const completedTask = (
+                await executeGraphqlV2(GetTasksByPlanIdDocument, {
+                  input: { planId: effectivePlanId },
+                })
+              ).tasksByPlanId.find((t) => t.id.toLowerCase() === taskId);
+
+              if (completedTask) {
+                await lifecycleDispatcher.runTask({
+                  phase: 'afterEach',
+                  task: toLifecycleTaskContext({
+                    ...completedTask,
+                    status: 'COMPLETED',
+                  }),
+                  taskOutcome: 'completed',
+                });
+              }
+            }
           } catch {
             // Parity with ralph.ts: log side effects are CLI-only; continue.
           }

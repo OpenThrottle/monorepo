@@ -27,6 +27,7 @@ import {
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
@@ -36,6 +37,7 @@ vi.mock('child_process', () => ({
 }));
 
 const mockRunBeforeRunHooksAndHandleBlock = vi.fn().mockResolvedValue(false);
+const mockRunBeforeAllHooksWithDispatcher = vi.fn().mockResolvedValue(false);
 const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
   async (params: {
     notification: {
@@ -58,10 +60,15 @@ const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
 );
 
 vi.mock('../job-run-hooks/execute-plan-job-run-hooks', () => ({
+  runAfterAllHooksWithDispatcherThenNotify: vi.fn(),
   runAfterRunHooksThenNotify: (
     ...args: unknown[]
   ): ReturnType<typeof mockRunAfterRunHooksThenNotify> =>
     mockRunAfterRunHooksThenNotify(...args),
+  runBeforeAllHooksWithDispatcher: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockRunBeforeAllHooksWithDispatcher> =>
+    mockRunBeforeAllHooksWithDispatcher(...args),
   runBeforeRunHooksAndHandleBlock: (
     ...args: unknown[]
   ): ReturnType<typeof mockRunBeforeRunHooksAndHandleBlock> =>
@@ -150,6 +157,7 @@ describe('PlansProcessor', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
     mockJob = {
       data: { planId: '2794d106-95f9-427e-904d-e0f9b5cbe734' },
       id: 'job-1',
@@ -222,6 +230,12 @@ describe('PlansProcessor', () => {
           provide: BullMqRunOutputRetentionService,
           useValue: createMock<BullMqRunOutputRetentionService>({
             maybePruneAfterJobClose: vi.fn(),
+          }),
+        },
+        {
+          provide: WorkflowLifecycleDispatcherFactory,
+          useValue: createMock<WorkflowLifecycleDispatcherFactory>({
+            create: vi.fn(),
           }),
         },
       ],

@@ -5,10 +5,7 @@
 
 import { spawn, spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
-import {
-  buildWorkflowRalphSpawnEnv,
-  getPostgresConfig,
-} from '@openthrottle/ai-mcp/src/cortex-server';
+import { buildWorkflowRalphSpawnEnv } from '@openthrottle/ai-mcp/src/cortex-server';
 import type { ChildProcessMetrics } from '../types/child-process-metrics';
 import type { WallClockMetrics } from '../types/wall-clock-metrics';
 import { createWallClockMetrics } from '../types/wall-clock-metrics';
@@ -22,8 +19,12 @@ import {
   appendPlanOutput,
   ensureCortexReachable,
   getTasksByPlanId,
+  RALPH_FATAL_REQUIRED_GRAPHQL,
+  RALPH_FATAL_REQUIRED_POSTGRES,
+  resolveWorkflowRalphConfig,
   updatePlanStatus,
 } from './cortex-ralph';
+import { resolveWorkflowRalphTransportFromEnv } from './workflow-transport';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import { resolveRalphWorktreeName } from './ralph-worktree-cli';
 import {
@@ -268,37 +269,37 @@ export async function runChildJob(
   const cpuAtStart = process.cpuUsage();
 
   const trimmedCanonical = canonicalCortexPostgresUrl?.trim();
-  let config: WorkflowRalphConfig;
-  try {
-    if (trimmedCanonical) {
-      config = { connectionString: trimmedCanonical };
-    } else {
-      const raw: unknown = getPostgresConfig();
-      const cs =
-        raw &&
-        typeof raw === 'object' &&
-        'connectionString' in raw &&
-        typeof (raw as { connectionString: unknown }).connectionString ===
-          'string'
-          ? (raw as { connectionString: string }).connectionString.trim()
-          : '';
-      if (cs === '') {
-        throw new Error('missing postgres config');
-      }
-      config = { connectionString: cs };
-    }
-  } catch {
+  let config: WorkflowRalphConfig | null = resolveWorkflowRalphConfig();
+
+  if (config == null) {
     const endTimestamp = Date.now();
     const cpuAtEnd = process.cpuUsage();
+    const transport = resolveWorkflowRalphTransportFromEnv();
+    const reason =
+      transport === 'postgres-direct'
+        ? RALPH_FATAL_REQUIRED_POSTGRES.trim()
+        : RALPH_FATAL_REQUIRED_GRAPHQL.trim();
+
     return {
       ok: false,
-      reason: `🚨 Postgres is not configured. Set POSTGRES_URL or POSTGRES_* env vars.`,
+      reason,
       wallClockMetrics: computeWallClockMetrics(
         startTimestamp,
         endTimestamp,
         cpuAtStart,
         cpuAtEnd,
       ),
+    };
+  }
+
+  if (
+    config.transport === 'postgres-direct' &&
+    trimmedCanonical &&
+    trimmedCanonical !== ''
+  ) {
+    config = {
+      connectionString: trimmedCanonical,
+      transport: 'postgres-direct',
     };
   }
   try {

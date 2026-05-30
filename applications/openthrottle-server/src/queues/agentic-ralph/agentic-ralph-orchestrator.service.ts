@@ -7,6 +7,7 @@ import {
   AGENTIC_WORKFLOW_RALPH_ID,
   AGENTIC_WORKFLOW_REGISTRY,
 } from '@openthrottle/nestjs-agentic-workflow';
+import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   WorkflowContext,
@@ -40,9 +41,10 @@ export class AgenticRalphOrchestratorService {
   async runPlanOrchestratorJob(params: {
     readonly correlation?: WorkflowRunCorrelation;
     readonly jobData: RunPlanOrchestratorJobData;
+    readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
     readonly signal?: AbortSignal;
   }): Promise<WorkflowRunResult> {
-    const { correlation, jobData, signal } = params;
+    const { correlation, jobData, lifecycleDispatcher, signal } = params;
     const orchestrator = this.workflowRegistry
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
       .createOrchestrator() as WorkflowOrchestrator;
@@ -59,6 +61,7 @@ export class AgenticRalphOrchestratorService {
       ...baseContext,
       ...(signal !== undefined ? { abortSignal: signal } : {}),
       ...(correlation !== undefined ? { correlation } : {}),
+      ...(lifecycleDispatcher !== undefined ? { lifecycleDispatcher } : {}),
     };
 
     return orchestrator.execute({ context });

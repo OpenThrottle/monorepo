@@ -227,33 +227,114 @@ export interface BuildWorkflowRalphSpawnEnvOptions {
   /**
    * When set (non-empty), forces nested Ralph to use this URL (e.g. same string as TypeORM `url`),
    * regardless of `workerEnv`, so foreign `cwd` tooling cannot desync plan lookup from the API DB.
+   * Used when `WORKFLOW_RALPH_TRANSPORT=postgres-direct`.
    */
   readonly canonicalCortexPostgresUrl?: string;
+  /**
+   * When set (non-empty), forces nested Ralph GraphQL auth regardless of `workerEnv` (default transport).
+   */
+  readonly canonicalWorkflowGraphqlAuth?: string;
+  /**
+   * When set (non-empty), forces nested Ralph GraphQL HTTP endpoint regardless of `workerEnv`.
+   */
+  readonly canonicalWorkflowGraphqlUrl?: string;
 }
 
+/** Env var: `graphql` (default) or `postgres-direct` for Ralph plan/task I/O rollback. */
+export const WORKFLOW_RALPH_TRANSPORT_ENV = `WORKFLOW_RALPH_TRANSPORT`;
+
+const resolveWorkflowRalphTransportFromSpawnEnv = (
+  env: NodeJS.ProcessEnv,
+): 'graphql' | 'postgres-direct' => {
+  const raw = env[WORKFLOW_RALPH_TRANSPORT_ENV]?.trim().toLowerCase();
+
+  if (raw === 'postgres-direct' || raw === 'postgres') {
+    return 'postgres-direct';
+  }
+
+  return 'graphql';
+};
+
+const resolveWorkflowGraphqlAuthFromSpawnEnv = (
+  env: NodeJS.ProcessEnv,
+): string | undefined => {
+  const keys = [
+    'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN',
+    'OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN',
+    'MCP_DEVELOPER_AUTH_TOKEN',
+  ] as const;
+
+  for (const key of keys) {
+    const trimmed = env[key]?.trim();
+    if (trimmed !== undefined && trimmed !== '') {
+      return trimmed;
+    }
+  }
+
+  return undefined;
+};
+
+const resolveWorkflowGraphqlUrlFromSpawnEnv = (
+  env: NodeJS.ProcessEnv,
+): string | undefined => {
+  const worker = env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
+  if (worker !== undefined && worker !== '') {
+    return worker;
+  }
+
+  const workflows = env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL?.trim();
+  if (workflows !== undefined && workflows !== '') {
+    return workflows;
+  }
+
+  return undefined;
+};
+
 /**
- * @description Env passed to nested `pnpm exec workflow-ralph`: canonical Cortex URL from the worker plus overrides so child cwd cannot point Ralph at a different database, and a PATH that includes the OpenThrottle `node_modules/.bin` so `workflow-ralph` resolves deterministically from a foreign `cwd` (see {@link applyWorkflowRalphBinPath}).
+ * @description Env passed to nested `pnpm exec workflow-ralph`: GraphQL auth/URL (default) or canonical Postgres URL (rollback), plus PATH with OpenThrottle `node_modules/.bin` for deterministic `workflow-ralph` resolution from a foreign `cwd` (see {@link applyWorkflowRalphBinPath}).
  */
 export function buildWorkflowRalphSpawnEnv(
   workerEnv: NodeJS.ProcessEnv,
   options?: BuildWorkflowRalphSpawnEnvOptions,
 ): NodeJS.ProcessEnv {
-  const trimmed = options?.canonicalCortexPostgresUrl?.trim();
-  const conn =
-    trimmed !== undefined && trimmed !== ''
-      ? trimmed
-      : resolveCortexPostgresConnectionStringFromEnv(workerEnv);
+  const transport = resolveWorkflowRalphTransportFromSpawnEnv(workerEnv);
+  let env: NodeJS.ProcessEnv = {
+    ...workerEnv,
+    [WORKFLOW_RALPH_TRANSPORT_ENV]: transport,
+  };
 
-  const withPostgres: NodeJS.ProcessEnv =
-    conn === undefined
-      ? workerEnv
-      : {
-          ...workerEnv,
-          [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]: conn,
-          POSTGRES_URL: conn,
-        };
+  if (transport === 'graphql') {
+    const auth =
+      options?.canonicalWorkflowGraphqlAuth?.trim() ||
+      resolveWorkflowGraphqlAuthFromSpawnEnv(workerEnv);
+    const graphqlUrl =
+      options?.canonicalWorkflowGraphqlUrl?.trim() ||
+      resolveWorkflowGraphqlUrlFromSpawnEnv(workerEnv);
 
-  const withBinPath = applyWorkflowRalphBinPath(withPostgres);
+    if (auth !== undefined) {
+      env = { ...env, OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN: auth };
+    }
+
+    if (graphqlUrl !== undefined) {
+      env = { ...env, OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL: graphqlUrl };
+    }
+  } else {
+    const trimmed = options?.canonicalCortexPostgresUrl?.trim();
+    const conn =
+      trimmed !== undefined && trimmed !== ''
+        ? trimmed
+        : resolveCortexPostgresConnectionStringFromEnv(workerEnv);
+
+    if (conn !== undefined) {
+      env = {
+        ...env,
+        [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]: conn,
+        POSTGRES_URL: conn,
+      };
+    }
+  }
+
+  const withBinPath = applyWorkflowRalphBinPath(env);
 
   return applyWorkflowRalphSpawnIdentityOverrides(withBinPath);
 }

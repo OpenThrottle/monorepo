@@ -44,7 +44,7 @@ function sanitizePostgresConnectionForLogs(connectionString: string): string {
  * @description One stderr line with cwd, plan id, sanitized Postgres target, and booleans for related env (no token values).
  */
 export function logWorkflowRalphOtDiagnostics(params: {
-  readonly connectionString: string;
+  readonly connectionString?: string;
   readonly planId: string;
 }): void {
   const raw = process.env[WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV];
@@ -67,6 +67,12 @@ export function logWorkflowRalphOtDiagnostics(params: {
       openthrottleCortexPostgresUrlSet: Boolean(
         env.OPENTHROTTLE_CORTEX_POSTGRES_URL?.trim(),
       ),
+      openthrottleWorkflowsAuthTokenSet: Boolean(
+        env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN?.trim(),
+      ),
+      openthrottleWorkflowsGraphqlUrlSet: Boolean(
+        env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL?.trim(),
+      ),
       postgresqlStarVarsPartiallySet: Boolean(
         env.POSTGRES_HOST?.trim() || env.POSTGRES_DB?.trim(),
       ),
@@ -75,14 +81,16 @@ export function logWorkflowRalphOtDiagnostics(params: {
       spawnXdgConfigHomeOverrideSet: Boolean(
         env.WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME?.trim(),
       ),
+      workflowRalphTransport: env.WORKFLOW_RALPH_TRANSPORT?.trim() ?? 'graphql',
       workspaceRootEnvSet: Boolean(env.WORKSPACE_ROOT?.trim()),
     },
     home: env.HOME ?? '(unset)',
-    note: 'workflow-ralph resolves plans via direct Postgres (getPostgresConfig → getPlanById), not GraphQL. Developer app GraphQL/API_URL_* does not affect plan lookup. BullMQ spawns inject OPENTHROTTLE_CORTEX_POSTGRES_URL / POSTGRES_URL from the worker so a foreign cwd cannot override Cortex DB; mismatched POSTGRES_* vs the DB where the plan row exists yields Plan not found.',
+    note: 'workflow-ralph resolves plans via GraphQL by default (executeWorkflowGraphqlV2 + codegen documents). Set WORKFLOW_RALPH_TRANSPORT=postgres-direct to use direct Postgres (getPostgresConfig → getPlanById). Developer app GraphQL/API_URL_* must match the server Ralph calls. BullMQ spawns inject OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN / OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL from the worker so a foreign cwd cannot override OpenThrottle transport; mismatched auth vs the server where the plan row exists yields Plan not found.',
     planId: params.planId,
-    postgresIdentity: sanitizePostgresConnectionForLogs(
-      params.connectionString,
-    ),
+    postgresIdentity:
+      params.connectionString != null && params.connectionString !== ''
+        ? sanitizePostgresConnectionForLogs(params.connectionString)
+        : '(graphql transport — no POSTGRES_URL on client)',
     surface: 'workflow-ralph',
     unixUser: env.USER ?? env.LOGNAME ?? '(unset)',
   };

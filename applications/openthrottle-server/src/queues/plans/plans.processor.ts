@@ -33,10 +33,13 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import {
+  runAfterAllHooksWithDispatcherThenNotify,
   runAfterRunHooksThenNotify,
+  runBeforeAllHooksWithDispatcher,
   runBeforeRunHooksAndHandleBlock,
   type PlanQueueJobCompletedPayload,
 } from '../job-run-hooks/execute-plan-job-run-hooks';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
@@ -44,6 +47,7 @@ import {
   AGENTIC_WORKFLOW_RUN_LOG_EVENT,
   PLAN_RUN_METRICS_LOG_EVENT,
 } from '@openthrottle/nestjs-agentic-workflow';
+import { isLifecycleHooksChildJobsEnabled } from '@openthrottle/openthrottle-agentic-workflow';
 import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
 import type {
@@ -210,6 +214,7 @@ export class PlansProcessor
     private readonly worktreeTracker: IWorktreeTargetsTracker,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
+    private readonly lifecycleDispatcherFactory: WorkflowLifecycleDispatcherFactory,
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
     private readonly bullMqRunOutputWriter: KeyedJsonlWriter | undefined,
@@ -384,15 +389,59 @@ export class PlansProcessor
   }
 
   /**
-   * @description Runs `after_run` hooks for the terminal main-run outcome, then emits queue job completed.
+   * @description Builds a child-job lifecycle dispatcher when orchestrator path + feature flag are enabled.
+   */
+  private createLifecycleDispatcherForJob(
+    job: RunPlanJob,
+    cancelSignal?: AbortSignal,
+  ): ReturnType<WorkflowLifecycleDispatcherFactory['create']> | undefined {
+    if (!isRunPlanOrchestratorJobData(job.data)) {
+      return undefined;
+    }
+    if (!isLifecycleHooksChildJobsEnabled()) {
+      return undefined;
+    }
+
+    return this.lifecycleDispatcherFactory.create({
+      hooks: job.data.jobRunHooks,
+      parentJobId: String(job.id),
+      parentQueueName: PLANS_QUEUE_NAME,
+      planRunJobData: job.data,
+      signal: cancelSignal,
+    });
+  }
+
+  /**
+   * @description Runs `afterAll` hooks for the terminal main-run outcome, then emits queue job completed.
    */
   private async completePlanRunWithHooks(params: {
     readonly cancelSignal?: AbortSignal;
     readonly job: RunPlanJob;
+    readonly lifecycleDispatcher?: ReturnType<
+      WorkflowLifecycleDispatcherFactory['create']
+    >;
     readonly mainRunStarted: boolean;
     readonly mainRunSucceeded: boolean;
     readonly notification: PlanQueueJobCompletedPayload;
   }): Promise<void> {
+    const dispatcher =
+      params.lifecycleDispatcher ??
+      this.createLifecycleDispatcherForJob(params.job, params.cancelSignal);
+
+    if (dispatcher !== undefined) {
+      await runAfterAllHooksWithDispatcherThenNotify({
+        dispatcher,
+        jobData: params.job.data,
+        logLabel: PlansProcessor.name,
+        logger: this.logger,
+        mainRunStarted: params.mainRunStarted,
+        mainRunSucceeded: params.mainRunSucceeded,
+        notification: params.notification,
+        notifications: this.notifications,
+      });
+      return;
+    }
+
     await runAfterRunHooksThenNotify({
       hooks: params.job.data.jobRunHooks,
       jobData: params.job.data,
@@ -543,17 +592,36 @@ export class PlansProcessor
         status: 'IN_PROGRESS',
       });
 
-      const blockedByBeforeRunHook = await runBeforeRunHooksAndHandleBlock({
-        hooks: job.data.jobRunHooks,
-        jobData: job.data,
-        logLabel: PlansProcessor.name,
-        logger: this.logger,
-        notifications: this.notifications,
-        planOutputStreamService: this.planOutputStreamService,
-        plansService: this.plansService,
-        signal: cancelSignal,
-        tasksService: this.tasksService,
-      });
+      const lifecycleDispatcher = this.createLifecycleDispatcherForJob(
+        job,
+        cancelSignal,
+      );
+
+      const blockedByBeforeRunHook =
+        lifecycleDispatcher !== undefined
+          ? await runBeforeAllHooksWithDispatcher({
+              dispatcher: lifecycleDispatcher,
+              hooks: job.data.jobRunHooks,
+              jobData: job.data,
+              logLabel: PlansProcessor.name,
+              logger: this.logger,
+              notifications: this.notifications,
+              planOutputStreamService: this.planOutputStreamService,
+              plansService: this.plansService,
+              signal: cancelSignal,
+              tasksService: this.tasksService,
+            })
+          : await runBeforeRunHooksAndHandleBlock({
+              hooks: job.data.jobRunHooks,
+              jobData: job.data,
+              logLabel: PlansProcessor.name,
+              logger: this.logger,
+              notifications: this.notifications,
+              planOutputStreamService: this.planOutputStreamService,
+              plansService: this.plansService,
+              signal: cancelSignal,
+              tasksService: this.tasksService,
+            });
 
       if (blockedByBeforeRunHook) {
         const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
@@ -575,6 +643,7 @@ export class PlansProcessor
             logContext,
             metricsAtStart,
             cancelSignal,
+            lifecycleDispatcher,
           )
         : useWorktree
           ? await this.processWithWorktree(
@@ -730,6 +799,9 @@ export class PlansProcessor
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     cancelSignal: AbortSignal,
+    lifecycleDispatcher?: ReturnType<
+      WorkflowLifecycleDispatcherFactory['create']
+    >,
   ): Promise<PlanRunJobResult> {
     if (!isRunPlanOrchestratorJobData(job.data)) {
       throw new Error('Expected orchestrator job data');
@@ -755,6 +827,7 @@ export class PlansProcessor
     const outcome = await this.agenticRalphOrchestrator.runPlanOrchestratorJob({
       correlation,
       jobData: data,
+      lifecycleDispatcher,
       signal: cancelSignal,
     });
 

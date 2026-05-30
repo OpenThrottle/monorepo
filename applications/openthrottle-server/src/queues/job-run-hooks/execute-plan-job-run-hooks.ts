@@ -4,6 +4,7 @@
  */
 
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import {
   PlanOutputStreamService,
   PlansService,
@@ -46,11 +47,24 @@ function executionBackendFromJobData(
   return merged.backend ?? jobData.executionBackend ?? 'cursor';
 }
 
-const BEFORE_RUN_SUFFIX =
+const BEFORE_PHASE_SUFFIX =
   'Complete any preflight work for this plan job. The main Ralph run starts only if this hook succeeds (or on_failure allows it).';
 
-const AFTER_RUN_SUFFIX =
+const AFTER_PHASE_SUFFIX =
   'The main plan job has finished (or was blocked before start). Summarize, file follow-ups, or run post-run checks as configured.';
+
+const BEFORE_EACH_SUFFIX =
+  'This hook runs before the task iterations begin. Complete any pre-task setup; the task run continues only if this hook succeeds (or on_failure allows it).';
+
+const AFTER_EACH_SUFFIX =
+  'This hook runs after the task reached a terminal status. Summarize, run per-task checks, or file follow-ups as configured.';
+
+const layer1SuffixForPhase = (phase: JobRunHookPhase): string => {
+  if (phase === 'beforeAll' || phase === 'beforeEach') {
+    return phase === 'beforeEach' ? BEFORE_EACH_SUFFIX : BEFORE_PHASE_SUFFIX;
+  }
+  return phase === 'afterEach' ? AFTER_EACH_SUFFIX : AFTER_PHASE_SUFFIX;
+};
 
 export type PlanQueueJobCompletedPayload = {
   readonly jobType: string;
@@ -77,7 +91,7 @@ const logAfterRunHookFailures = (
     }
 
     logger.warn(
-      `after_run hook failed (on_failure=${result.onFailure}): planId=${planId}, ${formatJobRunHookEntryLabel(result.entry)}`,
+      `afterAll hook failed (on_failure=${result.onFailure}): planId=${planId}, ${formatJobRunHookEntryLabel(result.entry)}`,
       logLabel,
     );
   }
@@ -94,6 +108,13 @@ export interface ExecutePlanJobRunHooksParams {
   readonly planOutputStreamService: PlanOutputStreamService;
   readonly plansService: PlansService;
   readonly signal?: AbortSignal;
+  readonly task?: {
+    readonly category: string | undefined;
+    readonly id: string;
+    readonly status: string;
+    readonly title: string;
+  };
+  readonly taskOutcome?: 'blocked' | 'completed' | 'failed';
   readonly tasksService: TasksService;
 }
 
@@ -152,8 +173,7 @@ export const executePlanJobRunHooks = async (
     await outputRepo.save(entity);
   };
 
-  const layer1Suffix =
-    phase === 'before_run' ? BEFORE_RUN_SUFFIX : AFTER_RUN_SUFFIX;
+  const layer1Suffix = layer1SuffixForPhase(phase);
 
   return executeJobRunHooksPhase({
     deps: {
@@ -201,19 +221,24 @@ export const executePlanJobRunHooks = async (
     planId,
     runKind: runKindFromJobData(jobData),
     signal: params.signal,
+    task: params.task,
+    taskOutcome: params.taskOutcome,
   });
 };
 
 /**
- * @description Runs `after_run` hooks for the current terminal job outcome.
+ * @description Runs `afterAll` hooks for the current terminal job outcome.
  */
-export const runAfterRunHooks = async (
+export const runAfterAllHooks = async (
   params: Omit<ExecutePlanJobRunHooksParams, 'phase'>,
 ): Promise<ExecuteJobRunHooksPhaseResult> =>
   executePlanJobRunHooks({
     ...params,
-    phase: 'after_run',
+    phase: 'afterAll',
   });
+
+/** @description Alias for {@link runAfterAllHooks} (legacy name). */
+export const runAfterRunHooks = runAfterAllHooks;
 
 /**
  * @description Runs `after_run` hooks, then emits the plan queue job-completed notification.
@@ -256,9 +281,9 @@ export const runAfterRunHooksThenNotify = async (params: {
 };
 
 /**
- * @description Runs `before_run` hooks; when blocked, sets plan status to BLOCKED and returns true.
+ * @description Runs `beforeAll` hooks; when blocked, sets plan status to BLOCKED and returns true.
  */
-export const runBeforeRunHooksAndHandleBlock = async (params: {
+export const runBeforeAllHooksAndHandleBlock = async (params: {
   readonly hooks: JobRunHooksConfig | undefined;
   readonly jobData: RunPlanJobData;
   readonly logLabel: string;
@@ -279,7 +304,7 @@ export const runBeforeRunHooksAndHandleBlock = async (params: {
     jobData: params.jobData,
     logLabel: params.logLabel,
     logger: params.logger,
-    phase: 'before_run',
+    phase: 'beforeAll',
     planOutputStreamService: params.planOutputStreamService,
     plansService: params.plansService,
     signal: params.signal,
@@ -315,15 +340,97 @@ export const runBeforeRunHooksAndHandleBlock = async (params: {
 
   params.notifications.emitQueueJobCompleted({
     jobType: 'plans',
-    message: `Plan run blocked by before_run hook: ${planId}`,
+    message: `Plan run blocked by beforeAll hook: ${planId}`,
     planId,
     severity: 'error',
   });
 
   params.logger.warn(
-    `before_run hook blocked main run: planId=${planId}`,
+    `beforeAll hook blocked main run: planId=${planId}`,
     params.logLabel,
   );
 
   return true;
+};
+
+/** @description Alias for {@link runBeforeAllHooksAndHandleBlock} (legacy name). */
+export const runBeforeRunHooksAndHandleBlock = runBeforeAllHooksAndHandleBlock;
+
+/**
+ * @description Runs `beforeAll` hooks via a BullMQ child-job dispatcher; handles plan BLOCKED terminal path.
+ */
+export const runBeforeAllHooksWithDispatcher = async (params: {
+  readonly dispatcher: WorkflowLifecycleDispatcher;
+  readonly hooks: JobRunHooksConfig | undefined;
+  readonly jobData: RunPlanJobData;
+  readonly logLabel: string;
+  readonly logger: LoggerService;
+  readonly notifications: PlanJobRunHooksServices & {
+    emitPlanStatusChanged: (payload: {
+      planId: string;
+      status: string;
+    }) => void;
+  };
+  readonly planOutputStreamService: PlanOutputStreamService;
+  readonly plansService: PlansService;
+  readonly signal?: AbortSignal;
+  readonly tasksService: TasksService;
+}): Promise<boolean> => {
+  const phaseResult = await params.dispatcher.runPlan({ phase: 'beforeAll' });
+
+  if (!phaseResult.blocked) {
+    return false;
+  }
+
+  const planId = params.jobData.planId;
+
+  await params.dispatcher.runPlan({
+    mainRunStarted: false,
+    mainRunSucceeded: false,
+    phase: 'afterAll',
+  });
+
+  const repo = params.plansService.getRepository();
+  await repo.update({ id: planId }, { status: 'BLOCKED' });
+
+  params.notifications.emitPlanStatusChanged({
+    planId,
+    status: 'BLOCKED',
+  });
+
+  params.notifications.emitQueueJobCompleted({
+    jobType: 'plans',
+    message: `Plan run blocked by beforeAll hook: ${planId}`,
+    planId,
+    severity: 'error',
+  });
+
+  params.logger.warn(
+    `beforeAll hook blocked main run: planId=${planId}`,
+    params.logLabel,
+  );
+
+  return true;
+};
+
+/**
+ * @description Runs `afterAll` hooks via dispatcher, then emits queue job-completed notification.
+ */
+export const runAfterAllHooksWithDispatcherThenNotify = async (params: {
+  readonly dispatcher: WorkflowLifecycleDispatcher;
+  readonly jobData: RunPlanJobData;
+  readonly logLabel: string;
+  readonly logger: LoggerService;
+  readonly mainRunStarted: boolean;
+  readonly mainRunSucceeded: boolean;
+  readonly notification: PlanQueueJobCompletedPayload;
+  readonly notifications: PlanJobRunHooksServices;
+}): Promise<void> => {
+  await params.dispatcher.runPlan({
+    mainRunStarted: params.mainRunStarted,
+    mainRunSucceeded: params.mainRunSucceeded,
+    phase: 'afterAll',
+  });
+
+  params.notifications.emitQueueJobCompleted(params.notification);
 };

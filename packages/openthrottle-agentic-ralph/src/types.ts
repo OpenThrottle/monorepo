@@ -1,5 +1,6 @@
 import type {
   WorkflowConfig,
+  WorkflowLifecycleDispatcher,
   WorkflowRunCorrelation,
   WorkflowRunResult as WorkflowRunResultBase,
   WorkflowOrchestrator as WorkflowOrchestratorBase,
@@ -39,6 +40,11 @@ export interface WorkflowContext extends WorkflowConfig {
 
   // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';
+  /**
+   * Optional Jest-style lifecycle hook dispatcher (BullMQ child jobs on the orchestrator path).
+   * When omitted, hook boundary calls are no-ops.
+   */
+  readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
   readonly mode: 'plan' | 'task';
   readonly planId: string;
   readonly project: string | undefined;

@@ -109,12 +109,18 @@ describe('applyWorkflowRalphBinPath', () => {
 });
 
 describe('buildWorkflowRalphSpawnEnv', () => {
-  it('returns the same env reference when postgres is unresolved and spawn overrides are absent', () => {
+  it('sets graphql transport by default and forwards worker GraphQL auth', () => {
     const env: NodeJS.ProcessEnv = {
       FOO: 'bar',
+      MCP_DEVELOPER_AUTH_TOKEN: 'dev-token',
       [WORKFLOW_RALPH_OT_ROOT_ENV]: emptyRoot,
     };
-    expect(buildWorkflowRalphSpawnEnv(env)).toBe(env);
+    const out = buildWorkflowRalphSpawnEnv(env);
+
+    expect(out).not.toBe(env);
+    expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('graphql');
+    expect(out.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN).toBe('dev-token');
+    expect(out.FOO).toBe('bar');
   });
 
   it('prepends the OT bin dir to PATH for deterministic workflow-ralph resolution', () => {
@@ -136,19 +142,21 @@ describe('buildWorkflowRalphSpawnEnv', () => {
     expect(out).not.toBe(process.env);
   });
 
-  it('merges canonical postgres URL with HOME and XDG overrides', () => {
+  it('merges canonical postgres URL with HOME and XDG overrides when transport is postgres-direct', () => {
     const out = buildWorkflowRalphSpawnEnv(
       {
         HOME: '/w',
         POSTGRES_URL: 'postgresql://a:b@localhost:1/db',
         [WORKFLOW_RALPH_SPAWN_HOME_ENV]: '/vault',
         [WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV]: '/xdg',
+        WORKFLOW_RALPH_TRANSPORT: 'postgres-direct',
       },
       { canonicalCortexPostgresUrl: 'postgresql://c:d@localhost:2/db2' },
     );
 
     expect(out.HOME).toBe('/vault');
     expect(out.XDG_CONFIG_HOME).toBe('/xdg');
+    expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('postgres-direct');
     expect(out.POSTGRES_URL).toBe('postgresql://c:d@localhost:2/db2');
     expect(out[OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]).toBe(
       'postgresql://c:d@localhost:2/db2',
@@ -165,6 +173,6 @@ describe('buildWorkflowRalphSpawnEnv', () => {
     const out = buildWorkflowRalphSpawnEnv(env);
 
     expect(out.HOME).toBe('/keep');
-    expect(out).toBe(env);
+    expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('graphql');
   });
 });

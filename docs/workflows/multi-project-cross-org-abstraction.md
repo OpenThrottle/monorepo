@@ -18,7 +18,7 @@
   trust boundary is GraphQL + the `OPENTHROTTLE_ALLOWED_WORKING_DIRS` allowlist.
 - **Reuse what exists:** `projects`, `workspace_local_repositories` (`project_id` link),
   `EnqueuePlanRun*.workingDirectory`, `validateWorkingDirectory` +
-  `assertWorkingDirectoryIsNxWorkspaceRoot`, and `resolveForeignWorkspaceContext` already provide
+  `validateWorkingDirectory`, and `resolveForeignWorkspaceContext` already provide
   most of the multi-workspace plumbing. This design composes them; it does **not** invent a new
   multi-tenant entity.
 - **Resolution via hooks:** which Skills/Prompts/Generators/sub-workflows apply to a run is resolved
@@ -114,7 +114,7 @@ sequenceDiagram
 
   U->>S: enqueuePlanRalphOrchestrator(planId, workingDirectory?, ralph, jobRunHooks)
   S->>S: resolve project → repository → workingDirectory (autocomplete)
-  S->>S: validateWorkingDirectory + assertWorkingDirectoryIsNxWorkspaceRoot + allowlist
+  S->>S: validateWorkingDirectory + allowlist
   S->>Q: enqueue parent plan-run job
   Q->>R: start run (in worker process or spawned child)
   R->>Q: beforeAll child → resolve skills/prompts (repo-local + OT-owned) + pre-mortem checklist
@@ -140,13 +140,13 @@ Within the run:
 
 ## Project / repository selection for a run
 
-| Input source                | Field                                                            | Behavior                                                                                            |
-| --------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Explicit `workingDirectory` | `EnqueuePlanRun*.workingDirectory`                               | Authoritative. Validated + Nx-root asserted + allowlist-checked. Bypasses autocomplete.             |
-| Plan's `project`            | `Plan.projectId` → `workspace_local_repositories.project_id`     | Autocomplete: resolve the linked repo's `filesystem_path` as `workingDirectory` when none provided. |
-| Repo registration           | `workspace_local_repositories` (`filesystem_path`, git metadata) | The canonical local path + remote for a project. One install can register many.                     |
-| Allowlist                   | `OPENTHROTTLE_ALLOWED_WORKING_DIRS`                              | Trust boundary: server only runs in directories under an allowed prefix (when set).                 |
-| Nx-root assertion           | `assertWorkingDirectoryIsNxWorkspaceRoot`                        | The run cwd must be an Nx workspace root (bypass: `OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR=1`).       |
+| Input source                | Field                                                            | Behavior                                                                                                                                            |
+| --------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Explicit `workingDirectory` | `EnqueuePlanRun*.workingDirectory`                               | Authoritative. Validated + allowlist-checked. Bypasses autocomplete. Non-Nx repos are allowed; the beforeAll pre-mortem hook validates runnability. |
+| Plan's `project`            | `Plan.projectId` → `workspace_local_repositories.project_id`     | Autocomplete: resolve the linked repo's `filesystem_path` as `workingDirectory` when none provided.                                                 |
+| Repo registration           | `workspace_local_repositories` (`filesystem_path`, git metadata) | The canonical local path + remote for a project. One install can register many.                                                                     |
+| Allowlist                   | `OPENTHROTTLE_ALLOWED_WORKING_DIRS`                              | Trust boundary: server only runs in directories under an allowed prefix (when set).                                                                 |
+| Repo runnability            | `beforeAll` lifecycle hook (Stage d)                             | Pre-mortem validates build/deps/git/allowlist for the target repo; replaces the removed Nx-root assertion.                                          |
 
 **Resolution algorithm (server, at enqueue):**
 
@@ -265,8 +265,8 @@ or run in an unintended directory.
 
 - **Where a run may execute.** `OPENTHROTTLE_ALLOWED_WORKING_DIRS` (comma-separated absolute
   prefixes) is the allowlist; when set, the server refuses any `workingDirectory` outside it.
-  `assertWorkingDirectoryIsNxWorkspaceRoot` prevents wrong-depth cwds. Both already exist in
-  `enqueue-plan-ralph-tuning.ts`.
+  `validateWorkingDirectory` enforces absolute paths and existence. Non-Nx target repos are allowed;
+  the `beforeAll` pre-mortem hook (Stage d) validates runnability instead of requiring `nx.json`.
 - **Who owns what.** `workspace_local_repositories` rows are scoped by `user_id` (JWT `sub`); a user
   only resolves their own registered repos. Plans/projects are owned in OT Postgres and only reached
   via GraphQL with a bearer token.

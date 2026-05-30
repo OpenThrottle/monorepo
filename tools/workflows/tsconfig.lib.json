@@ -19,6 +19,9 @@
       "path": "../../packages/ai-mcp/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
+    },
+    {
       "path": "../generators/tsconfig.lib.json"
     },
     {

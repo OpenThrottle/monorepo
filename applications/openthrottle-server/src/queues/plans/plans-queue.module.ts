@@ -8,6 +8,7 @@ import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 import { MetricsModule } from '../../metrics/metrics.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module';
+import { PlanLifecycleHooksQueueModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
 import {
   PLANS_QUEUE_NAME,
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
@@ -35,6 +36,7 @@ import { PlansProcessor } from './plans.processor';
     NestjsRepositoriesModule,
     NestjsWorktreesModule,
     NotificationsModule,
+    PlanLifecycleHooksQueueModule,
   ],
   providers: [PlanRunCancellationService, PlansProcessor],
 })

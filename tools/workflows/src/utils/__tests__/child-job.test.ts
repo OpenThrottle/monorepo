@@ -10,7 +10,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChildJobInput, ParentJobHandoff } from '../../types/worktree';
 import { runChildJob } from '../child-job';
 
-const mockConfig = { connectionString: 'postgres://localhost/cortex' };
+const mockConfig = {
+  connectionString: 'postgres://localhost/cortex',
+  transport: 'postgres-direct' as const,
+};
 
 const buildWorkflowRalphSpawnEnvMock = vi.fn(
   (
@@ -24,7 +27,10 @@ vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
     env: NodeJS.ProcessEnv,
     options?: { canonicalCortexPostgresUrl?: string },
   ) => buildWorkflowRalphSpawnEnvMock(env, options),
-  getPostgresConfig: vi.fn(() => mockConfig),
+}));
+
+vi.mock('../workflow-transport', () => ({
+  resolveWorkflowRalphTransportFromEnv: vi.fn(() => 'postgres-direct'),
 }));
 
 const mockCortexState: {
@@ -36,11 +42,14 @@ const mockCortexState: {
 };
 
 vi.mock('../cortex-ralph', () => ({
+  RALPH_FATAL_REQUIRED_GRAPHQL: 'graphql-required',
+  RALPH_FATAL_REQUIRED_POSTGRES: 'postgres-required',
   appendPlanOutput: vi.fn().mockResolvedValue(undefined),
   ensureCortexReachable: vi.fn().mockResolvedValue(undefined),
   getTasksByPlanId: vi
     .fn()
     .mockImplementation(async () => mockCortexState.tasks),
+  resolveWorkflowRalphConfig: vi.fn(() => mockConfig),
   updatePlanStatus: vi
     .fn()
     .mockImplementation(async (_config: unknown, planId: string) => {
@@ -257,12 +266,8 @@ describe('runChildJob', () => {
   });
 
   it('returns ok: false when Cortex config is missing', async () => {
-    const cortexServer = await import('@openthrottle/ai-mcp/src/cortex-server');
-    vi.mocked(cortexServer.getPostgresConfig).mockImplementationOnce(
-      (() => undefined) as unknown as () => ReturnType<
-        typeof cortexServer.getPostgresConfig
-      >,
-    );
+    const cortexRalph = await import('../cortex-ralph.js');
+    vi.mocked(cortexRalph.resolveWorkflowRalphConfig).mockReturnValueOnce(null);
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -273,7 +278,7 @@ describe('runChildJob', () => {
       const result = await runChildJob(input);
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.reason).toMatch(/Postgres is not configured/);
+        expect(result.reason).toMatch(/postgres-required/);
       }
     } finally {
       rmSync(dir, { force: true, recursive: true });

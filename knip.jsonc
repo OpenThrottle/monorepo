@@ -399,7 +399,6 @@
         "src/bin/ralph.ts",
         "src/bin/link-merge.ts",
         "src/bin/lighthouse.ts",
-        "src/bin/nx-validate.ts",
         "src/bin/run-iteration.ts",
         "src/doc-ingestion/index.ts",
         "src/utils/cortex-ralph.ts",

@@ -1,16 +1,17 @@
 {
   "name": "@tools/workflows",
-  "description": "TypeScript workflow CLIs for this monorepo: Ralph (OpenThrottle plan/task execution), link-merge for post-merge squash commits, Nx validation, and Lighthouse audits.",
+  "description": "[DEPRECATED] Legacy workflow CLIs and re-exports. New code should use @openthrottle/nestjs-agentic-workflow (queued runs), @openthrottle/nestjs-worktrees (worktrees), and @openthrottle/openthrottle-agentic-workflow (contracts). workflow-ralph remains a thin local CLI shim; workflow-link-merge and workflow-lighthouse stay here until relocated.",
   "version": "1.0.0",
+  "deprecated": "Use @openthrottle/nestjs-agentic-workflow for BullMQ agentic workflows. See tools/workflows/README.md.",
   "bin": {
     "workflow-link-merge": "./dist/src/bin/link-merge.js",
     "workflow-lighthouse": "./dist/src/bin/lighthouse.js",
-    "workflow-nx-validate": "./dist/src/bin/nx-validate.js",
     "workflow-ralph": "./dist/src/bin/ralph.js"
   },
   "dependencies": {
     "@nx/devkit": "22.6.4",
     "@openthrottle/ai-mcp": "workspace:*",
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:*",
     "@tools/generators": "workspace:*",
     "commander": "^14.0.2",
     "pg": "^8.17.1",

@@ -1,10 +1,9 @@
-import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
+import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import type { RalphPlanRunTuningInput } from './plan.input';
 import {
-  assertWorkingDirectoryIsNxWorkspaceRoot,
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
   DEFAULT_PLAN_RUN_KIND,
@@ -177,7 +176,7 @@ describe('buildRunPlanJobData', () => {
       ralph: null,
     });
     expect(result.jobRunHooks?.hooks).toHaveLength(1);
-    expect(result.jobRunHooks?.hooks[0]?.phase).toBe('before_run');
+    expect(result.jobRunHooks?.hooks[0]?.phase).toBe('beforeAll');
   });
 
   test('includes ralph when tuning is present', () => {
@@ -398,15 +397,14 @@ describe('buildRunPlanJobData with workingDirectory', () => {
     });
   });
 
-  test('throws when workingDirectory is not an Nx workspace root', () => {
+  test('accepts a non-Nx workingDirectory when the path exists', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
-    expect(() =>
-      buildRunPlanJobData({
-        planId: 'p1',
-        ralph: null,
-        workingDirectory: tempDir,
-      }),
-    ).toThrow(/not an Nx workspace root/);
+    const data = buildRunPlanJobData({
+      planId: 'p1',
+      ralph: null,
+      workingDirectory: tempDir,
+    });
+    expect(data.workingDirectory).toBe(tempDir);
   });
 
   test('throws for an invalid workingDirectory', () => {
@@ -417,50 +415,6 @@ describe('buildRunPlanJobData with workingDirectory', () => {
         workingDirectory: '/no/such/dir/ot-test',
       }),
     ).toThrow(/does not exist/);
-  });
-});
-
-describe('assertWorkingDirectoryIsNxWorkspaceRoot', () => {
-  const ORIGINAL_ALLOW = process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR;
-
-  beforeEach(() => {
-    delete process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR;
-  });
-
-  afterEach(() => {
-    if (ORIGINAL_ALLOW === undefined) {
-      delete process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR;
-    } else {
-      process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR = ORIGINAL_ALLOW;
-    }
-  });
-
-  test('passes when the directory contains nx.json', () => {
-    const dir = makeNxWorkspaceDir();
-    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).not.toThrow();
-  });
-
-  test('throws and points at the ancestor when a parent is the Nx root', () => {
-    const root = makeNxWorkspaceDir();
-    const subDir = join(root, 'services', 'native-apps');
-    mkdirSync(subDir, { recursive: true });
-
-    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(subDir)).toThrow(
-      new RegExp(`nearest Nx workspace root is ${root}`),
-    );
-  });
-
-  test('throws when no nx.json is found at or above the directory', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'ot-not-nx-'));
-    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).toThrow(
-      /no nx\.json .* found at or above/,
-    );
-  });
-
-  test('bypasses the check when OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR=1', () => {
-    process.env.OPENTHROTTLE_ALLOW_NON_NX_WORKING_DIR = '1';
-    const dir = mkdtempSync(join(tmpdir(), 'ot-not-nx-'));
-    expect(() => assertWorkingDirectoryIsNxWorkspaceRoot(dir)).not.toThrow();
   });
 });
 

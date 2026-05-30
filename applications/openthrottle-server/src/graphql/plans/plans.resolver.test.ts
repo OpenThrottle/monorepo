@@ -1432,7 +1432,7 @@ describe('PlansResolver', () => {
       } as Plan;
       const json = resolver.jobRunHooksJson(planWithHooks);
       const parsed = JSON.parse(json) as { hooks: { phase: string }[] };
-      expect(parsed.hooks[0]?.phase).toBe('before_run');
+      expect(parsed.hooks[0]?.phase).toBe('beforeAll');
     });
   });
 
@@ -1519,7 +1519,7 @@ describe('PlansResolver', () => {
         expect.objectContaining({
           jobRunHooks: expect.objectContaining({
             hooks: expect.arrayContaining([
-              expect.objectContaining({ phase: 'after_run' }),
+              expect.objectContaining({ phase: 'afterAll' }),
             ]),
           }),
         }),

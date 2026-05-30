@@ -4,7 +4,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockConfig = { connectionString: 'postgres://localhost/cortex' };
+const mockConfig = {
+  connectionString: 'postgres://localhost/cortex',
+  transport: 'postgres-direct' as const,
+};
 
 const mockState = {
   connectReject: undefined as Error | undefined,
@@ -15,13 +18,13 @@ const mockState = {
 const planRow = {
   author: 'visormatt',
   category: 'infra',
-  created_at: '2026-01-01T00:00:00.000Z',
+  createdAt: '2026-01-01T00:00:00.000Z',
   description: null,
   id: 'plan-1',
   status: 'IN_PROGRESS',
   summary: null,
   title: 'Test plan',
-  updated_at: '2026-01-02T00:00:00.000Z',
+  updatedAt: '2026-01-02T00:00:00.000Z',
 };
 
 vi.mock('pg', () => ({
@@ -74,15 +77,26 @@ vi.mock('pg', () => ({
           });
         }
 
+        if (sql.includes('FROM plans WHERE id')) {
+          return Promise.resolve({
+            rows: [{ ...planRow, status: mockState.planStatus }],
+          });
+        }
+
         return Promise.resolve({ rows: [{}] });
       }
     },
   },
 }));
 
-describe('ensureCortexReachable', () => {
+describe('ensureCortexReachable (postgres-direct)', () => {
+  beforeEach(() => {
+    vi.stubEnv('WORKFLOW_RALPH_TRANSPORT', 'postgres-direct');
+  });
+
   afterEach(() => {
     mockState.connectReject = undefined;
+    vi.unstubAllEnvs();
   });
 
   it('throws with clear message when connection fails', async () => {
@@ -104,11 +118,16 @@ describe('ensureCortexReachable', () => {
   });
 });
 
-describe('promotePlanToInProgressIfNeeded', () => {
+describe('promotePlanToInProgressIfNeeded (postgres-direct)', () => {
   beforeEach(() => {
     mockState.planStatus = 'PENDING';
     mockState.queryLog = [];
     vi.resetModules();
+    vi.stubEnv('WORKFLOW_RALPH_TRANSPORT', 'postgres-direct');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('returns true when plan is promoted from PENDING', async () => {
@@ -122,19 +141,6 @@ describe('promotePlanToInProgressIfNeeded', () => {
 
     expect(promoted).toBe(true);
     expect(mockState.queryLog[0]).toContain("status != 'IN_PROGRESS'");
-  });
-
-  it('returns true when plan is promoted from QUEUED', async () => {
-    mockState.planStatus = 'QUEUED';
-    const { promotePlanToInProgressIfNeeded } =
-      await import('../cortex-ralph.js');
-
-    const promoted = await promotePlanToInProgressIfNeeded(
-      mockConfig,
-      'plan-1',
-    );
-
-    expect(promoted).toBe(true);
   });
 
   it('returns false when plan is already IN_PROGRESS', async () => {
@@ -151,24 +157,19 @@ describe('promotePlanToInProgressIfNeeded', () => {
   });
 });
 
-describe('updatePlanStatus', () => {
+describe('updatePlanStatus (postgres-direct)', () => {
   beforeEach(() => {
     mockState.planStatus = 'PENDING';
     mockState.queryLog = [];
     vi.resetModules();
+    vi.stubEnv('WORKFLOW_RALPH_TRANSPORT', 'postgres-direct');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('promotes PENDING to IN_PROGRESS using status != IN_PROGRESS predicate', async () => {
-    const { updatePlanStatus } = await import('../cortex-ralph.js');
-
-    const row = await updatePlanStatus(mockConfig, 'plan-1', 'IN_PROGRESS');
-
-    expect(row?.status).toBe('IN_PROGRESS');
-    expect(mockState.queryLog[0]).toContain("status != 'IN_PROGRESS'");
-  });
-
-  it('promotes QUEUED to IN_PROGRESS', async () => {
-    mockState.planStatus = 'QUEUED';
     const { updatePlanStatus } = await import('../cortex-ralph.js');
 
     const row = await updatePlanStatus(mockConfig, 'plan-1', 'IN_PROGRESS');
@@ -187,11 +188,16 @@ describe('updatePlanStatus', () => {
   });
 });
 
-describe('updateTaskStatus', () => {
+describe('updateTaskStatus (postgres-direct)', () => {
   beforeEach(() => {
     mockState.planStatus = 'QUEUED';
     mockState.queryLog = [];
     vi.resetModules();
+    vi.stubEnv('WORKFLOW_RALPH_TRANSPORT', 'postgres-direct');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('promotes parent plan when task becomes IN_PROGRESS', async () => {

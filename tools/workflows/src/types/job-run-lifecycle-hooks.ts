@@ -1,5 +1,5 @@
 /**
- * @description Job-run lifecycle hook configuration (phase 1: `before_run` / `after_run`).
+ * @description Job-run lifecycle hook configuration (Jest-style phases + legacy wire aliases).
  * Canonical types for plan storage, GraphQL, and BullMQ payloads. See `JOB_RUN_LIFECYCLE_HOOKS.md`.
  *
  * Aligned with layer-1 Ralph prompt delivery (`named` → `--prompt`, `file` → `--prompt-file`)
@@ -8,8 +8,21 @@
 
 import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
 
-/** @description When a hook runs relative to the main Ralph/orchestrator run. */
-export type JobRunHookPhase = 'after_run' | 'before_run';
+/** @description Canonical Jest-style lifecycle phases (normalized after parse). */
+export type JobRunHookPhase =
+  | 'afterAll'
+  | 'afterEach'
+  | 'beforeAll'
+  | 'beforeEach';
+
+/** @description Legacy wire values accepted on read; mapped to canonical phases in parse. */
+export type JobRunHookPhaseWire =
+  | 'after_run'
+  | 'afterAll'
+  | 'afterEach'
+  | 'before_run'
+  | 'beforeAll'
+  | 'beforeEach';
 
 /** @description How hook failure affects the job (see {@link resolveJobRunHookOnFailure}). */
 export type JobRunHookOnFailure = 'block' | 'ignore' | 'warn';
@@ -23,6 +36,9 @@ export type JobRunHookPromptDelivery = 'file' | 'named';
 /** @description BullMQ plan job discriminant; mirrors `RunPlanJobData.runKind`. */
 export type JobRunHookRunKind = 'orchestrator' | 'spawn';
 
+/** @description Terminal task outcome for afterEach hooks and conditions. */
+export type JobRunHookTaskOutcome = 'blocked' | 'completed' | 'failed';
+
 /**
  * @description Optional filters; all fields omitted means “always run” for that phase.
  */
@@ -32,10 +48,26 @@ export interface JobRunHookConditions {
    */
   readonly runKinds?: ReadonlyArray<JobRunHookRunKind>;
   /**
-   * `after_run` only. Omit = run on any terminal main-run outcome.
+   * `beforeEach` / `afterEach` only. Restrict by task category (e.g. 'infra').
+   */
+  readonly taskCategories?: ReadonlyArray<string>;
+  /**
+   * `beforeEach` / `afterEach` only. Restrict by task status at the boundary.
+   */
+  readonly taskStatuses?: ReadonlyArray<string>;
+  /**
+   * `afterAll` only. Omit = run on any terminal main-run outcome.
    * `true` = main run succeeded; `false` = main run failed or was blocked before start.
    */
   readonly whenMainRunSucceeded?: boolean;
+  /**
+   * `afterAll` only (canonical name). Alias of {@link JobRunHookConditions.whenMainRunSucceeded}.
+   */
+  readonly whenPlanRunSucceeded?: boolean;
+  /**
+   * `afterEach` only. Omit = any task terminal outcome.
+   */
+  readonly whenTaskOutcome?: ReadonlyArray<JobRunHookTaskOutcome>;
 }
 
 /** @description Fields shared by every hook entry. */
@@ -106,6 +138,14 @@ export interface JobRunHookRunOptions {
   readonly project?: string | null;
 }
 
+/** @description Task context for beforeEach / afterEach hook evaluation and prompts. */
+export interface JobRunHookTaskContext {
+  readonly category: string | undefined;
+  readonly id: string;
+  readonly status: string;
+  readonly title: string;
+}
+
 /** @description Default timeout when {@link JobRunHookEntryBase.timeoutSeconds} is omitted. */
 export const DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS = 600;
 
@@ -127,12 +167,35 @@ export const JOB_RUN_HOOK_SKILL_PATH_PREFIXES = [
   '.cursor/skills/',
 ] as const;
 
+const PHASE_SORT_ORDER: Readonly<Record<JobRunHookPhase, number>> = {
+  afterAll: 3,
+  afterEach: 2,
+  beforeAll: 0,
+  beforeEach: 1,
+};
+
+/**
+ * @description Maps legacy wire phase strings to canonical {@link JobRunHookPhase}.
+ */
+export const normalizeJobRunHookPhase = (
+  wire: JobRunHookPhaseWire,
+): JobRunHookPhase => {
+  if (wire === 'before_run') return 'beforeAll';
+  if (wire === 'after_run') return 'afterAll';
+  return wire;
+};
+
 /**
  * @description Default {@link JobRunHookOnFailure} when omitted on an entry.
  */
 export const defaultJobRunHookOnFailure = (
   phase: JobRunHookPhase,
-): JobRunHookOnFailure => (phase === 'before_run' ? 'block' : 'warn');
+): JobRunHookOnFailure => {
+  if (phase === 'beforeAll' || phase === 'beforeEach') {
+    return 'block';
+  }
+  return 'warn';
+};
 
 /**
  * @description Resolves effective failure policy for a hook entry.
@@ -143,15 +206,13 @@ export const resolveJobRunHookOnFailure = (
   entry.onFailure ?? defaultJobRunHookOnFailure(entry.phase);
 
 /**
- * @description Sort key: `before_run` before `after_run`, then `order`, then stable index.
+ * @description Sort key: beforeAll → beforeEach → afterEach → afterAll, then `order`, then stable index.
  */
 export const compareJobRunHookEntries = (
   a: Pick<JobRunHookEntry, 'order' | 'phase'>,
   b: Pick<JobRunHookEntry, 'order' | 'phase'>,
 ): number => {
-  const phaseOrder = (p: JobRunHookPhase): number =>
-    p === 'before_run' ? 0 : 1;
-  const byPhase = phaseOrder(a.phase) - phaseOrder(b.phase);
+  const byPhase = PHASE_SORT_ORDER[a.phase] - PHASE_SORT_ORDER[b.phase];
   if (byPhase !== 0) return byPhase;
   return (a.order ?? 0) - (b.order ?? 0);
 };
@@ -177,3 +238,15 @@ export const formatJobRunHookEntryLabel = (entry: JobRunHookEntry): string => {
   }
   return `${phase} prompt_profile ${entry.prompt} (on_failure=${failure})`;
 };
+
+/** @description True when the phase runs at plan scope (once per plan run). */
+export const isPlanScopedJobRunHookPhase = (
+  phase: JobRunHookPhase,
+): phase is 'afterAll' | 'beforeAll' =>
+  phase === 'beforeAll' || phase === 'afterAll';
+
+/** @description True when the phase runs at task scope (per task transition). */
+export const isTaskScopedJobRunHookPhase = (
+  phase: JobRunHookPhase,
+): phase is 'afterEach' | 'beforeEach' =>
+  phase === 'beforeEach' || phase === 'afterEach';

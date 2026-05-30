@@ -1636,6 +1636,9 @@ importers:
       '@openthrottle/ai-mcp':
         specifier: workspace:*
         version: link:../../packages/ai-mcp
+      '@openthrottle/openthrottle-agentic-ralph':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-agentic-ralph
       '@tools/generators':
         specifier: workspace:*
         version: link:../generators
