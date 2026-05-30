@@ -17,11 +17,11 @@ export type {
   WorkflowLifecycleTaskOutcome,
   WorkflowPlanLifecyclePhase,
   WorkflowTaskLifecyclePhase,
-} from './lifecycle-types.js';
+} from './lifecycle.js';
 
 export {
   AGENTIC_WORKFLOW_RUN_LOG_EVENT,
   PLAN_RUN_METRICS_LOG_EVENT,
 } from './types.js';
 
-export { isLifecycleHooksChildJobsEnabled } from './lifecycle-types.js';
+export { isLifecycleHooksChildJobsEnabled } from './lifecycle.js';

@@ -38,6 +38,7 @@ export interface WorkflowLifecycleDispatcher {
     readonly mainRunSucceeded?: boolean;
     readonly phase: WorkflowPlanLifecyclePhase;
   }) => Promise<{ readonly blocked: boolean }>;
+
   /** @description Run task-scoped children for a phase; resolves to whether the phase blocked that task. */
   readonly runTask: (params: {
     readonly phase: WorkflowTaskLifecyclePhase;
@@ -50,5 +51,6 @@ export interface WorkflowLifecycleDispatcher {
  * @description When false, plan-run hooks run in-process (rollback for child-job orchestration).
  * Default: child BullMQ jobs on the orchestrator path.
  */
-export const isLifecycleHooksChildJobsEnabled = (): boolean =>
-  process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS !== 'false';
+export const isLifecycleHooksChildJobsEnabled = (): boolean => {
+  return process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS !== 'false';
+};

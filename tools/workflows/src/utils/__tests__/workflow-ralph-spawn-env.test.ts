@@ -132,6 +132,15 @@ describe('buildWorkflowRalphSpawnEnv', () => {
     expect(out.PATH).toBe(`${otBinDir}${path.delimiter}/usr/bin`);
   });
 
+  it('injects WORKFLOW_RALPH_OT_ROOT so nested Ralph resolves foreign cwd vs monorepo root', () => {
+    const out = buildWorkflowRalphSpawnEnv({
+      PATH: '/usr/bin',
+      [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
+    });
+
+    expect(out[WORKFLOW_RALPH_OT_ROOT_ENV]).toBe(otRoot);
+  });
+
   it('sets HOME from WORKFLOW_RALPH_SPAWN_HOME when set', () => {
     const out = buildWorkflowRalphSpawnEnv({
       HOME: '/worker',

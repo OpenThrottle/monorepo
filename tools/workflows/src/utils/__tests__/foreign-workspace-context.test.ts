@@ -106,6 +106,7 @@ describe('buildForeignWorkspacePromptLayer', () => {
       expect(layer).toBeDefined();
       expect(layer).toContain(foreignRoot);
       expect(layer).toContain('NOT the OpenThrottle monorepo');
+      expect(layer).toContain('Make file changes under this directory');
       expect(layer).toContain('applications/openthrottle-developer');
       expect(layer).toContain('tools/workflows');
     });

@@ -1343,6 +1343,9 @@ importers:
 
   packages/openthrottle-agentic-ralph:
     dependencies:
+      '@openthrottle/ai-mcp':
+        specifier: workspace:*
+        version: link:../ai-mcp
       '@openthrottle/nodejs-graphql':
         specifier: workspace:*
         version: link:../nodejs-graphql

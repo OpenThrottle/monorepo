@@ -51,6 +51,11 @@ export interface WorkflowContext extends WorkflowConfig {
   readonly runner: WorkflowRunner;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
+  /**
+   * @description Absolute path to the target repository cwd for agent iterations (foreign checkout).
+   * When omitted, the host process cwd is used (typically the OpenThrottle monorepo root).
+   */
+  readonly workingDirectory?: string;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;
 }

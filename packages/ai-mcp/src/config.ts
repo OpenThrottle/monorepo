@@ -334,7 +334,15 @@ export function buildWorkflowRalphSpawnEnv(
     }
   }
 
-  const withBinPath = applyWorkflowRalphBinPath(env);
+  let withBinPath = applyWorkflowRalphBinPath(env);
+
+  const otRoot = resolveOpenThrottleRoot(workerEnv);
+  if (otRoot !== undefined) {
+    withBinPath = {
+      ...withBinPath,
+      [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
+    };
+  }
 
   return applyWorkflowRalphSpawnIdentityOverrides(withBinPath);
 }

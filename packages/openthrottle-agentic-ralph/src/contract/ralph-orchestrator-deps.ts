@@ -40,6 +40,8 @@ export type WorkflowRalphIterationOnChunk = (
  */
 export interface WorkflowRalphIterationRunParams {
   readonly agentPrompt: string;
+  /** @description Agent subprocess cwd (foreign `workingDirectory`). */
+  readonly cwd?: string;
   readonly iteration: number;
   readonly model: string | undefined;
   readonly onChunk?: WorkflowRalphIterationOnChunk;

@@ -8,12 +8,17 @@ import {
   AGENTIC_WORKFLOW_REGISTRY,
 } from '@openthrottle/nestjs-agentic-workflow';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
+import {
+  resolveOpenThrottleRoot,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
+} from '@openthrottle/ai-mcp/src/config';
 import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   WorkflowContext,
   WorkflowOrchestrator,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
+import { applyWorkflowRalphDebugCli } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
 
 type PlanRunTuningInput = NonNullable<
@@ -57,11 +62,26 @@ export class AgenticRalphOrchestratorService {
       taskId: jobData.taskId,
     });
 
+    applyWorkflowRalphDebugCli(baseContext.debug);
+
+    const otRoot = resolveOpenThrottleRoot(process.env);
+    if (
+      otRoot !== undefined &&
+      (process.env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim() ?? '') === ''
+    ) {
+      process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = otRoot;
+    }
+
+    const workingDirectory = jobData.workingDirectory?.trim();
+
     const context: WorkflowContext = {
       ...baseContext,
       ...(signal !== undefined ? { abortSignal: signal } : {}),
       ...(correlation !== undefined ? { correlation } : {}),
       ...(lifecycleDispatcher !== undefined ? { lifecycleDispatcher } : {}),
+      ...(workingDirectory !== undefined && workingDirectory !== ''
+        ? { workingDirectory }
+        : {}),
     };
 
     return orchestrator.execute({ context });

@@ -17,6 +17,12 @@ import {
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
+import {
+  buildForeignWorkspacePromptLayer,
+  resolveForeignWorkspaceContext,
+} from '@openthrottle/ai-mcp/src/foreign-workspace-context';
+import { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
+import type { WorkflowContext } from '../types.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {
   parseAgentOutput,
@@ -24,6 +30,38 @@ import {
   agentOutputHasPromiseComplete,
 } from '../utils/output.js';
 import { formatPlanAndTasksForPrompt } from '../utils/index.js';
+
+/**
+ * @description Agent cwd and foreign-repo scoping for orchestrator prompts (parity with `ralph.ts`).
+ */
+const resolveOrchestratorAgentCwd = (context: WorkflowContext): string => {
+  const trimmed = context.workingDirectory?.trim() ?? '';
+
+  return trimmed !== '' ? trimmed : process.cwd();
+};
+
+const buildOrchestratorBasePrompt = (params: {
+  readonly context: WorkflowContext;
+  readonly effectivePlanId: string;
+  readonly injectedContext: string;
+  readonly taskIdTrim: string;
+}): string => {
+  const { context, effectivePlanId, injectedContext, taskIdTrim } = params;
+  const agentCwd = resolveOrchestratorAgentCwd(context);
+  const foreignLayer = buildForeignWorkspacePromptLayer(
+    resolveForeignWorkspaceContext(agentCwd, process.env),
+  );
+
+  return (
+    `${context.prompt}\n\n` +
+    (foreignLayer !== undefined ? `${foreignLayer}\n\n` : '') +
+    `${RALPH_SHELL_COMMAND_GUARDRAIL}\n\n` +
+    `${injectedContext}\n\n` +
+    `Plan-Id: ${effectivePlanId}.` +
+    (taskIdTrim !== '' ? ` Task-Id: ${taskIdTrim}.` : '') +
+    ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.'
+  );
+};
 
 const REMAINING_TASK_STATUS = new Set([
   'PENDING',
@@ -127,11 +165,13 @@ export const createWorkflowRalphOrchestrator = (
 
       // prompt.build
       const injectedContext = formatPlanAndTasksForPrompt(planRow, tasksRows);
-      const basePrompt =
-        `${context.prompt}\n\n${injectedContext}\n\n` +
-        `Plan-Id: ${effectivePlanId}.` +
-        (taskIdTrim ? ` Task-Id: ${taskIdTrim}.` : '') +
-        ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
+      const agentCwd = resolveOrchestratorAgentCwd(context);
+      const basePrompt = buildOrchestratorBasePrompt({
+        context,
+        effectivePlanId,
+        injectedContext,
+        taskIdTrim,
+      });
 
       // plan.guard
       if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
@@ -275,6 +315,7 @@ export const createWorkflowRalphOrchestrator = (
         try {
           agentOutput = await iterationRunner.run({
             agentPrompt,
+            cwd: agentCwd,
             iteration,
             model: context.model,
             onChunk,

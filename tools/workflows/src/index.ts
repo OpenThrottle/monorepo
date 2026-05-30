@@ -171,6 +171,7 @@ export {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
 } from './utils/ot-diagnostics';
+export { applyWorkflowRalphDebugCli } from './utils/apply-workflow-ralph-debug-cli';
 export { runIteration, runIterationAsync } from './bin/run-iteration';
 export type { CursorAgentChunk, RunIterationConfig } from './bin/run-iteration';
 export { createCursorWorkflowRalphIterationRunner } from './utils/cursor-workflow-ralph-iteration-runner';

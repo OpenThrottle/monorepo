@@ -5,11 +5,18 @@
  * Used when {@link RunPlanOrchestratorJobData.runKind} is `orchestrator`.
  */
 import {
+  resolveOpenThrottleRoot,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
+} from '@openthrottle/ai-mcp/src/config';
+import {
   buildRalphFlowContextFromPlanRunTuning,
   buildWorkflowExecuteGraphqlV2Options,
   createWorkflowRalphOrchestrator,
 } from '@openthrottle/openthrottle-workflows';
-import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
+import {
+  applyWorkflowRalphDebugCli,
+  createCursorWorkflowRalphIterationRunner,
+} from '@tools/workflows';
 import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type {
@@ -74,9 +81,24 @@ export const runPlanOrchestratorJob = async (params: {
     taskId: jobData.taskId,
   });
 
+  applyWorkflowRalphDebugCli(baseContext.debug);
+
+  const otRoot = resolveOpenThrottleRoot(process.env);
+  if (
+    otRoot !== undefined &&
+    (process.env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim() ?? '') === ''
+  ) {
+    process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = otRoot;
+  }
+
+  const workingDirectory = jobData.workingDirectory?.trim();
+
   const context: WorkflowRalphContext = {
     ...baseContext,
     ...(signal !== undefined ? { abortSignal: signal } : {}),
+    ...(workingDirectory !== undefined && workingDirectory !== ''
+      ? { workingDirectory }
+      : {}),
   };
 
   return orchestrator.execute({ context });

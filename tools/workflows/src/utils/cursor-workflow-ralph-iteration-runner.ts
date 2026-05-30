@@ -27,6 +27,10 @@ export interface CursorWorkflowRalphIterationStreamChunk {
 
 export interface CursorWorkflowRalphIterationRunParams {
   readonly agentPrompt: string;
+  /**
+   * @description Agent subprocess cwd (foreign `workingDirectory` on orchestrator path).
+   */
+  readonly cwd?: string;
   readonly iteration: number;
   readonly model: string | undefined;
   /**
@@ -123,6 +127,7 @@ export const createCursorWorkflowRalphIterationRunner = (
     return runIterationAsync({
       agentPrompt: params.agentPrompt,
       backend: params.runner,
+      cwd: params.cwd,
       iteration: params.iteration,
       model: params.model,
       onChunk: mergedOnChunk,

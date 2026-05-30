@@ -14,17 +14,7 @@
  *     single attributable summary before echoing, so the run output stays readable.
  */
 
-/**
- * @description Prompt guardrail appended to every Ralph iteration prompt. Instructs the agent to
- * keep Ralph completion signals as plain text (never run through the Shell tool) and to avoid
- * passing multiline prose / summaries / file inventories to the Shell tool, which `/bin/sh`
- * misparses one line per command.
- */
-export const RALPH_SHELL_COMMAND_GUARDRAIL = [
-  'SHELL SAFETY — Do NOT paste multiline prose into the Shell tool. Each shell command must be a single, valid command line.',
-  'Never run summaries, file inventories, task recaps, or the <ralph:task-complete>…</ralph:task-complete> / <promise>…</promise> signals through the Shell tool — emit those only as plain assistant text.',
-  'Feeding multiline prose to the shell makes /bin/sh treat each line as a separate command and produces "command not found" / syntax-error spam.',
-].join('\n');
+export { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
 
 /**
  * @description Matches ANSI SGR color escapes so they can be stripped before line classification.

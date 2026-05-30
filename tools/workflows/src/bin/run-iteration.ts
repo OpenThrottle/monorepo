@@ -27,6 +27,11 @@ export interface RunIterationConfig {
   agentPrompt: string;
   /** @description Execution backend; defaults to {@link DEFAULT_RALPH_RUNNER}. */
   backend?: RalphExecutionBackendId;
+  /**
+   * @description Process cwd for the runner subprocess. When omitted, inherits `process.cwd()`
+   * (e.g. foreign `workingDirectory` from BullMQ spawn or orchestrator).
+   */
+  cwd?: string;
   /** Iteration number. */
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
@@ -109,7 +114,12 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
 const runCursorIterationSync = (config: RunIterationConfig): string => {
   const command = buildCursorShellCommand(config);
 
-  return runShellIterationSync(command, 'cursor-agent', config.iteration);
+  return runShellIterationSync(
+    command,
+    'cursor-agent',
+    config.iteration,
+    config.cwd,
+  );
 };
 
 /**
@@ -118,15 +128,22 @@ const runCursorIterationSync = (config: RunIterationConfig): string => {
 const runClaudeIterationSync = (config: RunIterationConfig): string => {
   const command = buildClaudeShellCommand(config);
 
-  return runShellIterationSync(command, 'claude-code', config.iteration);
+  return runShellIterationSync(
+    command,
+    'claude-code',
+    config.iteration,
+    config.cwd,
+  );
 };
 
 const runShellIterationSync = (
   command: string,
   runnerLabel: string,
   iteration: number,
+  cwd?: string,
 ): string => {
   const child = spawnSync(command, [], {
+    cwd,
     encoding: 'utf-8',
     shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
@@ -187,16 +204,18 @@ const runShellIterationAsync = (
   runnerLabel: string,
   config: RunIterationConfig,
 ): Promise<string> => {
-  const { iteration, timeoutMs, signal, onChunk } = config;
+  const { cwd, iteration, timeoutMs, signal, onChunk } = config;
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning runner', {
+      cwd: cwd ?? process.cwd(),
       iteration,
       runnerLabel,
       timeoutMs: timeoutMs ?? null,
     });
 
     const child: ChildProcess = spawn(command, [], {
+      cwd,
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
     });
