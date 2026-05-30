@@ -1,5 +1,4 @@
 export * from './contract/index.js';
-export { OPENTHROTTLE_RALPH_PARITY_NOTE } from './openthrottle-ralph-parity.js';
 export {
   getRalphOutputMarkerFlags,
   parseRalphAgentParseControl,

@@ -94,8 +94,6 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly worktreeBase: string | undefined;
 }
 
-// export type WorkflowFlowContext = WorkflowRalphContext;
-
 /**
  * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare
  * the `main` function in `tools/workflows/src/bin/ralph.ts`). Extends {@link WorkflowOptions}

@@ -3,13 +3,6 @@
  * Transport-free contract consumed by orchestrators and BullMQ child-job dispatchers.
  */
 
-/** @description Jest-style lifecycle phases, scoped to plan (All) and tasks (Each). */
-export type WorkflowLifecyclePhase =
-  | 'afterAll'
-  | 'afterEach'
-  | 'beforeAll'
-  | 'beforeEach';
-
 /** @description Plan-scoped phases run once per plan run. */
 export type WorkflowPlanLifecyclePhase = 'afterAll' | 'beforeAll';
 

@@ -12,7 +12,6 @@ export type {
 
 export type {
   WorkflowLifecycleDispatcher,
-  WorkflowLifecyclePhase,
   WorkflowLifecycleTaskContext,
   WorkflowLifecycleTaskOutcome,
   WorkflowPlanLifecyclePhase,

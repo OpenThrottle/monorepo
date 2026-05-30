@@ -4,10 +4,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import {
-  RALPH_SHELL_COMMAND_GUARDRAIL,
-  sanitizeRalphShellNoise,
-} from '../ralph-shell-misparse';
+import { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
+import { sanitizeRalphShellNoise } from '../ralph-shell-misparse';
 
 const TASK_UUID = '0c8e76bd-a82c-4f49-b5f8-a9a65c047430';
 

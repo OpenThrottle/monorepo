@@ -84,9 +84,8 @@ strict "don't read just to check liveness, just do the write" posture.
 - **What it is.** `query serverHealth { serverHealth { api database redis websocket } }` →
   `GetServerHealthDocument`. Resolver: `applications/openthrottle-server/src/graphql/health/health.resolver.ts`,
   annotated `@Public()`, so **no bearer token** is required.
-- **How it runs.** The orchestrator calls `await executeGraphqlV2(GetServerHealthDocument, {})` once
-  at bootstrap, before any plan/task fetch or mutation (`orchestrator.ts`, `// healthcheck`). A
-  workflow-env variant is exposed as `fetchServerHealth()` (`utils/index.ts`).
+- **How it runs.** The orchestrator calls `await executeWorkflowGraphqlV2(GetServerHealthDocument, {})` once
+  at bootstrap, before any plan/task fetch or mutation (`orchestrator.ts`, `// healthcheck`).
 - **Why it is allowed to "bypass."** It is a **read-only, `@Public()`, idempotent preflight**. It
   performs no writes, leaks no plan/task data, needs no auth, and exists only to fail fast with a
   clear signal (`database: unreachable` while the HTTP stack is otherwise fine) before the run does
@@ -131,9 +130,9 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
 
 ### `tools/workflows/src/bin/ralph.ts`
 
-| Postgres-direct path                                                  | Replace with                    | Notes                                                               |
-| --------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------- |
-| `getCortexConfigOrExit()` + `ensureDatabaseReachableOrExit()` startup | `fetchServerHealth()` preflight | Same parity the orchestrator already has; removes startup `pg` use. |
+| Postgres-direct path                                                  | Replace with                                                     | Notes                                                               |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `getCortexConfigOrExit()` + `ensureDatabaseReachableOrExit()` startup | `executeWorkflowGraphqlV2(GetServerHealthDocument, …)` preflight | Same parity the orchestrator already has; removes startup `pg` use. |
 
 > **Net of the migration:** delete the `pg` dependency from the workflow lineage. After it, the
 > `serverHealth` preflight is the _only_ read-before-write call, and it is itself a GraphQL query —

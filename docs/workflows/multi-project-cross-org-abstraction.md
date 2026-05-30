@@ -336,7 +336,7 @@ follow-ups). Specifically deferred:
   [`repo-skills-discovery-design.md`](../../applications/openthrottle-developer/docs/repo-skills-discovery-design.md).
 - Cross-repo usage + foreign-cwd prompt scoping:
   [`tools/workflows/docs/cross-repo-usage.md`](../../tools/workflows/docs/cross-repo-usage.md),
-  `tools/workflows/src/utils/foreign-workspace-context.ts`.
+  `packages/ai-mcp/src/foreign-workspace-context.ts`.
 - Enqueue validation (`workingDirectory`, allowlist, Nx-root):
   `applications/openthrottle-server/src/graphql/plans/enqueue-plan-ralph-tuning.ts`.
 - Containerized/remote deployment gaps: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.

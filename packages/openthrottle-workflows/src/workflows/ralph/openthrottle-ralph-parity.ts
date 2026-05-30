@@ -10,14 +10,9 @@
  *
  * ## Optional GraphQL preflight (`getServerHealth`)
  *
- * - `fetchServerHealth` (commented in `utils/index.ts` — no package consumers; same behavior if
- *   restored) would run the public `getServerHealth` query via `executeWorkflowGraphqlV2` in
- *   `workflow-graphql.ts` (wraps `executeGraphqlV2` with workflow env + URL options; throws on
- *   HTTP/GraphQL errors; message includes status / first GraphQL error). Health JSON is only available
- *   after a successful HTTP POST; wrong URL, TLS, or proxy errors remain transport failures without
- *   health fields. Ralph startup
- *   still uses direct Postgres (`ensureDatabaseReachableOrExit`); see `tools/workflows/README.md`
- *   (section **getServerHealth vs workflow GraphQL transport errors**).
+ * - Optional `getServerHealth` preflight via `executeWorkflowGraphqlV2` in `workflow-graphql.ts` is
+ *   not wired in this package; Ralph startup uses direct Postgres (`ensureDatabaseReachableOrExit`).
+ *   See `tools/workflows/README.md` (getServerHealth vs workflow GraphQL transport errors).
  *
  * TODO: When `@openthrottle/nodejs-graphql` exposes structured failure payloads (`errors[]`, extensions,
  * HTTP metadata), surface them from {@link executeWorkflowGraphqlV2} or dedicated mappers so tooling
@@ -73,6 +68,3 @@
  *   plan-scoped; panel `mode` / `taskId` affect local CLI preview, not enqueue — same as
  *   `buildRalphPlanRunTuningInputFromWorkflowRunOptions` in the developer app.
  */
-
-export const OPENTHROTTLE_RALPH_PARITY_NOTE =
-  'See openthrottle-ralph-parity.ts for Postgres helpers in cortex-ralph ↔ GraphQL operation mapping.';

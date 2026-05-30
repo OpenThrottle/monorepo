@@ -8,13 +8,12 @@
  *
  * Since this is cursor-agent shell semantics rather than an OpenThrottle queue bug, we mitigate at
  * the OpenThrottle boundary in two complementary ways:
- *  1. {@link RALPH_SHELL_COMMAND_GUARDRAIL} — prompt guardrail telling the agent never to feed
- *     multiline prose to the Shell tool and to emit completion signals as plain text.
+ *  1. `RALPH_SHELL_COMMAND_GUARDRAIL` in `@openthrottle/ai-mcp/src/ralph-prompt-guardrails` —
+ *     prompt guardrail telling the agent never to feed multiline prose to the Shell tool and to
+ *     emit completion signals as plain text.
  *  2. {@link sanitizeRalphShellNoise} — collapse repeated `/bin/sh` misparse error lines into a
  *     single attributable summary before echoing, so the run output stays readable.
  */
-
-export { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
 
 /**
  * @description Matches ANSI SGR color escapes so they can be stripped before line classification.

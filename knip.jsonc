@@ -406,10 +406,6 @@
         "scripts/*.{ts,js}",
       ],
       "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,js}"],
-      "ignore": [
-        // PSI collector implementation; covered by unit tests; production metrics use types/system-cpu-metrics until child-job wiring.
-        "src/utils/system-cpu-metrics.ts",
-      ],
     },
   },
   "ignoreIssues": {

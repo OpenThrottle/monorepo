@@ -9,8 +9,8 @@ import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
 import {
   buildForeignWorkspacePromptLayer,
   resolveForeignWorkspaceContext,
-} from '../utils/foreign-workspace-context';
-import { RALPH_SHELL_COMMAND_GUARDRAIL } from '../utils/ralph-shell-misparse';
+} from '@openthrottle/ai-mcp/src/foreign-workspace-context';
+import { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
 import { getNxProjectNames } from '../utils/projects';
 import type { RalphArgs } from '../utils/parsers';
 import {

@@ -24,7 +24,6 @@ export type {
   WorkflowExecutionHooks,
   WorkflowFlowContext,
   WorkflowLifecycleDispatcher,
-  WorkflowLifecyclePhase,
   WorkflowLifecycleTaskContext,
   WorkflowLifecycleTaskOutcome,
   WorkflowOrchestrator,

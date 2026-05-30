@@ -22,20 +22,10 @@
       "import": "./dist/src/index.js",
       "require": "./dist/src/index.js"
     },
-    "./cortex": {
-      "types": "./dist/src/utils/cortex-ralph.d.ts",
-      "import": "./dist/src/utils/cortex-ralph.js",
-      "require": "./dist/src/utils/cortex-ralph.js"
-    },
     "./doc-ingestion": {
       "types": "./dist/src/doc-ingestion/index.d.ts",
       "import": "./dist/src/doc-ingestion/index.js",
       "require": "./dist/src/doc-ingestion/index.js"
-    },
-    "./ralph-debug": {
-      "types": "./dist/src/utils/ralph-debug-logger.d.ts",
-      "import": "./dist/src/utils/ralph-debug-logger.js",
-      "require": "./dist/src/utils/ralph-debug-logger.js"
     },
     "./*": {
       "import": "./dist/*.js",
