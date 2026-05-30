@@ -166,6 +166,11 @@ application dependency on `@tools/workflows` is exactly what Phase 2 removes.
 
 ## Postgres-direct access paths to migrate (Phase 2 input)
 
+> **Authoritative boundary + 1:1 GraphQL mapping:** see
+> [`graphql-only-transport-boundary.md`](./graphql-only-transport-boundary.md) (task `f4bf218a`),
+> which specifies the GraphQL-only rule, the single health-check exception, and the per-function
+> replacement document for each path below.
+
 These are the `@tools/workflows` entry points that talk to Postgres directly and must move to
 GraphQL when surfaces #1/#2 are folded under the Nest/GraphQL abstraction:
 
