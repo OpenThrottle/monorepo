@@ -388,5 +388,7 @@ migration. No stored data needs rewriting — parsing maps legacy values on the 
 - Execution surfaces + package layering:
   [`ralph-execution-paths-and-package-layering.md`](./ralph-execution-paths-and-package-layering.md)
 - Worktree + BullMQ processor: [`bullmq-processor-worktree.md`](./bullmq-processor-worktree.md)
+- Multi-project / cross-org design (concrete uses of these hook phases):
+  [`multi-project-cross-org-abstraction.md`](./multi-project-cross-org-abstraction.md)
 - Canonical decision table + target architecture: `tools/workflows/README.md`
 - Parent plan: `a1c55a0a-735c-4f60-965a-7f122acbdc8f`; this task: `c8896177-9b02-4c74-b890-7f7eff3327dd`

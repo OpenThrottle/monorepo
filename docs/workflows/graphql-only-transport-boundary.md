@@ -163,4 +163,5 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
   `src/__generated__/graphql.ts`.
 - Parent plan: `a1c55a0a-735c-4f60-965a-7f122acbdc8f`; this task: `f4bf218a-eaec-4073-8c4d-c3d4ccec09a7`.
 - Migration spin-out: task `978a661f` (creates the `@tools/workflows` → `nestjs-agentic-workflow`
-  cutover plan); multi-project design: task `2bdf0145`.
+  cutover plan); multi-project design: task `2bdf0145`
+  ([`multi-project-cross-org-abstraction.md`](./multi-project-cross-org-abstraction.md)).
