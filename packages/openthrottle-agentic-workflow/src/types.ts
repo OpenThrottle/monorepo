@@ -1,5 +1,5 @@
 /**
- * @description Shared configuration fields for agentic workflows (model, prompts,
+ * Shared configuration fields for agentic workflows (model, prompts,
  * iteration limits, timeouts). Workflow-specific options belong in downstream packages
  * via {@link WorkflowFlowContext} extensions.
  */
@@ -14,7 +14,7 @@ export interface WorkflowConfig {
 }
 
 /**
- * @description Generic identifiers for tracing an agentic workflow run through logs and metrics.
+ * Generic identifiers for tracing an agentic workflow run through logs and metrics.
  * Keep this free of domain-specific ids (no plan/task ids); callers attach those in application logs.
  *
  * Align structured logs with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}: include `correlationId`
@@ -37,20 +37,20 @@ export interface WorkflowRunCorrelation {
 }
 
 /**
- * @description Structured log event name for agentic workflow lifecycle lines (start/end).
+ * Structured log event name for agentic workflow lifecycle lines (start/end).
  * Application code should emit JSON payloads that include correlation fields from
  * {@link WorkflowRunCorrelation} plus workflow-specific attributes at the app layer.
  */
 export const AGENTIC_WORKFLOW_RUN_LOG_EVENT = 'agentic_workflow_run' as const;
 
 /**
- * @description Structured log event name used by plan-queue workers for task-run metrics payloads.
+ * Structured log event name used by plan-queue workers for task-run metrics payloads.
  * Pair with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT} for full observability of one queue job.
  */
 export const AGENTIC_WORKFLOW_METRICS_EVENT = 'plan_run_metrics' as const;
 
 /**
- * @description Optional runtime hooks merged into {@link WorkflowFlowContext}.
+ * Optional runtime hooks merged into {@link WorkflowFlowContext}.
  * Downstream workflows may add fields by extending {@link WorkflowFlowContext}.
  *
  * @example Workflow-specific context in a consumer package
@@ -75,14 +75,14 @@ export interface WorkflowExecutionHooks {
 }
 
 /**
- * @description Immutable snapshot of inputs driving a workflow run: shared
+ * Immutable snapshot of inputs driving a workflow run: shared
  * {@link WorkflowConfig} plus optional {@link WorkflowExecutionHooks}.
  */
 export interface WorkflowFlowContext
   extends WorkflowConfig, WorkflowExecutionHooks {}
 
 /**
- * @description Stable error shape for workflow steps; callers map from transport-layer errors.
+ * Stable error shape for workflow steps; callers map from transport-layer errors.
  */
 export interface WorkflowError {
   readonly cause: Error | undefined;
@@ -91,7 +91,7 @@ export interface WorkflowError {
 }
 
 /**
- * @description Terminal outcome of a workflow run. Downstream packages supply
+ * Terminal outcome of a workflow run. Downstream packages supply
  * discriminated reason types for finished vs failed branches.
  */
 export type WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> =
@@ -124,7 +124,7 @@ export type WorkflowStepSuccess<
     };
 
 /**
- * @description Runs a workflow until a terminal {@link WorkflowRunResult}.
+ * Runs a workflow until a terminal {@link WorkflowRunResult}.
  * Implementations live in downstream packages; this package defines only the contract.
  *
  * Use {@link WorkflowFlowContext} or a subtype for `TContext` so workflow-specific
