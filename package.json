@@ -72,6 +72,7 @@
     "@openthrottle/nestjs-worktrees": "workspace:*",
     "@openthrottle/nodejs-graphql": "workspace:*",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:*",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:*",
     "@openthrottle/openthrottle-developer-codegen": "workspace:*",
     "@openthrottle/openthrottle-mcp": "workspace:*",
