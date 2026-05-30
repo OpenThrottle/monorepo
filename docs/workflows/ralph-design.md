@@ -2,6 +2,13 @@
 
 **Canonical prompt:** `.cursor/commands/agents/ralph.md`. Previous agentic prompt versions (v2, v3) are deprecated; this doc describes the single workflow.
 
+> **Which path runs when?** This doc describes the Ralph workflow itself. For the **single canonical
+> decision table** of execution surfaces (Local CLI vs Plans queue spawn vs Plans queue
+> orchestrator) — trigger → surface → host process → transport → post-run checks — see
+> [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table)
+> and the full map in
+> [ralph-execution-paths-and-package-layering.md](./ralph-execution-paths-and-package-layering.md).
+
 ## Goal
 
 - **Ralph** runs a single workflow: idea or PRD → **plan and tasks in Cortex** → execute one task at a time until done. Progress lives in Cortex (plan, tasks, `plan_output_stream`); no file-based modes or OUTPUT files.

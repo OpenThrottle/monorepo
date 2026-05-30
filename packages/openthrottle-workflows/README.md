@@ -2,6 +2,15 @@
 
 GraphQL-first building blocks for OpenThrottle workflows: codegen-backed GraphQL via `**executeWorkflowGraphqlV2**` (wraps `@openthrottle/nodejs-graphql` `**executeGraphqlV2**` with workflow env and URL options), env helpers, Ralph flow-context tuning, discriminated `**WorkflowStepResult**` types, Ralph-oriented blueprints, and a **GraphQL-backed Ralph orchestrator** (`createWorkflowRalphOrchestrator`). The primary end-user entrypoint for interactive runs is still `**workflow-ralph` in `tools/workflows`; this package holds the typed contract, documents, and orchestration you can call from tests, workers, or other hosts without duplicating query shapes.
 
+> **Which path runs when?** This package is GraphQL-first building blocks; the **active** server
+> orchestrator is `@openthrottle/openthrottle-agentic-ralph` (this one is the older sibling, a
+> consolidation candidate in Phase 2). For the single canonical decision table (Local CLI vs Plans
+> queue spawn vs Plans queue orchestrator) see
+> [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table),
+> the full map in
+> [docs/workflows/ralph-execution-paths-and-package-layering.md](../../docs/workflows/ralph-execution-paths-and-package-layering.md),
+> and the [target architecture](../../tools/workflows/README.md#target-architecture-phase-2).
+
 ## Main exports
 
 Import from the package root; public API is re-exported from `src/index.ts` (Ralph contract, GraphQL client, parity notes).

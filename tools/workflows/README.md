@@ -2,6 +2,45 @@
 
 We're building out things like Agentic Ralph but in TypeScript packages. These shell scripts are getting unruly and we can do better.
 
+## Which path runs when (canonical decision table)
+
+> **Read this first.** Ralph can run in **three surfaces** with the **same** OpenThrottle plan/task
+> semantics but different host process, transport, and post-run checks. This is the **single
+> canonical table** — start here to answer "which path is at play, and when?" without reading code.
+> For the full map (surface + package-layering diagrams, Postgres-vs-GraphQL details), see
+> [docs/workflows/ralph-execution-paths-and-package-layering.md](../../docs/workflows/ralph-execution-paths-and-package-layering.md).
+
+| Trigger                                                                                                     | Surface                        | Host process                                                      | Ralph loop                                                                     | Transport (OT plan/task)                             | Post-run checks                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `pnpm exec workflow-ralph --plan/--task …` (human, copied-from-UI, or nested child of spawn)                | **Local CLI**                  | The `workflow-ralph` Node process itself                          | `src/bin/ralph.ts` → `main()`                                                  | **Postgres-direct** (`cortex-ralph.ts`, `pg.Client`) | **None** built in (validate manually, e.g. `pnpm run check:local`)                                                    |
+| GraphQL **`enqueuePlanRun`** (canonical) / **`workflowPlanRun`** (deprecated alias) → BullMQ job `run-plan` | **Plans queue — spawn**        | `openthrottle-server` worker → **child** `workflow-ralph` process | Delegates to **Local CLI** inside a worktree or cwd (`runChildJob`)            | **Postgres-direct** (child = Local CLI)              | **`WORKTREE_TARGETS` set:** `ensureCommit { runChecks: true }` (clean tree + nx lint/test/typecheck). **Unset:** none |
+| GraphQL **`enqueuePlanRalphOrchestrator`** → BullMQ job `Agentic Ralph`                                     | **Plans queue — orchestrator** | `openthrottle-server` worker, **in-process** (no child CLI)       | `createWorkflowRalphOrchestrator` (`@openthrottle/openthrottle-agentic-ralph`) | **GraphQL** (`executeGraphqlV2` typed documents)     | **None** (no `runWorktreeWorkflow`; no parent-job `ensureCommit`)                                                     |
+
+- **Local CLI** and **spawn** are the **Postgres-direct** lineage (this package, `@tools/workflows`); spawn always bottoms out in the Local CLI child.
+- **Orchestrator** is the **GraphQL-first** lineage and the basis for the [target architecture](#target-architecture-phase-2) — it borrows only the iteration runner (`createCursorWorkflowRalphIterationRunner`) from this package, not the CLI, the Postgres client, or the worktree workflow.
+- **Single health check:** only the orchestrator does a `getServerHealth` GraphQL preflight; Local CLI / spawn use a Postgres TCP check (`ensureDatabaseReachableOrExit`). See [getServerHealth vs workflow GraphQL transport errors](#getserverhealth-vs-workflow-graphql-transport-errors-ralph-startup).
+
+Mutation roles, profiling, and the `WORKTREE_TARGETS` post-run-check switch are detailed under [Worktree + BullMQ workflow](#worktree--bullmq-workflow-fan-outfan-in).
+
+## Target architecture (Phase 2)
+
+> **Forward-looking.** The sections above describe how Ralph runs **today** (three surfaces, two
+> transports). This section states the **intended end state** so docs are forward-compatible while
+> the migration lands. Tracked by parent plan `a1c55a0a-735c-4f60-965a-7f122acbdc8f`; the cutover is
+> spun out as its own OT plan (see task `978a661f`). Until that migration completes, the canonical
+> table above remains authoritative.
+
+The target collapses the three surfaces onto **one** GraphQL-first abstraction:
+
+- **Deprecate `@tools/workflows`.** Retire the Postgres-direct CLI + iteration runner + worktree workflow. A thin CLI shim for local human runs is an open decision in the cutover plan; the orchestrator path becomes the default for queued runs.
+- **`@openthrottle/nestjs-agentic-workflow` is the abstraction** behind OpenThrottle running an agentic workflow through BullMQ — Nest DI wiring + tokens, with the orchestrator (`@openthrottle/openthrottle-agentic-ralph`) as the loop and the transport-free contract (`@openthrottle/openthrottle-agentic-workflow`) as the sink.
+- **GraphQL-only transport, with exactly one exception:** every workflow request (plan/task fetch, status updates, plan-output streaming, enqueue, hook data) goes through GraphQL (`executeGraphqlV2` / `executeWorkflowGraphqlV2`). The **single** documented exception is a **health check** (`getServerHealth`) used as a read-before-write preflight. Remaining Postgres-direct paths (`ensureDatabaseReachableOrExit`, `getPostgresConfig` plan lookup) are migration items (task `f4bf218a`).
+- **Jest-style before/after workflow hooks**, scoped to the plan and its tasks (not Ralph iterations), each running as a **child BullMQ job** of the parent plan run:
+  - **before hooks** (`beforeAll` plan-level, `beforeEach` per-task) resolve which **skill / prompts / sub-workflows** apply.
+  - **after hooks** (`afterEach` per-task, `afterAll` plan-level) enforce **required checks** (CI, code review, performance audit, monitor creation, etc.).
+  - Today's run-level `before_run` / `after_run` map to `beforeAll` / `afterAll`; see [JOB_RUN_LIFECYCLE_HOOKS.md](../../JOB_RUN_LIFECYCLE_HOOKS.md) and task `c8896177`.
+- **Multi-project / cross-org:** one OpenThrottle installation runs workflows alongside many projects (work and personal), with prompts, skills, generators, and customizable workflows living primarily in OpenThrottle so they are easy to share across a large org. Builds on existing `workingDirectory` multi-workspace support (task `2bdf0145`).
+
 ## Building
 
 Run `pnpm nx run @tools/workflows:build` from the monorepo root to build the library.
@@ -210,6 +249,10 @@ On the plan detail page, expand the **Workflow configuration** card. The **Works
 **Response-time profiling:** `PlansResolver.enqueuePlanRun` and `PlansResolver.enqueuePlanRalphOrchestrator` use `@ProfileResponseTime` from `@openthrottle/nestjs-profiling` (logs `[PlansResolver.<mutation>] <ms>`). The deprecated `workflowPlanRun` alias delegates to `enqueuePlanRun` and is intentionally not separately profiled.
 
 Both spawn and orchestrator mutations accept `EnqueuePlanRunInput` / `EnqueuePlanRalphOrchestratorInput` tuning fields documented on the GraphQL types.
+
+> The **single canonical decision table** (trigger → surface → host process → transport → post-run
+> checks) lives at the top of this README: [Which path runs when](#which-path-runs-when-canonical-decision-table).
+> The table below is the per-surface "what runs / typical trigger" companion view.
 
 Ralph-related execution splits into **three surfaces** (same OpenThrottle plan/task semantics; different host process):
 

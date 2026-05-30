@@ -177,8 +177,11 @@ GraphQL when surfaces #1/#2 are folded under the Nest/GraphQL abstraction:
 
 ## Cross-links
 
-- Canonical decision table + GraphQL mutations: `tools/workflows/README.md`
-  (`enqueuePlanRun` canonical, `enqueuePlanRalphOrchestrator`, deprecated `workflowPlanRun` alias).
+- **Single canonical decision table** (trigger → surface → host process → transport → post-run
+  checks): [`tools/workflows/README.md` → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table).
+- **Target architecture (Phase 2):** [`tools/workflows/README.md` → Target architecture](../../tools/workflows/README.md#target-architecture-phase-2).
+- GraphQL mutations: `enqueuePlanRun` (canonical), `enqueuePlanRalphOrchestrator`, deprecated
+  `workflowPlanRun` alias — see [`tools/workflows/README.md` → Worktree + BullMQ workflow](../../tools/workflows/README.md#worktree--bullmq-workflow-fan-outfan-in).
 - Worktree workflow + BullMQ processor: `docs/workflows/bullmq-processor-worktree.md`,
   `docs/workflows/multi-worktree-architecture.md`.
 - Ralph design + runtime config: `docs/workflows/ralph-design.md`,
