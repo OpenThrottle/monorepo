@@ -33,9 +33,9 @@ pnpm exec workflow-ralph --task <openthrottle-task-uuid>
 - **`--plan`:** Plan-centric mode; tasks are picked and updated across iterations.
 - **`--task`:** Task-centric mode; plan is resolved from the task when `--plan` is omitted.
 
-Full flags and environment defaults: **`pnpm exec workflow-ralph --help`**. Optional repo-local defaults: **`.workflow-ralph.json`**; precedence is **CLI > environment > file > built-ins**.
+Full flags and environment defaults: **`pnpm exec workflow-ralph --help`**. Optional repo-local defaults: **`.workflow-ralph.json`** in process cwd (copy from **`.workflow-ralph.json.example`** at repo root). Precedence: **CLI → environment → file → built-ins** (`WORKFLOW_RALPH_CONFIG_PRECEDENCE` in `@tools/workflows`). Migration: **`docs/workflows/ralph-config-migration.md`**.
 
-Common tuning env vars (see `--help` for the full list): `WORKFLOW_RALPH_BACKEND`, `WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_PROMPT_FILE`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`.
+Common tuning env vars (see `--help` for the full list): `WORKFLOW_RALPH_BACKEND`, `WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_PROMPT_FILE`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`. **`RALPH_DEBUG`** is a deprecated alias for **`WORKFLOW_RALPH_DEBUG`** (still supported).
 
 ## Injected plan context (Ralph prompt)
 
@@ -81,7 +81,8 @@ Opt-in shim logger: **`WORKFLOW_RALPH_DEBUG=1`**, **`--debug`**, or **`--verbose
 ## Cross-links
 
 - **Canonical:** `tools/workflows/README.md`
-- **Design / runtime config:** `docs/workflows/ralph-design.md`, `docs/workflows/ralph-workflow-runtime-config.md`
+- **Config migration:** `docs/workflows/ralph-config-migration.md`
+- **Design / runtime config:** `docs/workflows/ralph-design.md`, `docs/workflows/ralph-workflow-runtime-config.md`, `docs/workflows/ralph-per-package-config-adr.md`
 - **Process / worktrees:** `docs/process-model.md`, `docs/worktree-registration-and-allocation.md`
 - **OT plans, commits, link_commit:** `.agents/skills/ot-plans/SKILL.md`
 - **Repo index:** `AGENTS.md` (Workflow CLI section)

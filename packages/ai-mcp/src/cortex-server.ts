@@ -15,6 +15,7 @@ export {
 export type {
   BuildWorkflowRalphSpawnEnvOptions,
   CortexPostgresConfig,
+  WorkflowRalphSpawnMergedDefaults,
 } from './config.js';
 export { embedQuery } from './embedding.js';
 export {

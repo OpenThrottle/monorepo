@@ -24,11 +24,15 @@ other workspace package.
 Re-exported from `src/index.ts`:
 
 - **Contracts:** `WorkflowConfig`, `WorkflowOrchestrator`, `WorkflowRunResult`, `WorkflowFlowContext`, `WorkflowExecutionHooks`, `WorkflowRunCorrelation`, `WorkflowError`, `WorkflowStepSuccess`, `WorkflowStepFailure`.
-- **Run-log event constants:** `AGENTIC_WORKFLOW_RUN_LOG_EVENT`, `PLAN_RUN_METRICS_LOG_EVENT` — structured log event names for joining workflow runs with queue metrics.
+- **Run-log event constants:** `AGENTIC_WORKFLOW_RUN_LOG_EVENT`, `AGENTIC_WORKFLOW_METRICS_EVENT` — structured log event names for joining workflow runs with queue metrics.
 
 `WorkflowExecutionHooks` is the transport-free hook contract; downstream layers (GraphQL + Nest +
 BullMQ child jobs) wire the actual `beforeAll` / `beforeEach` / `afterEach` / `afterAll` execution.
 Keep new hook/phase fields here so the contract stays portable.
+
+## Configuration
+
+**`lifecycleHooksChildJobs`** (disable hook child jobs when `false`) is read from merged **`.workflow-ralph.json` + env** (`OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS`) via `@tools/workflows` — see `src/lifecycle.ts` and `docs/workflows/ralph-config-migration.md`.
 
 ## Installation
 

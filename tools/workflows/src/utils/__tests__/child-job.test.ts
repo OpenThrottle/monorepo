@@ -15,22 +15,24 @@ const mockConfig = {
   transport: 'postgres-direct' as const,
 };
 
-const buildWorkflowRalphSpawnEnvMock = vi.fn(
+const buildNestedWorkflowRalphSpawnEnvMock = vi.fn(
   (
+    _spawnCwd: string,
     env: NodeJS.ProcessEnv,
     _options?: { canonicalCortexPostgresUrl?: string },
   ) => env,
 );
 
-vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
-  buildWorkflowRalphSpawnEnv: (
+vi.mock('../../config/build-nested-workflow-ralph-spawn-env', () => ({
+  buildNestedWorkflowRalphSpawnEnv: (
+    spawnCwd: string,
     env: NodeJS.ProcessEnv,
     options?: { canonicalCortexPostgresUrl?: string },
-  ) => buildWorkflowRalphSpawnEnvMock(env, options),
+  ) => buildNestedWorkflowRalphSpawnEnvMock(spawnCwd, env, options),
 }));
 
-vi.mock('../workflow-transport', () => ({
-  resolveWorkflowRalphTransportFromEnv: vi.fn(() => 'postgres-direct'),
+vi.mock('../../config/load-workflow-ralph-config', () => ({
+  resolveWorkflowRalphTransport: vi.fn(() => 'postgres-direct'),
 }));
 
 const mockCortexState: {
@@ -260,7 +262,7 @@ describe('runChildJob', () => {
   afterEach(() => {
     vi.mocked(spawn).mockReset();
     vi.mocked(spawnSync).mockReset();
-    buildWorkflowRalphSpawnEnvMock.mockClear();
+    buildNestedWorkflowRalphSpawnEnvMock.mockClear();
     mockCortexState.tasks = [];
     mockCortexState.updatePlanStatusCalls = [];
   });
@@ -474,9 +476,13 @@ describe('runChildJob', () => {
     try {
       await runChildJob(input);
 
-      expect(buildWorkflowRalphSpawnEnvMock).toHaveBeenCalledWith(process.env, {
-        canonicalCortexPostgresUrl: canonicalUrl,
-      });
+      expect(buildNestedWorkflowRalphSpawnEnvMock).toHaveBeenCalledWith(
+        foreignCwd,
+        process.env,
+        {
+          canonicalCortexPostgresUrl: canonicalUrl,
+        },
+      );
       expect(spawn).toHaveBeenCalledWith(
         'pnpm',
         expect.arrayContaining([

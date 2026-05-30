@@ -59,7 +59,7 @@ export const NotificationItem = (
         <div className="min-w-0 flex-1 text-left">
           <p
             className={classnames(
-              'line-clamp-2',
+              // 'line-clamp-2',
               read ? 'text-muted-foreground' : 'font-medium',
             )}
             data-testid={`notification-item-${notification.id}`}
@@ -81,6 +81,8 @@ export const NotificationItem = (
               {formatRelativeTime(notification.createdAt)}
             </p>
           </div>
+
+          <div className="text-xs">{JSON.stringify(notification)}</div>
         </div>
 
         <div className="flex shrink-0 gap-0.5">

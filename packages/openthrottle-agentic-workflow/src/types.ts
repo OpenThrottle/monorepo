@@ -19,7 +19,7 @@ export interface WorkflowConfig {
  *
  * Align structured logs with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}: include `correlationId`
  * (and optionally `queueJobId`, `queueName`) so aggregators can join with queue metrics such as
- * {@link PLAN_RUN_METRICS_LOG_EVENT}.
+ * {@link AGENTIC_WORKFLOW_METRICS_EVENT}.
  */
 export interface WorkflowRunCorrelation {
   /**
@@ -47,7 +47,7 @@ export const AGENTIC_WORKFLOW_RUN_LOG_EVENT = 'agentic_workflow_run' as const;
  * @description Structured log event name used by plan-queue workers for task-run metrics payloads.
  * Pair with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT} for full observability of one queue job.
  */
-export const PLAN_RUN_METRICS_LOG_EVENT = 'plan_run_metrics' as const;
+export const AGENTIC_WORKFLOW_METRICS_EVENT = 'plan_run_metrics' as const;
 
 /**
  * @description Optional runtime hooks merged into {@link WorkflowFlowContext}.

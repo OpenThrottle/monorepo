@@ -102,7 +102,15 @@ Optional follow-up: call `getServerHealth` before other workflow GraphQL for ric
 - **Test run:** Plan `11290613-8484-44fe-853a-d9bec535d9a9` (Test #2) completed via Ralph; task `b3466d60-45db-45d0-804c-51f69a5a03ae` closed. Plan `d3f01693-7fa1-4c0f-a619-970d982214c5` (Test #6) completed via Ralph; task `171c3dab-58a9-4104-8916-2893d56fa869` closed. Plan `f3408cc7-5ee6-47f2-8db5-d2dd3ccbe4c8` (Test #7) completed via Ralph; task `e3c4ffa7-c44c-4179-9b6b-ec3e923d9dbd` closed. Plan `32d1a4f1-4b40-4032-8178-f8fd39363b65` (Test #10) completed via Ralph; task `987a9f11-ab24-4eb2-8b52-152a8937c13f` closed. Plan `5efeca89-f57c-43d9-b13a-e2486e46e40c` (Test #13) completed via Ralph; task `4f47a9a9-6cca-483d-8a77-d34829007bbd` closed.
 - **Task status updates (plan-centric):** When running with `--plan` only (no `--task`), Ralph fetches tasks each iteration, picks the first IN_PROGRESS or first PENDING task, sets it to IN_PROGRESS, and injects into the prompt the current task UUID and: "When you complete it output `<ralph:task-complete>uuid</ralph:task-complete>` so the CLI can mark it completed." When the agent outputs that signal, Ralph marks the task COMPLETED in OpenThrottle. If the agent outputs `<promise>COMPLETE</promise>` but omits the tag, Ralph marks the current iteration's task COMPLETED so OpenThrottle stays in sync.
 - **Commit as you go:** After each task (or logical chunk), commit and push with conventional commits; include `Plan-Id` and `Task-Id` in the commit body or footer. Do **not** link those commits in OpenThrottle; link only the squash commit after PR merge via `workflow-link-merge` (see **Commit links** in `databases/README.md`).
-- **Design:** `docs/workflows/ralph-design.md`. **Runtime config (agents, limits, prompts):** `docs/workflows/ralph-workflow-runtime-config.md`. PRD attribute mapping (required / inferred / optional): `databases/README.md`. **Cross-repo:** See **Cross-repo usage** below.
+- **Design:** `docs/workflows/ralph-design.md`. **Runtime config (agents, limits, prompts):** `docs/workflows/ralph-workflow-runtime-config.md`. **Config file migration:** `docs/workflows/ralph-config-migration.md` (`.workflow-ralph.json`, precedence, deprecated env aliases). PRD attribute mapping (required / inferred / optional): `databases/README.md`. **Cross-repo:** See **Cross-repo usage** below.
+
+### Configuration file and precedence
+
+Non-secret Ralph/workflow tuning can live in **`.workflow-ralph.json`** in process cwd (repo root locally; worktree root for queued nested Ralph). Copy **`.workflow-ralph.json.example`** at the monorepo root as a starting point. JSON schema: `tools/workflows/schemas/workflow-ralph.defaults.schema.json`. Shared loader: `loadWorkflowRalphConfig` from `@tools/workflows`.
+
+**Precedence:** CLI flags / GraphQL enqueue tuning → environment variables → `.workflow-ralph.json` → built-in defaults (`WORKFLOW_RALPH_CONFIG_PRECEDENCE`).
+
+**Secrets stay env-only** (Postgres URLs, GraphQL auth, API keys). **Deprecated aliases (still work):** `RALPH_DEBUG` → prefer `WORKFLOW_RALPH_DEBUG`; `WORKFLOW_RALPH_TRANSPORT=postgres` → prefer `postgres-direct`. See `docs/workflows/ralph-config-migration.md` for the full migration checklist.
 
 ### Execution backend (layer 2)
 

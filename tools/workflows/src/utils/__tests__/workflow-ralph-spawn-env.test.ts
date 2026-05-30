@@ -184,4 +184,36 @@ describe('buildWorkflowRalphSpawnEnv', () => {
     expect(out.HOME).toBe('/keep');
     expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('graphql');
   });
+
+  it('applies spawn.home from mergedDefaults when env omits WORKFLOW_RALPH_SPAWN_HOME', () => {
+    const out = buildWorkflowRalphSpawnEnv(
+      {
+        HOME: '/worker',
+        PATH: '/usr/bin',
+        [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
+      },
+      { mergedDefaults: { spawn: { home: '/mounted' } } },
+    );
+
+    expect(out.HOME).toBe('/mounted');
+  });
+
+  it('applies spawn.otRoot from mergedDefaults when env omits WORKFLOW_RALPH_OT_ROOT', () => {
+    const out = buildWorkflowRalphSpawnEnv(
+      { PATH: '/usr/bin' },
+      { mergedDefaults: { spawn: { otRoot } } },
+    );
+
+    expect(out[WORKFLOW_RALPH_OT_ROOT_ENV]).toBe(otRoot);
+    expect(out.PATH).toBe(`${otBinDir}${path.delimiter}/usr/bin`);
+  });
+
+  it('applies transport from mergedDefaults when env omits WORKFLOW_RALPH_TRANSPORT', () => {
+    const out = buildWorkflowRalphSpawnEnv(
+      { [WORKFLOW_RALPH_OT_ROOT_ENV]: emptyRoot },
+      { mergedDefaults: { transport: 'postgres-direct' } },
+    );
+
+    expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('postgres-direct');
+  });
 });

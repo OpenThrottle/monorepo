@@ -3,11 +3,7 @@ import { COLORS } from '../config/index';
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
 import type { RalphDebugLevel } from './ralph-debug-logger';
-import {
-  ralphDebugLogger,
-  readRalphDebugConfigFromEnv,
-  setRalphDebugLevel,
-} from './ralph-debug-logger';
+import { ralphDebugLogger, setRalphDebugLevel } from './ralph-debug-logger';
 import type { RalphExecutionBackendId } from './ralph-execution-backend';
 import {
   parseRalphExecutionBackendId,
@@ -18,6 +14,10 @@ import {
   resolveRalphWorktreeName,
   type RalphWorktreeName,
 } from './ralph-worktree-cli';
+import {
+  loadWorkflowRalphConfig,
+  mapDefaultsDebugToRalphDebugLevel,
+} from '../config/load-workflow-ralph-config';
 import {
   mergeRalphRuntimeSeed,
   DEFAULT_RALPH_ITERATIONS,
@@ -368,15 +368,16 @@ export const parseRalphArgs = (): RalphArgs => {
   }
 
   /**
-   * CLI wins when any `--debug` / `--verbose` is present; otherwise use env
-   * (same rules as {@link readRalphDebugConfigFromEnv}) so argv parsing is the single place that applies the effective level after import.
+   * CLI wins when any `--debug` / `--verbose` is present; otherwise use merged
+   * file + env defaults ({@link loadWorkflowRalphConfig}).
    */
+  const mergedDefaults = loadWorkflowRalphConfig(cwd);
   const effectiveDebugLevel: RalphDebugLevel =
     cliDebug === 'verbose'
       ? 'verbose'
       : cliDebug === 'debug'
         ? 'debug'
-        : readRalphDebugConfigFromEnv();
+        : mapDefaultsDebugToRalphDebugLevel(mergedDefaults.debug);
 
   setRalphDebugLevel(effectiveDebugLevel);
 

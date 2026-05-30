@@ -152,6 +152,36 @@ export {
 } from './utils/ralph-execution-backend';
 export type { RalphExecutionBackendId } from './utils/ralph-execution-backend';
 export {
+  WORKFLOW_RALPH_CONFIG_PRECEDENCE,
+  WORKFLOW_RALPH_DEFAULTS_EXAMPLE_FILENAME,
+  WORKFLOW_RALPH_DEFAULTS_FILENAME,
+} from './config/workflow-ralph-defaults.types';
+export type {
+  WorkflowRalphDefaultsDebug,
+  WorkflowRalphDefaultsDiagnosticsJson,
+  WorkflowRalphDefaultsFileV1Json,
+  WorkflowRalphDefaultsSpawnJson,
+  WorkflowRalphResolvedDefaults,
+} from './config/workflow-ralph-defaults.types';
+export {
+  applyWorkflowRalphOtRootFromConfig,
+  buildNestedWorkflowRalphSpawnEnv,
+  resolveWorkflowRalphConfigCwd,
+} from './config/build-nested-workflow-ralph-spawn-env';
+export {
+  loadWorkflowRalphConfig,
+  loadWorkflowRalphDefaultsFileV1,
+  mapDefaultsDebugToRalphDebugLevel,
+  readWorkflowRalphConfigEnv,
+  readWorkflowRalphDebugFromEnv,
+  resolveWorkflowRalphTransport,
+  WORKFLOW_RALPH_CONFIG_ENV,
+} from './config/load-workflow-ralph-config';
+export {
+  mergePlanRunTuningWithWorkflowRalphConfig,
+  type PlanRunTuningMergeInput,
+} from './config/merge-plan-run-tuning-with-config';
+export {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,

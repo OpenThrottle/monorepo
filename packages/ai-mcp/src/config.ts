@@ -198,13 +198,13 @@ export function resolveCortexPostgresConnectionStringFromEnv(
 }
 
 /**
- * @description Applies optional identity overrides from {@link WORKFLOW_RALPH_SPAWN_HOME_ENV} and {@link WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV} so queue workers can align nested CLIs with mounted credentials.
+ * @description Applies optional identity overrides from env and optional merged file defaults so queue workers can align nested CLIs with mounted credentials.
  */
 export function applyWorkflowRalphSpawnIdentityOverrides(
   env: NodeJS.ProcessEnv,
+  merged?: WorkflowRalphSpawnMergedDefaults,
 ): NodeJS.ProcessEnv {
-  const home = env[WORKFLOW_RALPH_SPAWN_HOME_ENV]?.trim();
-  const xdgConfigHome = env[WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV]?.trim();
+  const { home, xdgConfigHome } = resolveEffectiveSpawnIdentity(env, merged);
 
   if (
     (home === undefined || home === '') &&
@@ -220,6 +220,16 @@ export function applyWorkflowRalphSpawnIdentityOverrides(
       ? { XDG_CONFIG_HOME: xdgConfigHome }
       : {}),
   };
+}
+
+/** Pre-merged spawn/transport from `.workflow-ralph.json` + env (via `@tools/workflows` loader). */
+export interface WorkflowRalphSpawnMergedDefaults {
+  readonly spawn?: {
+    readonly home?: string;
+    readonly otRoot?: string;
+    readonly xdgConfigHome?: string;
+  };
+  readonly transport?: 'graphql' | 'postgres-direct';
 }
 
 /** Optional overrides for {@link buildWorkflowRalphSpawnEnv}. */
@@ -238,6 +248,11 @@ export interface BuildWorkflowRalphSpawnEnvOptions {
    * When set (non-empty), forces nested Ralph GraphQL HTTP endpoint regardless of `workerEnv`.
    */
   readonly canonicalWorkflowGraphqlUrl?: string;
+  /**
+   * File + env merged spawn/transport from {@link loadWorkflowRalphConfig} (caller supplies;
+   * ai-mcp does not read `.workflow-ralph.json` directly). Env vars on `workerEnv` still win.
+   */
+  readonly mergedDefaults?: WorkflowRalphSpawnMergedDefaults;
 }
 
 /** Env var: `graphql` (default) or `postgres-direct` for Ralph plan/task I/O rollback. */
@@ -245,6 +260,7 @@ export const WORKFLOW_RALPH_TRANSPORT_ENV = `WORKFLOW_RALPH_TRANSPORT`;
 
 const resolveWorkflowRalphTransportFromSpawnEnv = (
   env: NodeJS.ProcessEnv,
+  merged?: WorkflowRalphSpawnMergedDefaults,
 ): 'graphql' | 'postgres-direct' => {
   const raw = env[WORKFLOW_RALPH_TRANSPORT_ENV]?.trim().toLowerCase();
 
@@ -252,7 +268,55 @@ const resolveWorkflowRalphTransportFromSpawnEnv = (
     return 'postgres-direct';
   }
 
-  return 'graphql';
+  if (raw === 'graphql') {
+    return 'graphql';
+  }
+
+  return merged?.transport ?? 'graphql';
+};
+
+const resolveEffectiveSpawnIdentity = (
+  env: NodeJS.ProcessEnv,
+  merged?: WorkflowRalphSpawnMergedDefaults,
+): {
+  readonly home: string | undefined;
+  readonly xdgConfigHome: string | undefined;
+} => {
+  const home =
+    env[WORKFLOW_RALPH_SPAWN_HOME_ENV]?.trim() ||
+    merged?.spawn?.home?.trim() ||
+    undefined;
+  const xdgConfigHome =
+    env[WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV]?.trim() ||
+    merged?.spawn?.xdgConfigHome?.trim() ||
+    undefined;
+
+  return { home, xdgConfigHome };
+};
+
+const resolveEffectiveOpenThrottleRoot = (
+  env: NodeJS.ProcessEnv,
+  merged?: WorkflowRalphSpawnMergedDefaults,
+): string | undefined => {
+  const explicitEnv = env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim();
+  if (
+    explicitEnv !== undefined &&
+    explicitEnv !== '' &&
+    isDirectory(explicitEnv)
+  ) {
+    return explicitEnv;
+  }
+
+  const fromMerged = merged?.spawn?.otRoot?.trim();
+  if (
+    fromMerged !== undefined &&
+    fromMerged !== '' &&
+    isDirectory(fromMerged)
+  ) {
+    return fromMerged;
+  }
+
+  return resolveOpenThrottleRoot(env);
 };
 
 const resolveWorkflowGraphqlAuthFromSpawnEnv = (
@@ -297,7 +361,11 @@ export function buildWorkflowRalphSpawnEnv(
   workerEnv: NodeJS.ProcessEnv,
   options?: BuildWorkflowRalphSpawnEnvOptions,
 ): NodeJS.ProcessEnv {
-  const transport = resolveWorkflowRalphTransportFromSpawnEnv(workerEnv);
+  const merged = options?.mergedDefaults;
+  const transport = resolveWorkflowRalphTransportFromSpawnEnv(
+    workerEnv,
+    merged,
+  );
   let env: NodeJS.ProcessEnv = {
     ...workerEnv,
     [WORKFLOW_RALPH_TRANSPORT_ENV]: transport,
@@ -334,17 +402,15 @@ export function buildWorkflowRalphSpawnEnv(
     }
   }
 
-  let withBinPath = applyWorkflowRalphBinPath(env);
+  const otRoot = resolveEffectiveOpenThrottleRoot(workerEnv, merged);
+  const envWithOtRoot =
+    otRoot !== undefined
+      ? { ...env, [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot }
+      : env;
 
-  const otRoot = resolveOpenThrottleRoot(workerEnv);
-  if (otRoot !== undefined) {
-    withBinPath = {
-      ...withBinPath,
-      [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
-    };
-  }
+  const withBinPath = applyWorkflowRalphBinPath(envWithOtRoot);
 
-  return applyWorkflowRalphSpawnIdentityOverrides(withBinPath);
+  return applyWorkflowRalphSpawnIdentityOverrides(withBinPath, merged);
 }
 
 /**

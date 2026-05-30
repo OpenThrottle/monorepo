@@ -36,6 +36,6 @@ export type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 export {
   AGENTIC_WORKFLOW_RUN_LOG_EVENT,
+  AGENTIC_WORKFLOW_METRICS_EVENT,
   isLifecycleHooksChildJobsEnabled,
-  PLAN_RUN_METRICS_LOG_EVENT,
 } from '@openthrottle/openthrottle-agentic-workflow';

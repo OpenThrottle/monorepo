@@ -39,7 +39,7 @@ You can **stream** stdout/stderr for logs, OpenThrottle `append_plan_output`, We
 - **Tier 1 (no package API change):** Implement the injected runner by calling `**runIterationAsync`** from `@tools/workflows/src/bin/run-iteration` (source: `[tools/workflows/src/bin/run-iteration.ts](../../tools/workflows/src/bin/run-iteration.ts)`; also re-exported from `[ralph.ts](../../tools/workflows/src/bin/ralph.ts)` for the CLI). Pass `**RunIterationConfig**`with optional`**onChunk**`to receive each`CursorAgentChunk` while the subprocess runs; **return\*\* the same string promise that `runIterationAsync` resolves with so embedding stays aligned with `workflow-ralph`. Alternatively use **`createCursorWorkflowRalphIterationRunner`** from `@tools/workflows` (see `[tools/workflows/src/utils/cursor-workflow-ralph-iteration-runner.ts](../../tools/workflows/src/utils/cursor-workflow-ralph-iteration-runner.ts)`): it maps orchestrator `iteration.run` params onto `runIterationAsync` and accepts optional `onChunk` / `appendPlanOutput` chunk hooks without duplicating field wiring.
 - **Non-goal:** Streaming partial text into GraphQL or task completion — the GraphQL layer and completion parsing stay **buffer-at-end** on the full iteration string.
 
-For CLI behavior, nesting, and runtime tuning, see `[tools/workflows` README](../../tools/workflows/README.md) (Workflow Ralph section).
+For CLI behavior, nesting, and runtime tuning, see `[tools/workflows` README](../../tools/workflows/README.md) (Workflow Ralph section) and [`docs/workflows/ralph-config-migration.md`](../../docs/workflows/ralph-config-migration.md) (`.workflow-ralph.json` precedence; GraphQL URL/auth env-only).
 
 ## Extending
 

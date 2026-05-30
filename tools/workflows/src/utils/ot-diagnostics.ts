@@ -1,3 +1,5 @@
+import { loadWorkflowRalphConfig } from '../config/load-workflow-ralph-config.js';
+
 /**
  * @description Opt-in diagnostics for comparing OpenThrottle DB/API identity across BullMQ worker → nested `workflow-ralph` when using `workingDirectory`. Never logs passwords.
  */
@@ -12,19 +14,6 @@ export const OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV =
 
 const OT_DIAGNOSTICS_LOG_PREFIX = '[workflow-ralph:ot-diagnostics]' as const;
 const PLANS_SPAWN_DIAGNOSTICS_PREFIX = '[plans-spawn:ot-diagnostics]' as const;
-
-/**
- * @description True when `value` is a non-empty string after trim (common env toggles: `1`, `true`).
- */
-function isOtDiagnosticsEnvTruthy(value: string | undefined): boolean {
-  if (value === undefined || value === '') {
-    return false;
-  }
-
-  const s = value.trim().toLowerCase();
-
-  return !(s === '' || s === '0' || s === 'false' || s === 'off' || s === 'no');
-}
 
 /**
  * @description Returns a Postgres URL safe for logs (password stripped). Falls back if parsing fails.
@@ -47,9 +36,10 @@ export function logWorkflowRalphOtDiagnostics(params: {
   readonly connectionString?: string;
   readonly planId: string;
 }): void {
-  const raw = process.env[WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV];
+  const diagnosticsEnabled = loadWorkflowRalphConfig(process.cwd()).diagnostics
+    .ot;
 
-  if (!isOtDiagnosticsEnvTruthy(raw)) {
+  if (diagnosticsEnabled !== true) {
     return;
   }
 
@@ -112,9 +102,9 @@ interface PlansProcessorSpawnOtDiagnosticsParams {
 export function formatPlansProcessorSpawnOtDiagnosticsMessage(
   params: PlansProcessorSpawnOtDiagnosticsParams,
 ): string | null {
-  const raw = params.workerEnv[OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV];
+  const config = loadWorkflowRalphConfig(params.spawnCwd, params.workerEnv);
 
-  if (!isOtDiagnosticsEnvTruthy(raw)) {
+  if (config.diagnostics.spawn !== true) {
     return null;
   }
 

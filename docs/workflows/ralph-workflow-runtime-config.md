@@ -1,6 +1,6 @@
 # Ralph workflow runtime configuration (design note)
 
-**Scope:** How operators configure `workflow-ralph` runs without hard-coding a single path. Complements [`ralph-design.md`](./ralph-design.md) and [`tools/workflows/README.md`](../../tools/workflows/README.md).
+**Scope:** How operators configure `workflow-ralph` runs without hard-coding a single path. Complements [`ralph-design.md`](./ralph-design.md), [`ralph-per-package-config-adr.md`](./ralph-per-package-config-adr.md) (file schema, precedence, env classification), and [`tools/workflows/README.md`](../../tools/workflows/README.md).
 
 ## Mental model: three independent knobs
 
@@ -23,7 +23,7 @@ Think in three layers. They answer different questions; mixing them causes confu
 ## Config surface (principles)
 
 - **Ad-hoc runs:** Prefer **explicit CLI flags** so invocations are copy-pasteable and visible in logs. Today: `--plan` / `--task`, `--backend`, `--prompt`, `--model`, `--iterations`, `--project`, `--iteration-timeout`, debug flags (see `--help`).
-- **Defaults:** **Environment variables** (`WORKFLOW_RALPH_BACKEND`, `WORKFLOW_RALPH_PROMPT`, `WORKFLOW_RALPH_PROMPT_FILE`, `WORKFLOW_RALPH_ITERATIONS`, `WORKFLOW_RALPH_ITERATION_TIMEOUT`, `WORKFLOW_RALPH_MODEL`, `WORKFLOW_RALPH_PROJECT`; see `pnpm exec workflow-ralph --help`) and optional **repo-local** `.workflow-ralph.json` (JSON: `backend`, `prompt` or `promptFile`, `iterations`, `iterationTimeout` in seconds, `model`, `project`). Precedence: **CLI overrides env overrides file defaults** over built-ins.
+- **Defaults:** **Environment variables** (`WORKFLOW_RALPH_*`, spawn/diagnostics vars; see `pnpm exec workflow-ralph --help`) and optional **repo-local** `.workflow-ralph.json` in process cwd (JSON schema: `tools/workflows/schemas/workflow-ralph.defaults.schema.json`). Fields include run tuning (`backend`, `prompt` / `promptFile`, `iterations`, `iterationTimeout`, `model`, `project`, worktree flags), **debug** (`omit` | `debug` | `verbose`), **transport** (`graphql` | `postgres-direct`), **spawn** (`home`, `xdgConfigHome`, `otRoot`), **diagnostics** (`ot`, `spawn`), and **lifecycleHooksChildJobs**. Precedence: **CLI overrides env overrides file defaults** over built-ins (see `WORKFLOW_RALPH_CONFIG_PRECEDENCE` in `@tools/workflows`).
 - **Composition:** Nested invocations (`runChildJob`, processors, worktrees) must **forward the same three layers** so automated runs match manual CLI behavior. Programmatic `runChildJob` and BullMQ job payloads accept optional `ralph` tuning (including `backend`) alongside plan id and iterations.
 
 ## Phased scope
@@ -42,5 +42,7 @@ Think in three layers. They answer different questions; mixing them causes confu
 ## References
 
 - Canonical workflow: [`ralph-design.md`](./ralph-design.md)
+- **Migration:** [`ralph-config-migration.md`](./ralph-config-migration.md)
+- Per-package ADR: [`ralph-per-package-config-adr.md`](./ralph-per-package-config-adr.md)
 - Package README and debugging: [`tools/workflows/README.md`](../../tools/workflows/README.md)
 - CLI surface: `pnpm exec workflow-ralph --help` (see `tools/workflows/src/config/messages.ts`)

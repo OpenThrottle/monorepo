@@ -2,6 +2,10 @@
  * @description Builds {@link WorkflowContext} from GraphQL
  * `RalphPlanRunTuningInput` (enqueue / job tuning). Keeps Ralph argv-equivalent defaults aligned
  * with the workflow flow-context contract (`contract/flow-context`).
+ *
+ * **Precedence:** enqueue / GraphQL tuning (highest) → env → `.workflow-ralph.json` → built-ins.
+ * Queue orchestrators merge file + env via {@link mergePlanRunTuningWithWorkflowRalphConfig}
+ * in `@tools/workflows` before calling {@link resolveWorkflowRunOptions}.
  */
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type { WorkflowContext } from '../types.js';

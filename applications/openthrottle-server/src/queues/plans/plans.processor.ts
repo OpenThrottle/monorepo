@@ -11,7 +11,6 @@ import {
   OnApplicationShutdown,
   OnModuleInit,
 } from '@nestjs/common';
-import { buildWorkflowRalphSpawnEnv } from '@openthrottle/ai-mcp/src/cortex-server';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getWorktreeTargetsFromEnv,
@@ -20,9 +19,12 @@ import {
 } from '@openthrottle/nestjs-worktrees';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
 import {
+  buildNestedWorkflowRalphSpawnEnv,
   buildWorkflowRalphRunTuningArgv,
   formatPlansProcessorSpawnOtDiagnosticsMessage,
+  loadWorkflowRalphConfig,
   mergeRalphNestedRunTuningWithExecutionBackend,
+  resolveWorkflowRalphConfigCwd,
   runChildJob,
 } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
@@ -45,7 +47,7 @@ import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
 import {
   AGENTIC_WORKFLOW_RUN_LOG_EVENT,
-  PLAN_RUN_METRICS_LOG_EVENT,
+  AGENTIC_WORKFLOW_METRICS_EVENT,
 } from '@openthrottle/nestjs-agentic-workflow';
 import { isLifecycleHooksChildJobsEnabled } from '@openthrottle/openthrottle-agentic-workflow';
 import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
@@ -398,7 +400,16 @@ export class PlansProcessor
     if (!isRunPlanOrchestratorJobData(job.data)) {
       return undefined;
     }
-    if (!isLifecycleHooksChildJobsEnabled()) {
+    const configCwd = resolveWorkflowRalphConfigCwd(
+      job.data.workingDirectory,
+      process.env,
+    );
+    if (
+      !isLifecycleHooksChildJobsEnabled({
+        lifecycleHooksChildJobs: loadWorkflowRalphConfig(configCwd, process.env)
+          .lifecycleHooksChildJobs,
+      })
+    ) {
       return undefined;
     }
 
@@ -747,7 +758,7 @@ export class PlansProcessor
   ): void {
     this.logger.info(
       JSON.stringify({
-        event: PLAN_RUN_METRICS_LOG_EVENT,
+        event: AGENTIC_WORKFLOW_METRICS_EVENT,
         jobId,
         planId,
         taskRunMetrics,
@@ -758,7 +769,7 @@ export class PlansProcessor
 
   /**
    * @description Structured JSON log for in-process Ralph orchestrator lifecycle. Uses
-   * {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}; pair with {@link PLAN_RUN_METRICS_LOG_EVENT} via shared
+   * {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}; pair with {@link AGENTIC_WORKFLOW_METRICS_EVENT} via shared
    * `correlationId` / `jobId`. Plan id is included here at the application layer only.
    */
   private logAgenticOrchestratorRunStructured(params: {
@@ -1248,7 +1259,7 @@ export class PlansProcessor
         args,
         {
           cwd: workspaceRoot,
-          env: buildWorkflowRalphSpawnEnv(process.env, {
+          env: buildNestedWorkflowRalphSpawnEnv(workspaceRoot, process.env, {
             canonicalCortexPostgresUrl: getCortexPostgresUrl(),
           }),
         },

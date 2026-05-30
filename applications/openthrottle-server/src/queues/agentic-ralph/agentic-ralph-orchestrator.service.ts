@@ -9,16 +9,18 @@ import {
 } from '@openthrottle/nestjs-agentic-workflow';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import {
-  resolveOpenThrottleRoot,
-  WORKFLOW_RALPH_OT_ROOT_ENV,
-} from '@openthrottle/ai-mcp/src/config';
+  applyWorkflowRalphOtRootFromConfig,
+  applyWorkflowRalphDebugCli,
+  loadWorkflowRalphConfig,
+  mergePlanRunTuningWithWorkflowRalphConfig,
+  resolveWorkflowRalphConfigCwd,
+} from '@tools/workflows';
 import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   WorkflowContext,
   WorkflowOrchestrator,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { applyWorkflowRalphDebugCli } from '@tools/workflows';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
 
 type PlanRunTuningInput = NonNullable<
@@ -54,23 +56,25 @@ export class AgenticRalphOrchestratorService {
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
       .createOrchestrator() as WorkflowOrchestrator;
 
+    const configCwd = resolveWorkflowRalphConfigCwd(
+      jobData.workingDirectory,
+      process.env,
+    );
+    const config = loadWorkflowRalphConfig(configCwd, process.env);
+    applyWorkflowRalphOtRootFromConfig(configCwd, process.env);
+
     const baseContext = buildRalphFlowContextFromPlanRunTuning({
       executionBackend: jobData.executionBackend,
       mode: jobData.mode ?? 'plan',
       planId: jobData.planId,
-      ralph: jobData.ralph as PlanRunTuningInput | undefined,
+      ralph: mergePlanRunTuningWithWorkflowRalphConfig(
+        jobData.ralph as PlanRunTuningInput | undefined,
+        config,
+      ) as PlanRunTuningInput | undefined,
       taskId: jobData.taskId,
     });
 
     applyWorkflowRalphDebugCli(baseContext.debug);
-
-    const otRoot = resolveOpenThrottleRoot(process.env);
-    if (
-      otRoot !== undefined &&
-      (process.env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim() ?? '') === ''
-    ) {
-      process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = otRoot;
-    }
 
     const workingDirectory = jobData.workingDirectory?.trim();
 

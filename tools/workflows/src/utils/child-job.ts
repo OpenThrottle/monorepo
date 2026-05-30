@@ -5,7 +5,7 @@
 
 import { spawn, spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
-import { buildWorkflowRalphSpawnEnv } from '@openthrottle/ai-mcp/src/cortex-server';
+import { buildNestedWorkflowRalphSpawnEnv } from '../config/build-nested-workflow-ralph-spawn-env.js';
 import type { ChildProcessMetrics } from '../types/child-process-metrics';
 import type { WallClockMetrics } from '../types/wall-clock-metrics';
 import { createWallClockMetrics } from '../types/wall-clock-metrics';
@@ -24,7 +24,7 @@ import {
   resolveWorkflowRalphConfig,
   updatePlanStatus,
 } from './cortex-ralph';
-import { resolveWorkflowRalphTransportFromEnv } from './workflow-transport';
+import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import { resolveRalphWorktreeName } from './ralph-worktree-cli';
 import {
@@ -73,7 +73,7 @@ function runRalphAsync(
 
     const child: ChildProcess = spawn('pnpm', ralphArgs, {
       cwd: worktreePath,
-      env: buildWorkflowRalphSpawnEnv(process.env, {
+      env: buildNestedWorkflowRalphSpawnEnv(worktreePath, process.env, {
         canonicalCortexPostgresUrl: options.canonicalCortexPostgresUrl,
       }),
       shell: true,
@@ -274,7 +274,7 @@ export async function runChildJob(
   if (config == null) {
     const endTimestamp = Date.now();
     const cpuAtEnd = process.cpuUsage();
-    const transport = resolveWorkflowRalphTransportFromEnv();
+    const transport = resolveWorkflowRalphTransport(worktreePath);
     const reason =
       transport === 'postgres-direct'
         ? RALPH_FATAL_REQUIRED_POSTGRES.trim()

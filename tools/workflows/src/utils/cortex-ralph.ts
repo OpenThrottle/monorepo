@@ -55,7 +55,7 @@ import {
   formatPlanAndTasksForPrompt,
   taskRequirementsFromRow,
 } from './cortex-ralph-types';
-import { resolveWorkflowRalphTransportFromEnv } from './workflow-transport';
+import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
 
 export type {
   CommitLinkInput,
@@ -98,7 +98,7 @@ const isPostgresTransport = (config: WorkflowRalphConfig): boolean =>
  * @description Resolves Ralph config from env without exiting. Returns null when required env is missing.
  */
 export const resolveWorkflowRalphConfig = (): WorkflowRalphConfig | null => {
-  const transport = resolveWorkflowRalphTransportFromEnv();
+  const transport = resolveWorkflowRalphTransport();
 
   if (transport === 'postgres-direct') {
     try {
@@ -127,7 +127,7 @@ export const getCortexConfigOrExit = (): WorkflowRalphConfig => {
   const config = resolveWorkflowRalphConfig();
 
   if (!config) {
-    const transport = resolveWorkflowRalphTransportFromEnv();
+    const transport = resolveWorkflowRalphTransport();
     console.error(
       transport === 'postgres-direct'
         ? RALPH_FATAL_REQUIRED_POSTGRES

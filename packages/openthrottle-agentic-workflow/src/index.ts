@@ -20,7 +20,10 @@ export type {
 
 export {
   AGENTIC_WORKFLOW_RUN_LOG_EVENT,
-  PLAN_RUN_METRICS_LOG_EVENT,
+  AGENTIC_WORKFLOW_METRICS_EVENT,
 } from './types.js';
 
-export { isLifecycleHooksChildJobsEnabled } from './lifecycle.js';
+export {
+  isLifecycleHooksChildJobsEnabled,
+  type LifecycleHooksChildJobsOptions,
+} from './lifecycle.js';

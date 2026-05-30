@@ -53,3 +53,7 @@ pnpm add @openthrottle/openthrottle-agentic-ralph
 ```
 
 This package is **private** to the workspace and is not published to the public registry.
+
+## Configuration precedence
+
+Run tuning merged into the orchestrator follows **enqueue / GraphQL tuning → env → `.workflow-ralph.json` → built-ins**. **GraphQL URL and auth tokens are env-only** (never read from the defaults file). See `src/utils/context.ts`, `docs/workflows/ralph-config-migration.md`, and `tools/workflows/README.md`.

@@ -15,6 +15,7 @@ import {
   buildWorkflowRalphTuningDiffLabels,
   formatWorkflowRalphExecutionBackendLabel,
   planRunJobDetailPath,
+  WORKFLOW_RALPH_CONFIG_PRECEDENCE,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { buildPlanRunSnapshotDiffLabels } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
@@ -109,10 +110,14 @@ export const PlanWorkflowRunTransparency = (
               Toolbar “Add to Queue” enqueues a{' '}
               <span className="font-medium text-foreground">plan-scoped</span>{' '}
               worker job with one execution backend for the whole run (Cursor or
-              Claude Code); use <code className="text-[0.65rem]">--task</code>{' '}
-              in the preview when you run{' '}
-              <code className="text-[0.65rem]">workflow-ralph</code> locally in
-              task-centric mode.
+              Claude Code).{' '}
+              <strong className="font-medium text-foreground">
+                Precedence
+              </strong>
+              : {WORKFLOW_RALPH_CONFIG_PRECEDENCE}. Configuration tab values and
+              enqueue tuning sit at the CLI layer; omit fields to inherit from{' '}
+              <code className="text-[0.65rem]">.workflow-ralph.json</code> in
+              the worktree or repo root.
             </CardDescription>
             <div className="flex flex-wrap gap-2 my-4">
               <Badge color="accent">

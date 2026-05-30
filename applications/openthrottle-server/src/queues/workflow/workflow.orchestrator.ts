@@ -5,18 +5,18 @@
  * Used when {@link RunPlanOrchestratorJobData.runKind} is `orchestrator`.
  */
 import {
-  resolveOpenThrottleRoot,
-  WORKFLOW_RALPH_OT_ROOT_ENV,
-} from '@openthrottle/ai-mcp/src/config';
+  applyWorkflowRalphOtRootFromConfig,
+  applyWorkflowRalphDebugCli,
+  createCursorWorkflowRalphIterationRunner,
+  loadWorkflowRalphConfig,
+  mergePlanRunTuningWithWorkflowRalphConfig,
+  resolveWorkflowRalphConfigCwd,
+} from '@tools/workflows';
 import {
   buildRalphFlowContextFromPlanRunTuning,
   buildWorkflowExecuteGraphqlV2Options,
   createWorkflowRalphOrchestrator,
 } from '@openthrottle/openthrottle-workflows';
-import {
-  applyWorkflowRalphDebugCli,
-  createCursorWorkflowRalphIterationRunner,
-} from '@tools/workflows';
 import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type {
@@ -73,23 +73,25 @@ export const runPlanOrchestratorJob = async (params: {
     createPlansQueueWorkflowRalphOrchestratorDeps(),
   );
 
+  const configCwd = resolveWorkflowRalphConfigCwd(
+    jobData.workingDirectory,
+    process.env,
+  );
+  const config = loadWorkflowRalphConfig(configCwd, process.env);
+  applyWorkflowRalphOtRootFromConfig(configCwd, process.env);
+
   const baseContext = buildRalphFlowContextFromPlanRunTuning({
     executionBackend: jobData.executionBackend,
     mode: jobData.mode ?? 'plan',
     planId: jobData.planId,
-    ralph: jobData.ralph as PlanRunTuningInput | undefined,
+    ralph: mergePlanRunTuningWithWorkflowRalphConfig(
+      jobData.ralph as PlanRunTuningInput | undefined,
+      config,
+    ) as PlanRunTuningInput | undefined,
     taskId: jobData.taskId,
   });
 
   applyWorkflowRalphDebugCli(baseContext.debug);
-
-  const otRoot = resolveOpenThrottleRoot(process.env);
-  if (
-    otRoot !== undefined &&
-    (process.env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim() ?? '') === ''
-  ) {
-    process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = otRoot;
-  }
 
   const workingDirectory = jobData.workingDirectory?.trim();
 

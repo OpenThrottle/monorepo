@@ -35,7 +35,7 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 ## Workflow CLI (@tools/workflows)
 
 - **Discoverability:** Run `pnpm exec workflow-ralph --help` (and other bins) for usage. See `tools/workflows/README.md` for bin list.
-- **Run:** `pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>` (or `--task <openthrottle-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`.
+- **Run:** `pnpm exec workflow-ralph --plan <openthrottle-plan-uuid>` (or `--task <openthrottle-task-uuid>` for task-centric). OpenThrottle (OT) required; see `tools/workflows/README.md`. Optional defaults: `.workflow-ralph.json` (see `.workflow-ralph.json.example`, `docs/workflows/ralph-config-migration.md`).
 - **API queue (spawn vs orchestrator):** `enqueuePlanRun` runs nested `workflow-ralph` in the worker; `enqueuePlanRalphOrchestrator` runs the in-process GraphQL Ralph orchestrator (no child CLI). See `tools/workflows/README.md` § Worktree + BullMQ workflow. Docker, worker cwd, and compose follow-ups: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
 - **Commit as you go:** When running Ralph (or working with OT plans/tasks), commit and push after each task or logical chunk. Use conventional commits and include `Plan-Id` and `Task-Id` in the commit body or footer. Link commits in OT only after the PR is merged (via `workflow-link-merge`); see `databases/README.md` § Commit links.
 
