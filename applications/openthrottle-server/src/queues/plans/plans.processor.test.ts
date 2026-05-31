@@ -12,7 +12,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import 'reflect-metadata';
-import { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
+import { OPENTHROTTLE_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
@@ -329,7 +329,7 @@ describe('PlansProcessor', () => {
         expect.objectContaining({
           cwd: process.cwd(),
           env: expect.objectContaining({
-            [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+            [OPENTHROTTLE_POSTGRES_URL_ENV]:
               'postgresql://u:p@localhost:5432/cortex_test',
             POSTGRES_URL: 'postgresql://u:p@localhost:5432/cortex_test',
           }),
@@ -396,7 +396,7 @@ describe('PlansProcessor', () => {
         expect.objectContaining({
           cwd: '/Users/matt/Development/other-monorepo',
           env: expect.objectContaining({
-            [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+            [OPENTHROTTLE_POSTGRES_URL_ENV]:
               'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
             POSTGRES_URL:
               'postgresql://worker:secret@db.example:5432/openthrottle_cortex',

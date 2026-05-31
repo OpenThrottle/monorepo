@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
-  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  OPENTHROTTLE_POSTGRES_URL_ENV,
   buildWorkflowRalphSpawnEnv,
   resolveCortexPostgresConnectionStringFromEnv,
   resolveOpenThrottleRoot,
@@ -34,7 +34,7 @@ afterAll(() => {
 describe('resolveCortexPostgresConnectionStringFromEnv', () => {
   it('prefers OPENTHROTTLE_CORTEX_POSTGRES_URL over POSTGRES_URL', () => {
     const conn = resolveCortexPostgresConnectionStringFromEnv({
-      [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+      [OPENTHROTTLE_POSTGRES_URL_ENV]:
         'postgresql://cortex@db.example:5432/openthrottle',
       POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
     });
@@ -122,7 +122,7 @@ describe('buildWorkflowRalphSpawnEnv', () => {
     expect(out.XDG_CONFIG_HOME).toBe('/xdg');
     expect(out.WORKFLOW_RALPH_TRANSPORT).toBe('postgres-direct');
     expect(out.POSTGRES_URL).toBe('postgresql://c:d@localhost:2/db2');
-    expect(out[OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]).toBe(
+    expect(out[OPENTHROTTLE_POSTGRES_URL_ENV]).toBe(
       'postgresql://c:d@localhost:2/db2',
     );
   });

@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ensurePostgresReachable,
   getPostgresUrl,
-  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
-  POSTGRES_UNREACHABLE_HINT_SUFFIX,
+  OPENTHROTTLE_POSTGRES_URL_ENV,
+  POSTGRES_UNREACHABLE_HINT,
   POSTGRES_URL_MISSING_ERROR,
   sanitizePostgresUrlForLogs,
   UNPARSEABLE_POSTGRES_URL_LOG_LABEL,
@@ -78,7 +78,7 @@ describe('ensurePostgresReachable', () => {
     ).rejects.toThrow(/Connection refused/);
     await expect(
       ensurePostgresReachable('postgresql://user:pass@localhost:5432/db'),
-    ).rejects.toThrow(POSTGRES_UNREACHABLE_HINT_SUFFIX);
+    ).rejects.toThrow(POSTGRES_UNREACHABLE_HINT);
   });
 
   it('throws with hint when SELECT 1 fails', async () => {
@@ -131,7 +131,7 @@ describe('getPostgresUrl', () => {
   describe('when OPENTHROTTLE_CORTEX_POSTGRES_URL is set', () => {
     it('prefers OPENTHROTTLE_CORTEX_POSTGRES_URL over POSTGRES_URL', () => {
       const conn = getPostgresUrl({
-        [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+        [OPENTHROTTLE_POSTGRES_URL_ENV]:
           'postgresql://cortex@db.example:5432/openthrottle',
         POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
       });
@@ -141,7 +141,7 @@ describe('getPostgresUrl', () => {
 
     it('trims whitespace from OPENTHROTTLE_CORTEX_POSTGRES_URL', () => {
       const conn = getPostgresUrl({
-        [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+        [OPENTHROTTLE_POSTGRES_URL_ENV]:
           '  postgresql://cortex@db.example:5432/openthrottle  ',
       });
 
@@ -168,7 +168,7 @@ describe('getPostgresUrl', () => {
 
     it('falls through empty OPENTHROTTLE_CORTEX_POSTGRES_URL to POSTGRES_URL', () => {
       const conn = getPostgresUrl({
-        [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]: '   ',
+        [OPENTHROTTLE_POSTGRES_URL_ENV]: '   ',
         POSTGRES_URL: 'postgresql://user:pass@localhost:5432/mydb',
       });
 

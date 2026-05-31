@@ -3,17 +3,16 @@
  */
 
 import * as fs from 'node:fs';
-
 import {
   getOpenThrottleRoot,
   getPostgresUrl,
-  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  OPENTHROTTLE_POSTGRES_URL_ENV,
   prependOpenThrottleBinToPath,
   resolveOpenThrottleBinDir,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-export { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV, WORKFLOW_RALPH_OT_ROOT_ENV };
+export { OPENTHROTTLE_POSTGRES_URL_ENV, WORKFLOW_RALPH_OT_ROOT_ENV };
 
 /**
  * @description When set (non-empty after trim) on the BullMQ worker, nested `workflow-ralph` children receive this as `HOME` so Claude Code and similar CLIs resolve OAuth paths under a directory you control (e.g. bind-mount host credentials into `/var/ralph-home` and set this to that path).
@@ -67,7 +66,7 @@ export function resolveWorkflowRalphBinDir(
 export const applyWorkflowRalphBinPath = prependOpenThrottleBinToPath;
 
 /**
- * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
+ * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
  * @returns Connection string or `undefined` when required vars are missing.
  * @deprecated Import {@link getPostgresUrl} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
@@ -280,7 +279,7 @@ export function buildWorkflowRalphSpawnEnv(
     if (conn !== undefined) {
       env = {
         ...env,
-        [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]: conn,
+        [OPENTHROTTLE_POSTGRES_URL_ENV]: conn,
         POSTGRES_URL: conn,
       };
     }

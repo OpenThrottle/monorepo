@@ -7,7 +7,7 @@ export {
   applyWorkflowRalphBinPath,
   buildWorkflowRalphSpawnEnv,
   getPostgresConfig,
-  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  OPENTHROTTLE_POSTGRES_URL_ENV,
   resolveOpenThrottleRoot,
   resolveWorkflowRalphBinDir,
   WORKFLOW_RALPH_OT_ROOT_ENV,

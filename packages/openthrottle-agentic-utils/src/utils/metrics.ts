@@ -1,12 +1,20 @@
 /**
- * @description Types for wall-clock duration vs CPU time metrics.
+ * Types for wall-clock duration vs CPU time metrics.
  * Used to determine if jobs are CPU-bound, I/O-bound, or wait-bound.
  */
 
 import pidusage from 'pidusage';
 
+const BYTES_PER_MB = 1024 * 1024;
+
 /**
- * @description Wall-clock and CPU time metrics for a job.
+ * Default polling interval for child process metrics (5 seconds).
+ */
+export const DEFAULT_POLL_INTERVAL_MS = 5000;
+
+/**
+ * Wall-clock and CPU time metrics for a job.
+ *
  * - If wallClockMs >> cpuTimeMs (ratio > 2), the job is I/O or wait-bound.
  * - If wallClockMs ≈ cpuTimeMs (ratio ≈ 1), the job is CPU-bound.
  * - Ratio > 5 suggests significant idle time (network, disk, or external waits).
@@ -22,6 +30,7 @@ export interface WallClockMetrics {
   readonly endTimestamp: number;
   /**
    * Interpretation hint based on ratio:
+   *
    * - 'cpu_bound': ratio <= 1.5
    * - 'mixed': ratio > 1.5 and <= 5
    * - 'io_bound': ratio > 5
@@ -34,16 +43,18 @@ export interface WallClockMetrics {
   readonly wallClockMs: number;
   /**
    * Ratio of wall-clock to CPU time: wallClockMs / cpuTimeMs.
+   *
    * - ~1: CPU-bound (little idle time)
    * - 2-5: I/O or mixed workload
    * - 5: Significant wait time (network, external processes)
+   *
    * If cpuTimeMs is 0, ratio is Infinity (pure idle/wait).
    */
   readonly wallClockToCpuRatio: number;
 }
 
 /**
- * @description Creates {@link WallClockMetrics} from start/end timestamps and CPU usage deltas.
+ * Creates {@link WallClockMetrics} from start/end timestamps and CPU usage deltas.
  */
 export function createWallClockMetrics(params: {
   readonly cpuSystemDeltaMs: number;
@@ -51,7 +62,7 @@ export function createWallClockMetrics(params: {
   readonly endTimestamp: number;
   readonly startTimestamp: number;
 }): WallClockMetrics {
-  const { startTimestamp, endTimestamp, cpuUserDeltaMs, cpuSystemDeltaMs } =
+  const { cpuUserDeltaMs, cpuSystemDeltaMs, endTimestamp, startTimestamp } =
     params;
 
   const wallClockMs = endTimestamp - startTimestamp;
@@ -88,7 +99,7 @@ export function createWallClockMetrics(params: {
 }
 
 /**
- * @description Formats {@link WallClockMetrics} as a one-line summary for logs.
+ * Formats {@link WallClockMetrics} as a one-line summary for logs.
  */
 export function formatWallClockMetrics(metrics: WallClockMetrics): string {
   const durationSec = (metrics.wallClockMs / 1000).toFixed(1);
@@ -101,10 +112,9 @@ export function formatWallClockMetrics(metrics: WallClockMetrics): string {
   return `Wall clock: ${durationSec}s, CPU: ${cpuSec}s (user: ${(metrics.cpuUserMs / 1000).toFixed(1)}s, sys: ${(metrics.cpuSystemMs / 1000).toFixed(1)}s), ratio: ${ratio}x (${metrics.interpretation})`;
 }
 
-/** Default polling interval for child process metrics (5 seconds). */
-export const DEFAULT_POLL_INTERVAL_MS = 5000;
-
-/** Single sample of child process CPU and memory from pidusage. */
+/**
+ * Single sample of child process CPU and memory from pidusage.
+ */
 export interface ChildProcessSample {
   /** CPU percentage (0–100+) at this sample. */
   readonly cpu: number;
@@ -116,7 +126,9 @@ export interface ChildProcessSample {
   readonly timestamp: number;
 }
 
-/** Aggregated metrics for a child process over its lifetime. */
+/**
+ * Aggregated metrics for a child process over its lifetime.
+ */
 export interface ChildProcessMetrics {
   /** Average CPU percentage across all samples. */
   readonly avgCpuPercent: number;
@@ -136,7 +148,9 @@ export interface ChildProcessMetrics {
   readonly samples?: readonly ChildProcessSample[];
 }
 
-/** Options for child process metrics polling. */
+/**
+ * Options for child process metrics polling.
+ */
 export interface ChildProcessMetricsOptions {
   /** Whether to keep all samples (true) or just aggregates (false). Defaults to false. */
   readonly keepSamples?: boolean;
@@ -145,7 +159,7 @@ export interface ChildProcessMetricsOptions {
 }
 
 /**
- * @description Creates a collector that polls a child process at intervals.
+ * Creates a collector that polls a child process at intervals.
  * Call start() with a PID after spawn, then stop() when the process exits.
  * Returns aggregated {@link ChildProcessMetrics}.
  */
@@ -157,8 +171,6 @@ export interface ChildProcessMetricsCollector {
   /** Whether the collector has been stopped. */
   readonly stopped: boolean;
 }
-
-const BYTES_PER_MB = 1024 * 1024;
 
 interface ChildProcessMetricsCollectorState {
   intervalId: ReturnType<typeof setInterval> | null;
@@ -172,7 +184,7 @@ interface ChildProcessMetricsCollectorState {
 }
 
 /**
- * @description Creates a new child process metrics collector.
+ * Creates a new child process metrics collector.
  * The collector polls the child process at the given interval and aggregates CPU/RSS metrics.
  */
 export function createChildProcessMetricsCollector(
@@ -211,6 +223,7 @@ export function createChildProcessMetricsCollector(
 
   const start = (pid: number): void => {
     if (state.stopped) return;
+
     state.pid = pid;
     state.startTime = Date.now();
 
@@ -226,6 +239,7 @@ export function createChildProcessMetricsCollector(
       clearInterval(state.intervalId);
       state.intervalId = null;
     }
+
     state.stopped = true;
 
     if (

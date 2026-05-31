@@ -1,17 +1,21 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  WORKFLOW_RALPH_DEBUG_ENV,
+  WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
+  WORKFLOW_RALPH_VERBOSE_ENV,
+  WORKFLOW_RUNNER_IDS,
+} from '../config/index.js';
 
 /**
- * @description Explicit absolute path to the OpenThrottle monorepo root, used to locate the `workflow-ralph` binary (`<root>/node_modules/.bin`) so nested spawns resolve it deterministically — even when `cwd` is a foreign checkout and the dev shell PATH is not inherited (clean/Docker envs). Set this when the marker file (`pnpm-workspace.yaml`) is not reachable by walking up from the module or `cwd`.
+ * Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root.
  */
-export const WORKFLOW_RALPH_OT_ROOT_ENV = `WORKFLOW_RALPH_OT_ROOT`;
-
-/** Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root. */
-const OT_WORKSPACE_MARKER = `pnpm-workspace.yaml`;
+const OPENTHROTTLE_WORKSPACE_MARKER = `.openthrottle.mjs`;
 
 /**
- * @description Returns true when `dir` exists and is a directory. Never throws.
+ * Returns true when `dir` exists and is a directory. Never throws.
  */
 const isDirectory = (dir: string): boolean => {
   try {
@@ -22,13 +26,15 @@ const isDirectory = (dir: string): boolean => {
 };
 
 /**
- * @description Returns true when `dir` contains the OpenThrottle workspace marker ({@link OT_WORKSPACE_MARKER}).
+ * Returns true when `dir` contains the OpenThrottle workspace marker ({@link OPENTHROTTLE_WORKSPACE_MARKER}).
  */
-const hasWorkspaceMarker = (dir: string): boolean =>
-  fs.existsSync(path.join(dir, OT_WORKSPACE_MARKER));
+const hasWorkspaceMarker = (dir: string): boolean => {
+  return fs.existsSync(path.join(dir, OPENTHROTTLE_WORKSPACE_MARKER));
+};
 
 /**
- * @description Walks up from `startDir` to find the OpenThrottle monorepo root (the first ancestor containing {@link OT_WORKSPACE_MARKER}). Returns undefined when no marker is found. Never throws.
+ * Walks up from `startDir` to find the OpenThrottle monorepo root (the first ancestor containing {@link OPENTHROTTLE_WORKSPACE_MARKER}).
+ * Returns undefined when no marker is found. Never throws.
  */
 const walkUpForWorkspaceRoot = (startDir: string): string | undefined => {
   let dir: string;
@@ -42,16 +48,30 @@ const walkUpForWorkspaceRoot = (startDir: string): string | undefined => {
     if (hasWorkspaceMarker(dir)) {
       return dir;
     }
+
     const parent = path.dirname(dir);
     if (parent === dir) {
       return undefined;
     }
+
     dir = parent;
   }
 };
 
 /**
- * @description Returns the directory of this module, or undefined when it cannot be resolved.
+ * Reads `import.meta.url` at runtime without a static `import.meta` reference so
+ * CommonJS-compiling consumers (e.g. NestJS packages) do not require ESM module settings.
+ */
+const readImportMetaUrl = (): string | undefined => {
+  try {
+    return new Function('return import.meta.url')();
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Returns the directory of this module, or undefined when it cannot be resolved.
  * Walking up from here lands in the OpenThrottle monorepo regardless of `cwd`.
  *
  * Supports CommonJS (`__dirname`) and native ESM (`import.meta.url`) so consumers compiled
@@ -62,19 +82,26 @@ const getModuleDir = (): string | undefined => {
     return __dirname;
   }
 
+  const importMetaUrl = readImportMetaUrl();
+  if (importMetaUrl === undefined) {
+    return undefined;
+  }
+
   try {
-    return path.dirname(fileURLToPath(import.meta.url));
+    return path.dirname(fileURLToPath(importMetaUrl));
   } catch {
     return undefined;
   }
 };
 
 /**
- * @description Resolves the OpenThrottle monorepo root, in priority order:
+ * Resolves the OpenThrottle monorepo root, in priority order:
+ *
  * 1. {@link WORKFLOW_RALPH_OT_ROOT_ENV} (explicit; trusted when the directory exists),
- * 2. `WORKSPACE_ROOT` (when it contains {@link OT_WORKSPACE_MARKER}),
+ * 2. `WORKSPACE_ROOT` (when it contains {@link OPENTHROTTLE_WORKSPACE_MARKER}),
  * 3. walk up from this module's location (always inside OpenThrottle),
  * 4. walk up from `process.cwd()` (last resort).
+ *
  * @returns Absolute path to the OpenThrottle root, or undefined when it cannot be determined.
  */
 export function getOpenThrottleRoot(
@@ -102,7 +129,7 @@ export function getOpenThrottleRoot(
 }
 
 /**
- * @description Resolves the directory used to load `.workflow-ralph.json` and workflow tuning defaults.
+ * Resolves the directory used to load `.workflow-ralph.json` and workflow tuning defaults.
  * Priority: job worktree (`workingDirectory`), then `WORKSPACE_ROOT`, then `process.cwd()`.
  */
 export function getWorkflowConfigCwd(
@@ -122,23 +149,13 @@ export function getWorkflowConfigCwd(
   return process.cwd();
 }
 
-/** Primary env var for Ralph workflow debug output (stderr). */
-export const WORKFLOW_RALPH_DEBUG_ENV = `WORKFLOW_RALPH_DEBUG` as const;
-
-/** Legacy alias for {@link WORKFLOW_RALPH_DEBUG_ENV}. */
-export const WORKFLOW_RALPH_DEBUG_LEGACY_ENV = `RALPH_DEBUG` as const;
-
 /**
- * When set, enables the noisiest debug lines (also accepts
- * `WORKFLOW_RALPH_DEBUG=2|verbose|all`).
+ * Opt-in workflow/Ralph debug shim level parsed from env (no logger instance).
  */
-export const WORKFLOW_RALPH_VERBOSE_ENV = `WORKFLOW_RALPH_VERBOSE` as const;
-
-/** @description Opt-in workflow/Ralph debug shim level parsed from env (no logger instance). */
 export type WorkflowDebugLevel = `off` | `debug` | `verbose`;
 
 /**
- * @description Returns true when `WORKFLOW_RALPH_VERBOSE` (or equivalent) requests verbose lines.
+ * Returns true when `WORKFLOW_RALPH_VERBOSE` (or equivalent) requests verbose lines.
  */
 export const isWorkflowVerboseEnvTruthy = (
   value: string | undefined,
@@ -146,6 +163,7 @@ export const isWorkflowVerboseEnvTruthy = (
   if (value === undefined || value === ``) {
     return false;
   }
+
   const s = value.trim().toLowerCase();
   return (
     s === `1` || s === `true` || s === `yes` || s === `on` || s === `verbose`
@@ -153,7 +171,7 @@ export const isWorkflowVerboseEnvTruthy = (
 };
 
 /**
- * @description Reads workflow debug level from env (`WORKFLOW_RALPH_DEBUG`, `RALPH_DEBUG`, `WORKFLOW_RALPH_VERBOSE`). Pure; no I/O.
+ * Reads workflow debug level from env (`WORKFLOW_RALPH_DEBUG`, `RALPH_DEBUG`, `WORKFLOW_RALPH_VERBOSE`). Pure; no I/O.
  */
 export const readWorkflowDebugLevelFromEnv = (
   env: NodeJS.ProcessEnv = process.env,
@@ -173,6 +191,7 @@ export const readWorkflowDebugLevelFromEnv = (
   if (s === `` || s === `0` || s === `false` || s === `off` || s === `no`) {
     return `off`;
   }
+
   if (s === `2` || s === `verbose` || s === `all`) {
     return `verbose`;
   }
@@ -180,26 +199,27 @@ export const readWorkflowDebugLevelFromEnv = (
   return `debug`;
 };
 
-/** Env var for Ralph execution backend (`cursor` | `claude`). */
-export const WORKFLOW_RALPH_BACKEND_ENV = `WORKFLOW_RALPH_BACKEND` as const;
-
-/** Known workflow runner ids; extend when adding a runner implementation. */
-export const WORKFLOW_RUNNER_IDS = [`claude`, `cursor`] as const;
-
-/** @description Which CLI/process runs each agentic iteration. */
+/**
+ * Which CLI/process runs each agentic iteration.
+ */
 export type WorkflowRunnerId = (typeof WORKFLOW_RUNNER_IDS)[number];
 
-/** @description Default runner: Cursor agent CLI. */
+/**
+ * Default runner: Cursor agent CLI.
+ */
 export const DEFAULT_WORKFLOW_RUNNER: WorkflowRunnerId = `cursor`;
 
 /**
- * @description Returns true when `value` is a supported {@link WorkflowRunnerId}.
+ * Returns true when `value` is a supported {@link WorkflowRunnerId}.
  */
-export const isWorkflowRunnerId = (value: string): value is WorkflowRunnerId =>
-  (WORKFLOW_RUNNER_IDS as readonly string[]).includes(value);
+export const isWorkflowRunnerId = (
+  value: string,
+): value is WorkflowRunnerId => {
+  return (WORKFLOW_RUNNER_IDS as readonly string[]).includes(value);
+};
 
 /**
- * @description Normalizes and validates a runner id from CLI, env, or defaults file.
+ * Normalizes and validates a runner id from CLI, env, or defaults file.
  */
 export const parseWorkflowRunnerId = (
   raw: string,
@@ -211,10 +231,12 @@ export const parseWorkflowRunnerId = (
       `Execution backend (${source}) must be a non-empty string (e.g. ${DEFAULT_WORKFLOW_RUNNER})`,
     );
   }
+
   if (!isWorkflowRunnerId(normalized)) {
     throw new Error(
       `Unknown execution backend "${raw.trim()}". Supported: ${WORKFLOW_RUNNER_IDS.join(', ')}`,
     );
   }
+
   return normalized;
 };

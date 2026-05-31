@@ -4,7 +4,7 @@
 
 import {
   ensurePostgresReachable,
-  POSTGRES_UNREACHABLE_HINT_SUFFIX,
+  POSTGRES_UNREACHABLE_HINT,
 } from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
 import type {
@@ -61,10 +61,7 @@ export async function ensureCortexReachablePostgres(
           'Postgres database is unreachable.',
           'Cortex database is unreachable.',
         )
-        .replace(
-          POSTGRES_UNREACHABLE_HINT_SUFFIX,
-          RALPH_FATAL_UNREACHABLE_SUFFIX,
-        ),
+        .replace(POSTGRES_UNREACHABLE_HINT, RALPH_FATAL_UNREACHABLE_SUFFIX),
     );
   }
 }
