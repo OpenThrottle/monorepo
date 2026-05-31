@@ -179,7 +179,7 @@ export type CancelPlanRunInput = {
 
 export type CancelPlanRunResultObject = {
   __typename?: 'CancelPlanRunResultObject';
-  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan. */
+  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan. */
   activeJobIdsCouldNotCancel: Array<Scalars['String']['output']>;
   /** True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state. */
   noMatchingJob: Scalars['Boolean']['output'];

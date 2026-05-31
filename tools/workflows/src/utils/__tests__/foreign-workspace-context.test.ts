@@ -8,7 +8,7 @@ import {
   resolveForeignWorkspaceContext,
   resolveForeignWorkspacePromptLayer,
 } from '@openthrottle/ai-mcp/src/foreign-workspace-context';
-import { WORKFLOW_RALPH_OT_ROOT_ENV } from '../../../../../packages/ai-mcp/src/config';
+import { WORKFLOW_RALPH_OT_ROOT_ENV } from '@openthrottle/ai-mcp/src/config';
 
 /** Temp dir with pnpm-workspace.yaml to simulate the OpenThrottle monorepo root. */
 let otRoot: string;

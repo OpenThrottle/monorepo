@@ -10,7 +10,7 @@ import {
   prependOpenThrottleBinToPath,
   resolveOpenThrottleBinDir,
 } from '../nodejs.js';
-import { WORKFLOW_RALPH_OT_ROOT_ENV } from '../workflow.js';
+import { WORKFLOW_RALPH_OT_ROOT_ENV } from '@openthrottle/ai-mcp/src/config';
 
 /** Temp dir without a node_modules/.bin so OT bin resolution is a no-op. */
 let emptyRoot: string;
