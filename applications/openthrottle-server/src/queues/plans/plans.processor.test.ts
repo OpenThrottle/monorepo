@@ -5,7 +5,10 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
-import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
+import type {
+  ChildProcessMetrics,
+  WallClockMetrics,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   PlanOutputStreamService,
   PlansService,
