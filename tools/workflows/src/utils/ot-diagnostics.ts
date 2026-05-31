@@ -1,3 +1,5 @@
+import { sanitizePostgresUrlForLogs } from '@openthrottle/openthrottle-agentic-utils';
+
 import { loadWorkflowRalphConfig } from '../config/load-workflow-ralph-config.js';
 
 /**
@@ -14,20 +16,6 @@ export const OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV =
 
 const OT_DIAGNOSTICS_LOG_PREFIX = '[workflow-ralph:ot-diagnostics]' as const;
 const PLANS_SPAWN_DIAGNOSTICS_PREFIX = '[plans-spawn:ot-diagnostics]' as const;
-
-/**
- * @description Returns a Postgres URL safe for logs (password stripped). Falls back if parsing fails.
- */
-function sanitizePostgresConnectionForLogs(connectionString: string): string {
-  try {
-    const u = new URL(connectionString);
-    u.password = '';
-
-    return u.toString();
-  } catch {
-    return '(unparseable POSTGRES_URL)';
-  }
-}
 
 /**
  * @description One stderr line with cwd, plan id, sanitized Postgres target, and booleans for related env (no token values).
@@ -79,7 +67,7 @@ export function logWorkflowRalphOtDiagnostics(params: {
     planId: params.planId,
     postgresIdentity:
       params.connectionString != null && params.connectionString !== ''
-        ? sanitizePostgresConnectionForLogs(params.connectionString)
+        ? sanitizePostgresUrlForLogs(params.connectionString)
         : '(graphql transport — no POSTGRES_URL on client)',
     surface: 'workflow-ralph',
     unixUser: env.USER ?? env.LOGNAME ?? '(unset)',
@@ -111,7 +99,7 @@ export function formatPlansProcessorSpawnOtDiagnosticsMessage(
   const env = params.workerEnv;
   const pgUrl = env.POSTGRES_URL?.trim();
   const postgresIdentity = pgUrl
-    ? sanitizePostgresConnectionForLogs(pgUrl)
+    ? sanitizePostgresUrlForLogs(pgUrl)
     : `POSTGRES_* host=${env.POSTGRES_HOST ?? '(unset)'} db=${env.POSTGRES_DB ?? '(unset)'}`;
   const effectiveUnixUid =
     typeof process.getuid === 'function' ? process.getuid() : null;

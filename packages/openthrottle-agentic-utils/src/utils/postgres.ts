@@ -68,3 +68,20 @@ export async function ensurePostgresReachable(
     await client.end();
   }
 }
+
+/** Fallback when a Postgres URL cannot be parsed for log redaction. */
+export const UNPARSEABLE_POSTGRES_URL_LOG_LABEL = '(unparseable POSTGRES_URL)';
+
+/**
+ * @description Returns a Postgres URL safe for logs (password stripped). Falls back if parsing fails.
+ */
+export function sanitizePostgresUrlForLogs(connectionString: string): string {
+  try {
+    const url = new URL(connectionString);
+    url.password = '';
+
+    return url.toString();
+  } catch {
+    return UNPARSEABLE_POSTGRES_URL_LOG_LABEL;
+  }
+}

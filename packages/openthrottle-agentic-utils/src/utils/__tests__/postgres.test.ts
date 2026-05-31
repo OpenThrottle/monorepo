@@ -5,6 +5,8 @@ import {
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   POSTGRES_UNREACHABLE_HINT_SUFFIX,
+  sanitizePostgresUrlForLogs,
+  UNPARSEABLE_POSTGRES_URL_LOG_LABEL,
 } from '../postgres.js';
 
 const mockState = {
@@ -98,6 +100,29 @@ describe('ensurePostgresReachable', () => {
     await expect(
       ensurePostgresReachable('  postgresql://user:pass@localhost:5432/db  '),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe('sanitizePostgresUrlForLogs', () => {
+  it('strips the password from a standard Postgres URL', () => {
+    const sanitized = sanitizePostgresUrlForLogs(
+      'postgresql://user:secret@localhost:5432/mydb',
+    );
+
+    expect(sanitized).toBe('postgresql://user@localhost:5432/mydb');
+    expect(sanitized).not.toContain('secret');
+  });
+
+  it('preserves username, host, port, and database when password is absent', () => {
+    expect(
+      sanitizePostgresUrlForLogs('postgresql://user@localhost:5432/mydb'),
+    ).toBe('postgresql://user@localhost:5432/mydb');
+  });
+
+  it('returns a fixed label when the URL cannot be parsed', () => {
+    expect(sanitizePostgresUrlForLogs('not-a-url')).toBe(
+      UNPARSEABLE_POSTGRES_URL_LOG_LABEL,
+    );
   });
 });
 
