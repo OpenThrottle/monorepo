@@ -1,10 +1,86 @@
 # @openthrottle/openthrottle-agentic-utils
 
-Add a short description of this package (purpose, main exports, and who consumes it).
+**Pure, well-named utilities** extracted incrementally from `@tools/workflows` and overlapping helpers in `@openthrottle/ai-mcp`. This package is the shared **runtime helper** layer for Ralph, nested spawns, and agentic CLIs: Postgres URL resolution, monorepo root discovery, workflow transport/config cwd, subprocess PATH, debug env parsing, and wall-clock / child-process metrics.
+
+It is **not** a home for CLI bins, Cortex GraphQL/Postgres CRUD, job-run-hooks runners, or doc-ingestion — those stay in `@tools/workflows` until a later phase.
+
+## Where this fits
+
+- **Contracts (types, orchestrator shapes):** `@openthrottle/openthrottle-agentic-workflow`
+- **GraphQL Ralph orchestrator:** `@openthrottle/openthrottle-agentic-ralph`
+- **CLI bins and Cortex wiring:** `@tools/workflows`
+- **This package:** leaf utilities with minimal dependencies; consumers import functions and re-export shims from workflows/ai-mcp until migration completes.
+
+OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task, feedback gate between moves).
+
+## Module layout (proposed)
+
+| Module file (proposed)  | Placeholder today   | Intended utilities                                                                                                                  |
+| ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/postgres.ts` | `utils.postgres.ts` | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
+| `src/utils/workflow.ts` | `utils.workflow.ts` | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
+| `src/utils/nodejs.ts`   | `utils.nodejs.ts`   | `prependOpenThrottleBinToPath`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                    |
+| `src/utils/metrics.ts`  | `utils.metrics.ts`  | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
+
+**Barrel:** `src/index.ts` re-exports all public symbols (same pattern as `openthrottle-agentic-workflow`).
+
+### File naming convention
+
+- **Repo rule:** kebab-case file names ([`.cursor/rules/coding/naming-conventions.mdc`](../../.cursor/rules/coding/naming-conventions.mdc)).
+- **Current scaffold** uses `utils.<domain>.ts` (dots, not kebab). **Recommendation:** rename to `src/utils/<domain>.ts` (`postgres.ts`, `workflow.ts`, `nodejs.ts`, `metrics.ts`) before the first real move (task 2). Avoid the `utils.` filename prefix; the directory already signals “utilities”.
+- **Function names:** prefer clear names over legacy `workflow*` / `ralph*` prefixes in the **public** API where semantics are general (e.g. `sanitizePostgresUrlForLogs` not `sanitizePostgresConnectionForLogs`). Keep **env var names** unchanged for compatibility (`POSTGRES_URL`, `WORKFLOW_RALPH_OT_ROOT`, `OPENTHROTTLE_CORTEX_POSTGRES_URL`, etc.).
+
+## Export map
+
+**Phase 1 (now):** single entrypoint only.
+
+```json
+".": { "import": "./dist/src/index.js", "types": "./dist/src/index.d.ts" }
+```
+
+**Optional later:** subpath exports for tree-shaking or explicit imports (only if consumers need them):
+
+```json
+"./postgres": "./dist/src/utils/postgres.js",
+"./workflow": "./dist/src/utils/workflow.js",
+"./nodejs": "./dist/src/utils/nodejs.js",
+"./metrics": "./dist/src/utils/metrics.js"
+```
+
+**Recommendation:** stay barrel-only until a consumer asks for subpaths; wildcard `"./*"` in `package.json` today is generator-default and unused.
+
+## Test layout
+
+- **Runner:** Vitest via `vitest.config.ts` (`@tools/dotfiles` node preset).
+- **Location:** colocated `src/**/__tests__/*.test.ts` (e.g. `src/utils/__tests__/postgres.test.ts`), matching `@openthrottle/openthrottle-agentic-workflow` and `@tools/workflows`.
+- **Nx:** `pnpm nx run @openthrottle/openthrottle-agentic-utils:test`
+- **Policy:** every moved function gets unit tests in this package before the workflows shim is deleted.
+
+## Dependency policy
+
+| Category                                   | Policy                                                                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Pure string/env/math helpers               | **Zero** runtime `dependencies`                                                                                 |
+| `pg` (reachability check)                  | **`peerDependencies`** + devDependency for tests; mock in unit tests                                            |
+| `pidusage` (child metrics)                 | **`peerDependencies`** when `createChildProcessMetricsCollector` lands                                          |
+| `@nx/devkit` / `nx` (`pinNxWorkspaceRoot`) | **`peerDependencies`**; optional peer group — consider keeping Nx pinning in workflows if coupling is too heavy |
+| `@openthrottle/ai-mcp`                     | **Do not depend** — utilities move **out of** ai-mcp; ai-mcp/workflows re-export shims during migration         |
+
+## Migration rules (per function)
+
+1. Implement + test in `@openthrottle/openthrottle-agentic-utils`.
+2. Re-export shim from `@tools/workflows` (or `@openthrottle/ai-mcp`) until all call sites switch.
+3. One function (or tight type+function pair) per OpenThrottle task.
+4. **Feedback gate** after each task before the next move.
+
+## Overlap to resolve (task 2+)
+
+- **`@openthrottle/openthrottle-postgres`** already exports `getPostgresUrl()` (throws, no `env` param, no `OPENTHROTTLE_CORTEX_POSTGRES_URL` precedence). **`ai-mcp`** has `resolveCortexPostgresUrl(env)` with Cortex spawn precedence.
+- **Decision needed:** consolidate on agentic-utils as canonical, deprecate `openthrottle-postgres` duplicate, and align throw vs `undefined` semantics before mass shim updates.
 
 ## Installation
 
-Install with your preferred package manager (list pnpm first in this monorepo):
+**In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:*"` (already on root `package.json`).
 
 **pnpm:**
 
@@ -12,8 +88,4 @@ Install with your preferred package manager (list pnpm first in this monorepo):
 pnpm add @openthrottle/openthrottle-agentic-utils
 ```
 
-**npm:**
-
-```bash
-npm install @openthrottle/openthrottle-agentic-utils
-```
+Private workspace package; not published to the public registry.
