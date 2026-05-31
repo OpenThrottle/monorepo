@@ -104,7 +104,7 @@ export default function Component(
             </div>
           )
         ) : (
-          <NotesTable notes={notes} />
+          <NotesTable className="bg-card" notes={notes} />
         )}
       </div>
     </GlobalScreen>

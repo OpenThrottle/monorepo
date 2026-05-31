@@ -4,14 +4,14 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GetQueuesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroduction';
+import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues._index';
-import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -58,7 +58,7 @@ export default function Component(
   return (
     <GlobalScreen>
       <QueuesIntroduction />
-      <QueuesTable queues={queues} />
+      <QueuesTable className="bg-card" queues={queues} />
       <QueuesStats queues={queues} />
     </GlobalScreen>
   );

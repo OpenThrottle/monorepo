@@ -10,12 +10,14 @@ import {
   isWorkflowRunnerId,
   parseWorkflowRunnerId,
   readWorkflowDebugLevelFromEnv,
+} from '../workflow.js';
+import {
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
   WORKFLOW_RUNNER_IDS,
-} from '../workflow.js';
+} from '../../config/index.js';
 
 /** Temp dir without a workspace marker. */
 let emptyRoot: string;

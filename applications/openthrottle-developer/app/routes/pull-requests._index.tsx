@@ -153,6 +153,7 @@ export default function Component(
       <PullRequestsIntroduction />
       <PullRequestsToolbar filters={filters} />
       <PullRequestsTable
+        className="bg-card"
         filters={filters}
         listQuery={listQuery}
         pulls={pulls}

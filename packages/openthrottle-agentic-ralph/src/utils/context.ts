@@ -7,6 +7,7 @@
  * Queue orchestrators merge file + env via {@link mergePlanRunTuningWithWorkflowRalphConfig}
  * in `@tools/workflows` before calling {@link resolveWorkflowRunOptions}.
  */
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type { WorkflowContext } from '../types.js';
 import {
@@ -14,20 +15,23 @@ import {
   DEFAULT_MODEL,
   DEFAULT_PROMPT,
   DEFAULT_RUNNER,
-  type WorkflowRunner,
 } from '../config/index.js';
 
 /**
  * Known backend ids; aligned with tools/workflows / GraphQL.
  */
-const WORKFLOW_RUNNER_IDS = ['claude', 'cursor'] as const;
+const WORKFLOW_RUNNER_IDS: WorkflowConfigRunner[] = [
+  'claude',
+  'cursor',
+  'opencode',
+];
 
 /**
- * Maps GraphQL / queue job backend strings to {@link WorkflowRunner}.
+ * Maps GraphQL / queue job backend strings to {@link WorkflowConfigRunner}.
  */
 const resolveExecutionBackend = (
   raw: string | null | undefined,
-): WorkflowRunner => {
+): WorkflowConfigRunner => {
   if (raw == null || raw === '') {
     return DEFAULT_RUNNER;
   }
@@ -35,7 +39,7 @@ const resolveExecutionBackend = (
   const n = raw.trim().toLowerCase();
 
   if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
-    return n as unknown as WorkflowRunner;
+    return n as unknown as WorkflowConfigRunner;
   }
 
   return DEFAULT_RUNNER;

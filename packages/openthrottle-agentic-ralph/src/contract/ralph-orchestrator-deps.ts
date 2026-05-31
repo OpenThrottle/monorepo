@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import type { WorkflowRunner } from '../config/index.js';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @description Injectable GraphQL executor: same contract as `executeGraphqlV2` from
@@ -45,7 +45,7 @@ export interface WorkflowRalphIterationRunParams {
   readonly iteration: number;
   readonly model: string | undefined;
   readonly onChunk?: WorkflowRalphIterationOnChunk;
-  readonly runner: WorkflowRunner;
+  readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;
   readonly timeoutMs: number | undefined;

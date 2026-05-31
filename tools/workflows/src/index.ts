@@ -1,16 +1,4 @@
 export {
-  captureLoadAverage,
-  createEmptyPsiMetrics,
-  determinePressureLevel,
-  formatSystemCpuMetrics,
-} from './types/system-cpu-metrics';
-export type {
-  LoadAverageMetrics,
-  PsiCpuMetrics,
-  SystemCpuMetrics,
-  SystemCpuSnapshot,
-} from './types/system-cpu-metrics';
-export {
   characterizeWorkload,
   formatChildProcessMetrics,
   formatTaskRunMetricsDetailed,

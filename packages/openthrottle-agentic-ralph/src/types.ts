@@ -4,9 +4,8 @@ import type {
   WorkflowCorrelation,
   WorkflowRunResult as WorkflowRunResultBase,
   WorkflowOrchestrator as WorkflowOrchestratorBase,
+  WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-workflow';
-
-import type { WorkflowRunner } from './config/index.js';
 
 export type WorkflowFinishedReason =
   | 'agent_complete'
@@ -48,7 +47,7 @@ export interface WorkflowContext extends WorkflowConfig {
   readonly mode: 'plan' | 'task';
   readonly planId: string;
   readonly project: string | undefined;
-  readonly runner: WorkflowRunner;
+  readonly runner: WorkflowConfigRunner;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
   /**

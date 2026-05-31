@@ -7,7 +7,7 @@ import type {
   ChildProcessMetrics,
   WallClockMetrics,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type { SystemCpuMetrics } from '@tools/workflows';
+import type { SystemCpuMetrics } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** Process memory and CPU snapshot (units: MB for memory, ms for CPU). */
 export interface ProcessMetricsSnapshot {

@@ -39,6 +39,11 @@ export const formatPlanAndTasksForPrompt = (
       if (t.description?.trim()) {
         lines.push(`    ${t.description.trim().replace(/\n/g, ' ')}`);
       }
+
+      if (t.requirementsJson) {
+        const requirements = JSON.parse(t.requirementsJson);
+        lines.push(`    Requirements: ${requirements.join(', ')}`);
+      }
     }
   }
 

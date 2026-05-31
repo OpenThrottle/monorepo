@@ -16,8 +16,10 @@ const GITHUB_USERNAME_REGEX =
 
 function normalizeAssignee(value: string | null | undefined): string | null {
   if (value === null || value === undefined) return null;
+
   const trimmed = String(value).trim();
   if (trimmed === '') return null;
+
   return GITHUB_USERNAME_REGEX.test(trimmed) ? trimmed : null;
 }
 
@@ -34,6 +36,7 @@ function buildPlanEmbeddingContent(
     plan.author,
     plan.category,
   ];
+
   return parts.filter(Boolean).join('\n');
 }
 
@@ -80,8 +83,7 @@ export class PlanCreationService {
     const assignee = normalizeAssignee(input.assignee ?? null);
 
     const parsedRunConfig = parsePlanRunConfigJson(input.runConfigJson);
-    const runConfig =
-      parsedRunConfig ?? getDefaultPlanRunConfigStorage();
+    const runConfig = parsedRunConfig ?? getDefaultPlanRunConfigStorage();
 
     const repo = this.plansService.getRepository();
     const entity = repo.create({

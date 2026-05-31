@@ -4,6 +4,7 @@
  * env and `.workflow-ralph.json` in the child cwd still apply (CLI > env > file > built-ins).
  */
 
+import { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
 import type { RalphExecutionBackendId } from './ralph-execution-backend';
 import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
 import {
@@ -182,14 +183,14 @@ export const buildWorkflowRalphRunTuningArgv = (
  */
 export const mergeRalphNestedRunTuningWithExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-  executionBackend: RalphExecutionBackendId | undefined,
+  executionBackend: WorkflowRunnerId | undefined,
 ): RalphNestedRunTuningInput => {
   const base = ralph ?? {};
-  const backend =
-    base.backend != null
-      ? base.backend
-      : (executionBackend ?? DEFAULT_RALPH_RUNNER);
+
+  const hasBackend = base.backend != null;
+  const backend = hasBackend ? base.backend : (executionBackend ?? 'cursor');
   const debug = normalizeRalphNestedDebugCli(base.debug);
+
   return {
     ...base,
     backend,

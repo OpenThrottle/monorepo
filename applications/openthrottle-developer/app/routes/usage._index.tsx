@@ -3,7 +3,6 @@ import { DashboardDailyStatsCard } from '~/routing/dashboard/components/Dashboar
 import { GetUsageDailyStatsDocument } from '~/__generated__/graphql';
 import {
   GlobalErrorBoundary,
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -79,8 +78,7 @@ export default function Component(
       <UsageIntroduction rangeDays={rangeDays} />
       <UsageOverview rangeDays={rangeDays} />
       <div data-testid="UsageDailyActivity">
-        <GlobalHeading className="text-lg" title="Daily activity" />
-        <DashboardDailyStatsCard className="mt-8" dailyStats={dailyStats} />
+        <DashboardDailyStatsCard className="my-4" dailyStats={dailyStats} />
       </div>
       <UsageDailyActivityOverview rangeDays={rangeDays} />
       <UsageAnalyticsGaps />

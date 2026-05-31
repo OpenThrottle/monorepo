@@ -367,11 +367,13 @@ export const createWorkflowRalphOrchestrator = (
             });
 
             if (lifecycleDispatcher && !isTaskCentric) {
-              const completedTask = (
-                await executeGraphqlV2(GetTasksByPlanIdDocument, {
-                  input: { planId: effectivePlanId },
-                })
-              ).tasksByPlanId.find((t) => t.id.toLowerCase() === taskId);
+              const tasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
+                input: { planId: effectivePlanId },
+              });
+
+              const completedTask = tasks.tasksByPlanId.find(
+                (t) => t.id.toLowerCase() === taskId,
+              );
 
               if (completedTask) {
                 await lifecycleDispatcher.runTask({

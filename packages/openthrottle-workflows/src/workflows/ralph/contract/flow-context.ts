@@ -43,8 +43,10 @@
  * worker uses env + `.workflow-ralph.json` in the worktree cwd (CLI > env > file > built-ins).
  */
 
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 /** @description Default `--backend` for workflow-ralph; aligned with `tools/workflows` / UI. */
-export const DEFAULT_RALPH_RUNNER = 'cursor';
+export const DEFAULT_RALPH_RUNNER: WorkflowConfigRunner = 'cursor';
 
 /** @description Default `--prompt` path fragment. */
 export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
@@ -54,12 +56,6 @@ export const DEFAULT_RALPH_ITERATIONS = 10;
 
 /** @description Default `--model` when unset or `auto`. */
 export const DEFAULT_RALPH_MODEL = 'auto';
-
-/**
- * @description Execution backend id for `--backend`; keep aligned with `workflow-ralph --backend`
- * and {@link DEFAULT_RALPH_RUNNER}.
- */
-export type WorkflowRunner = 'claude' | 'cursor';
 
 export type WorkflowMode = 'plan' | 'task';
 
@@ -87,7 +83,7 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly planId: string;
   readonly project: string | undefined;
   readonly prompt: string;
-  readonly runner: WorkflowRunner;
+  readonly runner: WorkflowConfigRunner;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
   readonly worktree: string | undefined;

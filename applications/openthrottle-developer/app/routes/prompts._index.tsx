@@ -153,7 +153,11 @@ export default function Component(
           sortOrder={sortOrder}
           types={types}
         />
-        <PromptsTable prompts={prompts} search={search ?? undefined} />
+        <PromptsTable
+          className="bg-card"
+          prompts={prompts}
+          search={search ?? undefined}
+        />
         <OpenThrottlePagination
           basePath="/prompts"
           className="mt-8"
