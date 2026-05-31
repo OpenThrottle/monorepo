@@ -24,17 +24,13 @@ export interface WorkflowConfig {
  * `queueName`) so aggregators can join with queue metrics such as {@link WORKFLOW_EVENT}.
  */
 export interface WorkflowCorrelation {
-  /**
-   * Primary key for cross-service correlation (often a BullMQ job id or generated run id).
-   */
+  /** Primary key for cross-service correlation (often a BullMQ job id or generated run id). */
   readonly correlationId: string;
-  /**
-   * Queue-backed job identifier when applicable (may match {@link WorkflowCorrelation.correlationId}).
-   */
+
+  /** Queue-backed job identifier when applicable (may match {@link WorkflowCorrelation.correlationId}). */
   readonly queueJobId?: string;
-  /**
-   * Logical queue name (e.g. BullMQ queue name) for log filtering.
-   */
+
+  /** Logical queue name (e.g. BullMQ queue name) for log filtering. */
   readonly queueName?: string;
 }
 
@@ -60,6 +56,7 @@ export interface WorkflowExecutionHooks {
    * implementations should forward this to each iteration and honor cancellation between steps.
    */
   readonly abortSignal?: AbortSignal;
+
   /**
    * Optional tracing metadata for structured logging; must not encode plan/task identifiers.
    */

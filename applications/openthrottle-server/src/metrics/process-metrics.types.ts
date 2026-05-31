@@ -35,7 +35,7 @@ export interface TaskRunMetrics {
  *
  * - childProcessMetrics: peak/avg CPU%, peak/avg RSS from pidusage polling of spawned processes
  * - wallClockMetrics: wall-clock duration vs CPU time (ratio, interpretation for CPU/IO bound)
- * - systemCpuMetrics: system load average and Linux PSI pressure data
+ * - f: system load average and Linux PSI pressure data
  */
 export interface EnhancedTaskRunMetrics extends TaskRunMetrics {
   /** Child process CPU/memory metrics from pidusage polling (if available). */

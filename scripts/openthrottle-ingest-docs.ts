@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import { readFile, readdir } from 'node:fs/promises';
 import { access } from 'node:fs/promises';
-import { join } from 'node:path';
 import { Client } from 'pg';
 import { createProjectGraphAsync } from '@nx/devkit';
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { join } from 'node:path';
+import { readFile, readdir } from 'node:fs/promises';
 
 /* eslint-disable no-await-in-loop */
 
@@ -51,8 +51,8 @@ export async function getProjectRootsFromGraph(): Promise<ProjectRootEntry[]> {
 }
 
 export interface DocEntry {
-  readonly path: string;
   readonly absolutePath: string;
+  readonly path: string;
 }
 
 /** Prefix for documentation path for NX project READMEs (stable, distinct from docs/). */
@@ -150,7 +150,7 @@ async function collectMdPaths(
 ): Promise<string[]> {
   const out: string[] = [];
 
-  let entries: { name: string; isFile: () => boolean }[];
+  let entries: { isFile: () => boolean; name: string }[];
 
   try {
     entries = await readdir(dir, { withFileTypes: true });
@@ -172,7 +172,7 @@ async function collectMdPaths(
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getPostgresConfig();
+  const url = getPostgresUrl();
 
   const repo = process.env.DOCS_REPO?.trim() ?? 'local/repo';
   const sha = process.env.DOCS_SHA?.trim() ?? 'local';
@@ -247,7 +247,7 @@ async function main(): Promise<void> {
     embeddings = new OpenAIEmbeddings({ model: 'text-embedding-3-small' });
   }
 
-  const client = new Client({ connectionString });
+  const client = new Client({ connectionString: url });
   await client.connect();
 
   let docsUpserted = 0;

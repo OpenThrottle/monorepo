@@ -7,7 +7,6 @@
  * {@link ensureDatabaseReachableOrExit} for a single fail-fast flow.
  */
 
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   appendPlanOutputGraphql,
@@ -56,6 +55,7 @@ import {
   taskRequirementsFromRow,
 } from './cortex-ralph-types';
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 export type {
   CommitLinkInput,
@@ -102,9 +102,10 @@ export const resolveWorkflowRalphConfig = (): WorkflowRalphConfig | null => {
 
   if (transport === 'postgres-direct') {
     try {
-      const postgres = getPostgresConfig();
+      const connectionString = getPostgresUrl();
+
       return {
-        connectionString: postgres.connectionString,
+        connectionString,
         transport: 'postgres-direct',
       };
     } catch {

@@ -58,6 +58,7 @@ export interface LifecycleHooksChildJobsOptions {
    * {@link lifecycleHooksChildJobs} is set (e.g. from {@link loadWorkflowRalphConfig} in `@tools/workflows`).
    */
   readonly env?: NodeJS.ProcessEnv;
+
   /**
    * Resolved flag from file + env merge. When set, takes precedence over
    * `OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS` alone.

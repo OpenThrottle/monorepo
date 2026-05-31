@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
-import { readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
 import { Client } from 'pg';
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
-import {
-  embedQuery,
-  isOllamaEmbeddingConfigured,
-} from '@openthrottle/ai-mcp/src/embedding';
+import { embedQuery } from '@openthrottle/ai-mcp/src/embedding';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { isOllamaEmbeddingConfigured } from '@openthrottle/ai-mcp/src/ollama-embedding';
+import { join } from 'node:path';
+import { readFile, readdir } from 'node:fs/promises';
 
 /* eslint-disable no-await-in-loop */
 
@@ -78,7 +76,7 @@ function isValidPlanJson(value: unknown): value is PlanJson {
  * @description Returns subdir names under PLANS_ROOT excluding TEMPLATES_DIR, plus '' for root.
  */
 async function getPlanSubdirs(): Promise<string[]> {
-  let entries: { name: string; isDirectory: () => boolean }[];
+  let entries: { isDirectory: () => boolean; name: string }[];
   try {
     entries = await readdir(PLANS_ROOT, { withFileTypes: true });
   } catch {
@@ -94,9 +92,9 @@ async function getPlanSubdirs(): Promise<string[]> {
 }
 
 async function collectPlanJsonPaths(): Promise<
-  { relativePath: string; absolutePath: string }[]
+  { absolutePath: string; relativePath: string }[]
 > {
-  const out: { relativePath: string; absolutePath: string }[] = [];
+  const out: { absolutePath: string; relativePath: string }[] = [];
 
   const subdirs = await getPlanSubdirs();
   for (const sub of subdirs) {
@@ -233,9 +231,9 @@ function chunkTextForEmbedding(text: string): string[] {
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getPostgresConfig();
-
+  const connectionString = getPostgresUrl();
   const planPaths = await collectPlanJsonPaths();
+
   console.log(`Found ${planPaths.length} plan JSON file(s).`);
 
   const hasEmbeddings =
