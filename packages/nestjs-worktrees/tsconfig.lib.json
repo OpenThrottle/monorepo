@@ -18,6 +18,9 @@
       "path": "../ai-mcp/tsconfig.lib.json"
     },
     {
+      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {
