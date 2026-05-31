@@ -15,12 +15,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Module layout (proposed)
 
-| Module file (proposed)  | Placeholder today  | Intended utilities                                                                                                                  |
-| ----------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/postgres.ts` | `postgres.ts`      | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
-| `src/utils/workflow.ts` | `workflow.ts`      | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
-| `src/utils/nodejs.ts`   | `nodejs.ts`        | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                       |
-| `src/utils/metrics.ts`  | `utils.metrics.ts` | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
+| Module file (proposed)  | Placeholder today | Intended utilities                                                                                                                  |
+| ----------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/postgres.ts` | `postgres.ts`     | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
+| `src/utils/workflow.ts` | `workflow.ts`     | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
+| `src/utils/nodejs.ts`   | `nodejs.ts`       | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                       |
+| `src/utils/metrics.ts`  | `metrics.ts`      | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
 
 **Barrel:** `src/index.ts` re-exports all public symbols (same pattern as `openthrottle-agentic-workflow`).
 
@@ -118,6 +118,13 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`parseWorkflowRunnerId`**, **`isWorkflowRunnerId`**, **`WORKFLOW_RUNNER_IDS`**, **`DEFAULT_WORKFLOW_RUNNER`**, and **`WORKFLOW_RALPH_BACKEND_ENV`** in `src/utils/workflow.ts` are canonical: normalize `cursor` | `claude` from CLI, env, or `.workflow-ralph.json`; throw on empty or unknown ids.
 - **`@tools/workflows`** `ralph-execution-backend.ts` re-exports deprecated `parseRalphExecutionBackendId`, `RALPH_EXECUTION_BACKEND_IDS`, `DEFAULT_RALPH_RUNNER`, and `isRalphExecutionBackendId` shims.
 - **`@tools/workflows`** barrel re-exports canonical symbols from this package.
+
+## Overlap resolved (task 11)
+
+- **`createWallClockMetrics`** and **`WallClockMetrics`** in `src/utils/metrics.ts` are canonical: pure wall-clock vs CPU time computation from timestamps and CPU usage deltas; zero runtime dependencies.
+- **`interpretation`** enum values: `cpu_bound` | `mixed` | `io_bound` | `idle` (ratio thresholds: ≤1.5, ≤5, >5, zero CPU).
+- **`@tools/workflows`** `wall-clock-metrics.ts` re-exports `createWallClockMetrics` and `WallClockMetrics` from this package; `formatWallClockMetrics` remains in workflows until the next task.
+- **`@tools/workflows`** barrel re-exports `createWallClockMetrics` and `WallClockMetrics` from this package.
 
 ## Installation
 

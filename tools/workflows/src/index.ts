@@ -1,5 +1,6 @@
 export { DEFAULT_POLL_INTERVAL_MS } from './types/child-process-metrics';
 export {
+  createWallClockMetrics,
   ensurePostgresReachable,
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
@@ -42,11 +43,8 @@ export type {
   SystemCpuMetrics,
   SystemCpuSnapshot,
 } from './types/system-cpu-metrics';
-export {
-  createWallClockMetrics,
-  formatWallClockMetrics,
-} from './types/wall-clock-metrics';
-export type { WallClockMetrics } from './types/wall-clock-metrics';
+export type { WallClockMetrics } from '@openthrottle/openthrottle-agentic-utils';
+export { formatWallClockMetrics } from './types/wall-clock-metrics';
 export {
   characterizeWorkload,
   formatChildProcessMetrics,
