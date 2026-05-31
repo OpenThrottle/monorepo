@@ -13,6 +13,7 @@ export {
   isWorkflowRunnerId,
   parseWorkflowRunnerId,
   resolveOpenThrottleBinDir,
+  formatWallClockMetrics,
   sanitizePostgresUrlForLogs,
   WORKFLOW_RALPH_BACKEND_ENV,
   WORKFLOW_RUNNER_IDS,
@@ -44,7 +45,6 @@ export type {
   SystemCpuSnapshot,
 } from './types/system-cpu-metrics';
 export type { WallClockMetrics } from '@openthrottle/openthrottle-agentic-utils';
-export { formatWallClockMetrics } from './types/wall-clock-metrics';
 export {
   characterizeWorkload,
   formatChildProcessMetrics,

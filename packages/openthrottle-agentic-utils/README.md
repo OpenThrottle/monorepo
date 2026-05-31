@@ -75,8 +75,8 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Overlap resolved (task 2)
 
-- **`getPostgresUrl`** in `src/utils/postgres.ts` is canonical: `OPENTHROTTLE_CORTEX_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*`; returns `undefined` when incomplete.
-- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveCortexPostgresConnectionStringFromEnv` shim; `getPostgresConfig()` still throws when URL is missing.
+- **`getPostgresUrl`** in `src/utils/postgres.ts` is canonical: `OPENTHROTTLE_CORTEX_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*`; **throws** when incomplete (`POSTGRES_URL_MISSING_ERROR`).
+- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveCortexPostgresConnectionStringFromEnv` shim (returns `undefined` on missing env for optional spawn paths); `getPostgresConfig()` delegates to `getPostgresUrl()`.
 - **`@tools/workflows`** re-exports `getPostgresUrl` and `OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV` from this package.
 - **`@openthrottle/openthrottle-postgres`** duplicate remains; deprecate in a later task.
 
@@ -123,8 +123,15 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 - **`createWallClockMetrics`** and **`WallClockMetrics`** in `src/utils/metrics.ts` are canonical: pure wall-clock vs CPU time computation from timestamps and CPU usage deltas; zero runtime dependencies.
 - **`interpretation`** enum values: `cpu_bound` | `mixed` | `io_bound` | `idle` (ratio thresholds: ≤1.5, ≤5, >5, zero CPU).
-- **`@tools/workflows`** `wall-clock-metrics.ts` re-exports `createWallClockMetrics` and `WallClockMetrics` from this package; `formatWallClockMetrics` remains in workflows until the next task.
+- **`@tools/workflows`** `wall-clock-metrics.ts` re-exports `createWallClockMetrics` and `WallClockMetrics` from this package.
 - **`@tools/workflows`** barrel re-exports `createWallClockMetrics` and `WallClockMetrics` from this package.
+
+## Overlap resolved (task 12)
+
+- **`formatWallClockMetrics`** in `src/utils/metrics.ts` is canonical: one-line log summary for {@link WallClockMetrics}; zero runtime dependencies.
+- Log line format: `Wall clock: {s}s, CPU: {s}s (user: {s}s, sys: {s}s), ratio: {ratio}x ({interpretation})` — infinity ratio renders as `∞`.
+- **`@tools/workflows`** `wall-clock-metrics.ts` re-exports `formatWallClockMetrics` from this package.
+- **`@tools/workflows`** barrel re-exports `formatWallClockMetrics` from this package.
 
 ## Installation
 
