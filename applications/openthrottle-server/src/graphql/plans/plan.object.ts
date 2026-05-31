@@ -48,8 +48,7 @@ export class PlanObject implements PlanData {
   summary!: string | null;
 
   @Field(() => Int, {
-    description:
-      'Number of tasks belonging to this plan. Resolved from tasks table.',
+    description: `Number of tasks belonging to this plan. Resolved from tasks table.`,
   })
   taskCount?: number;
 
@@ -79,10 +78,9 @@ export class PlanRunObject implements PlanRunData {
   createdAt!: Date;
 
   @Field(() => String, {
-    description:
-      'Execution backend selected once for the whole run: cursor or claude.',
+    description: `Execution backend selected once for the whole run: cursor or claude.`,
   })
-  executionBackend!: 'claude' | 'cursor';
+  executionBackend!: 'claude' | 'cursor' | 'opencode';
 
   @Field(() => String)
   id!: string;
@@ -94,8 +92,7 @@ export class PlanRunObject implements PlanRunData {
   queueName!: string;
 
   @Field(() => String, {
-    description:
-      'Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.',
+    description: `Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.`,
     nullable: true,
   })
   runConfigSnapshotJson!: string | null;
@@ -126,10 +123,9 @@ export class ListPlansByStatusResultObject {
 @ObjectType()
 export class EnqueuePlanRunResultObject {
   @Field(() => String, {
-    description:
-      'Execution backend selected once for the whole run: cursor or claude.',
+    description: `Execution backend selected once for the whole run: cursor or claude.`,
   })
-  executionBackend!: 'claude' | 'cursor';
+  executionBackend!: 'claude' | 'cursor' | 'opencode';
 
   @Field(() => String, { description: 'BullMQ job id' })
   jobId!: string;
@@ -138,14 +134,12 @@ export class EnqueuePlanRunResultObject {
   planId!: string;
 
   @Field(() => Int, {
-    description:
-      'Position of this job in the waiting queue (1-based). E.g., 1 means next to be processed.',
+    description: `Position of this job in the waiting queue (1-based). E.g., 1 means next to be processed.`,
   })
   queuePosition!: number;
 
   @Field(() => Int, {
-    description:
-      'Total number of jobs waiting in the queue (including this one).',
+    description: `Total number of jobs waiting in the queue (including this one).`,
   })
   queueTotal!: number;
 }
@@ -154,26 +148,22 @@ export class EnqueuePlanRunResultObject {
 @ObjectType()
 export class CancelPlanRunResultObject {
   @Field(() => [String], {
-    description:
-      'BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan.',
+    description: `BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan.`,
   })
   activeJobIdsCouldNotCancel!: string[];
 
   @Field(() => Boolean, {
-    description:
-      'True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.',
+    description: `True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.`,
   })
   signaledActiveRunToStop!: boolean;
 
   @Field(() => Boolean, {
-    description:
-      'True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.',
+    description: `True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state.`,
   })
   noMatchingJob!: boolean;
 
   @Field(() => String, {
-    description:
-      'Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied.',
+    description: `Plan status after cancel when a queued job was removed or an active run was signaled to stop (typically PENDING). Null when neither applied.`,
     nullable: true,
   })
   planStatusAfter!: string | null;
@@ -182,8 +172,7 @@ export class CancelPlanRunResultObject {
   planId!: string;
 
   @Field(() => [String], {
-    description:
-      'BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).',
+    description: `BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized).`,
   })
   removedJobIds!: string[];
 }

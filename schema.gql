@@ -241,7 +241,7 @@ type EnqueuePlanRunResultObject {
 
 type CancelPlanRunResultObject {
   """
-  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan.
+  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan.
   """
   activeJobIdsCouldNotCancel: [String!]!
 

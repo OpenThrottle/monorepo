@@ -3,7 +3,7 @@
  * Used to model and expose availability of worktree targets for Ralph loops.
  */
 
-import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 import type { RalphNestedDebugCli } from '../utils/workflow-ralph-nested-argv';
 import type {
   ChildProcessMetrics,
@@ -122,11 +122,11 @@ export type ChildJobStreamChunk =
 /** Input for the child job: run Ralph loop in the worktree and return branch + SHA. */
 export interface ChildJobInput {
   /**
-   * Execution backend (layer 2). One of {@link RalphExecutionBackendId} (`cursor` | `claude`); the
+   * Execution backend (layer 2). One of {@link WorkflowConfigRunner} (`cursor` | `claude`); the
    * same id applies to the entire nested run, not per iteration. Omitted uses workflow-ralph
    * default (`cursor`). Passed as `--backend` when not the default.
    */
-  readonly backend?: RalphExecutionBackendId;
+  readonly backend?: WorkflowConfigRunner;
   /**
    * When set, nested `workflow-ralph` and parent-side Cortex checks use this URL (e.g. TypeORM `url`
    * from openthrottle-server) so foreign `cwd` cannot desync Postgres identity from the API worker.

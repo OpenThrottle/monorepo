@@ -1,49 +1,50 @@
 /**
- * @description Maps and validates GraphQL `ralph` enqueue options into {@link RalphNestedRunTuningInput}
+ * Maps and validates GraphQL `ralph` enqueue options into {@link RalphNestedRunTuningInput}
  * for BullMQ spawn payloads (nested `workflow-ralph` argv). Orchestrator jobs use
  * `RunPlanOrchestratorJobData` and are built elsewhere when the enqueue API supports them.
  */
 
 import { existsSync, statSync } from 'fs';
 import { isAbsolute } from 'path';
-import type {
-  ChildJobInput,
-  RalphNestedRunTuningInput,
-} from '@tools/workflows';
-import { normalizeRalphNestedDebugCli } from '@tools/workflows';
-import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
-import {
-  DEFAULT_WORKFLOW_RUNNER,
-  parseWorkflowRunnerId,
-} from '@openthrottle/openthrottle-agentic-utils';
-import type {
-  RunPlanOrchestratorJobData,
-  RunPlanSpawnJobData,
-} from '../../queues/plans/plans.types';
-import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
 import {
   jobRunHooksForJobPayload,
   resolveJobRunHooksForEnqueue,
 } from './enqueue-plan-job-run-hooks';
+import { normalizeRalphNestedDebugCli } from '@tools/workflows';
+import { parseWorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import type {
+  ChildJobInput,
+  RalphNestedRunTuningInput,
+} from '@tools/workflows';
+import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
 import type { RalphPlanRunTuningInput } from './plan.input';
+import type {
+  RunPlanOrchestratorJobData,
+  RunPlanSpawnJobData,
+} from '../../queues/plans/plans.types';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 
-/** @description RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`. */
+/**
+ * RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`.
+ */
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
- * @description Default run kind for queued plan runs. `orchestrator` (in-process GraphQL orchestrator,
+ * Default run kind for queued plan runs. `orchestrator` (in-process GraphQL orchestrator,
  * dispatched through the AgenticWorkflowBase registry) is the default; `spawn` (nested `workflow-ralph`)
  * is the explicit legacy opt-in. Stage (a) rollback: set `OPENTHROTTLE_DEFAULT_RUN_KIND=spawn` to revert
  * the default to spawn without code changes; the spawn path code remains intact.
  */
 export type PlanRunKind = 'orchestrator' | 'spawn';
 
-/** @description The orchestrator-by-default value when the env override is unset/invalid. */
+/**
+ * The orchestrator-by-default value when the env override is unset/invalid.
+ */
 export const DEFAULT_PLAN_RUN_KIND: PlanRunKind = 'orchestrator';
 
 /**
- * @description Resolves the default {@link PlanRunKind} for queued runs from
+ * Resolves the default {@link PlanRunKind} for queued runs from
  * `OPENTHROTTLE_DEFAULT_RUN_KIND`. Returns {@link DEFAULT_PLAN_RUN_KIND} (`orchestrator`) unless the env
  * is explicitly `spawn` (case-insensitive). Any other value falls back to the orchestrator default.
  */
@@ -54,24 +55,30 @@ export const resolveDefaultPlanRunKind = (): PlanRunKind => {
 };
 
 /**
- * @description Returns true when `value` is a plausible Cortex plan/task UUID.
+ * Returns true when `value` is a plausible Cortex plan/task UUID.
  */
 const isCortexPlanTaskUuid = (value: string): boolean =>
   UUID_REGEX.test(value.trim());
 
-/** @description Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph. */
+/**
+ * Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph.
+ */
 const MAX_ITERATIONS = 1_000_000;
 
-/** @description One week in seconds — generous cap for per-iteration timeout. */
+/**
+ * One week in seconds — generous cap for per-iteration timeout.
+ */
 const MAX_ITERATION_TIMEOUT_SECONDS = 7 * 24 * 3600;
 
 const MAX_TUNING_STRING_LEN = 8192;
 
-/** @description Max path length for workingDirectory (prevents abuse). */
+/**
+ * Max path length for workingDirectory (prevents abuse).
+ */
 const MAX_WORKING_DIRECTORY_LEN = 4096;
 
 /**
- * @description Optional allowlist of directory prefixes from `OPENTHROTTLE_ALLOWED_WORKING_DIRS`.
+ * Optional allowlist of directory prefixes from `OPENTHROTTLE_ALLOWED_WORKING_DIRS`.
  * Comma-separated absolute paths; when set, workingDirectory must start with one of them.
  * When unset (default), any existing directory is accepted (local-only trust boundary).
  */
@@ -85,7 +92,7 @@ const getAllowedWorkingDirPrefixes = (): readonly string[] => {
 };
 
 /**
- * @description Validates and normalizes an optional workingDirectory from GraphQL input.
+ * Validates and normalizes an optional workingDirectory from GraphQL input.
  * Returns the trimmed path or `undefined` when omitted. Throws on invalid input.
  */
 export const validateWorkingDirectory = (
@@ -140,7 +147,7 @@ export const validateWorkingDirectory = (
 };
 
 /**
- * @description Trims and caps string tuning fields; returns undefined if empty after trim.
+ * Trims and caps string tuning fields; returns undefined if empty after trim.
  */
 const normalizeOptionalString = (
   value: string | null | undefined,
@@ -172,13 +179,14 @@ type ChildJobRalphTuning = Pick<
 >;
 
 /**
- * @description Strips `null` from {@link RalphNestedRunTuningInput} so spreads satisfy {@link ChildJobInput}.
+ * Strips `null` from {@link RalphNestedRunTuningInput} so spreads satisfy {@link ChildJobInput}.
  */
 export const ralphTuningForChildJob = (
   r: RalphNestedRunTuningInput | undefined,
 ): ChildJobRalphTuning => {
   if (!r) return {};
   const ralphDebugCli = normalizeRalphNestedDebugCli(r.debug);
+
   return {
     ...(r.backend != null ? { backend: r.backend } : {}),
     ...(ralphDebugCli !== undefined ? { ralphDebugCli } : {}),
@@ -201,7 +209,7 @@ export const ralphTuningForChildJob = (
 };
 
 /**
- * @description Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
+ * Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
  * @throws Error when values are out of range or backend is unknown.
  */
 export const parseEnqueueRalphTuning = (
@@ -277,14 +285,14 @@ export const parseEnqueueRalphTuning = (
 };
 
 /**
- * @description Resolves the execution backend persisted for the plan run. GraphQL omission falls back to the workflow-ralph default.
+ * Resolves the execution backend persisted for the plan run. GraphQL omission falls back to the workflow-ralph default.
  */
 const resolvePlanRunExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-): WorkflowRunnerId => ralph?.backend ?? DEFAULT_WORKFLOW_RUNNER;
+): WorkflowConfigRunner => ralph?.backend ?? 'cursor';
 
 /**
- * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
+ * Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).
  */
 export const buildRunPlanJobData = (input: {
   readonly jobRunHooksJson?: string | null;
@@ -314,7 +322,7 @@ export const buildRunPlanJobData = (input: {
 };
 
 /**
- * @description Builds {@link RunPlanOrchestratorJobData} for in-process Ralph (plans queue, `run-plan-orchestrator`).
+ * Builds {@link RunPlanOrchestratorJobData} for in-process Ralph (plans queue, `run-plan-orchestrator`).
  * @throws Error when ids are invalid or task mode constraints fail.
  */
 export const buildRunPlanOrchestratorJobData = (input: {

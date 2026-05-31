@@ -6,12 +6,12 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   JobRunHooksConfig,
-  RalphExecutionBackendId,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 import type { RunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
 import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 
 export type { RunPlanOrchestratorJobData };
 export { isRunPlanOrchestratorJobData };
@@ -46,7 +46,7 @@ export interface RunPlanSpawnJobData {
   /**
    * Execution backend selected once for this run. Optional only for previously persisted BullMQ jobs.
    */
-  readonly executionBackend?: RalphExecutionBackendId;
+  readonly executionBackend?: WorkflowConfigRunner;
   /**
    * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
    */

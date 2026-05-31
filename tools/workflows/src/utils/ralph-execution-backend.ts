@@ -10,17 +10,23 @@ import {
   isWorkflowRunnerId,
   parseWorkflowRunnerId,
   WORKFLOW_RUNNER_IDS,
-  type WorkflowRunnerId,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 
-/** @deprecated Import {@link WORKFLOW_RUNNER_IDS} from `@openthrottle/openthrottle-agentic-utils` instead. */
+/**
+ * @deprecated Import {@link WORKFLOW_RUNNER_IDS} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
 export const RALPH_EXECUTION_BACKEND_IDS = WORKFLOW_RUNNER_IDS;
 
-/** @deprecated Import {@link WorkflowRunnerId} from `@openthrottle/openthrottle-agentic-utils` instead. */
-export type RalphExecutionBackendId = WorkflowRunnerId;
+/**
+ * @deprecated Import {@link WorkflowConfigRunner} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
+export type RalphExecutionBackendId = WorkflowConfigRunner;
 
-/** @deprecated Import {@link DEFAULT_WORKFLOW_RUNNER} from `@openthrottle/openthrottle-agentic-utils` instead. */
-export const DEFAULT_RALPH_RUNNER: RalphExecutionBackendId =
+/**
+ * @deprecated Import {@link DEFAULT_WORKFLOW_RUNNER} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
+export const DEFAULT_RALPH_RUNNER: WorkflowConfigRunner =
   DEFAULT_WORKFLOW_RUNNER;
 
 /**

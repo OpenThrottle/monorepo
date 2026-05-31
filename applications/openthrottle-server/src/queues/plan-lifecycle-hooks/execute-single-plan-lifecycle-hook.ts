@@ -9,7 +9,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-workflows';
-import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
   buildJobRunHookAgentPrompt,
   createCursorWorkflowRalphIterationRunner,
@@ -67,7 +67,7 @@ const runKindFromJobData = (jobData: RunPlanJobData): JobRunHookRunKind =>
 
 const executionBackendFromJobData = (
   jobData: RunPlanJobData,
-): WorkflowRunnerId => {
+): WorkflowConfigRunner => {
   const merged = mergeRalphNestedRunTuningWithExecutionBackend(
     jobData.ralph,
     jobData.executionBackend,

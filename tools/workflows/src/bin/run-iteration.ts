@@ -1,6 +1,6 @@
 /**
  * @description Single-iteration runner for Ralph (sync and async). Injected by ralph.ts so tests can mock it.
- * Dispatches to a {@link RalphExecutionBackendId} implementation: `cursor` (Cursor `cursor-agent`) and
+ * Dispatches to a {@link WorkflowConfigRunner} implementation: `cursor` (Cursor `cursor-agent`) and
  * `claude` (Anthropic Claude Code CLI, `claude --bare -p …` — see code.claude.com headless docs).
  */
 
@@ -8,13 +8,13 @@ import { spawn } from 'child_process';
 import { spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
-import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
 import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import {
   appendRalphWorktreeShellFlags,
   type RalphWorktreeCliOptions,
 } from '../utils/ralph-worktree-cli';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** Chunk from runner stdout or stderr when using async spawn. */
 export interface CursorAgentChunk {
@@ -26,7 +26,7 @@ export interface RunIterationConfig {
   /** Full prompt for the runner (e.g. Cursor `-p`); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
   agentPrompt: string;
   /** @description Execution backend; defaults to {@link DEFAULT_RALPH_RUNNER}. */
-  backend?: RalphExecutionBackendId;
+  backend?: WorkflowConfigRunner;
   /**
    * @description Process cwd for the runner subprocess. When omitted, inherits `process.cwd()`
    * (e.g. foreign `workingDirectory` from BullMQ spawn or orchestrator).
@@ -53,12 +53,17 @@ export interface RunIterationConfig {
 /** Grace period in ms after SIGTERM before sending SIGKILL (runner child). */
 const SIGKILL_GRACE_MS = 10_000;
 
-const backendIterationLabel = (backend: RalphExecutionBackendId): string => {
+const backendIterationLabel = (backend: WorkflowConfigRunner): string => {
   switch (backend) {
     case 'claude':
       return 'claude-code';
+
     case 'cursor':
       return 'cursor-agent';
+
+    case 'opencode':
+      return 'opencode';
+
     default: {
       const _exhaustive: never = backend;
       return _exhaustive;

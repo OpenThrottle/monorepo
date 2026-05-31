@@ -4,7 +4,7 @@
  * Loader merge and env mapping: {@link loadWorkflowRalphConfig} in `load-workflow-ralph-config.ts`.
  */
 
-import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend.js';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { WorkflowRalphTransport } from '../utils/workflow-transport.js';
 
 /** @description Debug shim level aligned with {@link WorkflowDebug} in openthrottle-workflows. */
@@ -28,7 +28,7 @@ export interface WorkflowRalphDefaultsDiagnosticsJson {
  * in `ralph-runtime-config.ts` (run tuning only today).
  */
 export interface WorkflowRalphDefaultsFileV1Json {
-  readonly backend?: RalphExecutionBackendId;
+  readonly backend?: WorkflowConfigRunner;
   readonly debug?: WorkflowRalphDefaultsDebug;
   readonly diagnostics?: WorkflowRalphDefaultsDiagnosticsJson;
   readonly iterationTimeout?: number;

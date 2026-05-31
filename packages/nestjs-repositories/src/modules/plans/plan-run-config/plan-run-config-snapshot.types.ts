@@ -4,11 +4,9 @@
  */
 
 import type { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants';
-import type {
-  PlanRunConfigExecutionBackend,
-  PlanRunConfigTargetMode,
-} from './plan-run-config-storage.types';
 import type { PlanJobRunHooksStorage } from '../plan.entity';
+import type { PlanRunConfigTargetMode } from './plan-run-config-storage.types';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
 
@@ -17,7 +15,7 @@ export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
  */
 export interface PlanRunConfigSnapshotRalphV1 {
   readonly debug?: PlanRunConfigSnapshotDebugCli;
-  readonly executionBackend: PlanRunConfigExecutionBackend;
+  readonly executionBackend: WorkflowConfigRunner;
   readonly iterationTimeoutSeconds?: number;
   readonly iterations?: number;
   readonly model?: string;
@@ -48,7 +46,7 @@ export type PlanRunConfigSnapshot = PlanRunConfigSnapshotV1;
  * @description Input for building a snapshot from validated BullMQ job data at enqueue.
  */
 export interface BuildPlanRunConfigSnapshotInput {
-  readonly executionBackend: PlanRunConfigExecutionBackend;
+  readonly executionBackend: WorkflowConfigRunner;
   readonly jobRunHooks?: PlanJobRunHooksStorage | null;
   readonly mode?: PlanRunConfigTargetMode | null;
   readonly ralph?: {

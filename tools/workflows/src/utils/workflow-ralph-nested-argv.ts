@@ -4,9 +4,7 @@
  * env and `.workflow-ralph.json` in the child cwd still apply (CLI > env > file > built-ins).
  */
 
-import { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
-import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
@@ -70,11 +68,11 @@ export const normalizeRalphNestedDebugCli = (
  */
 export interface RalphNestedRunTuningInput {
   /**
-   * Execution backend id ({@link RalphExecutionBackendId}: `cursor` or `claude`). Selection applies
+   * Execution backend id ({@link WorkflowConfigRunner}: `cursor` or `claude`). Selection applies
    * to the **entire** nested run; not switched per iteration. Omit (or pass the default) to let the
    * child resolve from env / `.workflow-ralph.json`.
    */
-  readonly backend?: RalphExecutionBackendId | null;
+  readonly backend?: WorkflowConfigRunner | null;
   readonly debug?: RalphNestedDebugCli;
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
@@ -105,7 +103,7 @@ export const buildWorkflowRalphRunTuningArgv = (
   if (
     input.backend !== undefined &&
     input.backend !== null &&
-    input.backend !== DEFAULT_RALPH_RUNNER
+    input.backend !== 'cursor'
   ) {
     ralphArgs.push('--backend', input.backend);
   }
@@ -183,7 +181,7 @@ export const buildWorkflowRalphRunTuningArgv = (
  */
 export const mergeRalphNestedRunTuningWithExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-  executionBackend: WorkflowRunnerId | undefined,
+  executionBackend: WorkflowConfigRunner | undefined,
 ): RalphNestedRunTuningInput => {
   const base = ralph ?? {};
 

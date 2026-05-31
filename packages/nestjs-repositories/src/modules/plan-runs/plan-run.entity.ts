@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 
 export type PlanRunKind = 'orchestrator' | 'spawn';
-export type PlanRunExecutionBackend = 'claude' | 'cursor';
+export type PlanRunExecutionBackend = 'claude' | 'cursor' | 'opencode';
 
 /** Scalar/column fields of PlanRun (no relations). */
 export type PlanRunData = Pick<

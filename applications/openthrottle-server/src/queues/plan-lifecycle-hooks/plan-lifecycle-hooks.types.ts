@@ -7,7 +7,9 @@ import type {
 } from '@tools/workflows';
 import type { RunPlanJobData } from '../plans/plans.types';
 
-/** @description Payload for one lifecycle hook child BullMQ job. */
+/**
+ * Payload for one lifecycle hook child BullMQ job.
+ */
 export interface PlanLifecycleHookJobData {
   readonly entry: JobRunHookEntry;
   readonly hookIndex: number;
@@ -22,7 +24,9 @@ export interface PlanLifecycleHookJobData {
   readonly taskOutcome?: JobRunHookTaskOutcome;
 }
 
-/** @description Return value stored on the child job when the hook finishes. */
+/**
+ * Return value stored on the child job when the hook finishes.
+ */
 export interface PlanLifecycleHookJobResult {
   readonly blocked: boolean;
   readonly ok: boolean;

@@ -4,11 +4,7 @@ import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
 import type { RalphDebugLevel } from './ralph-debug-logger';
 import { ralphDebugLogger, setRalphDebugLevel } from './ralph-debug-logger';
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
-import {
-  parseRalphExecutionBackendId,
-  DEFAULT_RALPH_RUNNER,
-} from './ralph-execution-backend';
+import { parseRalphExecutionBackendId } from './ralph-execution-backend';
 import {
   RALPH_WORKTREE_FLAG_ONLY,
   resolveRalphWorktreeName,
@@ -30,6 +26,7 @@ import {
   type RalphPromptProfileKind,
 } from './ralph-prompt-resolution';
 import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =
@@ -118,7 +115,7 @@ export interface RalphArgs {
    * {@link RalphExecutionBackendId} (`cursor` | `claude`); the same id applies to the whole run
    * (no per-iteration switching). Default: Cursor `cursor-agent`.
    */
-  backend: RalphExecutionBackendId;
+  backend: WorkflowConfigRunner;
   /** Optional per-iteration timeout in ms (non-interactive only). When set, the runner process is killed after this duration. */
   iterationTimeoutMs: number | undefined;
   iterations: number;
@@ -387,7 +384,7 @@ export const parseRalphArgs = (): RalphArgs => {
   });
 
   const result: RalphArgs = {
-    backend: parsed.backend ?? DEFAULT_RALPH_RUNNER,
+    backend: parsed.backend ?? 'cursor',
     iterationTimeoutMs: parsed.iterationTimeoutMs,
     iterations: parsed.iterations ?? DEFAULT_RALPH_ITERATIONS,
     model: parsed.model,

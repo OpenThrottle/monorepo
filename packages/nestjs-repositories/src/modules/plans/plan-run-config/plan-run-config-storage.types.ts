@@ -3,6 +3,7 @@
  * `planId` is implicit (`plans.id`); omit from stored JSON.
  */
 
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { PLAN_RUN_CONFIG_VERSION } from './plan-run-config-storage.constants';
 
 export type PlanRunConfigTargetMode = 'plan' | 'task';
@@ -21,7 +22,7 @@ export type PlanRunConfigExecutionBackend = 'claude' | 'cursor';
  */
 export interface PlanRunConfigRalphV1 {
   readonly debugCli: PlanRunConfigDebugCli;
-  readonly executionBackend: PlanRunConfigExecutionBackend;
+  readonly executionBackend: WorkflowConfigRunner;
   /** @description Raw Configuration tab timeout field; empty omits `--iteration-timeout`. */
   readonly iterationTimeoutText: string;
   readonly iterations: number;
@@ -56,7 +57,7 @@ export type PlanRunConfigStorage = PlanRunConfigStorageV1;
  */
 export interface PlanWorkflowRalphRunOptions {
   readonly debugCli: PlanRunConfigDebugCli;
-  readonly executionBackend: PlanRunConfigExecutionBackend;
+  readonly executionBackend: WorkflowConfigRunner;
   readonly iterations: number;
   readonly model: string;
   readonly planId: string;

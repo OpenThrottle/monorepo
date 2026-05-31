@@ -8,9 +8,9 @@
  * injected prompt string and streaming/timeout behavior.
  */
 
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { runIterationAsync } from '../bin/run-iteration';
 import type { CursorAgentChunk } from '../bin/run-iteration';
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
 
 /**
  * @description Parameters for one agent iteration; aligned with
@@ -40,7 +40,7 @@ export interface CursorWorkflowRalphIterationRunParams {
   readonly onChunk?: (
     chunk: CursorWorkflowRalphIterationStreamChunk,
   ) => void | Promise<void>;
-  readonly runner: RalphExecutionBackendId;
+  readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;
   readonly timeoutMs: number | undefined;

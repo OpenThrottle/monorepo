@@ -4,7 +4,7 @@
  * Precedence after merge: CLI argv overrides env overrides file over built-ins (see {@link mergeRalphRuntimeSeed}).
  */
 
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
   loadWorkflowRalphConfig,
   loadWorkflowRalphDefaultsFileV1,
@@ -28,7 +28,7 @@ export const WORKFLOW_RALPH_DEFAULTS_FILE = '.workflow-ralph.json' as const;
  * `iterationTimeout` is in **seconds** (matches CLI `--iteration-timeout`).
  */
 export interface WorkflowRalphDefaultsFileJson {
-  readonly backend?: RalphExecutionBackendId;
+  readonly backend?: WorkflowConfigRunner;
   readonly iterationTimeout?: number;
   readonly iterations?: number;
   readonly model?: string;
@@ -48,7 +48,7 @@ export interface WorkflowRalphDefaultsFileJson {
  * @description Seed for argv parsing before CLI flags are applied.
  */
 export interface RalphRuntimeSeed {
-  readonly backend: RalphExecutionBackendId;
+  readonly backend: WorkflowConfigRunner;
   readonly iterationTimeoutMs: number | undefined;
   readonly iterations: number;
   readonly model: string | undefined;

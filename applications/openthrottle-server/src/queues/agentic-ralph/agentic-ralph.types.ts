@@ -1,4 +1,4 @@
-import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 import type {
   JobRunHooksConfig,
   RalphNestedRunTuningInput,
@@ -18,7 +18,7 @@ export interface RunPlanOrchestratorJobData {
   /**
    * Execution backend selected once for this run. Optional only for previously persisted BullMQ jobs.
    */
-  readonly executionBackend?: WorkflowRunnerId;
+  readonly executionBackend?: WorkflowConfigRunner;
   /**
    * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
    */
