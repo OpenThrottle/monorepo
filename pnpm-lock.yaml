@@ -1360,7 +1360,14 @@ importers:
         version: link:../openthrottle-agentic-workflow
 
   packages/openthrottle-agentic-utils:
+    dependencies:
+      pidusage:
+        specifier: ^4.0.1
+        version: 4.0.1
     devDependencies:
+      '@types/pidusage':
+        specifier: ^2.0.5
+        version: 2.0.5
       pg:
         specifier: ^8.17.1
         version: 8.20.0

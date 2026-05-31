@@ -133,6 +133,14 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`@tools/workflows`** `wall-clock-metrics.ts` re-exports `formatWallClockMetrics` from this package.
 - **`@tools/workflows`** barrel re-exports `formatWallClockMetrics` from this package.
 
+## Overlap resolved (task 13)
+
+- **`createChildProcessMetricsCollector`**, **`ChildProcessMetricsCollector`**, and child-process metric types (`ChildProcessSample`, `ChildProcessMetrics`, `ChildProcessMetricsOptions`, `DEFAULT_POLL_INTERVAL_MS`) in `src/utils/metrics.ts` are canonical: polls a child PID via `pidusage` at intervals and aggregates peak/average CPU and RSS.
+- **`pidusage`** is a **`peerDependency`** (and devDependency for tests); unit tests mock `pidusage`, integration tests use the real module.
+- **`@tools/workflows`** `child-process-metrics.ts` re-exports the collector from this package; **`sampleChildProcess`** remains in workflows until a later task.
+- **`@tools/workflows`** `types/child-process-metrics.ts` re-exports types from this package.
+- **`@tools/workflows`** barrel re-exports canonical symbols from this package.
+
 ## Installation
 
 **In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:*"` (already on root `package.json`).

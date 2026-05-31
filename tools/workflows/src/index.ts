@@ -1,6 +1,7 @@
-export { DEFAULT_POLL_INTERVAL_MS } from './types/child-process-metrics';
+export { DEFAULT_POLL_INTERVAL_MS } from '@openthrottle/openthrottle-agentic-utils';
 export {
   createWallClockMetrics,
+  createChildProcessMetricsCollector,
   ensurePostgresReachable,
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
@@ -24,14 +25,13 @@ export {
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
 export type {
+  ChildProcessMetrics,
+  ChildProcessMetricsCollector,
+  ChildProcessMetricsOptions,
+  ChildProcessSample,
   WorkflowDebugLevel,
   WorkflowRunnerId,
 } from '@openthrottle/openthrottle-agentic-utils';
-export type {
-  ChildProcessMetrics,
-  ChildProcessMetricsOptions,
-  ChildProcessSample,
-} from './types/child-process-metrics';
 export {
   captureLoadAverage,
   createEmptyPsiMetrics,
@@ -153,11 +153,7 @@ export {
   createMutexWorktreeTargetsTracker,
   MutexWorktreeTargetsTracker,
 } from './utils/mutex-worktree-targets';
-export {
-  createChildProcessMetricsCollector,
-  sampleChildProcess,
-} from './utils/child-process-metrics';
-export type { ChildProcessMetricsCollector } from './utils/child-process-metrics';
+export { sampleChildProcess } from './utils/child-process-metrics';
 export {
   createBranchInWorktree,
   deriveBranchName,
