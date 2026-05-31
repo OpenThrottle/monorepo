@@ -3,10 +3,8 @@
  * Used to model and expose availability of worktree targets for Ralph loops.
  */
 
-import type {
-  RalphExecutionBackendId,
-  RalphNestedDebugCli,
-} from '@tools/workflows';
+import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import type { RalphNestedDebugCli } from '@tools/workflows';
 
 /** Status of a worktree target: available for work or locked by a job. */
 export type WorktreeTargetStatus = 'available' | 'locked';
@@ -117,7 +115,7 @@ export interface ChildJobInput {
    * Execution backend id (layer 2); omitted uses workflow-ralph default (`cursor`).
    * Forwarded as `--backend` when set and not the default.
    */
-  readonly backend?: RalphExecutionBackendId;
+  readonly backend?: WorkflowRunnerId;
   /** Shim debug for nested runs; forwarded as `--debug` or `--verbose`. */
   readonly debug?: RalphNestedDebugCli;
   /** Handoff from parent (branch name, target id, worktree path). */

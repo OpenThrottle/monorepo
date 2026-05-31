@@ -11,6 +11,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-workflows';
+import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
 import {
   createCursorWorkflowRalphIterationRunner,
   executeJobRunHooksPhase,
@@ -20,7 +21,6 @@ import {
   type JobRunHookPhase,
   type JobRunHookRunKind,
   type JobRunHooksConfig,
-  type RalphExecutionBackendId,
   type RalphNestedRunTuningInput,
 } from '@tools/workflows';
 import type { RunPlanJobData } from '../plans/plans.types';
@@ -38,7 +38,7 @@ function runKindFromJobData(jobData: RunPlanJobData): JobRunHookRunKind {
 
 function executionBackendFromJobData(
   jobData: RunPlanJobData,
-): RalphExecutionBackendId {
+): WorkflowRunnerId {
   const merged = mergeRalphNestedRunTuningWithExecutionBackend(
     jobData.ralph,
     jobData.executionBackend,
@@ -47,22 +47,16 @@ function executionBackendFromJobData(
   return merged.backend ?? jobData.executionBackend ?? 'cursor';
 }
 
-const BEFORE_PHASE_SUFFIX =
-  'Complete any preflight work for this plan job. The main Ralph run starts only if this hook succeeds (or on_failure allows it).';
-
-const AFTER_PHASE_SUFFIX =
-  'The main plan job has finished (or was blocked before start). Summarize, file follow-ups, or run post-run checks as configured.';
-
-const BEFORE_EACH_SUFFIX =
-  'This hook runs before the task iterations begin. Complete any pre-task setup; the task run continues only if this hook succeeds (or on_failure allows it).';
-
-const AFTER_EACH_SUFFIX =
-  'This hook runs after the task reached a terminal status. Summarize, run per-task checks, or file follow-ups as configured.';
+const BEFORE_PHASE_SUFFIX = `Complete any preflight work for this plan job. The main Ralph run starts only if this hook succeeds (or on_failure allows it).`;
+const AFTER_PHASE_SUFFIX = `The main plan job has finished (or was blocked before start). Summarize, file follow-ups, or run post-run checks as configured.`;
+const BEFORE_EACH_SUFFIX = `This hook runs before the task iterations begin. Complete any pre-task setup; the task run continues only if this hook succeeds (or on_failure allows it).`;
+const AFTER_EACH_SUFFIX = `This hook runs after the task reached a terminal status. Summarize, run per-task checks, or file follow-ups as configured.`;
 
 const layer1SuffixForPhase = (phase: JobRunHookPhase): string => {
   if (phase === 'beforeAll' || phase === 'beforeEach') {
     return phase === 'beforeEach' ? BEFORE_EACH_SUFFIX : BEFORE_PHASE_SUFFIX;
   }
+
   return phase === 'afterEach' ? AFTER_EACH_SUFFIX : AFTER_PHASE_SUFFIX;
 };
 

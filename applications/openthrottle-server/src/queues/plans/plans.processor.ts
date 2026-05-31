@@ -18,13 +18,13 @@ import {
   WORKTREE_TRACKER_TOKEN,
 } from '@openthrottle/nestjs-worktrees';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
+import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import {
   buildNestedWorkflowRalphSpawnEnv,
   buildWorkflowRalphRunTuningArgv,
   formatPlansProcessorSpawnOtDiagnosticsMessage,
   loadWorkflowRalphConfig,
   mergeRalphNestedRunTuningWithExecutionBackend,
-  resolveWorkflowRalphConfigCwd,
   runChildJob,
 } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
@@ -45,10 +45,7 @@ import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/work
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
-import {
-  AGENTIC_WORKFLOW_RUN_LOG_EVENT,
-  AGENTIC_WORKFLOW_METRICS_EVENT,
-} from '@openthrottle/nestjs-agentic-workflow';
+import { WORKFLOW_EVENT } from '@openthrottle/nestjs-agentic-workflow';
 import { isLifecycleHooksChildJobsEnabled } from '@openthrottle/openthrottle-agentic-workflow';
 import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
@@ -409,7 +406,7 @@ export class PlansProcessor
     if (!isRunPlanOrchestratorJobData(job.data)) {
       return undefined;
     }
-    const configCwd = resolveWorkflowRalphConfigCwd(
+    const configCwd = getWorkflowConfigCwd(
       job.data.workingDirectory,
       process.env,
     );
@@ -778,7 +775,7 @@ export class PlansProcessor
   ): void {
     this.logger.info(
       JSON.stringify({
-        event: AGENTIC_WORKFLOW_METRICS_EVENT,
+        event: WORKFLOW_EVENT.METRIC,
         jobId,
         planId,
         taskRunMetrics,
@@ -789,8 +786,8 @@ export class PlansProcessor
 
   /**
    * Structured JSON log for in-process Ralph orchestrator lifecycle. Uses
-   * {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}; pair with {@link AGENTIC_WORKFLOW_METRICS_EVENT} via shared
-   * `correlationId` / `jobId`. Plan id is included here at the application layer only.
+   * {@link WORKFLOW_EVENT}; which pair via shared `correlationId` / `jobId`.
+   * Plan id is included here at the application layer only.
    */
   private logAgenticOrchestratorRunStructured(params: {
     readonly correlationId: string;
@@ -807,7 +804,7 @@ export class PlansProcessor
     this.logger.info(
       JSON.stringify({
         correlationId: params.correlationId,
-        event: AGENTIC_WORKFLOW_RUN_LOG_EVENT,
+        event: WORKFLOW_EVENT.JOB_RUN,
         outcome: params.outcome,
         phase: params.phase,
         planId: params.planId,

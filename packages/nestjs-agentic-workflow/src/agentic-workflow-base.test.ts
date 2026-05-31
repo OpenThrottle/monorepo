@@ -1,5 +1,5 @@
 import type {
-  WorkflowFlowContext,
+  WorkflowRunContext,
   WorkflowOrchestrator,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-workflow';
@@ -85,7 +85,7 @@ describe('createAgenticWorkflowRegistry', () => {
  * @description The base is parameterized only over the transport-free contract; this compile-time
  * usage guards that a context subtype still satisfies the generic.
  */
-interface NarrowContext extends WorkflowFlowContext {
+interface NarrowContext extends WorkflowRunContext {
   readonly extra: string;
 }
 
@@ -104,7 +104,7 @@ class NarrowWorkflow extends AgenticWorkflowBase<'ok', 'bad', NarrowContext> {
 }
 
 describe('AgenticWorkflowBase generic parameterization', () => {
-  it('accepts a narrowed WorkflowFlowContext subtype', () => {
+  it('accepts a narrowed WorkflowRunContext subtype', () => {
     const workflow = new NarrowWorkflow();
     expect(workflow.id).toBe('narrow');
     expect(workflow.createOrchestrator()).toHaveProperty('execute');

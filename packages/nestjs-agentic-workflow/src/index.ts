@@ -22,20 +22,19 @@ export type {
   WorkflowConfig,
   WorkflowError,
   WorkflowExecutionHooks,
-  WorkflowFlowContext,
+  WorkflowRunContext,
   WorkflowLifecycleDispatcher,
   WorkflowLifecycleTaskContext,
   WorkflowLifecycleTaskOutcome,
   WorkflowOrchestrator,
   WorkflowPlanLifecyclePhase,
-  WorkflowRunCorrelation,
+  WorkflowCorrelation,
   WorkflowRunResult,
   WorkflowStepFailure,
   WorkflowStepSuccess,
   WorkflowTaskLifecyclePhase,
 } from '@openthrottle/openthrottle-agentic-workflow';
 export {
-  AGENTIC_WORKFLOW_RUN_LOG_EVENT,
-  AGENTIC_WORKFLOW_METRICS_EVENT,
+  WORKFLOW_EVENT,
   isLifecycleHooksChildJobsEnabled,
 } from '@openthrottle/openthrottle-agentic-workflow';

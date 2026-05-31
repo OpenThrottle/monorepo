@@ -1,33 +1,33 @@
+export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
+export type WorkflowConfigModel = 'auto' | (string & {});
+export type WorkflowConfigRunner = 'cursor' | 'claude' | 'opencode';
+
 /**
  * Shared configuration fields for agentic workflows (model, prompts,
  * iteration limits, timeouts). Workflow-specific options belong in downstream packages
- * via {@link WorkflowFlowContext} extensions.
+ * via {@link WorkflowRunContext} extensions.
  */
 export interface WorkflowConfig {
-  readonly debug: 'debug' | 'omit' | 'verbose';
+  readonly debug: WorkflowConfigDebug;
   readonly iterationMax: number;
   readonly iterationTimeout: number | undefined;
   readonly iterations: number;
-  readonly model: string;
+  readonly model: WorkflowConfigModel;
   readonly prompt: string;
   readonly timeout: number | undefined;
 }
 
 /**
- * Generic identifiers for tracing an agentic workflow run through logs and metrics.
- * Keep this free of domain-specific ids (no plan/task ids); callers attach those in application logs.
- *
- * Align structured logs with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT}: include `correlationId`
- * (and optionally `queueJobId`, `queueName`) so aggregators can join with queue metrics such as
- * {@link AGENTIC_WORKFLOW_METRICS_EVENT}.
+ * Align structured logs using `correlationId` (and optionally `queueJobId`,
+ * `queueName`) so aggregators can join with queue metrics such as {@link WORKFLOW_EVENT}.
  */
-export interface WorkflowRunCorrelation {
+export interface WorkflowCorrelation {
   /**
    * Primary key for cross-service correlation (often a BullMQ job id or generated run id).
    */
   readonly correlationId: string;
   /**
-   * Queue-backed job identifier when applicable (may match {@link WorkflowRunCorrelation.correlationId}).
+   * Queue-backed job identifier when applicable (may match {@link WorkflowCorrelation.correlationId}).
    */
   readonly queueJobId?: string;
   /**
@@ -37,25 +37,25 @@ export interface WorkflowRunCorrelation {
 }
 
 /**
- * Structured log event name for agentic workflow lifecycle lines (start/end).
+ * Structured log event names for agentic workflow lifecycle lines (start/end).
  * Application code should emit JSON payloads that include correlation fields from
- * {@link WorkflowRunCorrelation} plus workflow-specific attributes at the app layer.
+ * {@link WorkflowCorrelation} plus workflow-specific attributes at the app layer.
  */
-export const AGENTIC_WORKFLOW_RUN_LOG_EVENT = 'agentic_workflow_run' as const;
+export const WORKFLOW_EVENT = {
+  JOB_RUN: 'job_run',
+  METRIC: 'metric',
+} as const;
+
+export type WorkflowEventKey = keyof typeof WORKFLOW_EVENT;
+export type WorkflowEvent = (typeof WORKFLOW_EVENT)[WorkflowEventKey];
 
 /**
- * Structured log event name used by plan-queue workers for task-run metrics payloads.
- * Pair with {@link AGENTIC_WORKFLOW_RUN_LOG_EVENT} for full observability of one queue job.
- */
-export const AGENTIC_WORKFLOW_METRICS_EVENT = 'plan_run_metrics' as const;
-
-/**
- * Optional runtime hooks merged into {@link WorkflowFlowContext}.
- * Downstream workflows may add fields by extending {@link WorkflowFlowContext}.
+ * Optional runtime hooks merged into {@link WorkflowRunContext}.
+ * Downstream workflows may add fields by extending {@link WorkflowRunContext}.
  *
  * @example Workflow-specific context in a consumer package
  * ```ts
- * interface RalphFlowContext extends WorkflowFlowContext {
+ * interface RalphFlowContext extends WorkflowRunContext {
  *   readonly mode: 'plan' | 'task';
  *   readonly planId: string;
  *   readonly taskId: string | undefined;
@@ -71,14 +71,14 @@ export interface WorkflowExecutionHooks {
   /**
    * Optional tracing metadata for structured logging; must not encode plan/task identifiers.
    */
-  readonly correlation?: WorkflowRunCorrelation;
+  readonly correlation?: WorkflowCorrelation;
 }
 
 /**
  * Immutable snapshot of inputs driving a workflow run: shared
  * {@link WorkflowConfig} plus optional {@link WorkflowExecutionHooks}.
  */
-export interface WorkflowFlowContext
+export interface WorkflowRunContext
   extends WorkflowConfig, WorkflowExecutionHooks {}
 
 /**
@@ -116,7 +116,10 @@ export type WorkflowStepSuccess<
   TStep extends string = string,
   TData extends Record<string, unknown> | undefined = undefined,
 > = TData extends undefined
-  ? { readonly outcome: 'success'; readonly step: TStep }
+  ? {
+      readonly outcome: 'success';
+      readonly step: TStep;
+    }
   : {
       readonly data: TData;
       readonly outcome: 'success';
@@ -127,13 +130,13 @@ export type WorkflowStepSuccess<
  * Runs a workflow until a terminal {@link WorkflowRunResult}.
  * Implementations live in downstream packages; this package defines only the contract.
  *
- * Use {@link WorkflowFlowContext} or a subtype for `TContext` so workflow-specific
+ * Use {@link WorkflowRunContext} or a subtype for `TContext` so workflow-specific
  * fields stay outside this package.
  */
 export interface WorkflowOrchestrator<
   WorkflowFinishedReason,
   WorkflowFailedReason,
-  TContext extends WorkflowFlowContext = WorkflowFlowContext,
+  TContext extends WorkflowRunContext = WorkflowRunContext,
 > {
   readonly execute: (params: {
     readonly context: TContext;

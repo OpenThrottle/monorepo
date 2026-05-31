@@ -55,8 +55,9 @@ const WORKFLOW_RALPH_MARKERS: readonly string[] = [
   '✅',
 ];
 
-const includesAny = (text: string, markers: readonly string[]): boolean =>
-  markers.some((marker) => text.includes(marker));
+const includesAny = (text: string, markers: readonly string[]): boolean => {
+  return markers.some((marker) => text.includes(marker));
+};
 
 /**
  * @description Best-effort attribution of a run-output chunk to its originating layer.
@@ -85,7 +86,9 @@ export const classifyRunOutputSource = (chunk: {
 export const runOutputLogContext = (
   logContext: string,
   source: RunOutputSource,
-): string => `${logContext} [${source}]`;
+): string => {
+  return `${logContext} [${source}]`;
+};
 
 /**
  * @description Maps `runChildJob` stream chunks to JSONL lines (`type`: `stdout` | `stderr`),

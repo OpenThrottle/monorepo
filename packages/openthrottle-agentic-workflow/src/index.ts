@@ -2,9 +2,9 @@ export type {
   WorkflowConfig,
   WorkflowError,
   WorkflowExecutionHooks,
-  WorkflowFlowContext,
+  WorkflowRunContext,
   WorkflowOrchestrator,
-  WorkflowRunCorrelation,
+  WorkflowCorrelation,
   WorkflowRunResult,
   WorkflowStepFailure,
   WorkflowStepSuccess,
@@ -18,10 +18,7 @@ export type {
   WorkflowTaskLifecyclePhase,
 } from './lifecycle.js';
 
-export {
-  AGENTIC_WORKFLOW_RUN_LOG_EVENT,
-  AGENTIC_WORKFLOW_METRICS_EVENT,
-} from './types.js';
+export { WORKFLOW_EVENT } from './types.js';
 
 export {
   isLifecycleHooksChildJobsEnabled,

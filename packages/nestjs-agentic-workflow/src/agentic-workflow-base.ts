@@ -1,5 +1,5 @@
 import type {
-  WorkflowFlowContext,
+  WorkflowRunContext,
   WorkflowOrchestrator,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
@@ -22,7 +22,7 @@ import type {
 export abstract class AgenticWorkflowBase<
   WorkflowFinishedReason = unknown,
   WorkflowFailedReason = unknown,
-  TContext extends WorkflowFlowContext = WorkflowFlowContext,
+  TContext extends WorkflowRunContext = WorkflowRunContext,
 > {
   /**
    * @description Stable registration id for this workflow (for example `'ralph'`). The dispatcher
@@ -45,7 +45,7 @@ export abstract class AgenticWorkflowBase<
 /**
  * @description A concrete {@link AgenticWorkflowBase} of any context shape. The registry is
  * workflow-agnostic and resolves by id, so its element type must accept workflows whose
- * `TContext` narrows {@link WorkflowFlowContext} (for example Ralph's `WorkflowContext`).
+ * `TContext` narrows {@link WorkflowRunContext} (for example Ralph's `WorkflowContext`).
  * `WorkflowOrchestrator` is contravariant in its context, so a single concrete element type
  * cannot otherwise hold workflows with differing contexts — `any` here is the registry escape
  * hatch (resolution is by id and the dispatcher narrows the orchestrator at the call site).

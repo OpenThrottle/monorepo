@@ -1,7 +1,7 @@
 import type {
   WorkflowConfig,
   WorkflowLifecycleDispatcher,
-  WorkflowRunCorrelation,
+  WorkflowCorrelation,
   WorkflowRunResult as WorkflowRunResultBase,
   WorkflowOrchestrator as WorkflowOrchestratorBase,
 } from '@openthrottle/openthrottle-agentic-workflow';
@@ -33,10 +33,10 @@ export interface WorkflowContext extends WorkflowConfig {
   readonly abortSignal?: AbortSignal;
 
   /**
-   * Optional tracing metadata from {@link WorkflowRunCorrelation}; forwarded with the context for
+   * Optional tracing metadata from {@link WorkflowCorrelation}; forwarded with the context for
    * application-layer structured logs (no plan/task ids at the shared-contract layer).
    */
-  readonly correlation?: WorkflowRunCorrelation;
+  readonly correlation?: WorkflowCorrelation;
 
   // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';

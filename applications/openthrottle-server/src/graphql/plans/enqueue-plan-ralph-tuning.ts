@@ -8,14 +8,14 @@ import { existsSync, statSync } from 'fs';
 import { isAbsolute } from 'path';
 import type {
   ChildJobInput,
-  RalphExecutionBackendId,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
+import { normalizeRalphNestedDebugCli } from '@tools/workflows';
+import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
 import {
-  DEFAULT_RALPH_RUNNER,
-  normalizeRalphNestedDebugCli,
-  parseRalphExecutionBackendId,
-} from '@tools/workflows';
+  DEFAULT_WORKFLOW_RUNNER,
+  parseWorkflowRunnerId,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type {
   RunPlanOrchestratorJobData,
   RunPlanSpawnJobData,
@@ -251,7 +251,7 @@ export const parseEnqueueRalphTuning = (
 
   const tuning: RalphNestedRunTuningInput = {
     ...(backendRaw !== undefined
-      ? { backend: parseRalphExecutionBackendId(backendRaw, 'cli') }
+      ? { backend: parseWorkflowRunnerId(backendRaw, 'cli') }
       : {}),
     ...(iterations !== undefined ? { iterations } : {}),
     ...(iterationTimeoutSeconds !== undefined
@@ -281,7 +281,7 @@ export const parseEnqueueRalphTuning = (
  */
 const resolvePlanRunExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-): RalphExecutionBackendId => ralph?.backend ?? DEFAULT_RALPH_RUNNER;
+): WorkflowRunnerId => ralph?.backend ?? DEFAULT_WORKFLOW_RUNNER;
 
 /**
  * @description Builds {@link RunPlanSpawnJobData} for the plans queue from enqueue input (spawn path).

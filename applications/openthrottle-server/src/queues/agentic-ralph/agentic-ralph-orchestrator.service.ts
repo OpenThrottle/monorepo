@@ -1,19 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type {
   AgenticWorkflowRegistry,
-  WorkflowRunCorrelation,
+  WorkflowCorrelation,
 } from '@openthrottle/nestjs-agentic-workflow';
 import {
   AGENTIC_WORKFLOW_RALPH_ID,
   AGENTIC_WORKFLOW_REGISTRY,
 } from '@openthrottle/nestjs-agentic-workflow';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
+import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import {
   applyWorkflowRalphOtRootFromConfig,
   applyWorkflowRalphDebugCli,
   loadWorkflowRalphConfig,
   mergePlanRunTuningWithWorkflowRalphConfig,
-  resolveWorkflowRalphConfigCwd,
 } from '@tools/workflows';
 import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
@@ -46,7 +46,7 @@ export class AgenticRalphOrchestratorService {
    * `executionBackend` / tuning (`cursor` or `claude`).
    */
   async runPlanOrchestratorJob(params: {
-    readonly correlation?: WorkflowRunCorrelation;
+    readonly correlation?: WorkflowCorrelation;
     readonly jobData: RunPlanOrchestratorJobData;
     readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
     readonly signal?: AbortSignal;
@@ -56,7 +56,7 @@ export class AgenticRalphOrchestratorService {
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
       .createOrchestrator() as WorkflowOrchestrator;
 
-    const configCwd = resolveWorkflowRalphConfigCwd(
+    const configCwd = getWorkflowConfigCwd(
       jobData.workingDirectory,
       process.env,
     );

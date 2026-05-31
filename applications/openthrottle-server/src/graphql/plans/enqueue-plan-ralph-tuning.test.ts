@@ -55,7 +55,7 @@ describe('parseEnqueueRalphTuning', () => {
     ).toEqual({ iterations: 7 });
   });
 
-  test('validates backend with parseRalphExecutionBackendId', () => {
+  test('validates backend with parseWorkflowRunnerId', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
