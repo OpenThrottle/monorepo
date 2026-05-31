@@ -1,4 +1,8 @@
 export { DEFAULT_POLL_INTERVAL_MS } from './types/child-process-metrics';
+export {
+  getPostgresUrl,
+  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+} from '@openthrottle/openthrottle-agentic-utils';
 export type {
   ChildProcessMetrics,
   ChildProcessMetricsOptions,

@@ -212,6 +212,9 @@ importers:
       '@openthrottle/openthrottle-agentic-ralph':
         specifier: workspace:*
         version: link:packages/openthrottle-agentic-ralph
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:*
+        version: link:packages/openthrottle-agentic-utils
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:*
         version: link:packages/openthrottle-agentic-workflow
@@ -927,6 +930,9 @@ importers:
       '@openthrottle/nestjs-repositories':
         specifier: workspace:*
         version: link:../nestjs-repositories
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:*
+        version: link:../openthrottle-agentic-utils
       openai:
         specifier: ^6.16.0
         version: 6.36.0(ws@8.20.0)(zod@4.4.3)
@@ -1353,6 +1359,8 @@ importers:
         specifier: workspace:*
         version: link:../openthrottle-agentic-workflow
 
+  packages/openthrottle-agentic-utils: {}
+
   packages/openthrottle-agentic-workflow: {}
 
   packages/openthrottle-developer-codegen: {}
@@ -1642,6 +1650,9 @@ importers:
       '@openthrottle/openthrottle-agentic-ralph':
         specifier: workspace:*
         version: link:../../packages/openthrottle-agentic-ralph
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-agentic-utils
       '@tools/generators':
         specifier: workspace:*
         version: link:../generators

@@ -17,7 +17,7 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 | Module file (proposed)  | Placeholder today   | Intended utilities                                                                                                                  |
 | ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/postgres.ts` | `utils.postgres.ts` | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
+| `src/utils/postgres.ts` | `postgres.ts`       | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
 | `src/utils/workflow.ts` | `utils.workflow.ts` | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
 | `src/utils/nodejs.ts`   | `utils.nodejs.ts`   | `prependOpenThrottleBinToPath`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                    |
 | `src/utils/metrics.ts`  | `utils.metrics.ts`  | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
@@ -73,10 +73,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 3. One function (or tight type+function pair) per OpenThrottle task.
 4. **Feedback gate** after each task before the next move.
 
-## Overlap to resolve (task 2+)
+## Overlap resolved (task 2)
 
-- **`@openthrottle/openthrottle-postgres`** already exports `getPostgresUrl()` (throws, no `env` param, no `OPENTHROTTLE_CORTEX_POSTGRES_URL` precedence). **`ai-mcp`** has `resolveCortexPostgresUrl(env)` with Cortex spawn precedence.
-- **Decision needed:** consolidate on agentic-utils as canonical, deprecate `openthrottle-postgres` duplicate, and align throw vs `undefined` semantics before mass shim updates.
+- **`getPostgresUrl`** in `src/utils/postgres.ts` is canonical: `OPENTHROTTLE_CORTEX_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*`; returns `undefined` when incomplete.
+- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveCortexPostgresConnectionStringFromEnv` shim; `getPostgresConfig()` still throws when URL is missing.
+- **`@tools/workflows`** re-exports `getPostgresUrl` and `OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV` from this package.
+- **`@openthrottle/openthrottle-postgres`** duplicate remains; deprecate in a later task.
 
 ## Installation
 

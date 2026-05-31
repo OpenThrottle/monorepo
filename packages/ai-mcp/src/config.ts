@@ -5,14 +5,16 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import {
+  getPostgresUrl,
+  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+} from '@openthrottle/openthrottle-agentic-utils';
+
 export interface CortexPostgresConfig {
   readonly connectionString: string;
 }
 
-/**
- * @description Env var set by BullMQ workers when spawning nested `workflow-ralph` so plan lookup uses the same Cortex DB as the server even when `cwd` is another repo whose tooling overwrites `POSTGRES_URL`.
- */
-export const OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV = `OPENTHROTTLE_CORTEX_POSTGRES_URL`;
+export { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV };
 
 /**
  * @description When set (non-empty after trim) on the BullMQ worker, nested `workflow-ralph` children receive this as `HOME` so Claude Code and similar CLIs resolve OAuth paths under a directory you control (e.g. bind-mount host credentials into `/var/ralph-home` and set this to that path).
@@ -169,32 +171,12 @@ export const applyWorkflowRalphBinPath = (
 /**
  * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
  * @returns Connection string or `undefined` when required vars are missing.
+ * @deprecated Import {@link getPostgresUrl} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
 export function resolveCortexPostgresConnectionStringFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): string | undefined {
-  const ot = env[OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]?.trim();
-  if (ot) {
-    return ot;
-  }
-
-  const url = env.POSTGRES_URL?.trim();
-  if (url) {
-    return url;
-  }
-
-  const db = env.POSTGRES_DB;
-  const host = env.POSTGRES_HOST;
-  const password = env.POSTGRES_PASSWORD;
-  const port = Number(env.POSTGRES_PORT);
-  const user = env.POSTGRES_USER;
-
-  if (!db || !host || !password || !port || !user) {
-    return undefined;
-  }
-
-  const encodedPassword = encodeURIComponent(password);
-  return `postgresql://${user}:${encodedPassword}@${host}:${port}/${db}`;
+  return getPostgresUrl(env);
 }
 
 /**
