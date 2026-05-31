@@ -1,13 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type {
-  AgenticWorkflowRegistry,
-  WorkflowCorrelation,
-} from '@openthrottle/nestjs-agentic-workflow';
+import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import {
   AGENTIC_WORKFLOW_RALPH_ID,
   AGENTIC_WORKFLOW_REGISTRY,
 } from '@openthrottle/nestjs-agentic-workflow';
-import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowCorrelation,
+  WorkflowLifecycleDispatcher,
+} from '@openthrottle/openthrottle-agentic-workflow';
 import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import {
   applyWorkflowRalphOtRootFromConfig,

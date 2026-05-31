@@ -45,8 +45,10 @@ import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/work
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { DelayedError } from 'bullmq';
 import type { Queue } from 'bullmq';
-import { WORKFLOW_EVENT } from '@openthrottle/nestjs-agentic-workflow';
-import { isLifecycleHooksChildJobsEnabled } from '@openthrottle/openthrottle-agentic-workflow';
+import {
+  isLifecycleHooksChildJobsEnabled,
+  WORKFLOW_EVENT,
+} from '@openthrottle/openthrottle-agentic-workflow';
 import { ralphTuningForChildJob } from '../../graphql/plans/enqueue-plan-ralph-tuning';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
 import type {
