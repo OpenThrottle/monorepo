@@ -1359,7 +1359,11 @@ importers:
         specifier: workspace:*
         version: link:../openthrottle-agentic-workflow
 
-  packages/openthrottle-agentic-utils: {}
+  packages/openthrottle-agentic-utils:
+    devDependencies:
+      pg:
+        specifier: ^8.17.1
+        version: 8.20.0
 
   packages/openthrottle-agentic-workflow: {}
 

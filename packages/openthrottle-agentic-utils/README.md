@@ -80,6 +80,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`@tools/workflows`** re-exports `getPostgresUrl` and `OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV` from this package.
 - **`@openthrottle/openthrottle-postgres`** duplicate remains; deprecate in a later task.
 
+## Overlap resolved (task 3)
+
+- **`ensurePostgresReachable`** in `src/utils/postgres.ts` is canonical: connect + `SELECT 1`; throws when the connection string is missing or the check fails.
+- **`pg`** is a **`peerDependency`** (and devDependency for tests); unit tests mock `pg.Client`.
+- **`@tools/workflows`** `ensureCortexReachablePostgres` delegates to `ensurePostgresReachable` and maps Cortex-specific error text; re-export shim on the workflows barrel.
+
 ## Installation
 
 **In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:*"` (already on root `package.json`).

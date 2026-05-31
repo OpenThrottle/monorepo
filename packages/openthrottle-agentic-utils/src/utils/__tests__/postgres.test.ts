@@ -1,9 +1,105 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  ensurePostgresReachable,
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  POSTGRES_UNREACHABLE_HINT_SUFFIX,
 } from '../postgres.js';
+
+const mockState = {
+  connectReject: undefined as Error | undefined,
+  endReject: undefined as Error | undefined,
+  queryLog: [] as string[],
+  queryReject: undefined as Error | undefined,
+};
+
+vi.mock('pg', () => ({
+  default: {
+    Client: class {
+      connect(): Promise<void> {
+        return mockState.connectReject
+          ? Promise.reject(mockState.connectReject)
+          : Promise.resolve();
+      }
+
+      end(): Promise<void> {
+        return mockState.endReject
+          ? Promise.reject(mockState.endReject)
+          : Promise.resolve();
+      }
+
+      query(sql: string): Promise<{ rows: unknown[] }> {
+        mockState.queryLog.push(sql);
+
+        return mockState.queryReject
+          ? Promise.reject(mockState.queryReject)
+          : Promise.resolve({ rows: [{}] });
+      }
+    },
+  },
+}));
+
+describe('ensurePostgresReachable', () => {
+  beforeEach(() => {
+    mockState.connectReject = undefined;
+    mockState.endReject = undefined;
+    mockState.queryReject = undefined;
+    mockState.queryLog = [];
+  });
+
+  afterEach(() => {
+    mockState.connectReject = undefined;
+    mockState.endReject = undefined;
+    mockState.queryReject = undefined;
+    mockState.queryLog = [];
+  });
+
+  it('throws when connection string is empty', async () => {
+    await expect(ensurePostgresReachable('')).rejects.toThrow(
+      'Postgres connection string is required.',
+    );
+    await expect(ensurePostgresReachable('   ')).rejects.toThrow(
+      'Postgres connection string is required.',
+    );
+  });
+
+  it('throws with hint when connect fails', async () => {
+    mockState.connectReject = new Error('Connection refused');
+
+    await expect(
+      ensurePostgresReachable('postgresql://user:pass@localhost:5432/db'),
+    ).rejects.toThrow(/Postgres database is unreachable/);
+    await expect(
+      ensurePostgresReachable('postgresql://user:pass@localhost:5432/db'),
+    ).rejects.toThrow(/Connection refused/);
+    await expect(
+      ensurePostgresReachable('postgresql://user:pass@localhost:5432/db'),
+    ).rejects.toThrow(POSTGRES_UNREACHABLE_HINT_SUFFIX);
+  });
+
+  it('throws with hint when SELECT 1 fails', async () => {
+    mockState.queryReject = new Error('permission denied');
+
+    await expect(
+      ensurePostgresReachable('postgresql://user:pass@localhost:5432/db'),
+    ).rejects.toThrow(/permission denied/);
+  });
+
+  it('runs SELECT 1 and resolves when connect succeeds', async () => {
+    await expect(
+      ensurePostgresReachable('postgresql://user:pass@localhost:5432/db'),
+    ).resolves.toBeUndefined();
+
+    expect(mockState.queryLog).toEqual(['SELECT 1']);
+  });
+
+  it('trims whitespace from the connection string', async () => {
+    await expect(
+      ensurePostgresReachable('  postgresql://user:pass@localhost:5432/db  '),
+    ).resolves.toBeUndefined();
+  });
+});
 
 describe('getPostgresUrl', () => {
   describe('when OPENTHROTTLE_CORTEX_POSTGRES_URL is set', () => {

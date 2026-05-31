@@ -2,6 +2,10 @@
  * @description Postgres-direct transport for Ralph plan/task I/O (rollback via `WORKFLOW_RALPH_TRANSPORT=postgres-direct`).
  */
 
+import {
+  ensurePostgresReachable,
+  POSTGRES_UNREACHABLE_HINT_SUFFIX,
+} from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
 import type {
   CommitLinkInput,
@@ -33,23 +37,35 @@ const requireConnectionString = (config: WorkflowRalphConfig): string => {
 
 /**
  * @description Verifies Cortex Postgres is reachable (connect + SELECT 1).
+ * @deprecated Import {@link ensurePostgresReachable} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
 export async function ensureCortexReachablePostgres(
   config: WorkflowRalphConfig,
 ): Promise<void> {
   const connectionString = requireConnectionString(config);
-  const client = new pg.Client({ connectionString });
 
   try {
-    await client.connect();
-    await client.query('SELECT 1');
+    await ensurePostgresReachable(connectionString);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message === 'Postgres connection string is required.') {
+      throw new Error(
+        'Postgres-direct transport requires connectionString on WorkflowRalphConfig.',
+      );
+    }
+
     throw new Error(
-      `Cortex database is unreachable. ${detail}${RALPH_FATAL_UNREACHABLE_SUFFIX}`,
+      message
+        .replace(
+          'Postgres database is unreachable.',
+          'Cortex database is unreachable.',
+        )
+        .replace(
+          POSTGRES_UNREACHABLE_HINT_SUFFIX,
+          RALPH_FATAL_UNREACHABLE_SUFFIX,
+        ),
     );
-  } finally {
-    await client.end();
   }
 }
 

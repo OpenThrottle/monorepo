@@ -1,7 +1,9 @@
 export { DEFAULT_POLL_INTERVAL_MS } from './types/child-process-metrics';
 export {
+  ensurePostgresReachable,
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  POSTGRES_UNREACHABLE_HINT_SUFFIX,
 } from '@openthrottle/openthrottle-agentic-utils';
 export type {
   ChildProcessMetrics,

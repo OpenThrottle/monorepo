@@ -8,7 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "pg": "^8.17.1"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -44,7 +46,9 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "pg": "^8.17.1"
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted",
