@@ -6,15 +6,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import {
+  getOpenThrottleRoot,
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-export interface CortexPostgresConfig {
-  readonly connectionString: string;
-}
-
-export { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV };
+export { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV, WORKFLOW_RALPH_OT_ROOT_ENV };
 
 /**
  * @description When set (non-empty after trim) on the BullMQ worker, nested `workflow-ralph` children receive this as `HOME` so Claude Code and similar CLIs resolve OAuth paths under a directory you control (e.g. bind-mount host credentials into `/var/ralph-home` and set this to that path).
@@ -26,13 +24,9 @@ export const WORKFLOW_RALPH_SPAWN_HOME_ENV = `WORKFLOW_RALPH_SPAWN_HOME`;
  */
 export const WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV = `WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME`;
 
-/**
- * @description Explicit absolute path to the OpenThrottle monorepo root, used to locate the `workflow-ralph` binary (`<root>/node_modules/.bin`) so nested spawns resolve it deterministically — even when `cwd` is a foreign checkout and the dev shell PATH is not inherited (clean/Docker envs). Set this when the marker file (`pnpm-workspace.yaml`) is not reachable by walking up from the module or `cwd`.
- */
-export const WORKFLOW_RALPH_OT_ROOT_ENV = `WORKFLOW_RALPH_OT_ROOT`;
-
-/** Marker file that identifies the OpenThrottle monorepo (pnpm workspace) root. */
-const OT_WORKSPACE_MARKER = `pnpm-workspace.yaml`;
+export interface CortexPostgresConfig {
+  readonly connectionString: string;
+}
 
 /**
  * @description Returns true when `dir` exists and is a directory. Never throws.
@@ -46,87 +40,22 @@ const isDirectory = (dir: string): boolean => {
 };
 
 /**
- * @description Returns true when `dir` contains the OpenThrottle workspace marker ({@link OT_WORKSPACE_MARKER}).
+ * @description Resolves the OpenThrottle monorepo root.
+ * @deprecated Import {@link getOpenThrottleRoot} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-const hasWorkspaceMarker = (dir: string): boolean =>
-  fs.existsSync(path.join(dir, OT_WORKSPACE_MARKER));
-
-/**
- * @description Walks up from `startDir` to find the OpenThrottle monorepo root (the first ancestor containing {@link OT_WORKSPACE_MARKER}). Returns undefined when no marker is found. Never throws.
- */
-const walkUpForWorkspaceRoot = (startDir: string): string | undefined => {
-  let dir: string;
-  try {
-    dir = path.resolve(startDir);
-  } catch {
-    return undefined;
-  }
-
-  for (;;) {
-    if (hasWorkspaceMarker(dir)) {
-      return dir;
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      return undefined;
-    }
-    dir = parent;
-  }
-};
-
-/**
- * @description Returns the directory of this module, or undefined when it cannot be resolved.
- * Walking up from here lands in the OpenThrottle monorepo regardless of `cwd`.
- *
- * The cross-repo spawn/Nx consumers of this code (`@tools/workflows`, `openthrottle-server`)
- * are compiled and run under CommonJS, where `__dirname` is the file's directory. We resolve
- * via `__dirname` (guarded with `typeof`) rather than `import.meta.url` so this file also
- * compiles under the CommonJS `module` setting those projects use — `import.meta` is rejected
- * there (TS1343). Under native ESM (`__dirname` undefined) this returns undefined and callers
- * fall back to the `WORKSPACE_ROOT`/`cwd` strategies.
- */
-const getModuleDir = (): string | undefined =>
-  typeof __dirname === 'string' ? __dirname : undefined;
-
-/**
- * @description Resolves the OpenThrottle monorepo root, in priority order:
- * 1. {@link WORKFLOW_RALPH_OT_ROOT_ENV} (explicit; trusted when the directory exists),
- * 2. `WORKSPACE_ROOT` (when it contains {@link OT_WORKSPACE_MARKER}),
- * 3. walk up from this module's location (always inside OpenThrottle),
- * 4. walk up from `process.cwd()` (last resort).
- * @returns Absolute path to the OpenThrottle root, or undefined when it cannot be determined.
- */
-export const resolveOpenThrottleRoot = (
+export function resolveOpenThrottleRoot(
   env: NodeJS.ProcessEnv = process.env,
-): string | undefined => {
-  const explicit = env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim();
-  if (explicit && isDirectory(explicit)) {
-    return explicit;
-  }
-
-  const workspaceRoot = env.WORKSPACE_ROOT?.trim();
-  if (workspaceRoot && hasWorkspaceMarker(workspaceRoot)) {
-    return workspaceRoot;
-  }
-
-  const moduleDir = getModuleDir();
-  if (moduleDir) {
-    const fromModule = walkUpForWorkspaceRoot(moduleDir);
-    if (fromModule) {
-      return fromModule;
-    }
-  }
-
-  return walkUpForWorkspaceRoot(process.cwd());
-};
+): string | undefined {
+  return getOpenThrottleRoot(env);
+}
 
 /**
- * @description Resolves the OpenThrottle `node_modules/.bin` directory that contains the `workflow-ralph` binary, using {@link resolveOpenThrottleRoot}. Returns undefined when the root or bin directory cannot be found, so callers can leave PATH untouched.
+ * @description Resolves the OpenThrottle `node_modules/.bin` directory that contains the `workflow-ralph` binary, using {@link getOpenThrottleRoot}. Returns undefined when the root or bin directory cannot be found, so callers can leave PATH untouched.
  */
 export const resolveWorkflowRalphBinDir = (
   env: NodeJS.ProcessEnv = process.env,
 ): string | undefined => {
-  const root = resolveOpenThrottleRoot(env);
+  const root = getOpenThrottleRoot(env);
   if (!root) {
     return undefined;
   }
@@ -298,7 +227,7 @@ const resolveEffectiveOpenThrottleRoot = (
     return fromMerged;
   }
 
-  return resolveOpenThrottleRoot(env);
+  return getOpenThrottleRoot(env);
 };
 
 const resolveWorkflowGraphqlAuthFromSpawnEnv = (

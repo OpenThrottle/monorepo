@@ -15,12 +15,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Module layout (proposed)
 
-| Module file (proposed)  | Placeholder today   | Intended utilities                                                                                                                  |
-| ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/postgres.ts` | `postgres.ts`       | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
-| `src/utils/workflow.ts` | `utils.workflow.ts` | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
-| `src/utils/nodejs.ts`   | `utils.nodejs.ts`   | `prependOpenThrottleBinToPath`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                    |
-| `src/utils/metrics.ts`  | `utils.metrics.ts`  | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
+| Module file (proposed)  | Placeholder today  | Intended utilities                                                                                                                  |
+| ----------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/postgres.ts` | `postgres.ts`      | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
+| `src/utils/workflow.ts` | `workflow.ts`      | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
+| `src/utils/nodejs.ts`   | `utils.nodejs.ts`  | `prependOpenThrottleBinToPath`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                    |
+| `src/utils/metrics.ts`  | `utils.metrics.ts` | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
 
 **Barrel:** `src/index.ts` re-exports all public symbols (same pattern as `openthrottle-agentic-workflow`).
 
@@ -85,6 +85,13 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`ensurePostgresReachable`** in `src/utils/postgres.ts` is canonical: connect + `SELECT 1`; throws when the connection string is missing or the check fails.
 - **`pg`** is a **`peerDependency`** (and devDependency for tests); unit tests mock `pg.Client`.
 - **`@tools/workflows`** `ensureCortexReachablePostgres` delegates to `ensurePostgresReachable` and maps Cortex-specific error text; re-export shim on the workflows barrel.
+
+## Overlap resolved (task 5)
+
+- **`getOpenThrottleRoot`** in `src/utils/workflow.ts` is canonical: `WORKFLOW_RALPH_OT_ROOT` → `WORKSPACE_ROOT` (with `pnpm-workspace.yaml`) → module walk-up → `process.cwd()`.
+- **`WORKFLOW_RALPH_OT_ROOT_ENV`** exported from this package; env var name unchanged for compatibility.
+- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveOpenThrottleRoot` shim; spawn/bin helpers call `getOpenThrottleRoot` internally.
+- **`@tools/workflows`** re-exports `getOpenThrottleRoot` and `WORKFLOW_RALPH_OT_ROOT_ENV` from this package.
 
 ## Installation
 
