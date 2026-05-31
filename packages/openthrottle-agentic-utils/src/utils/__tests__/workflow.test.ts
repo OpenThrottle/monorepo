@@ -6,7 +6,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
+  readWorkflowDebugLevelFromEnv,
+  WORKFLOW_RALPH_DEBUG_ENV,
+  WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
+  WORKFLOW_RALPH_VERBOSE_ENV,
 } from '../workflow.js';
 
 /** Temp dir without a workspace marker. */
@@ -84,5 +88,61 @@ describe('getWorkflowConfigCwd', () => {
 
   it('falls back to process.cwd when workingDirectory and WORKSPACE_ROOT are unset', () => {
     expect(getWorkflowConfigCwd(undefined, {})).toBe(process.cwd());
+  });
+});
+
+describe('readWorkflowDebugLevelFromEnv', () => {
+  it('returns off when unset and legacy unset', () => {
+    expect(
+      readWorkflowDebugLevelFromEnv({
+        [WORKFLOW_RALPH_DEBUG_ENV]: undefined,
+        [WORKFLOW_RALPH_DEBUG_LEGACY_ENV]: undefined,
+        [WORKFLOW_RALPH_VERBOSE_ENV]: undefined,
+      }),
+    ).toBe('off');
+  });
+
+  it('maps truthy WORKFLOW_RALPH_DEBUG to debug', () => {
+    expect(
+      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: '1' }),
+    ).toBe('debug');
+    expect(
+      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: 'true' }),
+    ).toBe('debug');
+  });
+
+  it('maps RALPH_DEBUG legacy when primary unset', () => {
+    expect(
+      readWorkflowDebugLevelFromEnv({
+        [WORKFLOW_RALPH_DEBUG_ENV]: undefined,
+        [WORKFLOW_RALPH_DEBUG_LEGACY_ENV]: 'yes',
+      }),
+    ).toBe('debug');
+  });
+
+  it('maps verbose level from WORKFLOW_RALPH_DEBUG', () => {
+    expect(
+      readWorkflowDebugLevelFromEnv({
+        [WORKFLOW_RALPH_DEBUG_ENV]: 'verbose',
+      }),
+    ).toBe('verbose');
+    expect(
+      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: '2' }),
+    ).toBe('verbose');
+  });
+
+  it('maps WORKFLOW_RALPH_VERBOSE to verbose', () => {
+    expect(
+      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_VERBOSE_ENV]: '1' }),
+    ).toBe('verbose');
+  });
+
+  it('returns off for explicit falsy strings', () => {
+    expect(
+      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: '0' }),
+    ).toBe('off');
+    expect(
+      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: 'false' }),
+    ).toBe('off');
   });
 });

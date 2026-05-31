@@ -121,3 +121,61 @@ export function getWorkflowConfigCwd(
 
   return process.cwd();
 }
+
+/** Primary env var for Ralph workflow debug output (stderr). */
+export const WORKFLOW_RALPH_DEBUG_ENV = `WORKFLOW_RALPH_DEBUG` as const;
+
+/** Legacy alias for {@link WORKFLOW_RALPH_DEBUG_ENV}. */
+export const WORKFLOW_RALPH_DEBUG_LEGACY_ENV = `RALPH_DEBUG` as const;
+
+/**
+ * When set, enables the noisiest debug lines (also accepts
+ * `WORKFLOW_RALPH_DEBUG=2|verbose|all`).
+ */
+export const WORKFLOW_RALPH_VERBOSE_ENV = `WORKFLOW_RALPH_VERBOSE` as const;
+
+/** @description Opt-in workflow/Ralph debug shim level parsed from env (no logger instance). */
+export type WorkflowDebugLevel = `off` | `debug` | `verbose`;
+
+/**
+ * @description Returns true when `WORKFLOW_RALPH_VERBOSE` (or equivalent) requests verbose lines.
+ */
+export const isWorkflowVerboseEnvTruthy = (
+  value: string | undefined,
+): boolean => {
+  if (value === undefined || value === ``) {
+    return false;
+  }
+  const s = value.trim().toLowerCase();
+  return (
+    s === `1` || s === `true` || s === `yes` || s === `on` || s === `verbose`
+  );
+};
+
+/**
+ * @description Reads workflow debug level from env (`WORKFLOW_RALPH_DEBUG`, `RALPH_DEBUG`, `WORKFLOW_RALPH_VERBOSE`). Pure; no I/O.
+ */
+export const readWorkflowDebugLevelFromEnv = (
+  env: NodeJS.ProcessEnv = process.env,
+): WorkflowDebugLevel => {
+  const verboseRaw = env[WORKFLOW_RALPH_VERBOSE_ENV];
+  if (isWorkflowVerboseEnvTruthy(verboseRaw)) {
+    return `verbose`;
+  }
+
+  const raw =
+    env[WORKFLOW_RALPH_DEBUG_ENV] ?? env[WORKFLOW_RALPH_DEBUG_LEGACY_ENV];
+  if (raw === undefined || raw === ``) {
+    return `off`;
+  }
+
+  const s = raw.trim().toLowerCase();
+  if (s === `` || s === `0` || s === `false` || s === `off` || s === `no`) {
+    return `off`;
+  }
+  if (s === `2` || s === `verbose` || s === `all`) {
+    return `verbose`;
+  }
+
+  return `debug`;
+};

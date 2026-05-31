@@ -19,13 +19,13 @@ import {
   parseRalphExecutionBackendId,
 } from '../utils/ralph-execution-backend.js';
 import {
-  isVerboseTruthy,
-  RALPH_DEBUG_ENV,
-  RALPH_DEBUG_ENV_LEGACY,
-  RALPH_VERBOSE_ENV,
-  readRalphDebugConfigFromEnv,
-  type RalphDebugLevel,
-} from '../utils/ralph-debug-logger.js';
+  isWorkflowVerboseEnvTruthy,
+  readWorkflowDebugLevelFromEnv,
+  WORKFLOW_RALPH_DEBUG_ENV,
+  WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
+  WORKFLOW_RALPH_VERBOSE_ENV,
+  type WorkflowDebugLevel,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   WORKFLOW_RALPH_TRANSPORT_ENV,
   type WorkflowRalphTransport,
@@ -59,14 +59,14 @@ export const WORKFLOW_RALPH_ENV = {
 /** @description Extended env vars for spawn, diagnostics, transport, and debug. */
 export const WORKFLOW_RALPH_CONFIG_ENV = {
   ...WORKFLOW_RALPH_ENV,
-  debug: RALPH_DEBUG_ENV,
-  debugLegacy: RALPH_DEBUG_ENV_LEGACY,
+  debug: WORKFLOW_RALPH_DEBUG_ENV,
+  debugLegacy: WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   lifecycleHooksChildJobs: 'OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS',
   spawnHome: 'WORKFLOW_RALPH_SPAWN_HOME',
   spawnOtRoot: 'WORKFLOW_RALPH_OT_ROOT',
   spawnXdgConfigHome: 'WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME',
   transport: WORKFLOW_RALPH_TRANSPORT_ENV,
-  verbose: RALPH_VERBOSE_ENV,
+  verbose: WORKFLOW_RALPH_VERBOSE_ENV,
 } as const;
 
 const V1_KNOWN_ROOT_KEYS = new Set([
@@ -375,7 +375,7 @@ export const loadWorkflowRalphDefaultsFileV1 = (
 };
 
 const mapRalphDebugLevelToDefaultsDebug = (
-  level: RalphDebugLevel,
+  level: WorkflowDebugLevel,
 ): WorkflowRalphDefaultsDebug => {
   switch (level) {
     case 'off':
@@ -398,15 +398,15 @@ export const readWorkflowRalphDebugFromEnv = (
   env: NodeJS.ProcessEnv = process.env,
 ): WorkflowRalphDefaultsDebug | undefined => {
   const hasDebugEnv =
-    isVerboseTruthy(env[RALPH_VERBOSE_ENV]) ||
-    (env[RALPH_DEBUG_ENV]?.trim() ?? '') !== '' ||
-    (env[RALPH_DEBUG_ENV_LEGACY]?.trim() ?? '') !== '';
+    isWorkflowVerboseEnvTruthy(env[WORKFLOW_RALPH_VERBOSE_ENV]) ||
+    (env[WORKFLOW_RALPH_DEBUG_ENV]?.trim() ?? '') !== '' ||
+    (env[WORKFLOW_RALPH_DEBUG_LEGACY_ENV]?.trim() ?? '') !== '';
 
   if (!hasDebugEnv) {
     return undefined;
   }
 
-  return mapRalphDebugLevelToDefaultsDebug(readRalphDebugConfigFromEnv(env));
+  return mapRalphDebugLevelToDefaultsDebug(readWorkflowDebugLevelFromEnv(env));
 };
 
 const readTransportFromEnv = (
@@ -693,10 +693,10 @@ export const resolveWorkflowRalphTransport = (
   env: NodeJS.ProcessEnv = process.env,
 ): WorkflowRalphTransport => loadWorkflowRalphConfig(cwd, env).transport;
 
-/** @description Maps {@link WorkflowRalphDefaultsDebug} to {@link RalphDebugLevel}. */
+/** @description Maps {@link WorkflowRalphDefaultsDebug} to {@link WorkflowDebugLevel}. */
 export const mapDefaultsDebugToRalphDebugLevel = (
   debug: WorkflowRalphDefaultsDebug,
-): RalphDebugLevel => {
+): WorkflowDebugLevel => {
   switch (debug) {
     case 'omit':
       return 'off';
