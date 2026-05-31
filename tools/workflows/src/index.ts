@@ -8,6 +8,8 @@ export {
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   POSTGRES_UNREACHABLE_HINT_SUFFIX,
+  NX_WORKSPACE_ROOT_PATH_ENV,
+  pinNxWorkspaceRootToOpenThrottle,
   prependOpenThrottleBinToPath,
   readWorkflowDebugLevelFromEnv,
   DEFAULT_WORKFLOW_RUNNER,
@@ -29,6 +31,7 @@ export type {
   ChildProcessMetricsCollector,
   ChildProcessMetricsOptions,
   ChildProcessSample,
+  PinNxWorkspaceRootResult,
   WorkflowDebugLevel,
   WorkflowRunnerId,
 } from '@openthrottle/openthrottle-agentic-utils';

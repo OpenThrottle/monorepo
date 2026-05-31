@@ -133,6 +133,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`@tools/workflows`** `wall-clock-metrics.ts` re-exports `formatWallClockMetrics` from this package.
 - **`@tools/workflows`** barrel re-exports `formatWallClockMetrics` from this package.
 
+## Overlap resolved (task 14)
+
+- **`pinNxWorkspaceRootToOpenThrottle`**, **`NX_WORKSPACE_ROOT_PATH_ENV`**, and **`PinNxWorkspaceRootResult`** in `src/utils/nodejs.ts` are canonical: pin Nx graph resolution to the OpenThrottle root via `getOpenThrottleRoot`, `NX_WORKSPACE_ROOT_PATH`, `NX_DAEMON=false`, and `setWorkspaceRoot`; `restore()` reverts all three.
+- **`nx`** is a **`peerDependency`** (and devDependency for tests); couples this package to Nx workspace-root APIs — feedback gate: keep vs move to `@openthrottle/nestjs-worktrees`.
+- **`@tools/workflows`** `projects.ts` re-exports the pin helper; **`getNxProjectNames`** still uses `@nx/devkit` `createProjectGraphAsync` in workflows.
+
 ## Overlap resolved (task 13)
 
 - **`createChildProcessMetricsCollector`**, **`ChildProcessMetricsCollector`**, and child-process metric types (`ChildProcessSample`, `ChildProcessMetrics`, `ChildProcessMetricsOptions`, `DEFAULT_POLL_INTERVAL_MS`) in `src/utils/metrics.ts` are canonical: polls a child PID via `pidusage` at intervals and aggregates peak/average CPU and RSS.

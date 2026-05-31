@@ -10,6 +10,7 @@
   "dependencies": {},
   "devDependencies": {
     "@types/pidusage": "^2.0.5",
+    "nx": "22.6.4",
     "pg": "^8.17.1",
     "pidusage": "^4.0.1"
   },
@@ -49,6 +50,7 @@
     }
   },
   "peerDependencies": {
+    "nx": "^22.0.0",
     "pg": "^8.17.1",
     "pidusage": "^4.0.1"
   },
