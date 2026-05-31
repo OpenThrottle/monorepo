@@ -179,3 +179,42 @@ export const readWorkflowDebugLevelFromEnv = (
 
   return `debug`;
 };
+
+/** Env var for Ralph execution backend (`cursor` | `claude`). */
+export const WORKFLOW_RALPH_BACKEND_ENV = `WORKFLOW_RALPH_BACKEND` as const;
+
+/** Known workflow runner ids; extend when adding a runner implementation. */
+export const WORKFLOW_RUNNER_IDS = [`claude`, `cursor`] as const;
+
+/** @description Which CLI/process runs each agentic iteration. */
+export type WorkflowRunnerId = (typeof WORKFLOW_RUNNER_IDS)[number];
+
+/** @description Default runner: Cursor agent CLI. */
+export const DEFAULT_WORKFLOW_RUNNER: WorkflowRunnerId = `cursor`;
+
+/**
+ * @description Returns true when `value` is a supported {@link WorkflowRunnerId}.
+ */
+export const isWorkflowRunnerId = (value: string): value is WorkflowRunnerId =>
+  (WORKFLOW_RUNNER_IDS as readonly string[]).includes(value);
+
+/**
+ * @description Normalizes and validates a runner id from CLI, env, or defaults file.
+ */
+export const parseWorkflowRunnerId = (
+  raw: string,
+  source: `cli` | `env` | `file` = `cli`,
+): WorkflowRunnerId => {
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === ``) {
+    throw new Error(
+      `Execution backend (${source}) must be a non-empty string (e.g. ${DEFAULT_WORKFLOW_RUNNER})`,
+    );
+  }
+  if (!isWorkflowRunnerId(normalized)) {
+    throw new Error(
+      `Unknown execution backend "${raw.trim()}". Supported: ${WORKFLOW_RUNNER_IDS.join(', ')}`,
+    );
+  }
+  return normalized;
+};

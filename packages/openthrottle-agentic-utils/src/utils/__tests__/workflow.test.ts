@@ -4,13 +4,17 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  DEFAULT_WORKFLOW_RUNNER,
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
+  isWorkflowRunnerId,
+  parseWorkflowRunnerId,
   readWorkflowDebugLevelFromEnv,
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
+  WORKFLOW_RUNNER_IDS,
 } from '../workflow.js';
 
 /** Temp dir without a workspace marker. */
@@ -144,5 +148,61 @@ describe('readWorkflowDebugLevelFromEnv', () => {
     expect(
       readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: 'false' }),
     ).toBe('off');
+  });
+});
+
+describe('parseWorkflowRunnerId', () => {
+  it('accepts cursor case-insensitively', () => {
+    expect(parseWorkflowRunnerId('cursor', 'cli')).toBe('cursor');
+    expect(parseWorkflowRunnerId('Cursor', 'env')).toBe('cursor');
+  });
+
+  it('accepts claude case-insensitively', () => {
+    expect(parseWorkflowRunnerId('claude', 'cli')).toBe('claude');
+    expect(parseWorkflowRunnerId('CLAUDE', 'env')).toBe('claude');
+    expect(parseWorkflowRunnerId('  Claude  ', 'file')).toBe('claude');
+  });
+
+  it('rejects unknown backends', () => {
+    expect(() => parseWorkflowRunnerId('codex', 'cli')).toThrow(
+      /Unknown execution backend/,
+    );
+  });
+
+  it('rejects empty string', () => {
+    expect(() => parseWorkflowRunnerId('  ', 'file')).toThrow(
+      /non-empty string/,
+    );
+  });
+
+  it('lists known backends in error message', () => {
+    expect(() => parseWorkflowRunnerId('codex', 'cli')).toThrow(
+      /claude.*cursor|cursor.*claude/,
+    );
+  });
+});
+
+describe('isWorkflowRunnerId', () => {
+  it.each(WORKFLOW_RUNNER_IDS)('returns true for %s', (id) => {
+    expect(isWorkflowRunnerId(id)).toBe(true);
+  });
+
+  it('returns false for unknown ids', () => {
+    expect(isWorkflowRunnerId('codex')).toBe(false);
+    expect(isWorkflowRunnerId('')).toBe(false);
+  });
+});
+
+describe('WORKFLOW_RUNNER_IDS', () => {
+  it('includes claude and cursor (one runner per plan run)', () => {
+    expect(WORKFLOW_RUNNER_IDS).toEqual(
+      expect.arrayContaining(['claude', 'cursor']),
+    );
+  });
+});
+
+describe('DEFAULT_WORKFLOW_RUNNER', () => {
+  it('is cursor', () => {
+    expect(DEFAULT_WORKFLOW_RUNNER).toBe('cursor');
   });
 });

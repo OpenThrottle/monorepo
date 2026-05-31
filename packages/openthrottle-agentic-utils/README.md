@@ -113,6 +113,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`@tools/workflows`** `ralph-debug-logger.ts` re-exports deprecated `readRalphDebugConfigFromEnv`, `RALPH_DEBUG_*` aliases, and `isVerboseTruthy`; global logger stays in workflows.
 - **`@tools/workflows`** barrel re-exports the canonical symbols from this package.
 
+## Overlap resolved (task 10)
+
+- **`parseWorkflowRunnerId`**, **`isWorkflowRunnerId`**, **`WORKFLOW_RUNNER_IDS`**, **`DEFAULT_WORKFLOW_RUNNER`**, and **`WORKFLOW_RALPH_BACKEND_ENV`** in `src/utils/workflow.ts` are canonical: normalize `cursor` | `claude` from CLI, env, or `.workflow-ralph.json`; throw on empty or unknown ids.
+- **`@tools/workflows`** `ralph-execution-backend.ts` re-exports deprecated `parseRalphExecutionBackendId`, `RALPH_EXECUTION_BACKEND_IDS`, `DEFAULT_RALPH_RUNNER`, and `isRalphExecutionBackendId` shims.
+- **`@tools/workflows`** barrel re-exports canonical symbols from this package.
+
 ## Installation
 
 **In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:*"` (already on root `package.json`).

@@ -8,8 +8,13 @@ export {
   POSTGRES_UNREACHABLE_HINT_SUFFIX,
   prependOpenThrottleBinToPath,
   readWorkflowDebugLevelFromEnv,
+  DEFAULT_WORKFLOW_RUNNER,
+  isWorkflowRunnerId,
+  parseWorkflowRunnerId,
   resolveOpenThrottleBinDir,
   sanitizePostgresUrlForLogs,
+  WORKFLOW_RALPH_BACKEND_ENV,
+  WORKFLOW_RUNNER_IDS,
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
@@ -18,6 +23,9 @@ export {
 } from '@openthrottle/openthrottle-agentic-utils';
 export type {
   WorkflowDebugLevel,
+  WorkflowRunnerId,
+} from '@openthrottle/openthrottle-agentic-utils';
+export type {
   ChildProcessMetrics,
   ChildProcessMetricsOptions,
   ChildProcessSample,
