@@ -3,12 +3,13 @@
  */
 
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 
 import {
   getOpenThrottleRoot,
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  prependOpenThrottleBinToPath,
+  resolveOpenThrottleBinDir,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
 
@@ -50,52 +51,20 @@ export function resolveOpenThrottleRoot(
 }
 
 /**
- * @description Resolves the OpenThrottle `node_modules/.bin` directory that contains the `workflow-ralph` binary, using {@link getOpenThrottleRoot}. Returns undefined when the root or bin directory cannot be found, so callers can leave PATH untouched.
+ * @description Resolves the OpenThrottle `node_modules/.bin` directory.
+ * @deprecated Import {@link resolveOpenThrottleBinDir} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-export const resolveWorkflowRalphBinDir = (
+export function resolveWorkflowRalphBinDir(
   env: NodeJS.ProcessEnv = process.env,
-): string | undefined => {
-  const root = getOpenThrottleRoot(env);
-  if (!root) {
-    return undefined;
-  }
-
-  const binDir = path.join(root, 'node_modules', '.bin');
-  return isDirectory(binDir) ? binDir : undefined;
-};
+): string | undefined {
+  return resolveOpenThrottleBinDir(env);
+}
 
 /**
- * @description Returns a copy of `env` with `dir` prepended to PATH. Returns `env` unchanged when `dir` is already on PATH so resolution stays idempotent.
+ * @description Prepends the OpenThrottle `node_modules/.bin` directory to PATH.
+ * @deprecated Import {@link prependOpenThrottleBinToPath} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-const prependDirToPath = (
-  env: NodeJS.ProcessEnv,
-  dir: string,
-): NodeJS.ProcessEnv => {
-  const currentPath = env.PATH ?? '';
-  const parts = currentPath.split(path.delimiter).filter((p) => p.length > 0);
-  if (parts.includes(dir)) {
-    return env;
-  }
-
-  const nextPath =
-    currentPath.length > 0 ? `${dir}${path.delimiter}${currentPath}` : dir;
-
-  return { ...env, PATH: nextPath };
-};
-
-/**
- * @description Prepends the OpenThrottle `node_modules/.bin` directory ({@link resolveWorkflowRalphBinDir}) to PATH so `pnpm exec workflow-ralph` resolves the binary from the OpenThrottle monorepo regardless of `cwd`, without relying on the dev shell PATH bleeding in. No-op when the bin directory cannot be resolved or is already on PATH.
- */
-export const applyWorkflowRalphBinPath = (
-  env: NodeJS.ProcessEnv,
-): NodeJS.ProcessEnv => {
-  const binDir = resolveWorkflowRalphBinDir(env);
-  if (binDir === undefined) {
-    return env;
-  }
-
-  return prependDirToPath(env, binDir);
-};
+export const applyWorkflowRalphBinPath = prependOpenThrottleBinToPath;
 
 /**
  * @description Resolves Cortex Postgres URL from env. Prefer {@link OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV} (injected at spawn), then `POSTGRES_URL`, then `POSTGRES_*` pieces.
@@ -266,7 +235,7 @@ const resolveWorkflowGraphqlUrlFromSpawnEnv = (
 };
 
 /**
- * @description Env passed to nested `pnpm exec workflow-ralph`: GraphQL auth/URL (default) or canonical Postgres URL (rollback), plus PATH with OpenThrottle `node_modules/.bin` for deterministic `workflow-ralph` resolution from a foreign `cwd` (see {@link applyWorkflowRalphBinPath}).
+ * @description Env passed to nested `pnpm exec workflow-ralph`: GraphQL auth/URL (default) or canonical Postgres URL (rollback), plus PATH with OpenThrottle `node_modules/.bin` for deterministic `workflow-ralph` resolution from a foreign `cwd` (see {@link prependOpenThrottleBinToPath}).
  */
 export function buildWorkflowRalphSpawnEnv(
   workerEnv: NodeJS.ProcessEnv,
@@ -319,7 +288,7 @@ export function buildWorkflowRalphSpawnEnv(
       ? { ...env, [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot }
       : env;
 
-  const withBinPath = applyWorkflowRalphBinPath(envWithOtRoot);
+  const withBinPath = prependOpenThrottleBinToPath(envWithOtRoot);
 
   return applyWorkflowRalphSpawnIdentityOverrides(withBinPath, merged);
 }

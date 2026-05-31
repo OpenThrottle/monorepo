@@ -4,12 +4,10 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
-  applyWorkflowRalphBinPath,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   buildWorkflowRalphSpawnEnv,
   resolveCortexPostgresConnectionStringFromEnv,
   resolveOpenThrottleRoot,
-  resolveWorkflowRalphBinDir,
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
@@ -62,49 +60,6 @@ describe('resolveOpenThrottleRoot', () => {
     expect(
       fs.existsSync(path.join(resolved as string, 'pnpm-workspace.yaml')),
     ).toBe(true);
-  });
-});
-
-describe('resolveWorkflowRalphBinDir', () => {
-  it('returns the OT node_modules/.bin when it exists', () => {
-    expect(
-      resolveWorkflowRalphBinDir({ [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot }),
-    ).toBe(otBinDir);
-  });
-
-  it('returns undefined when the resolved root has no node_modules/.bin', () => {
-    expect(
-      resolveWorkflowRalphBinDir({ [WORKFLOW_RALPH_OT_ROOT_ENV]: emptyRoot }),
-    ).toBeUndefined();
-  });
-});
-
-describe('applyWorkflowRalphBinPath', () => {
-  it('prepends the OT bin dir to PATH', () => {
-    const out = applyWorkflowRalphBinPath({
-      PATH: '/usr/bin',
-      [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
-    });
-
-    expect(out.PATH).toBe(`${otBinDir}${path.delimiter}/usr/bin`);
-  });
-
-  it('is idempotent when the OT bin dir is already on PATH', () => {
-    const env: NodeJS.ProcessEnv = {
-      PATH: `${otBinDir}${path.delimiter}/usr/bin`,
-      [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
-    };
-
-    expect(applyWorkflowRalphBinPath(env)).toBe(env);
-  });
-
-  it('leaves env untouched when the bin dir cannot be resolved', () => {
-    const env: NodeJS.ProcessEnv = {
-      PATH: '/usr/bin',
-      [WORKFLOW_RALPH_OT_ROOT_ENV]: emptyRoot,
-    };
-
-    expect(applyWorkflowRalphBinPath(env)).toBe(env);
   });
 });
 

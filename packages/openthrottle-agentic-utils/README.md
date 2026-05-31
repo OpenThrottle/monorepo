@@ -19,7 +19,7 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 | ----------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `src/utils/postgres.ts` | `postgres.ts`      | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                           |
 | `src/utils/workflow.ts` | `workflow.ts`      | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId` |
-| `src/utils/nodejs.ts`   | `utils.nodejs.ts`  | `prependOpenThrottleBinToPath`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                    |
+| `src/utils/nodejs.ts`   | `nodejs.ts`        | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                       |
 | `src/utils/metrics.ts`  | `utils.metrics.ts` | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                            |
 
 **Barrel:** `src/index.ts` re-exports all public symbols (same pattern as `openthrottle-agentic-workflow`).
@@ -98,6 +98,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`getWorkflowConfigCwd`** in `src/utils/workflow.ts` is canonical: job `workingDirectory` → `WORKSPACE_ROOT` → `process.cwd()`.
 - Used to locate `.workflow-ralph.json` and spawn tuning defaults; distinct from **`getOpenThrottleRoot`** (monorepo root for binary/graph resolution).
 - **`@tools/workflows`** re-exports `getWorkflowConfigCwd` from this package; deprecated `resolveWorkflowRalphConfigCwd` shim delegates to it.
+
+## Overlap resolved (task 8)
+
+- **`resolveOpenThrottleBinDir`** and **`prependOpenThrottleBinToPath`** in `src/utils/nodejs.ts` are canonical: resolve `<OT root>/node_modules/.bin` via `getOpenThrottleRoot`, prepend to PATH idempotently.
+- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveWorkflowRalphBinDir` and `applyWorkflowRalphBinPath` shims; `buildWorkflowRalphSpawnEnv` calls `prependOpenThrottleBinToPath` internally.
+- **`@tools/workflows`** re-exports `resolveOpenThrottleBinDir` and `prependOpenThrottleBinToPath` from this package.
 
 ## Installation
 
