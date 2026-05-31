@@ -10,14 +10,16 @@ export const OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV =
 export const POSTGRES_UNREACHABLE_HINT_SUFFIX =
   '\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity.\n';
 
+/** Thrown by {@link getPostgresUrl} when required Postgres env vars are missing or invalid. */
+export const POSTGRES_URL_MISSING_ERROR =
+  '🚨 Required Postgres environment variables are not set';
+
 /**
  * @description Resolves Postgres connection string from env.
  * Precedence: {@link OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV} → `POSTGRES_URL` → `POSTGRES_*` pieces.
- * @returns Connection string or `undefined` when required vars are missing.
+ * @throws When required vars are missing or `POSTGRES_PORT` is invalid.
  */
-export function getPostgresUrl(
-  env: NodeJS.ProcessEnv = process.env,
-): string | undefined {
+export function getPostgresUrl(env: NodeJS.ProcessEnv = process.env): string {
   const cortexUrl = env[OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]?.trim();
   if (cortexUrl) {
     return cortexUrl;
@@ -35,7 +37,7 @@ export function getPostgresUrl(
   const user = env.POSTGRES_USER;
 
   if (!db || !host || !password || !port || !user) {
-    return undefined;
+    throw new Error(POSTGRES_URL_MISSING_ERROR);
   }
 
   const encodedPassword = encodeURIComponent(password);

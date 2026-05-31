@@ -5,6 +5,7 @@ import {
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   POSTGRES_UNREACHABLE_HINT_SUFFIX,
+  POSTGRES_URL_MISSING_ERROR,
   sanitizePostgresUrlForLogs,
   UNPARSEABLE_POSTGRES_URL_LOG_LABEL,
 } from '../postgres.js';
@@ -204,21 +205,21 @@ describe('getPostgresUrl', () => {
   });
 
   describe('when required env vars are missing', () => {
-    it('returns undefined for an empty env', () => {
-      expect(getPostgresUrl({})).toBeUndefined();
+    it('throws for an empty env', () => {
+      expect(() => getPostgresUrl({})).toThrow(POSTGRES_URL_MISSING_ERROR);
     });
 
-    it('returns undefined when POSTGRES_* pieces are incomplete', () => {
-      expect(
+    it('throws when POSTGRES_* pieces are incomplete', () => {
+      expect(() =>
         getPostgresUrl({
           POSTGRES_HOST: 'localhost',
           POSTGRES_USER: 'user',
         }),
-      ).toBeUndefined();
+      ).toThrow(POSTGRES_URL_MISSING_ERROR);
     });
 
-    it('returns undefined when POSTGRES_PORT is invalid', () => {
-      expect(
+    it('throws when POSTGRES_PORT is invalid', () => {
+      expect(() =>
         getPostgresUrl({
           POSTGRES_DB: 'mydb',
           POSTGRES_HOST: 'localhost',
@@ -226,7 +227,7 @@ describe('getPostgresUrl', () => {
           POSTGRES_PORT: 'not-a-number',
           POSTGRES_USER: 'user',
         }),
-      ).toBeUndefined();
+      ).toThrow(POSTGRES_URL_MISSING_ERROR);
     });
   });
 });

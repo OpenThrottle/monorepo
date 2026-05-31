@@ -74,7 +74,11 @@ export const applyWorkflowRalphBinPath = prependOpenThrottleBinToPath;
 export function resolveCortexPostgresConnectionStringFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): string | undefined {
-  return getPostgresUrl(env);
+  try {
+    return getPostgresUrl(env);
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -298,13 +302,7 @@ export function buildWorkflowRalphSpawnEnv(
  * @returns Connection config or undefined if not configured.
  */
 export function getPostgresConfig(): CortexPostgresConfig {
-  const resolved = resolveCortexPostgresConnectionStringFromEnv();
-  if (!resolved) {
-    const message = `🚨 Postgres database is unreachable. Set POSTGRES_URL or POSTGRES_* env vars.`;
-    throw new Error(message);
-  }
-
-  return { connectionString: resolved };
+  return { connectionString: getPostgresUrl() };
 }
 
 /**
