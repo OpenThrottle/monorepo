@@ -2,6 +2,7 @@ export { DEFAULT_POLL_INTERVAL_MS } from './types/child-process-metrics';
 export {
   ensurePostgresReachable,
   getOpenThrottleRoot,
+  getWorkflowConfigCwd,
   getPostgresUrl,
   OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
   POSTGRES_UNREACHABLE_HINT_SUFFIX,

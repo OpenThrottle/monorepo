@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
   getOpenThrottleRoot,
+  getWorkflowConfigCwd,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '../workflow.js';
 
@@ -65,5 +66,23 @@ describe('getOpenThrottleRoot', () => {
     expect(
       fs.existsSync(path.join(resolved as string, 'pnpm-workspace.yaml')),
     ).toBe(true);
+  });
+});
+
+describe('getWorkflowConfigCwd', () => {
+  it('prefers workingDirectory over WORKSPACE_ROOT and process cwd', () => {
+    expect(
+      getWorkflowConfigCwd('/job/wt', { WORKSPACE_ROOT: '/server/root' }),
+    ).toBe('/job/wt');
+  });
+
+  it('falls back to WORKSPACE_ROOT when workingDirectory is blank', () => {
+    expect(getWorkflowConfigCwd('  ', { WORKSPACE_ROOT: '/server/root' })).toBe(
+      '/server/root',
+    );
+  });
+
+  it('falls back to process.cwd when workingDirectory and WORKSPACE_ROOT are unset', () => {
+    expect(getWorkflowConfigCwd(undefined, {})).toBe(process.cwd());
   });
 });

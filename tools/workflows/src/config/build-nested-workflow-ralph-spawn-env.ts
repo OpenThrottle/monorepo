@@ -9,27 +9,19 @@ import {
   resolveOpenThrottleRoot,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/ai-mcp/src/cortex-server';
+import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import { loadWorkflowRalphConfig } from './load-workflow-ralph-config.js';
 
 /**
  * @description Resolves Ralph config cwd for queue workers: job worktree, then `WORKSPACE_ROOT`, then process cwd.
+ * @deprecated Import {@link getWorkflowConfigCwd} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-export const resolveWorkflowRalphConfigCwd = (
+export function resolveWorkflowRalphConfigCwd(
   workingDirectory: string | undefined,
   env: NodeJS.ProcessEnv = process.env,
-): string => {
-  const fromJob = workingDirectory?.trim();
-  if (fromJob !== undefined && fromJob !== '') {
-    return fromJob;
-  }
-
-  const workspaceRoot = env.WORKSPACE_ROOT?.trim();
-  if (workspaceRoot !== undefined && workspaceRoot !== '') {
-    return workspaceRoot;
-  }
-
-  return process.cwd();
-};
+): string {
+  return getWorkflowConfigCwd(workingDirectory, env);
+}
 
 /**
  * @description Builds nested `workflow-ralph` child env with file + env precedence for spawn tuning.

@@ -100,3 +100,24 @@ export function getOpenThrottleRoot(
 
   return walkUpForWorkspaceRoot(process.cwd());
 }
+
+/**
+ * @description Resolves the directory used to load `.workflow-ralph.json` and workflow tuning defaults.
+ * Priority: job worktree (`workingDirectory`), then `WORKSPACE_ROOT`, then `process.cwd()`.
+ */
+export function getWorkflowConfigCwd(
+  workingDirectory: string | undefined,
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const fromJob = workingDirectory?.trim();
+  if (fromJob !== undefined && fromJob !== '') {
+    return fromJob;
+  }
+
+  const workspaceRoot = env.WORKSPACE_ROOT?.trim();
+  if (workspaceRoot !== undefined && workspaceRoot !== '') {
+    return workspaceRoot;
+  }
+
+  return process.cwd();
+}

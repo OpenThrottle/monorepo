@@ -93,6 +93,12 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 - **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveOpenThrottleRoot` shim; spawn/bin helpers call `getOpenThrottleRoot` internally.
 - **`@tools/workflows`** re-exports `getOpenThrottleRoot` and `WORKFLOW_RALPH_OT_ROOT_ENV` from this package.
 
+## Overlap resolved (task 6)
+
+- **`getWorkflowConfigCwd`** in `src/utils/workflow.ts` is canonical: job `workingDirectory` → `WORKSPACE_ROOT` → `process.cwd()`.
+- Used to locate `.workflow-ralph.json` and spawn tuning defaults; distinct from **`getOpenThrottleRoot`** (monorepo root for binary/graph resolution).
+- **`@tools/workflows`** re-exports `getWorkflowConfigCwd` from this package; deprecated `resolveWorkflowRalphConfigCwd` shim delegates to it.
+
 ## Installation
 
 **In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:*"` (already on root `package.json`).
