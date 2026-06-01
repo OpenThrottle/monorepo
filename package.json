@@ -378,7 +378,6 @@
     "clean:vite": "pnpm dlx rimraf --glob **/vite*.config.ts.timestamp*",
     "__database:import-docs": "tsx ./scripts/openthrottle-ingest-docs.ts",
     "database:backup": "tsx ./scripts/openthrottle-database-backup.ts",
-    "database:import": "tsx ./scripts/openthrottle-ingest-plans.ts",
     "database:import-docs": "node --env-file .env --experimental-strip-types ./scripts/openthrottle-ingest-docs.ts",
     "database:bootstrap-service-accounts": "tsx ./scripts/bootstrap-service-account-credentials.ts",
     "database:migrate": "pnpm run database:backup && tsx ./scripts/openthrottle-database-migrations.ts",

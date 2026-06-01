@@ -8,10 +8,7 @@
   // Exclude exports tagged /** @publicApi */ from unused-export reports (see docs/monorepo/Knip.md).
   "tags": ["-publicApi"],
   // React Router typegen: @/* → .react-router/types/* (generated at build; not on disk for report-only Knip).
-  "ignoreUnresolved": [
-    "@/app/\\+types/.*",
-    "@/app/routes/\\+types/.*",
-  ],
+  "ignoreUnresolved": ["@/app/\\+types/.*", "@/app/routes/\\+types/.*"],
   "entry": [
     // "applications/**/*.{ts,tsx,js,jsx}", // Uncomment this to include all applications
     // NestJS applications
@@ -144,7 +141,6 @@
         "scripts/parallelize-tasks.ts",
         "scripts/update-cortex-plan-status.ts",
         "scripts/update-cortex-task-status.ts",
-        "scripts/openthrottle-ingest-plans.ts",
         "scripts/openthrottle-ingest-docs.ts",
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
