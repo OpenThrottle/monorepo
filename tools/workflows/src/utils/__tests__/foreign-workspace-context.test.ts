@@ -67,8 +67,6 @@ describe('resolveForeignWorkspaceContext', () => {
         const env: NodeJS.ProcessEnv = {};
         const context = resolveForeignWorkspaceContext(unresolvable, env);
 
-        // resolveOpenThrottleRoot falls back to a module walk-up which lands in the real
-        // monorepo; the unresolvable cwd is outside it, so a root is still found. The
         // important contract: a resolvable root + outside cwd => foreign.
         if (context.openThrottleRoot === undefined) {
           expect(context.isForeign).toBe(false);

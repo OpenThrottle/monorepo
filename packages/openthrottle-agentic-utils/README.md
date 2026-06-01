@@ -90,7 +90,6 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 - **`getOpenThrottleRoot`** in `src/utils/workflow.ts` is canonical: `WORKFLOW_RALPH_OT_ROOT` → `WORKSPACE_ROOT` (with `pnpm-workspace.yaml`) → module walk-up → `process.cwd()`.
 - **`WORKFLOW_RALPH_OT_ROOT_ENV`** exported from this package; env var name unchanged for compatibility.
-- **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveOpenThrottleRoot` shim; spawn/bin helpers call `getOpenThrottleRoot` internally.
 - **`@tools/workflows`** re-exports `getOpenThrottleRoot` and `WORKFLOW_RALPH_OT_ROOT_ENV` from this package.
 
 ## Overlap resolved (task 6)

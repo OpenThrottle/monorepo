@@ -164,10 +164,10 @@ GraphQL-only boundary.
 
 Two sources of Skills/Prompts/Generators/workflows, merged per run:
 
-| Source           | Where it lives                                                                 | Discovery                                                                                                                            | Role                                                                 |
-| ---------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| **OpenThrottle** | Bundled with the install (the shared library); referenced by OT-stored hooks   | `OPENTHROTTLE_REPO_SKILL_PATHS` / repo-skills discovery against the OpenThrottle root (`resolveOpenThrottleRoot` / `WORKSPACE_ROOT`) | **Default / org-wide.** Source of truth; shared across all projects. |
-| **Repo-local**   | The target repository (`.agents/skills/**`, `.cursor/skills/**`, prompt files) | `discover-repo-skills.server.ts` scanner run against the **run's `workingDirectory`** (not the OpenThrottle root)                    | **Per-project override / addition.** Optional; overrides by slug.    |
+| Source           | Where it lives                                                                 | Discovery                                                                                                                        | Role                                                                 |
+| ---------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **OpenThrottle** | Bundled with the install (the shared library); referenced by OT-stored hooks   | `OPENTHROTTLE_REPO_SKILL_PATHS` / repo-skills discovery against the OpenThrottle root (`getOpenThrottleRoot` / `WORKSPACE_ROOT`) | **Default / org-wide.** Source of truth; shared across all projects. |
+| **Repo-local**   | The target repository (`.agents/skills/**`, `.cursor/skills/**`, prompt files) | `discover-repo-skills.server.ts` scanner run against the **run's `workingDirectory`** (not the OpenThrottle root)                | **Per-project override / addition.** Optional; overrides by slug.    |
 
 **Precedence (decided):** repo-local entries **override** OpenThrottle-owned entries with the same
 slug; OpenThrottle-owned entries fill the rest. This lets a project specialize a skill/prompt while

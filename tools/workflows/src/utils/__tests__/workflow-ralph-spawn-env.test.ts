@@ -7,11 +7,11 @@ import {
   OPENTHROTTLE_POSTGRES_URL_ENV,
   buildWorkflowRalphSpawnEnv,
   resolveCortexPostgresConnectionStringFromEnv,
-  resolveOpenThrottleRoot,
   WORKFLOW_RALPH_OT_ROOT_ENV,
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
 } from '../../../../../packages/ai-mcp/src/config';
+import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 /** Temp dir without a node_modules/.bin so OT bin resolution is a no-op. */
 let emptyRoot: string;
@@ -43,15 +43,15 @@ describe('resolveCortexPostgresConnectionStringFromEnv', () => {
   });
 });
 
-describe('resolveOpenThrottleRoot', () => {
+describe('getOpenThrottleRoot', () => {
   it('honors an explicit WORKFLOW_RALPH_OT_ROOT when the directory exists', () => {
-    expect(
-      resolveOpenThrottleRoot({ [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot }),
-    ).toBe(otRoot);
+    expect(getOpenThrottleRoot({ [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot })).toBe(
+      otRoot,
+    );
   });
 
   it('falls through past a missing explicit root to the module walk-up', () => {
-    const resolved = resolveOpenThrottleRoot({
+    const resolved = getOpenThrottleRoot({
       [WORKFLOW_RALPH_OT_ROOT_ENV]: path.join(otRoot, 'does-not-exist'),
     });
 

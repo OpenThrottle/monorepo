@@ -6,10 +6,12 @@
 import type { BuildWorkflowRalphSpawnEnvOptions } from '@openthrottle/ai-mcp/src/config';
 import {
   buildWorkflowRalphSpawnEnv,
-  resolveOpenThrottleRoot,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/ai-mcp/src/cortex-server';
-import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  getOpenThrottleRoot,
+  getWorkflowConfigCwd,
+} from '@openthrottle/openthrottle-agentic-utils';
 import { loadWorkflowRalphConfig } from './load-workflow-ralph-config.js';
 
 /**
@@ -60,7 +62,7 @@ export const applyWorkflowRalphOtRootFromConfig = (
     return;
   }
 
-  const resolved = resolveOpenThrottleRoot(env);
+  const resolved = getOpenThrottleRoot(env);
   if (resolved !== undefined) {
     env[WORKFLOW_RALPH_OT_ROOT_ENV] = resolved;
   }

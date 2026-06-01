@@ -8,7 +8,6 @@ export {
   buildWorkflowRalphSpawnEnv,
   getPostgresConfig,
   OPENTHROTTLE_POSTGRES_URL_ENV,
-  resolveOpenThrottleRoot,
   resolveWorkflowRalphBinDir,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from './config.js';

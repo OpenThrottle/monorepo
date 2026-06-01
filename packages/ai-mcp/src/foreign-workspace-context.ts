@@ -5,7 +5,7 @@
 
 import * as path from 'node:path';
 
-import { resolveOpenThrottleRoot } from './config.js';
+import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 /**
  * @description True when `childDir` is `parentDir` itself or nested within it.
@@ -34,7 +34,7 @@ export const resolveForeignWorkspaceContext = (
   env: NodeJS.ProcessEnv = process.env,
 ): ForeignWorkspaceContext => {
   const workingDirectory = path.resolve(cwd);
-  const openThrottleRoot = resolveOpenThrottleRoot(env);
+  const openThrottleRoot = getOpenThrottleRoot(env);
   const isForeign =
     openThrottleRoot !== undefined &&
     !isWithinDir(openThrottleRoot, workingDirectory);

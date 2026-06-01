@@ -40,16 +40,6 @@ const isDirectory = (dir: string): boolean => {
 };
 
 /**
- * @description Resolves the OpenThrottle monorepo root.
- * @deprecated Import {@link getOpenThrottleRoot} from `@openthrottle/openthrottle-agentic-utils` instead.
- */
-export function resolveOpenThrottleRoot(
-  env: NodeJS.ProcessEnv = process.env,
-): string | undefined {
-  return getOpenThrottleRoot(env);
-}
-
-/**
  * @description Resolves the OpenThrottle `node_modules/.bin` directory.
  * @deprecated Import {@link resolveOpenThrottleBinDir} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
