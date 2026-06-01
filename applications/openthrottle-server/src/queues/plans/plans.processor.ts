@@ -236,6 +236,8 @@ export class PlansProcessor
         ? `worktree count (${worktreeTargetsCount})`
         : 'default (no worktrees)';
 
+    this.logger.info('🟡 🟡 🟡 worktreeTracker', { worktreeTargetsCount });
+
     this.logger.info(
       `Plans queue worker started (concurrency=${CONCURRENCY}, source=${concurrencySource})`,
       PlansProcessor.name,
@@ -1135,6 +1137,7 @@ export class PlansProcessor
             PlansProcessor.name,
           );
         }
+
         if (result.ensureCommit.stdout) {
           this.logger.info(
             `Ensure-commit ${result.ensureCommit.check} stdout: ${result.ensureCommit.stdout.slice(0, 500)}`,
@@ -1339,6 +1342,7 @@ export class PlansProcessor
       });
 
       const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
+
       return {
         taskRunMetrics: { atEnd: metricsAtEnd, atStart: metricsAtStart },
       };
@@ -1349,6 +1353,7 @@ export class PlansProcessor
       const message = `Ralph failed to spawn: ${logContext}, error=${msgError}`;
 
       this.logger.error(message, PlansProcessor.name);
+
       await this.completePlanRunWithHooks({
         cancelSignal,
         job,
