@@ -654,6 +654,17 @@ type DuplicateJobResultObject {
   error: String
 }
 
+type EnqueueAgenticTestResultObject {
+  """Whether the job was enqueued."""
+  success: Boolean!
+
+  """BullMQ job id when success is true."""
+  jobId: String
+
+  """Error message when success is false."""
+  error: String
+}
+
 type EnqueueDocIngestionResultObject {
   """Whether the job was enqueued."""
   success: Boolean!
@@ -2001,6 +2012,16 @@ type Mutation {
   retryJob(input: RetryJobInput!): RetryJobResultObject!
 
   """
+  Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error.
+  """
+  enqueueAgenticTest: EnqueueAgenticTestResultObject!
+
+  """
+  Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job id or error.
+  """
+  enqueueAgenticWorkflowMock: EnqueueAgenticTestResultObject!
+
+  """
   Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error.
   """
   enqueueDocIngestion(input: EnqueueDocIngestionInput!): EnqueueDocIngestionResultObject!
@@ -2493,7 +2514,7 @@ input EnqueuePlanRalphOrchestratorInput {
   idempotencyKey: String
 
   """
-  Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric).
+  Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric).
   """
   mode: PlanRalphWorkflowMode
 
@@ -2523,7 +2544,7 @@ input EnqueuePlanRalphOrchestratorInput {
 }
 
 """
-Plan-scoped run (default) or task-centric run (`task` requires taskId).
+Plan-scoped run (default) or task-centric run ("task" requires taskId).
 """
 enum PlanRalphWorkflowMode {
   plan
