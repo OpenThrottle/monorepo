@@ -1,3 +1,9 @@
+---
+name: ot-create-plan
+description: Instructions
+disable-model-invocation: true
+---
+
 # Instructions
 
 Your job is to create a new **plan** in Cortex using the ai-mcp MCP server. Optionally add initial **tasks** to the plan.

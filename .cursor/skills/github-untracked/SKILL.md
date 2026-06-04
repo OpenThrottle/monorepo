@@ -1,3 +1,9 @@
+---
+name: github-untracked
+description: Instructions
+disable-model-invocation: true
+---
+
 # Instructions
 
 Your job is to clean up dangling file using `git clean`.

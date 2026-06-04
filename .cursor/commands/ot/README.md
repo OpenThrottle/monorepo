@@ -1,6 +1,8 @@
-# OpenThrottle (OT) Cursor commands
+# OpenThrottle (OT) Cursor skills
 
-**Central reference:** [openthrottle.mdc](../../rules/commands/openthrottle.mdc) — what OT is, when to use it, all available MCP tools, and this command list.
+**Central reference:** [openthrottle.mdc](../../rules/commands/openthrottle.mdc) — what OT is, when to use it, all available MCP tools, and this skill list.
+
+Skills live under `.cursor/skills/` (`ot-ask`, `ot-pending`, etc.).
 
 | Command              | Purpose                                                                     |
 | -------------------- | --------------------------------------------------------------------------- |

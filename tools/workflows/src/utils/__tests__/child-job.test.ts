@@ -651,7 +651,7 @@ describe('runChildJob', () => {
       handoff: handoff(dir),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
       prompt: '/agents/seo',
-      promptFile: '.cursor/commands/agents/ralph.md',
+      promptFile: '.cursor/skills/agents-ralph/SKILL.md',
     };
     try {
       await runChildJob(input);
@@ -663,7 +663,7 @@ describe('runChildJob', () => {
           '--plan',
           '2f94f33c-562d-4a70-8c08-c6d9510317e5',
           '--prompt-file',
-          '.cursor/commands/agents/ralph.md',
+          '.cursor/skills/agents-ralph/SKILL.md',
           '--worktree',
           'wt1',
         ],

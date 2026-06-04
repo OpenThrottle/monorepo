@@ -42,9 +42,9 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     expect(
       buildWorkflowRalphRunTuningArgv({
         prompt: '/agents/ignored',
-        promptFile: '.cursor/commands/agents/ralph.md',
+        promptFile: '.cursor/skills/agents-ralph/SKILL.md',
       }),
-    ).toEqual(['--prompt-file', '.cursor/commands/agents/ralph.md']);
+    ).toEqual(['--prompt-file', '.cursor/skills/agents-ralph/SKILL.md']);
   });
 
   it('includes --debug and --verbose when set', () => {

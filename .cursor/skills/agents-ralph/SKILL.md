@@ -1,3 +1,9 @@
+---
+name: agents-ralph
+description: Instructions
+disable-model-invocation: true
+---
+
 # Instructions
 
 **Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 Ralph - v1.0.1 🌟 🤗 🚀".
@@ -16,14 +22,14 @@
 - Follow [agents.mdc](../../rules/commands/agents.mdc) and [github.mdc](../../rules/commands/github.mdc).
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `SKIPPED`
 - **One task at a time.** Resume any `IN_PROGRESS` first; otherwise pick highest-priority `PENDING`.
-- **Commit frequently.** Run [/github/commit](../github/commit) when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. Record commit hashes in task/stream as you go.
+- **Commit frequently.** Run `/github/commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. Record commit hashes in task/stream as you go.
 
 ### Status updates
 
 Always keep plan and task status in OpenThrottle up to date:
 
 - **At run start:** The workflow CLI sets the plan to `IN_PROGRESS` at run start when OpenThrottle is configured (plan- and task-centric). The agent can still set the plan to `IN_PROGRESS` when starting a task as redundancy.
-- **When starting work on a task:** Set the task to `IN_PROGRESS` via MCP `update_task(taskId, { status: 'IN_PROGRESS' })`. If the plan is still `PENDING`, set the plan to `IN_PROGRESS` (MCP `update_plan(planId, { status: 'IN_PROGRESS' })`.
+- **When starting work on a task:** Set the task to `IN_PROGRESS` via MCP `update_task(taskId, { status: 'IN_PROGRESS' })`. If the plan is still `PENDING`, set the plan to `IN_PROGRESS` (MCP `update_plan(planId, { status: 'IN_PROGRESS' })`).
 - **When completing a task:** Set the task to `COMPLETED` via MCP `update_task` when available. **Always** output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` (one per completed task) so the Ralph CLI can mark it completed in OpenThrottle even if MCP was not used or failed.
 - **When all tasks for the plan are completed:** Set the plan to `COMPLETED` (MCP `update_plan`
 
@@ -31,7 +37,7 @@ Always keep plan and task status in OpenThrottle up to date:
 
 - **`<promise>ERROR</promise>`:** Invalid input or critical failure. Log to stream.
 - **`<promise>INPUT_REQUIRED</promise>`:** User input needed (e.g. API key, approval). Leave task `IN_PROGRESS`; log what's needed.
-- **`<promise>COMPLETE</promise>`:** All tasks `COMPLETED`. No `PENDING` or `IN_PROGRESS`. Run [/github/commit](../github/commit.md) before exiting.
+- **`<promise>COMPLETE</promise>`:** All tasks `COMPLETED`. No `PENDING` or `IN_PROGRESS`. Run `/github/commit` before exiting.
 
 ## References
 

@@ -34,7 +34,7 @@ export POSTGRES_URL="postgresql://openthrottle_user:openthrottle_password@localh
 
 pnpm exec workflow-ralph \
   --plan b0e4bb13-0df3-4d7c-b165-7daf2fdf910e \
-  --prompt-file .cursor/commands/agents/ralph.md
+  --prompt-file .cursor/skills/agents-ralph/SKILL.md
 ```
 
 ## 🏠 Architecture

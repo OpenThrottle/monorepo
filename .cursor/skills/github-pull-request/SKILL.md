@@ -1,3 +1,9 @@
+---
+name: github-pull-request
+description: Instructions
+disable-model-invocation: true
+---
+
 # Instructions
 
 Your job is to look at all commits on the current branch and summarize them into a great Pull Request.

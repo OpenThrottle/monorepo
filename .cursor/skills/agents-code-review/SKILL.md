@@ -1,3 +1,9 @@
+---
+name: agents-code-review
+description: Instructions
+disable-model-invocation: true
+---
+
 # Instructions
 
 Your job is to perform a HIGH QUALITY code review of the current branch.

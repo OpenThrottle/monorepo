@@ -53,7 +53,7 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 - **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/mcp-developer/docs/verification-environment.md](packages/mcp-developer/docs/verification-environment.md).
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
 - **Rules:** [.cursor/rules/commands/openthrottle.mdc](.cursor/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
-- **Commands:** [.cursor/commands/ot/](.cursor/commands/ot/) — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
+- **OT skills:** `.cursor/skills/ot-*` — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **mcp-developer** MCP server; answer only from retrieved chunks.
 - **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
 

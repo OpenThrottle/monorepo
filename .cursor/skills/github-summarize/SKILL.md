@@ -1,3 +1,9 @@
+---
+name: github-summarize
+description: Instructions
+disable-model-invocation: true
+---
+
 # Instructions
 
 Your job is to look at all commits on the current branch and summarize them into 5 - 10 bullet points (each a single line) of conventional commits around this PR. These will be used as in the squash and merge description.
