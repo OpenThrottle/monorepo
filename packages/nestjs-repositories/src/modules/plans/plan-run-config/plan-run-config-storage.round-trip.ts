@@ -151,7 +151,7 @@ export const buildRalphPlanRunTuningFromPlanRunConfig = (
     }
   } else {
     const prompt = ralph.prompt.trim();
-    if (prompt !== '' && prompt !== '/agents/ralph') {
+    if (prompt !== '' && prompt !== '/agents-ralph') {
       tuning.prompt = prompt;
     }
   }

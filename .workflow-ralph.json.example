@@ -1,6 +1,6 @@
 {
   "backend": "cursor",
-  "prompt": "/agents/ralph",
+  "prompt": "/agents-ralph",
   "iterations": 10,
   "iterationTimeout": 1800,
   "model": "auto",

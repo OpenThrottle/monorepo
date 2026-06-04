@@ -36,9 +36,9 @@ import {
 } from '../utils/ot-diagnostics.js';
 import type { Writable } from '../type.js';
 
-export const DEFAULT_RALPH_PROMPT = '/agents/ralph' as const;
+export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
 export const DEFAULT_RALPH_ITERATIONS = 10;
-export const DEFAULT_RALPH_MODEL = 'auto' as const;
+export const DEFAULT_RALPH_MODEL = 'auto';
 
 /**
  * @description Environment variable names for run tuning and prompt profile.

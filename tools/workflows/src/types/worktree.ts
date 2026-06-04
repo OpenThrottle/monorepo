@@ -178,7 +178,7 @@ export interface ChildJobInput {
   /** NX project name; forwarded as `--project` when set. */
   readonly project?: string;
   /**
-   * Prompt profile (layer 1). Omitted uses workflow-ralph built-in default (`/agents/ralph`).
+   * Prompt profile (layer 1). Omitted uses workflow-ralph built-in default (`/agents-ralph`).
    * Passed as `--prompt` when not the default.
    */
   readonly prompt?: string;

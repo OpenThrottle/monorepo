@@ -1915,7 +1915,7 @@ export type RalphPlanRunTuningInput = {
   model?: InputMaybe<Scalars['String']['input']>;
   /** Nx project name for workflow-ralph --project. */
   project?: InputMaybe<Scalars['String']['input']>;
-  /** Prompt profile path (e.g. /agents/ralph) for --prompt. */
+  /** Prompt profile path (e.g. /agents-ralph) for --prompt. */
   prompt?: InputMaybe<Scalars['String']['input']>;
   /** Repo-relative or absolute path for --prompt-file (layer-1 prompt file). */
   promptFile?: InputMaybe<Scalars['String']['input']>;

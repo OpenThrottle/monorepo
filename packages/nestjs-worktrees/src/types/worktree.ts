@@ -150,7 +150,7 @@ export interface ChildJobInput {
   readonly planId: string;
   /** NX project name. */
   readonly project?: string;
-  /** Prompt profile; omitted uses workflow-ralph default (`/agents/ralph`). */
+  /** Prompt profile; omitted uses workflow-ralph default (`/agents-ralph`). */
   readonly prompt?: string;
   /** Prompt file path; forwarded as `--prompt-file` when set (takes precedence over `prompt`). */
   readonly promptFile?: string;

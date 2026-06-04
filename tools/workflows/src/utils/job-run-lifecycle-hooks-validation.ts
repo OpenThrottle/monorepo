@@ -254,7 +254,7 @@ export const validateJobRunHookNamedPrompt = (prompt: string): string => {
   }
   if (!trimmed.startsWith('/')) {
     throw new Error(
-      'named prompt_profile must start with "/" (e.g. /agents/ralph)',
+      'named prompt_profile must start with "/" (e.g. /agents-ralph)',
     );
   }
   return trimmed;

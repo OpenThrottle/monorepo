@@ -31,7 +31,7 @@ Options:
   ${COLORS.cyan}--iterations ${COLORS.gray}<number>${COLORS.reset}    Number of iterations to run  ${COLORS.gray}default: ${COLORS.blue}10${COLORS.reset}
   ${COLORS.cyan}--model ${COLORS.gray}<model> ${COLORS.reset}         Model preset when the backend supports it (${COLORS.gray}--model${COLORS.reset}; omit when ${COLORS.blue}'auto'${COLORS.reset} for Claude)  ${COLORS.gray}default: ${COLORS.blue}'auto'${COLORS.reset}
   ${COLORS.cyan}--project ${COLORS.gray}<name>${COLORS.reset}          NX project name (from project graph; applications + packages)
-  ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt profile (command-style path for Cursor)  ${COLORS.gray}default: ${COLORS.blue}/agents/ralph${COLORS.reset}
+  ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt profile (command-style path for Cursor)  ${COLORS.gray}default: ${COLORS.blue}/agents-ralph${COLORS.reset}
   ${COLORS.cyan}--prompt-file ${COLORS.gray}<path>${COLORS.reset}     Read layer-1 prompt text from a UTF-8 file (mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset})
   ${COLORS.cyan}--prompt-stdin ${COLORS.reset}           Read layer-1 prompt text from stdin (pipe; mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset} / ${COLORS.cyan}--prompt-file${COLORS.reset})
   ${COLORS.cyan}--verbose ${COLORS.reset}           Verbose shim debug (same as ${RALPH_DEBUG_ENV}=verbose or ${RALPH_VERBOSE_ENV}=1)

@@ -102,7 +102,7 @@ export interface JobRunHookEntryBase {
 }
 
 /**
- * `prompt_profile` + `named`: command-style path (e.g. `/agents/ralph`).
+ * `prompt_profile` + `named`: command-style path (e.g. `/agents-ralph`).
  * Resolved like `RalphNestedRunTuningInput.prompt` / `--prompt`.
  */
 export interface JobRunHookPromptProfileNamed extends JobRunHookEntryBase {

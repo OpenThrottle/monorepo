@@ -2492,7 +2492,7 @@ input RalphPlanRunTuningInput {
   """Nx project name for workflow-ralph --project."""
   project: String
 
-  """Prompt profile path (e.g. /agents/ralph) for --prompt."""
+  """Prompt profile path (e.g. /agents-ralph) for --prompt."""
   prompt: String
 
   """

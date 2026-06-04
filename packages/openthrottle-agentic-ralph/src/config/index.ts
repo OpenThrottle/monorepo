@@ -10,7 +10,7 @@ export const DEFAULT_ITERATIONS = 10;
 export const DEFAULT_MODEL: WorkflowConfigModel = 'auto';
 
 /** @description Default `--prompt` path fragment. */
-export const DEFAULT_PROMPT = '/agents/ralph';
+export const DEFAULT_PROMPT = '/agents-ralph';
 
 /** @description Default `--backend` for workflow-ralph; aligned with `tools/workflows` / UI. */
 export const DEFAULT_RUNNER: WorkflowConfigRunner = 'cursor';

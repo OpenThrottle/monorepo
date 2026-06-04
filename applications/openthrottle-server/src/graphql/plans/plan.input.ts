@@ -221,7 +221,7 @@ export class RalphPlanRunTuningInput {
   project!: string | null;
 
   @Field(() => String, {
-    description: `Prompt profile path (e.g. /agents/ralph) for --prompt.`,
+    description: `Prompt profile path (e.g. /agents-ralph) for --prompt.`,
     nullable: true,
   })
   prompt!: string | null;

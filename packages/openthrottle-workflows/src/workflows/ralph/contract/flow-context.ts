@@ -23,7 +23,7 @@
  * | `planId` | `planId` | `--plan`; required in plan mode; in task-only mode resolved from DB. |
  * | `taskId` | `taskId` | `--task`; task uses this as the fixed task. plan: runner picks per-iteration task — **not** duplicated in context for iterations. |
  * | `iterations` | `iterations` + `iterations` | `--iterations` (default 10). **task:** `main()` sets `iterations = 1` **ignoring** `--iterations` (single-task rule); `iterations` keeps the user-requested value. |
- * | `prompt` | `prompt` | `--prompt` (default `/agents/ralph`). |
+ * | `prompt` | `prompt` | `--prompt` (default `/agents-ralph`). |
  * | `project` | `project` | `--project` (must be a known Nx project name). |
  * | `model` | `model` | `--model` (default `auto`). |
  * | `debug` `'omit'` \| `'debug'` \| `'verbose'` | `debug` | `--debug` / `--verbose`; omit uses env / `.workflow-ralph.json` only. |
@@ -49,7 +49,7 @@ import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflo
 export const DEFAULT_RALPH_RUNNER: WorkflowConfigRunner = 'cursor';
 
 /** @description Default `--prompt` path fragment. */
-export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
+export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
 
 /** @description Default `--iterations` (before task override in `main()`). */
 export const DEFAULT_RALPH_ITERATIONS = 10;
