@@ -415,6 +415,7 @@
     "sync:openthrottle:profile": "git subtree push --prefix=applications/openthrottle openthrottle-profile main",
     "sync:openthrottle:server": "git subtree push --prefix=applications/openthrottle-server openthrottle-server main",
     "sync:openthrottle:website": "git subtree push --prefix=applications/openthrottle-website openthrottle-website main",
+    "tools:args": "node --env-file .env --experimental-strip-types ./scripts/_temp.ts",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
     "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts"
   },

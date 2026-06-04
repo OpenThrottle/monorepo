@@ -4,7 +4,7 @@
  */
 
 import type { WorkflowRalphResolvedDefaults } from './workflow-ralph-defaults.types.js';
-import type { RalphNestedDebugCli } from '../utils/workflow-ralph-nested-argv.js';
+import { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** @description Subset of GraphQL `RalphPlanRunTuningInput` / nested job tuning fields. */
 export interface PlanRunTuningMergeInput {
@@ -14,7 +14,7 @@ export interface PlanRunTuningMergeInput {
   readonly model?: string | null;
   readonly project?: string | null;
   readonly prompt?: string | null;
-  readonly ralphDebugCli?: RalphNestedDebugCli | null;
+  readonly ralphDebugCli?: WorkflowConfigDebug | null;
   readonly skipWorktreeSetup?: boolean | null;
   readonly worktree?: string | null;
   readonly worktreeBase?: string | null;
@@ -22,7 +22,7 @@ export interface PlanRunTuningMergeInput {
 
 const mapDefaultsDebugToNestedCli = (
   debug: WorkflowRalphResolvedDefaults['debug'],
-): RalphNestedDebugCli => {
+): WorkflowConfigDebug => {
   switch (debug) {
     case 'debug':
       return 'debug';

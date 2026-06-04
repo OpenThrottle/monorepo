@@ -70,6 +70,7 @@ export class WorkflowLifecycleDispatcherFactory
     this.queueEvents = new QueueEvents(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME, {
       connection: this.lifecycleHooksQueue.opts.connection,
     });
+
     await this.queueEvents.waitUntilReady();
   }
 
@@ -195,6 +196,7 @@ export class WorkflowLifecycleDispatcherFactory
           phase: runPlanParams.phase,
         });
       },
+
       runTask: async (runTaskParams: {
         readonly phase: WorkflowTaskLifecyclePhase;
         readonly task: WorkflowLifecycleTaskContext;

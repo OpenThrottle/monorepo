@@ -370,7 +370,6 @@ export class PlansResolver {
 
     const result = new ListPlansByStatusResultObject();
     const raw = await searchPlansBySemanticQuery(
-      config,
       input.query,
       input.limit ?? DEFAULT_SEARCH_PLANS_LIMIT,
     );

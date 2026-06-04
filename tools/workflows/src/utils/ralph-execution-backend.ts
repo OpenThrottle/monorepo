@@ -11,7 +11,7 @@ import {
   parseWorkflowRunnerId,
   WORKFLOW_RUNNER_IDS,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @deprecated Import {@link WORKFLOW_RUNNER_IDS} from `@openthrottle/openthrottle-agentic-utils` instead.

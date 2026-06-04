@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  DEFAULT_WORKFLOW_RUNNER,
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
@@ -203,11 +204,6 @@ export const readWorkflowDebugLevelFromEnv = (
  * Which CLI/process runs each agentic iteration.
  */
 export type WorkflowRunnerId = (typeof WORKFLOW_RUNNER_IDS)[number];
-
-/**
- * Default runner: Cursor agent CLI.
- */
-export const DEFAULT_WORKFLOW_RUNNER: WorkflowRunnerId = `cursor`;
 
 /**
  * Returns true when `value` is a supported {@link WorkflowRunnerId}.

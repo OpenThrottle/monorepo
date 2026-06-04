@@ -7,39 +7,7 @@ import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 import {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
-  normalizeRalphNestedDebugCli,
 } from '../workflow-ralph-nested-argv';
-
-describe('normalizeRalphNestedDebugCli', () => {
-  it('returns lowercase debug and verbose values', () => {
-    expect(normalizeRalphNestedDebugCli('debug')).toBe('debug');
-    expect(normalizeRalphNestedDebugCli('verbose')).toBe('verbose');
-    expect(normalizeRalphNestedDebugCli('omit')).toBe('omit');
-  });
-
-  it('normalizes legacy uppercase DEBUG and VERBOSE', () => {
-    expect(normalizeRalphNestedDebugCli('DEBUG')).toBe('debug');
-    expect(normalizeRalphNestedDebugCli('VERBOSE')).toBe('verbose');
-  });
-
-  it('maps truthy aliases to debug and verbose', () => {
-    expect(normalizeRalphNestedDebugCli('1')).toBe('debug');
-    expect(normalizeRalphNestedDebugCli('true')).toBe('debug');
-    expect(normalizeRalphNestedDebugCli('2')).toBe('verbose');
-    expect(normalizeRalphNestedDebugCli('all')).toBe('verbose');
-  });
-
-  it('maps omit aliases to omit', () => {
-    expect(normalizeRalphNestedDebugCli('0')).toBe('omit');
-    expect(normalizeRalphNestedDebugCli('false')).toBe('omit');
-    expect(normalizeRalphNestedDebugCli('off')).toBe('omit');
-  });
-
-  it('returns undefined for unknown values', () => {
-    expect(normalizeRalphNestedDebugCli('maybe')).toBeUndefined();
-    expect(normalizeRalphNestedDebugCli(null)).toBeUndefined();
-  });
-});
 
 describe('buildWorkflowRalphRunTuningArgv', () => {
   it('returns empty when input is empty', () => {

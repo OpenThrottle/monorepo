@@ -1,5 +1,5 @@
 import type {
-  WorkflowConfig,
+  WorkflowConfigLegacy,
   WorkflowLifecycleDispatcher,
   WorkflowCorrelation,
   WorkflowRunResult as WorkflowRunResultBase,
@@ -8,23 +8,23 @@ import type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type WorkflowFinishedReason =
-  | 'agent_complete'
-  | 'cancelled'
-  | 'max_iterations'
-  | 'plan_already_terminal'
-  | 'tasks_exhausted';
+  | 'workflow_complete'
+  | 'workflow_cancelled'
+  | 'workflow_max_iterations'
+  | 'workflow_plan_already_terminal'
+  | 'workflow_tasks_exhausted';
 
 export type WorkflowFailedReason =
-  | 'agent_error'
-  | 'input_required'
-  | 'unhandled';
+  | 'workflow_agent_error'
+  | 'workflow_input_required'
+  | 'workflow_unhandled';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
  * {@link WorkflowRalphContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
  * `iterations`).
  */
-export interface WorkflowContext extends WorkflowConfig {
+export interface WorkflowContext extends WorkflowConfigLegacy {
   /**
    * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
    * checked between steps so user cancel matches the spawn-path behavior.

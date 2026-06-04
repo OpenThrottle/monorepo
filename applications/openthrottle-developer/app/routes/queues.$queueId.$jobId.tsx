@@ -38,6 +38,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
     if (q == null || q === '') {
       return [{ children: 'Queues', to: '/queues' }];
     }
+
     return [
       { children: 'Queues', to: '/queues' },
       { children: q, to: `/queues/${encodeURIComponent(q)}` },
@@ -57,19 +58,19 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const jobId = decodeURIComponent(jobIdParam);
-  const result = await executeGraphqlWithAuth(
+  const { job } = await executeGraphqlWithAuth(
     args.request,
     GetQueueJobDetailsDocument,
     { jobId, queueName },
   );
 
-  if (!result.job) {
+  if (!job) {
     throw new Response(`Job not found in queue "${queueName}"`, {
       status: 404,
     });
   }
 
-  return { job: result.job, queueName };
+  return { job, queueName };
 };
 
 export const links: Route.LinksFunction = () => {

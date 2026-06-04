@@ -4,7 +4,10 @@
  * env and `.workflow-ralph.json` in the child cwd still apply (CLI > env > file > built-ins).
  */
 
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowConfigDebug,
+  WorkflowConfigRunner,
+} from '@openthrottle/openthrottle-agentic-workflow';
 import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
@@ -13,54 +16,6 @@ import {
   buildWorktreeNestedArgv,
   type RalphWorktreeName,
 } from './ralph-worktree-cli';
-
-/**
- * @description Maps to `--debug` / `--verbose` / omit (env-only); matches `workflow-ralph` CLI.
- */
-export type RalphNestedDebugCli = 'omit' | 'debug' | 'verbose';
-
-/**
- * @description Normalizes debug CLI tuning to lowercase GraphQL/argv values.
- * Accepts legacy uppercase `DEBUG` / `VERBOSE` and truthy aliases (`1`, `true`, `on`).
- */
-export const normalizeRalphNestedDebugCli = (
-  value: string | null | undefined,
-): RalphNestedDebugCli | undefined => {
-  if (value == null) {
-    return undefined;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  if (normalized === '') {
-    return undefined;
-  }
-
-  if (normalized === 'verbose' || normalized === '2' || normalized === 'all') {
-    return 'verbose';
-  }
-
-  if (
-    normalized === 'debug' ||
-    normalized === '1' ||
-    normalized === 'true' ||
-    normalized === 'on' ||
-    normalized === 'yes'
-  ) {
-    return 'debug';
-  }
-
-  if (
-    normalized === 'omit' ||
-    normalized === '0' ||
-    normalized === 'false' ||
-    normalized === 'off' ||
-    normalized === 'no'
-  ) {
-    return 'omit';
-  }
-
-  return undefined;
-};
 
 /**
  * @description Layer 1 (prompt profile), layer 2 (backend), and layer 3 (run tuning) for nested `pnpm exec workflow-ralph`.
@@ -73,7 +28,7 @@ export interface RalphNestedRunTuningInput {
    * child resolve from env / `.workflow-ralph.json`.
    */
   readonly backend?: WorkflowConfigRunner | null;
-  readonly debug?: RalphNestedDebugCli;
+  readonly debug?: WorkflowConfigDebug;
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
   readonly model?: string;
@@ -143,7 +98,7 @@ export const buildWorkflowRalphRunTuningArgv = (
     );
   }
 
-  switch (normalizeRalphNestedDebugCli(input.debug)) {
+  switch (input.debug) {
     case 'debug':
       ralphArgs.push('--debug');
       break;
@@ -187,7 +142,7 @@ export const mergeRalphNestedRunTuningWithExecutionBackend = (
 
   const hasBackend = base.backend != null;
   const backend = hasBackend ? base.backend : (executionBackend ?? 'cursor');
-  const debug = normalizeRalphNestedDebugCli(base.debug);
+  const debug = base.debug;
 
   return {
     ...base,

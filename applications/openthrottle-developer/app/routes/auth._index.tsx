@@ -40,7 +40,8 @@ export default function Component(
   const [count, setCount] = React.useState(0);
 
   // Setup
-  const isFormEnabled = count >= 5;
+  const isFormEnabled = count >= 0;
+  // const isFormEnabled = count >= 5;
 
   // Handlers
   const onIncrementCount = () => {

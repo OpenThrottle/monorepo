@@ -26,7 +26,7 @@ import {
   type RalphPromptProfileKind,
 } from './ralph-prompt-resolution';
 import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =

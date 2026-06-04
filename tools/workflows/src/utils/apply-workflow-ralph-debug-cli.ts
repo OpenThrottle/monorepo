@@ -3,10 +3,10 @@
  * (orchestrator path parity with nested `workflow-ralph --debug` / `--verbose`).
  */
 
+import { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 import { setRalphDebugLevel, type RalphDebugLevel } from './ralph-debug-logger';
-import type { RalphNestedDebugCli } from './workflow-ralph-nested-argv';
 
-const mapDebugCliToLevel = (debug: RalphNestedDebugCli): RalphDebugLevel => {
+const mapDebugCliToLevel = (debug: WorkflowConfigDebug): RalphDebugLevel => {
   switch (debug) {
     case 'debug':
       return 'debug';
@@ -25,7 +25,7 @@ const mapDebugCliToLevel = (debug: RalphNestedDebugCli): RalphDebugLevel => {
  * @description Enables shim debug for in-process Ralph runs when tuning requests it.
  */
 export const applyWorkflowRalphDebugCli = (
-  debug: RalphNestedDebugCli,
+  debug: WorkflowConfigDebug,
 ): void => {
   setRalphDebugLevel(mapDebugCliToLevel(debug));
 };

@@ -13,8 +13,6 @@ import type { ServerHealthStatus } from './server-health.object';
 
 export interface ServerHealthResponse {
   readonly api: string;
-  /** @deprecated Use {@link api} instead. Example of GraphQL field deprecation policy. */
-  readonly apiStatus: string;
   readonly database: ServerHealthStatus;
   readonly redis: ServerHealthStatus;
   readonly websocket: ServerHealthStatus;
@@ -84,7 +82,6 @@ export class HealthService {
 
     return {
       api: 'ok',
-      apiStatus: 'ok',
       database,
       redis,
       websocket,

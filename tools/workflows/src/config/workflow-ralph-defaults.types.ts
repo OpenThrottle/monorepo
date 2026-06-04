@@ -1,5 +1,5 @@
 /**
- * @description Canonical TypeScript shapes for `.workflow-ralph.json` (v1).
+ * Canonical TypeScript shapes for `.workflow-ralph.json` (v1).
  * JSON Schema: `tools/workflows/schemas/workflow-ralph.defaults.schema.json`.
  * Loader merge and env mapping: {@link loadWorkflowRalphConfig} in `load-workflow-ralph-config.ts`.
  */
@@ -7,24 +7,30 @@
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { WorkflowRalphTransport } from '../utils/workflow-transport.js';
 
-/** @description Debug shim level aligned with {@link WorkflowDebug} in openthrottle-workflows. */
+/**
+ * Debug shim level aligned with {@link WorkflowDebug} in openthrottle-workflows.
+ */
 export type WorkflowRalphDefaultsDebug = 'debug' | 'omit' | 'verbose';
 
-/** @description Nested spawn tuning (worker → child workflow-ralph). Env-only secrets excluded. */
+/**
+ * Nested spawn tuning (worker → child workflow-ralph). Env-only secrets excluded.
+ */
 export interface WorkflowRalphDefaultsSpawnJson {
   readonly home?: string;
   readonly otRoot?: string;
   readonly xdgConfigHome?: string;
 }
 
-/** @description Opt-in diagnostics flags. */
+/**
+ * Opt-in diagnostics flags.
+ */
 export interface WorkflowRalphDefaultsDiagnosticsJson {
   readonly ot?: boolean;
   readonly spawn?: boolean;
 }
 
 /**
- * @description Full v1 defaults file shape. Superset of {@link WorkflowRalphDefaultsFileJson}
+ * Full v1 defaults file shape. Superset of {@link WorkflowRalphDefaultsFileJson}
  * in `ralph-runtime-config.ts` (run tuning only today).
  */
 export interface WorkflowRalphDefaultsFileV1Json {
@@ -46,7 +52,7 @@ export interface WorkflowRalphDefaultsFileV1Json {
 }
 
 /**
- * @description Result of merging built-ins + file + env (before CLI / enqueue overrides).
+ * Result of merging built-ins + file + env (before CLI / enqueue overrides).
  * Implementation: {@link loadWorkflowRalphConfig}.
  */
 export interface WorkflowRalphResolvedDefaults extends Required<
@@ -67,15 +73,17 @@ export interface WorkflowRalphResolvedDefaults extends Required<
   readonly worktreeBase: string | undefined;
 }
 
-/** @description Repo-local defaults filename (cwd). */
-export const WORKFLOW_RALPH_DEFAULTS_FILENAME = '.workflow-ralph.json' as const;
-
-/** @description Sample defaults filename at repo root (documentation only). */
-export const WORKFLOW_RALPH_DEFAULTS_EXAMPLE_FILENAME =
-  '.workflow-ralph.json.example' as const;
+/**
+ * Repo-local defaults filename (cwd).
+ */
+export const WORKFLOW_RALPH_DEFAULTS_FILENAME = `.workflow-ralph.json`;
 
 /**
- * @description Precedence documentation string; keep aligned with CLI `--help` and READMEs.
+ * Sample defaults filename at repo root (documentation only).
  */
-export const WORKFLOW_RALPH_CONFIG_PRECEDENCE =
-  'CLI flags → environment variables → .workflow-ralph.json → built-in defaults' as const;
+export const WORKFLOW_RALPH_DEFAULTS_EXAMPLE_FILENAME = `.workflow-ralph.json.example`;
+
+/**
+ * Precedence documentation string; keep aligned with CLI `--help` and READMEs.
+ */
+export const WORKFLOW_RALPH_CONFIG_PRECEDENCE = `CLI flags → environment variables → .workflow-ralph.json → built-in defaults`;

@@ -10,7 +10,6 @@ import {
   jobRunHooksForJobPayload,
   resolveJobRunHooksForEnqueue,
 } from './enqueue-plan-job-run-hooks';
-import { normalizeRalphNestedDebugCli } from '@tools/workflows';
 import { parseWorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   ChildJobInput,
@@ -22,7 +21,10 @@ import type {
   RunPlanOrchestratorJobData,
   RunPlanSpawnJobData,
 } from '../../queues/plans/plans.types';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
+import type {
+  WorkflowConfigDebug,
+  WorkflowConfigRunner,
+} from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isCortexUuid`.
@@ -185,7 +187,7 @@ export const ralphTuningForChildJob = (
   r: RalphNestedRunTuningInput | undefined,
 ): ChildJobRalphTuning => {
   if (!r) return {};
-  const ralphDebugCli = normalizeRalphNestedDebugCli(r.debug);
+  const ralphDebugCli = r.debug;
 
   return {
     ...(r.backend != null ? { backend: r.backend } : {}),
@@ -255,7 +257,8 @@ export const parseEnqueueRalphTuning = (
   const worktree = normalizeOptionalString(input.worktree);
   const worktreeBase = normalizeOptionalString(input.worktreeBase);
 
-  const ralphDebugCli = normalizeRalphNestedDebugCli(input.ralphDebugCli);
+  // FIXME: we can fix this up
+  const ralphDebugCli = input.ralphDebugCli as WorkflowConfigDebug;
 
   const tuning: RalphNestedRunTuningInput = {
     ...(backendRaw !== undefined

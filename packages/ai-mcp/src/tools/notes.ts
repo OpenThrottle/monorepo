@@ -4,7 +4,6 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getPostgresConfig } from '../config.js';
 import type { NoteRow } from '../cortex-client.js';
 import {
   createNote as cortexCreateNote,
@@ -20,7 +19,7 @@ import {
   listNotesInputSchema,
   updateNoteInputSchema,
 } from '../schemas.js';
-import { configMissingContent, invalidArgsContent } from './errors.js';
+import { invalidArgsContent } from './errors.js';
 
 type NoteToolResult =
   | { content: { text: string; type: 'text' }[]; isError: true }
@@ -44,13 +43,10 @@ async function createNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
+
   try {
     const data = parsed.data;
-    const note = await cortexCreateNote(config, data);
+    const note = await cortexCreateNote(data);
     return {
       content: [
         {
@@ -78,12 +74,9 @@ async function getNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
+
   try {
-    const note = await cortexGetNoteById(config, parsed.data.id);
+    const note = await cortexGetNoteById(parsed.data.id);
     if (!note) {
       return {
         content: [
@@ -115,13 +108,10 @@ async function listNotesHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
+
   try {
     const data = parsed.data;
-    const notes = await cortexListNotes(config, {
+    const notes = await cortexListNotes({
       author: data.author ?? undefined,
       limit: data.limit,
     });
@@ -149,13 +139,10 @@ async function updateNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
+
   try {
     const { id, ...rest } = parsed.data;
-    const note = await cortexUpdateNote(config, id, rest);
+    const note = await cortexUpdateNote(id, rest);
     if (!note) {
       return {
         content: [
@@ -186,12 +173,9 @@ async function deleteNoteHandler(
   if (!parsed.success) {
     return invalidArgsContent(parsed.error.message);
   }
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
+
   try {
-    const deleted = await cortexDeleteNote(config, parsed.data.id);
+    const deleted = await cortexDeleteNote(parsed.data.id);
     const text = deleted
       ? `Note ${parsed.data.id} deleted.`
       : `No note found for id: ${parsed.data.id}.`;

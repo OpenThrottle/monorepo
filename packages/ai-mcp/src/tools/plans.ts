@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getPostgresConfig, getDefaultGitHubUser } from '../config.js';
+import { getDefaultGitHubUser } from '../config.js';
 import {
   createPlan as cortexCreatePlan,
   deletePlan as cortexDeletePlan,
@@ -24,11 +24,7 @@ import {
   listPlansByStatusInputSchema,
   updatePlanInputSchema,
 } from '../schemas.js';
-import {
-  configMissingContent,
-  configMissingSearchContent,
-  invalidArgsContent,
-} from './errors.js';
+import { invalidArgsContent } from './errors.js';
 
 export function registerPlanTools(server: McpServer): void {
   server.registerTool(
@@ -46,18 +42,15 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingSearchContent();
-      }
+
       try {
         const result = await listPlansByStatus(
-          config,
           parsed.data.status,
           undefined,
           parsed.data.project ?? null,
           parsed.data.projectId ?? null,
         );
+
         const text =
           `Plans with status "${parsed.data.status}":\n` +
           (result.plans.length === 0
@@ -109,10 +102,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
+
       try {
         const defaultGh = getDefaultGitHubUser();
         const planInput = {
@@ -120,17 +110,12 @@ export function registerPlanTools(server: McpServer): void {
           assignee: defaultGh ?? parsed.data.assignee ?? null,
           author: defaultGh ?? parsed.data.author,
         };
-        const plan = await cortexCreatePlan(config, planInput);
+        const plan = await cortexCreatePlan(planInput);
         const content = buildPlanContentForEmbedding(plan);
         if (content.trim()) {
           const embedding = await embedQuery(content);
           if (embedding) {
-            await cortexInsertPlanEmbedding(
-              config,
-              plan.id,
-              content,
-              embedding,
-            );
+            await cortexInsertPlanEmbedding(plan.id, content, embedding);
           }
         }
         const text = `Created plan: ${plan.id}\n${JSON.stringify(plan, null, 2)}`;
@@ -166,12 +151,9 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
+
       try {
-        const plan = await cortexGetPlanById(config, parsed.data.id);
+        const plan = await cortexGetPlanById(parsed.data.id);
         if (!plan) {
           return {
             content: [
@@ -183,10 +165,7 @@ export function registerPlanTools(server: McpServer): void {
             isError: true,
           };
         }
-        const relatedCommits = await cortexGetCommitLinksByPlanId(
-          config,
-          plan.id,
-        );
+        const relatedCommits = await cortexGetCommitLinksByPlanId(plan.id);
         const payload = { plan, relatedCommits: [...relatedCommits] };
         return {
           content: [
@@ -232,10 +211,7 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
+
       try {
         const { id, ...rest } = parsed.data;
         const defaultGh = getDefaultGitHubUser();
@@ -243,7 +219,7 @@ export function registerPlanTools(server: McpServer): void {
           if (rest.author !== undefined) rest.author = defaultGh;
           if (rest.assignee !== undefined) rest.assignee = defaultGh;
         }
-        const plan = await cortexUpdatePlan(config, id, rest);
+        const plan = await cortexUpdatePlan(id, rest);
         if (!plan) {
           return {
             content: [
@@ -256,13 +232,8 @@ export function registerPlanTools(server: McpServer): void {
         if (content.trim()) {
           const embedding = await embedQuery(content);
           if (embedding) {
-            await cortexDeletePlanEmbeddings(config, plan.id);
-            await cortexInsertPlanEmbedding(
-              config,
-              plan.id,
-              content,
-              embedding,
-            );
+            await cortexDeletePlanEmbeddings(plan.id);
+            await cortexInsertPlanEmbedding(plan.id, content, embedding);
           }
         }
         return {
@@ -302,12 +273,9 @@ export function registerPlanTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
+
       try {
-        const deleted = await cortexDeletePlan(config, parsed.data.id);
+        const deleted = await cortexDeletePlan(parsed.data.id);
         const text = deleted
           ? `Plan ${parsed.data.id} deleted.`
           : `No plan found for id: ${parsed.data.id}.`;

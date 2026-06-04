@@ -29,7 +29,8 @@ export class AgenticWorkflowService {
    * @description Enqueues a deterministic mock job on the agentic-test queue for processor smoke runs.
    */
   async enqueueMockAgenticTest(): Promise<
-    { jobId: string } | { error: string }
+    | { jobId: string; jobName: string; queueName: string }
+    | { error: string }
   > {
     const job = await this.agenticTestQueue.add(
       AGENTIC_TEST_JOB_NAME,
@@ -39,6 +40,10 @@ export class AgenticWorkflowService {
       return { error: 'Failed to get new job id' };
     }
 
-    return { jobId: String(job.id) };
+    return {
+      jobId: String(job.id),
+      jobName: job.name ?? AGENTIC_TEST_JOB_NAME,
+      queueName: AGENTIC_TEST_QUEUE_NAME,
+    };
   }
 }

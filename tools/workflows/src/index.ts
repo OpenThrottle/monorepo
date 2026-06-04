@@ -36,12 +36,8 @@ export { runChildJob } from './utils/child-job';
 export {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
-  normalizeRalphNestedDebugCli,
 } from './utils/workflow-ralph-nested-argv';
-export type {
-  RalphNestedDebugCli,
-  RalphNestedRunTuningInput,
-} from './utils/workflow-ralph-nested-argv';
+export type { RalphNestedRunTuningInput } from './utils/workflow-ralph-nested-argv';
 export {
   compareJobRunHookEntries,
   defaultJobRunHookOnFailure,

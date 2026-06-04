@@ -1,3 +1,7 @@
+export const DEFAULT_WORKFLOW_DEBUG = 'omit';
+export const DEFAULT_WORKFLOW_ITERATIONS = 10;
+export const DEFAULT_WORKFLOW_RUNNER = 'cursor';
+
 /**
  * Env var for Ralph execution backend (`cursor` | `claude`).
  */
@@ -32,4 +36,4 @@ export const WORKFLOW_RALPH_VERBOSE_ENV = `WORKFLOW_RALPH_VERBOSE`;
 /**
  * Known workflow runner ids; extend when adding a runner implementation.
  */
-export const WORKFLOW_RUNNER_IDS = [`claude`, `cursor`] as const;
+export const WORKFLOW_RUNNER_IDS = [`claude`, `cursor`, 'opencode'] as const;

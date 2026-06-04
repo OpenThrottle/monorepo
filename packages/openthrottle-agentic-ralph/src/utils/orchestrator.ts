@@ -1,9 +1,11 @@
-/* eslint-disable no-await-in-loop */ // FIXME: We can better handle these instances
+// FIXME: We can better handle these instances
+/* eslint-disable no-await-in-loop */
 
 import type {
   WorkflowRunResult,
   WorkflowLifecycleTaskContext,
 } from '@openthrottle/openthrottle-agentic-workflow';
+import { WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
@@ -21,7 +23,6 @@ import {
   buildForeignWorkspacePromptLayer,
   resolveForeignWorkspaceContext,
 } from '@openthrottle/ai-mcp/src/foreign-workspace-context';
-import { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
 import type { WorkflowContext } from '../types.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {
@@ -55,7 +56,7 @@ const buildOrchestratorBasePrompt = (params: {
   return (
     `${context.prompt}\n\n` +
     (foreignLayer !== undefined ? `${foreignLayer}\n\n` : '') +
-    `${RALPH_SHELL_COMMAND_GUARDRAIL}\n\n` +
+    `${WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL}\n\n` +
     `${injectedContext}\n\n` +
     `Plan-Id: ${effectivePlanId}.` +
     (taskIdTrim !== '' ? ` Task-Id: ${taskIdTrim}.` : '') +
@@ -100,7 +101,7 @@ const onFailure = (
 
 /**
  * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
- * `cortex-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanToInProgressWhenTaskInProgress`).
+ * `cortex-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
  */
 const promotePlanToInProgressIfNeeded = async (
   executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
@@ -140,12 +141,12 @@ export const createWorkflowRalphOrchestrator = (
         });
 
         if (!taskLookup.task) {
-          return onFailure('unhandled');
+          return onFailure('workflow_unhandled');
         }
 
         effectivePlanId = taskLookup.task.planId;
       } else if (planIdTrim === '' && taskIdTrim === '') {
-        return onFailure('unhandled');
+        return onFailure('workflow_unhandled');
       }
 
       // state.load
@@ -160,7 +161,7 @@ export const createWorkflowRalphOrchestrator = (
       const tasksRows = tasksResult.tasksByPlanId;
 
       if (!planRow) {
-        return onFailure('unhandled');
+        return onFailure('workflow_unhandled');
       }
 
       // prompt.build
@@ -176,7 +177,7 @@ export const createWorkflowRalphOrchestrator = (
       // plan.guard
       if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
         // 🟡 If the plan is already terminal, we return a finished outcome
-        return onFinished('plan_already_terminal');
+        return onFinished('workflow_plan_already_terminal');
       }
 
       // plan.mark_in_progress
@@ -203,7 +204,7 @@ export const createWorkflowRalphOrchestrator = (
           : undefined;
 
       if (abortSignal?.aborted) {
-        return onFinished('cancelled');
+        return onFinished('workflow_cancelled');
       }
 
       let lastIterationTaskId: string | undefined;
@@ -218,7 +219,7 @@ export const createWorkflowRalphOrchestrator = (
       for (let iteration = 1; iteration <= maxIterations; iteration++) {
         // iteration.guard
         if (abortSignal?.aborted) {
-          return onFinished('cancelled');
+          return onFinished('workflow_cancelled');
         }
 
         let agentPrompt = basePrompt;
@@ -242,7 +243,7 @@ export const createWorkflowRalphOrchestrator = (
             });
 
             // 🟢 If we've exhausted the tasks, we return a finished outcome
-            return onFinished('tasks_exhausted');
+            return onFinished('workflow_tasks_exhausted');
           }
 
           // Grab any tasks that may already be marked in progress
@@ -327,11 +328,11 @@ export const createWorkflowRalphOrchestrator = (
             worktreeBase: context.worktreeBase,
           });
         } catch {
-          return onFailure('unhandled');
+          return onFailure('workflow_unhandled');
         }
 
         if (abortSignal?.aborted) {
-          return onFinished('cancelled');
+          return onFinished('workflow_cancelled');
         }
 
         const completeTaskIds = [...parseAgentCompleteTaskSignals(agentOutput)];
@@ -403,17 +404,17 @@ export const createWorkflowRalphOrchestrator = (
 
         // 1. 🔴 We check for any errors
         if (control === 'ERROR') {
-          return onFailure('agent_error');
+          return onFailure('workflow_agent_error');
         }
 
         // 2. 🟡 Then we check for any input required
         if (control === 'INPUT_REQUIRED') {
-          return onFailure('input_required');
+          return onFailure('workflow_input_required');
         }
 
         // 3. 🟢 Then we check for any completion
         if (control === 'COMPLETE') {
-          return onFinished('agent_complete');
+          return onFinished('workflow_complete');
         }
       } // ---> looping ... done
 
@@ -429,9 +430,9 @@ export const createWorkflowRalphOrchestrator = (
       }
 
       // 5. 🟡 We've successfully completed the iterations, but we've hit our limit
-      return onFinished('max_iterations');
+      return onFinished('workflow_max_iterations');
     } catch {
-      return onFailure('unhandled');
+      return onFailure('workflow_unhandled');
     }
   },
 });

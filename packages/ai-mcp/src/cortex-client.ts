@@ -15,7 +15,6 @@ import type {
   TaskEmbeddingSearchRow,
 } from '@openthrottle/nestjs-repositories';
 import { In } from 'typeorm';
-import type { CortexPostgresConfig } from './config.js';
 import { getOrCreateDataSource, runQuery } from './data-source.js';
 import { embedQuery } from './embedding.js';
 
@@ -84,17 +83,15 @@ interface DocumentationEmbeddingSearchRow {
 /**
  * @description Runs cosine-similarity search over plan_embeddings, task_embeddings, and documentation_embeddings; merges and returns top chunks.
  * Uses TypeORM DataSource with raw SQL so pgvector operator `<=>` and existing HNSW indexes are preserved (TypeORM has no built-in pgvector API).
- * @param config Cortex Postgres connection config.
  * @param embedding 1536-dim query embedding (e.g. from OpenAI text-embedding-3-small).
  * @param limit Max number of chunks to return (default 10).
  */
 export async function runSemanticSearch(
-  config: CortexPostgresConfig,
   embedding: number[],
   limit: number,
 ): Promise<SemanticSearchChunk[]> {
   const vectorStr = `[${embedding.join(',')}]`;
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const planRowsRaw = await ds.query<PlanEmbeddingSearchRow>(
     `SELECT pe.id, pe.content, pe.metadata, pe.plan_id, p.title AS plan_title,
@@ -183,15 +180,13 @@ export async function runSemanticSearch(
 
 /**
  * @description Fetches a single chunk by id from plan_embeddings, task_embeddings, or documentation_embeddings.
- * @param config Cortex Postgres connection config.
  * @param id UUID of the chunk (plan_embedding, task_embedding, or documentation_embedding id).
  * @returns The chunk or null if not found.
  */
 export async function getChunkById(
-  config: CortexPostgresConfig,
   id: string,
 ): Promise<SemanticSearchChunk | null> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   type PlanEmbeddingGetRow = Pick<
     PlanEmbeddingSearchRow,
@@ -204,6 +199,7 @@ export async function getChunkById(
        WHERE pe.id = $1`,
     [id],
   );
+
   const { rows: planRowRows } =
     normalizeQueryResult<PlanEmbeddingGetRow>(planRaw);
   if (planRowRows.length > 0) {
@@ -302,13 +298,11 @@ const DEFAULT_SEMANTIC_SEARCH_LIMIT = 20;
 
 /**
  * @description Search plans by semantic similarity to a query string. Embeds the query via OpenAI, runs vector search, and returns matching plans (deduped by plan id, in relevance order). Requires OPENAI_API_KEY.
- * @param config Cortex Postgres connection config.
  * @param query Free-text search query.
  * @param limit Max number of plans to return (default 20).
  * @returns List of plans matching the query, or empty if embedding fails or no matches.
  */
 export async function searchPlansBySemanticQuery(
-  config: CortexPostgresConfig,
   query: string,
   limit: number = DEFAULT_SEMANTIC_SEARCH_LIMIT,
 ): Promise<ListPlansByStatusResult> {
@@ -316,11 +310,7 @@ export async function searchPlansBySemanticQuery(
   if (!embedding) {
     return { plans: [], totalCount: 0 };
   }
-  const chunks = await runSemanticSearch(
-    config,
-    embedding,
-    Math.min(limit * 2, 50),
-  );
+  const chunks = await runSemanticSearch(embedding, Math.min(limit * 2, 50));
   const seen = new Set<string>();
   const planIds: string[] = [];
   for (const c of chunks) {
@@ -331,7 +321,7 @@ export async function searchPlansBySemanticQuery(
     }
   }
   const planResults = await Promise.all(
-    planIds.map((planId) => getPlanById(config, planId)),
+    planIds.map((planId) => getPlanById(planId)),
   );
   const plans: ListPlansByStatusPlan[] = [];
   for (const plan of planResults) {
@@ -366,12 +356,9 @@ interface ListSourcesResult {
 
 /**
  * @description Lists knowledge-base sources (plan, task, documentation) and plan titles from Cortex.
- * @param config Cortex Postgres connection config.
  */
-export async function listSources(
-  config: CortexPostgresConfig,
-): Promise<ListSourcesResult> {
-  const ds = await getOrCreateDataSource(config);
+export async function listSources(): Promise<ListSourcesResult> {
+  const ds = await getOrCreateDataSource();
   const planRaw = await ds.query<Pick<PlanData, 'id' | 'title'>>(
     `SELECT id, title FROM plans ORDER BY title`,
   );
@@ -426,7 +413,6 @@ export const DEFAULT_PLANS_PAGE_SIZE = 20;
 
 /**
  * @description Lists plans in Cortex filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.
- * @param config Cortex Postgres connection config.
  * @param status Plan status to filter by (e.g. BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED). Use '' or 'all' to show plans regardless of status.
  * @param assignee Optional: filter plans where author or assignee equals this value (e.g. GitHub username).
  * @param project Optional: filter plans whose project equals this value (NX project name).
@@ -438,7 +424,6 @@ export const DEFAULT_PLANS_PAGE_SIZE = 20;
  * @param offset Optional: number of plans to skip (default 0).
  */
 export async function listPlansByStatus(
-  config: CortexPostgresConfig,
   status: string,
   assignee?: string | null,
   project?: string | null,
@@ -449,7 +434,7 @@ export async function listPlansByStatus(
   limit: number = DEFAULT_PLANS_PAGE_SIZE,
   offset: number = 0,
 ): Promise<ListPlansByStatusResult> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const orderColumn = sortBy === 'updated' ? 'updated_at' : 'created_at';
   const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC';
@@ -736,11 +721,8 @@ function mapTaskEntityToRow(task: Task): TaskRow {
 /**
  * @description Creates a plan in Cortex and returns the inserted row.
  */
-export async function createPlan(
-  config: CortexPostgresConfig,
-  input: CreatePlanInput,
-): Promise<PlanRow> {
-  const ds = await getOrCreateDataSource(config);
+export async function createPlan(input: CreatePlanInput): Promise<PlanRow> {
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Plan);
   const plan = repo.create({
     assignee: normalizeAssignee(input.assignee),
@@ -760,11 +742,8 @@ export async function createPlan(
 /**
  * @description Fetches a plan by id, or null if not found.
  */
-export async function getPlanById(
-  config: CortexPostgresConfig,
-  id: string,
-): Promise<PlanRow | null> {
-  const ds = await getOrCreateDataSource(config);
+export async function getPlanById(id: string): Promise<PlanRow | null> {
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Plan);
   const plan = await repo.findOne({ where: { id } });
   return plan ? mapPlanEntityToRow(plan) : null;
@@ -774,11 +753,10 @@ export async function getPlanById(
  * @description Updates a plan by id; returns updated row or null if not found.
  */
 export async function updatePlan(
-  config: CortexPostgresConfig,
   id: string,
   input: UpdatePlanInput,
 ): Promise<PlanRow | null> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Plan);
   const plan = await repo.findOne({ where: { id } });
   if (!plan) return null;
@@ -800,11 +778,8 @@ export async function updatePlan(
 /**
  * @description Deletes a plan by id (cascades to tasks). Returns true if a row was deleted.
  */
-export async function deletePlan(
-  config: CortexPostgresConfig,
-  id: string,
-): Promise<boolean> {
-  const ds = await getOrCreateDataSource(config);
+export async function deletePlan(id: string): Promise<boolean> {
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Plan);
   const result = await repo.delete(id);
   return (result.affected ?? 0) > 0;
@@ -837,11 +812,8 @@ function inferTaskCategory(title: string, description?: string | null): string {
 /**
  * @description Creates a task in Cortex and returns the inserted row.
  */
-export async function createTask(
-  config: CortexPostgresConfig,
-  input: CreateTaskInput,
-): Promise<TaskRow> {
-  const ds = await getOrCreateDataSource(config);
+export async function createTask(input: CreateTaskInput): Promise<TaskRow> {
+  const ds = await getOrCreateDataSource();
   const taskRepo = ds.getRepository(Task);
   const planRepo = ds.getRepository(Plan);
   const status = (input.status ?? 'PENDING').toUpperCase();
@@ -879,11 +851,8 @@ export async function createTask(
 /**
  * @description Fetches a task by id, or null if not found.
  */
-export async function getTaskById(
-  config: CortexPostgresConfig,
-  id: string,
-): Promise<TaskRow | null> {
-  const ds = await getOrCreateDataSource(config);
+export async function getTaskById(id: string): Promise<TaskRow | null> {
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const task = await repo.findOne({ where: { id } });
   return task ? mapTaskEntityToRow(task) : null;
@@ -893,10 +862,9 @@ export async function getTaskById(
  * @description Fetches all tasks for a plan, ordered by created_at.
  */
 export async function getTasksByPlanId(
-  config: CortexPostgresConfig,
   planId: string,
 ): Promise<readonly TaskRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const tasks = await repo.find({
     order: { createdAt: 'ASC' },
@@ -917,10 +885,9 @@ const REMAINING_TASK_STATUSES = [
  * @description Fetches tasks for a plan whose status is BACKLOG, BLOCKED, IN_PROGRESS, or PENDING (i.e. remaining work). Ordered by created_at.
  */
 export async function getRemainingTasksByPlanId(
-  config: CortexPostgresConfig,
   planId: string,
 ): Promise<readonly TaskRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const tasks = await repo.find({
     order: { createdAt: 'ASC' },
@@ -945,10 +912,9 @@ interface ListTasksByCategoryInput {
  * Uses idx_tasks_category for the required category filter.
  */
 export async function listTasksByCategory(
-  config: CortexPostgresConfig,
   input: ListTasksByCategoryInput,
 ): Promise<readonly TaskRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const where: { category: string; planId?: string; status?: string } = {
     category: input.category,
@@ -970,11 +936,10 @@ export async function listTasksByCategory(
  * @description Updates a task by id; returns updated row or null if not found.
  */
 export async function updateTask(
-  config: CortexPostgresConfig,
   id: string,
   input: UpdateTaskInput,
 ): Promise<TaskRow | null> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const task = await repo.findOne({ where: { id } });
   if (!task) return null;
@@ -1001,11 +966,8 @@ export async function updateTask(
 /**
  * @description Deletes a task by id. Returns true if a row was deleted.
  */
-export async function deleteTask(
-  config: CortexPostgresConfig,
-  id: string,
-): Promise<boolean> {
-  const ds = await getOrCreateDataSource(config);
+export async function deleteTask(id: string): Promise<boolean> {
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const result = await repo.delete(id);
   return (result.affected ?? 0) > 0;
@@ -1037,10 +999,9 @@ interface CreateCommitLinkInput {
  * @description Creates a link between a git commit and a plan (and optionally a task). Returns the inserted row.
  */
 export async function createCommitLink(
-  config: CortexPostgresConfig,
   input: CreateCommitLinkInput,
 ): Promise<CommitLinkRow> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     created_at: string;
@@ -1080,10 +1041,9 @@ export async function createCommitLink(
  * @description Fetches all commit links for a plan (plan-level and task-level for that plan), ordered by created_at desc.
  */
 export async function getCommitLinksByPlanId(
-  config: CortexPostgresConfig,
   planId: string,
 ): Promise<readonly CommitLinkRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     created_at: string;
@@ -1116,10 +1076,9 @@ export async function getCommitLinksByPlanId(
  * @description Fetches all commit links for a task (task-level only), ordered by created_at desc.
  */
 export async function getCommitLinksByTaskId(
-  config: CortexPostgresConfig,
   taskId: string,
 ): Promise<readonly CommitLinkRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     created_at: string;
@@ -1181,11 +1140,10 @@ export interface LastActivityResult {
  * @description Fetches the single most recent activity (commit, plan output chunk, or task update) for a plan or for a specific task. Use for "What was the last thing we did for <plan> or <task>?"
  */
 export async function getLastActivityForPlanOrTask(
-  config: CortexPostgresConfig,
   planId: string,
   taskId?: string | null,
 ): Promise<LastActivityResult | null> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   type Candidate = {
     at: string;
@@ -1355,10 +1313,9 @@ interface CreatePlanOutputChunkInput {
  * @description Appends a chunk of streaming output to a plan (e.g. agent iteration log). Returns the inserted row.
  */
 export async function createPlanOutputChunk(
-  config: CortexPostgresConfig,
   input: CreatePlanOutputChunkInput,
 ): Promise<PlanOutputChunkRow> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     content: string;
@@ -1388,10 +1345,9 @@ export async function createPlanOutputChunk(
  * @description Fetches all output chunks for a plan, ordered by created_at ascending (stream order).
  */
 export async function getPlanOutputByPlanId(
-  config: CortexPostgresConfig,
   planId: string,
 ): Promise<readonly PlanOutputChunkRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     content: string;
@@ -1448,11 +1404,10 @@ interface ActivityByDateResult {
  * @description Fetches commit links in a date range (inclusive start, exclusive end). Joins plan and task titles.
  */
 async function getCommitLinksInDateRange(
-  config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
 ): Promise<readonly ActivityCommitRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     created_at: string;
@@ -1492,11 +1447,10 @@ async function getCommitLinksInDateRange(
  * @description Fetches plan output stream chunks in a date range. Joins plan title.
  */
 async function getPlanOutputChunksInDateRange(
-  config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
 ): Promise<readonly ActivityOutputChunkRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     content: string;
@@ -1528,11 +1482,10 @@ async function getPlanOutputChunksInDateRange(
  * @description Fetches tasks whose updated_at falls in a date range. Joins plan title.
  */
 async function getTasksUpdatedInDateRange(
-  config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
 ): Promise<readonly ActivityTaskUpdatedRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     id: string;
@@ -1564,14 +1517,13 @@ async function getTasksUpdatedInDateRange(
  * @description Fetches all activity (commits, plan output chunks, tasks updated) in a date range for "worked on / shipped on X date or X days ago" answers.
  */
 export async function getActivityByDateRange(
-  config: CortexPostgresConfig,
   startIso: string,
   endIso: string,
 ): Promise<ActivityByDateResult> {
   const [commits, outputChunks, tasksUpdated] = await Promise.all([
-    getCommitLinksInDateRange(config, startIso, endIso),
-    getPlanOutputChunksInDateRange(config, startIso, endIso),
-    getTasksUpdatedInDateRange(config, startIso, endIso),
+    getCommitLinksInDateRange(startIso, endIso),
+    getPlanOutputChunksInDateRange(startIso, endIso),
+    getTasksUpdatedInDateRange(startIso, endIso),
   ]);
   return { commits, outputChunks, tasksUpdated };
 }
@@ -1617,11 +1569,8 @@ function mapNoteRow(r: {
 /**
  * @description Creates a note in Cortex and returns the inserted row.
  */
-export async function createNote(
-  config: CortexPostgresConfig,
-  input: CreateNoteInput,
-): Promise<NoteRow> {
-  const ds = await getOrCreateDataSource(config);
+export async function createNote(input: CreateNoteInput): Promise<NoteRow> {
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     author: string | null;
@@ -1644,11 +1593,8 @@ export async function createNote(
 /**
  * @description Fetches a note by id, or null if not found.
  */
-export async function getNoteById(
-  config: CortexPostgresConfig,
-  id: string,
-): Promise<NoteRow | null> {
-  const ds = await getOrCreateDataSource(config);
+export async function getNoteById(id: string): Promise<NoteRow | null> {
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery<{
     author: string | null;
@@ -1670,10 +1616,9 @@ export async function getNoteById(
  * @description Lists notes, newest first. Optional author filter and limit.
  */
 export async function listNotes(
-  config: CortexPostgresConfig,
   options: { author?: string | null; limit?: number } = {},
 ): Promise<readonly NoteRow[]> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
   const res = await runQuery<{
     author: string | null;
@@ -1701,11 +1646,10 @@ export async function listNotes(
  * @description Updates a note by id; returns updated row or null if not found.
  */
 export async function updateNote(
-  config: CortexPostgresConfig,
   id: string,
   input: UpdateNoteInput,
 ): Promise<NoteRow | null> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
 
   const updates: string[] = [];
   const values: unknown[] = [];
@@ -1718,7 +1662,7 @@ export async function updateNote(
     updates.push(`author = $${i++}`);
     values.push(input.author);
   }
-  if (updates.length === 0) return getNoteById(config, id);
+  if (updates.length === 0) return getNoteById(id);
   values.push(id);
   const res = await runQuery<{
     author: string | null;
@@ -1738,11 +1682,8 @@ export async function updateNote(
 /**
  * @description Deletes a note by id. Returns true if a row was deleted.
  */
-export async function deleteNote(
-  config: CortexPostgresConfig,
-  id: string,
-): Promise<boolean> {
-  const ds = await getOrCreateDataSource(config);
+export async function deleteNote(id: string): Promise<boolean> {
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery(ds, 'DELETE FROM notes WHERE id = $1', [id]);
   return res.rowCount > 0;
@@ -1756,11 +1697,8 @@ export async function deleteNote(
 /**
  * @description Deletes all embedding rows for a plan. Use before replacing plan embedding (e.g. on update).
  */
-export async function deletePlanEmbeddings(
-  config: CortexPostgresConfig,
-  planId: string,
-): Promise<number> {
-  const ds = await getOrCreateDataSource(config);
+export async function deletePlanEmbeddings(planId: string): Promise<number> {
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery(
     ds,
@@ -1773,11 +1711,8 @@ export async function deletePlanEmbeddings(
 /**
  * @description Deletes all embedding rows for a task. Use before replacing task embedding (e.g. on update).
  */
-export async function deleteTaskEmbeddings(
-  config: CortexPostgresConfig,
-  taskId: string,
-): Promise<number> {
-  const ds = await getOrCreateDataSource(config);
+export async function deleteTaskEmbeddings(taskId: string): Promise<number> {
+  const ds = await getOrCreateDataSource();
 
   const res = await runQuery(
     ds,
@@ -1791,13 +1726,12 @@ export async function deleteTaskEmbeddings(
  * @description Inserts a plan embedding row for semantic search. Embedding must be 1536-dim (e.g. OpenAI text-embedding-3-small).
  */
 export async function insertPlanEmbedding(
-  config: CortexPostgresConfig,
   planId: string,
   content: string,
   embedding: number[],
   metadata: Record<string, unknown> = {},
 ): Promise<void> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(PlanEmbedding);
   const entity = repo.create({
     content,
@@ -1812,13 +1746,12 @@ export async function insertPlanEmbedding(
  * @description Inserts a task embedding row for semantic search. Embedding must be 1536-dim (e.g. OpenAI text-embedding-3-small).
  */
 export async function insertTaskEmbedding(
-  config: CortexPostgresConfig,
   taskId: string,
   content: string,
   embedding: number[],
   metadata: Record<string, unknown> = {},
 ): Promise<void> {
-  const ds = await getOrCreateDataSource(config);
+  const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(TaskEmbedding);
   const entity = repo.create({
     content,

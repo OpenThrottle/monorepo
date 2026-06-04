@@ -14,8 +14,7 @@ enum RalphNestedDebugCliGraphQL {
 }
 
 registerEnumType(RalphNestedDebugCliGraphQL, {
-  description:
-    'Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.',
+  description: `Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.`,
   name: 'RalphNestedDebugCli',
 });
 
@@ -28,8 +27,7 @@ export enum PlanRalphWorkflowModeGraphQL {
 }
 
 registerEnumType(PlanRalphWorkflowModeGraphQL, {
-  description:
-    'Plan-scoped run (default) or task-centric run (`task` requires taskId).',
+  description: `Plan-scoped run (default) or task-centric run ("task" requires taskId).`,
   name: 'PlanRalphWorkflowMode',
 });
 
@@ -293,15 +291,13 @@ export class EnqueuePlanRunInput {
 @InputType()
 export class EnqueuePlanRalphOrchestratorInput {
   @Field(() => String, {
-    description:
-      'Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.',
+    description: `Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.`,
     nullable: true,
   })
   idempotencyKey!: string | null;
 
   @Field(() => PlanRalphWorkflowModeGraphQL, {
-    description:
-      'Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric).',
+    description: `Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric).`,
     nullable: true,
   })
   mode!: PlanRalphWorkflowModeGraphQL | null;

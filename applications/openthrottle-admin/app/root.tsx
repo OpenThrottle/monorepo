@@ -95,7 +95,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const serverHealth: ServerHealthObject = {
     api: 'ok',
-    apiStatus: 'ok',
     database: 'ok',
     redis: 'ok',
     websocket: 'ok',

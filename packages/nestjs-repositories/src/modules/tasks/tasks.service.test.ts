@@ -78,7 +78,7 @@ describe('TasksService', () => {
     });
   });
 
-  describe('syncParentPlanToInProgressWhenTaskInProgress', () => {
+  describe('syncParentPlanStatus', () => {
     it('returns true and runs atomic update when a non-IN_PROGRESS plan row is updated', async () => {
       const planId = '11111111-1111-1111-1111-111111111111';
       vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
@@ -87,8 +87,7 @@ describe('TasksService', () => {
         raw: [],
       });
 
-      const promoted =
-        await service.syncParentPlanToInProgressWhenTaskInProgress(planId);
+      const promoted = await service.syncParentPlanStatus(planId);
 
       expect(promoted).toBe(true);
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
@@ -105,8 +104,7 @@ describe('TasksService', () => {
         raw: [],
       });
 
-      const promoted =
-        await service.syncParentPlanToInProgressWhenTaskInProgress(planId);
+      const promoted = await service.syncParentPlanStatus(planId);
 
       expect(promoted).toBe(false);
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
@@ -123,8 +121,7 @@ describe('TasksService', () => {
         raw: [],
       });
 
-      const promoted =
-        await service.syncParentPlanToInProgressWhenTaskInProgress(planId);
+      const promoted = await service.syncParentPlanStatus(planId);
 
       expect(promoted).toBe(false);
     });

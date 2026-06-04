@@ -4,21 +4,25 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { RALPH_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/ai-mcp/src/ralph-prompt-guardrails';
 import { sanitizeRalphShellNoise } from '../ralph-shell-misparse';
+import { WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/openthrottle-agentic-utils';
 
 const TASK_UUID = '0c8e76bd-a82c-4f49-b5f8-a9a65c047430';
 
-describe('RALPH_SHELL_COMMAND_GUARDRAIL', () => {
+describe('WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL', () => {
   it('forbids multiline prose in the Shell tool', () => {
-    expect(RALPH_SHELL_COMMAND_GUARDRAIL).toContain(
+    expect(WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL).toContain(
       'Do NOT paste multiline prose into the Shell tool',
     );
   });
 
   it('tells the agent to keep Ralph signals as plain text', () => {
-    expect(RALPH_SHELL_COMMAND_GUARDRAIL).toContain('<ralph:task-complete>');
-    expect(RALPH_SHELL_COMMAND_GUARDRAIL).toContain('plain assistant text');
+    expect(WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL).toContain(
+      '<ralph:task-complete>',
+    );
+    expect(WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL).toContain(
+      'plain assistant text',
+    );
   });
 });
 

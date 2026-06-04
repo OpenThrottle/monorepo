@@ -1,23 +1,5 @@
+import { WorkflowConfigLegacy } from './config.js';
 import { WORKFLOW_EVENT } from '../config/index.js';
-
-/**
- * Shared configuration fields for agentic workflows (model, prompts,
- * iteration limits, timeouts). Workflow-specific options belong in downstream packages
- * via {@link WorkflowRunContext} extensions.
- */
-export type WorkflowConfigDebug = 'debug' | 'omit' | 'verbose';
-export type WorkflowConfigModel = 'auto' | (string & {});
-export type WorkflowConfigRunner = 'cursor' | 'claude' | 'opencode';
-
-export interface WorkflowConfig {
-  readonly debug: WorkflowConfigDebug;
-  readonly iterationMax: number;
-  readonly iterationTimeout: number | undefined;
-  readonly iterations: number;
-  readonly model: WorkflowConfigModel;
-  readonly prompt: string;
-  readonly timeout: number | undefined;
-}
 
 /**
  * Align structured logs using `correlationId` (and optionally `queueJobId`,
@@ -65,10 +47,10 @@ export interface WorkflowExecutionHooks {
 
 /**
  * Immutable snapshot of inputs driving a workflow run: shared
- * {@link WorkflowConfig} plus optional {@link WorkflowExecutionHooks}.
+ * {@link WorkflowConfigLegacy} plus optional {@link WorkflowExecutionHooks}.
  */
 export interface WorkflowRunContext
-  extends WorkflowConfig, WorkflowExecutionHooks {}
+  extends WorkflowConfigLegacy, WorkflowExecutionHooks {}
 
 /**
  * Stable error shape for workflow steps; callers map from transport-layer errors.
@@ -83,7 +65,10 @@ export interface WorkflowError {
  * Terminal outcome of a workflow run. Downstream packages supply
  * discriminated reason types for finished vs failed branches.
  */
-export type WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> =
+export type WorkflowRunResult<
+  WorkflowFinishedReason extends string,
+  WorkflowFailedReason extends string,
+> =
   | {
       readonly exitCode: 0;
       readonly reason: WorkflowFinishedReason;
@@ -123,8 +108,8 @@ export type WorkflowStepSuccess<
  * fields stay outside this package.
  */
 export interface WorkflowOrchestrator<
-  WorkflowFinishedReason,
-  WorkflowFailedReason,
+  WorkflowFinishedReason extends string,
+  WorkflowFailedReason extends string,
   TContext extends WorkflowRunContext = WorkflowRunContext,
 > {
   readonly execute: (params: {

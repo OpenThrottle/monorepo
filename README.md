@@ -221,3 +221,12 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 **4. Other issues?**
 
 Let me know and we'll get to the bottom of things 🤷
+
+---
+
+```ts
+// from '@openthrottle/ai-mcp/
+// from '@openthrottle/nestjs-agentic-workflow';
+// from '@openthrottle/openthrottle-agentic-utils';
+// from '@tools/workflows';
+```

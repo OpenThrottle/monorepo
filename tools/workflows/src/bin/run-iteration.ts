@@ -1,6 +1,6 @@
 /**
  * @description Single-iteration runner for Ralph (sync and async). Injected by ralph.ts so tests can mock it.
- * Dispatches to a {@link WorkflowConfigRunner} implementation: `cursor` (Cursor `cursor-agent`) and
+ * Dispatches to a {@link RalphExecutionBackendId} implementation: `cursor` (Cursor `cursor-agent`) and
  * `claude` (Anthropic Claude Code CLI, `claude --bare -p …` — see code.claude.com headless docs).
  */
 
@@ -10,11 +10,9 @@ import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
 import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
-import {
-  appendRalphWorktreeShellFlags,
-  type RalphWorktreeCliOptions,
-} from '../utils/ralph-worktree-cli';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import { appendRalphWorktreeShellFlags } from '../utils/ralph-worktree-cli';
+import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
 
 /** Chunk from runner stdout or stderr when using async spawn. */
 export interface CursorAgentChunk {
@@ -88,6 +86,13 @@ const buildCursorShellCommand = (config: RunIterationConfig): string => {
   const modelFlag = model ? ` --model ${model}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
   const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+
+  console.log('__________________________________ START | safePrompt');
+  console.log(safePrompt);
+  console.log(
+    '__________________________________ END | safePrompt',
+    safePrompt,
+  );
 
   return appendRalphWorktreeShellFlags(base, 'cursor', {
     skipWorktreeSetup,
@@ -213,6 +218,7 @@ const runShellIterationAsync = (
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning runner', {
+      config, // TODO: remove this
       cwd: cwd ?? process.cwd(),
       iteration,
       runnerLabel,

@@ -97,7 +97,6 @@
     "scripts/get-cortex-plan-and-tasks.ts",
     "scripts/link-cortex-plans-tasks-to-existing-projects.ts",
     "scripts/list-cortex-plans-tasks-without-project.ts",
-    "scripts/openthrottle-associate-plans-tasks-with-project.ts",
     // infra/ is Terraform-only (no TS project graph)
     "infra/**",
   ],

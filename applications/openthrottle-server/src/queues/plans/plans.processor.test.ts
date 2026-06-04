@@ -98,9 +98,7 @@ const mockWorktreeTracker = {
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
 const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
-const mockSyncParentPlanToInProgressWhenTaskInProgress = vi
-  .fn()
-  .mockResolvedValue(false);
+const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(false);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -118,8 +116,7 @@ const mockTasksService = createMock<TasksService>({
       find: vi.fn().mockResolvedValue([]),
       findOne: mockTaskRepoFindOne,
     }) as unknown as ReturnType<TasksService['getRepository']>,
-  syncParentPlanToInProgressWhenTaskInProgress:
-    mockSyncParentPlanToInProgressWhenTaskInProgress,
+  syncParentPlanStatus: mocksyncParentPlanStatus,
 });
 
 const snapshotStub = {
@@ -756,15 +753,11 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mockSyncParentPlanToInProgressWhenTaskInProgress.mockResolvedValueOnce(
-        true,
-      );
+      mocksyncParentPlanStatus.mockResolvedValueOnce(true);
 
       await processor.onModuleInit();
 
-      expect(
-        mockSyncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledWith(divergedPlanId);
+      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
       const notifications = (
         processor as unknown as { notifications: NotificationsService }
       ).notifications;
@@ -786,15 +779,11 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mockSyncParentPlanToInProgressWhenTaskInProgress.mockResolvedValueOnce(
-        false,
-      );
+      mocksyncParentPlanStatus.mockResolvedValueOnce(false);
 
       await processor.onModuleInit();
 
-      expect(
-        mockSyncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledWith(divergedPlanId);
+      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
       const notifications = (
         processor as unknown as { notifications: NotificationsService }
       ).notifications;
@@ -812,9 +801,7 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(
-        mockSyncParentPlanToInProgressWhenTaskInProgress,
-      ).not.toHaveBeenCalled();
+      expect(mocksyncParentPlanStatus).not.toHaveBeenCalled();
     });
   });
 

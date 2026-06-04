@@ -13,6 +13,7 @@ import {
   Meta,
   Outlet,
   redirect,
+  redirectDocument,
   Scripts,
   ScrollRestoration,
   useFetcher,
@@ -26,6 +27,7 @@ import { Toaster } from '@openthrottle/react-router-shadcn';
 import {
   buildAuthCookie,
   getAuthTokenFromCookie,
+  getClearAuthCookieHeader,
 } from '@openthrottle/react-router-auth';
 import {
   artwork,
@@ -59,7 +61,10 @@ import {
 import { SITE_TITLE } from '#/app/global/config/settings';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { userAtom } from '~/global/data/atom.user';
-import { dataNavigationV2 } from '~/global/data/data.navigation';
+import {
+  dataNavigationGuest,
+  dataNavigationV2,
+} from '~/global/data/data.navigation';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import {
@@ -76,6 +81,7 @@ import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import {
   callLoginMutation,
+  callLogoutMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
 import { handleSendAgentMessageIntent } from '~/global/utils/utils.agents-chat';
@@ -109,7 +115,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   let serverHealth: ServerHealthObject = {
     api: 'ok',
-    apiStatus: 'ok',
     database: 'ok',
     redis: 'ok',
     websocket: 'ok',
@@ -123,9 +128,19 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const authToken = getAuthTokenFromCookie(cookieHeader);
   const isTokenNull = authToken === null;
+
   let user: UserObject | null = null;
   /** When false, the `me` query failed; do not treat as logged out for redirects. */
   let userLoadOk: boolean = isTokenNull;
+
+  const pathname = new URL(request.url).pathname;
+  const isProtected = PROTECTED_PATH_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+
+  if (isProtected && isTokenNull) {
+    return redirect('/auth');
+  }
 
   /** In development, always poll server health so API misconfiguration surfaces even when auth is off. */
   if (FEATURE_BETA_PREVIEW) {
@@ -422,7 +437,7 @@ export default function App(): React.ReactElement {
         >
           <GlobalProviders>
             <GlobalLayout
-              data={dataNavigationV2}
+              data={data?.user ? dataNavigationV2 : dataNavigationGuest}
               health={data?.serverHealth}
               overrides={{ footer: isFooterHidden }}
             >
@@ -504,6 +519,8 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
 
+  console.log(`🟢 intent: ${intent} - action`);
+
   if (intent === 'commander-search') {
     const jump = formData.get('jump');
     if (jump === 'plans-index') return redirect('/plans');
@@ -570,9 +587,27 @@ export const action = async (args: Route.ActionArgs) => {
       }
 
       const cookie = buildAuthCookie(token);
-      return redirect('/', {
+      return redirect('/dashboard', {
         headers: { 'Set-Cookie': cookie },
       });
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : 'Login failed';
+
+      return { error: message };
+    }
+  }
+
+  if (intent === 'logout') {
+    try {
+      const success = await callLogoutMutation();
+      if (success) {
+        return redirectDocument('/', {
+          headers: {
+            'Set-Cookie': getClearAuthCookieHeader(),
+          },
+        });
+      }
     } catch (error) {
       const isError = error instanceof Error;
       const message = isError ? error.message : 'Login failed';

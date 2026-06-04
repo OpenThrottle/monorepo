@@ -4,7 +4,7 @@
  */
 
 import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
-import type { RalphNestedDebugCli } from '@tools/workflows';
+import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * Status of a worktree target: available for work or locked by a job.
@@ -137,7 +137,7 @@ export interface ChildJobInput {
    */
   readonly backend?: WorkflowRunnerId;
   /** Shim debug for nested runs; forwarded as `--debug` or `--verbose`. */
-  readonly debug?: RalphNestedDebugCli;
+  readonly debug?: WorkflowConfigDebug;
   /** Handoff from parent (branch name, target id, worktree path). */
   readonly handoff: ParentJobHandoff;
   /** Per-iteration timeout in seconds for nested workflow-ralph. */

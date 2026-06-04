@@ -55,7 +55,7 @@ async function readKnowledgeBaseChunk(
   }
 
   try {
-    const chunk = await getChunkById(config, id as string);
+    const chunk = await getChunkById(id as string);
     if (!chunk) {
       result = {
         contents: [

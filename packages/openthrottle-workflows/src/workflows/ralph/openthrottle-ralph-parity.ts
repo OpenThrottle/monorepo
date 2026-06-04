@@ -31,7 +31,7 @@
  * - `updatePlanProjectId` → `updatePlan` with `projectId` / `project` fields (`mutations.graphql`)
  * - `updatePlanSummary` → `updatePlan` with `summary`
  * - `updatePlanStatus` → `updatePlan` with `status` (see behavioral note below)
- * - `promotePlanToInProgressIfNeeded` → `updatePlan` with `status: IN_PROGRESS` (same predicate as `updatePlanStatus` / `syncParentPlanToInProgressWhenTaskInProgress`)
+ * - `promotePlanToInProgressIfNeeded` → `updatePlan` with `status: IN_PROGRESS` (same predicate as `updatePlanStatus` / `syncParentPlanStatus`)
  * - `updateTaskStatus` → `updateTask` with `status`
  * - `updateTaskSummary` → `updateTask` with `summary`
  *

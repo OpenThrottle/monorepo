@@ -11,7 +11,7 @@ import type {
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 import type { RunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
 import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type { RunPlanOrchestratorJobData };
 export { isRunPlanOrchestratorJobData };

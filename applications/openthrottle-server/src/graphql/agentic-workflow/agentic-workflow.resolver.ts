@@ -3,8 +3,8 @@
  */
 
 import { Mutation, Resolver } from '@nestjs/graphql';
-import { EnqueueAgenticTestResultObject } from '../queues/enqueue-agentic-test-result.object';
 import { AgenticWorkflowService } from './agentic-workflow.service';
+import { EnqueueAgenticWorkflowMockResultObject } from './enqueue-agentic-workflow-mock-result.object';
 
 @Resolver()
 export class AgenticWorkflowResolver {
@@ -12,21 +12,25 @@ export class AgenticWorkflowResolver {
     private readonly agenticWorkflowService: AgenticWorkflowService,
   ) {}
 
-  @Mutation(() => EnqueueAgenticTestResultObject, {
+  @Mutation(() => EnqueueAgenticWorkflowMockResultObject, {
     description:
-      'Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job id or error.',
+      'Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error.',
   })
-  async enqueueAgenticWorkflowMock(): Promise<EnqueueAgenticTestResultObject> {
+  async enqueueAgenticWorkflowMock(): Promise<EnqueueAgenticWorkflowMockResultObject> {
     const result = await this.agenticWorkflowService.enqueueMockAgenticTest();
 
-    const out = new EnqueueAgenticTestResultObject();
+    const out = new EnqueueAgenticWorkflowMockResultObject();
     if ('jobId' in result) {
       out.success = true;
       out.jobId = result.jobId;
+      out.jobName = result.jobName;
+      out.queueName = result.queueName;
       out.error = null;
     } else {
       out.success = false;
       out.jobId = null;
+      out.jobName = null;
+      out.queueName = null;
       out.error = result.error;
     }
     return out;

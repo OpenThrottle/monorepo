@@ -27,10 +27,7 @@ import {
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import { resolveRalphWorktreeName } from './ralph-worktree-cli';
-import {
-  buildWorkflowRalphRunTuningArgv,
-  normalizeRalphNestedDebugCli,
-} from './workflow-ralph-nested-argv';
+import { buildWorkflowRalphRunTuningArgv } from './workflow-ralph-nested-argv';
 import { createChildProcessMetricsCollector } from './child-process-metrics';
 import type { ChildProcessMetricsCollector } from './child-process-metrics';
 
@@ -327,7 +324,7 @@ export async function runChildJob(
     planId,
     ...buildWorkflowRalphRunTuningArgv({
       backend,
-      debug: normalizeRalphNestedDebugCli(ralphDebugCli),
+      debug: ralphDebugCli,
       iterationTimeoutSeconds,
       iterations,
       model,

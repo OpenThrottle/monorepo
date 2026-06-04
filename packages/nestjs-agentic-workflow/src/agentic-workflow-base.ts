@@ -4,7 +4,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
- * @description Workflow-agnostic pattern for an agentic workflow registered with Nest DI.
+ * Workflow-agnostic pattern for an agentic workflow registered with Nest DI.
  *
  * A concrete workflow (for example `AgenticWorkflowRalph`) extends this base, declares a stable
  * {@link AgenticWorkflowBase.id}, and builds its {@link WorkflowOrchestrator} from injected
@@ -20,18 +20,18 @@ import type {
  * no default export, explicit return types.
  */
 export abstract class AgenticWorkflowBase<
-  WorkflowFinishedReason = unknown,
-  WorkflowFailedReason = unknown,
+  WorkflowFinishedReason extends string,
+  WorkflowFailedReason extends string,
   TContext extends WorkflowRunContext = WorkflowRunContext,
 > {
   /**
-   * @description Stable registration id for this workflow (for example `'ralph'`). The dispatcher
+   * Stable registration id for this workflow (for example `'ralph'`). The dispatcher
    * resolves a registered workflow by this id; it MUST be unique within a registry.
    */
   abstract readonly id: string;
 
   /**
-   * @description Builds the concrete {@link WorkflowOrchestrator} for this workflow from the
+   * Builds the concrete {@link WorkflowOrchestrator} for this workflow from the
    * workflow's injected dependencies. Implementations wrap their downstream orchestrator factory
    * (for example `createWorkflowRalphOrchestrator`) and keep all workflow-specific knowledge here.
    */
@@ -43,7 +43,7 @@ export abstract class AgenticWorkflowBase<
 }
 
 /**
- * @description A concrete {@link AgenticWorkflowBase} of any context shape. The registry is
+ * A concrete {@link AgenticWorkflowBase} of any context shape. The registry is
  * workflow-agnostic and resolves by id, so its element type must accept workflows whose
  * `TContext` narrows {@link WorkflowRunContext} (for example Ralph's `WorkflowContext`).
  * `WorkflowOrchestrator` is contravariant in its context, so a single concrete element type
@@ -51,36 +51,36 @@ export abstract class AgenticWorkflowBase<
  * hatch (resolution is by id and the dispatcher narrows the orchestrator at the call site).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyAgenticWorkflow = AgenticWorkflowBase<unknown, unknown, any>;
+export type AnyAgenticWorkflow = AgenticWorkflowBase<string, string, any>;
 
 /**
- * @description Read-only registry of {@link AgenticWorkflowBase} implementations keyed by
+ * Read-only registry of {@link AgenticWorkflowBase} implementations keyed by
  * {@link AgenticWorkflowBase.id}. Bound under {@link AGENTIC_WORKFLOW_REGISTRY}; the dispatcher
  * resolves a workflow by id and throws an actionable error for an unknown id.
  */
 export interface AgenticWorkflowRegistry {
   /**
-   * @description Returns the registered workflow for `id`, or `undefined` when none is registered.
+   * Returns the registered workflow for `id`, or `undefined` when none is registered.
    */
   readonly get: (id: string) => AnyAgenticWorkflow | undefined;
   /**
-   * @description All registered workflow ids (for diagnostics / unknown-id error messages).
+   * All registered workflow ids (for diagnostics / unknown-id error messages).
    */
   readonly ids: () => readonly string[];
   /**
-   * @description Returns the registered workflow for `id`, throwing when it is not registered.
+   * Returns the registered workflow for `id`, throwing when it is not registered.
    */
   readonly resolve: (id: string) => AnyAgenticWorkflow;
 }
 
 /**
- * @description Nest DI token for the {@link AgenticWorkflowRegistry}. Provided by
+ * Nest DI token for the {@link AgenticWorkflowRegistry}. Provided by
  * `NestjsAgenticWorkflowModule.registerWorkflow`; consumed by the orchestrator-by-default dispatcher.
  */
 export const AGENTIC_WORKFLOW_REGISTRY = Symbol('AGENTIC_WORKFLOW_REGISTRY');
 
 /**
- * @description Builds an {@link AgenticWorkflowRegistry} from the given workflows, keyed by id.
+ * Builds an {@link AgenticWorkflowRegistry} from the given workflows, keyed by id.
  * Throws on duplicate ids so misregistration fails loudly at module construction.
  */
 export const createAgenticWorkflowRegistry = (
@@ -94,6 +94,7 @@ export const createAgenticWorkflowRegistry = (
         `Duplicate agentic workflow id registered: "${workflow.id}"`,
       );
     }
+
     byId.set(workflow.id, workflow);
   }
 
@@ -104,12 +105,14 @@ export const createAgenticWorkflowRegistry = (
       const workflow = byId.get(id);
       if (!workflow) {
         const known = [...byId.keys()];
+
         throw new Error(
           `Unknown agentic workflow id: "${id}". Registered ids: ${
             known.length > 0 ? known.join(', ') : '(none)'
           }`,
         );
       }
+
       return workflow;
     },
   };
