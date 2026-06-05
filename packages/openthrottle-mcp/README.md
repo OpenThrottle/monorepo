@@ -2,7 +2,7 @@
 
 Model Context Protocol (MCP) server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access). Tools call `openthrottle-server` over GraphQL only.
 
-For schema, embeddings, and local Postgres setup, see [databases/README.md](../../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
+For schema, embeddings, and local Postgres setup, see [databases/README.md](../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
 
 **Cursor launcher:** [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) does not require a root **`OPENAI_API_KEY`**; configure **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **openthrottle-server** for semantic search. See [docs/verification-environment.md](docs/verification-environment.md) and [run-locally-oss.md](../../docs/openthrottle/run-locally-oss.md).
 
