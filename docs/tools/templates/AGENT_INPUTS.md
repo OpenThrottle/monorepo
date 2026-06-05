@@ -49,9 +49,15 @@ Invoke skills **before** writing code when the task matches their **USE WHEN** t
 | `.cursor/rules/coding/no-unchecked-indexed-access.mdc`  | Index access may be `T \| undefined`                   |
 | `.cursor/rules/coding/any-inside-generic-functions.mdc` | When `any` is acceptable in generics                   |
 
-### 1.4 Single entry point for agents
+### 1.4 Single entry points for agents
 
-- **`.cursor/rules/README.md`** — Describes layout (coding/ vs commands/), **Agent behavior** (plans in OT, fail loudly, generators first), and points to personal-generators.mdc and AGENT_USAGE.md. Agents should be directed here for "what rules exist and how to behave."
+| Doc                                                                   | Owns                                                                                             |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **This doc (AGENT_INPUTS.md)**                                        | What agents should load: rules list, example commands, discoverability checklist                 |
+| **[agent-editor-folders.md](../../monorepo/agent-editor-folders.md)** | Where files live: folder tree, duplication strategy, canonical ownership, where to edit          |
+| **[.cursor/rules/README.md](../../../.cursor/rules/README.md)**       | Rules layout (coding/ vs commands/), agent behavior (plans in OT, fail loudly, generators first) |
+
+Agents onboarding: **AGENT_INPUTS** for _what to load_, **agent-editor-folders** for _where to edit_, **`.cursor/rules/README.md`** for _how rules are organized_.
 
 ---
 
@@ -105,14 +111,15 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 ### 3.2 Supporting references
 
-| Location                          | Content                                                                                                    |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **AGENTS.md**                     | § Code style: ".cursor/rules/ — see README.md"; § Generators links to AGENT_USAGE.md.                      |
-| **RULES_TO_GENERATORS_MAP.md**    | Maps which rules apply to which generator; use when auditing or applying rules per artifact type.          |
-| **AUDIT_SCOPE.md**                | Defines what’s in scope for component/template audits (apps, packages, artifact types).                    |
-| **AUDIT_CHECKLIST.md**            | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`.        |
-| **AGENT_INPUTS.md** (this doc)    | Single spec for what to provide to agents: rules list, example commands, discoverability.                  |
-| **openthrottle-generators** skill | `.agents/skills/openthrottle-generators/SKILL.md` — invoke before **nx-generate** for `@tools/generators`. |
+| Location                                                              | Content                                                                                                    |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **AGENTS.md**                                                         | § Code style: ".cursor/rules/ — see README.md"; § Generators links to AGENT_USAGE.md.                      |
+| **RULES_TO_GENERATORS_MAP.md**                                        | Maps which rules apply to which generator; use when auditing or applying rules per artifact type.          |
+| **AUDIT_SCOPE.md**                                                    | Defines what’s in scope for component/template audits (apps, packages, artifact types).                    |
+| **AUDIT_CHECKLIST.md**                                                | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`.        |
+| **AGENT_INPUTS.md** (this doc)                                        | Single spec for what to provide to agents: rules list, example commands, discoverability.                  |
+| **[agent-editor-folders.md](../../monorepo/agent-editor-folders.md)** | Folder layout, duplication matrix, where to edit — not rule/skill bodies (see §1).                         |
+| **openthrottle-generators** skill                                     | `.agents/skills/openthrottle-generators/SKILL.md` — invoke before **nx-generate** for `@tools/generators`. |
 
 ### 3.3 Recommendations for implementation (post-planning)
 
@@ -124,10 +131,11 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 ## 4. Summary
 
-| What                 | Where                                                                                                                                                                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rules to load**    | §1: always-applied rules; §1.2 **openthrottle-generators** + AGENTS.md skills for Nx/generators; coding/\* for code edits. Single entry: .cursor/rules/README.md.                                                     |
-| **Example commands** | §2: discover (list → describe → list=<key> → execute); NX_ISOLATE_PLUGINS=false on every generator command; EXAMPLES.md for per-generator snippets; AGENT_USAGE.md is authoritative.                                  |
-| **Discoverability**  | §3: AGENTS.md, .cursor/rules/README.md, personal-generators.mdc, AGENT_USAGE.md all state "generator first"; RULES_TO_GENERATORS_MAP, AUDIT_SCOPE, AUDIT_CHECKLIST, AGENT_INPUTS support audits and agent onboarding. |
+| What                 | Where                                                                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Rules to load**    | §1: always-applied rules; §1.2 **openthrottle-generators** + AGENTS.md skills for Nx/generators; coding/\* for code edits. Entry points: .cursor/rules/README.md (rules layout), [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) (folder paths). |
+| **Example commands** | §2: discover (list → describe → list=<key> → execute); NX_ISOLATE_PLUGINS=false on every generator command; EXAMPLES.md for per-generator snippets; AGENT_USAGE.md is authoritative.                                                                               |
+| **Discoverability**  | §3: AGENTS.md, .cursor/rules/README.md, personal-generators.mdc, AGENT_USAGE.md all state "generator first"; RULES_TO_GENERATORS_MAP, AUDIT_SCOPE, AUDIT_CHECKLIST, AGENT_INPUTS support audits and agent onboarding.                                              |
+| **Folder layout**    | [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) — not duplicated here; use for `.cursor/` vs `.claude/` vs `.agents/` and sync strategy.                                                                                                         |
 
-This specification is the single reference for the "Define agent inputs: rules, examples, and discoverability" task. Downstream work (e.g. audit checklist, automation) should use it to ensure agents receive consistent rules, commands, and pointers to generator-first workflow.
+This specification is the single reference for **what agents should load** (rules, examples, discoverability). For **where agent/editor files live**, use [agent-editor-folders.md](../../monorepo/agent-editor-folders.md). Downstream work (e.g. audit checklist, automation) should use both to ensure agents receive consistent rules, commands, and pointers to generator-first workflow.
