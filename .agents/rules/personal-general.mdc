@@ -1,0 +1,93 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+## General Instructions
+
+### Updating Existing Files
+
+- Alphabetize arrays and object keys when their order doesn't matter.
+- Avoid type casing using `as` and using `any` as much as possible.
+- Do not introduce new TypeScript enums; use `as const` objects for enum-like values (see [enums.mdc](./coding/enums.mdc)). Retain existing enums.
+- Use `const` instead of `let` or `var` when possible.
+- Use `async/await` instead of `.then()` for asynchronous code.
+
+# Monorepo Instructions
+
+## UI Applications
+
+Our UI applications use React Router and React.
+
+### Creating New Files
+
+**Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md). Use Nx `@tools/generators` with `NX_ISOLATE_PLUGINS=false` and **`pnpm nx`**; do not use the legacy `yarn generate:*` commands for new code.
+
+Scaffold React Router app files with the **react-router** generator (`component`, `route`, `form`, `modal`, `table`, etc.). Discover valid values, then generate:
+
+```bash
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
+  --subGenerator=component \
+  --application=<APPLICATION_NAME> \
+  --folder=<FOLDER_NAME> \
+  --name=<COMPONENT_NAME>
+```
+
+- `<APPLICATION_NAME>` is an Nx application in this monorepo (e.g. `openthrottle-developer`). Use `--list=applications` to enumerate.
+- `<FOLDER_NAME>` is the folder under `applications/<application>/app` (use `--list=componentFolders --application=<APPLICATION_NAME>` when applicable).
+- `<COMPONENT_NAME>` should be PascalCase for components. `--subGenerator=route` and other sub-generators use the same entrypoint; see `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe`.
+
+### Updating Existing Files
+
+- Use components from `@openthrottle/react-router-shadcn` when possible. Source for those primitives lives under `packages/react-router-shadcn/src/components` if they ever need to be updated.
+
+### Testing
+
+- Test all new components and functions.
+- Always use `component`, not `screen`, to get elements in tests.
+- Use `userEvent` instead of `fireEvent` for simulating user interactions.
+- Use `waitFor` to wait for asynchronous updates in the DOM.
+- Generate mock data from GraphQL in the `mocks.ts` file of the given application.
+- Each if statement in the logic should have its own `describe` block.
+- Always include tests for edge cases to ensure robustness.
+
+## API Applications
+
+Our API applications powered by React Router will typically use Supabase, Postgres. NestJS applications will use GraphQL and Postgres.
+
+### Creating New Files
+
+**Agents:** Use the generator-first workflow (see [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md)). Use `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs` for new services/modules.
+
+Example (GraphQL service in an application):
+
+```bash
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
+  --subGenerator=graphql-service \
+  --application=<APPLICATION_NAME> \
+  --name=<SERVICE_NAME>
+```
+
+- **subGenerator** values include `graphql-service`, `simple-service`, `module`, `queue`, `ai-agent`, and `application`. Run `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --describe` for required flags per sub-generator.
+- `<APPLICATION_NAME>` is the target NestJS app when required (e.g. `openthrottle-server`).
+- `<SERVICE_NAME>` is kebab-case (often plural for services).
+
+### Updating Existing Files
+
+- When updating `.entity` files the GraphQL schema must be backwards compatible, so avoid removing fields or changing types. If a field is no longer needed, it should be marked as deprecated instead.
+- Resolver methods should return an ObjectType created using `PaginatedResult()`, `ListResult()`, or `Result()`, i.e. instead of returning `PlatformShift`, return:
+
+```typescript
+@ObjectType()
+export class PlatformShiftListResult extends ListResult(PlatformShift) {}
+```
+
+### Testing
+
+- Test all new methods added to resolvers, services, and repositories.
+- Mock any NestJS providers in the `beforeEach` block of the test.
+- Use model factories from the repository and entity factories from the service when necessary.
+- Each if statement in the logic should have its own `describe` block.
+- Always include tests for edge cases to ensure robustness.
