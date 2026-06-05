@@ -52,7 +52,6 @@ export function getAuthToken(): string {
   }
 
   const token = process.env.MCP_DEVELOPER_AUTH_TOKEN;
-
   const trimmed = typeof token === 'string' ? token.trim() : '';
 
   if (trimmed === '') {

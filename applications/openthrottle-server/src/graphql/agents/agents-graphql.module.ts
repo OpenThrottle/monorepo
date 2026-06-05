@@ -4,7 +4,7 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { McpDeveloperModule } from '../../modules/mcp-developer/mcp-developer.module';
+import { McpDeveloperModule } from '../../modules/openthrottle-mcp/openthrottle-mcp.module';
 import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
 import { AgentsMcpRouter } from './agents-mcp-router';
 import { AgentsResolver } from './agents.resolver';

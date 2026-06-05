@@ -2,11 +2,11 @@
  * @description MCP server and tool constants.
  */
 
-const DEFAULT_SERVER_NAME = '@openthrottle/mcp-developer';
+const DEFAULT_SERVER_NAME = '@openthrottle/openthrottle-mcp';
 export const SERVER_VERSION = '1.0.0';
 
 /**
- * @description MCP server name: from MCP_SERVER_NAME, or @openthrottle/mcp-developer-{WORKTREE_ID}
+ * @description MCP server name: from MCP_SERVER_NAME, or @openthrottle/openthrottle-mcp-{WORKTREE_ID}
  * when WORKTREE_ID is set (e.g. by run-ai-mcp.sh), otherwise default. Makes
  * each worktree advertise a distinct identity so Cursor does not conflate instances.
  */

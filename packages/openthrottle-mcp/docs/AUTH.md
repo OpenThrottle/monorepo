@@ -29,7 +29,7 @@ MCP and workers should assume **auth enabled** and send a valid service account 
  pnpm run database:migrate
 ```
 
-Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `mcp-developer` and `workflow-ralph` with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). It does **not** store secrets. 2. Mint bearer tokens (plaintext shown once):
+Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `openthrottle-mcp` and `workflow-ralph` with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). It does **not** store secrets. 2. Mint bearer tokens (plaintext shown once):
 
 ```bash
  pnpm run database:bootstrap-service-accounts
@@ -45,23 +45,23 @@ Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `mc
 
 If the bootstrap script skips an account because an active credential already exists, rotate via [Credential rotation](#credential-rotation) or revoke the old credential in admin GraphQL, then re-run the script.
 
-## Token source (mcp-developer)
+## Token source (openthrottle-mcp)
 
-- **Per-request (embedded in openthrottle-server):** `withMcpDeveloperAuthToken` / `withMcpDeveloperAuthTokenAsync` from `@openthrottle/mcp-developer/auth` so concurrent GraphQL requests do not share a global token.
+- **Per-request (embedded in openthrottle-server):** `withMcpDeveloperAuthToken` / `withMcpDeveloperAuthTokenAsync` from `@openthrottle/openthrottle-mcp/auth` so concurrent GraphQL requests do not share a global token.
 - **Primary (stdio MCP / CLI):** environment variable `**MCP_DEVELOPER_AUTH_TOKEN`\*\*
 
 Resolution order: per-request store → `MCP_DEVELOPER_AUTH_TOKEN`. If none is set or the value is empty, authenticated tools throw an error that instructs you to set the env var.
 
 ## Cursor MCP config
 
-In `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global / secondary workspace), set `**env**` on the `mcp-developer` server:
+In `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global / secondary workspace), set `**env**` on the `openthrottle-mcp` server:
 
 ```json
 {
   "mcpServers": {
-    "mcp-developer": {
+    "openthrottle-mcp": {
       "command": "bash",
-      "args": ["./scripts/run-mcp-developer.sh"],
+      "args": ["./scripts/run-openthrottle-mcp.sh"],
       "env": {
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",
@@ -72,7 +72,7 @@ In `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global / secondary work
 }
 ```
 
-Use an **absolute path** to `run-mcp-developer.sh` when the OpenThrottle repo is not the Cursor workspace root (see [verification-environment.md](./verification-environment.md)).
+Use an **absolute path** to `run-openthrottle-mcp.sh` when the OpenThrottle repo is not the Cursor workspace root (see [verification-environment.md](./verification-environment.md)).
 
 Do not commit real tokens. Prefer user-level MCP `env` or local `.env` files that are gitignored.
 
@@ -83,7 +83,7 @@ Rotate without disabling auth:
 1. **Create** a new credential (plaintext returned once):
 
 - **Bootstrap (no active credential):** `pnpm run database:bootstrap-service-accounts`
-- **Admin GraphQL (human JWT + `users:write`):** `createServiceAccountCredential` with `serviceAccountId` for `mcp-developer` (or another account). Requires `users:read` / `users:write` on your human user (assign `admin` after first login if needed).
+- **Admin GraphQL (human JWT + `users:write`):** `createServiceAccountCredential` with `serviceAccountId` for `openthrottle-mcp` (or another account). Requires `users:read` / `users:write` on your human user (assign `admin` after first login if needed).
 
 2. **Update** env everywhere the old token was stored:
 
@@ -126,7 +126,7 @@ mutation Revoke($credentialId: ID!) {
 }
 ```
 
-Use the `serviceAccountId` for `mcp-developer` in `CreateServiceAccountCredentialInput`. Store `token` immediately; it cannot be fetched again.
+Use the `serviceAccountId` for `openthrottle-mcp` in `CreateServiceAccountCredentialInput`. Store `token` immediately; it cannot be fetched again.
 
 ## Workflow worker token
 

@@ -1,12 +1,12 @@
 ---
 name: ot-plans
 description: >-
-  OpenThrottle (OT) plans and tasks via the mcp-developer MCP server (GraphQL
+  OpenThrottle (OT) plans and tasks via the openthrottle-mcp MCP server (GraphQL
   to openthrottle-server). USE WHEN creating or updating plans/tasks, plans in
   OT only, failing loudly when MCP is unavailable (no Markdown plan
   fallbacks), Plan-Id and Task-Id in commits, link_commit or
   workflow-link-merge after merge, or the user mentions OpenThrottle, OT,
-  Cortex, mcp-developer, plan UUIDs, task UUIDs, /ot commands, semantic search
+  Cortex, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
   over plans, or git–OT traceability. Covers when to use OT vs docs-mcp vs
   databases/README and plan/task lifecycle.
 ---
@@ -19,21 +19,21 @@ Use alongside repository rules (`.cursor/rules/commands/openthrottle.mdc`, `.cur
 
 ## OT vs documentation
 
-| Need                                                          | Use                                                                                            |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Plans, tasks, embeddings, plan output, activity, commit links | **mcp-developer** (`@openthrottle/mcp-developer`), registered in Cursor as **`mcp-developer`** |
-| Semantic search over repo **`docs/`**                         | **docs-mcp** (separate server)                                                                 |
-| Schema, migrations, DB setup                                  | `databases/README.md`                                                                          |
+| Need                                                          | Use                                                                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Plans, tasks, embeddings, plan output, activity, commit links | **openthrottle-mcp** (`@openthrottle/openthrottle-mcp`), registered in Cursor as **`openthrottle-mcp`** |
+| Semantic search over repo **`docs/`**                         | **docs-mcp** (separate server)                                                                          |
+| Schema, migrations, DB setup                                  | `databases/README.md`                                                                                   |
 
 Do not answer OT plan content from memory; use MCP tools and answer from retrieved chunks only.
 
 ## Fail loudly
 
 - **Creating or updating plans/tasks:** use OT only (`create_plan`, `create_task`, `update_task`, etc.).
-- If **mcp-developer is unavailable** or **`create_plan` / `create_task` fails:** report the error clearly to the user.
+- If **openthrottle-mcp is unavailable** or **`create_plan` / `create_task` fails:** report the error clearly to the user.
 - **Do not** silently write plans to Markdown under `docs/` or skip plan creation.
 
-## MCP workflow (mcp-developer)
+## MCP workflow (openthrottle-mcp)
 
 GraphQL-only boundary to **openthrottle-server**. Typical tools:
 

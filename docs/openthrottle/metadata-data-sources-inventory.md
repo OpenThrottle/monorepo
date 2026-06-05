@@ -6,13 +6,13 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 | Source | Table                      | Content                                     | Embedding model | MCP / consumer                           |
 | ------ | -------------------------- | ------------------------------------------- | --------------- | ---------------------------------------- |
-| Plans  | `plan_embeddings`          | Plan title, description, summary, output md | vector(1536)    | mcp-developer `semantic_search`          |
-| Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | mcp-developer `semantic_search`          |
+| Plans  | `plan_embeddings`          | Plan title, description, summary, output md | vector(1536)    | openthrottle-mcp `semantic_search`       |
+| Tasks  | `task_embeddings`          | Task title, description, summary            | vector(1536)    | openthrottle-mcp `semantic_search`       |
 | Docs   | `documentation_embeddings` | Chunked content from `docs/` + NX READMEs   | vector(1536)    | docs-mcp `documentation_semantic_search` |
 
 **Ingest:** `cortex:import` (plans); `cortex:import-docs` (docs). Embeddings require `OPENAI_API_KEY` or `OLLAMA_*` (Ollama must output 1536 dimensions; see `databases/README.md` § Embedding dimension strategy).
 
-**Gap:** mcp-developer and docs-mcp are separate MCPs — semantic search does not cross plans + tasks + docs + commits in one query.
+**Gap:** openthrottle-mcp and docs-mcp are separate MCPs — semantic search does not cross plans + tasks + docs + commits in one query.
 
 ---
 
@@ -24,7 +24,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 | Tasks         | `tasks`              | id, plan_id, title, description, category, status, requirements (JSONB), summary, assignee, created_at, updated_at | Same                                            |
 | Output stream | `plan_output_stream` | plan_id, iteration, content, created_at                                                                            | Agent iteration log; not embeddings             |
 
-**Ingest:** Plans/tasks created via mcp-developer (`create_plan`, `create_task`) or migrated from `plans/` via `cortex:import`. No file-based PRD source anymore.
+**Ingest:** Plans/tasks created via openthrottle-mcp (`create_plan`, `create_task`) or migrated from `plans/` via `cortex:import`. No file-based PRD source anymore.
 
 **Gap:** No explicit "PRD" table — plan/task content _is_ the PRD. Summary field supports PRD wrap-up; requirements is JSONB for ad-hoc structure.
 
@@ -53,7 +53,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 **Ingest:** MCP `link_commit` or `workflow-link-merge` after merge. One row per (plan, task, repo, sha).
 
-**Consumers:** `get_activity_by_date`, `get_last_activity` (mcp-developer); activity resolver (openthrottle-server GraphQL).
+**Consumers:** `get_activity_by_date`, `get_last_activity` (openthrottle-mcp); activity resolver (openthrottle-server GraphQL).
 
 **Gap:** `commit_links` has no embedding; not searchable by meaning. Activity is by date/task/plan, not semantic.
 
@@ -70,7 +70,7 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 **Main gaps:**
 
-1. **No cross-source semantic search** — plans, tasks, docs, and commits are queried separately. A unified "story over time" query would need to join or federate across mcp-developer and docs-mcp.
+1. **No cross-source semantic search** — plans, tasks, docs, and commits are queried separately. A unified "story over time" query would need to join or federate across openthrottle-mcp and docs-mcp.
 2. **Inconsistent metadata** — `documentation` and `commit_links` both carry repo/sha; plans/tasks have author/assignee but no repo/sha. No single metadata model that ties all four.
 3. **Docs not in activity** — `get_activity_by_date` returns commits, plan output, tasks updated; docs changes are not included.
 4. **Commit content not searchable** — commit messages are in `commit_links.message` but not embedded; cannot semantically search "commits about X".
@@ -82,4 +82,4 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 - Schema: `databases/README.md`
 - OT MCP tools: `.cursor/rules/commands/openthrottle.mdc`
 - Ingest: `scripts/openthrottle-ingest-docs.ts` (see root `package.json` scripts `database:import`, `database:import-docs`)
-- Activity: `packages/mcp-developer/src/tools/activity.ts`, `applications/openthrottle-server/src/graphql/activity/`
+- Activity: `packages/openthrottle-mcp/src/tools/activity.ts`, `applications/openthrottle-server/src/graphql/activity/`

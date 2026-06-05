@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/ai-mcp",
-  "description": "Legacy MCP server for OpenThrottle Cortex plans and tasks (direct Postgres and embeddings); prefer @openthrottle/mcp-developer for new use.",
+  "description": "Legacy MCP server for OpenThrottle Cortex plans and tasks (direct Postgres and embeddings); prefer @openthrottle/openthrottle-mcp for new use.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",

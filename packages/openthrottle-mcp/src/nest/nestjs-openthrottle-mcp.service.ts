@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common';
  */
 @Injectable()
 export class NestjsMcpDeveloperService {
-  private readonly name = 'nestjs-mcp-developer';
+  private readonly name = 'nestjs-openthrottle-mcp';
 
   constructor(private readonly logger: LoggerService) {
     this.logger.debug(`🧩 ${this.name} 🧩`);

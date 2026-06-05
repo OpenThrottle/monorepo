@@ -6,9 +6,9 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 import { McpTransportType } from '@rekog/mcp-nest';
-import { McpDeveloperMcpSurface } from './mcp-developer-mcp-surface.js';
-import { NestjsMcpDeveloperModule } from './nestjs-mcp-developer.module.js';
-import { NestjsMcpDeveloperService } from './nestjs-mcp-developer.service.js';
+import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.js';
+import { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.js';
+import { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.js';
 
 describe('NestjsMcpDeveloperModule', () => {
   describe('forRoot', () => {
@@ -17,7 +17,7 @@ describe('NestjsMcpDeveloperModule', () => {
         imports: [
           NestjsMcpDeveloperModule.forRoot({
             capabilities: { resources: {}, tools: {} },
-            name: 'openthrottle-mcp-developer-test',
+            name: 'openthrottle-openthrottle-mcp-test',
             transport: McpTransportType.STDIO,
             version: '0.0.0-test',
           }),

@@ -26,7 +26,7 @@ export default {
       // headers: {
       //   Authorization: `Bearer ${supabaseJWT}`,
       // },
-      name: 'openthrottle-mcp-developer codegen',
+      name: 'openthrottle-openthrottle-mcp codegen',
       url: `${url}/graphql`,
     },
     tagName: 'gql',

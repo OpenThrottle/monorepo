@@ -2,7 +2,7 @@
  * @description Dispatches a routed agents MCP decision to {@link McpDeveloperMcpSurface} methods (GraphQL-only handlers).
  */
 
-import type { McpDeveloperMcpSurface } from '@openthrottle/nestjs-mcp-developer';
+import type { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
 import type { AgentsMcpToolHandlerResult } from './agents-mcp-chat.mapper';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 

@@ -1,6 +1,6 @@
 /**
  * @description CLI entry point for the MCP server.
- * Run via `npx @openthrottle/mcp-developer` or `nx run openthrottle-mcp-developer:serve`.
+ * Run via `npx @openthrottle/openthrottle-mcp` or `nx run openthrottle-openthrottle-mcp:serve`.
  */
 
 import { runServerLocal } from './index.js';

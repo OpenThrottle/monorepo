@@ -25,7 +25,7 @@ describe('WorkspaceEditorConfigService', () => {
     repositoryRoot = mkdtempSync(join(tmpdir(), 'ot-ws-editor-'));
     mkdirSync(join(repositoryRoot, 'scripts'), { recursive: true });
     writeFileSync(
-      join(repositoryRoot, 'scripts', 'run-mcp-developer.sh'),
+      join(repositoryRoot, 'scripts', 'run-openthrottle-mcp.sh'),
       '#!/bin/bash\n',
     );
 

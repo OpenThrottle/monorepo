@@ -5,10 +5,10 @@ description: >-
   in openthrottle-server (Result/ListResult/PaginatedResult, deprecate instead
   of breaking schema); Postgres/pgvector, migrations, and ingest in
   databases/README.md; React Router UI in openthrottle-developer and
-  @openthrottle/react-router-shadcn; packages/mcp-developer GraphQL-only
+  @openthrottle/react-router-shadcn; packages/openthrottle-mcp GraphQL-only
   boundary, auth, verification-environment. USE WHEN changing openthrottle-server,
   openthrottle-developer, databases or database:import, embeddings (Ollama vs
-  hosted), packages/mcp-developer, verify-openthrottle-mcp-env, or Cortex
+  hosted), packages/openthrottle-mcp, verify-openthrottle-mcp-env, or Cortex
   schema and semantic ingest—not for routine OT plan CRUD (see ot-plans).
 ---
 
@@ -19,7 +19,7 @@ description: >-
 - You touch **`applications/openthrottle-server`** (NestJS GraphQL, queues, repositories).
 - You touch **`databases/`**, **`pnpm run database:*`**, embeddings, or **plan/docs ingest** scripts.
 - You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
-- You extend or debug **`packages/mcp-developer`** (tools, env, smoke checks).
+- You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
 
 Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tasks** for graph and targets, **ot-plans** for Cortex plans/tasks and MCP traceability, **workflow-ralph** for Ralph CLI and queues.
 
@@ -32,7 +32,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 | `workflow-ralph`, BullMQ mental model       | **workflow-ralph** — `.agents/skills/workflow-ralph/SKILL.md`                   |
 | Nx graph, `nx show project`, affected       | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
 | Run `nx` targets                            | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
-| **This file**                               | Server conventions, DB/embeddings, developer UI, mcp-developer package          |
+| **This file**                               | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package       |
 
 ---
 
@@ -74,7 +74,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 **Embeddings:** dimension strategy and **Ollama** / **`OPENAI_API_KEY`** are documented in **`databases/README.md`** (embedding section). For local Ollama and Cursor proxy, see **`docs/monorepo/Ollama.md`** and **`AGENTS.md`** (local embeddings / `OLLAMA_*`).
 
-**Relationship to MCP:** **`mcp-developer` does not connect to Postgres directly** — only **openthrottle-server** GraphQL. DB scripts and migrations are for the server and offline ingest, not for MCP process configuration.
+**Relationship to MCP:** **`openthrottle-mcp` does not connect to Postgres directly** — only **openthrottle-server** GraphQL. DB scripts and migrations are for the server and offline ingest, not for MCP process configuration.
 
 ---
 
@@ -99,19 +99,19 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 ---
 
-## 4. `@openthrottle/mcp-developer`
+## 4. `@openthrottle/openthrottle-mcp`
 
 **Boundary:** MCP tools call **openthrottle-server GraphQL only** — no direct DB driver in the MCP package.
 
 **Canonical paths**
 
-| Topic                                     | Path                                                      |
-| ----------------------------------------- | --------------------------------------------------------- |
-| Package README                            | `packages/mcp-developer/README.md`                        |
-| Auth tokens                               | `packages/mcp-developer/docs/AUTH.md`                     |
-| Env, smoke checklist, secondary workspace | `packages/mcp-developer/docs/verification-environment.md` |
-| Cursor registration                       | `.cursor/mcp.json` (server id **`mcp-developer`**)        |
-| Env probe script                          | `scripts/verify-openthrottle-mcp-env.sh`                  |
+| Topic                                     | Path                                                         |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| Package README                            | `packages/openthrottle-mcp/README.md`                        |
+| Auth tokens                               | `packages/openthrottle-mcp/docs/AUTH.md`                     |
+| Env, smoke checklist, secondary workspace | `packages/openthrottle-mcp/docs/verification-environment.md` |
+| Cursor registration                       | `.cursor/mcp.json` (server id **`openthrottle-mcp`**)        |
+| Env probe script                          | `scripts/verify-openthrottle-mcp-env.sh`                     |
 
 **Local verification (minimal):** install, root + server `.env`, **`pnpm run database:start`** + **`pnpm run database:migrate`**, **`pnpm nx run openthrottle-server:dev`**, align **`API_URL` / `API_URL_INTERNAL`** with server port; **`MCP_DEVELOPER_AUTH_TOKEN`** for authenticated tools. Details and failure modes: **`verification-environment.md`**.
 

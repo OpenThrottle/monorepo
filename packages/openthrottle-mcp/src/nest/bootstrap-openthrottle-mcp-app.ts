@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-mcp-developer-bootstrap-options.interface.js';
-import { NestjsMcpDeveloperModule } from './nestjs-mcp-developer.module.js';
+import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.js';
+import { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.js';
 
 /**
  * @description Creates a Nest application context so {@link NestjsMcpDeveloperModule} and `@rekog/mcp-nest` STDIO wiring run the developer MCP surface (same tools/resources as the legacy stdio server).

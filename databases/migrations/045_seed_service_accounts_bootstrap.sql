@@ -19,7 +19,7 @@ ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO
     roles (name, description)
-SELECT 'mcp', 'OpenThrottle mcp-developer MCP (plans/tasks GraphQL automation)'
+SELECT 'mcp', 'OpenThrottle openthrottle-mcp MCP (plans/tasks GraphQL automation)'
 WHERE
     NOT EXISTS (
         SELECT 1
@@ -61,13 +61,13 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO
     service_accounts (name, description)
-SELECT 'mcp-developer', 'Cursor MCP (@openthrottle/mcp-developer) — GraphQL plans/tasks automation'
+SELECT 'openthrottle-mcp', 'Cursor MCP (@openthrottle/openthrottle-mcp) — GraphQL plans/tasks automation'
 WHERE
     NOT EXISTS (
         SELECT 1
         FROM service_accounts
         WHERE
-            name = 'mcp-developer'
+            name = 'openthrottle-mcp'
     );
 
 INSERT INTO
@@ -87,7 +87,7 @@ SELECT sa.id, r.id
 FROM service_accounts sa
     CROSS JOIN roles r
 WHERE
-    sa.name = 'mcp-developer'
+    sa.name = 'openthrottle-mcp'
     AND r.name = 'mcp'
 ON CONFLICT DO NOTHING;
 

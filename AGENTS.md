@@ -28,8 +28,8 @@
 Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above.
 
 - **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`.agents/skills/openthrottle-generators/SKILL.md`](./.agents/skills/openthrottle-generators/SKILL.md)
-- **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, mcp-developer package: [`.agents/skills/openthrottle-stack/SKILL.md`](./.agents/skills/openthrottle-stack/SKILL.md)
-- **ot-plans** — mcp-developer, plans/tasks, `Plan-Id` / `Task-Id`, post-merge `link_commit`: [`.agents/skills/ot-plans/SKILL.md`](./.agents/skills/ot-plans/SKILL.md)
+- **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`.agents/skills/openthrottle-stack/SKILL.md`](./.agents/skills/openthrottle-stack/SKILL.md)
+- **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge `link_commit`: [`.agents/skills/ot-plans/SKILL.md`](./.agents/skills/ot-plans/SKILL.md)
 - **workflow-ralph** — CLI, queue spawn vs orchestrator, commit cadence: [`.agents/skills/workflow-ralph/SKILL.md`](./.agents/skills/workflow-ralph/SKILL.md)
 
 ## Workflow CLI (@tools/workflows)
@@ -49,12 +49,12 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 
 ## OpenThrottle (OT) — plans knowledge base
 
-- **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/mcp-developer** (GraphQL only; see `.cursor/mcp.json`). Use the **mcp-developer** MCP server for all OT tools.
-- **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/mcp-developer/docs/verification-environment.md](packages/mcp-developer/docs/verification-environment.md).
+- **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/openthrottle-mcp** (GraphQL only; see `.cursor/mcp.json`). Use the **openthrottle-mcp** MCP server for all OT tools.
+- **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/openthrottle-mcp/docs/verification-environment.md](packages/openthrottle-mcp/docs/verification-environment.md).
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
 - **Rules:** [.cursor/rules/commands/openthrottle.mdc](.cursor/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
 - **OT skills:** `.cursor/skills/ot-*` — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
-- For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **mcp-developer** MCP server; answer only from retrieved chunks.
+- For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **openthrottle-mcp** MCP server; answer only from retrieved chunks.
 - **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
 
 ### Plans in OT only; fail loudly

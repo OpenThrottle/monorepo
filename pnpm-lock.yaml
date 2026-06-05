@@ -137,9 +137,6 @@ importers:
       '@openthrottle/graphql-codegen':
         specifier: workspace:*
         version: link:packages/graphql-codegen
-      '@openthrottle/mcp-developer':
-        specifier: workspace:*
-        version: link:packages/mcp-developer
       '@openthrottle/nestjs-agentic-workflow':
         specifier: workspace:*
         version: link:packages/nestjs-agentic-workflow
@@ -167,12 +164,12 @@ importers:
       '@openthrottle/nestjs-logging':
         specifier: workspace:*
         version: link:packages/nestjs-logging
-      '@openthrottle/nestjs-mcp-developer':
-        specifier: workspace:*
-        version: link:packages/nestjs-mcp-developer
       '@openthrottle/nestjs-modules':
         specifier: workspace:*
         version: link:packages/nestjs-modules
+      '@openthrottle/nestjs-openthrottle-mcp':
+        specifier: workspace:*
+        version: link:packages/nestjs-mcp-developer
       '@openthrottle/nestjs-postgres':
         specifier: workspace:*
         version: link:packages/nestjs-postgres
@@ -962,30 +959,6 @@ importers:
         specifier: ^0.18.1
         version: 0.18.1(graphql@16.14.0)(zod@4.4.3)
 
-  packages/mcp-developer:
-    dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.29.0
-        version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
-      '@nestjs/common':
-        specifier: ^11.1.18
-        version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core':
-        specifier: ^11.1.18
-        version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@openthrottle/nestjs-modules':
-        specifier: workspace:*
-        version: link:../nestjs-modules
-      '@openthrottle/nodejs-graphql':
-        specifier: workspace:*
-        version: link:../nodejs-graphql
-      '@rekog/mcp-nest':
-        specifier: ^1.9.9
-        version: 1.9.9(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/jwt@11.0.2(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/passport@11.0.5(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0))(@nestjs/typeorm@11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3))))(express@5.2.1)(reflect-metadata@0.2.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3)))(zod@4.4.3)
-      zod:
-        specifier: ^4.3.6
-        version: 4.4.3
-
   packages/nestjs-agentic-workflow:
     dependencies:
       '@graphql-typed-document-node/core':
@@ -1191,9 +1164,9 @@ importers:
       '@nestjs/core':
         specifier: ^11.0.0
         version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@openthrottle/mcp-developer':
+      '@openthrottle/openthrottle-mcp':
         specifier: workspace:*
-        version: link:../mcp-developer
+        version: link:../openthrottle-mcp
 
   packages/nestjs-modules:
     dependencies:
@@ -1335,12 +1308,12 @@ importers:
       '@nestjs/common':
         specifier: '>=10.0.0'
         version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@openthrottle/mcp-developer':
-        specifier: workspace:*
-        version: link:../mcp-developer
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../openthrottle-agentic-utils
+      '@openthrottle/openthrottle-mcp':
+        specifier: workspace:*
+        version: link:../openthrottle-mcp
       '@tools/workflows':
         specifier: workspace:*
         version: link:../../tools/workflows
@@ -1385,7 +1358,29 @@ importers:
 
   packages/openthrottle-developer-codegen: {}
 
-  packages/openthrottle-mcp: {}
+  packages/openthrottle-mcp:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
+      '@nestjs/common':
+        specifier: ^11.1.18
+        version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.18
+        version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:*
+        version: link:../nestjs-modules
+      '@openthrottle/nodejs-graphql':
+        specifier: workspace:*
+        version: link:../nodejs-graphql
+      '@rekog/mcp-nest':
+        specifier: ^1.9.9
+        version: 1.9.9(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/jwt@11.0.2(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/passport@11.0.5(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0))(@nestjs/typeorm@11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3))))(express@5.2.1)(reflect-metadata@0.2.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3)))(zod@4.4.3)
+      zod:
+        specifier: ^4.3.6
+        version: 4.4.3
 
   packages/openthrottle-notifications: {}
 

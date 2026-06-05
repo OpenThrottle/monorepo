@@ -16,7 +16,7 @@ To complete the plan “Monorepo architecture diagram for OpenThrottle”, the f
 
 ## High-level architecture
 
-OpenThrottle consists of **applications** (deployable apps) and **packages** (shared libraries). The backend is **openthrottle-server** (NestJS + GraphQL); it talks to **Cortex** (Postgres with pgvector) via **@openthrottle/nestjs-repositories**. The **mcp-developer** MCP and the **openthrottle-developer** UI both call the server’s GraphQL API; the MCP uses **@openthrottle/nodejs-graphql** as a typed GraphQL client. **Ralph** and other workflows in **@tools/workflows** drive the agentic loop and optionally stream output to Cortex.
+OpenThrottle consists of **applications** (deployable apps) and **packages** (shared libraries). The backend is **openthrottle-server** (NestJS + GraphQL); it talks to **Cortex** (Postgres with pgvector) via **@openthrottle/nestjs-repositories**. The **openthrottle-mcp** MCP and the **openthrottle-developer** UI both call the server’s GraphQL API; the MCP uses **@openthrottle/nodejs-graphql** as a typed GraphQL client. **Ralph** and other workflows in **@tools/workflows** drive the agentic loop and optionally stream output to Cortex.
 
 ```mermaid
 flowchart TB
@@ -30,7 +30,7 @@ flowchart TB
   end
 
   subgraph Packages["Packages (@openthrottle)"]
-    MCP["mcp-developer<br/>(MCP server)"]
+    MCP["openthrottle-mcp<br/>(MCP server)"]
     NodeGraphQL["nodejs-graphql<br/>(GraphQL client)"]
     NestRepos["nestjs-repositories<br/>(TypeORM, Cortex)"]
     Notifications["notifications"]
@@ -61,14 +61,14 @@ flowchart TB
 ## Data and request flow
 
 - **openthrottle-developer**: Browser app; calls `API_URL` (openthrottle-server) for GraphQL and optional WebSocket (e.g. realtime, notifications).
-- **mcp-developer**: MCP server used by Cursor/other hosts; uses `@openthrottle/nodejs-graphql` to talk to openthrottle-server GraphQL (plans, tasks, search, commit links, plan output stream, etc.). No direct Postgres access.
+- **openthrottle-mcp**: MCP server used by Cursor/other hosts; uses `@openthrottle/nodejs-graphql` to talk to openthrottle-server GraphQL (plans, tasks, search, commit links, plan output stream, etc.). No direct Postgres access.
 - **openthrottle-server**: NestJS app; GraphQL API, auth (JWT), queues (BullMQ/Redis), and **NestjsRepositoriesModule** (`@openthrottle/nestjs-repositories`) for Cortex (plans, tasks, embeddings, commit_links, plan_output_stream, docs, users, RBAC). Optional OpenAI or Ollama for embeddings.
 - **Ralph** (`workflow-ralph`): Loads plan/tasks from Cortex (via server or env), runs the agent loop, updates task status from agent output; can append iteration output to Cortex `plan_output_stream`. Commit linking is done only after PR merge via `workflow-link-merge`.
 
 ```mermaid
 sequenceDiagram
   participant Dev as openthrottle-developer
-  participant MCP as mcp-developer
+  participant MCP as openthrottle-mcp
   participant Client as @openthrottle/nodejs-graphql
   participant Server as openthrottle-server
   participant Repos as @openthrottle/nestjs-repositories
@@ -105,8 +105,8 @@ Shared infra used by the server: **Postgres** (Cortex schema in `databases/corte
 
 | Package                                      | Role                                                                                                                                                                    |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **@openthrottle/mcp-developer**              | MCP server exposing OT tools (plans, tasks, search, commit links, plan output, etc.); depends on `@openthrottle/nodejs-graphql` to call openthrottle-server.            |
-| **@openthrottle/nodejs-graphql**             | Typed GraphQL client for Node (used by mcp-developer); no direct DB.                                                                                                    |
+| **@openthrottle/openthrottle-mcp**           | MCP server exposing OT tools (plans, tasks, search, commit links, plan output, etc.); depends on `@openthrottle/nodejs-graphql` to call openthrottle-server.            |
+| **@openthrottle/nodejs-graphql**             | Typed GraphQL client for Node (used by openthrottle-mcp); no direct DB.                                                                                                 |
 | **@openthrottle/nestjs-repositories**        | TypeORM-based data access for Cortex (plans, tasks, embeddings, commit_links, plan_output_stream, documentation, users, roles, etc.); used only by openthrottle-server. |
 | **@openthrottle/openthrottle-notifications** | Notifications (e.g. used by server/developer).                                                                                                                          |
 | **@openthrottle/react-router-\***            | Shared React Router libs (auth, GraphQL, UI, utils, editor, profiling, chat) for the developer and other OT UIs.                                                        |
@@ -120,4 +120,4 @@ Shared infra used by the server: **Postgres** (Cortex schema in `databases/corte
 - **Run locally (OSS/Ollama):** `docs/openthrottle/run-locally-oss.md`
 - **Docker image strategy:** `docs/openthrottle/docker-image-build-strategy.md`
 - **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`
-- **MCP developer setup:** `packages/mcp-developer/README.md`
+- **MCP developer setup:** `packages/openthrottle-mcp/README.md`

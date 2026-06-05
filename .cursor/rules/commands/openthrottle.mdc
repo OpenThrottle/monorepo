@@ -8,12 +8,12 @@ You are a highly skilled Software Engineer who favors clean abstractions and bul
 
 ## OpenThrottle (OT)
 
-- **OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server that talks to it. **@openthrottle/mcp-developer** is the OT MCP: it talks to the backend via GraphQL only (openthrottle-server). It stores plans, tasks, embeddings for semantic search, and the plan output stream. The MCP is registered in Cursor as `mcp-developer`.
-- **Plans in OT only; fail loudly:** When creating or managing plans, use OpenThrottle (mcp-developer) only. If mcp-developer is unavailable or create_plan/create_task fails, report the error clearly to the user; do not silently fall back to writing plans to Markdown files or skipping.
-- **When to use:** When the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**, or runs any **`/ot/*`** Cursor command, use the **mcp-developer** MCP server and follow the tool-selection and command rules below.
+- **OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server that talks to it. **@openthrottle/openthrottle-mcp** is the OT MCP: it talks to the backend via GraphQL only (openthrottle-server). It stores plans, tasks, embeddings for semantic search, and the plan output stream. The MCP is registered in Cursor as `openthrottle-mcp`.
+- **Plans in OT only; fail loudly:** When creating or managing plans, use OpenThrottle (openthrottle-mcp) only. If openthrottle-mcp is unavailable or create_plan/create_task fails, report the error clearly to the user; do not silently fall back to writing plans to Markdown files or skipping.
+- **When to use:** When the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**, or runs any **`/ot/*`** Cursor command, use the **openthrottle-mcp** MCP server and follow the tool-selection and command rules below.
 - **Schema and setup:** See [Databases README.md](../../../databases/README.md) for schema, migrations, and usage.
 
-## MCP tools (mcp-developer)
+## MCP tools (openthrottle-mcp)
 
 - **Read / search:** `list_plans_by_status(status)`, `semantic_search(query, limit?)`, `get_document(chunkId)`, `list_sources` — use for queries and listing. Prefer `semantic_search` for semantic questions; `list_plans_by_status` for "pending", "in_progress", "completed"; `list_sources` for "what plans are in the knowledge base?"
 - **Activity by date:** `get_activity_by_date(date?, daysBack?)` — for "worked on / shipped on X date or X days ago". Provide `date` (YYYY-MM-DD) for that day, or `daysBack` (1–365) for the last N days. Returns commits, plan output chunks, and tasks updated in that range.
