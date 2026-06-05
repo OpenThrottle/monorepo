@@ -367,6 +367,7 @@
     "clean:artifacts": "pnpm dlx rimraf --glob {applications,packages}/**/{.cache,build,dist}",
     "clean:buildInfo": "pnpm dlx rimraf --glob **/.tsbuildinfo && pnpm dlx rimraf --glob **/*.tsbuildinfo",
     "clean:cache": "pnpm dlx rimraf --glob **/{.cache,coverage}",
+    "clean:claude": "pnpm dlx rimraf --glob .claude/debug/",
     "clean:dist": "pnpm dlx rimraf --glob **/dist",
     "clean:modules": "pnpm dlx rimraf --glob **/node_modules",
     "clean:nx": "pnpm dlx rimraf --glob {.nx,tmp}",
