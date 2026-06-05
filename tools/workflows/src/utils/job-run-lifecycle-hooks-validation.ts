@@ -16,15 +16,23 @@ import {
   type JobRunHookEntry,
   type JobRunHookOnFailure,
   type JobRunHookPhase,
+  type JobRunHookPhaseWire,
   type JobRunHookPromptDelivery,
   type JobRunHookRunKind,
+  type JobRunHookTaskContext,
+  type JobRunHookTaskOutcome,
   type JobRunHooksConfig,
+  normalizeJobRunHookPhase,
   sortJobRunHookEntries,
 } from '../types/job-run-lifecycle-hooks';
 
-const JOB_RUN_HOOK_PHASES: readonly JobRunHookPhase[] = [
-  'before_run',
+const JOB_RUN_HOOK_PHASES_WIRE: readonly JobRunHookPhaseWire[] = [
+  'afterAll',
+  'afterEach',
   'after_run',
+  'beforeAll',
+  'beforeEach',
+  'before_run',
 ];
 const JOB_RUN_HOOK_ON_FAILURE: readonly JobRunHookOnFailure[] = [
   'block',
@@ -79,11 +87,13 @@ const parseOptionalPositiveInt = (
 const parsePhase = (value: unknown): JobRunHookPhase => {
   if (
     typeof value !== 'string' ||
-    !JOB_RUN_HOOK_PHASES.includes(value as JobRunHookPhase)
+    !JOB_RUN_HOOK_PHASES_WIRE.includes(value as JobRunHookPhaseWire)
   ) {
-    throw new Error(`phase must be one of: ${JOB_RUN_HOOK_PHASES.join(', ')}`);
+    throw new Error(
+      `phase must be one of: ${JOB_RUN_HOOK_PHASES_WIRE.join(', ')}`,
+    );
   }
-  return value as JobRunHookPhase;
+  return normalizeJobRunHookPhase(value as JobRunHookPhaseWire);
 };
 
 const parseOnFailure = (value: unknown): JobRunHookOnFailure | undefined => {
@@ -142,23 +152,90 @@ const parseConditions = (value: unknown): JobRunHookConditions | undefined => {
   }
 
   let whenMainRunSucceeded: boolean | undefined;
+  const whenPlanRunSucceededRaw =
+    value.whenPlanRunSucceeded ?? value.whenMainRunSucceeded;
   if (
-    value.whenMainRunSucceeded !== undefined &&
-    value.whenMainRunSucceeded !== null
+    whenPlanRunSucceededRaw !== undefined &&
+    whenPlanRunSucceededRaw !== null
   ) {
-    if (typeof value.whenMainRunSucceeded !== 'boolean') {
-      throw new Error('conditions.whenMainRunSucceeded must be a boolean');
+    if (typeof whenPlanRunSucceededRaw !== 'boolean') {
+      throw new Error(
+        'conditions.whenPlanRunSucceeded / whenMainRunSucceeded must be a boolean',
+      );
     }
-    whenMainRunSucceeded = value.whenMainRunSucceeded;
+    whenMainRunSucceeded = whenPlanRunSucceededRaw;
   }
 
-  if (runKinds === undefined && whenMainRunSucceeded === undefined) {
+  let whenTaskOutcome: JobRunHookTaskOutcome[] | undefined;
+  if (value.whenTaskOutcome !== undefined && value.whenTaskOutcome !== null) {
+    if (!Array.isArray(value.whenTaskOutcome)) {
+      throw new Error('conditions.whenTaskOutcome must be an array');
+    }
+    const allowed: readonly JobRunHookTaskOutcome[] = [
+      'blocked',
+      'completed',
+      'failed',
+    ];
+    whenTaskOutcome = value.whenTaskOutcome.map((item, index) => {
+      if (
+        typeof item !== 'string' ||
+        !allowed.includes(item as JobRunHookTaskOutcome)
+      ) {
+        throw new Error(
+          `conditions.whenTaskOutcome[${index}] must be one of: ${allowed.join(', ')}`,
+        );
+      }
+      return item as JobRunHookTaskOutcome;
+    });
+    if (whenTaskOutcome.length === 0) {
+      throw new Error('conditions.whenTaskOutcome must not be empty when set');
+    }
+  }
+
+  const parseStringArray = (
+    field: 'taskCategories' | 'taskStatuses',
+  ): string[] | undefined => {
+    const raw = value[field];
+    if (raw === undefined || raw === null) return undefined;
+    if (!Array.isArray(raw)) {
+      throw new Error(`conditions.${field} must be an array`);
+    }
+    const parsed = raw.map((item, index) => {
+      if (typeof item !== 'string' || item.trim() === '') {
+        throw new Error(
+          `conditions.${field}[${index}] must be a non-empty string`,
+        );
+      }
+      return item.trim();
+    });
+    if (parsed.length === 0) {
+      throw new Error(`conditions.${field} must not be empty when set`);
+    }
+    return parsed;
+  };
+
+  const taskCategories = parseStringArray('taskCategories');
+  const taskStatuses = parseStringArray('taskStatuses');
+
+  if (
+    runKinds === undefined &&
+    whenMainRunSucceeded === undefined &&
+    whenTaskOutcome === undefined &&
+    taskCategories === undefined &&
+    taskStatuses === undefined
+  ) {
     return undefined;
   }
 
   return {
     ...(runKinds !== undefined ? { runKinds } : {}),
     ...(whenMainRunSucceeded !== undefined ? { whenMainRunSucceeded } : {}),
+    ...(whenMainRunSucceeded !== undefined
+      ? { whenPlanRunSucceeded: whenMainRunSucceeded }
+      : {}),
+    ...(whenTaskOutcome !== undefined ? { whenTaskOutcome } : {}),
+    ...(taskCategories !== undefined ? { taskCategories } : {}),
+    ...(taskStatuses !== undefined ? { taskStatuses } : {}),
   };
 };
 
@@ -177,7 +254,7 @@ export const validateJobRunHookNamedPrompt = (prompt: string): string => {
   }
   if (!trimmed.startsWith('/')) {
     throw new Error(
-      'named prompt_profile must start with "/" (e.g. /agents/ralph)',
+      'named prompt_profile must start with "/" (e.g. /agents-ralph)',
     );
   }
   return trimmed;
@@ -279,12 +356,27 @@ export const parseJobRunHookEntry = (
   }
   const conditions = parseConditions(raw.conditions);
 
+  if (conditions?.whenMainRunSucceeded !== undefined && phase !== 'afterAll') {
+    throw new Error(
+      'conditions.whenMainRunSucceeded / whenPlanRunSucceeded is only valid for afterAll hooks',
+    );
+  }
+
   if (
-    conditions?.whenMainRunSucceeded !== undefined &&
-    phase === 'before_run'
+    (conditions?.whenTaskOutcome !== undefined ||
+      conditions?.taskCategories !== undefined ||
+      conditions?.taskStatuses !== undefined) &&
+    phase !== 'afterEach' &&
+    phase !== 'beforeEach'
   ) {
     throw new Error(
-      'conditions.whenMainRunSucceeded is only valid for after_run hooks',
+      'conditions.whenTaskOutcome, taskCategories, and taskStatuses are only valid for beforeEach / afterEach hooks',
+    );
+  }
+
+  if (conditions?.whenTaskOutcome !== undefined && phase !== 'afterEach') {
+    throw new Error(
+      'conditions.whenTaskOutcome is only valid for afterEach hooks',
     );
   }
 
@@ -441,6 +533,8 @@ export const shouldRunJobRunHook = (
     readonly mainRunSucceeded: boolean;
     readonly phase: JobRunHookPhase;
     readonly runKind: JobRunHookRunKind;
+    readonly task?: JobRunHookTaskContext;
+    readonly taskOutcome?: JobRunHookTaskOutcome;
   },
 ): boolean => {
   if (entry.phase !== context.phase) return false;
@@ -452,15 +546,50 @@ export const shouldRunJobRunHook = (
     }
   }
 
-  if (
-    entry.phase === 'after_run' &&
-    conditions?.whenMainRunSucceeded !== undefined
-  ) {
+  const whenPlanSucceeded =
+    conditions?.whenPlanRunSucceeded ?? conditions?.whenMainRunSucceeded;
+  if (entry.phase === 'afterAll' && whenPlanSucceeded !== undefined) {
     if (!context.mainRunStarted) {
       return false;
     }
-    if (conditions.whenMainRunSucceeded !== context.mainRunSucceeded) {
+    if (whenPlanSucceeded !== context.mainRunSucceeded) {
       return false;
+    }
+  }
+
+  if (
+    entry.phase === 'afterEach' &&
+    conditions?.whenTaskOutcome !== undefined
+  ) {
+    if (context.taskOutcome === undefined) {
+      return false;
+    }
+    if (!conditions.whenTaskOutcome.includes(context.taskOutcome)) {
+      return false;
+    }
+  }
+
+  if (
+    (entry.phase === 'beforeEach' || entry.phase === 'afterEach') &&
+    context.task !== undefined
+  ) {
+    if (
+      conditions?.taskCategories !== undefined &&
+      conditions.taskCategories.length > 0
+    ) {
+      const category = context.task.category ?? '';
+      if (!conditions.taskCategories.includes(category)) {
+        return false;
+      }
+    }
+
+    if (
+      conditions?.taskStatuses !== undefined &&
+      conditions.taskStatuses.length > 0
+    ) {
+      if (!conditions.taskStatuses.includes(context.task.status)) {
+        return false;
+      }
     }
   }
 

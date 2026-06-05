@@ -23,15 +23,20 @@ import {
 import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
+  getDefaultPlanRunConfigStorage,
+  parsePlanRunConfigJson,
   PlansService,
   PlanRunsService,
+  planRunConfigFromPlanStorage,
   ProjectsService,
+  serializePlanRunConfigForGraphql,
+  serializePlanRunConfigSnapshotForGraphql,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { In } from 'typeorm';
 import type { Project } from '@openthrottle/nestjs-repositories';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
 import { NotificationsService } from '../../notifications/notifications.service';
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
@@ -51,7 +56,9 @@ import {
 import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
+  resolveDefaultPlanRunKind,
 } from './enqueue-plan-ralph-tuning';
+import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 import {
   CancelPlanRunInput,
   CreatePlanInput,
@@ -77,7 +84,17 @@ import {
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;
 const MAX_PLAN_RUNS_LIMIT = 100;
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`;
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
+
+/** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
+const ENQUEUE_TASK_STATUSES_TO_RESET = [
+  'PENDING',
+  'IN_PROGRESS',
+  'BLOCKED',
+  'BACKLOG',
+  'SKIPPED',
+  'CANCELED',
+] as const;
 
 /**
  * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
@@ -87,11 +104,12 @@ function normalizePlanStatusForPolicy(status: string): string {
 }
 
 /**
- * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status = 'PENDING'`. Also allows idempotent `IN_PROGRESS` when already `IN_PROGRESS`.
+ * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
+ * Allows `PENDING`, `QUEUED`, and idempotent `IN_PROGRESS` → `IN_PROGRESS`.
  */
 function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
   const s = normalizePlanStatusForPolicy(currentStatus);
-  return s === 'PENDING' || s === 'IN_PROGRESS';
+  return s === 'PENDING' || s === 'IN_PROGRESS' || s === 'QUEUED';
 }
 
 @Resolver(() => PlanObject)
@@ -136,6 +154,17 @@ export class PlansResolver {
     return serializeJobRunHooksForGraphql({ hooks: [] });
   }
 
+  @ResolveField(() => String, {
+    description: `Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).`,
+  })
+  runConfigJson(@Parent() parent: PlanObject): string {
+    const stored = (parent as PlanObject & { runConfig?: unknown }).runConfig;
+    return serializePlanRunConfigForGraphql(
+      stored as Parameters<typeof serializePlanRunConfigForGraphql>[0],
+      { planId: parent.id },
+    );
+  }
+
   // @ProfileResponseTime('PlansResolver.taskCount')
   @ResolveField(() => Int, {
     description: 'Number of tasks belonging to this plan',
@@ -155,6 +184,9 @@ export class PlansResolver {
     out.id = planRun.id;
     out.planId = planRun.planId;
     out.queueName = planRun.queueName;
+    out.runConfigSnapshotJson = serializePlanRunConfigSnapshotForGraphql(
+      planRun.runConfigSnapshot,
+    );
     out.runKind = planRun.runKind;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
@@ -338,7 +370,6 @@ export class PlansResolver {
 
     const result = new ListPlansByStatusResultObject();
     const raw = await searchPlansBySemanticQuery(
-      config,
       input.query,
       input.limit ?? DEFAULT_SEARCH_PLANS_LIMIT,
     );
@@ -534,6 +565,25 @@ export class PlansResolver {
         }
       }
     }
+    if (input.runConfigJson !== undefined) {
+      const next = parsePlanRunConfigJson(input.runConfigJson);
+      if (next !== undefined) {
+        const resolved =
+          input.runConfigJson === null
+            ? getDefaultPlanRunConfigStorage({ planId: entity.id })
+            : next;
+        const prevJson = JSON.stringify(
+          planRunConfigFromPlanStorage(entity.runConfig, {
+            planId: entity.id,
+          }),
+        );
+        const nextJson = JSON.stringify(resolved);
+        if (prevJson !== nextJson) {
+          entity.runConfig = resolved;
+          touched = true;
+        }
+      }
+    }
 
     if (!touched && inProgressBlocked) {
       throw new BadRequestException(IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE);
@@ -651,7 +701,24 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      throw new NotFoundException(`Plan not found: ${planId}`);
+      throw new NotFoundException(`🟡 3 - Plan not found: ${planId}`);
+    }
+
+    // Orchestrator-by-default: queued runs use the in-process GraphQL orchestrator (resolved as
+    // AgenticWorkflowRalph through the AgenticWorkflowBase registry) unless the deployment opts back
+    // into spawn via OPENTHROTTLE_DEFAULT_RUN_KIND=spawn (Stage (a) rollback flag).
+    if (resolveDefaultPlanRunKind() === 'orchestrator') {
+      const orchestratorInput = new EnqueuePlanRalphOrchestratorInput();
+      orchestratorInput.idempotencyKey = null;
+      orchestratorInput.jobRunHooksJson = jobRunHooksJson;
+      orchestratorInput.mode = null;
+      orchestratorInput.planId = planId;
+      orchestratorInput.priority = priority;
+      orchestratorInput.ralph = ralph;
+      orchestratorInput.taskId = null;
+      orchestratorInput.workingDirectory = workingDirectory;
+
+      return this.enqueuePlanRalphOrchestrator(orchestratorInput);
     }
 
     let jobData: RunPlanJobData;
@@ -675,34 +742,28 @@ export class PlansResolver {
       priority: jobPriority,
     });
     const jobId = String(job.id ?? job.name);
+    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData);
 
     await this.planRunsService.recordQueuedRun({
       bullmqJobId: jobId,
       executionBackend: jobData.executionBackend ?? 'cursor',
       planId,
       queueName: PLANS_QUEUE_NAME,
+      runConfigSnapshot,
       runKind: 'spawn',
     });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
     const taskRepo = this.tasksService.getRepository();
-    const statusesToReset = [
-      'PENDING',
-      'IN_PROGRESS',
-      'BLOCKED',
-      'BACKLOG',
-      'SKIPPED',
-      'CANCELED',
-    ] as const;
 
-    await taskRepo.update(
-      {
-        planId,
-        status: In(statusesToReset),
-      },
-      { status: 'QUEUED' },
-    );
+    await updateMatchingTasksAndEmitStatusChanged({
+      fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
+      notifications: this.notificationsService,
+      planId,
+      taskRepo,
+      toStatus: 'QUEUED',
+    });
 
     const waitingCount = await this.plansQueue.getWaitingCount();
     const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
@@ -785,7 +846,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: planId } });
 
     if (!plan) {
-      throw new NotFoundException(`Plan not found: ${planId}`);
+      throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
     }
 
     const taskRepo = this.tasksService.getRepository();
@@ -849,26 +910,19 @@ export class PlansResolver {
       executionBackend: jobData.executionBackend ?? 'cursor',
       planId,
       queueName: PLANS_QUEUE_NAME,
+      runConfigSnapshot: buildPlanRunConfigSnapshotFromJobData(jobData),
       runKind: 'orchestrator',
     });
 
     await repo.update({ id: planId }, { status: 'QUEUED' });
 
-    const statusesToReset = [
-      'PENDING',
-      'IN_PROGRESS',
-      'BLOCKED',
-      'BACKLOG',
-      'SKIPPED',
-      'CANCELED',
-    ] as const;
-    await taskRepo.update(
-      {
-        planId,
-        status: In(statusesToReset),
-      },
-      { status: 'QUEUED' },
-    );
+    await updateMatchingTasksAndEmitStatusChanged({
+      fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
+      notifications: this.notificationsService,
+      planId,
+      taskRepo,
+      toStatus: 'QUEUED',
+    });
 
     const waitingCount = await this.plansQueue.getWaitingCount();
     const waitingJobs = await this.plansQueue.getJobs(['waiting'], 0, 500);
@@ -941,7 +995,7 @@ export class PlansResolver {
     const plan = await repo.findOne({ where: { id: input.planId } });
 
     if (!plan) {
-      throw new NotFoundException(`Plan not found: ${input.planId}`);
+      throw new NotFoundException(`🟡 2 - Plan not found: ${input.planId}`);
     }
 
     const queueResult = await cancelPlanRunJobsForPlan(
@@ -968,10 +1022,13 @@ export class PlansResolver {
       await repo.update({ id: input.planId }, { status: 'PENDING' });
 
       const taskRepo = this.tasksService.getRepository();
-      await taskRepo.update(
-        { planId: input.planId, status: 'QUEUED' },
-        { status: 'PENDING' },
-      );
+      await updateMatchingTasksAndEmitStatusChanged({
+        fromStatuses: ['QUEUED'],
+        notifications: this.notificationsService,
+        planId: input.planId,
+        taskRepo,
+        toStatus: 'PENDING',
+      });
 
       const refreshed = await repo.findOne({ where: { id: input.planId } });
       out.planStatusAfter = refreshed?.status ?? 'PENDING';

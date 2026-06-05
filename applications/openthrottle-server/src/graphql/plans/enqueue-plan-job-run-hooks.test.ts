@@ -31,13 +31,11 @@ describe('parseJobRunHooksJsonInput', () => {
       }),
     );
     expect(config?.hooks).toHaveLength(1);
-    expect(config?.hooks[0]?.phase).toBe('before_run');
+    expect(config?.hooks[0]?.phase).toBe('beforeAll');
   });
 
   it('rejects invalid JSON', () => {
-    expect(() => parseJobRunHooksJsonInput('not-json')).toThrow(
-      /valid JSON/,
-    );
+    expect(() => parseJobRunHooksJsonInput('not-json')).toThrow(/valid JSON/);
   });
 
   it('rejects JSON exceeding max length', () => {
@@ -71,7 +69,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
       },
     });
     expect(resolved?.hooks).toHaveLength(1);
-    expect(resolved?.hooks[0]?.phase).toBe('after_run');
+    expect(resolved?.hooks[0]?.phase).toBe('afterAll');
   });
 
   it('prefers enqueue override over plan storage', () => {
@@ -97,7 +95,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
         ],
       },
     });
-    expect(resolved?.hooks[0]?.phase).toBe('before_run');
+    expect(resolved?.hooks[0]?.phase).toBe('beforeAll');
     expect(
       resolved?.hooks[0]?.kind === 'prompt_profile' &&
         resolved.hooks[0].prompt === '/agents/seo',
@@ -115,9 +113,7 @@ describe('jobRunHooksForJobPayload', () => {
   it('omits empty hook lists from BullMQ payload', () => {
     expect(jobRunHooksForJobPayload({ hooks: [] })).toBeUndefined();
     expect(
-      jobRunHooksForJobPayload(
-        jobRunHooksFromPlanStorage({ hooks: [] }),
-      ),
+      jobRunHooksForJobPayload(jobRunHooksFromPlanStorage({ hooks: [] })),
     ).toBeUndefined();
   });
 });

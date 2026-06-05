@@ -7,15 +7,31 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ADMIN_PATHS } from '~/global/data/data.navigation';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
+import { GaugeCircleIcon } from 'lucide-react';
 
-// export const loader = async (_args: Route.LoaderArgs) => {
-//   return {};
-// };
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Dashboard',
+  links: (_match) => [],
+};
+
+export const loader = async (_args: Route.LoaderArgs) => {
+  return {};
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
+};
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: SITE_TITLE }];
@@ -40,8 +56,17 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl text-highlight">Dashboard</h1>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={GaugeCircleIcon}
+          title="Dashboard"
+        />
+        <p className="text-muted-foreground text-sm">
+          Get a pulse of all your Plans, Tasks, PR's, Prompts, Skills, and more
+          coming soon.
+        </p>
       </div>
 
       <div className="flex flex-1 flex-col gap-4 w-full">
@@ -109,8 +134,8 @@ export default function Component(
   );
 }
 
-// export const action = async (_args: Route.ActionArgs) => {
-//   return {};
-// };
+export const action = async (_args: Route.ActionArgs) => {
+  return {};
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

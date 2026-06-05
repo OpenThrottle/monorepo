@@ -51,7 +51,7 @@ export function registerSearchTools(server: McpServer): void {
         };
       }
       try {
-        const chunks = await runSemanticSearch(config, embedding, limit);
+        const chunks = await runSemanticSearch(embedding, limit);
         const textSummary = chunks
           .map(
             (c) =>
@@ -107,12 +107,9 @@ export function registerSearchTools(server: McpServer): void {
       if (!parsed.success) {
         return invalidArgsContent(parsed.error.message);
       }
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingSearchContent();
-      }
+
       try {
-        const chunk = await getChunkById(config, parsed.data.id);
+        const chunk = await getChunkById(parsed.data.id);
         if (!chunk) {
           return {
             content: [
@@ -166,7 +163,7 @@ export function registerSearchTools(server: McpServer): void {
         return configMissingSearchContent();
       }
       try {
-        const result = await listSources(config);
+        const result = await listSources();
         const text =
           'Sources:\n' +
           result.sources

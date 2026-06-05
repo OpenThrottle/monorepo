@@ -1,55 +1,151 @@
 /**
- * @description Minimal Cortex client for Ralph (plan and task flows): get/update plan and task, format prompt context. Config from @openthrottle/ai-mcp getPostgresConfig().
- * All workflow entry points require Cortex at startup; use getCortexConfigOrExit and ensureDatabaseReachableOrExit for a single fail-fast flow.
+ * @description Minimal OpenThrottle client for Ralph (plan and task flows): get/update plan and task, format prompt context.
+ * Default transport is GraphQL (`executeWorkflowGraphqlV2` + codegen documents). Roll back with
+ * `WORKFLOW_RALPH_TRANSPORT=postgres-direct`.
+ *
+ * All workflow entry points require OpenThrottle at startup; use {@link getCortexConfigOrExit} and
+ * {@link ensureDatabaseReachableOrExit} for a single fail-fast flow.
  */
 
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
-import pg from 'pg';
-import { ralphDebugLogger } from './ralph-debug-logger';
+import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
+import {
+  appendPlanOutputGraphql,
+  ensureCortexReachableGraphql,
+  ensureProjectForNxNameGraphql,
+  getPlanByIdGraphql,
+  getTaskByIdGraphql,
+  getTasksByPlanIdGraphql,
+  insertCommitLinkGraphql,
+  listPlansByStatusGraphql,
+  listProjectsGraphql,
+  updatePlanProjectIdGraphql,
+  updatePlanStatusGraphql,
+  updatePlanSummaryGraphql,
+  updateTaskStatusGraphql,
+  updateTaskSummaryGraphql,
+} from './cortex-ralph-graphql';
+import {
+  appendPlanOutputPostgres,
+  ensureCortexReachablePostgres,
+  ensureProjectForNxNamePostgres,
+  getPlanByIdPostgres,
+  getTaskByIdPostgres,
+  getTasksByPlanIdPostgres,
+  insertCommitLinkPostgres,
+  listPlansByStatusPostgres,
+  listProjectsPostgres,
+  RALPH_FATAL_UNREACHABLE_SUFFIX,
+  updatePlanProjectIdPostgres,
+  updatePlanStatusPostgres,
+  updatePlanSummaryPostgres,
+  updateTaskStatusPostgres,
+  updateTaskSummaryPostgres,
+} from './cortex-ralph-postgres';
+import type {
+  CommitLinkInput,
+  CommitLinkRow,
+  ListPlansByStatusRow,
+  PlanRow,
+  ProjectRow,
+  TaskRow,
+  WorkflowRalphConfig,
+} from './cortex-ralph-types';
+import {
+  formatPlanAndTasksForPrompt,
+  taskRequirementsFromRow,
+} from './cortex-ralph-types';
+import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
-export interface WorkflowRalphConfig {
-  readonly connectionString: string;
-}
+export type {
+  CommitLinkInput,
+  CommitLinkRow,
+  ListPlansByStatusRow,
+  PlanRow,
+  ProjectRow,
+  TaskRow,
+  WorkflowRalphConfig,
+};
+
+export {
+  formatPlanAndTasksForPrompt,
+  RALPH_FATAL_UNREACHABLE_SUFFIX,
+  taskRequirementsFromRow,
+};
+
+export { WORKFLOW_RALPH_TRANSPORT_ENV } from './workflow-transport';
+export type { WorkflowRalphTransport } from './workflow-transport';
 
 /** Fatal error prefix used by getCortexConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
 export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 
 /** Emoji prefix for validation/not-found fatal errors in workflow bins (e.g. plan not found). Use with console.error. */
-export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 ';
+export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 🚨 🚨 ';
 
-/** Shared message when Cortex env is missing. Used by getCortexConfigOrExit and all workflow bins/scripts. */
-export const RALPH_FATAL_REQUIRED = `${RALPH_FATAL_PREFIX}Cortex is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
+/** Shared message when GraphQL workflow env is missing. */
+export const RALPH_FATAL_REQUIRED_GRAPHQL = `${RALPH_FATAL_PREFIX}OpenThrottle is required. Set OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN (or MCP_DEVELOPER_AUTH_TOKEN) and API_URL_INTERNAL (or OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL).\n`;
 
-/** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
-export const RALPH_FATAL_UNREACHABLE_SUFFIX =
-  '\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
+/** Shared message when Postgres env is missing (postgres-direct rollback). */
+export const RALPH_FATAL_REQUIRED_POSTGRES = `${RALPH_FATAL_PREFIX}OpenThrottle is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;
 
-/**
- * @description Normalizes JSONB task requirements from Postgres to a readonly array.
- */
-export function taskRequirementsFromRow(raw: unknown): readonly unknown[] {
-  return Array.isArray(raw) ? raw : [];
-}
+/** @deprecated Use {@link RALPH_FATAL_REQUIRED_GRAPHQL} or {@link RALPH_FATAL_REQUIRED_POSTGRES}. */
+export const RALPH_FATAL_REQUIRED = RALPH_FATAL_REQUIRED_GRAPHQL;
+
+const isPostgresTransport = (config: WorkflowRalphConfig): boolean =>
+  config.transport === 'postgres-direct';
 
 /**
- * @description Returns Cortex config or exits with {@link RALPH_FATAL_REQUIRED}. Use at startup for all workflow entry points (Cortex required).
+ * @description Resolves Ralph config from env without exiting. Returns null when required env is missing.
  */
-export function getCortexConfigOrExit(): WorkflowRalphConfig {
-  const config = getPostgresConfig();
+export const resolveWorkflowRalphConfig = (): WorkflowRalphConfig | null => {
+  const transport = resolveWorkflowRalphTransport();
+
+  if (transport === 'postgres-direct') {
+    try {
+      const connectionString = getPostgresUrl();
+
+      return {
+        connectionString,
+        transport: 'postgres-direct',
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  const token = resolveWorkflowAuthTokenFromEnv();
+  if (!token) {
+    return null;
+  }
+
+  return { transport: 'graphql' };
+};
+
+/**
+ * @description Returns OpenThrottle config or exits with a clear fatal message.
+ */
+export const getCortexConfigOrExit = (): WorkflowRalphConfig => {
+  const config = resolveWorkflowRalphConfig();
+
   if (!config) {
-    console.error(RALPH_FATAL_REQUIRED);
+    const transport = resolveWorkflowRalphTransport();
+    console.error(
+      transport === 'postgres-direct'
+        ? RALPH_FATAL_REQUIRED_POSTGRES
+        : RALPH_FATAL_REQUIRED_GRAPHQL,
+    );
     process.exit(1);
   }
 
   return config;
-}
+};
 
 /**
- * @description Verifies Cortex is reachable or exits with a clear message. Call after getCortexConfigOrExit() for the standard startup flow.
+ * @description Verifies OpenThrottle is reachable or exits with a clear message.
  */
-export async function ensureDatabaseReachableOrExit(
+export const ensureDatabaseReachableOrExit = async (
   config: WorkflowRalphConfig,
-): Promise<void> {
+): Promise<void> => {
   try {
     await ensureCortexReachable(config);
   } catch (error) {
@@ -57,598 +153,139 @@ export async function ensureDatabaseReachableOrExit(
     console.error(`${RALPH_FATAL_PREFIX}${msg}\n`);
     process.exit(1);
   }
-}
+};
 
 /**
- * @description Verifies Cortex Postgres is reachable (connect + SELECT 1). Throws with a clear message if connection fails. Call before using Cortex when config is required.
+ * @description Verifies OpenThrottle is reachable before plan/task I/O.
  */
-export async function ensureCortexReachable(
+export const ensureCortexReachable = async (
   config: WorkflowRalphConfig,
-): Promise<void> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-
-  try {
-    await client.connect();
-    await client.query('SELECT 1');
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Cortex database is unreachable. ${detail}${RALPH_FATAL_UNREACHABLE_SUFFIX}`,
-    );
-  } finally {
-    await client.end();
+): Promise<void> => {
+  if (isPostgresTransport(config)) {
+    await ensureCortexReachablePostgres(config);
+    return;
   }
-}
 
-export interface TaskRow {
-  readonly category: string | null;
-  readonly createdAt: string;
-  readonly description: string | null;
-  readonly id: string;
-  readonly planId: string;
-  readonly requirements: readonly unknown[];
-  readonly status: string;
-  readonly title: string;
-  readonly updatedAt: string;
-}
+  await ensureCortexReachableGraphql();
+};
 
-export interface PlanRow {
-  readonly author: string;
-  readonly category: string;
-  readonly createdAt: string;
-  readonly description: string | null;
-  readonly id: string;
-  readonly status: string;
-  readonly summary: string | null;
-  readonly title: string;
-  readonly updatedAt: string;
-}
-
-export interface ProjectRow {
-  readonly id: string;
-  readonly name: string;
-  readonly nxProjectName: string | null;
-}
-
-/**
- * @description Updates a plan's summary (PRD summarization, usage guide). Returns updated row or null if not found.
- */
-export async function updatePlanSummary(
+export const updatePlanSummary = async (
   config: WorkflowRalphConfig,
   planId: string,
   summary: string,
-): Promise<PlanRow | null> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      author: string;
-      category: string;
-      created_at: string;
-      description: string | null;
-      id: string;
-      status: string;
-      summary: string | null;
-      title: string;
-      updated_at: string;
-    }>(
-      `UPDATE plans SET summary = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
-      [summary, planId],
-    );
-    const row = res.rows[0];
-    if (!row) return null;
-    return {
-      author: row.author,
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      status: row.status,
-      summary: row.summary,
-      title: row.title,
-      updatedAt: row.updated_at,
-    };
-  } finally {
-    await client.end();
-  }
-}
+): Promise<PlanRow | null> =>
+  isPostgresTransport(config)
+    ? updatePlanSummaryPostgres(config, planId, summary)
+    : updatePlanSummaryGraphql(planId, summary);
 
-/**
- * @description Updates a task's summary (PRD summarization, close-out notes). Returns true if a row was updated.
- */
-export async function updateTaskSummary(
+export const updateTaskSummary = async (
   config: WorkflowRalphConfig,
   taskId: string,
   summary: string,
-): Promise<boolean> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query(
-      `UPDATE tasks SET summary = $1, updated_at = NOW() WHERE id = $2`,
-      [summary, taskId],
-    );
-    return res.rowCount === 1;
-  } finally {
-    await client.end();
-  }
-}
+): Promise<boolean> =>
+  isPostgresTransport(config)
+    ? updateTaskSummaryPostgres(config, taskId, summary)
+    : updateTaskSummaryGraphql(taskId, summary);
 
-/**
- * @description Fetches a task by id, or null if not found.
- */
-export async function getTaskById(
+export const getTaskById = async (
   config: WorkflowRalphConfig,
   id: string,
-): Promise<TaskRow | null> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      category: string | null;
-      created_at: string;
-      description: string | null;
-      id: string;
-      plan_id: string;
-      requirements: unknown;
-      status: string;
-      title: string;
-      updated_at: string;
-    }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE id = $1`,
-      [id],
-    );
-    const row = res.rows[0];
-    if (!row) return null;
-    return {
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      planId: row.plan_id,
-      requirements: taskRequirementsFromRow(row.requirements),
-      status: row.status,
-      title: row.title,
-      updatedAt: row.updated_at,
-    };
-  } finally {
-    await client.end();
-  }
-}
+): Promise<TaskRow | null> =>
+  isPostgresTransport(config)
+    ? getTaskByIdPostgres(config, id)
+    : getTaskByIdGraphql(id);
 
-export interface ListPlansByStatusRow {
-  readonly createdAt: string;
-  readonly id: string;
-  readonly status: string;
-  readonly title: string;
-}
-
-/**
- * @description Lists plans in Cortex filtered by status. Returns id, title, status, createdAt.
- */
-export async function listPlansByStatus(
+export const listPlansByStatus = async (
   config: WorkflowRalphConfig,
   status: string,
-): Promise<ListPlansByStatusRow[]> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      created_at: string;
-      id: string;
-      status: string;
-      title: string;
-    }>(
-      `SELECT id, title, status, created_at FROM plans WHERE status = $1 ORDER BY created_at DESC`,
-      [status],
-    );
-    return res.rows.map((row) => ({
-      createdAt: row.created_at,
-      id: row.id,
-      status: row.status,
-      title: row.title,
-    }));
-  } finally {
-    await client.end();
-  }
-}
+): Promise<ListPlansByStatusRow[]> =>
+  isPostgresTransport(config)
+    ? listPlansByStatusPostgres(config, status)
+    : listPlansByStatusGraphql(status);
 
-/**
- * @description Fetches a plan by id, or null if not found.
- */
-export async function getPlanById(
+export const getPlanById = async (
   config: WorkflowRalphConfig,
   id: string,
-): Promise<PlanRow | null> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      author: string;
-      category: string;
-      created_at: string;
-      description: string | null;
-      id: string;
-      status: string;
-      summary: string | null;
-      title: string;
-      updated_at: string;
-    }>(
-      `SELECT id, title, author, category, description, status, summary, created_at, updated_at FROM plans WHERE id = $1`,
-      [id],
-    );
-    const row = res.rows[0];
-    if (!row) return null;
-    return {
-      author: row.author,
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      status: row.status,
-      summary: row.summary,
-      title: row.title,
-      updatedAt: row.updated_at,
-    };
-  } finally {
-    await client.end();
-  }
-}
+): Promise<PlanRow | null> =>
+  isPostgresTransport(config)
+    ? getPlanByIdPostgres(config, id)
+    : getPlanByIdGraphql(id);
 
-/**
- * @description Lists all projects from the projects table (id, name, nx_project_name). Use to map plans to NX projects.
- */
-export async function listProjects(
+export const listProjects = async (
   config: WorkflowRalphConfig,
-): Promise<ProjectRow[]> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      id: string;
-      name: string;
-      nx_project_name: string | null;
-    }>(`SELECT id, name, nx_project_name FROM projects ORDER BY name`, []);
-    return res.rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      nxProjectName: row.nx_project_name,
-    }));
-  } finally {
-    await client.end();
-  }
-}
+): Promise<ProjectRow[]> =>
+  isPostgresTransport(config)
+    ? listProjectsPostgres(config)
+    : listProjectsGraphql();
 
-/**
- * @description Ensures a project row exists for the given NX project name; returns its id. Inserts if missing.
- */
-export async function ensureProjectForNxName(
+export const ensureProjectForNxName = async (
   config: WorkflowRalphConfig,
   nxProjectName: string,
-): Promise<string> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const existing = await client.query<{ id: string }>(
-      `SELECT id FROM projects WHERE nx_project_name = $1 LIMIT 1`,
-      [nxProjectName],
-    );
-    const row = existing.rows[0];
-    if (row) return row.id;
-    const insert = await client.query<{ id: string }>(
-      `INSERT INTO projects (name, nx_project_name) VALUES ($1, $2) RETURNING id`,
-      [nxProjectName, nxProjectName],
-    );
-    const inserted = insert.rows[0];
-    if (!inserted) throw new Error('ensureProjectForNxName: no row returned');
-    return inserted.id;
-  } finally {
-    await client.end();
-  }
-}
+): Promise<string> =>
+  isPostgresTransport(config)
+    ? ensureProjectForNxNamePostgres(config, nxProjectName)
+    : ensureProjectForNxNameGraphql(nxProjectName);
 
-/**
- * @description Updates a plan's project_id (FK to projects). Pass null to clear. Returns true if a row was updated.
- */
-export async function updatePlanProjectId(
+export const updatePlanProjectId = async (
   config: WorkflowRalphConfig,
   planId: string,
   projectId: string | null,
-): Promise<boolean> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query(
-      `UPDATE plans SET project_id = $1, updated_at = NOW() WHERE id = $2`,
-      [projectId, planId],
-    );
-    return (res.rowCount ?? 0) > 0;
-  } finally {
-    await client.end();
-  }
-}
+): Promise<boolean> =>
+  isPostgresTransport(config)
+    ? updatePlanProjectIdPostgres(config, planId, projectId)
+    : updatePlanProjectIdGraphql(planId, projectId);
 
-/**
- * @description Fetches all tasks for a plan, ordered by created_at.
- */
-export async function getTasksByPlanId(
+export const getTasksByPlanId = async (
   config: WorkflowRalphConfig,
   planId: string,
-): Promise<TaskRow[]> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      category: string | null;
-      created_at: string;
-      description: string | null;
-      id: string;
-      plan_id: string;
-      requirements: unknown;
-      status: string;
-      title: string;
-      updated_at: string;
-    }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY created_at`,
-      [planId],
-    );
-    return res.rows.map((row) => ({
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      planId: row.plan_id,
-      requirements: taskRequirementsFromRow(row.requirements),
-      status: row.status,
-      title: row.title,
-      updatedAt: row.updated_at,
-    }));
-  } finally {
-    await client.end();
-  }
-}
+): Promise<TaskRow[]> =>
+  isPostgresTransport(config)
+    ? getTasksByPlanIdPostgres(config, planId)
+    : getTasksByPlanIdGraphql(planId);
 
 /**
- * @description Formats plan and tasks as plain text for injection into the agent prompt. Ralph uses this so the agent gets full context from Postgres without needing Cortex MCP (get_plan, get_tasks_by_plan_id).
+ * @description Promotes a plan to `IN_PROGRESS` when its status is not already `IN_PROGRESS`.
  */
-export function formatPlanAndTasksForPrompt(
-  plan: PlanRow | null,
-  tasks: TaskRow[],
-): string {
-  const lines: string[] = [
-    '--- Cortex plan (injected by Ralph from Postgres)',
-    '',
-  ];
-  if (plan) {
-    lines.push(`Plan-Id: ${plan.id}`);
-    lines.push(`Title: ${plan.title}`);
-    if (plan.description) lines.push(`Description: ${plan.description.trim()}`);
-    if (plan.status) lines.push(`Status: ${plan.status}`);
-    lines.push('');
-  }
-  lines.push('Tasks:');
-  if (tasks.length === 0) {
-    lines.push('  (none)');
-  } else {
-    for (const t of tasks) {
-      lines.push(`  - ${t.id}  ${t.title}  (${t.status})`);
-      if (t.description?.trim()) {
-        lines.push(`    ${t.description.trim().replace(/\n/g, ' ')}`);
-      }
-    }
-  }
-  lines.push('', '---');
-  return lines.join('\n');
-}
+export const promotePlanToInProgressIfNeeded = async (
+  config: WorkflowRalphConfig,
+  planId: string,
+): Promise<boolean> => {
+  const row = await updatePlanStatus(config, planId, 'IN_PROGRESS');
+  return row !== null;
+};
 
-/**
- * @description Updates a task's status (and optionally other fields). Returns updated row or null if not found.
- */
-export async function updateTaskStatus(
+export const updateTaskStatus = async (
   config: WorkflowRalphConfig,
   id: string,
   status: string,
-): Promise<TaskRow | null> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      category: string | null;
-      created_at: string;
-      description: string | null;
-      id: string;
-      plan_id: string;
-      requirements: unknown;
-      status: string;
-      title: string;
-      updated_at: string;
-    }>(
-      `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, plan_id, title, description, category, status, requirements, created_at, updated_at`,
-      [status, id],
-    );
-    const row = res.rows[0];
-    if (!row) return null;
-    return {
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      planId: row.plan_id,
-      requirements: taskRequirementsFromRow(row.requirements),
-      status: row.status,
-      title: row.title,
-      updatedAt: row.updated_at,
-    };
-  } finally {
-    await client.end();
-  }
-}
+): Promise<TaskRow | null> =>
+  isPostgresTransport(config)
+    ? updateTaskStatusPostgres(config, id, status)
+    : updateTaskStatusGraphql(id, status);
 
-/**
- * @description Updates a plan's status in Postgres. For `IN_PROGRESS`, applies
- * `UPDATE … WHERE id = $2 AND status = 'PENDING'` (aligned with
- * `PlansResolver.canApplyInProgressAsTargetStatus` in `plans.resolver.ts`). Returns the
- * updated row, or `null` if the plan id is missing or no row matched (including `IN_PROGRESS`
- * when the plan is not currently `PENDING`). Unlike GraphQL `updatePlan` / `setPlanStatus`,
- * this helper does not treat `IN_PROGRESS` → `IN_PROGRESS` as a no-op: an already-in-progress
- * plan yields no update and `null`. Other target statuses use an unconditional update by id.
- */
-export async function updatePlanStatus(
+export const updatePlanStatus = async (
   config: WorkflowRalphConfig,
   planId: string,
   status: string,
-): Promise<PlanRow | null> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    if (status === 'IN_PROGRESS') {
-      const res = await client.query<{
-        author: string;
-        category: string;
-        created_at: string;
-        description: string | null;
-        id: string;
-        status: string;
-        summary: string | null;
-        title: string;
-        updated_at: string;
-      }>(
-        `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 AND status = 'PENDING' RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
-        [status, planId],
-      );
-      const row = res.rows[0];
-      if (!row) return null;
-      return {
-        author: row.author,
-        category: row.category,
-        createdAt: row.created_at,
-        description: row.description,
-        id: row.id,
-        status: row.status,
-        summary: row.summary,
-        title: row.title,
-        updatedAt: row.updated_at,
-      };
-    }
-    const res = await client.query<{
-      author: string;
-      category: string;
-      created_at: string;
-      description: string | null;
-      id: string;
-      status: string;
-      summary: string | null;
-      title: string;
-      updated_at: string;
-    }>(
-      `UPDATE plans SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
-      [status, planId],
-    );
-    const row = res.rows[0];
-    if (!row) return null;
-    return {
-      author: row.author,
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      status: row.status,
-      summary: row.summary,
-      title: row.title,
-      updatedAt: row.updated_at,
-    };
-  } finally {
-    await client.end();
-  }
-}
+): Promise<PlanRow | null> =>
+  isPostgresTransport(config)
+    ? updatePlanStatusPostgres(config, planId, status)
+    : updatePlanStatusGraphql(planId, status);
 
-export interface CommitLinkInput {
-  readonly message: string | null;
-  readonly planId: string;
-  readonly repo: string;
-  readonly sha: string;
-  readonly taskId: string | null;
-}
-
-export interface CommitLinkRow {
-  readonly createdAt: string;
-  readonly id: string;
-  readonly message: string | null;
-  readonly planId: string;
-  readonly repo: string;
-  readonly sha: string;
-  readonly taskId: string | null;
-}
-
-/**
- * @description Appends a chunk of streaming output to a plan (same as Cortex MCP append_plan_output). Used by child-job when streamToCortex is enabled so plan_output_stream is updated in real time.
- */
-export async function appendPlanOutput(
+export const appendPlanOutput = async (
   config: WorkflowRalphConfig,
   planId: string,
   content: string,
   iteration?: number | null,
-): Promise<void> {
-  if (!content) return;
-  ralphDebugLogger.debug('appendPlanOutput', {
-    byteLength: content.length,
-    iteration: iteration ?? null,
-    planId,
-  });
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    await client.query(
-      `INSERT INTO plan_output_stream (plan_id, iteration, content) VALUES ($1, $2, $3)`,
-      [planId, iteration ?? null, content],
-    );
-  } finally {
-    await client.end();
-  }
-}
+): Promise<void> =>
+  isPostgresTransport(config)
+    ? appendPlanOutputPostgres(config, planId, content, iteration)
+    : appendPlanOutputGraphql(planId, content, iteration);
 
-/**
- * @description Inserts a commit link (plan/task ↔ repo/sha). Use after PR merge with the squash commit SHA so commit_links stores the one SHA on main.
- */
-export async function insertCommitLink(
+export const insertCommitLink = async (
   config: WorkflowRalphConfig,
   input: CommitLinkInput,
-): Promise<CommitLinkRow> {
-  const client = new pg.Client({ connectionString: config.connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      created_at: string;
-      id: string;
-      message: string | null;
-      plan_id: string;
-      repo: string;
-      sha: string;
-      task_id: string | null;
-    }>(
-      `INSERT INTO commit_links (plan_id, task_id, repo, sha, message)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, plan_id, task_id, repo, sha, message, created_at`,
-      [
-        input.planId,
-        input.taskId ?? null,
-        input.repo,
-        input.sha,
-        input.message ?? null,
-      ],
-    );
-    const row = res.rows[0];
-    if (!row) throw new Error('insertCommitLink: no row returned');
-    return {
-      createdAt: row.created_at,
-      id: row.id,
-      message: row.message,
-      planId: row.plan_id,
-      repo: row.repo,
-      sha: row.sha,
-      taskId: row.task_id,
-    };
-  } finally {
-    await client.end();
-  }
-}
+): Promise<CommitLinkRow> =>
+  isPostgresTransport(config)
+    ? insertCommitLinkPostgres(config, input)
+    : insertCommitLinkGraphql(input);

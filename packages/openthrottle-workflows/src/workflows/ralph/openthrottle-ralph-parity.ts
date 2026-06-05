@@ -10,14 +10,9 @@
  *
  * ## Optional GraphQL preflight (`getServerHealth`)
  *
- * - `fetchServerHealth` (commented in `utils/index.ts` — no package consumers; same behavior if
- *   restored) would run the public `getServerHealth` query via `executeWorkflowGraphqlV2` in
- *   `workflow-graphql.ts` (wraps `executeGraphqlV2` with workflow env + URL options; throws on
- *   HTTP/GraphQL errors; message includes status / first GraphQL error). Health JSON is only available
- *   after a successful HTTP POST; wrong URL, TLS, or proxy errors remain transport failures without
- *   health fields. Ralph startup
- *   still uses direct Postgres (`ensureDatabaseReachableOrExit`); see `tools/workflows/README.md`
- *   (section **getServerHealth vs workflow GraphQL transport errors**).
+ * - Optional `getServerHealth` preflight via `executeWorkflowGraphqlV2` in `workflow-graphql.ts` is
+ *   not wired in this package; Ralph startup uses direct Postgres (`ensureDatabaseReachableOrExit`).
+ *   See `tools/workflows/README.md` (getServerHealth vs workflow GraphQL transport errors).
  *
  * TODO: When `@openthrottle/nodejs-graphql` exposes structured failure payloads (`errors[]`, extensions,
  * HTTP metadata), surface them from {@link executeWorkflowGraphqlV2} or dedicated mappers so tooling
@@ -36,13 +31,14 @@
  * - `updatePlanProjectId` → `updatePlan` with `projectId` / `project` fields (`mutations.graphql`)
  * - `updatePlanSummary` → `updatePlan` with `summary`
  * - `updatePlanStatus` → `updatePlan` with `status` (see behavioral note below)
+ * - `promotePlanToInProgressIfNeeded` → `updatePlan` with `status: IN_PROGRESS` (same predicate as `updatePlanStatus` / `syncParentPlanStatus`)
  * - `updateTaskStatus` → `updateTask` with `status`
  * - `updateTaskSummary` → `updateTask` with `summary`
  *
  * ## `ralph.ts` main() path (minimal subset)
  *
  * Uses only: `getTaskById`, `getPlanById`, `getTasksByPlanId`, `formatPlanAndTasksForPrompt` (pure),
- * `updatePlanStatus`, `updateTaskStatus`. GraphQL covers all data access except prompt formatting.
+ * `promotePlanToInProgressIfNeeded`, `updatePlanStatus`, `updateTaskStatus`. GraphQL covers all data access except prompt formatting.
  *
  * ## Related workflow bins (same `cortex-ralph` module)
  *
@@ -54,8 +50,8 @@
  * Source of truth: `applications/openthrottle-server/src/graphql/plans/plans.resolver.ts`
  * (`updatePlan`, `setPlanStatus`, `canApplyInProgressAsTargetStatus`).
  *
- * - **Direct Postgres (`cortex-ralph`):** `UPDATE … SET status = 'IN_PROGRESS' WHERE id = $2 AND status = 'PENDING'` — only `PENDING` rows change; no match → `null` (already `IN_PROGRESS` is not a no-op row update, unlike GraphQL below).
- * - **`updatePlan`:** Requesting `IN_PROGRESS` updates status only when current status is `PENDING` or already `IN_PROGRESS` (idempotent `IN_PROGRESS` → `IN_PROGRESS`). Otherwise the invalid transition is skipped (status unchanged); other input fields still apply. If nothing else changed and `IN_PROGRESS` was the only invalid request → `400` with `Cannot transition to IN_PROGRESS: only PENDING plans may enter this state.`
+ * - **Direct Postgres (`cortex-ralph`):** `UPDATE … SET status = 'IN_PROGRESS' WHERE id = $2 AND status != 'IN_PROGRESS'` — promotes `PENDING`, `QUEUED`, and other non-terminal statuses; no match → `null` (already `IN_PROGRESS` is not a no-op row update, unlike GraphQL below).
+ * - **`updatePlan`:** Requesting `IN_PROGRESS` updates status only when current status is `PENDING`, `QUEUED`, or already `IN_PROGRESS` (idempotent `IN_PROGRESS` → `IN_PROGRESS`). Otherwise the invalid transition is skipped (status unchanged); other input fields still apply. If nothing else changed and `IN_PROGRESS` was the only invalid request → `400` with `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`
  * - **`setPlanStatus`:** Validates `IN_PROGRESS` first and throws that same `400` when invalid **before** the same-status early return. Valid `IN_PROGRESS` → `IN_PROGRESS` returns the entity without persisting.
  *
  * ## `RalphFlowContext` from GraphQL / queue tuning (`ralph-plan-run-context.ts`, re-exported from `workflow-graphql.ts`)
@@ -72,6 +68,3 @@
  *   plan-scoped; panel `mode` / `taskId` affect local CLI preview, not enqueue — same as
  *   `buildRalphPlanRunTuningInputFromWorkflowRunOptions` in the developer app.
  */
-
-export const OPENTHROTTLE_RALPH_PARITY_NOTE =
-  'See openthrottle-ralph-parity.ts for Postgres helpers in cortex-ralph ↔ GraphQL operation mapping.';

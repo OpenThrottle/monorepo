@@ -21,7 +21,7 @@ export const summarizeStoragePair = (key: string, raw: string): string => {
 
 export const readStorageEntries = (
   storage: Storage | undefined,
-): readonly { readonly key: string; readonly preview: string }[] => {
+): { key: string; preview: string }[] => {
   if (!storage || typeof storage.length !== 'number') {
     return [];
   }

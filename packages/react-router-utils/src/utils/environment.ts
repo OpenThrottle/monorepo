@@ -4,6 +4,7 @@ import type { OpenThrottleEnv } from '../types';
 export const getEnvironment = (): OpenThrottleEnv => {
   const appEnv = ENV_SOURCE['APP_ENV'];
   const appName = ENV_SOURCE['APP_NAME'];
+  const appNameShort = ENV_SOURCE['APP_NAME_SHORT'];
   const appUrl = ENV_SOURCE['APP_URL'];
   const apiUrlExternal = ENV_SOURCE['API_URL_EXTERNAL'];
   const apiUrlInternal = ENV_SOURCE['API_URL_INTERNAL'];
@@ -21,6 +22,7 @@ export const getEnvironment = (): OpenThrottleEnv => {
   if (!apiUrlInternal) throw new Error('API_URL_INTERNAL is not set');
   if (!appEnv) throw new Error('APP_ENV is not set');
   if (!appName) throw new Error('APP_NAME is not set');
+  if (!appNameShort) throw new Error('APP_NAME_SHORT is not set');
   if (!appUrl) throw new Error('APP_URL is not set');
   if (!appUrlAdmin) throw new Error('APP_URL_ADMIN is not set');
   if (!appUrlCms) throw new Error('APP_URL_CMS is not set');
@@ -37,6 +39,7 @@ export const getEnvironment = (): OpenThrottleEnv => {
     API_URL_INTERNAL: apiUrlInternal,
     APP_ENV: appEnv,
     APP_NAME: appName,
+    APP_NAME_SHORT: appNameShort,
     APP_URL: appUrl,
     APP_URL_ADMIN: appUrlAdmin,
     APP_URL_CMS: appUrlCms,

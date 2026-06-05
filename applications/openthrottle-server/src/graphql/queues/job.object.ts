@@ -8,11 +8,6 @@ import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object';
 @ObjectType()
 export class JobObject {
   @Field(() => String, {
-    description: 'BullMQ job id.',
-  })
-  id!: string;
-
-  @Field(() => String, {
     description: 'JSON string of job data (e.g. { planId } for run-plan).',
     nullable: true,
   })
@@ -26,23 +21,10 @@ export class JobObject {
   executionBackend!: string | null;
 
   @Field(() => String, {
-    description:
-      'Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.',
+    description: 'Error message if the job failed.',
     nullable: true,
   })
-  name!: string | null;
-
-  @Field(() => Float, {
-    description: 'Unix timestamp when the job was created.',
-    nullable: true,
-  })
-  timestamp!: number | null;
-
-  @Field(() => Float, {
-    description: 'Unix timestamp when the job started processing.',
-    nullable: true,
-  })
-  processedOn!: number | null;
+  failedReason!: string | null;
 
   @Field(() => Float, {
     description: 'Unix timestamp when the job finished.',
@@ -51,22 +33,34 @@ export class JobObject {
   finishedOn!: number | null;
 
   @Field(() => String, {
-    description: 'Error message if the job failed.',
-    nullable: true,
+    description: 'BullMQ job id.',
   })
-  failedReason!: string | null;
+  id!: string;
 
   @Field(() => String, {
-    description: 'Return value from the processor (if completed).',
+    description:
+      'Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.',
     nullable: true,
   })
-  returnvalue!: string | null;
+  name!: string | null;
 
   @Field(() => Int, {
     description: 'Job progress (0-100 or custom).',
     nullable: true,
   })
   progress!: number | null;
+
+  @Field(() => Float, {
+    description: 'Unix timestamp when the job started processing.',
+    nullable: true,
+  })
+  processedOn!: number | null;
+
+  @Field(() => String, {
+    description: 'Return value from the processor (if completed).',
+    nullable: true,
+  })
+  returnvalue!: string | null;
 
   @Field(() => String, {
     description: 'Job state: waiting, active, completed, failed, delayed.',
@@ -79,4 +73,10 @@ export class JobObject {
     nullable: true,
   })
   taskRunMetrics!: TaskRunMetricsObject | null;
+
+  @Field(() => Float, {
+    description: 'Unix timestamp when the job was created.',
+    nullable: true,
+  })
+  timestamp!: number | null;
 }

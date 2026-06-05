@@ -206,10 +206,9 @@ export class TasksResolver {
     const saved = await repo.save(entity);
 
     if (saved.status === 'IN_PROGRESS') {
-      const promoted =
-        await this.tasksService.syncParentPlanToInProgressWhenTaskInProgress(
-          saved.planId,
-        );
+      const promoted = await this.tasksService.syncParentPlanStatus(
+        saved.planId,
+      );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
@@ -284,10 +283,9 @@ export class TasksResolver {
     const saved = await repo.save(entity);
 
     if (saved.status === 'IN_PROGRESS' && previousStatus !== 'IN_PROGRESS') {
-      const promoted =
-        await this.tasksService.syncParentPlanToInProgressWhenTaskInProgress(
-          saved.planId,
-        );
+      const promoted = await this.tasksService.syncParentPlanStatus(
+        saved.planId,
+      );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,

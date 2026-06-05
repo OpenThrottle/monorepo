@@ -4,7 +4,6 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getPostgresConfig } from '../config.js';
 import { getOrCreateDataSource, runQuery } from '../data-source.js';
 
 type HealthStructured = {
@@ -30,21 +29,8 @@ async function handleHealth(args: { checkDb?: boolean }): Promise<{
     };
   }
 
-  const config = getPostgresConfig();
-  if (!config) {
-    result.cortex = 'not_configured';
-    result.message = 'Cortex Postgres is not configured.';
-
-    const text = `Server OK. Cortex: ${result.cortex}. ${result.message}`;
-
-    return {
-      content: [{ text, type: 'text' as const }],
-      structuredContent: { result },
-    };
-  }
-
   try {
-    const ds = await getOrCreateDataSource(config);
+    const ds = await getOrCreateDataSource();
     await runQuery(ds, 'SELECT 1');
 
     result.cortex = 'reachable';

@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useNotificationsSocket } from '@openthrottle/react-router-notifications';
 import { SettingsDebugPanel } from '../SettingsDebugPanel';
 import type { SettingsDebugGraphQLResult } from '../SettingsDebugPanel';
 import { renderRoutesStub } from '~/testing/route-fixtures';
@@ -27,7 +28,27 @@ const graphQLError: SettingsDebugGraphQLResult = {
   status: 'error',
 };
 
+vi.mock('@openthrottle/react-router-notifications', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@openthrottle/react-router-notifications')
+    >();
+
+  return {
+    ...actual,
+    useNotificationsSocket: vi.fn(),
+  };
+});
+
 describe('SettingsDebugPanel', () => {
+  beforeEach(() => {
+    vi.mocked(useNotificationsSocket).mockReturnValue({
+      socket: null,
+      status: 'connected',
+      subscribeToNotifications: () => () => undefined,
+    });
+  });
+
   test('renders debug sections when GraphQL health is ok', () => {
     renderRoutesStub(
       <SettingsDebugPanel envSnapshot={envSnapshot} graphQL={graphQLOk} />,
@@ -35,13 +56,16 @@ describe('SettingsDebugPanel', () => {
 
     expect(screen.getByRole('heading', { name: 'Debug' })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'Feature flags' }),
+      screen.getByRole('group', { name: 'Feature flags' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Sanitized env snapshot')).toBeInTheDocument();
     expect(screen.getByText('GraphQL endpoint health')).toBeInTheDocument();
     expect(screen.getByText(/getRootHealth/i)).toBeInTheDocument();
     expect(screen.getByText(/42 ms/)).toBeInTheDocument();
     expect(screen.getByText(/local dev: ports, hosts/i)).toBeInTheDocument();
+    expect(
+      screen.getByTestId('OpenThrottleWebsocketDebugger'),
+    ).toBeInTheDocument();
   });
 
   test('renders GraphQL error details when health check fails', () => {

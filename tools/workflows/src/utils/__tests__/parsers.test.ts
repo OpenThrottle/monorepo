@@ -3,6 +3,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   getRalphOutputMarkerFlags,
   isCortexPlanId,
@@ -11,6 +14,7 @@ import {
   parseRalphCompleteTaskSignals,
 } from '../parsers';
 import { ralphDebugLogger, setRalphDebugLevel } from '../ralph-debug-logger';
+import { WORKFLOW_RALPH_DEFAULTS_FILE } from '../ralph-runtime-config';
 
 const PLAN_UUID = '77cb14a0-5eb0-4061-87ea-d618b85e8818';
 const TASK_UUID = '93fcbc19-1861-4931-9631-6393d33220a2';
@@ -223,6 +227,26 @@ describe('parseRalphArgs (shim debug CLI)', () => {
     expect(ralphDebugLogger.level).toBe('verbose');
   });
 
+  it('sets verbose level from --verbose=verbose', () => {
+    process.argv = [
+      'node',
+      'ralph.js',
+      '--plan',
+      PLAN_UUID,
+      '--verbose=verbose',
+    ];
+    const args = parseRalphArgs();
+    expect(args.ralphDebugLevel).toBe('verbose');
+    expect(ralphDebugLogger.level).toBe('verbose');
+  });
+
+  it('throws when --verbose= has an invalid value', () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--verbose=maybe'];
+    expect(() => parseRalphArgs()).toThrow(
+      /expects "verbose" or a truthy verbose flag/,
+    );
+  });
+
   it('sets verbose level from --debug=verbose', () => {
     process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--debug=verbose'];
     const args = parseRalphArgs();
@@ -265,5 +289,40 @@ describe('parseRalphArgs (shim debug CLI)', () => {
     expect(() => parseRalphArgs()).toThrow(
       /expects "verbose" or a truthy debug flag/,
     );
+  });
+
+  it('rejects uppercase --DEBUG and --VERBOSE argv (lowercase only)', () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--DEBUG'];
+    expect(() => parseRalphArgs()).toThrow(/Unknown flag: --DEBUG/);
+
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--VERBOSE'];
+    expect(() => parseRalphArgs()).toThrow(/Unknown flag: --VERBOSE/);
+  });
+
+  it('sets verbose level from --verbose=true', () => {
+    process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--verbose=true'];
+    const args = parseRalphArgs();
+    expect(args.ralphDebugLevel).toBe('verbose');
+    expect(ralphDebugLogger.level).toBe('verbose');
+  });
+
+  it('applies debug from .workflow-ralph.json when no CLI or env debug flags', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-parsers-'));
+    const previousCwd = process.cwd();
+    try {
+      writeFileSync(
+        join(dir, WORKFLOW_RALPH_DEFAULTS_FILE),
+        JSON.stringify({ debug: 'verbose' }),
+        'utf8',
+      );
+      process.chdir(dir);
+      process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID];
+      const args = parseRalphArgs();
+      expect(args.ralphDebugLevel).toBe('verbose');
+      expect(ralphDebugLogger.level).toBe('verbose');
+    } finally {
+      process.chdir(previousCwd);
+      rmSync(dir, { force: true, recursive: true });
+    }
   });
 });

@@ -14,11 +14,18 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.$noteId';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Details',
+  breadcrumb: (match) => (
+    <OpenThrottleClipboard
+      className="cursor-pointer whitespace-nowrap"
+      label={match.params.noteId}
+      text={match.params.noteId ?? 'not-found'}
+    />
+  ),
   links: (_match) => [{ children: 'Notes', to: '/notes' }],
 };
 

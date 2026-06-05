@@ -72,4 +72,20 @@ describe('readRalphPromptFileUtf8', () => {
       rmSync(dir, { force: true, recursive: true });
     }
   });
+
+  it('strips YAML frontmatter from skill-style files', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-prompt-'));
+    try {
+      writeFileSync(
+        join(dir, 'skill.md'),
+        '---\nname: agents-ralph\ndescription: x\n---\n\n# Instructions\n\nBody\n',
+        'utf8',
+      );
+      expect(readRalphPromptFileUtf8(dir, 'skill.md')).toBe(
+        '# Instructions\n\nBody\n',
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
 });

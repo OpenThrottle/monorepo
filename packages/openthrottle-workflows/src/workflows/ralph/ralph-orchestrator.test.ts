@@ -23,7 +23,7 @@ import type {
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
 } from './contract/ralph-orchestrator-deps.js';
-import { createWorkflowRalphOrchestrator } from './ralph-orchestrator.js';
+import { createWorkflowRalphOrchestrator } from '@openthrottle/openthrottle-agentic-ralph';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';
@@ -535,5 +535,57 @@ describe('createWorkflowRalphOrchestrator', () => {
       (c) => c[0] === GetTaskDocument,
     );
     expect(getTaskCalls.length).toBe(1);
+  });
+
+  it('promotes plan when resuming an IN_PROGRESS task while plan is QUEUED', async () => {
+    const updatePlanCalls: Array<{ id: string; status: string }> = [];
+    const executeGraphqlV2 = wrapWorkflowExecute((async (
+      document,
+      variables,
+    ) => {
+      const doc = document as unknown;
+      if (doc === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (doc === GetPlanDocument) {
+        return { plan: basePlan({ status: 'QUEUED' }) };
+      }
+      if (doc === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, 'IN_PROGRESS')] };
+      }
+      if (doc === UpdatePlanDocument) {
+        const input = variables?.input as { id: string; status: string };
+        updatePlanCalls.push(input);
+        return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
+      }
+      if (doc === UpdateTaskDocument) {
+        return { updateTask: baseTask(TASK_A, 'IN_PROGRESS') };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    }) as WorkflowExecuteGraphqlV2);
+    const iterationRunner: WorkflowRalphIterationRunner = {
+      run: async () => '<promise>COMPLETE</promise>',
+    };
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: baseRalphContext({ iterations: 1 }),
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'agent_complete',
+      status: 'finished',
+    });
+    expect(
+      updatePlanCalls.filter((c) => c.status === 'IN_PROGRESS').length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(updatePlanCalls[0]).toEqual({
+      id: PLAN_ID,
+      status: 'IN_PROGRESS',
+    });
   });
 });

@@ -2,19 +2,17 @@
  * @description Service for server health checks: OpenThrottle DB (via existing logic) and Redis (BullMQ PING).
  */
 
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
-import { PlansService } from '@openthrottle/nestjs-repositories';
-import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { Injectable } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { PlansService } from '@openthrottle/nestjs-repositories';
+import type { Queue } from 'bullmq';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import type { ServerHealthStatus } from './server-health.object';
 
 export interface ServerHealthResponse {
   readonly api: string;
-  /** @deprecated Use {@link api} instead. Example of GraphQL field deprecation policy. */
-  readonly apiStatus: string;
   readonly database: ServerHealthStatus;
   readonly redis: ServerHealthStatus;
   readonly websocket: ServerHealthStatus;
@@ -32,9 +30,8 @@ export class HealthService {
    * @description Database status: ok if reachable, unconfigured if no config, unreachable on error.
    */
   async getDatabaseStatus(): Promise<ServerHealthStatus> {
-    const config = getPostgresConfig();
-
-    if (!config) {
+    const url = getPostgresUrl();
+    if (!url) {
       return 'unconfigured';
     }
 
@@ -85,7 +82,6 @@ export class HealthService {
 
     return {
       api: 'ok',
-      apiStatus: 'ok',
       database,
       redis,
       websocket,

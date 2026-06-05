@@ -143,6 +143,6 @@ Summarize how many sources and pending plans you see.
 | MCP verification, env, smoke checks          | [verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md)                          |
 | MCP config template                          | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                                                          |
 | DB schema, migrations, imports, commit links | [databases/README.md](../../databases/README.md)                                                                      |
-| OT MCP tool choice and commands              | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), [.cursor/commands/ot/](../../.cursor/commands/ot/) |
+| OT MCP tool choice and skills                | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*` |
 | Workflow CLI / Ralph (optional)              | [tools/workflows/README.md](../../tools/workflows/README.md)                                                          |
 | OSS / Ollama path                            | [run-locally-oss.md](./run-locally-oss.md)                                                                            |

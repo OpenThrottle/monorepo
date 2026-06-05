@@ -17,6 +17,10 @@ MCP server for plans knowledge base (semantic search over Cortex Postgres).
 
 No raw SQL or credentials are exposed to the MCP client.
 
+## Ralph spawn env (`buildWorkflowRalphSpawnEnv`)
+
+When the plans queue spawns nested `workflow-ralph`, this package builds the child process environment (Postgres URL injection, `PATH` for monorepo bins, optional `HOME` / `XDG_CONFIG_HOME` overrides). **Non-secret spawn tuning** (`spawn.*`, `transport`) is merged from **`.workflow-ralph.json` + env** via `@tools/workflows` `loadWorkflowRalphConfig` (caller passes `mergedDefaults`; env on the worker still wins). **Secrets remain env-only** (Postgres URLs, GraphQL auth). See `docs/workflows/ralph-config-migration.md` and `packages/ai-mcp/src/config.ts`.
+
 ## Is Cortex running?
 
 **Quick check:** Invoke the **`health`** tool from Cursor (MCP Tools) or [MCP Inspector](https://github.com/modelcontextprotocol/inspector). It returns `server: ok` and `cortex: not_configured` | `reachable` | `unreachable`.

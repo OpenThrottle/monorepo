@@ -31,6 +31,7 @@ export interface PlanTabDetailsProps {
   jobRunHooksBlockedReason?: string;
   jobRunHooksJson?: string;
   plan: PlanDetailsFragment;
+  planRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'];
   ralphTuningJson: string;
   recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
   setFullscreen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -48,6 +49,7 @@ export const PlanTabDetails = (
     jobRunHooksBlockedReason,
     jobRunHooksJson = '',
     plan,
+    planRunAuditRows,
     ralphTuningJson,
     recentPlanRuns,
     setFullscreen,
@@ -181,9 +183,11 @@ export const PlanTabDetails = (
         <PlanWorkflowRunTransparency
           canonicalWorkflowCommand={canonicalWorkflowCommand}
           planId={plan.id}
+          planRunAuditRows={planRunAuditRows}
           recentPlanRuns={recentPlanRuns}
           workflowInput={workflowInput}
           workflowTimeout={workflowTimeout}
+          workingDirectory={workingDirectory ?? ''}
         />
       </div>
     </TabsContent>

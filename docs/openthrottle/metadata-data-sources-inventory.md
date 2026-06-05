@@ -81,5 +81,5 @@ Inventory of embeddings, plan/task content, docs, and commit_links — gaps and 
 
 - Schema: `databases/README.md`
 - OT MCP tools: `.cursor/rules/commands/openthrottle.mdc`
-- Ingest: `scripts/openthrottle-ingest-plans.ts`, `scripts/openthrottle-ingest-docs.ts` (see root `package.json` scripts `database:import`, `database:import-docs`)
+- Ingest: `scripts/openthrottle-ingest-docs.ts` (see root `package.json` scripts `database:import`, `database:import-docs`)
 - Activity: `packages/mcp-developer/src/tools/activity.ts`, `applications/openthrottle-server/src/graphql/activity/`

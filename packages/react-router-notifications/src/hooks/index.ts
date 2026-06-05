@@ -7,4 +7,11 @@ export {
   type UseSystemNotificationsPreferenceResult,
 } from './use-system-notifications-preference';
 export { useNotificationsSocket } from './useNotificationsSocket';
-export { type NotificationPermissionState } from '../types';
+export {
+  useNotificationsSocketEventSubscription,
+  type UseNotificationsSocketEventSubscriptionOptions,
+} from './useNotificationsSocketEventSubscription';
+export {
+  type NotificationPermissionState,
+  type NotificationSocketEventListener,
+} from '../types';

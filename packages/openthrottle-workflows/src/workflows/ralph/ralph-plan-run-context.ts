@@ -3,12 +3,12 @@
  * `RalphPlanRunTuningInput` (enqueue / job tuning). Keeps Ralph argv-equivalent defaults aligned
  * with the workflow flow-context contract (`contract/flow-context`).
  */
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
 import type { RalphPlanRunTuningInput } from '../../__generated__/graphql.js';
 import type {
   WorkflowRalphContext,
   WorkflowDebug,
-  WorkflowRunner,
   WorkflowOptions,
   WorkflowMode,
 } from './contract/flow-context.js';
@@ -48,12 +48,12 @@ const mapRalphNestedDebugCliToWorkflowDebugCli = (
 const WORKFLOW_RUNNER_IDS = ['claude', 'cursor'] as const;
 
 /**
- * @description Maps GraphQL / job `backend` string to {@link WorkflowRunner}; unknown values fall back
+ * @description Maps GraphQL / job `backend` string to {@link WorkflowConfigRunner}; unknown values fall back
  * to {@link DEFAULT_RALPH_RUNNER}.
  */
 const resolveExecutionBackend = (
   raw: string | null | undefined,
-): WorkflowRunner => {
+): WorkflowConfigRunner => {
   if (raw == null || raw === '') {
     return DEFAULT_RALPH_RUNNER;
   }
@@ -61,7 +61,7 @@ const resolveExecutionBackend = (
   const n = raw.trim().toLowerCase();
 
   if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
-    return n as unknown as WorkflowRunner;
+    return n as unknown as WorkflowConfigRunner;
   }
 
   return DEFAULT_RALPH_RUNNER;

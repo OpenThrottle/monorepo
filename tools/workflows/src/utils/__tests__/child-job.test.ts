@@ -10,11 +10,29 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChildJobInput, ParentJobHandoff } from '../../types/worktree';
 import { runChildJob } from '../child-job';
 
-const mockConfig = { connectionString: 'postgres://localhost/cortex' };
+const mockConfig = {
+  connectionString: 'postgres://localhost/cortex',
+  transport: 'postgres-direct' as const,
+};
 
-vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
-  buildWorkflowRalphSpawnEnv: vi.fn((env: NodeJS.ProcessEnv) => env),
-  getPostgresConfig: vi.fn(() => mockConfig),
+const buildNestedWorkflowRalphSpawnEnvMock = vi.fn(
+  (
+    _spawnCwd: string,
+    env: NodeJS.ProcessEnv,
+    _options?: { canonicalCortexPostgresUrl?: string },
+  ) => env,
+);
+
+vi.mock('../../config/build-nested-workflow-ralph-spawn-env', () => ({
+  buildNestedWorkflowRalphSpawnEnv: (
+    spawnCwd: string,
+    env: NodeJS.ProcessEnv,
+    options?: { canonicalCortexPostgresUrl?: string },
+  ) => buildNestedWorkflowRalphSpawnEnvMock(spawnCwd, env, options),
+}));
+
+vi.mock('../../config/load-workflow-ralph-config', () => ({
+  resolveWorkflowRalphTransport: vi.fn(() => 'postgres-direct'),
 }));
 
 const mockCortexState: {
@@ -26,11 +44,14 @@ const mockCortexState: {
 };
 
 vi.mock('../cortex-ralph', () => ({
+  RALPH_FATAL_REQUIRED_GRAPHQL: 'graphql-required',
+  RALPH_FATAL_REQUIRED_POSTGRES: 'postgres-required',
   appendPlanOutput: vi.fn().mockResolvedValue(undefined),
   ensureCortexReachable: vi.fn().mockResolvedValue(undefined),
   getTasksByPlanId: vi
     .fn()
     .mockImplementation(async () => mockCortexState.tasks),
+  resolveWorkflowRalphConfig: vi.fn(() => mockConfig),
   updatePlanStatus: vi
     .fn()
     .mockImplementation(async (_config: unknown, planId: string) => {
@@ -241,17 +262,14 @@ describe('runChildJob', () => {
   afterEach(() => {
     vi.mocked(spawn).mockReset();
     vi.mocked(spawnSync).mockReset();
+    buildNestedWorkflowRalphSpawnEnvMock.mockClear();
     mockCortexState.tasks = [];
     mockCortexState.updatePlanStatusCalls = [];
   });
 
   it('returns ok: false when Cortex config is missing', async () => {
-    const cortexServer = await import('@openthrottle/ai-mcp/src/cortex-server');
-    vi.mocked(cortexServer.getPostgresConfig).mockImplementationOnce(
-      (() => undefined) as unknown as () => ReturnType<
-        typeof cortexServer.getPostgresConfig
-      >,
-    );
+    const cortexRalph = await import('../cortex-ralph.js');
+    vi.mocked(cortexRalph.resolveWorkflowRalphConfig).mockReturnValueOnce(null);
 
     const dir = createTempDir();
     const input: ChildJobInput = {
@@ -262,7 +280,7 @@ describe('runChildJob', () => {
       const result = await runChildJob(input);
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.reason).toMatch(/Postgres is not configured/);
+        expect(result.reason).toMatch(/postgres-required/);
       }
     } finally {
       rmSync(dir, { force: true, recursive: true });
@@ -337,6 +355,51 @@ describe('runChildJob', () => {
     }
   });
 
+  it('passes --debug when ralphDebugCli is DEBUG (legacy uppercase)', async () => {
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const dir = createTempDir();
+    const input: ChildJobInput = {
+      handoff: handoff(dir),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+      ralphDebugCli: 'DEBUG' as 'debug',
+    };
+    try {
+      await runChildJob(input);
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        [
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+          '--debug',
+          '--worktree',
+          'wt1',
+        ],
+        expect.objectContaining({ cwd: dir, shell: true }),
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
   it('passes --verbose when ralphDebugCli is verbose', async () => {
     vi.mocked(spawn).mockReturnValue(
       createMockRalphChild({ status: 0, stdout: '' }),
@@ -379,6 +442,59 @@ describe('runChildJob', () => {
       );
     } finally {
       rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('injects canonical Cortex Postgres URL into nested spawn env when cwd is foreign (regression: Plan not found)', async () => {
+    const canonicalUrl =
+      'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
+    const foreignCwd = createTempDir();
+
+    vi.mocked(spawn).mockReturnValue(
+      createMockRalphChild({ status: 0, stdout: '' }),
+    );
+    const spawnSyncRet = (stdout: string): ReturnType<typeof spawnSync> => ({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout,
+    });
+    vi.mocked(spawnSync)
+      .mockReturnValueOnce(spawnSyncRet('ralph/test-branch'))
+      .mockReturnValueOnce(spawnSyncRet('abc123def456'));
+
+    mockCortexState.tasks = [{ status: 'COMPLETED' }];
+
+    const input: ChildJobInput = {
+      canonicalCortexPostgresUrl: canonicalUrl,
+      handoff: handoff(foreignCwd),
+      planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+    };
+    try {
+      await runChildJob(input);
+
+      expect(buildNestedWorkflowRalphSpawnEnvMock).toHaveBeenCalledWith(
+        foreignCwd,
+        process.env,
+        {
+          canonicalCortexPostgresUrl: canonicalUrl,
+        },
+      );
+      expect(spawn).toHaveBeenCalledWith(
+        'pnpm',
+        expect.arrayContaining([
+          'exec',
+          'workflow-ralph',
+          '--plan',
+          '2f94f33c-562d-4a70-8c08-c6d9510317e5',
+        ]),
+        expect.objectContaining({ cwd: foreignCwd, shell: true }),
+      );
+    } finally {
+      rmSync(foreignCwd, { force: true, recursive: true });
     }
   });
 
@@ -535,7 +651,7 @@ describe('runChildJob', () => {
       handoff: handoff(dir),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
       prompt: '/agents/seo',
-      promptFile: '.cursor/commands/agents/ralph.md',
+      promptFile: '.cursor/skills/agents-ralph/SKILL.md',
     };
     try {
       await runChildJob(input);
@@ -547,7 +663,7 @@ describe('runChildJob', () => {
           '--plan',
           '2f94f33c-562d-4a70-8c08-c6d9510317e5',
           '--prompt-file',
-          '.cursor/commands/agents/ralph.md',
+          '.cursor/skills/agents-ralph/SKILL.md',
           '--worktree',
           'wt1',
         ],

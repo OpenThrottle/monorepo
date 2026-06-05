@@ -2,22 +2,31 @@
  * @description Opt-in debug logging for Ralph / workflow-ralph. When disabled, {@link ralphDebugLogger} methods are no-ops (no branches in hot paths beyond one indirect call). Enable with {@link RALPH_DEBUG_ENV} or {@link RALPH_DEBUG_ENV_LEGACY}; verbose lines with {@link RALPH_VERBOSE_ENV} or `WORKFLOW_RALPH_DEBUG=verbose`.
  */
 
-/** Primary env var for Ralph workflow debug output (stderr). @publicApi */
-export const RALPH_DEBUG_ENV = 'WORKFLOW_RALPH_DEBUG' as const;
+import {
+  isWorkflowVerboseEnvTruthy,
+  readWorkflowDebugLevelFromEnv,
+  WORKFLOW_RALPH_DEBUG_ENV,
+  WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
+  WORKFLOW_RALPH_VERBOSE_ENV,
+  type WorkflowDebugLevel,
+} from '@openthrottle/openthrottle-agentic-utils';
 
-/** Legacy alias for {@link RALPH_DEBUG_ENV}. @publicApi */
-export const RALPH_DEBUG_ENV_LEGACY = 'RALPH_DEBUG' as const;
+/** @deprecated Import {@link WORKFLOW_RALPH_DEBUG_ENV} from `@openthrottle/openthrottle-agentic-utils` instead. */
+export const RALPH_DEBUG_ENV = WORKFLOW_RALPH_DEBUG_ENV;
 
-/** When set, enables the noisiest {@link RalphDebugLogger.verbose} lines (also accepts `WORKFLOW_RALPH_DEBUG=2|verbose`). @publicApi */
-export const RALPH_VERBOSE_ENV = 'WORKFLOW_RALPH_VERBOSE' as const;
+/** @deprecated Import {@link WORKFLOW_RALPH_DEBUG_LEGACY_ENV} from `@openthrottle/openthrottle-agentic-utils` instead. */
+export const RALPH_DEBUG_ENV_LEGACY = WORKFLOW_RALPH_DEBUG_LEGACY_ENV;
+
+/** @deprecated Import {@link WORKFLOW_RALPH_VERBOSE_ENV} from `@openthrottle/openthrottle-agentic-utils` instead. */
+export const RALPH_VERBOSE_ENV = WORKFLOW_RALPH_VERBOSE_ENV;
 
 /** Prefix on every stderr debug line for grep-friendly logs. @publicApi */
 export const RALPH_DEBUG_LOG_PREFIX = '[workflow-ralph:debug]' as const;
 
 export const VERBOSE_LABEL = '[verbose]' as const;
 
-/** @publicApi */
-export type RalphDebugLevel = 'off' | 'debug' | 'verbose';
+/** @deprecated Import {@link WorkflowDebugLevel} from `@openthrottle/openthrottle-agentic-utils` instead. */
+export type RalphDebugLevel = WorkflowDebugLevel;
 
 export interface RalphDebugLogger {
   /**
@@ -40,40 +49,20 @@ export const noop = (): void => {};
 
 /**
  * @description Reads debug level from `env` (defaults to `process.env`). Pure for tests.
+ * @deprecated Import {@link readWorkflowDebugLevelFromEnv} from `@openthrottle/openthrottle-agentic-utils` instead.
  * @publicApi
  */
 export function readRalphDebugConfigFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): RalphDebugLevel {
-  const verboseRaw = env[RALPH_VERBOSE_ENV];
-  if (isVerboseTruthy(verboseRaw)) {
-    return 'verbose';
-  }
-
-  const raw = env[RALPH_DEBUG_ENV] ?? env[RALPH_DEBUG_ENV_LEGACY];
-  if (raw === undefined || raw === '') {
-    return 'off';
-  }
-
-  const s = raw.trim().toLowerCase();
-  if (s === '' || s === '0' || s === 'false' || s === 'off' || s === 'no') {
-    return 'off';
-  }
-  if (s === '2' || s === 'verbose' || s === 'all') {
-    return 'verbose';
-  }
-
-  return 'debug';
+  return readWorkflowDebugLevelFromEnv(env);
 }
 
+/**
+ * @deprecated Import {@link isWorkflowVerboseEnvTruthy} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
 export function isVerboseTruthy(value: string | undefined): boolean {
-  if (value === undefined || value === '') {
-    return false;
-  }
-  const s = value.trim().toLowerCase();
-  return (
-    s === '1' || s === 'true' || s === 'yes' || s === 'on' || s === 'verbose'
-  );
+  return isWorkflowVerboseEnvTruthy(value);
 }
 
 export function writeDebugLine(parts: readonly unknown[]): void {

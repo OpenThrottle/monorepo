@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openthrottle.dev/schemas/workflow-ralph.defaults.schema.json",
+  "title": "Workflow Ralph defaults",
+  "description": "Optional repo-local defaults for workflow-ralph and queue spawn tuning. Secrets (Postgres URLs, auth tokens) must not appear in this file. Precedence: built-ins < this file < environment variables < CLI / enqueue payload.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "backend": {
+      "type": "string",
+      "enum": ["cursor", "claude"],
+      "description": "Execution backend for the entire plan run (same as WORKFLOW_RALPH_BACKEND / --backend)."
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Command-style prompt profile (mutually exclusive with promptFile)."
+    },
+    "promptFile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UTF-8 prompt file path, cwd-relative or absolute (mutually exclusive with prompt)."
+    },
+    "iterations": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Default iteration count (WORKFLOW_RALPH_ITERATIONS / --iterations)."
+    },
+    "iterationTimeout": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Per-iteration timeout in seconds (WORKFLOW_RALPH_ITERATION_TIMEOUT / --iteration-timeout)."
+    },
+    "model": {
+      "type": "string",
+      "description": "Model preset when the backend supports it (WORKFLOW_RALPH_MODEL / --model)."
+    },
+    "project": {
+      "type": "string",
+      "description": "Default Nx project name (WORKFLOW_RALPH_PROJECT / --project)."
+    },
+    "worktree": {
+      "type": "string",
+      "description": "Agent CLI worktree name (WORKFLOW_RALPH_WORKTREE / --worktree)."
+    },
+    "worktreeBase": {
+      "type": "string",
+      "description": "Cursor-only base branch for new agent worktree (WORKFLOW_RALPH_WORKTREE_BASE)."
+    },
+    "skipWorktreeSetup": {
+      "type": "boolean",
+      "description": "Cursor-only: skip .cursor/worktrees.json setup (WORKFLOW_RALPH_SKIP_WORKTREE_SETUP)."
+    },
+    "debug": {
+      "type": "string",
+      "enum": ["omit", "debug", "verbose"],
+      "description": "Debug shim level when CLI --debug/--verbose are omitted."
+    },
+    "transport": {
+      "type": "string",
+      "enum": ["graphql", "postgres-direct"],
+      "description": "Ralph OpenThrottle I/O transport (WORKFLOW_RALPH_TRANSPORT). Env alias postgres maps to postgres-direct."
+    },
+    "spawn": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Nested workflow-ralph spawn tuning (worker → child). Paths should be absolute.",
+      "properties": {
+        "home": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Child HOME override (WORKFLOW_RALPH_SPAWN_HOME)."
+        },
+        "xdgConfigHome": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Child XDG_CONFIG_HOME override (WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME)."
+        },
+        "otRoot": {
+          "type": "string",
+          "minLength": 1,
+          "description": "OpenThrottle monorepo root for workflow-ralph bin resolution (WORKFLOW_RALPH_OT_ROOT)."
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Opt-in diagnostics logging.",
+      "properties": {
+        "ot": {
+          "type": "boolean",
+          "description": "Nested Ralph OT identity lines (WORKFLOW_RALPH_OT_DIAGNOSTICS)."
+        },
+        "spawn": {
+          "type": "boolean",
+          "description": "Server worker spawn diagnostics (OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS)."
+        }
+      }
+    },
+    "lifecycleHooksChildJobs": {
+      "type": "boolean",
+      "description": "When false, disables lifecycle hook child jobs (OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS=false). Default true when omitted."
+    }
+  }
+}

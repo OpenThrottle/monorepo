@@ -26,9 +26,7 @@ export class TasksService {
   /**
    * @description When a task is IN_PROGRESS, sets its parent plan to IN_PROGRESS if not already (atomic UPDATE; idempotent and safe under concurrent writers). Returns whether a plan row was updated.
    */
-  async syncParentPlanToInProgressWhenTaskInProgress(
-    planId: string,
-  ): Promise<boolean> {
+  async syncParentPlanStatus(planId: string): Promise<boolean> {
     const planRepo = this.plansService.getRepository();
     const result = await planRepo.update(
       { id: planId, status: Not('IN_PROGRESS') },

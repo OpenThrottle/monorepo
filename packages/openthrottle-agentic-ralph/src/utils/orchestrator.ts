@@ -1,6 +1,11 @@
-/* eslint-disable no-await-in-loop */ // FIXME: We can better handle these instances
+// FIXME: We can better handle these instances
+/* eslint-disable no-await-in-loop */
 
-import type { WorkflowRunResult } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  WorkflowRunResult,
+  WorkflowLifecycleTaskContext,
+} from '@openthrottle/openthrottle-agentic-workflow';
+import { WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
@@ -14,6 +19,11 @@ import {
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
+import {
+  buildForeignWorkspacePromptLayer,
+  resolveForeignWorkspaceContext,
+} from '@openthrottle/ai-mcp/src/foreign-workspace-context';
+import type { WorkflowContext } from '../types.js';
 import type { WorkflowRalphOrchestratorDeps } from '../contract/ralph-orchestrator-deps.js';
 import {
   parseAgentOutput,
@@ -22,12 +32,56 @@ import {
 } from '../utils/output.js';
 import { formatPlanAndTasksForPrompt } from '../utils/index.js';
 
+/**
+ * @description Agent cwd and foreign-repo scoping for orchestrator prompts (parity with `ralph.ts`).
+ */
+const resolveOrchestratorAgentCwd = (context: WorkflowContext): string => {
+  const trimmed = context.workingDirectory?.trim() ?? '';
+
+  return trimmed !== '' ? trimmed : process.cwd();
+};
+
+const buildOrchestratorBasePrompt = (params: {
+  readonly context: WorkflowContext;
+  readonly effectivePlanId: string;
+  readonly injectedContext: string;
+  readonly taskIdTrim: string;
+}): string => {
+  const { context, effectivePlanId, injectedContext, taskIdTrim } = params;
+  const agentCwd = resolveOrchestratorAgentCwd(context);
+  const foreignLayer = buildForeignWorkspacePromptLayer(
+    resolveForeignWorkspaceContext(agentCwd, process.env),
+  );
+
+  return (
+    `${context.prompt}\n\n` +
+    (foreignLayer !== undefined ? `${foreignLayer}\n\n` : '') +
+    `${WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL}\n\n` +
+    `${injectedContext}\n\n` +
+    `Plan-Id: ${effectivePlanId}.` +
+    (taskIdTrim !== '' ? ` Task-Id: ${taskIdTrim}.` : '') +
+    ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.'
+  );
+};
+
 const REMAINING_TASK_STATUS = new Set([
   'PENDING',
   'QUEUED',
   'IN_PROGRESS',
   'BLOCKED',
 ]);
+
+const toLifecycleTaskContext = (task: {
+  readonly category?: string | null;
+  readonly id: string;
+  readonly status: string;
+  readonly title: string;
+}): WorkflowLifecycleTaskContext => ({
+  category: task.category ?? undefined,
+  id: task.id,
+  status: task.status,
+  title: task.title,
+});
 
 const onFinished = (
   reason: WorkflowFinishedReason,
@@ -44,6 +98,19 @@ const onFailure = (
   reason,
   status: 'failed',
 });
+
+/**
+ * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
+ * `cortex-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
+ */
+const promotePlanToInProgressIfNeeded = async (
+  executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
+  planId: string,
+): Promise<void> => {
+  await executeGraphqlV2(UpdatePlanDocument, {
+    input: { id: planId, status: 'IN_PROGRESS' },
+  });
+};
 
 /**
  * @description GraphQL-backed Ralph pipeline: resolves plan, loads state, guards terminal plans,
@@ -74,12 +141,12 @@ export const createWorkflowRalphOrchestrator = (
         });
 
         if (!taskLookup.task) {
-          return onFailure('unhandled');
+          return onFailure('workflow_unhandled');
         }
 
         effectivePlanId = taskLookup.task.planId;
       } else if (planIdTrim === '' && taskIdTrim === '') {
-        return onFailure('unhandled');
+        return onFailure('workflow_unhandled');
       }
 
       // state.load
@@ -94,27 +161,27 @@ export const createWorkflowRalphOrchestrator = (
       const tasksRows = tasksResult.tasksByPlanId;
 
       if (!planRow) {
-        return onFailure('unhandled');
+        return onFailure('workflow_unhandled');
       }
 
       // prompt.build
       const injectedContext = formatPlanAndTasksForPrompt(planRow, tasksRows);
-      const basePrompt =
-        `${context.prompt}\n\n${injectedContext}\n\n` +
-        `Plan-Id: ${effectivePlanId}.` +
-        (taskIdTrim ? ` Task-Id: ${taskIdTrim}.` : '') +
-        ' Use the plan and tasks above (injected from OpenThrottle by Ralph). Do not call get_plan or get_tasks_by_plan_id; the context is provided. When you complete a task output <ralph:task-complete>TASK_UUID</ralph:task-complete>.';
+      const agentCwd = resolveOrchestratorAgentCwd(context);
+      const basePrompt = buildOrchestratorBasePrompt({
+        context,
+        effectivePlanId,
+        injectedContext,
+        taskIdTrim,
+      });
 
       // plan.guard
       if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
         // 🟡 If the plan is already terminal, we return a finished outcome
-        return onFinished('plan_already_terminal');
+        return onFinished('workflow_plan_already_terminal');
       }
 
       // plan.mark_in_progress
-      await executeGraphqlV2(UpdatePlanDocument, {
-        input: { id: effectivePlanId, status: 'IN_PROGRESS' },
-      });
+      await promotePlanToInProgressIfNeeded(executeGraphqlV2, effectivePlanId);
 
       // task.mark_in_progress
       if (taskIdTrim) {
@@ -137,11 +204,13 @@ export const createWorkflowRalphOrchestrator = (
           : undefined;
 
       if (abortSignal?.aborted) {
-        return onFinished('cancelled');
+        return onFinished('workflow_cancelled');
       }
 
       let lastIterationTaskId: string | undefined;
       let lastIterationTaskCompleted = false;
+
+      const lifecycleDispatcher = context.lifecycleDispatcher;
 
       /**
        * This is where we run our guarded loop (max iterations) chipping away
@@ -150,7 +219,7 @@ export const createWorkflowRalphOrchestrator = (
       for (let iteration = 1; iteration <= maxIterations; iteration++) {
         // iteration.guard
         if (abortSignal?.aborted) {
-          return onFinished('cancelled');
+          return onFinished('workflow_cancelled');
         }
 
         let agentPrompt = basePrompt;
@@ -174,7 +243,7 @@ export const createWorkflowRalphOrchestrator = (
             });
 
             // 🟢 If we've exhausted the tasks, we return a finished outcome
-            return onFinished('tasks_exhausted');
+            return onFinished('workflow_tasks_exhausted');
           }
 
           // Grab any tasks that may already be marked in progress
@@ -199,6 +268,38 @@ export const createWorkflowRalphOrchestrator = (
               await executeGraphqlV2(UpdateTaskDocument, {
                 input: { id: taskForIteration.id, status: 'IN_PROGRESS' },
               });
+
+              if (lifecycleDispatcher) {
+                const beforeEachResult = await lifecycleDispatcher.runTask({
+                  phase: 'beforeEach',
+                  task: toLifecycleTaskContext({
+                    ...taskForIteration,
+                    status: 'IN_PROGRESS',
+                  }),
+                });
+
+                if (beforeEachResult.blocked) {
+                  await executeGraphqlV2(UpdateTaskDocument, {
+                    input: { id: taskForIteration.id, status: 'BLOCKED' },
+                  });
+
+                  await lifecycleDispatcher.runTask({
+                    phase: 'afterEach',
+                    task: toLifecycleTaskContext({
+                      ...taskForIteration,
+                      status: 'BLOCKED',
+                    }),
+                    taskOutcome: 'blocked',
+                  });
+
+                  continue;
+                }
+              }
+            } else {
+              await promotePlanToInProgressIfNeeded(
+                executeGraphqlV2,
+                effectivePlanId,
+              );
             }
 
             agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
@@ -215,6 +316,7 @@ export const createWorkflowRalphOrchestrator = (
         try {
           agentOutput = await iterationRunner.run({
             agentPrompt,
+            cwd: agentCwd,
             iteration,
             model: context.model,
             onChunk,
@@ -226,11 +328,11 @@ export const createWorkflowRalphOrchestrator = (
             worktreeBase: context.worktreeBase,
           });
         } catch {
-          return onFailure('unhandled');
+          return onFailure('workflow_unhandled');
         }
 
         if (abortSignal?.aborted) {
-          return onFinished('cancelled');
+          return onFinished('workflow_cancelled');
         }
 
         const completeTaskIds = [...parseAgentCompleteTaskSignals(agentOutput)];
@@ -264,6 +366,27 @@ export const createWorkflowRalphOrchestrator = (
             await executeGraphqlV2(UpdateTaskDocument, {
               input: { id: taskId, status: 'COMPLETED' },
             });
+
+            if (lifecycleDispatcher && !isTaskCentric) {
+              const tasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
+                input: { planId: effectivePlanId },
+              });
+
+              const completedTask = tasks.tasksByPlanId.find(
+                (t) => t.id.toLowerCase() === taskId,
+              );
+
+              if (completedTask) {
+                await lifecycleDispatcher.runTask({
+                  phase: 'afterEach',
+                  task: toLifecycleTaskContext({
+                    ...completedTask,
+                    status: 'COMPLETED',
+                  }),
+                  taskOutcome: 'completed',
+                });
+              }
+            }
           } catch {
             // Parity with ralph.ts: log side effects are CLI-only; continue.
           }
@@ -281,17 +404,17 @@ export const createWorkflowRalphOrchestrator = (
 
         // 1. 🔴 We check for any errors
         if (control === 'ERROR') {
-          return onFailure('agent_error');
+          return onFailure('workflow_agent_error');
         }
 
         // 2. 🟡 Then we check for any input required
         if (control === 'INPUT_REQUIRED') {
-          return onFailure('input_required');
+          return onFailure('workflow_input_required');
         }
 
         // 3. 🟢 Then we check for any completion
         if (control === 'COMPLETE') {
-          return onFinished('agent_complete');
+          return onFinished('workflow_complete');
         }
       } // ---> looping ... done
 
@@ -307,9 +430,9 @@ export const createWorkflowRalphOrchestrator = (
       }
 
       // 5. 🟡 We've successfully completed the iterations, but we've hit our limit
-      return onFinished('max_iterations');
+      return onFinished('workflow_max_iterations');
     } catch {
-      return onFailure('unhandled');
+      return onFailure('workflow_unhandled');
     }
   },
 });

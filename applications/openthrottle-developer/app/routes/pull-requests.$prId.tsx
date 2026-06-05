@@ -100,7 +100,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       {!pull ? (
         <PullRequestNotFound listQuery={listQuery} owner={owner} repo={repo} />
       ) : (

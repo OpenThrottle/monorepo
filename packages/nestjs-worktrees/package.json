@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@openthrottle/mcp-developer": "workspace:*",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@tools/workflows": "workspace:*",
     "pg": "^8.17.1"
   },

@@ -41,7 +41,7 @@ const namedBeforeHook: JobRunHooksConfig = {
     {
       kind: 'prompt_profile',
       onFailure: 'block',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     },
@@ -107,7 +107,7 @@ describe('executePlanJobRunHooks', () => {
       jobData: baseJobData,
       logLabel: 'test',
       logger: mockLogger,
-      phase: 'before_run',
+      phase: 'beforeAll',
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
       tasksService: mockTasksService,
@@ -126,7 +126,7 @@ describe('executePlanJobRunHooks', () => {
       jobData: baseJobData,
       logLabel: 'test',
       logger: mockLogger,
-      phase: 'before_run',
+      phase: 'beforeAll',
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
       tasksService: mockTasksService,
@@ -153,7 +153,7 @@ describe('executePlanJobRunHooks', () => {
       },
       logLabel: 'PlansProcessor',
       logger: mockLogger,
-      phase: 'before_run',
+      phase: 'beforeAll',
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
       tasksService: mockTasksService,
@@ -167,7 +167,7 @@ describe('executePlanJobRunHooks', () => {
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledTimes(1);
 
     const call = mockExecuteJobRunHooksPhase.mock.calls[0]?.[0];
-    expect(call?.phase).toBe('before_run');
+    expect(call?.phase).toBe('beforeAll');
     expect(call?.planId).toBe(planId);
     expect(call?.runKind).toBe('spawn');
     expect(call?.hooks).toEqual(namedBeforeHook);
@@ -184,7 +184,7 @@ describe('executePlanJobRunHooks', () => {
       logger: mockLogger,
       mainRunStarted: true,
       mainRunSucceeded: true,
-      phase: 'after_run',
+      phase: 'afterAll',
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
       tasksService: mockTasksService,
@@ -260,7 +260,7 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
     expect(blocked).toBe(true);
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledTimes(2);
     expect(mockExecuteJobRunHooksPhase.mock.calls[1]?.[0]?.phase).toBe(
-      'after_run',
+      'afterAll',
     );
     expect(mockExecuteJobRunHooksPhase.mock.calls[1]?.[0]?.mainRunStarted).toBe(
       false,
@@ -324,7 +324,7 @@ describe('runAfterRunHooksThenNotify', () => {
     });
 
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledWith(
-      expect.objectContaining({ phase: 'after_run' }),
+      expect.objectContaining({ phase: 'afterAll' }),
     );
     expect(emitQueueJobCompleted).toHaveBeenCalledWith({
       jobType: 'plans',
@@ -368,7 +368,7 @@ describe('runAfterRunHooksThenNotify', () => {
     });
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('after_run hook failed'),
+      expect.stringContaining('afterAll hook failed'),
       'PlansProcessor',
     );
     expect(emitQueueJobCompleted).toHaveBeenCalled();

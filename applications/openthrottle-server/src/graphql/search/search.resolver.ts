@@ -7,7 +7,6 @@
 import {
   embedQuery,
   getChunkById,
-  getPostgresConfig,
   listSources,
   runSemanticSearch,
 } from '@openthrottle/ai-mcp/src/cortex-server';
@@ -53,11 +52,6 @@ export class SearchResolver {
   async search(
     @Args('input', { type: () => SearchInput }) input: SearchInput,
   ): Promise<SearchResult> {
-    const config = getPostgresConfig();
-    if (!config) {
-      return { chunks: [] };
-    }
-
     const limit = Math.min(
       Math.max(1, input.limit ?? DEFAULT_SEARCH_LIMIT),
       MAX_SEARCH_LIMIT,
@@ -73,7 +67,7 @@ export class SearchResolver {
       return { chunks: [] };
     }
 
-    const chunks = await runSemanticSearch(config, embedding, limit);
+    const chunks = await runSemanticSearch(embedding, limit);
     const result = new SearchResult();
 
     result.chunks = chunks.map(mapChunkToObject);
@@ -88,11 +82,7 @@ export class SearchResolver {
   async getDocument(
     @Args('id', { type: () => String }) id: string,
   ): Promise<SearchChunk | null> {
-    const config = getPostgresConfig();
-    if (!config) {
-      return null;
-    }
-    const chunk = await getChunkById(config, id);
+    const chunk = await getChunkById(id);
     if (!chunk) {
       return null;
     }
@@ -103,12 +93,7 @@ export class SearchResolver {
     description: `List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.`,
   })
   async listSources(): Promise<ListSourcesResultObject> {
-    const config = getPostgresConfig();
-    if (!config) {
-      return { plans: [], sources: [] };
-    }
-
-    const result = await listSources(config);
+    const result = await listSources();
     const obj = new ListSourcesResultObject();
 
     obj.sources = result.sources.map((s) => {

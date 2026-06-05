@@ -15,12 +15,14 @@ const mockPlan = {
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Plan description',
   id: 'plan-1',
+  jobRunHooksJson: JSON.stringify({ hooks: [] }),
   projectId: 'proj-1',
   projectRelation: {
     __typename: 'ProjectObject' as const,
     id: 'proj-1',
     name: 'Test Project',
   },
+  runConfigJson: JSON.stringify({ version: 1 }),
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
   title: 'Test Plan',
@@ -62,6 +64,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [mockTask],
           }}
@@ -100,6 +103,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}
@@ -130,6 +134,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: null,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}
@@ -155,6 +160,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [mockTask],
           }}
@@ -191,6 +197,7 @@ describe('routes/plans.$planId.tsx', () => {
           loaderData={{
             plan: mockPlan,
             planOutputChunks: [],
+            planRunAuditRows: [],
             recentPlanRuns: [],
             tasks: [],
           }}

@@ -8,13 +8,11 @@ import { spawn } from 'child_process';
 import { spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { ARTWORK_LINE, COLORS } from '../config/index';
-import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
 import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
-import {
-  appendRalphWorktreeShellFlags,
-  type RalphWorktreeCliOptions,
-} from '../utils/ralph-worktree-cli';
+import { appendRalphWorktreeShellFlags } from '../utils/ralph-worktree-cli';
+import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** Chunk from runner stdout or stderr when using async spawn. */
 export interface CursorAgentChunk {
@@ -26,7 +24,12 @@ export interface RunIterationConfig {
   /** Full prompt for the runner (e.g. Cursor `-p`); includes injected plan/tasks and Plan-Id (and optional Task-Id). */
   agentPrompt: string;
   /** @description Execution backend; defaults to {@link DEFAULT_RALPH_RUNNER}. */
-  backend?: RalphExecutionBackendId;
+  backend?: WorkflowConfigRunner;
+  /**
+   * @description Process cwd for the runner subprocess. When omitted, inherits `process.cwd()`
+   * (e.g. foreign `workingDirectory` from BullMQ spawn or orchestrator).
+   */
+  cwd?: string;
   /** Iteration number. */
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
@@ -48,12 +51,17 @@ export interface RunIterationConfig {
 /** Grace period in ms after SIGTERM before sending SIGKILL (runner child). */
 const SIGKILL_GRACE_MS = 10_000;
 
-const backendIterationLabel = (backend: RalphExecutionBackendId): string => {
+const backendIterationLabel = (backend: WorkflowConfigRunner): string => {
   switch (backend) {
     case 'claude':
       return 'claude-code';
+
     case 'cursor':
       return 'cursor-agent';
+
+    case 'opencode':
+      return 'opencode';
+
     default: {
       const _exhaustive: never = backend;
       return _exhaustive;
@@ -79,6 +87,13 @@ const buildCursorShellCommand = (config: RunIterationConfig): string => {
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
   const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
 
+  console.log('__________________________________ START | safePrompt');
+  console.log(safePrompt);
+  console.log(
+    '__________________________________ END | safePrompt',
+    safePrompt,
+  );
+
   return appendRalphWorktreeShellFlags(base, 'cursor', {
     skipWorktreeSetup,
     worktree,
@@ -98,7 +113,8 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
   const modelFlag =
     modelNorm !== '' && modelNorm !== 'auto' ? ` --model ${modelNorm}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
-  const base = `claude --bare --permission-mode acceptEdits -p "${safePrompt}"${modelFlag}`;
+
+  const base = `claude --bare -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
 
   return appendRalphWorktreeShellFlags(base, 'claude', { worktree });
 };
@@ -109,7 +125,12 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
 const runCursorIterationSync = (config: RunIterationConfig): string => {
   const command = buildCursorShellCommand(config);
 
-  return runShellIterationSync(command, 'cursor-agent', config.iteration);
+  return runShellIterationSync(
+    command,
+    'cursor-agent',
+    config.iteration,
+    config.cwd,
+  );
 };
 
 /**
@@ -118,15 +139,22 @@ const runCursorIterationSync = (config: RunIterationConfig): string => {
 const runClaudeIterationSync = (config: RunIterationConfig): string => {
   const command = buildClaudeShellCommand(config);
 
-  return runShellIterationSync(command, 'claude-code', config.iteration);
+  return runShellIterationSync(
+    command,
+    'claude-code',
+    config.iteration,
+    config.cwd,
+  );
 };
 
 const runShellIterationSync = (
   command: string,
   runnerLabel: string,
   iteration: number,
+  cwd?: string,
 ): string => {
   const child = spawnSync(command, [], {
+    cwd,
     encoding: 'utf-8',
     shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
@@ -187,16 +215,19 @@ const runShellIterationAsync = (
   runnerLabel: string,
   config: RunIterationConfig,
 ): Promise<string> => {
-  const { iteration, timeoutMs, signal, onChunk } = config;
+  const { cwd, iteration, timeoutMs, signal, onChunk } = config;
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning runner', {
+      config, // TODO: remove this
+      cwd: cwd ?? process.cwd(),
       iteration,
       runnerLabel,
       timeoutMs: timeoutMs ?? null,
     });
 
     const child: ChildProcess = spawn(command, [], {
+      cwd,
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
     });

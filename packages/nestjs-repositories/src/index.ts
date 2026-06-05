@@ -1,4 +1,5 @@
 export { CommitLink } from './modules/commit-links/commit-link.entity';
+export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
 export { CommitLinksService } from './modules/commit-links/commit-links.service';
 export {
@@ -76,7 +77,6 @@ export { User } from './modules/users/user.entity';
 export { usersFactory } from './modules/users/users.factory';
 export { UsersService } from './modules/users/users.service';
 export { vectorTransformer } from './common/vector.transformer';
-export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export type {
   CustomPromptData,
   CustomPromptType,
@@ -92,6 +92,44 @@ export type {
   PlanData,
   PlanJobRunHooksStorage,
 } from './modules/plans/plan.entity';
+export {
+  buildPlanRunConfigSnapshot,
+  buildRalphPlanRunTuningFromPlanRunConfig,
+  DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
+  DEFAULT_PLAN_RUN_RALPH_MODEL,
+  DEFAULT_PLAN_RUN_RALPH_PROMPT,
+  DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  getDefaultPlanRunConfigRalphV1,
+  getDefaultPlanRunConfigStorage,
+  getDefaultPlanWorkflowUiState,
+  parsePlanRunConfigJson,
+  parsePlanRunConfigSnapshot,
+  parsePlanRunConfigStorage,
+  planRunConfigFromPlanStorage,
+  parsePlanRunIterationTimeoutSeconds,
+  planRunConfigFromWorkflowUiState,
+  PLAN_RUN_CONFIG_SNAPSHOT_VERSION,
+  PLAN_RUN_CONFIG_VERSION,
+  serializePlanRunConfigForGraphql,
+  serializePlanRunConfigSnapshotForGraphql,
+  workflowUiStateFromPlanRunConfig,
+} from './modules/plans/plan-run-config';
+export type {
+  BuildPlanRunConfigSnapshotInput,
+  PlanRunConfigDebugCli,
+  PlanRunConfigExecutionBackend,
+  PlanRunConfigPromptLayer,
+  PlanRunConfigRalphV1,
+  PlanRunConfigSnapshot,
+  PlanRunConfigSnapshotRalphV1,
+  PlanRunConfigSnapshotV1,
+  PlanRunConfigStorage,
+  PlanRunConfigStorageV1,
+  PlanRunConfigTargetMode,
+  PlanRunConfigWorktreeCli,
+  PlanWorkflowRalphRunOptions,
+  PlanWorkflowUiState,
+} from './modules/plans/plan-run-config';
 export type {
   PlanRunData,
   PlanRunExecutionBackend,

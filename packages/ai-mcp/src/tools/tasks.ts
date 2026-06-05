@@ -5,7 +5,7 @@
 /* eslint-disable no-await-in-loop */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getPostgresConfig, getDefaultGitHubUser } from '../config.js';
+import { getDefaultGitHubUser } from '../config.js';
 import type { TaskRow } from '../cortex-client.js';
 import {
   createTask as cortexCreateTask,
@@ -31,7 +31,7 @@ import {
   listTasksByCategoryInputSchema,
   updateTaskInputSchema,
 } from '../schemas.js';
-import { configMissingContent, invalidArgsContent } from './errors.js';
+import { invalidArgsContent } from './errors.js';
 
 type CreateTasksResult =
   | { content: { text: string; type: 'text' }[]; isError: true }
@@ -55,18 +55,13 @@ async function createTasksHandler(
     return invalidArgsContent(parsed.error.message);
   }
 
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
-
   const data = parsed.data;
   const results: { id: string; title: string }[] = [];
 
   try {
     const defaultGh = getDefaultGitHubUser();
     for (const item of data.tasks) {
-      const task = await cortexCreateTask(config, {
+      const task = await cortexCreateTask({
         assignee: defaultGh ?? item.assignee ?? null,
         category: item.category ?? null,
         description: item.description ?? null,
@@ -86,7 +81,6 @@ async function createTasksHandler(
 
         if (embedding) {
           await cortexInsertTaskEmbedding(
-            config,
             task.id,
             content,
             embedding as number[],
@@ -119,15 +113,10 @@ async function handleGetRemainingTasksForPlan(args: {
     return invalidArgsContent(parsed.error.message);
   }
 
-  const config = getPostgresConfig();
-  if (!config) {
-    return configMissingContent();
-  }
-
   try {
     const { planId } = parsed.data;
 
-    const tasks = await cortexGetRemainingTasksByPlanId(config, planId);
+    const tasks = await cortexGetRemainingTasksByPlanId(planId);
     const isEmpty = tasks.length === 0;
     const text = isEmpty
       ? 'No remaining tasks for this plan.'
@@ -171,11 +160,6 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
-
       try {
         const defaultGh = getDefaultGitHubUser();
         const taskInput = {
@@ -183,18 +167,13 @@ export function registerTaskTools(server: McpServer): void {
           assignee: defaultGh ?? parsed.data.assignee ?? null,
         };
 
-        const task = await cortexCreateTask(config, taskInput);
+        const task = await cortexCreateTask(taskInput);
         const content = buildTaskContentForEmbedding(task);
 
         if (content.trim()) {
           const embedding = await embedQuery(content);
           if (embedding) {
-            await cortexInsertTaskEmbedding(
-              config,
-              task.id,
-              content,
-              embedding,
-            );
+            await cortexInsertTaskEmbedding(task.id, content, embedding);
           }
         }
 
@@ -239,13 +218,8 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
-
       try {
-        const task = await cortexGetTaskById(config, parsed.data.id);
+        const task = await cortexGetTaskById(parsed.data.id);
         if (!task) {
           return {
             content: [
@@ -258,10 +232,7 @@ export function registerTaskTools(server: McpServer): void {
           };
         }
 
-        const relatedCommits = await cortexGetCommitLinksByTaskId(
-          config,
-          task.id,
-        );
+        const relatedCommits = await cortexGetCommitLinksByTaskId(task.id);
         const payload = { relatedCommits: [...relatedCommits], task };
 
         return {
@@ -294,13 +265,8 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
-
       try {
-        const tasks = await cortexGetTasksByPlanId(config, parsed.data.planId);
+        const tasks = await cortexGetTasksByPlanId(parsed.data.planId);
         const text =
           tasks.length === 0
             ? 'No tasks for this plan.'
@@ -348,13 +314,8 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
-
       try {
-        const tasks = await cortexListTasksByCategory(config, parsed.data);
+        const tasks = await cortexListTasksByCategory(parsed.data);
         const text =
           tasks.length === 0
             ? `No tasks found for category "${parsed.data.category}".`
@@ -399,11 +360,6 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
-
       try {
         const { id, ...rest } = parsed.data;
         const defaultGh = getDefaultGitHubUser();
@@ -416,7 +372,7 @@ export function registerTaskTools(server: McpServer): void {
           rest.assignee = defaultGh;
         }
 
-        const task = await cortexUpdateTask(config, id, rest);
+        const task = await cortexUpdateTask(id, rest);
         if (!task) {
           const text = `No task found for id: ${id}`;
 
@@ -431,13 +387,8 @@ export function registerTaskTools(server: McpServer): void {
           const embedding = await embedQuery(content);
 
           if (embedding) {
-            await cortexDeleteTaskEmbeddings(config, task.id);
-            await cortexInsertTaskEmbedding(
-              config,
-              task.id,
-              content,
-              embedding,
-            );
+            await cortexDeleteTaskEmbeddings(task.id);
+            await cortexInsertTaskEmbedding(task.id, content, embedding);
           }
         }
 
@@ -472,13 +423,8 @@ export function registerTaskTools(server: McpServer): void {
         return invalidArgsContent(parsed.error.message);
       }
 
-      const config = getPostgresConfig();
-      if (!config) {
-        return configMissingContent();
-      }
-
       try {
-        const deleted = await cortexDeleteTask(config, parsed.data.id);
+        const deleted = await cortexDeleteTask(parsed.data.id);
         const text = deleted
           ? `Task ${parsed.data.id} deleted.`
           : `No task found for id: ${parsed.data.id}.`;

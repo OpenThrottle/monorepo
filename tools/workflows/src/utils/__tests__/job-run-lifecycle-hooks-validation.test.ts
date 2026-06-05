@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultJobRunHookOnFailure,
   formatJobRunHookEntryLabel,
+  normalizeJobRunHookPhase,
   resolveJobRunHookOnFailure,
   sortJobRunHookEntries,
 } from '../../types/job-run-lifecycle-hooks';
@@ -21,10 +22,20 @@ import {
   validateJobRunHookSkillPath,
 } from '../job-run-lifecycle-hooks-validation';
 
+describe('normalizeJobRunHookPhase', () => {
+  it('maps legacy wire values to canonical phases', () => {
+    expect(normalizeJobRunHookPhase('before_run')).toBe('beforeAll');
+    expect(normalizeJobRunHookPhase('after_run')).toBe('afterAll');
+    expect(normalizeJobRunHookPhase('beforeEach')).toBe('beforeEach');
+  });
+});
+
 describe('defaultJobRunHookOnFailure', () => {
-  it('uses block for before_run and warn for after_run', () => {
-    expect(defaultJobRunHookOnFailure('before_run')).toBe('block');
-    expect(defaultJobRunHookOnFailure('after_run')).toBe('warn');
+  it('uses block for beforeAll/beforeEach and warn for after phases', () => {
+    expect(defaultJobRunHookOnFailure('beforeAll')).toBe('block');
+    expect(defaultJobRunHookOnFailure('beforeEach')).toBe('block');
+    expect(defaultJobRunHookOnFailure('afterAll')).toBe('warn');
+    expect(defaultJobRunHookOnFailure('afterEach')).toBe('warn');
   });
 });
 
@@ -37,7 +48,7 @@ describe('parseJobRunHookEntry', () => {
     });
     expect(entry).toMatchObject({
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
@@ -50,6 +61,7 @@ describe('parseJobRunHookEntry', () => {
       target: '/agents/seo',
     });
     expect(entry.kind).toBe('prompt_profile');
+    expect(entry.phase).toBe('afterAll');
     if (entry.kind === 'prompt_profile' && entry.promptDelivery === 'named') {
       expect(entry.prompt).toBe('/agents/seo');
     }
@@ -58,7 +70,7 @@ describe('parseJobRunHookEntry', () => {
   it('parses file prompt_profile', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       promptDelivery: 'file',
       promptFile: 'prompts/preflight.md',
     });
@@ -72,16 +84,17 @@ describe('parseJobRunHookEntry', () => {
   it('parses skill hook', () => {
     const entry = parseJobRunHookEntry({
       kind: 'skill',
-      phase: 'after_run',
+      phase: 'afterEach',
       skillPath: '.agents/skills/workflow-ralph/SKILL.md',
     });
     expect(entry).toMatchObject({
       kind: 'skill',
+      phase: 'afterEach',
       skillPath: '.agents/skills/workflow-ralph/SKILL.md',
     });
   });
 
-  it('rejects whenMainRunSucceeded on before_run', () => {
+  it('rejects whenMainRunSucceeded on beforeAll', () => {
     expect(() =>
       parseJobRunHookEntry({
         conditions: { whenMainRunSucceeded: true },
@@ -89,14 +102,14 @@ describe('parseJobRunHookEntry', () => {
         phase: 'before_run',
         skillPath: '.agents/skills/foo/SKILL.md',
       }),
-    ).toThrow(/whenMainRunSucceeded/);
+    ).toThrow(/whenMainRunSucceeded|whenPlanRunSucceeded/);
   });
 
   it('rejects named prompt without leading slash', () => {
     expect(() =>
       parseJobRunHookEntry({
         kind: 'prompt_profile',
-        phase: 'before_run',
+        phase: 'beforeAll',
         prompt: 'agents/ralph',
       }),
     ).toThrow(/must start with/);
@@ -108,7 +121,7 @@ describe('parseJobRunHooksConfig', () => {
     expect(parseJobRunHooksConfig(null)).toEqual({ hooks: [] });
   });
 
-  it('sorts before_run before after_run and by order', () => {
+  it('sorts beforeAll before afterAll and by order', () => {
     const { hooks } = parseJobRunHooksConfig([
       {
         kind: 'skill',
@@ -125,14 +138,14 @@ describe('parseJobRunHooksConfig', () => {
       {
         kind: 'prompt_profile',
         order: 1,
-        phase: 'before_run',
+        phase: 'beforeAll',
         prompt: '/agents/seo',
       },
     ]);
     expect(hooks.map((h) => h.phase)).toEqual([
-      'before_run',
-      'before_run',
-      'after_run',
+      'beforeAll',
+      'beforeAll',
+      'afterAll',
     ]);
     if (
       hooks[0]?.kind === 'prompt_profile' &&
@@ -145,7 +158,7 @@ describe('parseJobRunHooksConfig', () => {
   it('rejects more than max hooks per phase', () => {
     const hooks = Array.from({ length: 11 }, () => ({
       kind: 'prompt_profile' as const,
-      phase: 'before_run' as const,
+      phase: 'beforeAll' as const,
       prompt: '/agents/ralph',
       promptDelivery: 'named' as const,
     }));
@@ -155,7 +168,7 @@ describe('parseJobRunHooksConfig', () => {
   it('rejects more than max total hooks', () => {
     const hooks = Array.from({ length: 21 }, (_, index) => ({
       kind: 'prompt_profile' as const,
-      phase: index < 11 ? ('before_run' as const) : ('after_run' as const),
+      phase: index < 11 ? ('beforeAll' as const) : ('afterAll' as const),
       prompt: '/agents/ralph',
       promptDelivery: 'named' as const,
     }));
@@ -170,7 +183,7 @@ describe('parseJobRunHooksConfig', () => {
       mkdirSync(join(dir, '.agents/skills/test-hook'), { recursive: true });
       writeFileSync(skillAbs, '# Test\n', 'utf8');
       const { hooks } = parseJobRunHooksConfig(
-        [{ kind: 'skill', phase: 'after_run', skillPath: skillRel }],
+        [{ kind: 'skill', phase: 'afterAll', skillPath: skillRel }],
         { cwd: dir, requireTargetsExist: true },
       );
       expect(hooks).toHaveLength(1);
@@ -184,7 +197,7 @@ describe('shouldRunJobRunHook', () => {
   const beforeSkill = parseJobRunHookEntry({
     conditions: { runKinds: ['spawn'] },
     kind: 'skill',
-    phase: 'before_run',
+    phase: 'beforeAll',
     skillPath: '.agents/skills/x/SKILL.md',
   });
 
@@ -193,7 +206,7 @@ describe('shouldRunJobRunHook', () => {
       shouldRunJobRunHook(beforeSkill, {
         mainRunStarted: false,
         mainRunSucceeded: false,
-        phase: 'before_run',
+        phase: 'beforeAll',
         runKind: 'spawn',
       }),
     ).toBe(true);
@@ -201,24 +214,24 @@ describe('shouldRunJobRunHook', () => {
       shouldRunJobRunHook(beforeSkill, {
         mainRunStarted: false,
         mainRunSucceeded: false,
-        phase: 'before_run',
+        phase: 'beforeAll',
         runKind: 'orchestrator',
       }),
     ).toBe(false);
   });
 
-  it('filters after_run by whenMainRunSucceeded', () => {
+  it('filters afterAll by whenMainRunSucceeded', () => {
     const after = parseJobRunHookEntry({
       conditions: { whenMainRunSucceeded: true },
       kind: 'prompt_profile',
-      phase: 'after_run',
+      phase: 'afterAll',
       prompt: '/agents/ralph',
     });
     expect(
       shouldRunJobRunHook(after, {
         mainRunStarted: true,
         mainRunSucceeded: true,
-        phase: 'after_run',
+        phase: 'afterAll',
         runKind: 'spawn',
       }),
     ).toBe(true);
@@ -226,8 +239,50 @@ describe('shouldRunJobRunHook', () => {
       shouldRunJobRunHook(after, {
         mainRunStarted: true,
         mainRunSucceeded: false,
-        phase: 'after_run',
+        phase: 'afterAll',
         runKind: 'spawn',
+      }),
+    ).toBe(false);
+  });
+
+  it('filters afterEach by whenTaskOutcome and taskCategories', () => {
+    const afterEach = parseJobRunHookEntry({
+      conditions: {
+        taskCategories: ['infra'],
+        whenTaskOutcome: ['completed'],
+      },
+      kind: 'prompt_profile',
+      phase: 'afterEach',
+      prompt: '/agents/ci',
+    });
+    expect(
+      shouldRunJobRunHook(afterEach, {
+        mainRunStarted: true,
+        mainRunSucceeded: true,
+        phase: 'afterEach',
+        runKind: 'orchestrator',
+        task: {
+          category: 'infra',
+          id: 'task-1',
+          status: 'COMPLETED',
+          title: 'CI',
+        },
+        taskOutcome: 'completed',
+      }),
+    ).toBe(true);
+    expect(
+      shouldRunJobRunHook(afterEach, {
+        mainRunStarted: true,
+        mainRunSucceeded: true,
+        phase: 'afterEach',
+        runKind: 'orchestrator',
+        task: {
+          category: 'docs',
+          id: 'task-1',
+          status: 'COMPLETED',
+          title: 'Docs',
+        },
+        taskOutcome: 'completed',
       }),
     ).toBe(false);
   });
@@ -236,12 +291,12 @@ describe('shouldRunJobRunHook', () => {
 describe('helpers', () => {
   it('resolveJobRunHookOnFailure applies defaults', () => {
     expect(
-      resolveJobRunHookOnFailure({ onFailure: undefined, phase: 'before_run' }),
+      resolveJobRunHookOnFailure({ onFailure: undefined, phase: 'beforeAll' }),
     ).toBe('block');
     expect(
       resolveJobRunHookOnFailure({
         onFailure: 'ignore',
-        phase: 'after_run',
+        phase: 'afterAll',
       }),
     ).toBe('ignore');
   });
@@ -255,10 +310,10 @@ describe('helpers', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
       onFailure: 'warn',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
     });
-    expect(formatJobRunHookEntryLabel(entry)).toContain('before_run');
+    expect(formatJobRunHookEntryLabel(entry)).toContain('beforeAll');
     expect(formatJobRunHookEntryLabel(entry)).toContain('warn');
   });
 
@@ -275,14 +330,14 @@ describe('helpers', () => {
   it('sortJobRunHookEntries matches parse order', () => {
     const a = parseJobRunHookEntry({
       kind: 'prompt_profile',
-      phase: 'after_run',
+      phase: 'afterAll',
       prompt: '/agents/ralph',
     });
     const b = parseJobRunHookEntry({
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/seo',
     });
-    expect(sortJobRunHookEntries([a, b])[0]?.phase).toBe('before_run');
+    expect(sortJobRunHookEntries([a, b])[0]?.phase).toBe('beforeAll');
   });
 });

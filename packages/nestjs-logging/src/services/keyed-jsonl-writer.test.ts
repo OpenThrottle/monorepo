@@ -48,6 +48,37 @@ describe('KeyedJsonlWriter', () => {
     await w.closeAll();
   });
 
+  it('writes the optional source tag when provided and omits it otherwise', async () => {
+    const w = new KeyedJsonlWriter({ runOutputBaseDirectory: await mkBase() });
+
+    w.appendRunChunk('q', '1', {
+      data: 'tagged',
+      source: 'cursor-agent',
+      timestamp: '2026-05-02T12:00:00.000Z',
+      type: 'stdout',
+    });
+    w.appendRunChunk('q', '1', {
+      data: 'untagged',
+      timestamp: '2026-05-02T12:00:01.000Z',
+      type: 'stdout',
+    });
+    await w.close('q', '1');
+
+    const lines = (await readFile(path.join(baseDir, 'q/1.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+
+    expect(lines[0]).toEqual({
+      data: 'tagged',
+      source: 'cursor-agent',
+      timestamp: '2026-05-02T12:00:00.000Z',
+      type: 'stdout',
+    });
+    expect(lines[1]).not.toHaveProperty('source');
+    await w.closeAll();
+  });
+
   it('uses .log for raw lineFormat and does not add delimiters', async () => {
     const w = new KeyedJsonlWriter({
       lineFormat: 'raw',

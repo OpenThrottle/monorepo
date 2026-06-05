@@ -74,11 +74,7 @@ async function handleGetActivityByDate(args: {
     endIso = endDate.toISOString();
   }
   try {
-    const activity = await cortexGetActivityByDateRange(
-      config,
-      startIso,
-      endIso,
-    );
+    const activity = await cortexGetActivityByDateRange(startIso, endIso);
 
     const lines: string[] = [
       `Activity from ${startIso} to ${endIso}:`,
@@ -153,7 +149,6 @@ async function handleGetLastActivity(args: {
   try {
     const { planId, taskId } = parsed.data;
     const activityResult = await cortexGetLastActivityForPlanOrTask(
-      config,
       planId,
       taskId,
     );

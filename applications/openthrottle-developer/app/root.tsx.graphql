@@ -5,35 +5,6 @@ fragment HealthCard on ServerHealthObject {
   websocket
 }
 
-mutation register($input: RegisterInput!) {
-  register(input: $input) {
-    accessToken
-    email
-    id
-  }
-}
-
-mutation login($input: LoginInput!) {
-  login(input: $input) {
-    accessToken
-  }
-}
-
-query getRootHealth {
-  serverHealth {
-    ...HealthCard
-  }
-}
-
-# query getSubscription {
-#   mySubscription {
-#     cancelAtPeriodEnd
-#     status
-#     stripeCustomerId
-#     stripePriceId
-#   }
-# }
-
 fragment RootMetrics on ServerMetricsObject {
   cpuSystemMs
   cpuUserMs
@@ -41,12 +12,6 @@ fragment RootMetrics on ServerMetricsObject {
   heapTotalMb
   heapUsedMb
   rssMb
-}
-
-query getRootMetrics {
-  serverMetrics {
-    ...RootMetrics
-  }
 }
 
 query getMyUser {
@@ -57,6 +22,38 @@ query getMyUser {
     githubUsername
     id
     updatedAt
+  }
+}
+
+query getRootHealth {
+  serverHealth {
+    ...HealthCard
+  }
+}
+
+query getRootMetrics {
+  serverMetrics {
+    ...RootMetrics
+  }
+}
+
+mutation login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+  }
+}
+
+mutation logout {
+  signout {
+    success
+  }
+}
+
+mutation register($input: RegisterInput!) {
+  register(input: $input) {
+    accessToken
+    email
+    id
   }
 }
 

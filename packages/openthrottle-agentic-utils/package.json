@@ -1,0 +1,80 @@
+{
+  "name": "@openthrottle/openthrottle-agentic-utils",
+  "description": "Pure utilities for agentic workflows (Postgres env, OT root discovery, metrics). Extracted from @tools/workflows and ai-mcp.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/pidusage": "^2.0.5",
+    "nx": "22.6.4",
+    "pg": "^8.17.1",
+    "pidusage": "^4.0.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/openthrottle-agentic-utils",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {},
+      "typecheck-tests": {}
+    }
+  },
+  "peerDependencies": {
+    "nx": "^22.0.0",
+    "pg": "^8.17.1",
+    "pidusage": "^4.0.1"
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

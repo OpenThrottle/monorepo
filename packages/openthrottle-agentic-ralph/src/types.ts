@@ -1,30 +1,30 @@
 import type {
-  WorkflowConfig,
-  WorkflowRunCorrelation,
+  WorkflowConfigLegacy,
+  WorkflowLifecycleDispatcher,
+  WorkflowCorrelation,
   WorkflowRunResult as WorkflowRunResultBase,
   WorkflowOrchestrator as WorkflowOrchestratorBase,
+  WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
-import type { WorkflowRunner } from './config/index.js';
-
 export type WorkflowFinishedReason =
-  | 'agent_complete'
-  | 'cancelled'
-  | 'max_iterations'
-  | 'plan_already_terminal'
-  | 'tasks_exhausted';
+  | 'workflow_complete'
+  | 'workflow_cancelled'
+  | 'workflow_max_iterations'
+  | 'workflow_plan_already_terminal'
+  | 'workflow_tasks_exhausted';
 
 export type WorkflowFailedReason =
-  | 'agent_error'
-  | 'input_required'
-  | 'unhandled';
+  | 'workflow_agent_error'
+  | 'workflow_input_required'
+  | 'workflow_unhandled';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
  * {@link WorkflowRalphContext} extends this shape plus orchestration-only fields (`kind`, `mode`,
  * `iterations`).
  */
-export interface WorkflowContext extends WorkflowConfig {
+export interface WorkflowContext extends WorkflowConfigLegacy {
   /**
    * When set (e.g. BullMQ worker + in-process abort controller), forwarded to each iteration and
    * checked between steps so user cancel matches the spawn-path behavior.
@@ -32,19 +32,29 @@ export interface WorkflowContext extends WorkflowConfig {
   readonly abortSignal?: AbortSignal;
 
   /**
-   * Optional tracing metadata from {@link WorkflowRunCorrelation}; forwarded with the context for
+   * Optional tracing metadata from {@link WorkflowCorrelation}; forwarded with the context for
    * application-layer structured logs (no plan/task ids at the shared-contract layer).
    */
-  readonly correlation?: WorkflowRunCorrelation;
+  readonly correlation?: WorkflowCorrelation;
 
   // 🤠 - agentic ralph workflow specifics
   readonly kind: 'ralph';
+  /**
+   * Optional Jest-style lifecycle hook dispatcher (BullMQ child jobs on the orchestrator path).
+   * When omitted, hook boundary calls are no-ops.
+   */
+  readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
   readonly mode: 'plan' | 'task';
   readonly planId: string;
   readonly project: string | undefined;
-  readonly runner: WorkflowRunner;
+  readonly runner: WorkflowConfigRunner;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
+  /**
+   * @description Absolute path to the target repository cwd for agent iterations (foreign checkout).
+   * When omitted, the host process cwd is used (typically the OpenThrottle monorepo root).
+   */
+  readonly workingDirectory?: string;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;
 }

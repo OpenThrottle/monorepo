@@ -12,6 +12,7 @@ export * from './components/OpenThrottleLogo';
 export * from './components/OpenThrottleModal';
 export * from './components/OpenThrottleNavigation';
 export * from './components/OpenThrottlePagination';
+export * from './components/OpenThrottlePaginationSimple';
 export * from './components/OpenThrottlePlanStatusBadge';
 export * from './components/OpenThrottleSidebar';
 export * from './components/OpenThrottleSidebarHeader';
@@ -20,6 +21,8 @@ export * from './components/OpenThrottleTable';
 export * from './components/OpenThrottleTabs';
 export * from './components/OpenThrottleTabLink';
 export * from './components/OpenThrottleTabsNav';
+export * from './components/OpenThrottleWebsocketDebugger';
+export * from './components/websocket-debugger';
 
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';

@@ -1,26 +1,3 @@
-export { DEFAULT_POLL_INTERVAL_MS } from './types/child-process-metrics';
-export type {
-  ChildProcessMetrics,
-  ChildProcessMetricsOptions,
-  ChildProcessSample,
-} from './types/child-process-metrics';
-export {
-  captureLoadAverage,
-  createEmptyPsiMetrics,
-  determinePressureLevel,
-  formatSystemCpuMetrics,
-} from './types/system-cpu-metrics';
-export type {
-  LoadAverageMetrics,
-  PsiCpuMetrics,
-  SystemCpuMetrics,
-  SystemCpuSnapshot,
-} from './types/system-cpu-metrics';
-export {
-  createWallClockMetrics,
-  formatWallClockMetrics,
-} from './types/wall-clock-metrics';
-export type { WallClockMetrics } from './types/wall-clock-metrics';
 export {
   characterizeWorkload,
   formatChildProcessMetrics,
@@ -60,20 +37,20 @@ export {
   buildWorkflowRalphRunTuningArgv,
   mergeRalphNestedRunTuningWithExecutionBackend,
 } from './utils/workflow-ralph-nested-argv';
-export type {
-  RalphNestedDebugCli,
-  RalphNestedRunTuningInput,
-} from './utils/workflow-ralph-nested-argv';
+export type { RalphNestedRunTuningInput } from './utils/workflow-ralph-nested-argv';
 export {
   compareJobRunHookEntries,
   defaultJobRunHookOnFailure,
   DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS,
   formatJobRunHookEntryLabel,
+  isPlanScopedJobRunHookPhase,
+  isTaskScopedJobRunHookPhase,
   JOB_RUN_HOOK_SKILL_PATH_PREFIXES,
   MAX_JOB_RUN_HOOKS_PER_PHASE,
   MAX_JOB_RUN_HOOKS_TOTAL,
   MAX_JOB_RUN_HOOK_STRING_LEN,
   MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS,
+  normalizeJobRunHookPhase,
   resolveJobRunHookOnFailure,
   sortJobRunHookEntries,
 } from './types/job-run-lifecycle-hooks';
@@ -84,12 +61,15 @@ export type {
   JobRunHookKind,
   JobRunHookOnFailure,
   JobRunHookPhase,
+  JobRunHookPhaseWire,
   JobRunHookPromptDelivery,
   JobRunHookPromptProfileFile,
   JobRunHookPromptProfileNamed,
   JobRunHookRunKind,
   JobRunHookRunOptions,
   JobRunHookSkill,
+  JobRunHookTaskContext,
+  JobRunHookTaskOutcome,
   JobRunHooksConfig,
 } from './types/job-run-lifecycle-hooks';
 export {
@@ -122,21 +102,15 @@ export {
   createMutexWorktreeTargetsTracker,
   MutexWorktreeTargetsTracker,
 } from './utils/mutex-worktree-targets';
-export {
-  createChildProcessMetricsCollector,
-  sampleChildProcess,
-} from './utils/child-process-metrics';
-export type { ChildProcessMetricsCollector } from './utils/child-process-metrics';
+export { sampleChildProcess } from './utils/child-process-metrics';
 export {
   createBranchInWorktree,
   deriveBranchName,
-  ENSURE_COMMIT_NX_CHECKS,
   isWorktreeClean,
   parentJobAcquireAndCreateBranch,
   parentJobEnsureCommitBeforeRelease,
   slugifyForBranch,
 } from './utils/parent-job';
-export type { EnsureCommitNxCheck } from './utils/parent-job';
 export { runWorktreeWorkflow } from './utils/workflow';
 export { WorktreeTargetsTracker } from './utils/worktree-targets';
 export {
@@ -146,6 +120,36 @@ export {
   parseRalphExecutionBackendId,
 } from './utils/ralph-execution-backend';
 export type { RalphExecutionBackendId } from './utils/ralph-execution-backend';
+export {
+  WORKFLOW_RALPH_CONFIG_PRECEDENCE,
+  WORKFLOW_RALPH_DEFAULTS_EXAMPLE_FILENAME,
+  WORKFLOW_RALPH_DEFAULTS_FILENAME,
+} from './config/workflow-ralph-defaults.types';
+export type {
+  WorkflowRalphDefaultsDebug,
+  WorkflowRalphDefaultsDiagnosticsJson,
+  WorkflowRalphDefaultsFileV1Json,
+  WorkflowRalphDefaultsSpawnJson,
+  WorkflowRalphResolvedDefaults,
+} from './config/workflow-ralph-defaults.types';
+export {
+  applyWorkflowRalphOtRootFromConfig,
+  buildNestedWorkflowRalphSpawnEnv,
+  resolveWorkflowRalphConfigCwd,
+} from './config/build-nested-workflow-ralph-spawn-env';
+export {
+  loadWorkflowRalphConfig,
+  loadWorkflowRalphDefaultsFileV1,
+  mapDefaultsDebugToRalphDebugLevel,
+  readWorkflowRalphConfigEnv,
+  readWorkflowRalphDebugFromEnv,
+  resolveWorkflowRalphTransport,
+  WORKFLOW_RALPH_CONFIG_ENV,
+} from './config/load-workflow-ralph-config';
+export {
+  mergePlanRunTuningWithWorkflowRalphConfig,
+  type PlanRunTuningMergeInput,
+} from './config/merge-plan-run-tuning-with-config';
 export {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -166,6 +170,7 @@ export {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
 } from './utils/ot-diagnostics';
+export { applyWorkflowRalphDebugCli } from './utils/apply-workflow-ralph-debug-cli';
 export { runIteration, runIterationAsync } from './bin/run-iteration';
 export type { CursorAgentChunk, RunIterationConfig } from './bin/run-iteration';
 export { createCursorWorkflowRalphIterationRunner } from './utils/cursor-workflow-ralph-iteration-runner';

@@ -130,7 +130,7 @@ Use the `serviceAccountId` for `mcp-developer` in `CreateServiceAccountCredentia
 
 ## Workflow worker token
 
-Plans queue / Ralph orchestration can call GraphQL with `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` (service account `workflow-ralph`). Mint via the same bootstrap script or admin GraphQL. Prefer this over `**OPENTHROTTLE_WORKER_GRAPHQL_PLACEHOLDER_TOKEN**`, which only bypasses auth when `APP_ENABLE_AUTHENTICATION=false`.
+Plans queue / Ralph orchestration can call GraphQL with `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` (service account `workflow-ralph`). Mint via the same bootstrap script or admin GraphQL.
 
 See `applications/openthrottle-server/.env.default` and [databases/README.md](../../../databases/README.md).
 

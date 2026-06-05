@@ -46,7 +46,7 @@ GraphQL-only boundary to **openthrottle-server**. Typical tools:
 
 **Author and assignee** on plans must be the **GitHub username** (not display name). When `GITHUB_USER` is set, the MCP uses it for author/assignee.
 
-Cursor **`/ot/*`** commands live under `.cursor/commands/ot/`; they instruct use of these tools.
+Cursor **`/ot/*`** skills live under `.cursor/skills/ot-*`; they instruct use of these tools.
 
 ## Commits while working on OT plans/tasks
 
