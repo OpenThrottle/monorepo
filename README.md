@@ -15,8 +15,6 @@ After years of development, I've refined my tech stack to focus on a core set of
     - [Common Commands](#common-commands)
     - [TypeScript Execution (SWC)](#typescript-execution-swc)
     - [Python Applications](#python-applications)
-  - [🌳 Reserved Worktrees](#-reserved-worktrees)
-    - [Using Reserved Worktrees](#using-reserved-worktrees)
   - [☁️ GCP Auth | gcloud CLI](#️-gcp-auth--gcloud-cli)
   - [🛟 Troubleshooting](#-troubleshooting)
 
@@ -134,56 +132,6 @@ source .venv/bin/activate
 # Turn it off
 deactivate
 ```
-
-## 🌳 Reserved Worktrees
-
-This monorepo uses Git worktrees to enable multiple branches to be checked out simultaneously. We maintain four reserved worktrees that are pre-configured and ready to use, avoiding the setup cost of creating new worktrees for each branch:
-
-- `monorepo-worktree-one`, `monorepo-worktree-two`, `monorepo-worktree-three` - For feature branches and general development
-- `monorepo-hotfix` - Reserved for hotfixes and urgent one-off fixes
-
-### Using Reserved Worktrees
-
-**Assign a branch to a worktree:**
-
-```bash
-# Checkout your branch in an available worktree
-cd ../monorepo-worktree-one
-git fetch origin
-git checkout your-feature-branch
-```
-
-**For hotfixes:**
-
-```bash
-# Use the dedicated hotfix worktree
-cd ../monorepo-hotfix
-git fetch origin
-git checkout your-hotfix-branch
-
-# or create a new hotfix branch from main
-git checkout -b hotfix/urgent-fix main
-```
-
-**Sync a branch with main:**
-
-```bash
-# From within the worktree
-cd ../monorepo-worktree-one
-# Always pull main first to ensure it's current
-git fetch origin main
-git pull origin main
-# Then rebase your branch onto main
-git rebase origin/main
-```
-
-**List all worktrees:**
-
-```bash
-git worktree list
-```
-
-**Note:** The main `monorepo` directory is reserved for the `main` branch. Each branch can only be checked out in one worktree at a time.
 
 ## ☁️ GCP Auth | gcloud CLI
 
