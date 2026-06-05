@@ -28,6 +28,8 @@ tmp
 *.d.ts.map
 *.tsbuildinfo
 **/__generated__/**/*
+databases/backups/**/*.sql
+databases/backups/**/*.zip
 vite.config.*.timestamp*
 vite.config.ts.timestamp*
 vitest.config.*.timestamp*
@@ -36,13 +38,12 @@ vitest.config.ts.timestamp*
 #############################################################################
 # Claude Code
 #############################################################################
-# Claude Code - personal/secrets
-.claude/settings.local.json
+.claude.json
 .claude/backups/
 .claude/debug/
 .claude/projects/
 .claude/sessions/
-.claude.json
+.claude/settings.local.json
 CLAUDE.local.md
 
 # Cursor CLI
