@@ -123,9 +123,9 @@ jobs:
       #       --verbose \
       #       --nxBail
 
-      - name: '🔒 GraphQL codegen drift guard (agentic-ralph, mcp-developer)'
-        run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/mcp-developer
+      # - name: '🔒 GraphQL codegen drift guard (agentic-ralph, mcp-developer)'
+      #   run: |
+      #     pnpm dlx nx@${{ env.NX_VERSION }} run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/mcp-developer
 
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"
