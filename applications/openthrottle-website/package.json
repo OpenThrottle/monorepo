@@ -27,8 +27,8 @@
       "type:application"
     ],
     "targets": {
-      "codegen-graphql": {},
-      "codegen-graphql-watch": {},
+      "____codegen-graphql____": {},
+      "____codegen-graphql-watch____": {},
       "codegen-react-router": {},
       "codegen-react-router-watch": {},
       "lint": {},

@@ -1,4 +1,6 @@
+import * as React from 'react';
 import { render } from '@testing-library/react';
+import { BotIcon } from 'lucide-react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -10,7 +12,15 @@ describe('OpenThrottleProductFeatures Component', () => {
   let props: OpenThrottleProductFeaturesProps;
 
   beforeEach(() => {
-    props = {};
+    props = {
+      features: [
+        {
+          description: 'Test description',
+          icon: BotIcon,
+          title: 'Test title',
+        },
+      ],
+    };
 
     const Component = () => <OpenThrottleProductFeatures {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
