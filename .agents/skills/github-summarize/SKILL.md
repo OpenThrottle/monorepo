@@ -1,6 +1,6 @@
 ---
 name: github-summarize
-description: Instructions
+description: Summarize all commits on the current branch into 5–10 single-line conventional-commit bullets for squash-merge descriptions. USE WHEN the user runs /github/summarize or needs a bullet-only PR summary in a code fence with no extra commentary.
 disable-model-invocation: true
 ---
 
