@@ -1,6 +1,6 @@
 # @openthrottle/openthrottle-mcp
 
-Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access). Tools call openthrottle-server over GraphQL only.
+Model Context Protocol (MCP) server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access). Tools call `openthrottle-server` over GraphQL only.
 
 For schema, embeddings, and local Postgres setup, see [databases/README.md](../../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
 
@@ -21,4 +21,5 @@ pnpm nx run @openthrottle/openthrottle-mcp:build
 pnpm nx run @openthrottle/openthrottle-mcp:serve
 ```
 
-This package is **private** to the workspace and is not published to the public registry.
+> [!Tip]
+> This package is **private** to the workspace and is not published to a public registry.
