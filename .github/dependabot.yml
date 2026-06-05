@@ -9,7 +9,9 @@
 ########################################################################
 version: 2
 updates:
-  - directories:
+  - cooldown:
+      default-days: 7
+    directories:
       - '/'
       - '/applications/*'
       - '/packages/*'

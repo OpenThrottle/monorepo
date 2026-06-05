@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "expo-mcp": {
-      "args": ["-y", "expo-mcp"],
-      "command": "npx",
-      "type": "stdio"
-    }
-  }
-}

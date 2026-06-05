@@ -121,4 +121,5 @@ Watch mode: `pnpm nx run @openthrottle/nodejs-graphql:__dev`.
 
 **In this monorepo:** add `"@openthrottle/nodejs-graphql": "workspace:*"` to the consuming package’s `package.json`, then run `pnpm install` from the repository root.
 
-This package is **private** to the workspace and is not published to the public registry.
+> [!Tip]
+> This package is **private** to the workspace and is not published to a public registry.

@@ -1,0 +1,23 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+Use JSDoc comments to annotate functions and types.
+
+Be concise in JSDoc comments, and only provide JSDoc comments if the function's behavior is not self-evident. This should be added following a JSDoc inline `@description` tag.
+
+Use the JSDoc inline `@link` tag to link to other functions and types within the same file.
+
+```ts
+/**
+ * @description Subtracts two numbers
+ */
+const subtract = (a: number, b: number) => a - b;
+
+/**
+ * @description Does the opposite to {@link subtract}
+ */
+const add = (a: number, b: number) => a + b;
+```

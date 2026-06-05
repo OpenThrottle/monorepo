@@ -98,7 +98,7 @@ nx g @tools/generators:remix --describe
 # Check the "list" object in the output
 
 # Some list keys require additional params
-nx g @tools/generators:remix --list=componentFolders --application=openthrottle-cms
+nx g @tools/generators:remix --list=componentFolders --application=openthrottle-developer
 ```
 
 ### Issue: "Target not found" or "Invalid destination"

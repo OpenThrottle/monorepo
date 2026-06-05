@@ -23,6 +23,10 @@
 
 <!-- nx configuration end-->
 
+## Agent and editor folders
+
+For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `.agents/`, `skills/`, duplication strategy, where to edit for common tasks), see [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md). **This file** covers cross-editor handbook topics (Nx, OT, workflow CLI); **that doc** covers physical layout and canonical ownership.
+
 ## Cursor Agent Skills (OpenThrottle)
 
 Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above.

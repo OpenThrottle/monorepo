@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import { OpenThrottleClipboard } from './OpenThrottleClipboard';
 import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
 import {
@@ -15,13 +16,14 @@ import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 
 export interface OpenThrottleProductGetStartedProps {
+  className?: string;
   introduction?: string;
 }
 
 export const OpenThrottleProductGetStarted = (
   props: OpenThrottleProductGetStartedProps,
 ): React.ReactElement => {
-  const { introduction: introductionProp } = props;
+  const { className, introduction: introductionProp } = props;
 
   // Hooks
   const [introduction] = React.useState(
@@ -40,7 +42,7 @@ export const OpenThrottleProductGetStarted = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className={classnames('max-w-2xl mx-auto', className)}>
       <CardHeader className="flex w-auto items-center gap-2 justify-start">
         <OpenThrottleLogo className="text-xl" />
         <span className="text-muted-foreground/50 font-extralight">

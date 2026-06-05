@@ -207,13 +207,13 @@
   border-radius: var(--radius);
   background-image: conic-gradient(
     from var(--border-angle-1) at 50% 50%,
-    transparent 0%,
-    transparent 45%,
-    color-mix(in srgb, var(--accent) 30%, transparent) 55%,
+    var(--color-sidebar-border) 0%,
+    var(--color-sidebar-border) 45%,
+    color-mix(in srgb, var(--accent) 30%, var(--color-sidebar-border)) 55%,
     var(--accent) 65%,
-    color-mix(in srgb, var(--accent) 50%, white) 72%,
-    color-mix(in srgb, var(--accent) 25%, transparent) 85%,
-    transparent 100%
+    color-mix(in srgb, var(--accent) 50%, var(--color-sidebar-border)) 72%,
+    color-mix(in srgb, var(--accent) 25%, var(--color-sidebar-border)) 85%,
+    var(--color-sidebar-border) 100%
   );
   padding: 1px;
   position: relative;

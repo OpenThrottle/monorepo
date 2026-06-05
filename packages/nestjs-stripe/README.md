@@ -12,7 +12,8 @@ pnpm add @openthrottle/nestjs-stripe -w
 
 Or add `"@openthrottle/nestjs-stripe": "workspace:*"` in a consuming package and run `pnpm install` from the repository root.
 
-This package is **private** to the workspace and is not published to the public registry.
+> [!Tip]
+> This package is **private** to the workspace and is not published to a public registry.
 
 Ensure peer dependencies are satisfied (see below). The `stripe` npm package is a **direct dependency** of this library.
 

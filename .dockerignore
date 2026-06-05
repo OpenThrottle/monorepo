@@ -10,7 +10,6 @@
 # .npmrc
 
 .claude
-.codex
 .cursor
 .gemini
 .git

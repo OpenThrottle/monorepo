@@ -236,7 +236,7 @@ export const meta = (_args: Route.MetaArgs) => {
  * @link https://reactrouter.com/explanation/special-files#layout-export
  * Document shell only: {@link Meta}, {@link Links}, {@link Scripts}, env bootstrap,
  * body wrapper for providers that must wrap the full document, {@link Toaster}, and {@link ScrollRestoration}.
- * App-level chrome lives in the default {@link App} export (canonical split for openthrottle-cms / openthrottle-admin).
+ * App-level chrome lives in the default {@link App} export (canonical split for openthrottle-xxxx / openthrottle-admin).
  */
 export function Layout({ children }: { children: React.ReactNode }) {
   // Hooks
