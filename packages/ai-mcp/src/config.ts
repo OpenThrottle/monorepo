@@ -198,7 +198,7 @@ const resolveWorkflowGraphqlAuthFromSpawnEnv = (
   const keys = [
     'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN',
     'OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN',
-    'MCP_DEVELOPER_AUTH_TOKEN',
+    'OPENTHROTTLE_MCP_AUTH_TOKEN',
   ] as const;
 
   for (const key of keys) {

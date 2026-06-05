@@ -7,7 +7,7 @@ describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', (
   const clearAuthTokenEnv = (): void => {
     delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN;
     delete process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN;
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   };
 
   afterEach(() => {
@@ -18,7 +18,7 @@ describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', (
     clearAuthTokenEnv();
     process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN = 'worker-token';
     process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN = 'wf-token';
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = 'mcp-token';
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'mcp-token';
 
     expect(resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token).toBe(
       'worker-token',
@@ -28,16 +28,16 @@ describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', (
   it('falls back to OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN', () => {
     clearAuthTokenEnv();
     process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN = 'wf-token';
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = 'mcp-token';
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'mcp-token';
 
     expect(resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token).toBe(
       'wf-token',
     );
   });
 
-  it('falls back to MCP_DEVELOPER_AUTH_TOKEN', () => {
+  it('falls back to OPENTHROTTLE_MCP_AUTH_TOKEN', () => {
     clearAuthTokenEnv();
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = 'mcp-token';
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'mcp-token';
 
     expect(resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token).toBe(
       'mcp-token',

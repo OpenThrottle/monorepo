@@ -60,11 +60,11 @@ With Postgres up and migrations applied:
 pnpm run database:bootstrap-service-accounts
 ```
 
-The script prints `**MCP_DEVELOPER_AUTH_TOKEN**` and `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` once per account (skips accounts that already have an active credential).
+The script prints `**OPENTHROTTLE_MCP_AUTH_TOKEN**` and `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` once per account (skips accounts that already have an active credential).
 
-1. Copy `**MCP_DEVELOPER_AUTH_TOKEN**` into:
+1. Copy `**OPENTHROTTLE_MCP_AUTH_TOKEN**` into:
 
-- `applications/openthrottle-server/.env` → `MCP_DEVELOPER_AUTH_TOKEN=ot_sa_…`
+- `applications/openthrottle-server/.env` → `OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_…`
 - Cursor MCP `**env**` for `**openthrottle-mcp**` (see step 5).
 
 2. Optionally copy `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` for BullMQ / Ralph workers.
@@ -111,7 +111,7 @@ Register `**openthrottle-mcp**` in `**.cursor/mcp.json**` (this repo as workspac
       "env": {
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",
-        "MCP_DEVELOPER_AUTH_TOKEN": "ot_sa_<prefix>_<secret>"
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "ot_sa_<prefix>_<secret>"
       }
     }
   }
@@ -125,7 +125,7 @@ Restart Cursor after changing MCP config.
 ### Automated env check (from monorepo root)
 
 ```bash
-export MCP_DEVELOPER_AUTH_TOKEN="ot_sa_<prefix>_<secret>"
+export OPENTHROTTLE_MCP_AUTH_TOKEN="ot_sa_<prefix>_<secret>"
 API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
 ```
 
@@ -135,7 +135,7 @@ Expect `**OK: GET …/health**`, `**OK: embedding provider configured**` (or a W
 
 1. Confirm `**openthrottle-mcp**` is connected.
 2. Call tool `**health**` (no auth) — `serverHealth` from GraphQL.
-3. Call `**list_sources**` or `**list_plans_by_status**` — confirms `**MCP_DEVELOPER_AUTH_TOKEN**` and RBAC with auth enabled.
+3. Call `**list_sources**` or `**list_plans_by_status**` — confirms `**OPENTHROTTLE_MCP_AUTH_TOKEN**` and RBAC with auth enabled.
 
 ---
 

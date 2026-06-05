@@ -41,7 +41,7 @@ export const SettingsKeysServiceAccountCredentials = (
           <span className="font-medium text-foreground">One-time secret:</span>{' '}
           when you create a credential, the full token is shown once. Copy it
           immediately into{' '}
-          <code className="text-xs">MCP_DEVELOPER_AUTH_TOKEN</code> or worker
+          <code className="text-xs">OPENTHROTTLE_MCP_AUTH_TOKEN</code> or worker
           env — it cannot be retrieved again.
         </p>
         <p>

@@ -83,7 +83,7 @@ export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';
 export const RALPH_WORKFLOW_FATAL_PREFIX = '🚨 🚨 🚨 ';
 
 /** Shared message when GraphQL workflow env is missing. */
-export const RALPH_FATAL_REQUIRED_GRAPHQL = `${RALPH_FATAL_PREFIX}OpenThrottle is required. Set OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN (or MCP_DEVELOPER_AUTH_TOKEN) and API_URL_INTERNAL (or OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL).\n`;
+export const RALPH_FATAL_REQUIRED_GRAPHQL = `${RALPH_FATAL_PREFIX}OpenThrottle is required. Set OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN (or OPENTHROTTLE_MCP_AUTH_TOKEN) and API_URL_INTERNAL (or OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL).\n`;
 
 /** Shared message when Postgres env is missing (postgres-direct rollback). */
 export const RALPH_FATAL_REQUIRED_POSTGRES = `${RALPH_FATAL_PREFIX}OpenThrottle is required. Set POSTGRES_URL or POSTGRES_* and ensure the database is reachable.\n`;

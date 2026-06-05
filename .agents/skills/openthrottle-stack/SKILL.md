@@ -113,7 +113,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 | Cursor registration                       | `.cursor/mcp.json` (server id **`openthrottle-mcp`**)        |
 | Env probe script                          | `scripts/verify-openthrottle-mcp-env.sh`                     |
 
-**Local verification (minimal):** install, root + server `.env`, **`pnpm run database:start`** + **`pnpm run database:migrate`**, **`pnpm nx run openthrottle-server:dev`**, align **`API_URL` / `API_URL_INTERNAL`** with server port; **`MCP_DEVELOPER_AUTH_TOKEN`** for authenticated tools. Details and failure modes: **`verification-environment.md`**.
+**Local verification (minimal):** install, root + server `.env`, **`pnpm run database:start`** + **`pnpm run database:migrate`**, **`pnpm nx run openthrottle-server:dev`**, align **`API_URL` / `API_URL_INTERNAL`** with server port; **`OPENTHROTTLE_MCP_AUTH_TOKEN`** for authenticated tools. Details and failure modes: **`verification-environment.md`**.
 
 **Extending tools:** add or adjust GraphQL operations against **openthrottle-server** first; keep MCP as a thin GraphQL client and document env in README/AUTH/verification docs.
 
