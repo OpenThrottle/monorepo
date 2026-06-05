@@ -160,4 +160,6 @@ It does **not** scan `.claude/skills`, `skills/`, or `.opencode/skills`. Duplica
 
 ---
 
-_Next tasks (same plan): document editor-unique canonical ownership, consolidate into a single contributor reference, wire cross-links from `AGENTS.md`, `CLAUDE.md`, and `AGENT_INPUTS.md`._
+**See also:** [agent-editor-folders-ownership.md](./agent-editor-folders-ownership.md) — canonical source of truth per concern and editor-unique content.
+
+_Next tasks (same plan): consolidate into a single contributor reference and wire cross-links from `AGENTS.md`, `CLAUDE.md`, and `AGENT_INPUTS.md`._

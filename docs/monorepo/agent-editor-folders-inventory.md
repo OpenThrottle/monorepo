@@ -215,6 +215,6 @@ Counts are `SKILL.md` files under each tree (excluding symlinks counted at targe
 
 ---
 
-**See also:** [agent-editor-folders-duplication-map.md](./agent-editor-folders-duplication-map.md) — exact vs near-duplicate skills, rules/personas overlap, sync mechanisms, and drift watch list.
+**See also:** [agent-editor-folders-duplication-map.md](./agent-editor-folders-duplication-map.md) — exact vs near-duplicate skills, rules/personas overlap, sync mechanisms, and drift watch list. [agent-editor-folders-ownership.md](./agent-editor-folders-ownership.md) — canonical source of truth per concern and editor-unique content.
 
-_Next tasks (same plan): document canonical ownership, consolidate into a single contributor reference, and wire cross-links from `AGENTS.md`, `CLAUDE.md`, and `AGENT_INPUTS.md`._
+_Next tasks (same plan): consolidate into a single contributor reference and wire cross-links from `AGENTS.md`, `CLAUDE.md`, and `AGENT_INPUTS.md`._
