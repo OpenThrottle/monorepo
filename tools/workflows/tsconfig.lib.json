@@ -16,13 +16,19 @@
   ],
   "references": [
     {
-      "path": "../../packages/ai-mcp/tsconfig.lib.json"
+      "path": "../../packages/openthrottle-agentic-workflow/tsconfig.lib.json"
+    },
+    {
+      "path": "../generators/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
       "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
     },
     {
-      "path": "../generators/tsconfig.lib.json"
+      "path": "../../packages/ai-mcp/tsconfig.lib.json"
     },
     {
       "path": "../dotfiles/tsconfig.lib.json"

@@ -14,9 +14,6 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
-      "path": "../../packages/openthrottle-agentic-utils/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/openthrottle-workflows/tsconfig.lib.json"
     },
     {
@@ -38,6 +35,12 @@
       "path": "../../packages/nestjs-utils/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/ai-mcp/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-workflow/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {
@@ -47,7 +50,7 @@
       "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/ai-mcp/tsconfig.lib.json"
+      "path": "../../packages/nestjs-mcp-developer/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-repositories/tsconfig.lib.json"
@@ -60,9 +63,6 @@
     },
     {
       "path": "../../packages/nestjs-logging/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/nestjs-mcp-developer/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-graphql/tsconfig.lib.json"
@@ -84,6 +84,9 @@
     },
     {
       "path": "../../packages/nestjs-websockets/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
