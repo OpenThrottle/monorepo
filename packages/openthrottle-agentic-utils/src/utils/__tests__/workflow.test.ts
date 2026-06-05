@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
-  DEFAULT_WORKFLOW_RUNNER,
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
   isWorkflowRunnerId,
@@ -200,11 +199,5 @@ describe('WORKFLOW_RUNNER_IDS', () => {
     expect(WORKFLOW_RUNNER_IDS).toEqual(
       expect.arrayContaining(['claude', 'cursor']),
     );
-  });
-});
-
-describe('DEFAULT_WORKFLOW_RUNNER', () => {
-  it('is cursor', () => {
-    expect(DEFAULT_WORKFLOW_RUNNER).toBe('cursor');
   });
 });
