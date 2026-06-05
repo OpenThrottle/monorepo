@@ -1,6 +1,9 @@
 ---
 name: ot-pending
-description: Instructions
+description: >-
+  List plans with status pending in OpenThrottle via openthrottle-mcp
+  list_plans_by_status. USE WHEN the user runs /ot/pending, asks for pending
+  plans, or wants the backlog of not-yet-started OT work—report titles and ids.
 disable-model-invocation: true
 ---
 

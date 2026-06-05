@@ -1,6 +1,10 @@
 ---
 name: ot-list-sources
-description: Instructions
+description: >-
+  List plans and knowledge-base sources in OpenThrottle via openthrottle-mcp
+  list_sources. USE WHEN the user runs /ot/list-sources, asks what plans are in
+  the knowledge base, or wants to discover available OT collections before
+  searching.
 disable-model-invocation: true
 ---
 

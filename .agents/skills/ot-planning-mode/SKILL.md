@@ -1,6 +1,10 @@
 ---
 name: ot-planning-mode
-description: Instructions
+description: >-
+  Turn a rough idea or notes into an OpenThrottle plan plus tasks via
+  openthrottle-mcp create_plan and create_task. USE WHEN the user runs
+  /ot/planning-mode, has an unstructured PRD or idea, or wants documented plan
+  and task ids before Ralph or manual execution—keep output concise.
 disable-model-invocation: true
 ---
 

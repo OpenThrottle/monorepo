@@ -1,6 +1,10 @@
 ---
 name: ot-create-plan
-description: Instructions
+description: >-
+  Create a new plan (and optional initial tasks) in OpenThrottle via
+  openthrottle-mcp create_plan and create_task. USE WHEN the user runs
+  /ot/create-plan, asks to add a plan to OT/Cortex, or wants a structured plan
+  record without starting execution—report created plan and task ids.
 disable-model-invocation: true
 ---
 
