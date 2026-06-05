@@ -113,7 +113,8 @@ const buildClaudeShellCommand = (config: RunIterationConfig): string => {
   const modelFlag =
     modelNorm !== '' && modelNorm !== 'auto' ? ` --model ${modelNorm}` : '';
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
-  const base = `claude --bare --permission-mode acceptEdits -p "${safePrompt}"${modelFlag}`;
+
+  const base = `claude --bare -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
 
   return appendRalphWorktreeShellFlags(base, 'claude', { worktree });
 };
