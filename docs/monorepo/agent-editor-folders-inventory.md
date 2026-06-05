@@ -2,7 +2,7 @@
 
 **Plan-Id:** `a55015f4-1d17-4f79-9772-d3f4788f8cfc`  
 **Task:** Inventory agent/editor folders and entry points (`f33eeefc-4ac7-4ab6-b60c-5ac8e870c585`)  
-**Status:** Working document; downstream tasks will map duplication, ownership, and consolidate into a single reference.
+**Consolidated reference:** [agent-editor-folders.md](./agent-editor-folders.md)
 
 This inventory enumerates agent- and editor-specific configuration locations in the OpenThrottle monorepo. For each location: **purpose**, **primary audience**, and **git tracking** (tracked, ignored, or local-only).
 
@@ -215,6 +215,4 @@ Counts are `SKILL.md` files under each tree (excluding symlinks counted at targe
 
 ---
 
-**See also:** [agent-editor-folders-duplication-map.md](./agent-editor-folders-duplication-map.md) — exact vs near-duplicate skills, rules/personas overlap, sync mechanisms, and drift watch list. [agent-editor-folders-ownership.md](./agent-editor-folders-ownership.md) — canonical source of truth per concern and editor-unique content.
-
-_Next tasks (same plan): consolidate into a single contributor reference and wire cross-links from `AGENTS.md`, `CLAUDE.md`, and `AGENT_INPUTS.md`._
+**See also:** [agent-editor-folders.md](./agent-editor-folders.md) (contributor entry point) · [duplication map](./agent-editor-folders-duplication-map.md) · [ownership](./agent-editor-folders-ownership.md)

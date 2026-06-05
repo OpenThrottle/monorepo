@@ -2,7 +2,7 @@
 
 **Plan-Id:** `a55015f4-1d17-4f79-9772-d3f4788f8cfc`  
 **Task:** Map shared and duplicated content across editors (`a9026517-d683-40ab-acae-a4e6d28bee85`)  
-**Companion:** [agent-editor-folders-inventory.md](./agent-editor-folders-inventory.md) (folder inventory)
+**Consolidated reference:** [agent-editor-folders.md](./agent-editor-folders.md) · **Companion:** [inventory](./agent-editor-folders-inventory.md)
 
 This document compares content across `.cursor/`, `.claude/`, `.agents/`, repo-root `skills/`, and `.opencode/`. It classifies **exact duplicates**, **near-duplicates** (same slug, different path or drift), and **editor-only** content. It also records **sync mechanisms** (or lack thereof).
 
@@ -160,6 +160,4 @@ It does **not** scan `.claude/skills`, `skills/`, or `.opencode/skills`. Duplica
 
 ---
 
-**See also:** [agent-editor-folders-ownership.md](./agent-editor-folders-ownership.md) — canonical source of truth per concern and editor-unique content.
-
-_Next tasks (same plan): consolidate into a single contributor reference and wire cross-links from `AGENTS.md`, `CLAUDE.md`, and `AGENT_INPUTS.md`._
+**See also:** [agent-editor-folders.md](./agent-editor-folders.md) (contributor entry point) · [ownership](./agent-editor-folders-ownership.md)
