@@ -212,6 +212,29 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+export type CommitCortexDocumentIngestInput = {
+  /** File bytes encoded as standard base64 (no data: URL prefix). */
+  fileBase64: Scalars['String']['input'];
+  /** MIME type from the upload when known (e.g. text/markdown). */
+  mimeType?: InputMaybe<Scalars['String']['input']>;
+  /** Original filename for format detection fallback. */
+  originalFilename?: InputMaybe<Scalars['String']['input']>;
+  /** Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used. */
+  plan: CreatePlanInput;
+};
+
+export type CommitCortexDocumentIngestResultObject = {
+  __typename?: 'CommitCortexDocumentIngestResultObject';
+  /** Error message when success is false (parse failure or rollback after partial task create). */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Created plan when success is true. */
+  plan?: Maybe<PlanObject>;
+  /** True when the plan and all tasks were created. */
+  success: Scalars['Boolean']['output'];
+  /** Created tasks when success is true. */
+  tasks: Array<TaskObject>;
+};
+
 export type CommitLinkObject = {
   __typename?: 'CommitLinkObject';
   createdAt: Scalars['DateTime']['output'];
@@ -869,6 +892,8 @@ export type Mutation = {
   assignRoleToUser: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
+  commitCortexDocumentIngest: CommitCortexDocumentIngestResultObject;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -931,6 +956,8 @@ export type Mutation = {
   linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
+  /** Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting. */
+  previewCortexDocumentIngest: PreviewCortexDocumentIngestResultObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
   /** Remove a permission from a role */
@@ -1012,6 +1039,10 @@ export type MutationAssignRoleToUserArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCommitCortexDocumentIngestArgs = {
+  input: CommitCortexDocumentIngestInput;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -1128,6 +1159,10 @@ export type MutationLinkCommitArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+export type MutationPreviewCortexDocumentIngestArgs = {
+  input: PreviewCortexDocumentIngestInput;
 };
 
 export type MutationRegisterArgs = {
@@ -1403,6 +1438,31 @@ export enum PressureLevel {
   Moderate = 'moderate',
   Unknown = 'unknown',
 }
+
+export type PreviewCortexDocumentIngestInput = {
+  /** File bytes encoded as standard base64 (no data: URL prefix). */
+  fileBase64: Scalars['String']['input'];
+  /** MIME type from the upload when known (e.g. text/markdown). */
+  mimeType?: InputMaybe<Scalars['String']['input']>;
+  /** Original filename for format detection fallback. */
+  originalFilename?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PreviewCortexDocumentIngestResultObject = {
+  __typename?: 'PreviewCortexDocumentIngestResultObject';
+  /** Detected upload format when parsing ran (e.g. markdown). */
+  detectedFormat?: Maybe<Scalars['String']['output']>;
+  /** Parse error code when success is false. */
+  errorCode?: Maybe<Scalars['String']['output']>;
+  /** Human-readable error when success is false. */
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Suggested plan title from the document structure. */
+  planTitleSuggested?: Maybe<Scalars['String']['output']>;
+  /** JSON array of proposed tasks: { title, description, requirements[] }. */
+  proposedTasksJson?: Maybe<Scalars['String']['output']>;
+  /** True when the document parsed successfully. */
+  success: Scalars['Boolean']['output'];
+};
 
 /** Process metrics snapshot: memory (RSS, heap, external in MB) and CPU (user/system in ms). */
 export type ProcessMetricsSnapshot = {
@@ -2120,6 +2180,11 @@ export type ServerHealthObject = {
   __typename?: 'ServerHealthObject';
   /** API status. "ok" when the resolver runs. */
   api: Scalars['String']['output'];
+  /**
+   * Deprecated alias for api. Kept for backwards compatibility.
+   * @deprecated Use api instead. Example field demonstrating the GraphQL deprecation policy.
+   */
+  apiStatus: Scalars['String']['output'];
   /** OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic. */
   database: Scalars['String']['output'];
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
