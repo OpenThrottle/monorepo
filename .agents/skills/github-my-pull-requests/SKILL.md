@@ -1,7 +1,10 @@
 ---
-name: my-pull-requests
+name: github-my-pull-requests
 description: 'List my pull requests in the current repository'
+disable-model-invocation: true
 ---
+
+# Instructions
 
 Search the current repo (using #githubRepo for the repo info) and list any pull requests you find (using #list_pull_requests) that are assigned to me.
 
