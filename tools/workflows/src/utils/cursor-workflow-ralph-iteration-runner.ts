@@ -8,7 +8,7 @@
  * injected prompt string and streaming/timeout behavior.
  */
 
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { runIterationAsync } from '../bin/run-iteration';
 import type { CursorAgentChunk } from '../bin/run-iteration';
 

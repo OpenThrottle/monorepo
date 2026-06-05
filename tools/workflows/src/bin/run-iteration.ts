@@ -12,7 +12,7 @@ import { DEFAULT_RALPH_RUNNER } from '../utils/ralph-execution-backend';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import { appendRalphWorktreeShellFlags } from '../utils/ralph-worktree-cli';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow/dist';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** Chunk from runner stdout or stderr when using async spawn. */
 export interface CursorAgentChunk {
