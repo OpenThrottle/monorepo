@@ -15,7 +15,9 @@
   },
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": [],
+    "implicitDependencies": [
+      "openthrottle-server:start"
+    ],
     "sourceRoot": "./",
     "projectType": "application",
     "tags": [

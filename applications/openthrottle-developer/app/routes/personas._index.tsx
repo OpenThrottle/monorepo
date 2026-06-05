@@ -12,7 +12,7 @@ import type { Route } from '@/app/routes/+types/personas._index';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'PersonasIndex',
+  breadcrumb: (_match) => 'Personas',
   links: (_match) => [],
 };
 
@@ -25,7 +25,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `PersonasIndex | ${SITE_TITLE}` }];
+  return [{ title: `Personas | ${SITE_TITLE}` }];
 };
 
 export default function Component(
@@ -52,11 +52,13 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="PersonasIndex"
+          title="Personas"
         />
         <p className="text-sm text-muted-foreground">
-          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
-          architecto ea?
+          Agentic personas represent the intersection of computational modeling
+          and autonomous AI. The term generally refers to one of two concepts:
+          dynamically simulated users used for product testing, or defined
+          behavioral profiles built for autonomous AI agents.
         </p>
       </div>
     </GlobalScreen>
