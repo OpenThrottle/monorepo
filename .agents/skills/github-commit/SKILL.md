@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to create a good commit message from the current diff.
 
 ## Rules

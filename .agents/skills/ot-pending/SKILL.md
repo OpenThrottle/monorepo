@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to list plans that are in a **pending** state using OpenThrottle (ai-mcp MCP server).
 
 ## Rules

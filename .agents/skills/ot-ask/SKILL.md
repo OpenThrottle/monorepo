@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to answer the user's question using the **OpenThrottle** (ai-mcp) MCP server—the plans knowledge base.
 
 ## Rules

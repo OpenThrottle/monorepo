@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to list what plans and sources are in the OpenThrottle plans knowledge base using the ai-mcp MCP server.
 
 ## Rules

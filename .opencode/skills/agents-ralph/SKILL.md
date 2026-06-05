@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 **Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 ./skills/agents-ralph - v1.0.3 🌟 🤗 🚀".
 
 **Ralph** is a technique: run a loop (read prompt → execute one step → repeat). You tune the prompt and docs when the agent goes wrong ([ghuntley.com/ralph](https://ghuntley.com/ralph)). This prompt defines our single workflow: start with an **idea or PRD**, turn it into a **plan and tasks in OpenThrottle** _(a Postgres Database)_, then **execute one task at a time** (add tasks as the work reveals more work) until every task is done. Progress lives in OpenThrottle (plan, tasks, plan_output_stream); no file-based modes.

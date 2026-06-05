@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to use a reserved worktree to create a new branch and open it in Cursor. This allows you to work on multiple branches simultaneously without switching between them.
 
 ## Reserved Worktrees

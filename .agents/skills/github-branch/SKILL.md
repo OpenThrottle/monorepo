@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to fork a new branch of work using the GitHub CLI.
 
 ## Rules

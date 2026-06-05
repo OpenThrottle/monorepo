@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to support the **"random idea → documented plan"** workflow using Cortex (ai-mcp MCP server). Turn the user's idea or rough notes into a structured plan with optional tasks.
 
 ## Rules

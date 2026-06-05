@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to **edit** an existing task in OpenThrottle using the ai-mcp MCP server.
 
 ## Rules

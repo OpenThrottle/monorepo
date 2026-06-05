@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to take the content you're given and to create GitHub issue(s) around the feature(s) or issue(s) described.
 
 ## Rules

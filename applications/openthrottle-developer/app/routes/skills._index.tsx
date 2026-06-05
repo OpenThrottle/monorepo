@@ -23,8 +23,11 @@ export const loader = async (_args: Route.LoaderArgs) => {
     await import('~/routing/agents/data/discover-repo-skills.server');
   const { getMonorepoRoot } =
     await import('~/routing/agents/data/resolve-monorepo-root.server');
+
   const monorepoRoot = getMonorepoRoot();
   const entries = discoverRepoSkills(monorepoRoot);
+
+  console.log('entries', entries);
 
   return { entries };
 };

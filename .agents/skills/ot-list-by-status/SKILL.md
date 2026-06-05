@@ -4,8 +4,6 @@ description: Instructions
 disable-model-invocation: true
 ---
 
-# Instructions
-
 Your job is to list plans in OpenThrottle filtered by **status** using the ai-mcp MCP server.
 
 ## Rules
