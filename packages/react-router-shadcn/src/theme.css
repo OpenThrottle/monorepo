@@ -10,8 +10,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* --brand: hsl(0, 100%, 50%); */
-  --brand: hsl(208 100% 50%);
+  --brand: hsl(0, 100%, 50%);
   --overlay-background: hsla(0, 0%, 100%, 0.6);
   --tw-ring-color: var(--brand) !important;
 
@@ -208,13 +207,13 @@
   border-radius: var(--radius);
   background-image: conic-gradient(
     from var(--border-angle-1) at 50% 50%,
-    var(--color-background) 0%,
-    var(--color-background) 45%,
-    color-mix(in srgb, var(--accent) 30%, var(--color-background)) 55%,
+    var(--color-sidebar-border) 0%,
+    var(--color-sidebar-border) 45%,
+    color-mix(in srgb, var(--accent) 30%, var(--color-sidebar-border)) 55%,
     var(--accent) 65%,
-    color-mix(in srgb, var(--accent) 50%, var(--color-secondary-foreground)) 72%,
-    color-mix(in srgb, var(--accent) 25%, var(--color-background)) 85%,
-    var(--color-background) 100%
+    color-mix(in srgb, var(--accent) 50%, var(--color-sidebar-border)) 72%,
+    color-mix(in srgb, var(--accent) 25%, var(--color-sidebar-border)) 85%,
+    var(--color-sidebar-border) 100%
   );
   padding: 1px;
   position: relative;
