@@ -4,7 +4,7 @@
   "compilerOptions": {
     "builder": "tsc",
     "deleteOutDir": true,
-    "tsConfigPath": "applications/nestjs-rest-api/tsconfig.app.json",
+    "tsConfigPath": "applications/openthrottle-server/tsconfig.app.json",
     "typeCheck": false,
     "webpack": false
   },
@@ -16,15 +16,15 @@
   },
   "language": "ts",
   "projects": {
-    "nestjs-rest-api": {
+    "openthrottle-server": {
       "compilerOptions": {
-        "tsConfigPath": "applications/nestjs-rest-api/tsconfig.app.json"
+        "tsConfigPath": "applications/openthrottle-server/tsconfig.app.json"
       },
-      "root": "applications/nestjs-rest-api",
-      "sourceRoot": "applications/nestjs-rest-api/src",
+      "root": "applications/openthrottle-server",
+      "sourceRoot": "applications/openthrottle-server/src",
       "type": "application"
     }
   },
   "monorepo": true,
-  "root": "applications/nestjs-rest-api"
+  "root": "applications/openthrottle-server"
 }

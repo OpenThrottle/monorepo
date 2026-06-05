@@ -15,7 +15,6 @@ Ground truth for project names: `nx show projects` and `nx graph` in this reposi
 | **React Router (Remix-style generators)** | Web UI       | `type:application`, `technology:react`, `technology:react-router` | Yes                    |
 | openthrottle                              | React Router | ✓                                                                 | Yes                    |
 | openthrottle-admin                        | React Router | ✓                                                                 | Yes                    |
-| openthrottle-cms                          | React Router | ✓                                                                 | Yes                    |
 | openthrottle-developer                    | React Router | ✓                                                                 | Yes                    |
 | openthrottle-email                        | React Router | ✓                                                                 | Yes                    |
 | openthrottle-website                      | React Router | ✓                                                                 | Yes                    |
@@ -52,7 +51,7 @@ Align with **@tools/generators** generators:
 **Recommendation: sample-first, then expand.**
 
 - **Sample-first**
-  - Pick **2–3 applications** (e.g. **openthrottle-cms**, **openthrottle**, **openthrottle-developer**) and **2–3 packages** (e.g. **@openthrottle/react-router-ui**, **@openthrottle/react-router-shadcn**).
+  - Pick **2–3 applications** (e.g. **openthrottle**, **openthrottle-developer**) and **2–3 packages** (e.g. **@openthrottle/react-router-ui**, **@openthrottle/react-router-shadcn**).
   - Audit for: (1) use of generator templates where applicable, (2) alignment with `.cursor/rules` (naming, default exports, return types, etc.).
   - Produce a short report: gaps, recurring violations, and whether templates were used at creation time.
 - **Full audit**

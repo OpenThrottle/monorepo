@@ -87,12 +87,12 @@ const buildCursorShellCommand = (config: RunIterationConfig): string => {
   const safePrompt = escapeForShellDoubleQuoted(agentPrompt);
   const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
 
-  console.log('__________________________________ START | safePrompt');
-  console.log(safePrompt);
-  console.log(
-    '__________________________________ END | safePrompt',
-    safePrompt,
-  );
+  // console.log('__________________________________ START | safePrompt');
+  // console.log(safePrompt);
+  // console.log(
+  //   '__________________________________ END | safePrompt',
+  //   safePrompt,
+  // );
 
   return appendRalphWorktreeShellFlags(base, 'cursor', {
     skipWorktreeSetup,
@@ -219,7 +219,7 @@ const runShellIterationAsync = (
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning runner', {
-      config, // TODO: remove this
+      // config, // TODO: remove this
       cwd: cwd ?? process.cwd(),
       iteration,
       runnerLabel,

@@ -6,12 +6,13 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { redirect } from 'react-router';
+import { Link, redirect } from 'react-router';
 import { CreatePlanDocument } from '~/__generated__/graphql';
 import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.create';
+import { Button } from '@openthrottle/react-router-shadcn';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -40,6 +41,11 @@ export default function Component(
   // Hooks
 
   // Setup
+  const directory = `/Users/matt/Development/openthrottle`;
+
+  const linkCursor = `cursor://file${directory}`;
+  const linkClaude = `claude://file${directory}`;
+  const linkVSCode = `vscode://file${directory}`;
 
   // Handlers
 
@@ -51,6 +57,18 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <div className="flex gap-4">
+        <Link to={linkCursor}>
+          <Button>Cursor</Button>
+        </Link>
+        <Link to={linkClaude}>
+          <Button>Claude</Button>
+        </Link>
+        <Link to={linkVSCode}>
+          <Button>VSCode</Button>
+        </Link>
+      </div>
+
       <PlanCreateMcpParityShell>
         <PlanForm actionData={actionData} />
       </PlanCreateMcpParityShell>

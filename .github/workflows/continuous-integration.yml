@@ -74,7 +74,7 @@ jobs:
     #   matrix:
     #     jobIndex: [1] # must be in sync with "jobCount"
     #     target: ["lint", "typecheck"] # the test suite is just disabled right now
-    timeout-minutes: 45
+    timeout-minutes: 15
 
     steps:
       - name: '📦 Checkout the code'
@@ -200,6 +200,7 @@ jobs:
             ${{ env.OUTPUT_FILE }}
             static/
           retention-days: 30
+
   # nx-release:
   #   if: ${{ github.actor != 'dependabot[bot]' }}
   #   runs-on: ubuntu-latest

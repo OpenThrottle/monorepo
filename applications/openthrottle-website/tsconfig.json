@@ -17,15 +17,6 @@
       "path": "../../tools/dotfiles"
     },
     {
-      "path": "../../packages/react-router-shadcn"
-    },
-    {
-      "path": "../../packages/nodejs-graphql"
-    },
-    {
-      "path": "../../packages/react-router-graphql"
-    },
-    {
       "path": "../../packages/react-router-ui-global"
     },
     {

@@ -7,6 +7,7 @@ This directory is the **single source of truth** for how we write code in this r
 - **Root:** [`.cursor/rules/`](./)
 - **Coding conventions:** [`.cursor/rules/coding/`](./coding/) — TypeScript/JavaScript style, types, naming, testing hints
 - **Command/context rules:** [`.cursor/rules/commands/`](./commands/) — When to use OpenThrottle (OT), GitHub, agents, etc.
+- **All agent/editor folders:** [docs/monorepo/agent-editor-folders.md](../../docs/monorepo/agent-editor-folders.md) — `.cursor/` vs `.claude/` vs `.agents/`, duplication strategy, where to edit skills and MCP config (this README covers **rules only**).
 
 ## What lives here
 

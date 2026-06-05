@@ -57,12 +57,12 @@ nx g @tools/generators:react \
 nx g @tools/generators:remix --list=applications
 
 # 2. List available folders
-nx g @tools/generators:remix --list=componentFolders --application=openthrottle-cms
+nx g @tools/generators:remix --list=componentFolders --application=openthrottle-developer
 
 # 3. Generate component
 nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=global/components \
   --name=UserProfile
 ```
@@ -72,7 +72,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=form \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserForm
 ```
@@ -82,7 +82,7 @@ nx g @tools/generators:remix \
 ```bash
 nx g @tools/generators:remix \
   --subGenerator=route \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --name=api.users
 ```
 
@@ -149,7 +149,7 @@ nx g @tools/generators:package \
 
 ```bash
 nx g @tools/generators:folders \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing \
   --name=users
 ```
@@ -158,7 +158,7 @@ nx g @tools/generators:folders \
 
 ```bash
 nx g @tools/generators:folders \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=services \
   --name=email-service
 ```
@@ -182,34 +182,34 @@ Here's a complete workflow for creating a new feature:
 ```bash
 # 1. Create routing folder structure
 nx g @tools/generators:folders \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing \
   --name=users
 
 # 2. Create a route
 nx g @tools/generators:remix \
   --subGenerator=route \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --name=users
 
 # 3. Create components
 nx g @tools/generators:remix \
   --subGenerator=component \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserList,UserCard
 
 # 4. Create a form
 nx g @tools/generators:remix \
   --subGenerator=form \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserForm
 
 # 5. Create a table
 nx g @tools/generators:remix \
   --subGenerator=table \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UsersTable
 ```

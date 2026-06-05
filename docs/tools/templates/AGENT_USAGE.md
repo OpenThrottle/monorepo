@@ -73,7 +73,7 @@ Discover available values for dynamic options:
 ```bash
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react --list=destinations
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=applications
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-cms
+NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 ```
 
 ### 4. Create New Code — Always With Generators
@@ -89,7 +89,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
 # React Router app component example
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
   --subGenerator=component \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=global/components \
   --name=UserProfile
 # NestJS GraphQL service
