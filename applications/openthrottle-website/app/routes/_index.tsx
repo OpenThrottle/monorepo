@@ -34,15 +34,17 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <>
+    <main className="flex flex-1 flex-col">
       <div className="max-w-7xl mx-auto flex flex-col gap-4 md:gap-8 lg:gap-24 p-4 md:p-8 lg:p-12">
         <div className="mx-auto my-40">
           <OpenThrottleProductGetStarted />
         </div>
         <OpenThrottleProductFeatures features={FEATURES} />
       </div>
-      <GlobalFooter />
-    </>
+      <div className="mt-40">
+        <GlobalFooter />
+      </div>
+    </main>
   );
 }
 

@@ -15,8 +15,9 @@ import {
   OPEN_THROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
 import { SITE_TITLE } from '#/app/global/config/settings';
-import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import type { Route } from '@/app/+types/root';
 
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];
@@ -123,7 +124,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
-        {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
+        {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />
 
         {/* Now we add our scripts as they may use the env */}
@@ -147,4 +148,4 @@ export default function App(): React.ReactElement {
 /**
  * @link https://reactrouter.com/how-to/error-boundary
  */
-// export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = GlobalErrorBoundary;

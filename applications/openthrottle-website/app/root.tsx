@@ -13,6 +13,7 @@ import {
   artwork,
   OPEN_THROTTLE_BUCKET,
 } from '@openthrottle/react-router-utils';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
@@ -103,15 +104,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="min-h-screen flex flex-col">
-        {/* <GlobalHeader /> */}
-        <main className="flex flex-1 flex-col">{children}</main>
-        {/* <GlobalFooter /> */}
+        {children}
 
         <ScrollRestoration />
+
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
-        {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
+        {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />
 
         {/* Now we add our scripts as they may use the env */}
@@ -135,4 +135,4 @@ export default function App(): React.ReactElement {
 /**
  * @link https://reactrouter.com/how-to/error-boundary
  */
-// export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = GlobalErrorBoundary;

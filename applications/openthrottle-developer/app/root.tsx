@@ -322,7 +322,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Toaster />
         <ScrollRestoration />
 
-        {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
+        {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />
 
         {/* Now we add our scripts as they may use the env */}
