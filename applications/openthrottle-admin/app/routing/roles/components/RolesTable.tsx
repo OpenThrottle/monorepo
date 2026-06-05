@@ -29,7 +29,7 @@ export const RolesTable = (props: RolesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('bg-card border ui-border rounded-lg', className)}
       data-testid="RolesTable"
     >
       <DataTable<RoleRowFragment, string | number | null | undefined>
