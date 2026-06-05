@@ -219,7 +219,7 @@ const runShellIterationAsync = (
 
   return new Promise((resolve, reject) => {
     ralphDebugLogger.debug('runIterationAsync: spawning runner', {
-      config, // TODO: remove this
+      // config, // TODO: remove this
       cwd: cwd ?? process.cwd(),
       iteration,
       runnerLabel,
