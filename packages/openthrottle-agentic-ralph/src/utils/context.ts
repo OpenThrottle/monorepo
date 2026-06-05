@@ -1,8 +1,13 @@
 /**
- * @description Builds {@link WorkflowContext} from GraphQL
+ * Builds {@link WorkflowContext} from GraphQL
  * `RalphPlanRunTuningInput` (enqueue / job tuning). Keeps Ralph argv-equivalent defaults aligned
  * with the workflow flow-context contract (`contract/flow-context`).
+ *
+ * **Precedence:** enqueue / GraphQL tuning (highest) → env → `.workflow-ralph.json` → built-ins.
+ * Queue orchestrators merge file + env via {@link mergePlanRunTuningWithWorkflowRalphConfig}
+ * in `@tools/workflows` before calling {@link resolveWorkflowRunOptions}.
  */
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type { WorkflowContext } from '../types.js';
 import {
@@ -10,18 +15,23 @@ import {
   DEFAULT_MODEL,
   DEFAULT_PROMPT,
   DEFAULT_RUNNER,
-  type WorkflowRunner,
 } from '../config/index.js';
 
-/** @description Known backend ids; aligned with tools/workflows / GraphQL. */
-const WORKFLOW_RUNNER_IDS = ['claude', 'cursor'] as const;
+/**
+ * Known backend ids; aligned with tools/workflows / GraphQL.
+ */
+const WORKFLOW_RUNNER_IDS: WorkflowConfigRunner[] = [
+  'claude',
+  'cursor',
+  'opencode',
+];
 
 /**
- * @description Maps GraphQL / queue job backend strings to {@link WorkflowRunner}.
+ * Maps GraphQL / queue job backend strings to {@link WorkflowConfigRunner}.
  */
 const resolveExecutionBackend = (
   raw: string | null | undefined,
-): WorkflowRunner => {
+): WorkflowConfigRunner => {
   if (raw == null || raw === '') {
     return DEFAULT_RUNNER;
   }
@@ -29,7 +39,7 @@ const resolveExecutionBackend = (
   const n = raw.trim().toLowerCase();
 
   if ((WORKFLOW_RUNNER_IDS as readonly string[]).includes(n)) {
-    return n as unknown as WorkflowRunner;
+    return n as unknown as WorkflowConfigRunner;
   }
 
   return DEFAULT_RUNNER;
@@ -102,7 +112,7 @@ const resolveProject = (raw: string | null | undefined): string => {
 };
 
 /**
- * @description Merges optional `ralph` / nested tuning (GraphQL {@link RalphPlanRunTuningInput} or
+ * Merges optional `ralph` / nested tuning (GraphQL {@link RalphPlanRunTuningInput} or
  * worker job tuning with the same field names) with defaults so the result matches
  * {@link WorkflowContext}. Ignores `promptFile` — layer-1 argv only; not on {@link WorkflowContext}.
  */
@@ -146,7 +156,7 @@ export function resolveWorkflowRunOptions(params: {
 }
 
 /**
- * @description Builds {@link WorkflowContext} from a full {@link WorkflowContext}
+ * Builds {@link WorkflowContext} from a full {@link WorkflowContext}
  * (e.g. developer UI / argv preview). Applies task `iterations === 1` rule; keeps
  * {@link WorkflowContext.iterations} as the user-facing value.
  */
@@ -164,7 +174,7 @@ export function buildRalphFlowContextFromRunOptionsShape(
 }
 
 /**
- * @description Resolves {@link WorkflowContext} from enqueue / job tuning plus plan scope.
+ * Resolves {@link WorkflowContext} from enqueue / job tuning plus plan scope.
  * Queued runs: pass `mode: 'plan'` and omit `taskId` so context matches BullMQ plan-scoped argv
  * (see `openthrottle-ralph-parity.ts` queue vs CLI notes).
  */

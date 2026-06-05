@@ -4,6 +4,7 @@
 
 import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { getDefaultPlanRunConfigStorage } from './plan-run-config';
 import type { Plan } from './plan.entity';
 
 // /** Column-only shape for building plan test data (no relations). */
@@ -41,6 +42,7 @@ export const plansFactory = Factory.define<Plan>(() => ({
   project: null,
   projectId: null,
   projectRelation: null,
+  runConfig: getDefaultPlanRunConfigStorage(),
   status: faker.helpers.arrayElement(['PENDING', 'IN_PROGRESS', 'COMPLETED']),
   summary: null,
   tasks: [],

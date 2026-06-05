@@ -57,6 +57,4 @@ Do not remove or change types on existing GraphQL fields without a migration pla
 - **Object fields:** `@Field(() => String, { deprecationReason: 'Use newField instead.' })`
 - **Queries / mutations:** `@Query(() => String, { deprecationReason: '...' })` (same for `@Mutation`, `@ResolveField`, `@Args`)
 
-**Example in this repo:** `ServerHealthObject.apiStatus` is deprecated in favor of `api` (see `server-health.object.ts` and the generated `@deprecated` directive in `schema.gql`).
-
 See [CONTRIBUTING.md](../../../CONTRIBUTING.md#graphql-schema-and-codegen) and the PR template **GraphQL schema** checklist.

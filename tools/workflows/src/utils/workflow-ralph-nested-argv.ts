@@ -4,8 +4,10 @@
  * env and `.workflow-ralph.json` in the child cwd still apply (CLI > env > file > built-ins).
  */
 
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
-import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
+import type {
+  WorkflowConfigDebug,
+  WorkflowConfigRunner,
+} from '@openthrottle/openthrottle-agentic-workflow';
 import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
@@ -16,22 +18,17 @@ import {
 } from './ralph-worktree-cli';
 
 /**
- * @description Maps to `--debug` / `--verbose` / omit (env-only); matches `workflow-ralph` CLI.
- */
-export type RalphNestedDebugCli = 'omit' | 'debug' | 'verbose';
-
-/**
  * @description Layer 1 (prompt profile), layer 2 (backend), and layer 3 (run tuning) for nested `pnpm exec workflow-ralph`.
  * All fields optional; omitted fields do not produce argv (defaults resolved in the child process).
  */
 export interface RalphNestedRunTuningInput {
   /**
-   * Execution backend id ({@link RalphExecutionBackendId}: `cursor` or `claude`). Selection applies
+   * Execution backend id ({@link WorkflowConfigRunner}: `cursor` or `claude`). Selection applies
    * to the **entire** nested run; not switched per iteration. Omit (or pass the default) to let the
    * child resolve from env / `.workflow-ralph.json`.
    */
-  readonly backend?: RalphExecutionBackendId | null;
-  readonly debug?: RalphNestedDebugCli;
+  readonly backend?: WorkflowConfigRunner | null;
+  readonly debug?: WorkflowConfigDebug;
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
   readonly model?: string;
@@ -61,7 +58,7 @@ export const buildWorkflowRalphRunTuningArgv = (
   if (
     input.backend !== undefined &&
     input.backend !== null &&
-    input.backend !== DEFAULT_RALPH_RUNNER
+    input.backend !== 'cursor'
   ) {
     ralphArgs.push('--backend', input.backend);
   }
@@ -139,12 +136,17 @@ export const buildWorkflowRalphRunTuningArgv = (
  */
 export const mergeRalphNestedRunTuningWithExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-  executionBackend: RalphExecutionBackendId | undefined,
+  executionBackend: WorkflowConfigRunner | undefined,
 ): RalphNestedRunTuningInput => {
   const base = ralph ?? {};
-  const backend =
-    base.backend != null
-      ? base.backend
-      : (executionBackend ?? DEFAULT_RALPH_RUNNER);
-  return { ...base, backend };
+
+  const hasBackend = base.backend != null;
+  const backend = hasBackend ? base.backend : (executionBackend ?? 'cursor');
+  const debug = base.debug;
+
+  return {
+    ...base,
+    backend,
+    ...(debug !== undefined ? { debug } : {}),
+  };
 };

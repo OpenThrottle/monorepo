@@ -11,6 +11,7 @@ const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
 
 const mockConfig: WorkflowRalphConfig = {
   connectionString: 'postgres://localhost/cortex',
+  transport: 'postgres-direct',
 };
 
 const mockPlan: PlanRow = {
@@ -39,10 +40,12 @@ const mockTask: TaskRow = {
 
 const mockTasks: TaskRow[] = [mockTask];
 
-const { updateTaskStatusMock, runIterationMock } = vi.hoisted(() => ({
-  runIterationMock: vi.fn().mockReturnValue('agent output'),
-  updateTaskStatusMock: vi.fn().mockResolvedValue({}),
-}));
+const { updateTaskStatusMock, runIterationMock, getNxProjectNamesMock } =
+  vi.hoisted(() => ({
+    getNxProjectNamesMock: vi.fn().mockResolvedValue([]),
+    runIterationMock: vi.fn().mockReturnValue('agent output'),
+    updateTaskStatusMock: vi.fn().mockResolvedValue({}),
+  }));
 
 vi.mock('../../utils/cortex-ralph', async (importOriginal) => {
   const actual =
@@ -53,6 +56,7 @@ vi.mock('../../utils/cortex-ralph', async (importOriginal) => {
     getCortexConfigOrExit: vi.fn(() => mockConfig),
     getPlanById: vi.fn().mockResolvedValue(mockPlan),
     getTasksByPlanId: vi.fn().mockResolvedValue(mockTasks),
+    promotePlanToInProgressIfNeeded: vi.fn().mockResolvedValue(true),
     updatePlanStatus: vi.fn().mockResolvedValue(undefined),
     updateTaskStatus: updateTaskStatusMock,
   };
@@ -79,7 +83,7 @@ vi.mock('../../utils/parsers', async (importOriginal) => {
 });
 
 vi.mock('../../utils/projects', () => ({
-  getNxProjectNames: vi.fn().mockResolvedValue([]),
+  getNxProjectNames: (...args: unknown[]) => getNxProjectNamesMock(...args),
 }));
 
 vi.mock('../run-iteration', () => ({
@@ -105,8 +109,8 @@ describe('Ralph main (max-iterations cleanup)', () => {
     exitSpy.mockRestore();
   });
 
-  it('calls updateTaskStatus with PENDING for current task when max iterations reached and task was not completed', async () => {
-    const { main } = await import('../ralph');
+  it('calls updateTaskStatus with PENDING for current task when msax iterations reached and task was not completed', async () => {
+    const { main } = await import('../ralph.js');
 
     await main();
 
@@ -122,7 +126,7 @@ describe('Ralph main (max-iterations cleanup)', () => {
     runIterationMock.mockReturnValue(
       `<ralph:task-complete>${TASK_ID}</ralph:task-complete>`,
     );
-    const { main } = await import('../ralph');
+    const { main } = await import('../ralph.js');
 
     await main();
 
@@ -130,6 +134,120 @@ describe('Ralph main (max-iterations cleanup)', () => {
       (value: unknown[]) => value.length === 3 && value[2] === 'PENDING',
     );
     expect(pendingCalls.length).toBe(0);
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});
+
+describe('Ralph main (Cortex before NX project graph)', () => {
+  const originalStdinIsTTY = process.stdin.isTTY;
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation((() => {}) as typeof process.exit);
+    getNxProjectNamesMock.mockClear();
+    getNxProjectNamesMock.mockResolvedValue(['my-app']);
+    process.stdin.isTTY = true;
+  });
+
+  afterEach(() => {
+    process.stdin.isTTY = originalStdinIsTTY;
+    exitSpy.mockRestore();
+    vi.resetModules();
+  });
+
+  it('resolves Cortex config before NX project validation when --project is set', async () => {
+    const callOrder: string[] = [];
+    const cortexRalph = await import('../../utils/cortex-ralph.js');
+    const parsers = await import('../../utils/parsers.js');
+
+    vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
+      callOrder.push('cortex');
+      return mockConfig;
+    });
+    vi.mocked(parsers.parseRalphArgs).mockReturnValue({
+      backend: 'cursor',
+      iterationTimeoutMs: undefined,
+      iterations: 1,
+      model: 'auto',
+      plan: PLAN_ID,
+      project: 'my-app',
+      prompt: '/agents/ralph',
+      promptProfileKind: 'named',
+      promptProfileLabel: '/agents/ralph',
+      ralphDebugLevel: 'off',
+      skipWorktreeSetup: undefined,
+      task: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
+    });
+    getNxProjectNamesMock.mockImplementation(async () => {
+      callOrder.push('nx');
+      return ['my-app'];
+    });
+
+    const { main } = await import('../ralph.js');
+    await main();
+
+    expect(callOrder).toEqual(['cortex', 'nx']);
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});
+
+describe('Ralph main (Cortex before NX project graph)', () => {
+  const originalStdinIsTTY = process.stdin.isTTY;
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation((() => {}) as typeof process.exit);
+    getNxProjectNamesMock.mockClear();
+    getNxProjectNamesMock.mockResolvedValue(['my-app']);
+    process.stdin.isTTY = true;
+  });
+
+  afterEach(() => {
+    process.stdin.isTTY = originalStdinIsTTY;
+    exitSpy.mockRestore();
+    vi.resetModules();
+  });
+
+  it('resolves Cortex config before NX project validation when --project is set', async () => {
+    const callOrder: string[] = [];
+    const cortexRalph = await import('../../utils/cortex-ralph.js');
+    const parsers = await import('../../utils/parsers.js');
+
+    vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
+      callOrder.push('cortex');
+      return mockConfig;
+    });
+    vi.mocked(parsers.parseRalphArgs).mockReturnValue({
+      backend: 'cursor',
+      iterationTimeoutMs: undefined,
+      iterations: 1,
+      model: 'auto',
+      plan: PLAN_ID,
+      project: 'my-app',
+      prompt: '/agents/ralph',
+      promptProfileKind: 'named',
+      promptProfileLabel: '/agents/ralph',
+      ralphDebugLevel: 'off',
+      skipWorktreeSetup: undefined,
+      task: undefined,
+      worktree: undefined,
+      worktreeBase: undefined,
+    });
+    getNxProjectNamesMock.mockImplementation(async () => {
+      callOrder.push('nx');
+      return ['my-app'];
+    });
+
+    const { main } = await import('../ralph.js');
+    await main();
+
+    expect(callOrder).toEqual(['cortex', 'nx']);
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });

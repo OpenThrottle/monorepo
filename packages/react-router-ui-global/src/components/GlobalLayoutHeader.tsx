@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import { Form, Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
@@ -175,6 +175,14 @@ export const GlobalLayoutHeader = (
       ) : null}
 
       <NotificationBell />
+
+      <Form action="/" className="flex items-center gap-2" method="post">
+        <input name="intent" type="hidden" value="logout" />
+        <button className="p-0 text-foreground" type="submit">
+          <SignOutIcon className="size-5" />
+          <span className="sr-only">Sign out</span>
+        </button>
+      </Form>
     </nav>
   );
 };

@@ -42,9 +42,9 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     expect(
       buildWorkflowRalphRunTuningArgv({
         prompt: '/agents/ignored',
-        promptFile: '.cursor/commands/agents/ralph.md',
+        promptFile: '.cursor/skills/agents-ralph/SKILL.md',
       }),
-    ).toEqual(['--prompt-file', '.cursor/commands/agents/ralph.md']);
+    ).toEqual(['--prompt-file', '.cursor/skills/agents-ralph/SKILL.md']);
   });
 
   it('includes --debug and --verbose when set', () => {
@@ -54,6 +54,15 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     expect(buildWorkflowRalphRunTuningArgv({ debug: 'verbose' })).toEqual([
       '--verbose',
     ]);
+  });
+
+  it('normalizes legacy uppercase DEBUG and VERBOSE debug values', () => {
+    expect(
+      buildWorkflowRalphRunTuningArgv({ debug: 'DEBUG' as 'debug' }),
+    ).toEqual(['--debug']);
+    expect(
+      buildWorkflowRalphRunTuningArgv({ debug: 'VERBOSE' as 'verbose' }),
+    ).toEqual(['--verbose']);
   });
 
   it('includes --worktree argv when set', () => {
@@ -112,5 +121,22 @@ describe('mergeRalphNestedRunTuningWithExecutionBackend', () => {
     ).toEqual({
       backend: 'cursor',
     });
+  });
+
+  it('normalizes legacy uppercase debug on merge', () => {
+    expect(
+      mergeRalphNestedRunTuningWithExecutionBackend(
+        { debug: 'VERBOSE' as 'verbose' },
+        'cursor',
+      ),
+    ).toEqual({ backend: 'cursor', debug: 'verbose' });
+    expect(
+      buildWorkflowRalphRunTuningArgv(
+        mergeRalphNestedRunTuningWithExecutionBackend(
+          { debug: 'DEBUG' as 'debug' },
+          'cursor',
+        ),
+      ),
+    ).toEqual(['--debug']);
   });
 });

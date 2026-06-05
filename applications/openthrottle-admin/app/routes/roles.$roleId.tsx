@@ -29,10 +29,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher } from 'react-router';
+import { useFetcher } from 'react-router';
 import { formatDate } from 'date-fns';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import {
   AddPermissionToRoleDocument,
   DeleteRoleDocument,
@@ -42,6 +46,7 @@ import {
   UpdateRoleDocument,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { ShieldCheckIcon } from 'lucide-react';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
 
@@ -104,6 +109,18 @@ function AddPermissionSelectForm(
   );
 }
 
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => _match.loaderData?.role?.name ?? 'Role Details',
+  links: (_match) => [
+    {
+      children: 'Roles',
+      to: '/roles',
+    },
+  ],
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const { request, params } = args;
   const roleId = params.roleId;
@@ -132,6 +149,10 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     throw error;
   }
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta = ({ data }: Route.MetaArgs) => {
@@ -189,15 +210,18 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <p className="text-sm text-muted-foreground">
-        <Link
-          className="underline underline-offset-2 hover:text-primary"
-          to="/roles"
-          viewTransition={true}
-        >
-          ← Back to roles
-        </Link>
-      </p>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ShieldCheckIcon}
+          title="Role Details"
+        />
+        <p className="text-muted-foreground text-sm">
+          View and manage role details.
+        </p>
+      </div>
+
       <Card data-testid="role-detail">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">{role.name}</CardTitle>

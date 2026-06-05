@@ -181,6 +181,11 @@ type PlanObject {
 
   """Job-run lifecycle hooks stored on the plan ({ hooks: [...] })."""
   jobRunHooksJson: String!
+
+  """
+  Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).
+  """
+  runConfigJson: String!
 }
 
 type PlanStatusCountObject {
@@ -198,6 +203,11 @@ type PlanRunObject {
   id: String!
   planId: String!
   queueName: String!
+
+  """
+  Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
+  """
+  runConfigSnapshotJson: String
 
   """Ralph run implementation: spawn or orchestrator."""
   runKind: String!
@@ -231,7 +241,7 @@ type EnqueuePlanRunResultObject {
 
 type CancelPlanRunResultObject {
   """
-  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan.
+  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan.
   """
   activeJobIdsCouldNotCancel: [String!]!
 
@@ -380,6 +390,23 @@ type LastActivityResultObject {
   taskUpdate: LastActivityTaskUpdatePartObject
 }
 
+type EnqueueAgenticWorkflowMockResultObject {
+  """Whether the job was enqueued."""
+  success: Boolean!
+
+  """BullMQ job id when success is true."""
+  jobId: String
+
+  """BullMQ job name when success is true."""
+  jobName: String
+
+  """BullMQ queue name when success is true."""
+  queueName: String
+
+  """Error message when success is false."""
+  error: String
+}
+
 type AgentsChatTurnResult {
   """
   Assistant-visible reply text. Null when the turn failed (see errorMessage).
@@ -466,42 +493,6 @@ type CommitLinkObject {
   taskId: String
 }
 
-type PreviewCortexDocumentIngestResultObject {
-  """True when the document parsed successfully."""
-  success: Boolean!
-
-  """Parse error code when success is false."""
-  errorCode: String
-
-  """Human-readable error when success is false."""
-  errorMessage: String
-
-  """Detected upload format when parsing ran (e.g. markdown)."""
-  detectedFormat: String
-
-  """Suggested plan title from the document structure."""
-  planTitleSuggested: String
-
-  """JSON array of proposed tasks: { title, description, requirements[] }."""
-  proposedTasksJson: String
-}
-
-type CommitCortexDocumentIngestResultObject {
-  """True when the plan and all tasks were created."""
-  success: Boolean!
-
-  """
-  Error message when success is false (parse failure or rollback after partial task create).
-  """
-  error: String
-
-  """Created plan when success is true."""
-  plan: PlanObject
-
-  """Created tasks when success is true."""
-  tasks: [TaskObject!]!
-}
-
 """A custom prompt document for AI workflow customization"""
 type CustomPromptObject {
   id: String!
@@ -582,9 +573,6 @@ type ServerHealthObject {
   """API status. "ok" when the resolver runs."""
   api: String!
 
-  """Deprecated alias for api. Kept for backwards compatibility."""
-  apiStatus: String! @deprecated(reason: "Use api instead. Example field demonstrating the GraphQL deprecation policy.")
-
   """
   OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
   """
@@ -638,6 +626,17 @@ type DuplicateJobResultObject {
   success: Boolean!
 
   """New job id when success is true."""
+  jobId: String
+
+  """Error message when success is false."""
+  error: String
+}
+
+type EnqueueAgenticTestResultObject {
+  """Whether the job was enqueued."""
+  success: Boolean!
+
+  """BullMQ job id when success is true."""
   jobId: String
 
   """Error message when success is false."""
@@ -856,9 +855,6 @@ type TaskRunMetrics {
 }
 
 type JobObject {
-  """BullMQ job id."""
-  id: String!
-
   """JSON string of job data (e.g. { planId } for run-plan)."""
   data: String
 
@@ -867,28 +863,28 @@ type JobObject {
   """
   executionBackend: String
 
+  """Error message if the job failed."""
+  failedReason: String
+
+  """Unix timestamp when the job finished."""
+  finishedOn: Float
+
+  """BullMQ job id."""
+  id: String!
+
   """
   Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.
   """
   name: String
 
-  """Unix timestamp when the job was created."""
-  timestamp: Float
+  """Job progress (0-100 or custom)."""
+  progress: Int
 
   """Unix timestamp when the job started processing."""
   processedOn: Float
 
-  """Unix timestamp when the job finished."""
-  finishedOn: Float
-
-  """Error message if the job failed."""
-  failedReason: String
-
   """Return value from the processor (if completed)."""
   returnvalue: String
-
-  """Job progress (0-100 or custom)."""
-  progress: Int
 
   """Job state: waiting, active, completed, failed, delayed."""
   state: String!
@@ -897,6 +893,9 @@ type JobObject {
   Task-run metrics (process memory/CPU at start and end). Present only for plans-queue jobs that completed with metrics.
   """
   taskRunMetrics: TaskRunMetrics
+
+  """Unix timestamp when the job was created."""
+  timestamp: Float
 }
 
 type QueueStatsObject {
@@ -1495,6 +1494,26 @@ type Query {
   """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
 
+  """List all roles with their permissions"""
+  roles: [RoleObject!]!
+
+  """Get a role by ID"""
+  role(id: ID!): RoleObject
+
+  """List all permissions"""
+  permissions: [PermissionObject!]!
+
+  """Get roles assigned to a user"""
+  rolesForUser(userId: ID!): [RoleObject!]!
+
+  """
+  Get permission names for a user (union of all their roles' permissions)
+  """
+  permissionsForUser(userId: ID!): [String!]!
+
+  """Get permission names for the current user"""
+  myPermissions: [String!]!
+
   """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!
 
@@ -1910,6 +1929,11 @@ type Mutation {
   triggerDevJsonlLogSample: Boolean!
 
   """
+  Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error.
+  """
+  enqueueAgenticWorkflowMock: EnqueueAgenticWorkflowMockResultObject!
+
+  """
   Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
   """
   agentsRunChatTurn(input: AgentsRunChatTurnInput!): AgentsChatTurnResult!
@@ -1931,16 +1955,6 @@ type Mutation {
   Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA.
   """
   linkCommit(input: LinkCommitInput!): CommitLinkObject!
-
-  """
-  Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting.
-  """
-  previewCortexDocumentIngest(input: PreviewCortexDocumentIngestInput!): PreviewCortexDocumentIngestResultObject!
-
-  """
-  Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails.
-  """
-  commitCortexDocumentIngest(input: CommitCortexDocumentIngestInput!): CommitCortexDocumentIngestResultObject!
 
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
@@ -1969,6 +1983,11 @@ type Mutation {
   Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error.
   """
   retryJob(input: RetryJobInput!): RetryJobResultObject!
+
+  """
+  Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error.
+  """
+  enqueueAgenticTest: EnqueueAgenticTestResultObject!
 
   """
   Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error.
@@ -2041,6 +2060,27 @@ type Mutation {
   Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL).
   """
   deleteProject(input: DeleteProjectInput!): Boolean!
+
+  """Create a role"""
+  createRole(input: CreateRoleInput!): RoleObject!
+
+  """Update a role"""
+  updateRole(input: UpdateRoleInput!): RoleObject
+
+  """Delete a role"""
+  deleteRole(id: ID!): Boolean!
+
+  """Assign a role to a user"""
+  assignRoleToUser(input: AssignRoleToUserInput!): Boolean!
+
+  """Remove a role from a user"""
+  removeRoleFromUser(input: RemoveRoleFromUserInput!): Boolean!
+
+  """Add a permission to a role"""
+  addPermissionToRole(input: AddPermissionToRoleInput!): Boolean!
+
+  """Remove a permission from a role"""
+  removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
 
   """Create a service account (admin, human only)."""
   createServiceAccount(input: CreateServiceAccountInput!): ServiceAccountObject!
@@ -2160,49 +2200,6 @@ input LinkCommitInput {
   message: String
 }
 
-input PreviewCortexDocumentIngestInput {
-  """File bytes encoded as standard base64 (no data: URL prefix)."""
-  fileBase64: String!
-
-  """MIME type from the upload when known (e.g. text/markdown)."""
-  mimeType: String
-
-  """Original filename for format detection fallback."""
-  originalFilename: String
-}
-
-input CommitCortexDocumentIngestInput {
-  """File bytes encoded as standard base64 (no data: URL prefix)."""
-  fileBase64: String!
-
-  """MIME type from the upload when known (e.g. text/markdown)."""
-  mimeType: String
-
-  """Original filename for format detection fallback."""
-  originalFilename: String
-
-  """
-  Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used.
-  """
-  plan: CreatePlanInput!
-}
-
-input CreatePlanInput {
-  assignee: String
-  author: String!
-  category: String!
-  description: String
-  project: String
-
-  """
-  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
-  """
-  projectId: ID
-  status: String
-  summary: String
-  title: String!
-}
-
 """Input for creating a new custom prompt"""
 input CreateCustomPromptInput {
   title: String!
@@ -2313,6 +2310,27 @@ input AppendPlanOutputInput {
   planId: ID!
 }
 
+input CreatePlanInput {
+  assignee: String
+  author: String!
+  category: String!
+  description: String
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
+  """
+  projectId: ID
+  status: String
+  summary: String
+  title: String!
+
+  """
+  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults.
+  """
+  runConfigJson: String
+}
+
 input UpdatePlanInput {
   assignee: String
   author: String
@@ -2335,6 +2353,11 @@ input UpdatePlanInput {
   JSON string of job-run lifecycle hooks ({ hooks: [...] }). Pass null to clear; omit to leave unchanged.
   """
   jobRunHooksJson: String
+
+  """
+  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.
+  """
+  runConfigJson: String
 }
 
 input SetPlanStatusInput {
@@ -2393,7 +2416,7 @@ input RalphPlanRunTuningInput {
   """Nx project name for workflow-ralph --project."""
   project: String
 
-  """Prompt profile path (e.g. /agents/ralph) for --prompt."""
+  """Prompt profile path (e.g. /agents-ralph) for --prompt."""
   prompt: String
 
   """
@@ -2432,7 +2455,7 @@ input EnqueuePlanRalphOrchestratorInput {
   idempotencyKey: String
 
   """
-  Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric).
+  Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric).
   """
   mode: PlanRalphWorkflowMode
 
@@ -2462,7 +2485,7 @@ input EnqueuePlanRalphOrchestratorInput {
 }
 
 """
-Plan-scoped run (default) or task-centric run (`task` requires taskId).
+Plan-scoped run (default) or task-centric run ("task" requires taskId).
 """
 enum PlanRalphWorkflowMode {
   plan
@@ -2496,6 +2519,55 @@ input UpdateProjectInput {
 input DeleteProjectInput {
   """Project id to delete"""
   id: ID!
+}
+
+input CreateRoleInput {
+  description: String
+
+  """Role name (e.g. admin, user, viewer). Must be unique."""
+  name: String!
+}
+
+input UpdateRoleInput {
+  description: String
+
+  """Role id to update"""
+  id: ID!
+
+  """Role name. Pass null to leave unchanged."""
+  name: String
+}
+
+input AssignRoleToUserInput {
+  """Role id to assign"""
+  roleId: ID!
+
+  """User id to assign the role to"""
+  userId: ID!
+}
+
+input RemoveRoleFromUserInput {
+  """Role id to remove"""
+  roleId: ID!
+
+  """User id to remove the role from"""
+  userId: ID!
+}
+
+input AddPermissionToRoleInput {
+  """Permission id to add"""
+  permissionId: ID!
+
+  """Role id to add the permission to"""
+  roleId: ID!
+}
+
+input RemovePermissionFromRoleInput {
+  """Permission id to remove"""
+  permissionId: ID!
+
+  """Role id to remove the permission from"""
+  roleId: ID!
 }
 
 input CreateServiceAccountInput {

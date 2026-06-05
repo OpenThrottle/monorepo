@@ -11,6 +11,8 @@ import type {
   JobRunHookPhase,
   JobRunHookRunKind,
   JobRunHooksConfig,
+  JobRunHookTaskContext,
+  JobRunHookTaskOutcome,
 } from '../types/job-run-lifecycle-hooks';
 import {
   formatJobRunHookEntryLabel,
@@ -57,6 +59,8 @@ export interface ExecuteJobRunHooksPhaseParams {
   readonly planId: string;
   readonly runKind: JobRunHookRunKind;
   readonly signal?: AbortSignal;
+  readonly task?: JobRunHookTaskContext;
+  readonly taskOutcome?: JobRunHookTaskOutcome;
 }
 
 export interface JobRunHookPhaseEntryResult {
@@ -68,7 +72,7 @@ export interface JobRunHookPhaseEntryResult {
 }
 
 export interface ExecuteJobRunHooksPhaseResult {
-  /** When true, a `before_run` hook with `on_failure: block` failed; skip the main run. */
+  /** When true, a blocking hook failed; meaning depends on phase (plan vs task scope). */
   readonly blocked: boolean;
   readonly results: readonly JobRunHookPhaseEntryResult[];
 }
@@ -130,13 +134,30 @@ export const buildJobRunHookAgentPrompt = (params: {
   readonly layer1Text: string;
   readonly planContextBlock: string;
   readonly planId: string;
+  readonly task?: JobRunHookTaskContext;
+  readonly taskOutcome?: JobRunHookTaskOutcome;
 }): string => {
-  const { entry, layer1Suffix, layer1Text, planContextBlock, planId } = params;
-  const phaseLabel = entry.phase === 'before_run' ? 'before_run' : 'after_run';
+  const {
+    entry,
+    layer1Suffix,
+    layer1Text,
+    planContextBlock,
+    planId,
+    task,
+    taskOutcome,
+  } = params;
+  const phaseLabel = entry.phase;
+
+  const taskBlock =
+    task !== undefined
+      ? `\n\nTask context:\n- id: ${task.id}\n- title: ${task.title}\n- status: ${task.status}${
+          task.category !== undefined ? `\n- category: ${task.category}` : ''
+        }${taskOutcome !== undefined ? `\n- outcome: ${taskOutcome}` : ''}\n`
+      : '';
 
   return (
     `${layer1Text}\n\n` +
-    `${planContextBlock}\n\n` +
+    `${planContextBlock}${taskBlock}\n\n` +
     `Plan-Id: ${planId}. ` +
     `This is a job-run lifecycle hook (${phaseLabel}). ${layer1Suffix}`
   );
@@ -164,7 +185,10 @@ const applyHookFailurePolicy = (
     return { blocked: false, continuePhase: true };
   }
 
-  if (phase === 'before_run' && onFailure === 'block') {
+  if (
+    (phase === 'beforeAll' || phase === 'beforeEach') &&
+    onFailure === 'block'
+  ) {
     return { blocked: true, continuePhase: false };
   }
 
@@ -188,6 +212,10 @@ export const executeJobRunHooksPhase = async (
     mainRunSucceeded: params.mainRunSucceeded ?? false,
     phase: params.phase,
     runKind: params.runKind,
+    ...(params.task !== undefined ? { task: params.task } : {}),
+    ...(params.taskOutcome !== undefined
+      ? { taskOutcome: params.taskOutcome }
+      : {}),
   };
 
   const results: JobRunHookPhaseEntryResult[] = [];
@@ -215,6 +243,8 @@ export const executeJobRunHooksPhase = async (
       layer1Text,
       planContextBlock: params.planContextBlock,
       planId: params.planId,
+      task: params.task,
+      taskOutcome: params.taskOutcome,
     });
 
     const timeoutMs = resolveJobRunHookTimeoutSeconds(entry) * 1000;

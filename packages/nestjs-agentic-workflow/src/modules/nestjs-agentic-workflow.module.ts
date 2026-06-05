@@ -1,8 +1,14 @@
-import type { DynamicModule } from '@nestjs/common';
+import type { DynamicModule, Provider } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+import type { AnyAgenticWorkflow } from '../agentic-workflow-base';
+import {
+  AGENTIC_WORKFLOW_REGISTRY,
+  createAgenticWorkflowRegistry,
+} from '../agentic-workflow-base';
 import type {
   AgenticWorkflowModuleAsyncOptions,
+  AgenticWorkflowRegisterWorkflowOptions,
   AgenticWorkflowRegistrationOptions,
 } from '../agentic-workflow-module.definition';
 import {
@@ -41,6 +47,64 @@ export class NestjsAgenticWorkflowModule {
         {
           provide: AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
           useValue: workerGraphqlAuth,
+        },
+      ],
+    };
+  }
+
+  /**
+   * @description Registers worker GraphQL defaults plus one or more {@link AgenticWorkflowBase}
+   * implementations into a workflow registry keyed by id, and exports {@link AGENTIC_WORKFLOW_REGISTRY}.
+   *
+   * The orchestrator-by-default dispatcher resolves a workflow by id from the registry; today only
+   * the Ralph workflow is registered, but additional `AgenticWorkflow<X>` entries can be added
+   * side-by-side WITHOUT changing the dispatcher. Each workflow is built by its `useFactory`
+   * (which may inject the per-workflow deps token via `inject`), so all workflow-specific wiring
+   * stays in the concrete workflow + its registration.
+   */
+  static registerWorkflow(
+    options: AgenticWorkflowRegisterWorkflowOptions,
+  ): DynamicModule {
+    const {
+      executeGraphqlV2,
+      imports,
+      isGlobal,
+      providers = [],
+      workerGraphqlAuth,
+      workflows,
+    } = options;
+
+    const workflowTokens = workflows.map((_, index) =>
+      Symbol(`AGENTIC_WORKFLOW_ENTRY_${index}`),
+    );
+
+    const workflowProviders: Provider[] = workflows.map((entry, index) => ({
+      inject: entry.inject ?? [],
+      provide: workflowTokens[index],
+      useFactory: entry.useFactory,
+    }));
+
+    return {
+      exports: [...moduleExports, AGENTIC_WORKFLOW_REGISTRY],
+      global: isGlobal === true,
+      imports: [LoggerModule, ...(imports ?? [])],
+      module: NestjsAgenticWorkflowModule,
+      providers: [
+        ...providers,
+        {
+          provide: AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
+          useValue: executeGraphqlV2,
+        },
+        {
+          provide: AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
+          useValue: workerGraphqlAuth,
+        },
+        ...workflowProviders,
+        {
+          inject: workflowTokens,
+          provide: AGENTIC_WORKFLOW_REGISTRY,
+          useFactory: (...resolved: AnyAgenticWorkflow[]) =>
+            createAgenticWorkflowRegistry(resolved),
         },
       ],
     };

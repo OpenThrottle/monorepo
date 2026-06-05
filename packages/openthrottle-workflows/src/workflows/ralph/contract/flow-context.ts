@@ -23,7 +23,7 @@
  * | `planId` | `planId` | `--plan`; required in plan mode; in task-only mode resolved from DB. |
  * | `taskId` | `taskId` | `--task`; task uses this as the fixed task. plan: runner picks per-iteration task — **not** duplicated in context for iterations. |
  * | `iterations` | `iterations` + `iterations` | `--iterations` (default 10). **task:** `main()` sets `iterations = 1` **ignoring** `--iterations` (single-task rule); `iterations` keeps the user-requested value. |
- * | `prompt` | `prompt` | `--prompt` (default `/agents/ralph`). |
+ * | `prompt` | `prompt` | `--prompt` (default `/agents-ralph`). |
  * | `project` | `project` | `--project` (must be a known Nx project name). |
  * | `model` | `model` | `--model` (default `auto`). |
  * | `debug` `'omit'` \| `'debug'` \| `'verbose'` | `debug` | `--debug` / `--verbose`; omit uses env / `.workflow-ralph.json` only. |
@@ -43,23 +43,19 @@
  * worker uses env + `.workflow-ralph.json` in the worktree cwd (CLI > env > file > built-ins).
  */
 
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 /** @description Default `--backend` for workflow-ralph; aligned with `tools/workflows` / UI. */
-export const DEFAULT_RALPH_RUNNER = 'cursor';
+export const DEFAULT_RALPH_RUNNER: WorkflowConfigRunner = 'cursor';
 
 /** @description Default `--prompt` path fragment. */
-export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
+export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
 
 /** @description Default `--iterations` (before task override in `main()`). */
 export const DEFAULT_RALPH_ITERATIONS = 10;
 
 /** @description Default `--model` when unset or `auto`. */
 export const DEFAULT_RALPH_MODEL = 'auto';
-
-/**
- * @description Execution backend id for `--backend`; keep aligned with `workflow-ralph --backend`
- * and {@link DEFAULT_RALPH_RUNNER}.
- */
-export type WorkflowRunner = 'claude' | 'cursor';
 
 export type WorkflowMode = 'plan' | 'task';
 
@@ -87,14 +83,12 @@ export interface WorkflowOptions extends WorkflowConfiguration {
   readonly planId: string;
   readonly project: string | undefined;
   readonly prompt: string;
-  readonly runner: WorkflowRunner;
+  readonly runner: WorkflowConfigRunner;
   readonly skipWorktreeSetup: boolean | undefined;
   readonly taskId: string;
   readonly worktree: string | undefined;
   readonly worktreeBase: string | undefined;
 }
-
-// export type WorkflowFlowContext = WorkflowRalphContext;
 
 /**
  * @description Immutable snapshot of inputs driving the Ralph-shaped orchestration (compare

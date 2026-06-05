@@ -12,12 +12,24 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { UserIcon } from 'lucide-react';
 import { UsersTable } from '~/routing/users/components/UsersTable';
 import type { Route } from '@/app/routes/+types/users._index';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Users',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
@@ -36,6 +48,10 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     throw error;
   }
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta = (_args: Route.MetaArgs) => {
@@ -73,8 +89,17 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={UserIcon}
+          title="Users"
+        />
+        <p className="text-muted-foreground text-sm">View and manage users.</p>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl text-highlight">Users</h1>
         <Sheet onOpenChange={setOpen} open={open}>
           <SheetTrigger asChild={true}>
             <Button size="xs" type="button">

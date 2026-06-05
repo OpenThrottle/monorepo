@@ -38,6 +38,7 @@ import {
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
+  validateWorkflowRalphRunOptionsState,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
@@ -45,6 +46,7 @@ import {
   PlanDetailIndexLoaderDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanJobRunHooksDocument,
+  PlanDetailUpdatePlanRunConfigDocument,
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
 import {
@@ -55,6 +57,11 @@ import {
   validateJobRunHooksDraftRows,
   type JobRunHookDraftRow,
 } from '~/routing/plans/utils/job-run-hooks-ui';
+import {
+  hydratePlanRunConfigUiState,
+  serializePlanRunConfigUiState,
+} from '~/routing/plans/utils/plan-run-config-ui';
+import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
@@ -108,6 +115,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     return {
       plan: null,
       planOutputChunks: [],
+      planRunAuditRows: [],
       recentPlanRuns: [],
       tasks: [],
     };
@@ -122,6 +130,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     plan: page.plan ?? null,
     planOutputChunks: page.planOutputStreamChunks ?? [],
+    planRunAuditRows: page.planRunsByPlanId ?? [],
     recentPlanRuns: page.metrics.recentPlanRunsMetrics ?? [],
     tasks: page.tasksByPlanId ?? [],
   };
@@ -144,7 +153,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params } = props;
-  const { plan, recentPlanRuns, tasks } = loaderData;
+  const { plan, planRunAuditRows, recentPlanRuns, tasks } = loaderData;
 
   // Hooks
   const revalidator = useRevalidator();
@@ -160,6 +169,7 @@ export default function Component(
     JobRunHookDraftRow[]
   >(() => jobRunHookEntriesToDraftRows([]));
   const fetcherSaveJobRunHooks = useFetcher<typeof action>();
+  const fetcherSaveRunConfig = useFetcher<typeof action>();
 
   // Setup
   const [fullscreen, setFullscreen] = React.useState(false);
@@ -199,6 +209,41 @@ export default function Component(
   }, [jobRunHookRows]);
 
   const jobRunHooksValidation = validateJobRunHooksDraftRows(jobRunHookRows);
+
+  const workflowValidation = validateWorkflowRalphRunOptionsState(
+    workflowInput,
+    workflowTimeout,
+    { requireCliTargetIds: true },
+  );
+  const workspacePathError = validateWorkspacePathClient(workingDirectory);
+  const runConfigSaveBlocked =
+    !workflowValidation.ok || workspacePathError != null;
+  const runConfigSaveBlockedReason = !workflowValidation.ok
+    ? workflowValidation.issues[0]?.message
+    : workspacePathError;
+
+  const runConfigJson = React.useMemo((): string => {
+    if (runConfigSaveBlocked || plan?.id == null) {
+      return '';
+    }
+
+    try {
+      return serializePlanRunConfigUiState({
+        iterationTimeoutText: workflowTimeout,
+        workflowInput,
+        workingDirectory,
+      });
+    } catch {
+      return '';
+    }
+  }, [
+    plan?.id,
+    runConfigSaveBlocked,
+    workflowInput,
+    workflowTimeout,
+    workingDirectory,
+  ]);
+
   const saveJobRunHooksData = fetcherSaveJobRunHooks.data;
   const saveJobRunHooksError =
     saveJobRunHooksData != null &&
@@ -206,6 +251,15 @@ export default function Component(
     'saveJobRunHooksError' in saveJobRunHooksData &&
     typeof saveJobRunHooksData.saveJobRunHooksError === 'string'
       ? saveJobRunHooksData.saveJobRunHooksError
+      : undefined;
+
+  const saveRunConfigData = fetcherSaveRunConfig.data;
+  const saveRunConfigError =
+    saveRunConfigData != null &&
+    typeof saveRunConfigData === 'object' &&
+    'saveRunConfigError' in saveRunConfigData &&
+    typeof saveRunConfigData.saveRunConfigError === 'string'
+      ? saveRunConfigData.saveRunConfigError
       : undefined;
 
   // Handlers
@@ -227,6 +281,17 @@ export default function Component(
     formData.set('intent', 'saveJobRunHooks');
     formData.set('jobRunHooksJson', jobRunHooksJson);
     void fetcherSaveJobRunHooks.submit(formData, { method: 'post' });
+  };
+
+  const onSaveRunConfig = (): void => {
+    if (!plan?.id || runConfigSaveBlocked || runConfigJson === '') {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set('intent', 'saveRunConfig');
+    formData.set('runConfigJson', runConfigJson);
+    void fetcherSaveRunConfig.submit(formData, { method: 'post' });
   };
 
   const onToggleExpanded = (expanded: boolean): void => {
@@ -283,20 +348,23 @@ export default function Component(
   }, [searchParams]);
 
   React.useEffect(() => {
-    setWorkflowInput(
-      getDefaultWorkflowRalphRunOptionsInput({ planId: plan?.id }),
-    );
+    if (!plan?.id) {
+      return;
+    }
 
-    setWorkingDirectory('');
-    setWorkflowTimeout('');
+    const hydrated = hydratePlanRunConfigUiState(plan.id, plan.runConfigJson);
+
+    setWorkflowInput(hydrated.workflowInput);
+    setWorkingDirectory(hydrated.workingDirectory);
+    setWorkflowTimeout(hydrated.iterationTimeoutText);
 
     try {
-      const entries = parseJobRunHooksJsonFromPlan(plan?.jobRunHooksJson);
+      const entries = parseJobRunHooksJsonFromPlan(plan.jobRunHooksJson);
       setJobRunHookRows(jobRunHookEntriesToDraftRows(entries));
     } catch {
       setJobRunHookRows(jobRunHookEntriesToDraftRows([]));
     }
-  }, [plan?.id, plan?.jobRunHooksJson]);
+  }, [plan?.id, plan?.jobRunHooksJson, plan?.runConfigJson]);
 
   // Subscribe to plan/task status-change events so we revalidate when status
   // is updated via openthrottle-mcp or API, keeping plan and tasks in sync.
@@ -314,6 +382,20 @@ export default function Component(
       revalidator.revalidate();
     }
   }, [fetcherSaveJobRunHooks.state, fetcherSaveJobRunHooks.data, revalidator]);
+
+  React.useEffect(() => {
+    if (fetcherSaveRunConfig.state !== 'idle') return;
+
+    const data = fetcherSaveRunConfig.data;
+    if (
+      data != null &&
+      typeof data === 'object' &&
+      'saveRunConfig' in data &&
+      data.saveRunConfig != null
+    ) {
+      revalidator.revalidate();
+    }
+  }, [fetcherSaveRunConfig.state, fetcherSaveRunConfig.data, revalidator]);
 
   React.useEffect(() => {
     if (!planId || !socketContext?.socket) return;
@@ -382,18 +464,14 @@ export default function Component(
               </TabsTrigger>
               <TabsTrigger className="flex-0 cursor-pointer" value="tasks">
                 <LayoutListIcon />
-                Tasks
+                Tasks ({tasks.length})
               </TabsTrigger>
               <TabsTrigger
                 className="flex-0 cursor-pointer"
                 value="requirements"
               >
                 <BadgeCheckIcon />
-                Requirements
-              </TabsTrigger>
-              <TabsTrigger className="flex-0 cursor-pointer" value="output">
-                <TerminalSquareIcon />
-                Output
+                Requirements ({tasks.length})
               </TabsTrigger>
               {/* {loaderData.planOutputChunks.length > 0 ? (
               ) : null} */}
@@ -409,6 +487,10 @@ export default function Component(
                 <FileIcon />
                 Metadata
               </TabsTrigger>
+              <TabsTrigger className="flex-0 cursor-pointer" value="output">
+                <TerminalSquareIcon />
+                Output
+              </TabsTrigger>
             </TabsList>
 
             <PlanTabDetails
@@ -417,6 +499,7 @@ export default function Component(
               jobRunHooksBlockedReason={jobRunHooksValidation.issues[0]}
               jobRunHooksJson={jobRunHooksJson}
               plan={plan}
+              planRunAuditRows={planRunAuditRows}
               ralphTuningJson={ralphTuningJson}
               recentPlanRuns={recentPlanRuns}
               setFullscreen={setFullscreen}
@@ -435,17 +518,30 @@ export default function Component(
               onJobRunHookRowsChange={setJobRunHookRows}
               onResetToDefaults={onResetToDefaults}
               onSaveJobRunHooks={onSaveJobRunHooks}
+              onSaveRunConfig={onSaveRunConfig}
               onValueChange={setWorkflowInput}
               onWorkingDirectoryChange={setWorkingDirectory}
               planId={plan.id}
               saveJobRunHooksDisabled={!jobRunHooksValidation.ok}
               saveJobRunHooksPending={fetcherSaveJobRunHooks.state !== 'idle'}
+              saveRunConfigDisabled={runConfigSaveBlocked}
+              saveRunConfigPending={fetcherSaveRunConfig.state !== 'idle'}
               value={workflowInput}
               workingDirectory={workingDirectory}
             />
             {saveJobRunHooksError != null ? (
               <p className="text-destructive text-xs px-4" role="alert">
                 {saveJobRunHooksError}
+              </p>
+            ) : null}
+            {saveRunConfigError != null ? (
+              <p className="text-destructive text-xs px-4" role="alert">
+                {saveRunConfigError}
+              </p>
+            ) : null}
+            {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
+              <p className="text-muted-foreground text-xs px-4" role="note">
+                Save configuration blocked: {runConfigSaveBlockedReason}
               </p>
             ) : null}
             <PlanTabsMetadata plan={plan} />
@@ -539,6 +635,46 @@ export const action = async (args: Route.ActionArgs) => {
       const message = isError ? error.message : String(error);
 
       return { updateTaskError: message };
+    }
+  }
+
+  if (intent === 'saveRunConfig') {
+    const configRaw = formData.get('runConfigJson');
+    const runConfigJson =
+      typeof configRaw === 'string' && configRaw.trim() !== ''
+        ? configRaw.trim()
+        : null;
+
+    if (runConfigJson != null) {
+      try {
+        JSON.parse(runConfigJson);
+      } catch {
+        return { saveRunConfigError: 'runConfigJson must be valid JSON.' };
+      }
+    }
+
+    try {
+      const result = await executeGraphqlWithAuth(
+        args.request,
+        PlanDetailUpdatePlanRunConfigDocument,
+        {
+          input: {
+            id: planId,
+            runConfigJson,
+          },
+        },
+      );
+
+      if (!result.updatePlan?.id) {
+        return { saveRunConfigError: 'Failed to save run configuration.' };
+      }
+
+      return { saveRunConfig: result.updatePlan };
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      return { saveRunConfigError: message };
     }
   }
 

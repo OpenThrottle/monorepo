@@ -12,12 +12,24 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { useFetcher } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GlobalLayoutBreadcrumbsHandle,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import { RolesTable } from '~/routing/roles/components/RolesTable';
+import { ShieldCheckIcon } from 'lucide-react';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/roles._index';
+
+type HandleData = Route.ComponentProps['loaderData'];
+
+export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
+  breadcrumb: (_match) => 'Roles',
+  links: (_match) => [],
+};
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
@@ -35,6 +47,10 @@ export const loader = async (args: Route.LoaderArgs) => {
 
     throw error;
   }
+};
+
+export const links: Route.LinksFunction = () => {
+  return [];
 };
 
 export const meta = (_args: Route.MetaArgs) => {
@@ -72,8 +88,19 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ShieldCheckIcon}
+          title="Roles"
+        />
+        <p className="text-muted-foreground text-sm">
+          View and manage role details.
+        </p>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl text-highlight">Roles</h1>
         <Sheet onOpenChange={setCreateOpen} open={createOpen}>
           <SheetTrigger asChild={true}>
             <Button size="xs" type="button">
@@ -129,6 +156,7 @@ export default function Component(
           </SheetContent>
         </Sheet>
       </div>
+
       <RolesTable roles={roles} />
     </GlobalScreen>
   );

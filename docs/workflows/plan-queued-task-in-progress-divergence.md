@@ -19,7 +19,7 @@ Divergence is **expected transient behavior** with current reconciliation design
 
 ### 1. Plan-only reset on stall / startup / failure
 
-`PlansProcessor` and `WorkflowProcessor` reset **only the plan** to `QUEUED` when:
+`PlansProcessor` resets **only the plan** to `QUEUED` when:
 
 - `onModuleInit` → `reconcilePlanStatusOnStartup()` (no active BullMQ job for an `IN_PROGRESS` plan)
 - `@OnWorkerEvent('stalled')` → `resetPlanStatusToQueued`
@@ -46,12 +46,12 @@ Typical timeline after abrupt worker stop:
 
 ### 3. Prior plan `67feee49` sync does not cover this case
 
-| Aspect                          | Plan `67feee49` (completed)                                                                                                      | Gap for Queued / requeue                                                                                                                                    |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Trigger**                     | GraphQL `createTask` / `updateTask` when a task **newly** becomes `IN_PROGRESS` (`previousStatus !== 'IN_PROGRESS'` on update)   | Stall/reconcile sets plan `QUEUED` only; tasks stay `IN_PROGRESS` — no transition, so sync is not invoked                                                   |
-| **SQL predicate**               | `WHERE id = ? AND status != 'IN_PROGRESS'` (TypeORM `Not('IN_PROGRESS')`) — **would** promote `QUEUED` → `IN_PROGRESS` if called | Predicate is fine; **call site** is missing on resume                                                                                                       |
-| **Ralph / direct DB**           | N/A (not in scope of `67feee49`)                                                                                                 | `updateTaskStatus` in `cortex-ralph.ts` never calls sync                                                                                                    |
-| **Plan promotion on job retry** | N/A                                                                                                                              | `PlansProcessor.process` / `WorkflowProcessor.process` set plan `IN_PROGRESS` at job start — clears divergence only when the BullMQ job is **active** again |
+| Aspect                          | Plan `67feee49` (completed)                                                                                                      | Gap for Queued / requeue                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Trigger**                     | GraphQL `createTask` / `updateTask` when a task **newly** becomes `IN_PROGRESS` (`previousStatus !== 'IN_PROGRESS'` on update)   | Stall/reconcile sets plan `QUEUED` only; tasks stay `IN_PROGRESS` — no transition, so sync is not invoked                      |
+| **SQL predicate**               | `WHERE id = ? AND status != 'IN_PROGRESS'` (TypeORM `Not('IN_PROGRESS')`) — **would** promote `QUEUED` → `IN_PROGRESS` if called | Predicate is fine; **call site** is missing on resume                                                                          |
+| **Ralph / direct DB**           | N/A (not in scope of `67feee49`)                                                                                                 | `updateTaskStatus` in `cortex-ralph.ts` never calls sync                                                                       |
+| **Plan promotion on job retry** | N/A                                                                                                                              | `PlansProcessor.process` sets plan `IN_PROGRESS` at job start — clears divergence only when the BullMQ job is **active** again |
 
 `TasksService.syncParentPlanToInProgressWhenTaskInProgress` promotes the parent plan when a task **newly** becomes `IN_PROGRESS` via GraphQL:
 
@@ -204,7 +204,7 @@ Keep parity: `cortex-ralph` and GraphQL should accept the same source statuses f
 
 #### Layer 3 — Server startup / stall upward reconciliation (closes UI gap during waiting)
 
-Add **`reconcilePlanStatusFromActiveTasksOnStartup`** (mirror of `reconcilePlanStatusOnStartup`) in `PlansProcessor` and `WorkflowProcessor`:
+Add **`reconcilePlanStatusFromActiveTasksOnStartup`** (mirror of `reconcilePlanStatusOnStartup`) in `PlansProcessor`:
 
 1. Find plans with `status = 'QUEUED'` (and optionally `PENDING` if product agrees).
 2. For each, if any task has `status = 'IN_PROGRESS'`, call `tasksService.syncParentPlanToInProgressWhenTaskInProgress(planId)` and emit `PLAN_STATUS_CHANGED` when promoted.
@@ -244,11 +244,38 @@ Create a single implementation plan (e.g. **“Fix plan QUEUED vs task IN_PROGRE
 
 1. GraphQL + `cortex-ralph` parity for `QUEUED` → `IN_PROGRESS`.
 2. Ralph + orchestrator promote-on-resume / startup.
-3. `reconcilePlanStatusFromActiveTasksOnStartup` in plans + workflow processors.
+3. `reconcilePlanStatusFromActiveTasksOnStartup` in `PlansProcessor`.
 4. Tests per table above.
 5. Manual verification using Scenarios A–B; close investigation plan `7c8a54a7-cd0f-4a93-ab4f-d39b4d46ead5`.
 
 **Estimated scope:** ~4–6 files, no schema migration; backward-compatible GraphQL (widens allowed transition).
+
+## Verification (plan `f8fb7f3b-0816-4e65-8b39-76e7248d381f`, 2026-05-28)
+
+Implementation landed in plan `f8fb7f3b`. Automated coverage maps to manual scenarios as follows:
+
+| Scenario                                     | What was verified                                                                                                        | Evidence                                                                                                                                               |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **A — Stall window**                         | Upward reconcile on server startup promotes `QUEUED` plan when any task is `IN_PROGRESS` and emits `plan.status_changed` | `plans.processor.test.ts` — “promotes QUEUED plans that have an IN_PROGRESS task…”                                                                     |
+| **B — Ralph resume without task transition** | `promotePlanToInProgressIfNeeded` at Ralph startup and on resume branch                                                  | `cortex-ralph.test.ts` — `QUEUED` → `IN_PROGRESS`; `ralph.ts` calls helper at startup (~143) and resume (~217)                                         |
+| **C — Orchestrator after stall**             | GraphQL allows `QUEUED` → `IN_PROGRESS`; orchestrator promotes when resuming `IN_PROGRESS` task                          | `plans.resolver.test.ts`; `ralph-orchestrator.test.ts` — “promotes plan when resuming an IN_PROGRESS task while plan is QUEUED”                        |
+| **WebSocket UI sync**                        | Plan detail revalidates on `plan.status_changed` / `task.status_changed` without full reload                             | `plans.$planId._index.tsx` socket handlers call `revalidator.revalidate()`; emission inventory in `docs/openthrottle/notifications-websockets-plan.md` |
+
+**Test commands (all green on 2026-05-28):**
+
+```bash
+pnpm exec vitest run applications/openthrottle-server/src/queues/plans/plans.processor.test.ts \
+  applications/openthrottle-server/src/graphql/plans/plans.resolver.test.ts \
+  applications/openthrottle-server/src/graphql/tasks/tasks.resolver.test.ts \
+  applications/openthrottle-server/src/notifications/emit-bulk-task-status-changes.test.ts
+
+pnpm nx run workflows:test --testPathPattern="cortex-ralph.test|ralph.test"
+pnpm nx run @openthrottle/openthrottle-workflows:test --testPathPattern=ralph-orchestrator.test
+```
+
+**Operator manual sign-off (optional):** Run scenarios A–C against a live stack (server + Redis + developer app) per steps above; confirm plan detail badge updates without refresh when status changes via enqueue, stall recovery, or CLI Ralph resume.
+
+**Investigation closed:** Plan `7c8a54a7-cd0f-4a93-ab4f-d39b4d46ead5` — root cause documented here; fix shipped in plan `f8fb7f3b`.
 
 ### Acceptance criteria
 

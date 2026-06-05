@@ -27,3 +27,9 @@ export type NotificationSocketStatus =
   | 'disconnected'
   | 'error'
   | 'reconnecting';
+
+/** @description Listener invoked for each Socket.IO notification event (shared socket fan-out). */
+export type NotificationSocketEventListener = (
+  event: NotificationEventName,
+  payload: NotificationPayload,
+) => void;

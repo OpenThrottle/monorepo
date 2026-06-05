@@ -50,26 +50,20 @@ export const loader = async (args: Route.LoaderArgs) => {
     start: startIso,
   };
 
-  try {
-    const result = await executeGraphqlWithAuth(
-      args.request,
-      GetDashboardDocument,
-      variables,
-    );
+  const result = await executeGraphqlWithAuth(
+    args.request,
+    GetDashboardDocument,
+    variables,
+  );
 
-    const { activityByDate, dailyStatsRange, queues } = result;
-    const githubStats = await executeGraphqlWithAuth(
-      args.request,
-      GetDashboardGithubStatsDocument,
-      { owner, repo },
-    );
+  const { activityByDate, dailyStatsRange, queues } = result;
+  const githubStats = await executeGraphqlWithAuth(
+    args.request,
+    GetDashboardGithubStatsDocument,
+    { owner, repo },
+  );
 
-    return { activityByDate, dailyStatsRange, githubStats, queues };
-  } catch (error) {
-    console.error('💥 💥 💥 💥 Error loading dashboard:', error);
-
-    throw error;
-  }
+  return { activityByDate, dailyStatsRange, githubStats, queues };
 };
 
 export const links: Route.LinksFunction = () => {

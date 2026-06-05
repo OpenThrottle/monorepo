@@ -10,11 +10,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import { executeGraphqlV2, getGraphQLUrl } from '@openthrottle/nodejs-graphql';
 
-export {
-  buildRalphFlowContextFromPlanRunTuning,
-  buildRalphFlowContextFromRunOptionsShape,
-  resolveWorkflowRunOptions,
-} from './context.js';
+export { buildRalphFlowContextFromPlanRunTuning } from './context.js';
 
 /**
  * @description Configuration for building {@link ExecuteGraphqlOptionsV2} (auth, optional endpoint override, extra headers).
@@ -91,6 +87,8 @@ export async function executeWorkflowGraphqlV2<
 
 /**
  * @description Resolves optional Bearer token from env: `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, then `MCP_DEVELOPER_AUTH_TOKEN` (same token source as mcp-developer for local parity).
+ *
+ * **Env-only (never in `.workflow-ralph.json`):** auth tokens and GraphQL URL overrides.
  */
 export function resolveWorkflowAuthTokenFromEnv(): string | undefined {
   const raw =
@@ -104,6 +102,8 @@ export function resolveWorkflowAuthTokenFromEnv(): string | undefined {
 
 /**
  * @description Optional full GraphQL HTTP endpoint (e.g. `http://localhost:6021/graphql`). When unset, callers use `API_URL_INTERNAL` via {@link getGraphQLUrl} from `@openthrottle/nodejs-graphql`.
+ *
+ * **Env-only:** deployment-specific endpoints are not read from `.workflow-ralph.json`.
  */
 export function resolveWorkflowGraphqlUrlOverrideFromEnv(): string | undefined {
   const raw = process.env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL;

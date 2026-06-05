@@ -10,6 +10,7 @@ import { CreateQueueResultObject } from './create-queue-result.object';
 import { DuplicateJobInput } from './duplicate-job.input';
 import { DuplicateJobResultObject } from './duplicate-job-result.object';
 import { EnqueueDocIngestionInput } from './enqueue-doc-ingestion.input';
+import { EnqueueAgenticTestResultObject } from './enqueue-agentic-test-result.object';
 import { EnqueueDocIngestionResultObject } from './enqueue-doc-ingestion-result.object';
 import { JobObject } from './job.object';
 import { JobsResultObject, QueueDetailsObject } from './queue-details.object';
@@ -221,6 +222,26 @@ export class QueuesResolver {
     );
 
     const out = new RetryJobResultObject();
+    if ('jobId' in result) {
+      out.success = true;
+      out.jobId = result.jobId;
+      out.error = null;
+    } else {
+      out.success = false;
+      out.jobId = null;
+      out.error = result.error;
+    }
+    return out;
+  }
+
+  @Mutation(() => EnqueueAgenticTestResultObject, {
+    description:
+      'Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error.',
+  })
+  async enqueueAgenticTest(): Promise<EnqueueAgenticTestResultObject> {
+    const result = await this.queuesService.enqueueAgenticTest();
+
+    const out = new EnqueueAgenticTestResultObject();
     if ('jobId' in result) {
       out.success = true;
       out.jobId = result.jobId;

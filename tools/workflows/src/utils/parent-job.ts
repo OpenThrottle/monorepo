@@ -1,12 +1,14 @@
 /**
  * Parent job: acquire a worktree target and create a branch for the child (Ralph) job.
- * After child completes, ensure working tree is clean and (optionally) CI-aligned nx checks pass before release.
+ * After child completes, ensure the working tree is committed/clean before release.
+ *
+ * Note: ensureCommit is commit/clean-only. The lint/typecheck/test enforcement it used to
+ * run (the removed ENSURE_COMMIT_NX_CHECKS) is now owned by the Stage (d) after-phase hooks,
+ * which run the TARGET repo's own checks rather than hardcoded OpenThrottle nx targets.
  */
 
-import { spawn, spawnSync } from 'child_process';
-import type { ChildProcess } from 'child_process';
+import { spawnSync } from 'child_process';
 import type {
-  ChildJobStreamChunk,
   IWorktreeTargetsTracker,
   ParentJobAcquireOptions,
   ParentJobAcquireResult,
@@ -14,17 +16,6 @@ import type {
   ParentJobEnsureCommitResult,
   ParentJobHandoff,
 } from '../types/worktree';
-
-/** Grace period in ms after SIGTERM before sending SIGKILL (align with child-job). */
-const SIGKILL_GRACE_MS = 10_000;
-
-interface NxSpawnResult {
-  readonly killReason?: 'timeout' | 'abort';
-  readonly signal: NodeJS.Signals | null;
-  readonly status: number | null;
-  readonly stderr: string;
-  readonly stdout: string;
-}
 
 const DEFAULT_BASE_BRANCH = 'main';
 
@@ -167,176 +158,21 @@ export function isWorktreeClean(worktreePath: string): boolean {
   return out.length === 0;
 }
 
-/** Nx targets run by ensureCommit; aligned with CI (`continuous-integration.yml`). */
-export const ENSURE_COMMIT_NX_CHECKS = [
-  'lint',
-  'typecheck',
-  'typecheck-tests',
-] as const;
-
-export type EnsureCommitNxCheck = (typeof ENSURE_COMMIT_NX_CHECKS)[number];
-
 /**
- * @description Runs a single nx check (lint, typecheck, or typecheck-tests) with spawn + Promise.
- * Supports optional timeout, AbortSignal, and onChunk for progress.
- */
-function runNxCheckAsync(
-  worktreePath: string,
-  args: string[],
-  options: {
-    readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
-    readonly signal?: AbortSignal;
-    readonly timeoutMs?: number;
-  },
-): Promise<NxSpawnResult> {
-  return new Promise((resolve, reject) => {
-    const child: ChildProcess = spawn('pnpm', args, {
-      cwd: worktreePath,
-      shell: true,
-      stdio: ['inherit', 'pipe', 'pipe'],
-    });
-
-    let stdout = '';
-    let stderr = '';
-    let killReason: 'timeout' | 'abort' | undefined;
-    let resolved = false;
-
-    const push = (stream: 'stdout' | 'stderr', data: string): void => {
-      if (stream === 'stdout') stdout += data;
-      else stderr += data;
-      options.onChunk?.({ data, stream });
-    };
-
-    if (child.stdout) {
-      child.stdout.setEncoding('utf8');
-      child.stdout.on('data', (chunk: string) => push('stdout', chunk));
-    }
-    if (child.stderr) {
-      child.stderr.setEncoding('utf8');
-      child.stderr.on('data', (chunk: string) => push('stderr', chunk));
-    }
-
-    const killChild = (reason: 'timeout' | 'abort'): void => {
-      if (killReason !== undefined) return;
-      killReason = reason;
-      if (child.killed) return;
-      child.kill('SIGTERM');
-      const killTimeout = setTimeout(() => {
-        try {
-          child.kill('SIGKILL');
-        } catch {
-          /* process may have exited */
-        }
-      }, SIGKILL_GRACE_MS);
-      child.once('close', () => clearTimeout(killTimeout));
-    };
-
-    const onAbort = (): void => {
-      if (options.signal?.aborted) killChild('abort');
-    };
-
-    const done = (
-      status: number | null,
-      signal: NodeJS.Signals | null,
-    ): void => {
-      if (resolved) return;
-      resolved = true;
-      clearTimeout(timeoutId);
-      options.signal?.removeEventListener('abort', onAbort);
-      resolve({
-        killReason,
-        signal,
-        status,
-        stderr,
-        stdout,
-      });
-    };
-
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    if (options.timeoutMs !== undefined && options.timeoutMs > 0) {
-      timeoutId = setTimeout(() => killChild('timeout'), options.timeoutMs);
-    }
-
-    options.signal?.addEventListener('abort', onAbort);
-    if (options.signal?.aborted) {
-      killChild('abort');
-    }
-
-    child.on('close', (code, sig) => done(code ?? null, sig ?? null));
-    child.on('error', (err) => {
-      if (!resolved) {
-        resolved = true;
-        clearTimeout(timeoutId);
-        options.signal?.removeEventListener('abort', onAbort);
-        reject(err);
-      }
-    });
-  });
-}
-
-/**
- * @description Runs CI-aligned nx checks in the worktree (spawn + Promise).
- * Uses nx affected when base is set. Supports optional timeoutMs, signal, and onChunk.
- */
-async function runLintTestTypecheck(
-  worktreePath: string,
-  base: string | undefined,
-  options: {
-    readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
-    readonly signal?: AbortSignal;
-    readonly timeoutMs?: number;
-  } = {},
-): Promise<ParentJobEnsureCommitResult> {
-  for (const check of ENSURE_COMMIT_NX_CHECKS) {
-    const args =
-      base !== undefined && base.length > 0
-        ? ['exec', 'nx', 'affected', '-t', check, '--base', base, '--parallel']
-        : ['exec', 'nx', 'run-many', '-t', check, '--parallel'];
-    // eslint-disable-next-line no-await-in-loop -- checks must run sequentially (lint then test then build)
-    const result = await runNxCheckAsync(worktreePath, args, options);
-    const stderrTrimmed = result.stderr.trim();
-    const stdoutTrimmed = result.stdout.trim();
-    if (result.killReason === 'timeout') {
-      return {
-        ok: false,
-        reason: 'checks_timed_out',
-        stderr: stderrTrimmed || undefined,
-        stdout: stdoutTrimmed || undefined,
-      };
-    }
-    if (result.killReason === 'abort') {
-      return {
-        ok: false,
-        reason: 'checks_cancelled',
-        stderr: stderrTrimmed || undefined,
-        stdout: stdoutTrimmed || undefined,
-      };
-    }
-    if (result.status !== 0) {
-      return {
-        check,
-        ok: false,
-        reason: 'checks_failed',
-        stderr: stderrTrimmed || undefined,
-        stdout: stdoutTrimmed || undefined,
-      };
-    }
-  }
-  return { ok: true };
-}
-
-/**
- * @description Parent job step: after child completes, ensure all changes are committed and
- * (optionally) lint/typecheck/typecheck-tests pass before the caller releases the worktree target.
- * Call this before releasing the target; on success, release the target.
- * Nx checks run via spawn + Promise with optional timeout, AbortSignal, and onChunk for progress.
+ * @description Parent job step: after child completes, ensure all changes are committed and the
+ * working tree is clean before the caller releases the worktree target. Call this before releasing
+ * the target; on success, release the target.
+ *
+ * This step is commit/clean-only. It intentionally no longer runs lint/typecheck/test (the removed
+ * ENSURE_COMMIT_NX_CHECKS): that enforcement is owned by the Stage (d) after-phase hooks, which run
+ * the TARGET repo's own checks rather than hardcoded OpenThrottle nx targets. The `options` are
+ * accepted for backwards-compatible call sites but no longer trigger any checks.
  */
 export async function parentJobEnsureCommitBeforeRelease(
   handoff: ParentJobHandoff,
-  options: ParentJobEnsureCommitOptions = {},
+  _options: ParentJobEnsureCommitOptions = {},
 ): Promise<ParentJobEnsureCommitResult> {
   const { worktreePath } = handoff;
-  const { base, runChecks = true, timeoutMs, signal, onChunk } = options;
 
   if (!isWorktreeClean(worktreePath)) {
     const child = spawnSync('git', ['-C', worktreePath, 'status', '--short'], {
@@ -350,13 +186,5 @@ export async function parentJobEnsureCommitBeforeRelease(
     };
   }
 
-  if (!runChecks) {
-    return { ok: true };
-  }
-
-  return runLintTestTypecheck(worktreePath, base, {
-    onChunk,
-    signal,
-    timeoutMs,
-  });
+  return { ok: true };
 }

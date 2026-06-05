@@ -95,12 +95,13 @@ function buildQueueJobsTableColumns(
           case 'delayed':
             color = 'amber';
             break;
+          case 'failed':
+            color = 'red';
+            break;
+          default:
+            color = 'default';
+            break;
         }
-        // active
-        // completed
-        // delayed
-        // failed
-        // waiting
 
         return (
           <div className="px-3 py-2">

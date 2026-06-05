@@ -12,7 +12,7 @@ import {
   TaskEmbedding,
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
-import type { CortexPostgresConfig } from './config.js';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 const cache = new Map<string, DataSource>();
 
@@ -20,18 +20,20 @@ const cache = new Map<string, DataSource>();
  * @description Returns a TypeORM DataSource for the given config, creating and initializing one per connection string (connection pooling).
  * Registers Plan, Task, PlanEmbedding, TaskEmbedding, Project, CommitLink, and PlanOutputStreamChunk so repository-based CRUD and relation metadata (e.g. Plan#commitLinks) resolve correctly.
  */
-export async function getOrCreateDataSource(
-  config: CortexPostgresConfig,
-): Promise<DataSource> {
-  const key = config.connectionString;
+export async function getOrCreateDataSource(): Promise<DataSource> {
+  const url = getPostgresUrl();
+  const key = url;
+
   let ds = cache.get(key);
   if (ds?.isInitialized) {
     return ds;
   }
+
   if (ds != null) {
     await ds.initialize();
     return ds;
   }
+
   ds = new DataSource({
     entities: [
       CommitLink,
@@ -43,10 +45,13 @@ export async function getOrCreateDataSource(
       TaskEmbedding,
     ],
     type: 'postgres',
-    url: config.connectionString,
+    url,
   });
+
   cache.set(key, ds);
+
   await ds.initialize();
+
   return ds;
 }
 
@@ -67,6 +72,8 @@ export async function runQuery<T = unknown>(
   if (Array.isArray(raw)) {
     return { rowCount: raw.length, rows: raw as T[] };
   }
+
   const r = raw as { rowCount?: number; rows?: T[] };
+
   return { rowCount: r.rowCount ?? 0, rows: r.rows ?? [] };
 }

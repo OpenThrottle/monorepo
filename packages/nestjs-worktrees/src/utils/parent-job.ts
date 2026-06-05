@@ -1,8 +1,12 @@
 /**
  * Parent job: acquire a worktree target and create a branch for the child (Ralph) job.
- * After child completes, ensure working tree is clean and (optionally) CI-aligned nx checks pass before release.
+ * After child completes, ensure the working tree is committed/clean before release.
  *
- * Thread-safety: All git and pnpm spawns use explicit worktreePath (git -C, spawn cwd). Path comes from
+ * Note: ensureCommit is commit/clean-only. The lint/typecheck/test enforcement it used to run
+ * (the removed ENSURE_COMMIT_NX_CHECKS) is now owned by the Stage (d) after-phase hooks, which run
+ * the TARGET repo's own checks rather than hardcoded OpenThrottle nx targets.
+ *
+ * Thread-safety: All git spawns use explicit worktreePath (git -C). Path comes from
  * acquireResult.target.path and handoff; no process.cwd() or shared path; safe for concurrent jobs.
  */
 
@@ -226,57 +230,21 @@ export function pushBranchToRemote(
   };
 }
 
-/** Nx targets run by ensureCommit; aligned with CI (`continuous-integration.yml`). */
-const ENSURE_COMMIT_NX_CHECKS = [
-  'lint',
-  'typecheck',
-  'typecheck-tests',
-] as const;
-
 /**
- * @description Runs CI-aligned nx checks in the worktree via nx. Uses nx affected when base is set.
- */
-function runLintTestTypecheck(
-  worktreePath: string,
-  base: string | undefined,
-): ParentJobEnsureCommitResult {
-  for (const check of ENSURE_COMMIT_NX_CHECKS) {
-    const args =
-      base !== undefined && base.length > 0
-        ? ['exec', 'nx', 'affected', '-t', check, '--base', base, '--parallel']
-        : ['exec', 'nx', 'run-many', '-t', check, '--parallel'];
-
-    const child = spawnSync('pnpm', args, {
-      cwd: worktreePath,
-      encoding: 'utf-8',
-      shell: true,
-      stdio: ['inherit', 'pipe', 'pipe'],
-    });
-
-    if (child.status !== 0) {
-      return {
-        check,
-        ok: false,
-        reason: 'checks_failed',
-        stderr: child.stderr?.trim() || undefined,
-        stdout: child.stdout?.trim() || undefined,
-      };
-    }
-  }
-  return { ok: true };
-}
-
-/**
- * @description Parent job step: after child completes, ensure all changes are committed and
- * (optionally) lint/test/typecheck pass before the caller releases the worktree target.
- * Call this before releasing the target; on success, release the target.
+ * @description Parent job step: after child completes, ensure all changes are committed and the
+ * working tree is clean before the caller releases the worktree target. Call this before releasing
+ * the target; on success, release the target.
+ *
+ * This step is commit/clean-only. It intentionally no longer runs lint/typecheck/test (the removed
+ * ENSURE_COMMIT_NX_CHECKS): that enforcement is owned by the Stage (d) after-phase hooks, which run
+ * the TARGET repo's own checks rather than hardcoded OpenThrottle nx targets. The `options` are
+ * accepted for backwards-compatible call sites but no longer trigger any checks.
  */
 export function parentJobEnsureCommitBeforeRelease(
   handoff: ParentJobHandoff,
-  options: ParentJobEnsureCommitOptions = {},
+  _options: ParentJobEnsureCommitOptions = {},
 ): ParentJobEnsureCommitResult {
   const { worktreePath } = handoff;
-  const { base, runChecks = true } = options;
 
   if (!isWorktreeClean(worktreePath)) {
     const child = spawnSync('git', ['-C', worktreePath, 'status', '--short'], {
@@ -291,9 +259,5 @@ export function parentJobEnsureCommitBeforeRelease(
     };
   }
 
-  if (!runChecks) {
-    return { ok: true };
-  }
-
-  return runLintTestTypecheck(worktreePath, base);
+  return { ok: true };
 }

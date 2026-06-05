@@ -2,7 +2,7 @@
  * @description Resolves and formats agent CLI `-w` / `--worktree` flags for Ralph iterations.
  */
 
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** Sentinel: pass `--worktree` with no name (CLI optional argument). */
 export const RALPH_WORKTREE_FLAG_ONLY = '' as const;
@@ -87,7 +87,7 @@ export const buildWorktreeNestedArgv = (
  */
 export const appendRalphWorktreeShellFlags = (
   command: string,
-  backend: RalphExecutionBackendId,
+  backend: WorkflowConfigRunner,
   options: RalphWorktreeCliOptions | undefined,
 ): string => {
   if (options?.worktree === undefined) {

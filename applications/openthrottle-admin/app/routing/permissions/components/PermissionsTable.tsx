@@ -1,13 +1,53 @@
 import * as React from 'react';
-import { Card, DataTable } from '@openthrottle/react-router-shadcn';
+import classnames from 'classnames';
+import { DataTable } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PermissionRowFragment } from '~/__generated__/graphql';
 
-function buildPermissionTableColumns(): ColumnDef<
+export interface PermissionsTableProps {
+  readonly className?: string;
+  readonly permissions: PermissionRowFragment[];
+}
+
+export const PermissionsTable = (
+  props: PermissionsTableProps,
+): React.ReactElement => {
+  const { className, permissions } = props;
+
+  // Hooks
+
+  // Setup
+  const columns = React.useMemo(
+    () => PermissionsTable.buildTable(),
+    [permissions],
+  );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PermissionsTable"
+    >
+      <DataTable<PermissionRowFragment, string | number | null | undefined>
+        columns={columns}
+        data={permissions}
+      />
+    </div>
+  );
+};
+
+PermissionsTable.buildTable = (): ColumnDef<
   PermissionRowFragment,
   string | number | null | undefined
->[] {
+>[] => {
   return [
     {
       accessorKey: 'name',
@@ -45,37 +85,4 @@ function buildPermissionTableColumns(): ColumnDef<
       header: () => 'ID',
     },
   ];
-}
-
-interface PermissionsTableProps {
-  readonly className?: string;
-  readonly permissions: PermissionRowFragment[];
-}
-
-export const PermissionsTable = (
-  props: PermissionsTableProps,
-): React.ReactElement => {
-  const { className, permissions } = props;
-
-  // Hooks
-
-  // Setup
-  const columns = React.useMemo(() => buildPermissionTableColumns(), []);
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <Card className={className} data-testid="PermissionsTable">
-      <DataTable<PermissionRowFragment, string | number | null | undefined>
-        columns={columns}
-        data={permissions}
-      />
-    </Card>
-  );
 };

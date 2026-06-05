@@ -23,18 +23,23 @@ export interface KeyedJsonlWriterOptions {
 
 /**
  * @description One JSONL line for structured run output (`lineFormat: 'jsonl'`).
+ * `source` is an optional originating-layer tag (e.g. `workflow-ralph`, `cursor-agent`, `spawn`)
+ * for run-output attribution; omitted from the serialized line when not provided.
  */
 export interface KeyedJsonlRunRecord {
   readonly data: string | Readonly<Record<string, unknown>>;
+  readonly source?: string;
   readonly timestamp: string;
   readonly type: string;
 }
 
 /**
  * @description Input for `appendRunChunk` in jsonl mode; `timestamp` defaults to `new Date().toISOString()`.
+ * Optional `source` tags the originating layer for attribution (see {@link KeyedJsonlRunRecord}).
  */
 export interface KeyedJsonlRunChunkInput {
   readonly data: string | Readonly<Record<string, unknown>>;
+  readonly source?: string;
   readonly timestamp?: string;
   readonly type: string;
 }
@@ -85,6 +90,7 @@ export class KeyedJsonlWriter {
 
       const record: KeyedJsonlRunRecord = {
         data: chunk.data,
+        ...(chunk.source === undefined ? {} : { source: chunk.source }),
         timestamp: chunk.timestamp ?? new Date().toISOString(),
         type: chunk.type,
       };
@@ -302,6 +308,7 @@ export class KeyedJsonlWriter {
     const entry = await this.openForCompound(compound, queueName, jobId);
     const line: KeyedJsonlRunRecord = {
       data: chunk.data,
+      ...(chunk.source === undefined ? {} : { source: chunk.source }),
       timestamp: chunk.timestamp,
       type: chunk.type,
     };

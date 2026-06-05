@@ -34,7 +34,7 @@ export POSTGRES_URL="postgresql://openthrottle_user:openthrottle_password@localh
 
 pnpm exec workflow-ralph \
   --plan b0e4bb13-0df3-4d7c-b165-7daf2fdf910e \
-  --prompt-file .cursor/commands/agents/ralph.md
+  --prompt-file .cursor/skills/agents-ralph/SKILL.md
 ```
 
 ## 🏠 Architecture
@@ -221,3 +221,20 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 **4. Other issues?**
 
 Let me know and we'll get to the bottom of things 🤷
+
+---
+
+```ts
+// from '@openthrottle/ai-mcp/
+// from '@openthrottle/nestjs-agentic-workflow';
+// from '@openthrottle/openthrottle-agentic-utils';
+// from '@tools/workflows';
+```
+
+```bash
+cursor-agent -p /agents-ralph
+
+claude /agents-ralph
+
+opencode --prompt "skill({ name: "agents-ralph" })"
+```

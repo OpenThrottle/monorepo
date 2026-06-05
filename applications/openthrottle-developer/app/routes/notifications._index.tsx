@@ -49,7 +49,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <div>
         <GlobalHeading
           className="mb-4"

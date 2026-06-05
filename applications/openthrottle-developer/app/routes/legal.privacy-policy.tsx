@@ -8,6 +8,11 @@ import { BookOpenIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal.privacy-policy';
+import { Link } from 'react-router';
+import {
+  OPEN_THROTTLE_CONTACT_PORTFOLIO,
+  OPEN_THROTTLE_CONTACT_PORTFOLIO_REF,
+} from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -54,9 +59,101 @@ export default function Component(
           icon={BookOpenIcon}
           title="Privacy policy"
         />
-        <p className="text-sm text-muted-foreground">
-          Privacy policy content will be published here.
-        </p>
+
+        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+          <p>
+            This site is a personal portfolio and developer playground operated
+            by Matthew Scholta. It exists to showcase open source work and
+            experiments, not to run a commercial service. This policy describes,
+            in plain terms, what is and is not collected when you visit, and how
+            that information is used. The site is provided as is; this policy
+            may evolve as the project evolves.
+          </p>
+
+          <h2 className="text-foreground font-medium">Information collected</h2>
+          <p>
+            No accounts, sign-ups, or personally identifying information are
+            required to browse this site. The site does not ask for your name,
+            email address, phone number, or payment details, and does not
+            maintain a user database. Standard server and platform logs (such as
+            IP address, user agent, referrer, requested URL, and timestamp) may
+            be recorded by the hosting provider for security, abuse prevention,
+            and basic operational metrics. Aggregate, non-identifying analytics
+            may also be collected to understand which pages are visited.
+          </p>
+
+          <h2 className="text-foreground font-medium">
+            Cookies and local storage
+          </h2>
+          <p>
+            The site uses a minimal set of cookies and browser local storage to
+            remember preferences such as theme selection and to keep the
+            interface working correctly. These are not used to track you across
+            other sites. You can clear cookies and local storage at any time
+            from your browser settings; the site will continue to function with
+            reduced personalization.
+          </p>
+
+          <h2 className="text-foreground font-medium">Third-party services</h2>
+          <p>
+            Pages may load resources from or link out to third-party services,
+            including GitHub (for source code, avatars, and discussions), the
+            hosting and content delivery provider that serves this site, and,
+            where enabled, a privacy-respecting analytics provider. Each of
+            these services has its own privacy practices, and any data they
+            collect when you interact with them is governed by their own
+            policies. Following an external link is treated as leaving this
+            site.
+          </p>
+
+          <h2 className="text-foreground font-medium">
+            Data retention and your rights
+          </h2>
+          <p>
+            Operational logs and aggregate analytics are retained only as long
+            as needed for security and basic reporting, and are then rotated or
+            deleted by the underlying providers. Because the site does not
+            maintain user accounts, there is generally no personal profile to
+            access, correct, or delete. If you believe information related to
+            you has been recorded and you would like it reviewed or removed, you
+            can request access or deletion by contacting the maintainer using
+            the link below.
+          </p>
+
+          <h2 className="text-foreground font-medium">
+            Children&apos;s privacy
+          </h2>
+          <p>
+            This site is not directed to children under the age of 13, and it
+            does not knowingly collect personal information from children. If
+            you believe a child has provided personal information through this
+            site, please get in touch so it can be removed.
+          </p>
+
+          <h2 className="text-foreground font-medium">
+            Changes to this policy
+          </h2>
+          <p>
+            This policy may be updated from time to time to reflect changes to
+            the site, the tools it uses, or applicable best practices. Updates
+            take effect when published on this page. Continued use of the site
+            after an update constitutes acceptance of the revised policy.
+          </p>
+
+          <h2 className="text-foreground font-medium">Contact</h2>
+          <p>
+            Questions, requests, or concerns about this privacy policy can be
+            directed to the maintainer at{' '}
+            <Link
+              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              target="_blank"
+              to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}
+            >
+              {OPEN_THROTTLE_CONTACT_PORTFOLIO}
+            </Link>
+            .
+          </p>
+        </div>
       </div>
     </GlobalScreen>
   );

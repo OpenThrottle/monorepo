@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import { Repository } from 'typeorm';
-import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import type { PlanRunConfigSnapshot } from '../plans/plan-run-config/plan-run-config-snapshot.types';
+import type { PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
 
 interface RecordQueuedPlanRunInput {
   readonly bullmqJobId: string;
-  readonly executionBackend: PlanRunExecutionBackend;
+  readonly executionBackend: WorkflowConfigRunner;
   readonly planId: string;
   readonly queueName: string;
+  readonly runConfigSnapshot?: PlanRunConfigSnapshot | null;
   readonly runKind: PlanRunKind;
 }
 
@@ -40,12 +44,16 @@ export class PlanRunsService {
       executionBackend: input.executionBackend,
       planId: input.planId,
       queueName: input.queueName,
+      runConfigSnapshot: input.runConfigSnapshot ?? null,
       runKind: input.runKind,
       status: 'QUEUED',
     };
-    const row = repo.create(rowInput);
 
-    await repo.upsert(rowInput, ['queueName', 'bullmqJobId']);
+    const row = repo.create(rowInput);
+    await repo.upsert(rowInput as QueryDeepPartialEntity<PlanRun>, [
+      'queueName',
+      'bullmqJobId',
+    ]);
 
     return (
       (await repo.findOne({

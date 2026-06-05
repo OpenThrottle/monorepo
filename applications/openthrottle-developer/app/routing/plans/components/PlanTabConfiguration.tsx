@@ -53,6 +53,8 @@ export interface PlanTabConfigurationProps {
 
   onSaveJobRunHooks: () => void;
 
+  onSaveRunConfig?: () => void;
+
   onValueChange?: (next: WorkflowRalphRunOptionsInput) => void;
 
   onWorkingDirectoryChange: (next: string) => void;
@@ -61,6 +63,8 @@ export interface PlanTabConfigurationProps {
   planId?: string;
   saveJobRunHooksDisabled?: boolean;
   saveJobRunHooksPending?: boolean;
+  saveRunConfigDisabled?: boolean;
+  saveRunConfigPending?: boolean;
   /** When set (e.g. task detail), seeds `--task` when plan id is absent. */
   taskId?: string;
   /** Controlled: workflow run options (parent owns for enqueue + CLI preview). */
@@ -83,11 +87,14 @@ export const PlanTabConfiguration = (
     onJobRunHookRowsChange,
     onResetToDefaults,
     onSaveJobRunHooks,
+    onSaveRunConfig,
     onValueChange,
     onWorkingDirectoryChange,
     planId,
     saveJobRunHooksDisabled,
     saveJobRunHooksPending,
+    saveRunConfigDisabled,
+    saveRunConfigPending,
     taskId,
     value: valueProp,
     workingDirectory = '',
@@ -193,7 +200,13 @@ export const PlanTabConfiguration = (
     <TabsContent value="configuration">
       <div className="flex flex-col gap-4 md:gap-8 max-w-3xl">
         <Card className="p-4">
-          <PlanWorkflowCommand command={command} onReset={onResetToDefaults} />
+          <PlanWorkflowCommand
+            command={command}
+            onReset={onResetToDefaults}
+            onSave={onSaveRunConfig}
+            saveDisabled={saveRunConfigDisabled}
+            savePending={saveRunConfigPending}
+          />
         </Card>
 
         <div className="space-y-4 md:space-y-8">

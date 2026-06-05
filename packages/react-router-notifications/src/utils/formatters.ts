@@ -51,6 +51,8 @@ export function formatSeverityToColor(severity: NotificationSeverity): string {
   switch (severity) {
     case 'error':
       return 'bg-destructive';
+    case 'info':
+      return 'bg-yellow-500';
     case 'success':
       return 'bg-green-500';
     case 'warning':

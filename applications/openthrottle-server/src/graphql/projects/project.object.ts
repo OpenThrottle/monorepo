@@ -3,7 +3,7 @@
  */
 
 import type { Plan, Task } from '@openthrottle/nestjs-repositories';
-import type { ProjectData } from '@openthrottle/nestjs-repositories/src/modules/projects/project.entity';
+import type { ProjectData } from '@openthrottle/nestjs-repositories';
 import { Field, ObjectType } from '@nestjs/graphql';
 import type { PlanObject } from '../plans/plan.object';
 import type { TaskObject } from '../tasks/task.object';

@@ -5,14 +5,17 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
-import type { ChildProcessMetrics, WallClockMetrics } from '@tools/workflows';
+import type {
+  ChildProcessMetrics,
+  WallClockMetrics,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   PlanOutputStreamService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import 'reflect-metadata';
-import { OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
+import { OPENTHROTTLE_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
@@ -27,6 +30,7 @@ import {
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
@@ -36,6 +40,7 @@ vi.mock('child_process', () => ({
 }));
 
 const mockRunBeforeRunHooksAndHandleBlock = vi.fn().mockResolvedValue(false);
+const mockRunBeforeAllHooksWithDispatcher = vi.fn().mockResolvedValue(false);
 const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
   async (params: {
     notification: {
@@ -58,10 +63,15 @@ const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
 );
 
 vi.mock('../job-run-hooks/execute-plan-job-run-hooks', () => ({
+  runAfterAllHooksWithDispatcherThenNotify: vi.fn(),
   runAfterRunHooksThenNotify: (
     ...args: unknown[]
   ): ReturnType<typeof mockRunAfterRunHooksThenNotify> =>
     mockRunAfterRunHooksThenNotify(...args),
+  runBeforeAllHooksWithDispatcher: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockRunBeforeAllHooksWithDispatcher> =>
+    mockRunBeforeAllHooksWithDispatcher(...args),
   runBeforeRunHooksAndHandleBlock: (
     ...args: unknown[]
   ): ReturnType<typeof mockRunBeforeRunHooksAndHandleBlock> =>
@@ -87,6 +97,8 @@ const mockWorktreeTracker = {
 
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
+const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
+const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(false);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -102,7 +114,9 @@ const mockTasksService = createMock<TasksService>({
   getRepository: () =>
     ({
       find: vi.fn().mockResolvedValue([]),
+      findOne: mockTaskRepoFindOne,
     }) as unknown as ReturnType<TasksService['getRepository']>,
+  syncParentPlanStatus: mocksyncParentPlanStatus,
 });
 
 const snapshotStub = {
@@ -143,6 +157,7 @@ describe('PlansProcessor', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
     mockJob = {
       data: { planId: '2794d106-95f9-427e-904d-e0f9b5cbe734' },
       id: 'job-1',
@@ -215,6 +230,12 @@ describe('PlansProcessor', () => {
           provide: BullMqRunOutputRetentionService,
           useValue: createMock<BullMqRunOutputRetentionService>({
             maybePruneAfterJobClose: vi.fn(),
+          }),
+        },
+        {
+          provide: WorkflowLifecycleDispatcherFactory,
+          useValue: createMock<WorkflowLifecycleDispatcherFactory>({
+            create: vi.fn(),
           }),
         },
       ],
@@ -294,7 +315,9 @@ describe('PlansProcessor', () => {
 
   it('should inject canonical Cortex Postgres URL into nested workflow-ralph env when POSTGRES_URL is set', async () => {
     const prevUrl = process.env.POSTGRES_URL;
+    const prevTransport = process.env.WORKFLOW_RALPH_TRANSPORT;
     process.env.POSTGRES_URL = 'postgresql://u:p@localhost:5432/cortex_test';
+    process.env.WORKFLOW_RALPH_TRANSPORT = 'postgres-direct';
 
     try {
       await processor.process(mockJob);
@@ -306,7 +329,7 @@ describe('PlansProcessor', () => {
         expect.objectContaining({
           cwd: process.cwd(),
           env: expect.objectContaining({
-            [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+            [OPENTHROTTLE_POSTGRES_URL_ENV]:
               'postgresql://u:p@localhost:5432/cortex_test',
             POSTGRES_URL: 'postgresql://u:p@localhost:5432/cortex_test',
           }),
@@ -315,6 +338,11 @@ describe('PlansProcessor', () => {
       );
     } finally {
       process.env.POSTGRES_URL = prevUrl;
+      if (prevTransport === undefined) {
+        delete process.env.WORKFLOW_RALPH_TRANSPORT;
+      } else {
+        process.env.WORKFLOW_RALPH_TRANSPORT = prevTransport;
+      }
     }
   });
 
@@ -342,8 +370,10 @@ describe('PlansProcessor', () => {
 
   it('should inject canonical Cortex Postgres into nested env when workingDirectory is a foreign cwd (regression: Plan not found)', async () => {
     const prevUrl = process.env.POSTGRES_URL;
+    const prevTransport = process.env.WORKFLOW_RALPH_TRANSPORT;
     process.env.POSTGRES_URL =
       'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
+    process.env.WORKFLOW_RALPH_TRANSPORT = 'postgres-direct';
 
     mockJob = {
       data: {
@@ -366,7 +396,7 @@ describe('PlansProcessor', () => {
         expect.objectContaining({
           cwd: '/Users/matt/Development/other-monorepo',
           env: expect.objectContaining({
-            [OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV]:
+            [OPENTHROTTLE_POSTGRES_URL_ENV]:
               'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
             POSTGRES_URL:
               'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
@@ -376,6 +406,11 @@ describe('PlansProcessor', () => {
       );
     } finally {
       process.env.POSTGRES_URL = prevUrl;
+      if (prevTransport === undefined) {
+        delete process.env.WORKFLOW_RALPH_TRANSPORT;
+      } else {
+        process.env.WORKFLOW_RALPH_TRANSPORT = prevTransport;
+      }
     }
   });
 
@@ -705,6 +740,69 @@ describe('PlansProcessor', () => {
       expect(mockGetJobs).not.toHaveBeenCalled();
       expect(mockRepoUpdate).not.toHaveBeenCalled();
     });
+
+    it('promotes QUEUED plans that have an IN_PROGRESS task and emits plan status changed', async () => {
+      const divergedPlanId = 'queued-plan-with-in-progress-task';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: divergedPlanId, status: 'QUEUED', title: 'Diverged' },
+        ]);
+      mockTaskRepoFindOne.mockResolvedValueOnce({
+        id: 'task-in-progress',
+        planId: divergedPlanId,
+        status: 'IN_PROGRESS',
+      });
+      mocksyncParentPlanStatus.mockResolvedValueOnce(true);
+
+      await processor.onModuleInit();
+
+      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+      expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+        planId: divergedPlanId,
+        status: 'IN_PROGRESS',
+      });
+    });
+
+    it('does not emit when QUEUED plan has IN_PROGRESS task but sync is a no-op', async () => {
+      const divergedPlanId = 'queued-plan-sync-noop';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: divergedPlanId, status: 'QUEUED', title: 'Diverged' },
+        ]);
+      mockTaskRepoFindOne.mockResolvedValueOnce({
+        id: 'task-in-progress',
+        planId: divergedPlanId,
+        status: 'IN_PROGRESS',
+      });
+      mocksyncParentPlanStatus.mockResolvedValueOnce(false);
+
+      await processor.onModuleInit();
+
+      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
+      const notifications = (
+        processor as unknown as { notifications: NotificationsService }
+      ).notifications;
+      expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('skips QUEUED plans with no IN_PROGRESS tasks', async () => {
+      const queuedPlanId = 'queued-plan-idle';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: queuedPlanId, status: 'QUEUED', title: 'Waiting' },
+        ]);
+      mockTaskRepoFindOne.mockResolvedValueOnce(null);
+
+      await processor.onModuleInit();
+
+      expect(mocksyncParentPlanStatus).not.toHaveBeenCalled();
+    });
   });
 
   describe('Worker events (failed / stalled)', () => {
@@ -887,6 +985,12 @@ describe('PlansProcessor', () => {
             provide: BullMqRunOutputRetentionService,
             useValue: createMock<BullMqRunOutputRetentionService>({
               maybePruneAfterJobClose: vi.fn(),
+            }),
+          },
+          {
+            provide: WorkflowLifecycleDispatcherFactory,
+            useValue: createMock<WorkflowLifecycleDispatcherFactory>({
+              create: vi.fn(),
             }),
           },
         ],

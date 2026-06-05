@@ -4,11 +4,11 @@
  * Aligns with plan: "Add child process and system-level CPU profiling for Ralph workflows".
  */
 
-import type { ChildProcessMetrics } from '../types/child-process-metrics';
-import type { SystemCpuMetrics } from '../types/system-cpu-metrics';
-import { formatSystemCpuMetrics } from '../types/system-cpu-metrics';
-import type { WallClockMetrics } from '../types/wall-clock-metrics';
+import { formatSystemCpuMetrics } from '@openthrottle/openthrottle-agentic-workflow';
 import { formatWallClockMetrics } from '../types/wall-clock-metrics';
+import type { ChildProcessMetrics } from '../types/child-process-metrics';
+import type { SystemCpuMetrics } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WallClockMetrics } from '../types/wall-clock-metrics';
 
 /**
  * @description Combined metrics for a task run, including child process,

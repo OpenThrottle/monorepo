@@ -4,6 +4,7 @@ import { action } from '../plans.$planId._index';
 import {
   PlanDetailCancelPlanRunDocument,
   PlanDetailEnqueuePlanRunDocument,
+  PlanDetailUpdatePlanRunConfigDocument,
   type PlanDetailCancelPlanRunMutation,
 } from '~/__generated__/graphql';
 
@@ -218,6 +219,106 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     expect(result).toEqual({
       runPlanError: 'Invalid workflow run options payload.',
+    });
+  });
+});
+
+describe('routes/plans.$planId._index action (saveRunConfig)', () => {
+  beforeEach(() => {
+    mockExecuteGraphqlWithAuth.mockReset();
+  });
+
+  test('persists runConfigJson via updatePlan', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      updatePlan: {
+        id: '80864bba-630a-451d-bfd2-4b25ec202381',
+        runConfigJson: '{"version":1}',
+        updatedAt: '2025-01-01T00:00:00Z',
+      },
+    });
+
+    const configPayload = JSON.stringify({
+      ralph: {
+        debugCli: 'omit',
+        executionBackend: 'claude',
+        iterationTimeoutText: '',
+        iterations: 4,
+        model: 'auto',
+        project: '',
+        prompt: '/agents/ralph',
+        promptFile: '',
+        promptLayer: 'named',
+        skipWorktreeSetup: false,
+        worktreeBase: '',
+        worktreeCli: 'omit',
+        worktreeName: '',
+      },
+      target: { mode: 'plan', taskId: '' },
+      version: 1,
+      workspace: { workingDirectory: '' },
+    });
+
+    const formData = new FormData();
+    formData.set('intent', 'saveRunConfig');
+    formData.set('runConfigJson', configPayload);
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailUpdatePlanRunConfigDocument,
+      {
+        input: {
+          id: '80864bba-630a-451d-bfd2-4b25ec202381',
+          runConfigJson: configPayload,
+        },
+      },
+    );
+    expect(result).toEqual({
+      saveRunConfig: {
+        id: '80864bba-630a-451d-bfd2-4b25ec202381',
+        runConfigJson: '{"version":1}',
+        updatedAt: '2025-01-01T00:00:00Z',
+      },
+    });
+  });
+
+  test('returns error when runConfigJson is not valid JSON', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'saveRunConfig');
+    formData.set('runConfigJson', 'not-json');
+
+    const request = new Request(
+      'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
+      {
+        body: formData,
+        method: 'POST',
+      },
+    );
+
+    const result = await action({
+      context: {},
+      params: { planId: '80864bba-630a-451d-bfd2-4b25ec202381' },
+      request,
+      unstable_pattern: '/plans/:planId',
+    });
+
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      saveRunConfigError: 'runConfigJson must be valid JSON.',
     });
   });
 });

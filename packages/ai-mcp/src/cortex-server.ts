@@ -4,13 +4,17 @@
  */
 
 export {
+  applyWorkflowRalphBinPath,
   buildWorkflowRalphSpawnEnv,
   getPostgresConfig,
-  OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV,
+  OPENTHROTTLE_POSTGRES_URL_ENV,
+  resolveWorkflowRalphBinDir,
+  WORKFLOW_RALPH_OT_ROOT_ENV,
 } from './config.js';
 export type {
   BuildWorkflowRalphSpawnEnvOptions,
   CortexPostgresConfig,
+  WorkflowRalphSpawnMergedDefaults,
 } from './config.js';
 export { embedQuery } from './embedding.js';
 export {

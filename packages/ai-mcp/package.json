@@ -11,8 +11,9 @@
     "ai-mcp": "./dist/src/bin.js"
   },
   "dependencies": {
-    "@openthrottle/nestjs-repositories": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@openthrottle/nestjs-repositories": "workspace:*",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "openai": "^6.16.0",
     "pg": "^8.17.1",
     "typeorm": "^0.3.28",
@@ -74,7 +75,6 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted"

@@ -6,6 +6,7 @@ export type OpenThrottleEnv = {
   // This application
   APP_ENV: 'development' | 'production' | 'staging' | 'test';
   APP_NAME: string;
+  APP_NAME_SHORT: string;
   APP_URL: string;
   // Sibling applications
   APP_URL_ADMIN: string;

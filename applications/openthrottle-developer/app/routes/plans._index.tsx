@@ -198,7 +198,11 @@ export default function Component(
           statuses={statuses}
           view={view}
         />
-        <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
+        <PlansTable
+          className="bg-card"
+          plans={plans}
+          statusFilterUrls={statusFilterUrls}
+        />
       </div>
       <OpenThrottlePagination
         assignees={assignees}

@@ -1,13 +1,11 @@
 /**
- * @description Stable registration id for the OpenThrottle Ralph agentic workflow. Align with
+ * Stable registration id for the OpenThrottle Ralph agentic workflow. Align with
  * `WorkflowContext.kind` in `@openthrottle/openthrottle-agentic-ralph` (`'ralph'`).
  */
-export const AGENTIC_WORKFLOW_RALPH_ID = 'ralph' as const;
-
-export type AgenticWorkflowRalphId = typeof AGENTIC_WORKFLOW_RALPH_ID;
+export const AGENTIC_WORKFLOW_RALPH_ID = `ralph`;
 
 /**
- * @description Nest DI token for Ralph orchestrator dependencies (`executeGraphqlV2` + `iterationRunner`,
+ * Nest DI token for Ralph orchestrator dependencies (`executeGraphqlV2` + `iterationRunner`,
  * optional `onChunk`). The application provides this object — typically via `useFactory` merging
  * {@link AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2} with {@link AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH} and a
  * Cursor iteration runner from `@tools/workflows`.

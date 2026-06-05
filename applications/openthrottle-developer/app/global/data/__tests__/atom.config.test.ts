@@ -15,7 +15,9 @@ import {
 
 describe('appearance config constants', () => {
   test('CONFIG_STORAGE_KEY is stable for localStorage', () => {
-    expect(CONFIG_STORAGE_KEY).toBe('openthrottle-developer-appearance');
+    expect(CONFIG_STORAGE_KEY).toBe(
+      'openthrottle-developer:settings:appearance',
+    );
   });
 
   test('DEFAULT_APPEARANCE_CONFIG matches stylesheet defaults', () => {

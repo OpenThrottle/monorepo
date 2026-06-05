@@ -1,0 +1,25 @@
+import * as React from 'react';
+import { render } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { QueueCorrelationAndSupport } from '../QueueCorrelationAndSupport';
+import type { QueueCorrelationAndSupportProps } from '../QueueCorrelationAndSupport';
+
+describe('QueueCorrelationAndSupport Component', () => {
+  let component: RenderResult;
+  let props: QueueCorrelationAndSupportProps;
+
+  beforeEach(() => {
+    props = {};
+
+    const Component = () => <QueueCorrelationAndSupport {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+    component = render(<RoutesStub />);
+  });
+
+  test('should render', () => {
+    expect(component.baseElement).toMatchSnapshot();
+  });
+});

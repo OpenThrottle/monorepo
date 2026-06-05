@@ -28,10 +28,7 @@ export const UsageOverview = (
 
   return (
     <div className={classnames(className)}>
-      <GlobalHeading
-        className="mb-4 text-xl"
-        title="Agents &amp; OpenThrottle usage"
-      />
+      <GlobalHeading className="mb-4" title="Agents &amp; OpenThrottle usage" />
       <div className="text-sm text-muted-foreground space-y-4 md:space-y-8">
         <p>
           Plan and task counts come from OpenThrottle daily stats (last{' '}

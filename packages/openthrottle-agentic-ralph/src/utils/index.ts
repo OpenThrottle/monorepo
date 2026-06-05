@@ -1,10 +1,4 @@
-import {
-  GetServerHealthDocument,
-  type GetServerHealthQuery,
-  type PlanFragment,
-  type TaskFragment,
-} from '../__generated__/graphql.js';
-import { executeWorkflowGraphqlV2 } from './graphql.js';
+import type { PlanFragment, TaskFragment } from '../__generated__/graphql.js';
 
 /**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with
@@ -45,6 +39,11 @@ export const formatPlanAndTasksForPrompt = (
       if (t.description?.trim()) {
         lines.push(`    ${t.description.trim().replace(/\n/g, ' ')}`);
       }
+
+      if (t.requirementsJson) {
+        const requirements = JSON.parse(t.requirementsJson);
+        lines.push(`    Requirements: ${requirements.join(', ')}`);
+      }
     }
   }
 
@@ -52,15 +51,3 @@ export const formatPlanAndTasksForPrompt = (
 
   return lines.join('\n');
 };
-
-/**
- * @description Runs the public `getServerHealth` query via {@link executeWorkflowGraphqlV2} (throws on
- * failure; error message reflects HTTP status / first GraphQL error). Uses workflow GraphQL env
- * (`OPENTHROTTLE_WORKFLOWS_*`); wrap in try/catch when callers need non-throwing control flow. Optional
- * preflight for api/database/redis/websocket when the HTTP POST succeeds. Does not replace Ralph's
- * OpenThrottle TCP check (`ensureDatabaseReachableOrExit`). See `tools/workflows/README.md` (getServerHealth vs
- * transport).
- */
-export async function fetchServerHealth(): Promise<GetServerHealthQuery> {
-  return executeWorkflowGraphqlV2(GetServerHealthDocument, {});
-}
