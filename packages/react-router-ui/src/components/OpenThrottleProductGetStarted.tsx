@@ -65,7 +65,7 @@ export const OpenThrottleProductGetStarted = (
               size={12}
             />
             <OpenThrottleClipboard
-              className="text-xs py-2 pl-8 pr-12 text-left w-full"
+              className="text-xs py-4 pl-8 pr-12 text-left opacity-60 hover:opacity-100 transition-opacity w-full"
               label={command}
               text={command}
             />
@@ -76,7 +76,7 @@ export const OpenThrottleProductGetStarted = (
           </div>
 
           <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
-            <Button className="text-xs" size="xs" variant="brand">
+            <Button className="text-xs" variant="brand">
               View on GitHub
             </Button>
           </Link>

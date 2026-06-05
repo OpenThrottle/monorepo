@@ -1,8 +1,14 @@
-import { resolve } from 'path';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { CodegenConfig } from '@graphql-codegen/cli';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({
+  path: join(__dirname, '../../applications/openthrottle-developer/.env'),
+});
 
 /** Use repo schema file so codegen/typecheck work without a running server. */
 const schemaFile = resolve(__dirname, '../../schema.gql');
@@ -51,15 +57,6 @@ const config: CodegenConfig = {
   importExtension: '.js',
   schema: schemaFile,
   // schema: isDevelopment ? `${url}/graphql` : `../../schema.gql`,
-
-  // schema: {
-  //   [supabaseURL]: {
-  //     headers: {
-  //       Authorization: `Bearer ${supabaseJWT}`,
-  //       apikey: supabaseJWT,
-  //     },
-  //   },
-  // },
 };
 
 export default config;

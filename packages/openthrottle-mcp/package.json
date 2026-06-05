@@ -82,6 +82,7 @@
         "executor": "@nx/js:tsc"
       },
       "codegen-graphql": {},
+      "codegen-graphql-watch": {},
       "lint": {},
       "serve": {
         "cache": false,

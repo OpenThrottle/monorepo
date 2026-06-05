@@ -17,7 +17,7 @@ describe('NestjsMcpDeveloperModule', () => {
         imports: [
           NestjsMcpDeveloperModule.forRoot({
             capabilities: { resources: {}, tools: {} },
-            name: 'openthrottle-openthrottle-mcp-test',
+            name: 'openthrottle-mcp-test',
             transport: McpTransportType.STDIO,
             version: '0.0.0-test',
           }),

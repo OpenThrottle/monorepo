@@ -13,8 +13,8 @@ import {
     NestjsMcpDeveloperModule.forRoot({
       apiPrefix: 'openthrottle-developer-mcp',
       capabilities: { resources: {}, tools: {} },
-      description: `OpenThrottle developer MCP tools backed by this server’s GraphQL API.`,
-      name: 'openthrottle-openthrottle-mcp',
+      description: `OpenThrottle developer MCP tools backed by this server's GraphQL API.`,
+      name: 'openthrottle-server | MCP Developer',
       title: 'OpenThrottle Developer MCP',
       transport: McpTransportType.STREAMABLE_HTTP,
       version: '1.0.0',
