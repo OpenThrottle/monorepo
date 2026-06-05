@@ -132,8 +132,8 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { filters, listQuery, prPreviewNumber, prPreviewPull, pulls } =
-    loaderData;
+  const { filters, listQuery } = loaderData;
+  const { prPreviewNumber, prPreviewPull, pulls } = loaderData;
 
   // Hooks
 
@@ -148,66 +148,22 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <PullRequestStats />
       <PullRequestsIntroduction />
       <PullRequestsToolbar filters={filters} />
       <PullRequestsTable
+        className="bg-card"
         filters={filters}
         listQuery={listQuery}
         pulls={pulls}
       />
-
       <PullRequestPreviewSheet
         filters={filters}
         listQuery={listQuery}
         prPreviewNumber={prPreviewNumber}
         prPreviewPull={prPreviewPull}
       />
-
-      {/* <div className="grid grid-cols-1 gap-4 lg:gap-8">
-        {pulls.map((pull) => (
-          <Card className="p-4 lg:p-8" key={pull.number}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-md font-semibold leading-snug">
-                  <Link
-                    className="hover:underline"
-                    to={
-                      listQuery === ''
-                        ? `/pull-requests/${pull.number}`
-                        : `/pull-requests/${pull.number}?${listQuery}`
-                    }
-                    viewTransition={true}
-                  >
-                    {pull.title}
-                  </Link>{' '}
-                  <span className="text-muted-foreground font-normal">
-                    #{pull.number}
-                  </span>
-                </h2>
-                <p className="text-muted-foreground mt-2 text-xs">
-                  <span className="font-medium text-foreground">
-                    {pull.author}
-                  </span>
-                  {' · '}
-                  Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — updated{' '}
-                  {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
-                </p>
-                {pull.baseRef !== null || pull.headRef !== null ? (
-                  <p className="text-muted-foreground mt-1 font-mono text-xs">
-                    {pull.baseRef !== null ? pull.baseRef : '—'} ←{' '}
-                    {pull.headRef !== null ? pull.headRef : '—'}
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
-                <PullRequestStatus state={pull.state} />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div> */}
     </GlobalScreen>
   );
 }

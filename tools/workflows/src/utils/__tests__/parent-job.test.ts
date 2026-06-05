@@ -10,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 import {
   createBranchInWorktree,
   deriveBranchName,
-  ENSURE_COMMIT_NX_CHECKS,
   isWorktreeClean,
   parentJobAcquireAndCreateBranch,
   parentJobEnsureCommitBeforeRelease,
@@ -468,17 +467,7 @@ describe('isWorktreeClean', () => {
   });
 });
 
-describe('ENSURE_COMMIT_NX_CHECKS', () => {
-  it('matches CI continuous-integration affected targets', () => {
-    expect([...ENSURE_COMMIT_NX_CHECKS]).toEqual([
-      'lint',
-      'typecheck',
-      'typecheck-tests',
-    ]);
-  });
-});
-
-describe('parentJobEnsureCommitBeforeRelease', () => {
+describe('parentJobEnsureCommitBeforeRelease (commit/clean-only)', () => {
   it('returns working_tree_dirty when worktree has uncommitted changes', async () => {
     const dir = createTempGitRepo();
     const handoff = {
@@ -501,7 +490,22 @@ describe('parentJobEnsureCommitBeforeRelease', () => {
     }
   });
 
-  it('returns ok: true when worktree is clean and runChecks is false', async () => {
+  it('returns ok: true when worktree is clean (no nx checks run)', async () => {
+    const dir = createTempGitRepo();
+    const handoff = {
+      branchName: 'ralph/test',
+      targetId: 'wt1',
+      worktreePath: dir,
+    };
+    try {
+      const result = await parentJobEnsureCommitBeforeRelease(handoff);
+      expect(result.ok).toBe(true);
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('ignores legacy runChecks/base options and only verifies clean', async () => {
     const dir = createTempGitRepo();
     const handoff = {
       branchName: 'ralph/test',
@@ -510,7 +514,8 @@ describe('parentJobEnsureCommitBeforeRelease', () => {
     };
     try {
       const result = await parentJobEnsureCommitBeforeRelease(handoff, {
-        runChecks: false,
+        base: 'main',
+        runChecks: true,
       });
       expect(result.ok).toBe(true);
     } finally {

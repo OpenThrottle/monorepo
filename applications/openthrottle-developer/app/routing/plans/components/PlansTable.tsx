@@ -29,10 +29,9 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
 
   // Setup
   const search = searchParams.get('q') ?? '';
-
   const columns = React.useMemo(
     () => PlansTable.buildTable(statusFilterUrls, runPlanFetcher),
-    [statusFilterUrls, runPlanFetcher],
+    [plans, runPlanFetcher, statusFilterUrls],
   );
 
   // Handlers

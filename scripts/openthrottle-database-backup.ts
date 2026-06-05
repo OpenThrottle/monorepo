@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { mkdir, unlink } from 'node:fs/promises';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { join } from 'node:path';
+import { mkdir, unlink } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 
 /**
  * @description Backs up the Cortex Postgres database to a timestamped zip file.
@@ -21,11 +21,12 @@ function timestamp(): string {
   const h = String(d.getHours()).padStart(2, '0');
   const min = String(d.getMinutes()).padStart(2, '0');
   const s = String(d.getSeconds()).padStart(2, '0');
+
   return `${y}${m}${day}-${h}${min}${s}`;
 }
 
 async function main(): Promise<void> {
-  const { connectionString } = getPostgresConfig();
+  const connectionString = getPostgresUrl();
   await mkdir(BACKUPS_DIR, { recursive: true });
 
   const ts = timestamp();
@@ -53,6 +54,7 @@ async function main(): Promise<void> {
   }
 
   await unlink(sqlPath);
+
   console.log('Backup written to:', zipPath);
 }
 

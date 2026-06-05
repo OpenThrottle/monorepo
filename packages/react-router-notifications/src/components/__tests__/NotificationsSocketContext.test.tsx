@@ -11,7 +11,11 @@ describe('NotificationsSocketContext', () => {
   beforeEach(() => {
     const Component = () => (
       <NotificationsSocketContext.Provider
-        value={{ socket: null, status: 'disconnected' }}
+        value={{
+          socket: null,
+          status: 'disconnected',
+          subscribeToNotifications: () => () => {},
+        }}
       >
         <span data-testid="ctx-child">child</span>
       </NotificationsSocketContext.Provider>

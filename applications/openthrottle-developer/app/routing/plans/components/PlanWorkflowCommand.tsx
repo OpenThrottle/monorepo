@@ -15,12 +15,15 @@ export interface PlanWorkflowCommandProps {
    */
   command?: string;
   onReset?: () => void;
+  onSave?: () => void;
+  saveDisabled?: boolean;
+  savePending?: boolean;
 }
 
 export const PlanWorkflowCommand = (
   props: PlanWorkflowCommandProps,
 ): React.ReactElement => {
-  const { className, command, onReset } = props;
+  const { className, command, onReset, onSave, saveDisabled = false, savePending = false } = props;
 
   // Hooks
   const atomCommand = useAtomValue(workflowRalphCanonicalCommandLineAtom);
@@ -65,6 +68,16 @@ export const PlanWorkflowCommand = (
           {/* Reset to defaults */}
           <RefreshCcwIcon />
         </Button>
+        {onSave != null ? (
+          <Button
+            data-testid="plan-run-config-save"
+            disabled={saveDisabled || savePending}
+            onClick={onSave}
+            type="button"
+          >
+            {savePending ? 'Saving…' : 'Save to plan'}
+          </Button>
+        ) : null}
       </div>
 
       <p className="text-muted-foreground text-xs mt-4" role="note">

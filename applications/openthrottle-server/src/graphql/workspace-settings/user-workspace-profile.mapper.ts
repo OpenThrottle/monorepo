@@ -28,7 +28,9 @@ export const toUserWorkspaceProfileObject = (
   contactDisplayName: settings.contactDisplayName,
   contactEmail: settings.contactEmail,
   createdAt: settings.createdAt,
-  enabledEditors: settings.enabledEditors.map((id) => EDITOR_ID_TO_ENUM[id]),
+  enabledEditors: settings.enabledEditors.map(
+    (id: WorkspaceEditorId) => EDITOR_ID_TO_ENUM[id],
+  ),
   updatedAt: settings.updatedAt,
   userId: settings.userId,
 });

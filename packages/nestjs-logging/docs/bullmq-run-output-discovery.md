@@ -46,4 +46,4 @@
 
 ## Wiring note (for follow-on tasks)
 
-BullMQ processors today live under `applications/openthrottle-server/src/queues/*` (`plans.processor.ts`, `workflow.processor.ts`, etc.). Lifecycle hooks: open (or lazy-open on first chunk) at job start, periodic or milestone `flush`, `close`/evict LRU slot on completion—documented in README after implementation.
+BullMQ processors today live under `applications/openthrottle-server/src/queues/*` (`plans.processor.ts`, etc.). Lifecycle hooks: open (or lazy-open on first chunk) at job start, periodic or milestone `flush`, `close`/evict LRU slot on completion—documented in README after implementation.

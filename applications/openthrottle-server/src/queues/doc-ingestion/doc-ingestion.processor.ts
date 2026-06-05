@@ -12,7 +12,6 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import {
   computeDocIngestionDiff,
   deindexDocumentationByPath,
-  getDocIngestionStateConnectionString,
   removePriorState,
   savePriorState,
 } from '@tools/workflows/doc-ingestion';
@@ -21,6 +20,7 @@ import type {
   DocIngestionJob,
   DocIngestionJobResult,
 } from './doc-ingestion.types';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 const CONCURRENCY = 1;
 
@@ -98,7 +98,7 @@ export class DocIngestionProcessor
       );
     }
 
-    const connectionString = getDocIngestionStateConnectionString();
+    const connectionString = getPostgresUrl();
     if (!connectionString) {
       throw new Error(
         'Postgres not configured. Set POSTGRES_URL or POSTGRES_* for doc-ingestion.',

@@ -3,7 +3,16 @@ import {
   RALPH_DEBUG_ENV_LEGACY,
   RALPH_VERBOSE_ENV,
 } from '../utils/ralph-debug-logger';
-import { WORKFLOW_RALPH_ENV } from '../utils/ralph-runtime-config';
+import {
+  WORKFLOW_RALPH_CONFIG_ENV,
+  WORKFLOW_RALPH_ENV,
+} from '../config/load-workflow-ralph-config';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../utils/workflow-transport';
+import {
+  OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
+  WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
+} from '../utils/ot-diagnostics';
+import { WORKFLOW_RALPH_CONFIG_PRECEDENCE } from '../config/workflow-ralph-defaults.types';
 import { ARTWORK_LINE, ARTWORK_THANK_YOU, COLORS } from './index';
 
 export const MESSAGE_TOOL_USAGE = `
@@ -22,7 +31,7 @@ Options:
   ${COLORS.cyan}--iterations ${COLORS.gray}<number>${COLORS.reset}    Number of iterations to run  ${COLORS.gray}default: ${COLORS.blue}10${COLORS.reset}
   ${COLORS.cyan}--model ${COLORS.gray}<model> ${COLORS.reset}         Model preset when the backend supports it (${COLORS.gray}--model${COLORS.reset}; omit when ${COLORS.blue}'auto'${COLORS.reset} for Claude)  ${COLORS.gray}default: ${COLORS.blue}'auto'${COLORS.reset}
   ${COLORS.cyan}--project ${COLORS.gray}<name>${COLORS.reset}          NX project name (from project graph; applications + packages)
-  ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt profile (command-style path for Cursor)  ${COLORS.gray}default: ${COLORS.blue}/agents/ralph${COLORS.reset}
+  ${COLORS.cyan}--prompt ${COLORS.gray}<prompt>${COLORS.reset}        Prompt profile (command-style path for Cursor)  ${COLORS.gray}default: ${COLORS.blue}/agents-ralph${COLORS.reset}
   ${COLORS.cyan}--prompt-file ${COLORS.gray}<path>${COLORS.reset}     Read layer-1 prompt text from a UTF-8 file (mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset})
   ${COLORS.cyan}--prompt-stdin ${COLORS.reset}           Read layer-1 prompt text from stdin (pipe; mutually exclusive with ${COLORS.cyan}--prompt${COLORS.reset} / ${COLORS.cyan}--prompt-file${COLORS.reset})
   ${COLORS.cyan}--verbose ${COLORS.reset}           Verbose shim debug (same as ${RALPH_DEBUG_ENV}=verbose or ${RALPH_VERBOSE_ENV}=1)
@@ -30,9 +39,10 @@ Options:
   ${COLORS.cyan}--worktree-base ${COLORS.gray}<branch>${COLORS.reset}  Cursor-only: base branch/ref for new agent worktree
   ${COLORS.cyan}--skip-worktree-setup ${COLORS.reset}  Cursor-only: skip .cursor/worktrees.json setup scripts
 
-Environment (debug shim; optional — omit both flags to rely on env only):
+Environment (debug shim; optional — omit both flags to rely on env or file):
   ${COLORS.gray}${RALPH_DEBUG_ENV}${COLORS.reset}=1|true|verbose|0|off  ${COLORS.gray}${RALPH_DEBUG_ENV_LEGACY}${COLORS.reset} (alias)  ${COLORS.gray}${RALPH_VERBOSE_ENV}${COLORS.reset}=1 (verbose lines)
-  If ${COLORS.cyan}--debug${COLORS.reset} or ${COLORS.cyan}--verbose${COLORS.reset} appears on the command line, it overrides these variables for this run.
+  File: ${COLORS.cyan}debug${COLORS.reset} in ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} (${COLORS.gray}"omit" | "debug" | "verbose"${COLORS.reset})
+  If ${COLORS.cyan}--debug${COLORS.reset} or ${COLORS.cyan}--verbose${COLORS.reset} appears on the command line, it overrides env and file for this run.
 
 Environment (prompt profile + run tuning; optional):
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.backend}${COLORS.reset}   Default execution backend id (${COLORS.green}cursor${COLORS.reset} or ${COLORS.green}claude${COLORS.reset}; one per plan run), same as ${COLORS.cyan}--backend${COLORS.reset}
@@ -45,8 +55,12 @@ Environment (prompt profile + run tuning; optional):
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.worktree}${COLORS.reset}   Agent CLI worktree name, same as ${COLORS.cyan}--worktree${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.worktreeBase}${COLORS.reset}   Cursor-only: ${COLORS.cyan}--worktree-base${COLORS.reset}
   ${COLORS.gray}${WORKFLOW_RALPH_ENV.skipWorktreeSetup}${COLORS.reset}   Cursor-only: truthy enables ${COLORS.cyan}--skip-worktree-setup${COLORS.reset}
-  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (JSON: backend, prompt, promptFile, iterations, iterationTimeout, model, project, worktree, worktreeBase, skipWorktreeSetup — use either ${COLORS.cyan}prompt${COLORS.reset} or ${COLORS.cyan}promptFile${COLORS.reset}, not both).
-  Precedence: ${COLORS.green}CLI flags${COLORS.reset} override ${COLORS.green}environment${COLORS.reset} override ${COLORS.green}file${COLORS.reset} override built-in defaults.
+  ${COLORS.gray}${WORKFLOW_RALPH_TRANSPORT_ENV}${COLORS.reset}   OpenThrottle I/O transport (${COLORS.green}graphql${COLORS.reset} default; ${COLORS.green}postgres-direct${COLORS.reset} or ${COLORS.green}postgres${COLORS.reset} for rollback)
+  ${COLORS.gray}${WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV}${COLORS.reset}   Opt-in OT identity stderr JSON before plan fetch (or ${COLORS.cyan}diagnostics.ot${COLORS.reset} in file)
+  ${COLORS.gray}${OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV}${COLORS.reset}   Worker spawn diagnostics (or ${COLORS.cyan}diagnostics.spawn${COLORS.reset} in file)
+  ${COLORS.gray}${WORKFLOW_RALPH_CONFIG_ENV.spawnHome}${COLORS.reset} / ${COLORS.gray}${WORKFLOW_RALPH_CONFIG_ENV.spawnXdgConfigHome}${COLORS.reset} / ${COLORS.gray}${WORKFLOW_RALPH_CONFIG_ENV.spawnOtRoot}${COLORS.reset}   Nested spawn tuning (or ${COLORS.cyan}spawn.home${COLORS.reset}, ${COLORS.cyan}spawn.xdgConfigHome${COLORS.reset}, ${COLORS.cyan}spawn.otRoot${COLORS.reset} in file)
+  Optional repo-local defaults file: ${COLORS.cyan}.workflow-ralph.json${COLORS.reset} in the current working directory (see ${COLORS.cyan}tools/workflows/schemas/workflow-ralph.defaults.schema.json${COLORS.reset} for all keys).
+  Precedence: ${COLORS.green}${WORKFLOW_RALPH_CONFIG_PRECEDENCE}${COLORS.reset}.
 `;
 
 export const MESSAGE_INTRO = `

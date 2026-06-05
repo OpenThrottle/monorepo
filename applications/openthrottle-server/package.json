@@ -91,5 +91,8 @@
     "start:docker": "node -r dotenv/config ./build/src/main.js"
   },
   "sideEffects": false,
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "@openthrottle/openthrottle-agentic-utils": "workspace:*"
+  }
 }

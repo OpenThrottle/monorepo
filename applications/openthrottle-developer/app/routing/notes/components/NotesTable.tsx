@@ -52,7 +52,7 @@ export const NotesTable = (props: NotesTableProps): React.ReactElement => {
 
   // Setup
   const search = searchParams.get('q') ?? '';
-  const columns = React.useMemo(() => NotesTable.buildTable(), []);
+  const columns = React.useMemo(() => NotesTable.buildTable(), [notes]);
 
   // Handlers
 

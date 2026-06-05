@@ -1,5 +1,0 @@
-{
-  "data": "💰 💰 config 💰 💰 {\n  connectionString: \u001b[32m'postgresql://openthrottle_user:openthrottle_password@localhost:6010/openthrottle'\u001b[39m\n}\n",
-  "timestamp": "2026-05-03T01:56:06.201Z",
-  "type": "stdout"
-}

@@ -18,6 +18,20 @@ interface ResolvedRalphPromptProfile {
 }
 
 /**
+ * @description Strips leading YAML frontmatter when present (e.g. migrated `.cursor/skills/*\/SKILL.md`).
+ */
+export const stripYamlFrontmatter = (content: string): string => {
+  if (!content.startsWith('---\n')) {
+    return content;
+  }
+  const end = content.indexOf('\n---\n', 4);
+  if (end === -1) {
+    return content;
+  }
+  return content.slice(end + 5);
+};
+
+/**
  * @description Reads UTF-8 prompt text from `path` resolved against `cwd`.
  */
 export const readRalphPromptFileUtf8 = (
@@ -25,7 +39,8 @@ export const readRalphPromptFileUtf8 = (
   userPath: string,
 ): string => {
   const absolute = resolve(cwd, userPath.trim());
-  return readFileSync(absolute, 'utf8');
+  const raw = readFileSync(absolute, 'utf8');
+  return stripYamlFrontmatter(raw);
 };
 
 /**

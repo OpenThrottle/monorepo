@@ -1,50 +1,40 @@
 /**
  * @description Layer 2 — execution backend (runner): which process invokes each Ralph iteration.
  * A single plan run uses **exactly one** runner for **all** iterations; no per-iteration switching.
- * To use a different runner, start a new plan run / re-queue with that choice.
  *
- * Implemented: `cursor` (Cursor `cursor-agent` CLI) and `claude` (Anthropic Claude Code CLI, `claude`
- * on PATH — non-interactive `-p` / `--print` with `--bare`; see `bin/run-iteration.ts`).
- *
- * Adding a runner: register the id below, implement spawn paths in `bin/run-iteration.ts`, and
- * keep CLI help text in `config/messages.ts` aligned.
+ * Implementation lives in `@openthrottle/openthrottle-agentic-utils`; this module keeps legacy names.
  */
 
-/** Known backend ids; extend when adding a runner implementation. */
-export const RALPH_EXECUTION_BACKEND_IDS = ['claude', 'cursor'] as const;
-
-/** @description Which CLI/process runs each agentic iteration. */
-export type RalphExecutionBackendId =
-  (typeof RALPH_EXECUTION_BACKEND_IDS)[number];
-
-/** @description Default runner: Cursor agent CLI. */
-export const DEFAULT_RALPH_RUNNER: RalphExecutionBackendId = 'cursor';
+import {
+  DEFAULT_WORKFLOW_RUNNER,
+  isWorkflowRunnerId,
+  parseWorkflowRunnerId,
+  WORKFLOW_RUNNER_IDS,
+} from '@openthrottle/openthrottle-agentic-utils';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
- * @description Returns true when `value` is a supported {@link RalphExecutionBackendId}.
+ * @deprecated Import {@link WORKFLOW_RUNNER_IDS} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-export const isRalphExecutionBackendId = (
-  value: string,
-): value is RalphExecutionBackendId =>
-  (RALPH_EXECUTION_BACKEND_IDS as readonly string[]).includes(value);
+export const RALPH_EXECUTION_BACKEND_IDS = WORKFLOW_RUNNER_IDS;
 
 /**
- * @description Normalizes and validates a backend id from CLI, env, or defaults file.
+ * @deprecated Import {@link WorkflowConfigRunner} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
-export const parseRalphExecutionBackendId = (
-  raw: string,
-  source: 'cli' | 'env' | 'file' = 'cli',
-): RalphExecutionBackendId => {
-  const normalized = raw.trim().toLowerCase();
-  if (normalized === '') {
-    throw new Error(
-      `Execution backend (${source}) must be a non-empty string (e.g. ${DEFAULT_RALPH_RUNNER})`,
-    );
-  }
-  if (!isRalphExecutionBackendId(normalized)) {
-    throw new Error(
-      `Unknown execution backend "${raw.trim()}". Supported: ${RALPH_EXECUTION_BACKEND_IDS.join(', ')}`,
-    );
-  }
-  return normalized;
-};
+export type RalphExecutionBackendId = WorkflowConfigRunner;
+
+/**
+ * @deprecated Import {@link DEFAULT_WORKFLOW_RUNNER} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
+export const DEFAULT_RALPH_RUNNER: WorkflowConfigRunner =
+  DEFAULT_WORKFLOW_RUNNER;
+
+/**
+ * @deprecated Import {@link isWorkflowRunnerId} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
+export const isRalphExecutionBackendId = isWorkflowRunnerId;
+
+/**
+ * @deprecated Import {@link parseWorkflowRunnerId} from `@openthrottle/openthrottle-agentic-utils` instead.
+ */
+export const parseRalphExecutionBackendId = parseWorkflowRunnerId;

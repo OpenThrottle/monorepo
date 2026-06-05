@@ -41,12 +41,12 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 ### Ralph (agentic execution)
 
 - Turn an idea or PRD into a **plan + tasks in OT**, then **execute one task at a time** until done. Progress lives in OT (plan, tasks, plan_output_stream); commit with Plan-Id and Task-Id; link the squash commit after PR merge.
-- **Detailed docs:** [docs/workflows/ralph-design.md](../workflows/ralph-design.md), [.cursor/commands/agents/ralph.md](../../.cursor/commands/agents/ralph.md), [tools/workflows/README.md](../../tools/workflows/README.md).
+- **Detailed docs:** [docs/workflows/ralph-design.md](../workflows/ralph-design.md), [.cursor/skills/agents-ralph/SKILL.md](../../.cursor/skills/agents-ralph/SKILL.md), [tools/workflows/README.md](../../tools/workflows/README.md).
 
 ### Cursor integration (MCP)
 
 - **mcp-developer** (OT) MCP server in Cursor: ask OpenThrottle / ask OT, list plans by status, create/edit plans and tasks, semantic search, activity by date, output stream, commit links.
-- **Detailed docs:** [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), [.cursor/commands/ot/](../../.cursor/commands/ot/).
+- **Detailed docs:** [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*`.
 
 ### Dashboard (OpenThrottle app)
 

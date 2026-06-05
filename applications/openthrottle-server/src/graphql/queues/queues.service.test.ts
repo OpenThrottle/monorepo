@@ -4,6 +4,11 @@ import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import type { Job, Queue } from 'bullmq';
 import { createMock } from '@golevelup/ts-vitest';
+import { AGENTIC_TEST_QUEUE_NAME } from '../../queues/agentic-test/agentic-test.constants';
+import type {
+  AgenticTestJobPayload,
+  AgenticTestJobResult,
+} from '../../queues/agentic-test/agentic-test.types';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
@@ -88,6 +93,18 @@ describe('QueuesService', () => {
     getJobCounts: mockDailyStatsGetJobCounts,
   });
 
+  const mockAgenticTestAdd = vi.fn().mockResolvedValue(
+    createMock<Job<AgenticTestJobPayload, AgenticTestJobResult>>({
+      id: 'agentic-test-job-id',
+    }),
+  );
+  const mockAgenticTestQueue = createMock<
+    Queue<AgenticTestJobPayload, AgenticTestJobResult>
+  >({
+    add: mockAgenticTestAdd,
+    getJobCounts: mockGetJobCounts,
+  });
+
   const mockDocIngestionAdd = vi.fn().mockResolvedValue(
     createMock<Job<DocIngestionJobPayload, DocIngestionJobResult>>({
       id: 'doc-ingestion-job-id',
@@ -128,6 +145,10 @@ describe('QueuesService', () => {
       providers: [
         QueuesService,
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: getQueueToken(AGENTIC_TEST_QUEUE_NAME),
+          useValue: mockAgenticTestQueue,
+        },
         {
           provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
           useValue: mockDailyStatsQueue,
@@ -183,6 +204,13 @@ describe('QueuesService', () => {
       });
     });
 
+    test('returns error when queue name is reserved (agentic-test)', async () => {
+      const result = await service.createQueue(AGENTIC_TEST_QUEUE_NAME);
+      expect(result).toEqual({
+        error: `Queue name "${AGENTIC_TEST_QUEUE_NAME}" is reserved`,
+      });
+    });
+
     test('returns error when queue name is reserved (plans)', async () => {
       const result = await service.createQueue(PLANS_QUEUE_NAME);
       expect(result).toEqual({
@@ -199,6 +227,12 @@ describe('QueuesService', () => {
   });
 
   describe('getQueueByName', () => {
+    test('returns queue when name is agentic-test', () => {
+      expect(service.getQueueByName(AGENTIC_TEST_QUEUE_NAME)).toBe(
+        mockAgenticTestQueue,
+      );
+    });
+
     test('returns queue when name is daily-stats', () => {
       expect(service.getQueueByName(DAILY_STATS_QUEUE_NAME)).toBe(
         mockDailyStatsQueue,
@@ -360,6 +394,10 @@ describe('QueuesService', () => {
           QueuesService,
           { provide: ConfigService, useValue: mockConfigService },
           {
+            provide: getQueueToken(AGENTIC_TEST_QUEUE_NAME),
+            useValue: mockAgenticTestQueue,
+          },
+          {
             provide: getQueueToken(DAILY_STATS_QUEUE_NAME),
             useValue: mockDailyStatsQueue,
           },
@@ -442,7 +480,10 @@ describe('QueuesService', () => {
 
       const result = await service.getStats();
 
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(5);
+      const agenticTestStats = result.find(
+        (s) => s.name === AGENTIC_TEST_QUEUE_NAME,
+      );
       const plansStats = result.find((s) => s.name === PLANS_QUEUE_NAME);
       const dailyStatsStats = result.find(
         (s) => s.name === DAILY_STATS_QUEUE_NAME,
@@ -453,6 +494,14 @@ describe('QueuesService', () => {
       const docIngestionStats = result.find(
         (s) => s.name === DOC_INGESTION_QUEUE_NAME,
       );
+      expect(agenticTestStats).toMatchObject({
+        activeCount: 1,
+        completedCount: 10,
+        delayedCount: 0,
+        failedCount: 2,
+        name: AGENTIC_TEST_QUEUE_NAME,
+        waitingCount: 3,
+      });
       expect(plansStats).toMatchObject({
         activeCount: 1,
         completedCount: 10,
@@ -485,7 +534,7 @@ describe('QueuesService', () => {
         name: DATABASE_BACKUP_QUEUE_NAME,
         waitingCount: 3,
       });
-      expect(mockGetJobCounts).toHaveBeenCalledTimes(3);
+      expect(mockGetJobCounts).toHaveBeenCalledTimes(4);
       expect(mockDailyStatsGetJobCounts).toHaveBeenCalledTimes(1);
     });
 
@@ -553,6 +602,17 @@ describe('QueuesService', () => {
       expect(result).toEqual({ jobId: 'job-failed' });
       expect(mockRetry).toHaveBeenCalledTimes(1);
       expect(mockGetJob).toHaveBeenCalledWith('job-failed');
+    });
+  });
+
+  describe('enqueueAgenticTest', () => {
+    test('returns jobId when enqueue succeeds', async () => {
+      mockAgenticTestAdd.mockClear();
+
+      const result = await service.enqueueAgenticTest();
+
+      expect(result).toEqual({ jobId: 'agentic-test-job-id' });
+      expect(mockAgenticTestAdd).toHaveBeenCalledWith('agentic-test', {});
     });
   });
 

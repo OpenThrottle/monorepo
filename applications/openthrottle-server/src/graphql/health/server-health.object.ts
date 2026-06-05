@@ -8,21 +8,13 @@ import { Field, ObjectType } from '@nestjs/graphql';
 export type ServerHealthStatus = 'ok' | 'unconfigured' | 'unreachable';
 
 @ObjectType({
-  description:
-    'Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.',
+  description: `Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.`,
 })
 export class ServerHealthObject {
   @Field(() => String, {
     description: `API status. "ok" when the resolver runs.`,
   })
   api!: string;
-
-  @Field(() => String, {
-    deprecationReason:
-      'Use api instead. Example field demonstrating the GraphQL deprecation policy.',
-    description: `Deprecated alias for api. Kept for backwards compatibility.`,
-  })
-  apiStatus!: string;
 
   @Field(() => String, {
     description: `OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.`,

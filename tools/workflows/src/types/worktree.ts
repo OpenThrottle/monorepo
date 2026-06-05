@@ -3,25 +3,33 @@
  * Used to model and expose availability of worktree targets for Ralph loops.
  */
 
-import type { RalphExecutionBackendId } from '../utils/ralph-execution-backend';
-import type { RalphNestedDebugCli } from '../utils/workflow-ralph-nested-argv';
 import type {
   ChildProcessMetrics,
   ChildProcessMetricsOptions,
 } from './child-process-metrics';
 import type { WallClockMetrics } from './wall-clock-metrics';
+import type {
+  WorkflowConfigDebug,
+  WorkflowConfigRunner,
+} from '@openthrottle/openthrottle-agentic-workflow';
 
-/** Status of a worktree target: available for work or locked by a job. */
+/**
+ * Status of a worktree target: available for work or locked by a job.
+ */
 export type WorktreeTargetStatus = 'available' | 'locked';
 
-/** Snapshot of a worktree target in available state. */
+/**
+ * Snapshot of a worktree target in available state.
+ */
 export interface WorktreeTargetAvailable {
   readonly id: string;
   readonly path: string;
   readonly status: 'available';
 }
 
-/** Snapshot of a worktree target in locked state. */
+/**
+ * Snapshot of a worktree target in locked state.
+ */
 export interface WorktreeTargetLocked {
   readonly id: string;
   readonly lockedBy: string;
@@ -29,15 +37,21 @@ export interface WorktreeTargetLocked {
   readonly status: 'locked';
 }
 
-/** Discriminated union for worktree target state. */
+/**
+ * Discriminated union for worktree target state.
+ */
 export type WorktreeTarget = WorktreeTargetAvailable | WorktreeTargetLocked;
 
-/** Result of attempting to acquire a worktree target. */
+/**
+ * Result of attempting to acquire a worktree target.
+ */
 export type AcquireResult =
   | { ok: true; target: WorktreeTargetLocked }
   | { ok: false; reason: 'no_targets' | 'all_locked' | 'id_not_found' };
 
-/** Result of attempting to release a worktree target. */
+/**
+ * Result of attempting to release a worktree target.
+ */
 export type ReleaseResult =
   | { ok: true }
   | { ok: false; reason: 'id_not_found' | 'not_locked' | 'locked_by_other' };
@@ -77,14 +91,18 @@ export interface IWorktreeTargetsTracker {
   }): ReleaseResult | Promise<ReleaseResult>;
 }
 
-/** Payload passed from parent job to child (Ralph loop) after acquiring target and creating branch. */
+/**
+ * Payload passed from parent job to child (Ralph loop) after acquiring target and creating branch.
+ */
 export interface ParentJobHandoff {
   readonly branchName: string;
   readonly targetId: string;
   readonly worktreePath: string;
 }
 
-/** Options for the parent job: acquire target and create branch. */
+/**
+ * Options for the parent job: acquire target and create branch.
+ */
 export interface ParentJobAcquireOptions {
   /** Base branch to create from (e.g. main). Defaults to "main". */
   readonly baseBranch?: string;
@@ -105,7 +123,9 @@ export interface ParentJobAcquireOptions {
   readonly worktreeId?: string;
 }
 
-/** Result of parent job acquire + create-branch step. */
+/**
+ * Result of parent job acquire + create-branch step.
+ */
 export type ParentJobAcquireResult =
   | { handoff: ParentJobHandoff; ok: true }
   | {
@@ -114,19 +134,23 @@ export type ParentJobAcquireResult =
       reason: 'acquire_failed' | 'create_branch_failed';
     };
 
-/** Chunk of stdout or stderr from the Ralph child process (for streaming). */
+/**
+ * Chunk of stdout or stderr from the Ralph child process (for streaming).
+ */
 export type ChildJobStreamChunk =
   | { readonly data: string; readonly stream: 'stdout' }
   | { readonly data: string; readonly stream: 'stderr' };
 
-/** Input for the child job: run Ralph loop in the worktree and return branch + SHA. */
+/**
+ * Input for the child job: run Ralph loop in the worktree and return branch + SHA.
+ */
 export interface ChildJobInput {
   /**
-   * Execution backend (layer 2). One of {@link RalphExecutionBackendId} (`cursor` | `claude`); the
+   * Execution backend (layer 2). One of {@link WorkflowConfigRunner} (`cursor` | `claude`); the
    * same id applies to the entire nested run, not per iteration. Omitted uses workflow-ralph
    * default (`cursor`). Passed as `--backend` when not the default.
    */
-  readonly backend?: RalphExecutionBackendId;
+  readonly backend?: WorkflowConfigRunner;
   /**
    * When set, nested `workflow-ralph` and parent-side Cortex checks use this URL (e.g. TypeORM `url`
    * from openthrottle-server) so foreign `cwd` cannot desync Postgres identity from the API worker.
@@ -154,7 +178,7 @@ export interface ChildJobInput {
   /** NX project name; forwarded as `--project` when set. */
   readonly project?: string;
   /**
-   * Prompt profile (layer 1). Omitted uses workflow-ralph built-in default (`/agents/ralph`).
+   * Prompt profile (layer 1). Omitted uses workflow-ralph built-in default (`/agents-ralph`).
    * Passed as `--prompt` when not the default.
    */
   readonly prompt?: string;
@@ -166,7 +190,7 @@ export interface ChildJobInput {
   /**
    * Shim debug level for nested runs; forwarded as `--debug` or `--verbose` when not `omit`.
    */
-  readonly ralphDebugCli?: RalphNestedDebugCli;
+  readonly ralphDebugCli?: WorkflowConfigDebug;
   /** Optional AbortSignal; when aborted the child is killed (SIGTERM then SIGKILL after grace). */
   readonly signal?: AbortSignal;
   /** Cursor-only: `--skip-worktree-setup`. */
@@ -188,7 +212,9 @@ export interface ChildJobInput {
   readonly worktreeBase?: string;
 }
 
-/** Successful result of the child job: branch and commit SHA for parent to validate before release. */
+/**
+ * Successful result of the child job: branch and commit SHA for parent to validate before release.
+ */
 export interface ChildJobSuccess {
   readonly branchName: string;
   /** Child process CPU/memory metrics (if polling was enabled). */
@@ -201,7 +227,9 @@ export interface ChildJobSuccess {
   readonly wallClockMetrics?: WallClockMetrics;
 }
 
-/** Failed result of the child job. */
+/**
+ * Failed result of the child job.
+ */
 export interface ChildJobFailure {
   /** Child process CPU/memory metrics (if polling was enabled and samples were collected). */
   readonly childProcessMetrics?: ChildProcessMetrics;
@@ -212,49 +240,52 @@ export interface ChildJobFailure {
   readonly wallClockMetrics?: WallClockMetrics;
 }
 
-/** Result of running the child job (Ralph loop); returned to BullMQ parent for commit checks and release. */
+/**
+ * Result of running the child job (Ralph loop); returned to BullMQ parent for commit checks and release.
+ */
 export type ChildJobResult = ChildJobSuccess | ChildJobFailure;
 
-/** Options for parent job: ensure commit and checks before releasing target. */
+/**
+ * Options for parent job: ensure commit before releasing target.
+ *
+ * @description ensureCommit is now commit/clean-only; these fields are retained for
+ * backwards-compatible call sites but no longer trigger any checks. lint/typecheck/test
+ * enforcement moved to the Stage (d) after-phase hooks (which run the TARGET repo's own checks).
+ */
 export interface ParentJobEnsureCommitOptions {
-  /**
-   * Base ref for nx affected (e.g. main or origin/main).
-   * When set, runs lint/typecheck/typecheck-tests only for affected projects.
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly base?: string;
-  /**
-   * Optional callback invoked for each stdout/stderr chunk during nx checks (progress).
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
-  /**
-   * When true (default), run lint, typecheck, and typecheck-tests in the worktree before releasing.
-   * When false, only verify working tree is clean.
-   */
+  /** @deprecated No longer used; ensureCommit is always commit/clean-only now. */
   readonly runChecks?: boolean;
-  /**
-   * Optional AbortSignal; when aborted the nx check child is killed (SIGTERM then SIGKILL after grace).
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly signal?: AbortSignal;
-  /**
-   * Optional timeout in ms for nx checks (each of lint/typecheck/typecheck-tests).
-   * On expiry the child is killed (SIGTERM then SIGKILL after grace).
-   */
+  /** @deprecated No longer used; checks moved to Stage (d) after-phase hooks. */
   readonly timeoutMs?: number;
 }
 
-/** Success: working tree clean and checks (if requested) passed. */
+/**
+ * Success: working tree clean.
+ */
 export interface ParentJobEnsureCommitSuccess {
   readonly ok: true;
 }
 
-/** Failure: working tree has uncommitted changes. */
+/**
+ * Failure: working tree has uncommitted changes.
+ */
 export interface ParentJobEnsureCommitFailureDirty {
   readonly detail?: string;
   readonly ok: false;
   readonly reason: 'working_tree_dirty';
 }
 
-/** Failure: lint, typecheck, or typecheck-tests failed. */
+/**
+ * Failure: lint, typecheck, or typecheck-tests failed.
+ * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
+ * Retained in the union so existing consumer narrowing keeps type-checking during transition.
+ */
 export interface ParentJobEnsureCommitFailureChecks {
   readonly check: 'lint' | 'typecheck' | 'typecheck-tests';
   readonly ok: false;
@@ -263,7 +294,10 @@ export interface ParentJobEnsureCommitFailureChecks {
   readonly stdout?: string;
 }
 
-/** Failure: nx checks timed out. */
+/**
+ * Failure: nx checks timed out.
+ * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
+ */
 export interface ParentJobEnsureCommitFailureTimeout {
   readonly ok: false;
   readonly reason: 'checks_timed_out';
@@ -271,7 +305,10 @@ export interface ParentJobEnsureCommitFailureTimeout {
   readonly stdout?: string;
 }
 
-/** Failure: nx checks were cancelled (AbortSignal). */
+/**
+ * Failure: nx checks were cancelled (AbortSignal).
+ * @deprecated ensureCommit no longer runs nx checks; this variant is never produced.
+ */
 export interface ParentJobEnsureCommitFailureCancelled {
   readonly ok: false;
   readonly reason: 'checks_cancelled';
@@ -279,7 +316,11 @@ export interface ParentJobEnsureCommitFailureCancelled {
   readonly stdout?: string;
 }
 
-/** Result of ensure-commit-before-release step. */
+/**
+ * Result of ensure-commit-before-release step. At runtime this is now only
+ * {@link ParentJobEnsureCommitSuccess} or {@link ParentJobEnsureCommitFailureDirty};
+ * the checks_* variants are retained for back-compat narrowing only (never produced).
+ */
 export type ParentJobEnsureCommitResult =
   | ParentJobEnsureCommitSuccess
   | ParentJobEnsureCommitFailureDirty
@@ -303,7 +344,7 @@ export type WorkflowLoopResult =
 export interface WorktreeWorkflowOptions {
   /** Options for acquire + create-branch step. */
   readonly acquire: ParentJobAcquireOptions;
-  /** Options for ensure-commit-before-release (base for nx affected, runChecks). Default: runChecks true. */
+  /** Options for ensure-commit-before-release. Now commit/clean-only (checks moved to Stage (d) hooks). */
   readonly ensureCommit?: ParentJobEnsureCommitOptions;
   /**
    * Run the loop in the worktree (e.g. Ralph child job). Receives handoff from acquire step.

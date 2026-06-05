@@ -10,7 +10,7 @@ describe('routes/legal._index.tsx', () => {
       <MemoryRouter>
         <LegalIndex
           actionData={undefined}
-          loaderData={undefined}
+          loaderData={{} as never}
           matches={[] as never}
           params={{}}
         />

@@ -36,7 +36,7 @@ export function registerOutputTools(server: McpServer): void {
         return configMissingContent();
       }
       try {
-        const chunk = await cortexCreatePlanOutputChunk(config, {
+        const chunk = await cortexCreatePlanOutputChunk({
           content: parsed.data.content,
           iteration: parsed.data.iteration ?? null,
           planId: parsed.data.planId,
@@ -77,10 +77,7 @@ export function registerOutputTools(server: McpServer): void {
         return configMissingContent();
       }
       try {
-        const chunks = await cortexGetPlanOutputByPlanId(
-          config,
-          parsed.data.planId,
-        );
+        const chunks = await cortexGetPlanOutputByPlanId(parsed.data.planId);
         const text =
           chunks.length === 0
             ? 'No output chunks for this plan.'

@@ -6,15 +6,15 @@
  * spawn cwd). No process.cwd() or shared path; safe for concurrent jobs when each has its own handoff.
  */
 
-import { spawnSync } from 'child_process';
-import { getPostgresConfig } from '@openthrottle/ai-mcp/src/cortex-server';
 import { buildWorkflowRalphRunTuningArgv } from '@tools/workflows';
-import type { ChildJobInput, ChildJobResult } from '../types/worktree';
 import {
   ensureCortexReachable,
   getTasksByPlanId,
   updatePlanStatus,
 } from './cortex-client';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { spawnSync } from 'child_process';
+import type { ChildJobInput, ChildJobResult } from '../types/worktree';
 import type { CortexRalphConfig } from './cortex-client';
 
 /**
@@ -43,34 +43,43 @@ export async function runChildJob(
 ): Promise<ChildJobResult> {
   const {
     backend,
+    debug,
     handoff,
-    iterationTimeoutSeconds,
     iterations,
+    iterationTimeoutSeconds,
     model,
     planId,
     project,
     prompt,
     promptFile,
-    debug,
   } = input;
   const { worktreePath } = handoff;
 
-  const rawConfig = getPostgresConfig();
-  if (!rawConfig) {
+  let connectionString: string;
+
+  try {
+    connectionString = getPostgresUrl();
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+
     return {
       ok: false,
-      reason: `🚨 Postgres is not configured. Set POSTGRES_URL or POSTGRES_* env vars.`,
+      reason: message,
     };
   }
 
-  const config: CortexRalphConfig = {
-    connectionString: rawConfig.connectionString,
-  };
+  const config: CortexRalphConfig = { connectionString };
+
   try {
     await ensureCortexReachable(config);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    return { ok: false, reason: `Cortex unreachable: ${msg}` };
+
+    return {
+      ok: false,
+      reason: `OpenThrottle Postgres is unreachable: ${msg}`,
+    };
   }
 
   const ralphArgs = [
@@ -106,12 +115,12 @@ export async function runChildJob(
     };
   }
 
+  const commitSha = gitInWorktree(worktreePath, ['rev-parse', 'HEAD']);
   const branchName = gitInWorktree(worktreePath, [
     'rev-parse',
     '--abbrev-ref',
     'HEAD',
   ]);
-  const commitSha = gitInWorktree(worktreePath, ['rev-parse', 'HEAD']);
 
   if (!branchName || !commitSha) {
     return {
@@ -125,6 +134,7 @@ export async function runChildJob(
   const allDone =
     tasks.length > 0 &&
     tasks.every((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED');
+
   if (allDone) {
     await updatePlanStatus(config, planId, 'COMPLETED');
   }

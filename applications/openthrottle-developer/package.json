@@ -7,8 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://developer.openthrottle.ai"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@openthrottle/nestjs-repositories": "workspace:*"
+  },
   "engines": {
     "node": ">=22"
   },

@@ -3,21 +3,17 @@ import { COLORS } from '../config/index';
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
 import type { RalphDebugLevel } from './ralph-debug-logger';
-import {
-  ralphDebugLogger,
-  readRalphDebugConfigFromEnv,
-  setRalphDebugLevel,
-} from './ralph-debug-logger';
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
-import {
-  parseRalphExecutionBackendId,
-  DEFAULT_RALPH_RUNNER,
-} from './ralph-execution-backend';
+import { ralphDebugLogger, setRalphDebugLevel } from './ralph-debug-logger';
+import { parseRalphExecutionBackendId } from './ralph-execution-backend';
 import {
   RALPH_WORKTREE_FLAG_ONLY,
   resolveRalphWorktreeName,
   type RalphWorktreeName,
 } from './ralph-worktree-cli';
+import {
+  loadWorkflowRalphConfig,
+  mapDefaultsDebugToRalphDebugLevel,
+} from '../config/load-workflow-ralph-config';
 import {
   mergeRalphRuntimeSeed,
   DEFAULT_RALPH_ITERATIONS,
@@ -29,6 +25,8 @@ import {
   resolveRalphPromptFromSeed,
   type RalphPromptProfileKind,
 } from './ralph-prompt-resolution';
+import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
+import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =
@@ -117,7 +115,7 @@ export interface RalphArgs {
    * {@link RalphExecutionBackendId} (`cursor` | `claude`); the same id applies to the whole run
    * (no per-iteration switching). Default: Cursor `cursor-agent`.
    */
-  backend: RalphExecutionBackendId;
+  backend: WorkflowConfigRunner;
   /** Optional per-iteration timeout in ms (non-interactive only). When set, the runner process is killed after this duration. */
   iterationTimeoutMs: number | undefined;
   iterations: number;
@@ -207,8 +205,26 @@ export const parseRalphArgs = (): RalphArgs => {
       } else if (cliDebug !== 'verbose') {
         cliDebug = 'debug';
       }
-    } else if (arg === '--verbose') {
-      cliDebug = 'verbose';
+    } else if (arg === '--verbose' || arg.startsWith('--verbose=')) {
+      if (arg.startsWith('--verbose=')) {
+        const value = arg.slice('--verbose='.length).trim().toLowerCase();
+        if (
+          value === 'verbose' ||
+          value === '2' ||
+          value === 'all' ||
+          value === '' ||
+          value === '1' ||
+          value === 'true' ||
+          value === 'on'
+        ) {
+          cliDebug = 'verbose';
+        } else {
+          const message = `--verbose=value expects "verbose" or a truthy verbose flag; got "${value}"`;
+          throw new Error(message);
+        }
+      } else {
+        cliDebug = 'verbose';
+      }
     } else if (arg === '--iterations' && i + 1 < args.length) {
       const value = parseInt(args[i + 1] ?? '', 10);
       if (isNaN(value) || value < 1) {
@@ -349,15 +365,16 @@ export const parseRalphArgs = (): RalphArgs => {
   }
 
   /**
-   * CLI wins when any `--debug` / `--verbose` is present; otherwise use env
-   * (same rules as {@link readRalphDebugConfigFromEnv}) so argv parsing is the single place that applies the effective level after import.
+   * CLI wins when any `--debug` / `--verbose` is present; otherwise use merged
+   * file + env defaults ({@link loadWorkflowRalphConfig}).
    */
+  const mergedDefaults = loadWorkflowRalphConfig(cwd);
   const effectiveDebugLevel: RalphDebugLevel =
     cliDebug === 'verbose'
       ? 'verbose'
       : cliDebug === 'debug'
         ? 'debug'
-        : readRalphDebugConfigFromEnv();
+        : mapDefaultsDebugToRalphDebugLevel(mergedDefaults.debug);
 
   setRalphDebugLevel(effectiveDebugLevel);
 
@@ -367,7 +384,7 @@ export const parseRalphArgs = (): RalphArgs => {
   });
 
   const result: RalphArgs = {
-    backend: parsed.backend ?? DEFAULT_RALPH_RUNNER,
+    backend: parsed.backend ?? 'cursor',
     iterationTimeoutMs: parsed.iterationTimeoutMs,
     iterations: parsed.iterations ?? DEFAULT_RALPH_ITERATIONS,
     model: parsed.model,
@@ -394,7 +411,22 @@ export const parseRalphResponse = (
   iteration: number,
   plan: string,
 ): void => {
-  console.log(result);
+  /**
+   * Collapse `/bin/sh` command-misparse spam (cursor-agent's Shell tool feeding multiline prose to
+   * the shell; plan 65a8dd25 finding #1) before echoing, but still detect terminal markers from the
+   * original, unsanitized result so completion/error signals are never altered.
+   */
+  const { sanitized, collapsedBlockCount, suppressedLineCount } =
+    sanitizeRalphShellNoise(result);
+  console.log(sanitized);
+
+  if (collapsedBlockCount > 0) {
+    ralphDebugLogger.debug('parseRalphResponse: suppressed /bin/sh noise', {
+      collapsedBlockCount,
+      iteration,
+      suppressedLineCount,
+    });
+  }
 
   const markers = getRalphOutputMarkerFlags(result);
   const hasErr = markers.hasPromiseError;

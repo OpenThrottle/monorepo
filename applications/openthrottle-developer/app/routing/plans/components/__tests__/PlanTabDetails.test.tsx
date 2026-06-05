@@ -40,12 +40,16 @@ const defaultWorkflow: WorkflowRalphRunOptionsInput =
 const defaultRecent: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'] =
   [];
 
+const defaultPlanRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'] =
+  [];
+
 describe('PlanTabDetails Component', () => {
   test('renders overview tab with plan toolbar and workflow transparency', () => {
     const setFullscreen = vi.fn() as PlanTabDetailsProps['setFullscreen'];
     const props: PlanTabDetailsProps = {
       fullscreen: false,
       plan: mockPlan,
+      planRunAuditRows: defaultPlanRunAuditRows,
       ralphTuningJson: '',
       recentPlanRuns: defaultRecent,
       setFullscreen,

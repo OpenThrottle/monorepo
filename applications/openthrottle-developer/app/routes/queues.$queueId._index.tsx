@@ -1,20 +1,19 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import {
   DEFAULT_PAGINATION_LIMIT,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import {
-  OpenThrottleEmptyState,
-  OpenThrottleStatCard,
-} from '@openthrottle/react-router-ui';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import {
+  OpenThrottleEmptyState,
+  OpenThrottlePaginationSimple,
+  OpenThrottleStatCard,
+} from '@openthrottle/react-router-ui';
 import { ListOrderedIcon } from 'lucide-react';
 import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -107,10 +106,10 @@ export default function Component(
 
   // Setup
   const jobs = queue.jobs?.jobs ?? [];
-  const hasNext = queue.jobs?.hasNext ?? false;
   const queueBasePath = `/queues/${encodeURIComponent(queue.name)}`;
+  // const hasNext = queue.jobs?.hasNext ?? false;
 
-  const buildJobsPageHref = (nextPage: number): string => {
+  const _buildJobsPageHref = (nextPage: number): string => {
     params.set('page', String(nextPage));
     params.set('limit', String(limit));
 
@@ -166,56 +165,14 @@ export default function Component(
           title="No jobs in this queue."
         />
       ) : (
-        // <p className="text-muted-foreground"></p>
         <>
           <QueueJobsTable className="mb-4" jobs={jobs} queueName={queue.name} />
-
-          {(jobs.length > 0 || page > 1 || hasNext) && (
-            <div
-              className="mt-8 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between"
-              data-testid="queue-jobs-pagination"
-            >
-              <p className="text-sm text-muted-foreground">
-                Page {page} · {jobs.length} job{jobs.length === 1 ? '' : 's'} ·{' '}
-                {limit} per page
-                {hasNext ? ' · more on next page' : ''}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {page > 1 ? (
-                  <Button asChild={true} size="sm" variant="outline">
-                    <Link rel="prev" to={buildJobsPageHref(page - 1)}>
-                      Previous
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    className="pointer-events-none opacity-50"
-                    disabled={true}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Previous
-                  </Button>
-                )}
-                {hasNext ? (
-                  <Button asChild={true} size="sm" variant="outline">
-                    <Link rel="next" to={buildJobsPageHref(page + 1)}>
-                      Next
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    className="pointer-events-none opacity-50"
-                    disabled={true}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Next
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+          <OpenThrottlePaginationSimple
+            basePath={queueBasePath}
+            limit={limit}
+            page={page}
+            total={queue.jobs?.jobs?.length ?? 0}
+          />
         </>
       )}
     </GlobalScreen>

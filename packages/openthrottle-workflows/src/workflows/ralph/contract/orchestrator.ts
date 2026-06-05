@@ -2,16 +2,16 @@ import type { WorkflowRunResult as WorkflowRunResultBase } from '@openthrottle/o
 import type { WorkflowRalphContext } from './flow-context.js';
 
 export type WorkflowFinishedReason =
-  | 'agent_complete'
-  | 'cancelled'
-  | 'max_iterations'
-  | 'plan_already_terminal'
-  | 'tasks_exhausted';
+  | 'workflow_complete'
+  | 'workflow_cancelled'
+  | 'workflow_max_iterations'
+  | 'workflow_plan_already_terminal'
+  | 'workflow_tasks_exhausted';
 
 export type WorkflowFailedReason =
-  | 'agent_error'
-  | 'input_required'
-  | 'unhandled';
+  | 'workflow_agent_error'
+  | 'workflow_input_required'
+  | 'workflow_unhandled';
 
 /**
  * @description Terminal outcome of a workflow run (process exit semantics

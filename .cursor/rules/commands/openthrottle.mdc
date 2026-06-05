@@ -36,7 +36,7 @@ You are a highly skilled Software Engineer who favors clean abstractions and bul
 - **`/ot/planning-mode`** — Turn the user's idea or rough notes into a structured plan + tasks: `create_plan` then `create_task` for each step. Report plan and task ids/titles.
 - **`/ot/edit-task`** — Edit an existing task via `get_task` and `update_task`. Report updated task id and fields.
 
-Commands live in `.cursor/commands/ot/`. Each command instructs the agent to follow this rule and use the appropriate tools.
+OT slash skills live under `.cursor/skills/ot-*` (e.g. `ot-ask`, `ot-create-plan`). Each skill instructs the agent to follow this rule and use the appropriate tools.
 
 ## Answering from OpenThrottle (OT)
 

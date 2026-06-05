@@ -4,36 +4,21 @@
  * Precedence after merge: CLI argv overrides env overrides file over built-ins (see {@link mergeRalphRuntimeSeed}).
  */
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import type { RalphExecutionBackendId } from './ralph-execution-backend';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
-  parseRalphExecutionBackendId,
-  DEFAULT_RALPH_RUNNER,
-} from './ralph-execution-backend';
+  loadWorkflowRalphConfig,
+  loadWorkflowRalphDefaultsFileV1,
+  normalizeWorkflowRalphDefaultsFileV1,
+  readWorkflowRalphConfigEnv,
+} from '../config/load-workflow-ralph-config.js';
+import type { Writable } from '../type';
 
-export const DEFAULT_RALPH_PROMPT = '/agents/ralph' as const;
-export const DEFAULT_RALPH_ITERATIONS = 10;
-export const DEFAULT_RALPH_MODEL = 'auto' as const;
-
-/**
- * Environment variable names for run tuning and prompt profile (Phase 1).
- * `WORKFLOW_RALPH_BACKEND` accepts any registered {@link RalphExecutionBackendId} (`cursor` |
- * `claude`); the same id applies to the entire plan run.
- */
-export const WORKFLOW_RALPH_ENV = {
-  backend: 'WORKFLOW_RALPH_BACKEND',
-  iterationTimeout: 'WORKFLOW_RALPH_ITERATION_TIMEOUT',
-  iterations: 'WORKFLOW_RALPH_ITERATIONS',
-  model: 'WORKFLOW_RALPH_MODEL',
-  project: 'WORKFLOW_RALPH_PROJECT',
-  prompt: 'WORKFLOW_RALPH_PROMPT',
-  /** Path to UTF-8 file whose contents become layer-1 prompt text (same as `--prompt-file`). */
-  promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
-  skipWorktreeSetup: 'WORKFLOW_RALPH_SKIP_WORKTREE_SETUP',
-  worktree: 'WORKFLOW_RALPH_WORKTREE',
-  worktreeBase: 'WORKFLOW_RALPH_WORKTREE_BASE',
-} as const;
+export {
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
+  WORKFLOW_RALPH_ENV,
+} from '../config/load-workflow-ralph-config.js';
 
 /** Repo-local JSON file (cwd); optional. */
 export const WORKFLOW_RALPH_DEFAULTS_FILE = '.workflow-ralph.json' as const;
@@ -43,7 +28,7 @@ export const WORKFLOW_RALPH_DEFAULTS_FILE = '.workflow-ralph.json' as const;
  * `iterationTimeout` is in **seconds** (matches CLI `--iteration-timeout`).
  */
 export interface WorkflowRalphDefaultsFileJson {
-  readonly backend?: RalphExecutionBackendId;
+  readonly backend?: WorkflowConfigRunner;
   readonly iterationTimeout?: number;
   readonly iterations?: number;
   readonly model?: string;
@@ -59,16 +44,11 @@ export interface WorkflowRalphDefaultsFileJson {
   readonly worktreeBase?: string;
 }
 
-/** @internal Mutable builder for {@link WorkflowRalphDefaultsFileJson} (TS forbids assigning to readonly props). */
-type WorkflowRalphDefaultsFileDraft = Partial<{
-  -readonly [K in keyof WorkflowRalphDefaultsFileJson]: WorkflowRalphDefaultsFileJson[K];
-}>;
-
 /**
  * @description Seed for argv parsing before CLI flags are applied.
  */
 export interface RalphRuntimeSeed {
-  readonly backend: RalphExecutionBackendId;
+  readonly backend: WorkflowConfigRunner;
   readonly iterationTimeoutMs: number | undefined;
   readonly iterations: number;
   readonly model: string | undefined;
@@ -85,136 +65,42 @@ export interface RalphRuntimeSeed {
   readonly worktreeBase: string | undefined;
 }
 
-const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>
-  typeof error === 'object' && error !== null && 'code' in error;
-
-const isEnoent = (error: unknown): boolean =>
-  isNodeErrno(error) && error.code === 'ENOENT';
-
-/**
- * @description Parses a positive integer from an env value; returns undefined if missing/invalid.
- */
-const parsePositiveIntEnv = (
-  raw: string | undefined,
-  varName: string,
-): number | undefined => {
-  if (raw === undefined || raw.trim() === '') {
-    return undefined;
-  }
-  const value = parseInt(raw.trim(), 10);
-  if (Number.isNaN(value) || value < 1) {
-    throw new Error(
-      `${varName} must be a positive integer; got "${raw.trim()}"`,
-    );
-  }
-  return value;
-};
-
-/**
- * @description Validates and extracts defaults from parsed JSON object content.
- */
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const normalizeDefaultsFile = (
-  parsed: unknown,
-  filePath: string,
+const pickRunTuningFromV1 = (
+  v1: ReturnType<typeof loadWorkflowRalphDefaultsFileV1>,
 ): WorkflowRalphDefaultsFileJson => {
-  if (!isPlainObject(parsed)) {
-    throw new Error(`${filePath} must be a JSON object`);
-  }
-  const o = parsed;
-  const out: WorkflowRalphDefaultsFileDraft = {};
+  const out: Writable<WorkflowRalphDefaultsFileJson> = {};
 
-  if ('backend' in o && o.backend !== undefined) {
-    if (typeof o.backend !== 'string' || o.backend.trim() === '') {
-      throw new Error(`${filePath}: "backend" must be a non-empty string`);
-    }
-    out.backend = parseRalphExecutionBackendId(o.backend.trim(), 'file');
+  if (v1.backend !== undefined) {
+    out.backend = v1.backend;
   }
-  if ('promptFile' in o && o.promptFile !== undefined) {
-    if (typeof o.promptFile !== 'string' || o.promptFile.trim() === '') {
-      throw new Error(`${filePath}: "promptFile" must be a non-empty string`);
-    }
-    if ('prompt' in o && o.prompt !== undefined) {
-      throw new Error(
-        `${filePath}: "prompt" and "promptFile" cannot both be set`,
-      );
-    }
-    out.promptFile = o.promptFile.trim();
+  if (v1.iterationTimeout !== undefined) {
+    out.iterationTimeout = v1.iterationTimeout;
   }
-  if ('prompt' in o && o.prompt !== undefined) {
-    if (typeof o.prompt !== 'string' || o.prompt.trim() === '') {
-      throw new Error(`${filePath}: "prompt" must be a non-empty string`);
-    }
-    out.prompt = o.prompt.trim();
+  if (v1.iterations !== undefined) {
+    out.iterations = v1.iterations;
   }
-  if ('iterations' in o && o.iterations !== undefined) {
-    if (
-      typeof o.iterations !== 'number' ||
-      !Number.isInteger(o.iterations) ||
-      o.iterations < 1
-    ) {
-      throw new Error(`${filePath}: "iterations" must be a positive integer`);
-    }
-    out.iterations = o.iterations;
+  if (v1.model !== undefined) {
+    out.model = v1.model;
   }
-  if ('iterationTimeout' in o && o.iterationTimeout !== undefined) {
-    if (
-      typeof o.iterationTimeout !== 'number' ||
-      !Number.isInteger(o.iterationTimeout) ||
-      o.iterationTimeout < 1
-    ) {
-      throw new Error(
-        `${filePath}: "iterationTimeout" must be a positive integer (seconds)`,
-      );
-    }
-    out.iterationTimeout = o.iterationTimeout;
+  if (v1.project !== undefined) {
+    out.project = v1.project;
   }
-  if ('model' in o && o.model !== undefined) {
-    if (typeof o.model !== 'string') {
-      throw new Error(`${filePath}: "model" must be a string`);
-    }
-    out.model = o.model.trim();
+  if (v1.prompt !== undefined) {
+    out.prompt = v1.prompt;
   }
-  if ('project' in o && o.project !== undefined) {
-    if (typeof o.project !== 'string') {
-      throw new Error(`${filePath}: "project" must be a string`);
-    }
-    const p = o.project.trim();
-    if (p !== '') {
-      out.project = p;
-    }
+  if (v1.promptFile !== undefined) {
+    out.promptFile = v1.promptFile;
   }
-
-  if ('worktree' in o && o.worktree !== undefined) {
-    if (typeof o.worktree !== 'string') {
-      throw new Error(`${filePath}: "worktree" must be a string`);
-    }
-    const w = o.worktree.trim();
-    if (w !== '') {
-      out.worktree = w;
-    }
+  if (v1.skipWorktreeSetup !== undefined) {
+    out.skipWorktreeSetup = v1.skipWorktreeSetup;
   }
-
-  if ('worktreeBase' in o && o.worktreeBase !== undefined) {
-    if (typeof o.worktreeBase !== 'string') {
-      throw new Error(`${filePath}: "worktreeBase" must be a string`);
-    }
-    const b = o.worktreeBase.trim();
-    if (b !== '') {
-      out.worktreeBase = b;
-    }
+  if (v1.worktree !== undefined) {
+    out.worktree = v1.worktree;
   }
-
-  if ('skipWorktreeSetup' in o && o.skipWorktreeSetup !== undefined) {
-    if (typeof o.skipWorktreeSetup !== 'boolean') {
-      throw new Error(`${filePath}: "skipWorktreeSetup" must be a boolean`);
-    }
-    out.skipWorktreeSetup = o.skipWorktreeSetup;
+  if (v1.worktreeBase !== undefined) {
+    out.worktreeBase = v1.worktreeBase;
   }
-
-  return out as WorkflowRalphDefaultsFileJson;
+  return out;
 };
 
 /**
@@ -223,107 +109,14 @@ const normalizeDefaultsFile = (
 export function loadWorkflowRalphDefaultsFile(
   cwd: string,
 ): WorkflowRalphDefaultsFileJson {
-  const filePath = join(cwd, WORKFLOW_RALPH_DEFAULTS_FILE);
-  try {
-    const raw = readFileSync(filePath, 'utf8');
-    const parsed: unknown = JSON.parse(raw);
-    return normalizeDefaultsFile(parsed, WORKFLOW_RALPH_DEFAULTS_FILE);
-  } catch (error) {
-    if (isEnoent(error)) {
-      return {};
-    }
-    throw error;
-  }
+  return pickRunTuningFromV1(loadWorkflowRalphDefaultsFileV1(cwd));
 }
 
 /**
  * @description Reads `WORKFLOW_RALPH_*` env vars for prompt and run tuning.
  */
 export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
-  const out: WorkflowRalphDefaultsFileDraft = {};
-
-  const backendRaw = process.env[WORKFLOW_RALPH_ENV.backend];
-  if (backendRaw !== undefined && backendRaw.trim() !== '') {
-    out.backend = parseRalphExecutionBackendId(backendRaw.trim(), 'env');
-  }
-
-  const promptRaw = process.env[WORKFLOW_RALPH_ENV.prompt];
-  const promptFileRaw = process.env[WORKFLOW_RALPH_ENV.promptFile];
-  const hasNamed = promptRaw !== undefined && promptRaw.trim() !== '';
-  const hasFile = promptFileRaw !== undefined && promptFileRaw.trim() !== '';
-  if (hasNamed && hasFile) {
-    throw new Error(
-      `${WORKFLOW_RALPH_ENV.prompt} and ${WORKFLOW_RALPH_ENV.promptFile} cannot both be set`,
-    );
-  }
-  if (hasNamed) {
-    out.prompt = promptRaw!.trim();
-  }
-  if (hasFile) {
-    out.promptFile = promptFileRaw!.trim();
-  }
-
-  const iterations = parsePositiveIntEnv(
-    process.env[WORKFLOW_RALPH_ENV.iterations],
-    WORKFLOW_RALPH_ENV.iterations,
-  );
-  if (iterations !== undefined) {
-    out.iterations = iterations;
-  }
-
-  const iterationTimeout = parsePositiveIntEnv(
-    process.env[WORKFLOW_RALPH_ENV.iterationTimeout],
-    WORKFLOW_RALPH_ENV.iterationTimeout,
-  );
-  if (iterationTimeout !== undefined) {
-    out.iterationTimeout = iterationTimeout;
-  }
-
-  const modelRaw = process.env[WORKFLOW_RALPH_ENV.model];
-  if (modelRaw !== undefined && modelRaw.trim() !== '') {
-    out.model = modelRaw.trim();
-  }
-
-  const projectRaw = process.env[WORKFLOW_RALPH_ENV.project];
-  if (projectRaw !== undefined && projectRaw.trim() !== '') {
-    out.project = projectRaw.trim();
-  }
-
-  const worktreeRaw = process.env[WORKFLOW_RALPH_ENV.worktree];
-  if (worktreeRaw !== undefined && worktreeRaw.trim() !== '') {
-    out.worktree = worktreeRaw.trim();
-  }
-
-  const worktreeBaseRaw = process.env[WORKFLOW_RALPH_ENV.worktreeBase];
-  if (worktreeBaseRaw !== undefined && worktreeBaseRaw.trim() !== '') {
-    out.worktreeBase = worktreeBaseRaw.trim();
-  }
-
-  const skipRaw = process.env[WORKFLOW_RALPH_ENV.skipWorktreeSetup]?.trim();
-  if (skipRaw !== undefined && skipRaw !== '') {
-    const lower = skipRaw.toLowerCase();
-    if (
-      lower === '1' ||
-      lower === 'true' ||
-      lower === 'yes' ||
-      lower === 'on'
-    ) {
-      out.skipWorktreeSetup = true;
-    } else if (
-      lower === '0' ||
-      lower === 'false' ||
-      lower === 'no' ||
-      lower === 'off'
-    ) {
-      out.skipWorktreeSetup = false;
-    } else {
-      throw new Error(
-        `${WORKFLOW_RALPH_ENV.skipWorktreeSetup} must be a boolean (1|0|true|false); got "${skipRaw}"`,
-      );
-    }
-  }
-
-  return out as WorkflowRalphDefaultsFileJson;
+  return pickRunTuningFromV1(readWorkflowRalphConfigEnv());
 }
 
 /**
@@ -331,43 +124,25 @@ export function readWorkflowRalphEnv(): WorkflowRalphDefaultsFileJson {
  * Order: **env overrides file** over built-ins. CLI parsing applies on top (see {@link parseRalphArgs}).
  */
 export function mergeRalphRuntimeSeed(cwd: string): RalphRuntimeSeed {
-  const file = loadWorkflowRalphDefaultsFile(cwd);
-  const env = readWorkflowRalphEnv();
-
-  const backend = env.backend ?? file.backend ?? DEFAULT_RALPH_RUNNER;
-
-  const promptFile = env.promptFile ?? file.promptFile;
-  const namedPrompt = env.prompt ?? file.prompt ?? DEFAULT_RALPH_PROMPT;
-  if (promptFile !== undefined && namedPrompt !== DEFAULT_RALPH_PROMPT) {
-    throw new Error(
-      'Cannot combine prompt file path with a non-default named prompt in defaults (env + .workflow-ralph.json). Use only one of prompt or promptFile.',
-    );
-  }
-  const prompt = namedPrompt;
-  const iterations =
-    env.iterations ?? file.iterations ?? DEFAULT_RALPH_ITERATIONS;
-  const iterationTimeoutSeconds = env.iterationTimeout ?? file.iterationTimeout;
+  const resolved = loadWorkflowRalphConfig(cwd);
   const iterationTimeoutMs =
-    iterationTimeoutSeconds !== undefined && iterationTimeoutSeconds >= 1
-      ? iterationTimeoutSeconds * 1000
-      : undefined;
-  const model = env.model ?? file.model ?? DEFAULT_RALPH_MODEL;
-  const projectRaw = env.project ?? file.project;
-  const project =
-    projectRaw !== undefined && projectRaw.trim() !== ''
-      ? projectRaw.trim()
+    resolved.iterationTimeout !== undefined && resolved.iterationTimeout >= 1
+      ? resolved.iterationTimeout * 1000
       : undefined;
 
   return {
-    backend,
+    backend: resolved.backend,
     iterationTimeoutMs,
-    iterations,
-    model,
-    project,
-    prompt,
-    promptFile,
-    skipWorktreeSetup: env.skipWorktreeSetup ?? file.skipWorktreeSetup,
-    worktree: env.worktree ?? file.worktree,
-    worktreeBase: env.worktreeBase ?? file.worktreeBase,
+    iterations: resolved.iterations,
+    model: resolved.model,
+    project: resolved.project,
+    prompt: resolved.prompt,
+    promptFile: resolved.promptFile,
+    skipWorktreeSetup: resolved.skipWorktreeSetup,
+    worktree: resolved.worktree,
+    worktreeBase: resolved.worktreeBase,
   };
 }
+
+/** @description Re-export for callers validating file JSON without reading from disk. */
+export { normalizeWorkflowRalphDefaultsFileV1 };

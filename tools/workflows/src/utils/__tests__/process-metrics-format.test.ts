@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import type { SystemCpuMetrics } from '@openthrottle/openthrottle-agentic-workflow';
 import type { ChildProcessMetrics } from '../../types/child-process-metrics';
-import type { SystemCpuMetrics } from '../../types/system-cpu-metrics';
 import type { WallClockMetrics } from '../../types/wall-clock-metrics';
 import {
   characterizeWorkload,

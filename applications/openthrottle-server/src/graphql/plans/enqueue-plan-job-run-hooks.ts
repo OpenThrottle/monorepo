@@ -14,7 +14,7 @@ const MAX_JOB_RUN_HOOKS_JSON_LEN = 512_000;
  */
 export const serializeJobRunHooksForGraphql = (
   stored: PlanJobRunHooksStorage | null | undefined,
-): string => JSON.stringify(stored ?? { hooks: [] });
+): string => JSON.stringify(parseJobRunHooksConfig(stored ?? { hooks: [] }));
 
 /**
  * @description Parses GraphQL JSON into canonical {@link JobRunHooksConfig} for DB or enqueue.

@@ -36,7 +36,7 @@ export function registerCommitTools(server: McpServer): void {
       const data = parsed.data;
 
       try {
-        const link = await cortexCreateCommitLink(config, {
+        const link = await cortexCreateCommitLink({
           message: data.message ?? null,
           planId: data.planId,
           repo: data.repo,

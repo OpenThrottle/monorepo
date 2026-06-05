@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
   Sidebar,
@@ -55,7 +56,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         collapsible="icon"
         variant="sidebar"
       >
-        <GlobalSidebarHeader name="Dev" to="/" />
+        <GlobalSidebarHeader name={APP_NAME_SHORT} to="/" />
         <GlobalSidebarContent
           data={data}
           defaultSectionsExpanded={false}

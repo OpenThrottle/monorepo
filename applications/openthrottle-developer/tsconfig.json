@@ -48,6 +48,9 @@
     },
     {
       "path": "../../packages/react-router-utils"
+    },
+    {
+      "path": "../../packages/nestjs-repositories"
     }
   ]
 }

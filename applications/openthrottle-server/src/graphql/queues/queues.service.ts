@@ -7,6 +7,14 @@ import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import {
+  AGENTIC_TEST_JOB_NAME,
+  AGENTIC_TEST_QUEUE_NAME,
+} from '../../queues/agentic-test/agentic-test.constants';
+import type {
+  AgenticTestJobPayload,
+  AgenticTestJobResult,
+} from '../../queues/agentic-test/agentic-test.types';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
 import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants';
@@ -46,6 +54,7 @@ const IDEMPOTENCY_KEY_REGEX = /^[a-zA-Z0-9_.:-]+$/;
 
 /** @description Union of all queue job data types for methods that work across static and dynamic queues. */
 type AnyJobData =
+  | AgenticTestJobPayload
   | AggregateDailyStatsJobData
   | DocIngestionJobPayload
   | DynamicJobData
@@ -120,6 +129,7 @@ const VALID_JOB_STATES = [
 //
 
 const REGISTERED_QUEUES = [
+  AGENTIC_TEST_QUEUE_NAME,
   DATABASE_BACKUP_QUEUE_NAME,
   DAILY_STATS_QUEUE_NAME,
   DOC_INGESTION_QUEUE_NAME,
@@ -135,6 +145,11 @@ export class QueuesService implements OnModuleDestroy {
 
   constructor(
     private readonly configService: ConfigService,
+    @InjectQueue(AGENTIC_TEST_QUEUE_NAME)
+    private readonly agenticTestQueue: Queue<
+      AgenticTestJobPayload,
+      AgenticTestJobResult
+    >,
     @InjectQueue(DAILY_STATS_QUEUE_NAME)
     private readonly dailyStatsQueue: Queue<AggregateDailyStatsJobData, void>,
     @InjectQueue(DATABASE_BACKUP_QUEUE_NAME)
@@ -222,6 +237,10 @@ export class QueuesService implements OnModuleDestroy {
    * @description Returns the queue instance for the given name, or null if not registered.
    */
   getQueueByName(name: string): Queue<AnyJobData, void> | null {
+    if (name === AGENTIC_TEST_QUEUE_NAME) {
+      return this.agenticTestQueue as unknown as Queue<AnyJobData, void>;
+    }
+
     if (name === DAILY_STATS_QUEUE_NAME) {
       return this.dailyStatsQueue as Queue<AnyJobData, void>;
     }
@@ -405,6 +424,21 @@ export class QueuesService implements OnModuleDestroy {
     const id = job.id ?? jobId;
 
     return { jobId: String(id) };
+  }
+
+  /**
+   * @description Enqueues a doc-ingestion job with the given payload. At least one of directories or files must be non-empty. Returns new job id on success or error message.
+   */
+  /**
+   * @description Enqueues an agentic-test smoke job (echo timestamps for ~30s). Returns new job id on success.
+   */
+  async enqueueAgenticTest(): Promise<{ jobId: string } | { error: string }> {
+    const job = await this.agenticTestQueue.add(AGENTIC_TEST_JOB_NAME, {});
+    if (job.id == null) {
+      return { error: 'Failed to get new job id' };
+    }
+
+    return { jobId: String(job.id) };
   }
 
   /**

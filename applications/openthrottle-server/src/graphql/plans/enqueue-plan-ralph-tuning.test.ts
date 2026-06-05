@@ -1,14 +1,26 @@
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import type { RalphPlanRunTuningInput } from './plan.input';
 import {
   buildRunPlanJobData,
   buildRunPlanOrchestratorJobData,
+  DEFAULT_PLAN_RUN_KIND,
   parseEnqueueRalphTuning,
+  ralphTuningForChildJob,
+  resolveDefaultPlanRunKind,
   validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
+
+/**
+ * @description Creates a temp directory that looks like an Nx workspace root (has nx.json).
+ */
+const makeNxWorkspaceDir = (): string => {
+  const dir = mkdtempSync(join(tmpdir(), 'ot-nx-'));
+  writeFileSync(join(dir, 'nx.json'), '{}');
+  return dir;
+};
 
 const emptyTuningInput = (): RalphPlanRunTuningInput => ({
   backend: null,
@@ -43,7 +55,7 @@ describe('parseEnqueueRalphTuning', () => {
     ).toEqual({ iterations: 7 });
   });
 
-  test('validates backend with parseRalphExecutionBackendId', () => {
+  test('validates backend with parseWorkflowRunnerId', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
@@ -83,6 +95,45 @@ describe('parseEnqueueRalphTuning', () => {
         ralphDebugCli: 'debug',
       }),
     ).toEqual({ debug: 'debug' });
+  });
+
+  test('normalizes legacy uppercase ralphDebugCli to nested debug', () => {
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'DEBUG' as 'debug',
+      }),
+    ).toEqual({ debug: 'debug' });
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'VERBOSE' as 'verbose',
+      }),
+    ).toEqual({ debug: 'verbose' });
+  });
+
+  test('omits debug when ralphDebugCli is omit or unknown', () => {
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'omit',
+      }),
+    ).toBeUndefined();
+    expect(
+      parseEnqueueRalphTuning({
+        ...emptyTuningInput(),
+        ralphDebugCli: 'DEBUGG' as 'debug',
+      }),
+    ).toBeUndefined();
+  });
+
+  test('ralphTuningForChildJob normalizes legacy uppercase debug on job payload', () => {
+    expect(
+      ralphTuningForChildJob({ debug: 'DEBUG' as 'debug', iterations: 2 }),
+    ).toEqual({ iterations: 2, ralphDebugCli: 'debug' });
+    expect(ralphTuningForChildJob({ debug: 'VERBOSE' as 'verbose' })).toEqual({
+      ralphDebugCli: 'verbose',
+    });
   });
 
   test('parses worktree tuning for nested argv and orchestrator', () => {
@@ -125,7 +176,7 @@ describe('buildRunPlanJobData', () => {
       ralph: null,
     });
     expect(result.jobRunHooks?.hooks).toHaveLength(1);
-    expect(result.jobRunHooks?.hooks[0]?.phase).toBe('before_run');
+    expect(result.jobRunHooks?.hooks[0]?.phase).toBe('beforeAll');
   });
 
   test('includes ralph when tuning is present', () => {
@@ -256,7 +307,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
   });
 
   test('includes workingDirectory when provided', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    const tempDir = makeNxWorkspaceDir();
     expect(
       buildRunPlanOrchestratorJobData({
         planId: SAMPLE_PLAN_ID,
@@ -332,8 +383,8 @@ describe('buildRunPlanJobData with workingDirectory', () => {
     expect(result).not.toHaveProperty('workingDirectory');
   });
 
-  test('includes workingDirectory for a valid directory', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+  test('includes workingDirectory for a valid Nx workspace directory', () => {
+    const tempDir = makeNxWorkspaceDir();
     const result = buildRunPlanJobData({
       planId: 'p1',
       ralph: null,
@@ -346,6 +397,16 @@ describe('buildRunPlanJobData with workingDirectory', () => {
     });
   });
 
+  test('accepts a non-Nx workingDirectory when the path exists', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'ot-test-'));
+    const data = buildRunPlanJobData({
+      planId: 'p1',
+      ralph: null,
+      workingDirectory: tempDir,
+    });
+    expect(data.workingDirectory).toBe(tempDir);
+  });
+
   test('throws for an invalid workingDirectory', () => {
     expect(() =>
       buildRunPlanJobData({
@@ -354,5 +415,35 @@ describe('buildRunPlanJobData with workingDirectory', () => {
         workingDirectory: '/no/such/dir/ot-test',
       }),
     ).toThrow(/does not exist/);
+  });
+});
+
+describe('resolveDefaultPlanRunKind', () => {
+  const ORIGINAL = process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+
+  afterEach(() => {
+    if (ORIGINAL === undefined) {
+      delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+    } else {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = ORIGINAL;
+    }
+  });
+
+  test('defaults to orchestrator when unset', () => {
+    delete process.env.OPENTHROTTLE_DEFAULT_RUN_KIND;
+    expect(resolveDefaultPlanRunKind()).toBe('orchestrator');
+    expect(DEFAULT_PLAN_RUN_KIND).toBe('orchestrator');
+  });
+
+  describe('when OPENTHROTTLE_DEFAULT_RUN_KIND is set', () => {
+    test('returns spawn for the explicit spawn rollback value (case-insensitive)', () => {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'SPAWN';
+      expect(resolveDefaultPlanRunKind()).toBe('spawn');
+    });
+
+    test('falls back to orchestrator for any other value', () => {
+      process.env.OPENTHROTTLE_DEFAULT_RUN_KIND = 'nonsense';
+      expect(resolveDefaultPlanRunKind()).toBe('orchestrator');
+    });
   });
 });

@@ -31,21 +31,21 @@ export const GlobalLayoutBreadcrumbs = (
     .filter((match) => match.handle && match.handle.links)
     .map((match) => match.handle?.links?.(match) ?? []);
 
-  if (links[0]) {
-    links[0].unshift({
-      children: 'OpenThrottle',
-      className: 'hidden lg:block font-semibold!',
-      to: '/',
-    });
-  } else {
-    links.unshift([
-      {
-        children: 'OpenThrottle',
-        className: 'hidden lg:block font-semibold!',
-        to: '/',
-      },
-    ]);
-  }
+  // if (links[0]) {
+  //   links[0].unshift({
+  //     children: 'OpenThrottle',
+  //     className: 'hidden lg:block font-semibold!',
+  //     to: '/',
+  //   });
+  // } else {
+  //   links.unshift([
+  //     {
+  //       children: 'OpenThrottle',
+  //       className: 'hidden lg:block font-semibold!',
+  //       to: '/',
+  //     },
+  //   ]);
+  // }
 
   // Handlers
 

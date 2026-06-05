@@ -164,13 +164,13 @@ export default function Component(
           icon={FileUpIcon}
           title="Upload document"
         />
-        <p className="mb-6 max-w-2xl text-sm text-muted-foreground">
+        <p className="mb-6 text-sm text-muted-foreground">
           Upload markdown, CSV, HTML, JSON, or Excel. After parsing (stubbed
           here), review the proposed plan and tasks, then commit once the ingest
           service is wired.
         </p>
 
-        <div className="flex max-w-2xl flex-col gap-6">
+        <div className="flex flex-col gap-6">
           <fetcher.Form
             className="flex flex-col gap-4"
             encType="multipart/form-data"

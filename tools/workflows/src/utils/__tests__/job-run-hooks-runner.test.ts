@@ -53,7 +53,7 @@ describe('resolveJobRunHookLayer1Prompt', () => {
   it('returns named prompt path for prompt_profile named', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
@@ -71,7 +71,7 @@ describe('resolveJobRunHookLayer1Prompt', () => {
 
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       promptDelivery: 'file',
       promptFile,
     });
@@ -84,13 +84,15 @@ describe('resolveJobRunHookLayer1Prompt', () => {
   it('loads repo skill markdown for skill kind', () => {
     const entry = parseJobRunHookEntry({
       kind: 'skill',
-      phase: 'after_run',
+      phase: 'afterAll',
       skillPath: '.agents/skills/workflow-ralph/SKILL.md',
     });
 
     const text = resolveJobRunHookLayer1Prompt(entry, process.cwd());
 
-    expect(text).toContain('# Repo skill: .agents/skills/workflow-ralph/SKILL.md');
+    expect(text).toContain(
+      '# Repo skill: .agents/skills/workflow-ralph/SKILL.md',
+    );
     expect(text).toContain('Workflow Ralph');
   });
 });
@@ -99,7 +101,7 @@ describe('buildJobRunHookAgentPrompt', () => {
   it('combines layer-1, plan block, and hook suffix', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
@@ -115,7 +117,7 @@ describe('buildJobRunHookAgentPrompt', () => {
     expect(prompt).toContain('/agents/ralph');
     expect(prompt).toContain('--- Cortex plan ---');
     expect(prompt).toContain('Plan-Id: 00000000-0000-4000-8000-000000000001');
-    expect(prompt).toContain('before_run');
+    expect(prompt).toContain('beforeAll');
     expect(prompt).toContain('Do preflight.');
   });
 });
@@ -130,7 +132,7 @@ describe('executeJobRunHooksPhase', () => {
       },
       hooks: undefined,
       layer1Suffix: 'suffix',
-      phase: 'before_run',
+      phase: 'beforeAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',
@@ -141,11 +143,13 @@ describe('executeJobRunHooksPhase', () => {
   });
 
   it('passes composed agent prompt to runHookIteration for skill hook', async () => {
-    const runHookIteration = vi.fn().mockResolvedValue({ ok: true, output: 'ok' });
+    const runHookIteration = vi
+      .fn()
+      .mockResolvedValue({ ok: true, output: 'ok' });
 
     const entry = parseJobRunHookEntry({
       kind: 'skill',
-      phase: 'before_run',
+      phase: 'beforeAll',
       skillPath: '.agents/skills/workflow-ralph/SKILL.md',
     });
 
@@ -157,17 +161,18 @@ describe('executeJobRunHooksPhase', () => {
       },
       hooks: { hooks: [entry] },
       layer1Suffix: 'suffix',
-      phase: 'before_run',
+      phase: 'beforeAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',
     });
 
     expect(runHookIteration).toHaveBeenCalledTimes(1);
-    const agentPrompt = runHookIteration.mock.calls[0]?.[0]?.agentPrompt as string;
+    const agentPrompt = runHookIteration.mock.calls[0]?.[0]
+      ?.agentPrompt as string;
     expect(agentPrompt).toContain('workflow-ralph/SKILL.md');
     expect(agentPrompt).toContain('--- plan ---');
-    expect(agentPrompt).toContain('before_run');
+    expect(agentPrompt).toContain('beforeAll');
   });
 
   it('blocks before_run when hook fails with on_failure block', async () => {
@@ -180,7 +185,7 @@ describe('executeJobRunHooksPhase', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
       onFailure: 'block',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
@@ -193,7 +198,7 @@ describe('executeJobRunHooksPhase', () => {
       },
       hooks: { hooks: [entry] },
       layer1Suffix: 'suffix',
-      phase: 'before_run',
+      phase: 'beforeAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',
@@ -213,7 +218,7 @@ describe('executeJobRunHooksPhase', () => {
     const entry = parseJobRunHookEntry({
       kind: 'prompt_profile',
       onFailure: 'warn',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
@@ -226,7 +231,7 @@ describe('executeJobRunHooksPhase', () => {
       },
       hooks: { hooks: [entry] },
       layer1Suffix: 'suffix',
-      phase: 'before_run',
+      phase: 'beforeAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',
@@ -236,19 +241,21 @@ describe('executeJobRunHooksPhase', () => {
   });
 
   it('filters after_run hooks by whenMainRunSucceeded', async () => {
-    const runHookIteration = vi.fn().mockResolvedValue({ ok: true, output: 'ok' });
+    const runHookIteration = vi
+      .fn()
+      .mockResolvedValue({ ok: true, output: 'ok' });
 
     const onSuccess = parseJobRunHookEntry({
       conditions: { whenMainRunSucceeded: true },
       kind: 'prompt_profile',
-      phase: 'after_run',
+      phase: 'afterAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
     const onFailure = parseJobRunHookEntry({
       conditions: { whenMainRunSucceeded: false },
       kind: 'prompt_profile',
-      phase: 'after_run',
+      phase: 'afterAll',
       prompt: '/agents/seo',
       promptDelivery: 'named',
     });
@@ -263,7 +270,7 @@ describe('executeJobRunHooksPhase', () => {
       layer1Suffix: 'suffix',
       mainRunStarted: true,
       mainRunSucceeded: true,
-      phase: 'after_run',
+      phase: 'afterAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',
@@ -284,7 +291,7 @@ describe('executeJobRunHooksPhase', () => {
       layer1Suffix: 'suffix',
       mainRunStarted: true,
       mainRunSucceeded: false,
-      phase: 'after_run',
+      phase: 'afterAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',
@@ -300,7 +307,7 @@ describe('executeJobRunHooksPhase', () => {
     const entry = parseJobRunHookEntry({
       conditions: { runKinds: ['orchestrator'] },
       kind: 'prompt_profile',
-      phase: 'before_run',
+      phase: 'beforeAll',
       prompt: '/agents/ralph',
       promptDelivery: 'named',
     });
@@ -313,7 +320,7 @@ describe('executeJobRunHooksPhase', () => {
       },
       hooks: { hooks: [entry] },
       layer1Suffix: 'suffix',
-      phase: 'before_run',
+      phase: 'beforeAll',
       planContextBlock: '--- plan ---',
       planId: '00000000-0000-4000-8000-000000000001',
       runKind: 'spawn',

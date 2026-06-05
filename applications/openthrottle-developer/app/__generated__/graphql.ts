@@ -103,6 +103,13 @@ export type ActivityTaskUpdatedRowObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type AddPermissionToRoleInput = {
+  /** Permission id to add */
+  permissionId: Scalars['ID']['input'];
+  /** Role id to add the permission to */
+  roleId: Scalars['ID']['input'];
+};
+
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -158,6 +165,13 @@ export type AssignRoleToServiceAccountInput = {
   serviceAccountId: Scalars['ID']['input'];
 };
 
+export type AssignRoleToUserInput = {
+  /** Role id to assign */
+  roleId: Scalars['ID']['input'];
+  /** User id to assign the role to */
+  userId: Scalars['ID']['input'];
+};
+
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
@@ -165,7 +179,7 @@ export type CancelPlanRunInput = {
 
 export type CancelPlanRunResultObject = {
   __typename?: 'CancelPlanRunResultObject';
-  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When `signaledActiveRunToStop` is true, the worker was asked to terminate the Ralph child for this plan. */
+  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan. */
   activeJobIdsCouldNotCancel: Array<Scalars['String']['output']>;
   /** True when no run-plan job for this plan existed in waiting, delayed, paused, active, or prioritized state. */
   noMatchingJob: Scalars['Boolean']['output'];
@@ -297,6 +311,8 @@ export type CreatePlanInput = {
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults. */
+  runConfigJson?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
@@ -322,6 +338,12 @@ export type CreateQueueResultObject = {
   queueName?: Maybe<Scalars['String']['output']>;
   /** Whether the queue was created (or accepted for registration). */
   success: Scalars['Boolean']['output'];
+};
+
+export type CreateRoleInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Role name (e.g. admin, user, viewer). Must be unique. */
+  name: Scalars['String']['input'];
 };
 
 export type CreateServiceAccountCredentialInput = {
@@ -463,6 +485,30 @@ export type DuplicateJobResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type EnqueueAgenticTestResultObject = {
+  __typename?: 'EnqueueAgenticTestResultObject';
+  /** Error message when success is false. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** BullMQ job id when success is true. */
+  jobId?: Maybe<Scalars['String']['output']>;
+  /** Whether the job was enqueued. */
+  success: Scalars['Boolean']['output'];
+};
+
+export type EnqueueAgenticWorkflowMockResultObject = {
+  __typename?: 'EnqueueAgenticWorkflowMockResultObject';
+  /** Error message when success is false. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** BullMQ job id when success is true. */
+  jobId?: Maybe<Scalars['String']['output']>;
+  /** BullMQ job name when success is true. */
+  jobName?: Maybe<Scalars['String']['output']>;
+  /** BullMQ queue name when success is true. */
+  queueName?: Maybe<Scalars['String']['output']>;
+  /** Whether the job was enqueued. */
+  success: Scalars['Boolean']['output'];
+};
+
 export type EnqueueDocIngestionInput = {
   /** Paths relative to workspace root; each directory is expanded to all .md files (recursive). */
   directories?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -491,7 +537,7 @@ export type EnqueuePlanRalphOrchestratorInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. */
   jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
-  /** Omit or `plan` for plan-scoped run; `task` requires taskId (task-centric). */
+  /** Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric). */
   mode?: InputMaybe<PlanRalphWorkflowMode>;
   /** Plan id to run the orchestrator for */
   planId: Scalars['ID']['input'];
@@ -832,6 +878,8 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Add a permission to a role */
+  addPermissionToRole: Scalars['Boolean']['output'];
   /** Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures. */
   agentsRunChatTurn: AgentsChatTurnResult;
   /** Append a chunk to a plan's output stream (e.g. agent iteration log). */
@@ -840,6 +888,8 @@ export type Mutation = {
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Assign a role to a service account (admin, human only). */
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
+  /** Assign a role to a user */
+  assignRoleToUser: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails. */
@@ -854,6 +904,8 @@ export type Mutation = {
   createProject: ProjectObject;
   /** Create a queue dynamically. The queue is registered so it appears in queues() and queue(name). Returns success with queueName or error. */
   createQueue: CreateQueueResultObject;
+  /** Create a role */
+  createRole: RoleObject;
   /** Create a service account (admin, human only). */
   createServiceAccount: ServiceAccountObject;
   /** Create a credential; returns plaintext token once (admin, human only). */
@@ -872,6 +924,8 @@ export type Mutation = {
   deletePlan: Scalars['Boolean']['output'];
   /** Delete a project by ID. Related plans and tasks remain; their project link is cleared (ON DELETE SET NULL). */
   deleteProject: Scalars['Boolean']['output'];
+  /** Delete a role */
+  deleteRole: Scalars['Boolean']['output'];
   /** Delete a task by ID */
   deleteTask: Scalars['Boolean']['output'];
   /** Remove a local repository owned by the authenticated user. */
@@ -886,6 +940,10 @@ export type Mutation = {
   enableServiceAccount?: Maybe<ServiceAccountObject>;
   /** Re-enable a disabled user. */
   enableUser?: Maybe<UserObject>;
+  /** Enqueue an agentic-test smoke job. Echoes the current ISO timestamp once per second for ~30s, then completes. Returns job id or error. */
+  enqueueAgenticTest: EnqueueAgenticTestResultObject;
+  /** Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error. */
+  enqueueAgenticWorkflowMock: EnqueueAgenticWorkflowMockResultObject;
   /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
   /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
@@ -902,10 +960,14 @@ export type Mutation = {
   previewCortexDocumentIngest: PreviewCortexDocumentIngestResultObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
+  /** Remove a permission from a role */
+  removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
   removeRepeatableJob: RemoveRepeatableJobResultObject;
   /** Remove a role from a service account (admin, human only). */
   removeRoleFromServiceAccount: Scalars['Boolean']['output'];
+  /** Remove a role from a user */
+  removeRoleFromUser: Scalars['Boolean']['output'];
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
@@ -930,6 +992,8 @@ export type Mutation = {
   updatePlan?: Maybe<PlanObject>;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
+  /** Update a role */
+  updateRole?: Maybe<RoleObject>;
   /** Update a service account (admin, human only). */
   updateServiceAccount?: Maybe<ServiceAccountObject>;
   /** Update a task */
@@ -949,6 +1013,10 @@ export type Mutation = {
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
 };
 
+export type MutationAddPermissionToRoleArgs = {
+  input: AddPermissionToRoleInput;
+};
+
 export type MutationAgentsRunChatTurnArgs = {
   input: AgentsRunChatTurnInput;
 };
@@ -963,6 +1031,10 @@ export type MutationApplyWorkspaceEditorConfigurationArgs = {
 
 export type MutationAssignRoleToServiceAccountArgs = {
   input: AssignRoleToServiceAccountInput;
+};
+
+export type MutationAssignRoleToUserArgs = {
+  input: AssignRoleToUserInput;
 };
 
 export type MutationCancelPlanRunArgs = {
@@ -991,6 +1063,10 @@ export type MutationCreateProjectArgs = {
 
 export type MutationCreateQueueArgs = {
   input: CreateQueueInput;
+};
+
+export type MutationCreateRoleArgs = {
+  input: CreateRoleInput;
 };
 
 export type MutationCreateServiceAccountArgs = {
@@ -1027,6 +1103,10 @@ export type MutationDeletePlanArgs = {
 
 export type MutationDeleteProjectArgs = {
   input: DeleteProjectInput;
+};
+
+export type MutationDeleteRoleArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationDeleteTaskArgs = {
@@ -1089,12 +1169,20 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationRemovePermissionFromRoleArgs = {
+  input: RemovePermissionFromRoleInput;
+};
+
 export type MutationRemoveRepeatableJobArgs = {
   input: RemoveRepeatableJobInput;
 };
 
 export type MutationRemoveRoleFromServiceAccountArgs = {
   input: RemoveRoleFromServiceAccountInput;
+};
+
+export type MutationRemoveRoleFromUserArgs = {
+  input: RemoveRoleFromUserInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -1131,6 +1219,10 @@ export type MutationUpdatePlanArgs = {
 
 export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
+};
+
+export type MutationUpdateRoleArgs = {
+  input: UpdateRoleInput;
 };
 
 export type MutationUpdateServiceAccountArgs = {
@@ -1240,6 +1332,8 @@ export type PlanObject = {
   projectId?: Maybe<Scalars['String']['output']>;
   /** Resolved project entity when projectId is set; null when projectId is unset. */
   projectRelation?: Maybe<ProjectObject>;
+  /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
+  runConfigJson: Scalars['String']['output'];
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
   /** Number of tasks belonging to this plan. Resolved from tasks table. */
@@ -1260,7 +1354,7 @@ export type PlanOutputStreamChunkObject = {
   planId: Scalars['String']['output'];
 };
 
-/** Plan-scoped run (default) or task-centric run (`task` requires taskId). */
+/** Plan-scoped run (default) or task-centric run ("task" requires taskId). */
 export enum PlanRalphWorkflowMode {
   Plan = 'plan',
   Task = 'task',
@@ -1289,6 +1383,8 @@ export type PlanRunObject = {
   id: Scalars['String']['output'];
   planId: Scalars['String']['output'];
   queueName: Scalars['String']['output'];
+  /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
+  runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
   /** Ralph run implementation: spawn or orchestrator. */
   runKind: Scalars['String']['output'];
   status: Scalars['String']['output'];
@@ -1506,6 +1602,8 @@ export type Query = {
   me?: Maybe<UserObject>;
   /** Metrics namespace: serverSnapshot (current process metrics) and recentPlanRunsMetrics for plan-level visualization. serverMetrics at root is unchanged. */
   metrics: MetricsObject;
+  /** Get permission names for the current user */
+  myPermissions: Array<Scalars['String']['output']>;
   /** Get a note by ID */
   note?: Maybe<NoteObject>;
   /** List all notes, ordered by createdAt descending */
@@ -1514,8 +1612,12 @@ export type Query = {
   openPrCountByAuthor: Array<OpenPrCountByAuthorObject>;
   /** Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC). */
   openToMergedCycleTime: Array<OpenToMergedCycleTimeObject>;
+  /** List all permissions */
+  permissions: Array<PermissionObject>;
   /** Permission names for a service account (union of role permissions). */
   permissionsForServiceAccount: Array<Scalars['String']['output']>;
+  /** Get permission names for a user (union of all their roles' permissions) */
+  permissionsForUser: Array<Scalars['String']['output']>;
   /** Get a plan by ID */
   plan?: Maybe<PlanObject>;
   /** Plan count per status for sidebar/filters */
@@ -1556,8 +1658,14 @@ export type Query = {
   repeatableJobs: Array<RepeatableJobObject>;
   /** Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls. */
   reviewCycleTime: Array<ReviewCycleTimeObject>;
+  /** Get a role by ID */
+  role?: Maybe<RoleObject>;
+  /** List all roles with their permissions */
+  roles: Array<RoleObject>;
   /** Roles assigned to a service account (admin, human only). */
   rolesForServiceAccount: Array<RoleObject>;
+  /** Get roles assigned to a user */
+  rolesForUser: Array<RoleObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires Cortex Postgres and embedding (OPENAI_API_KEY or Ollama). */
   search: SearchResult;
   /** Semantic search over plans/tasks (vector similarity). Requires OPENAI_API_KEY or Ollama for query embedding. Returns plans matching the query, deduped by plan id. */
@@ -1678,6 +1786,10 @@ export type QueryPermissionsForServiceAccountArgs = {
   serviceAccountId: Scalars['ID']['input'];
 };
 
+export type QueryPermissionsForUserArgs = {
+  userId: Scalars['ID']['input'];
+};
+
 export type QueryPlanArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1742,8 +1854,16 @@ export type QueryReviewCycleTimeArgs = {
   input: ReviewCycleTimeInput;
 };
 
+export type QueryRoleArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type QueryRolesForServiceAccountArgs = {
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type QueryRolesForUserArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 export type QuerySearchArgs = {
@@ -1855,7 +1975,7 @@ export type RalphPlanRunTuningInput = {
   model?: InputMaybe<Scalars['String']['input']>;
   /** Nx project name for workflow-ralph --project. */
   project?: InputMaybe<Scalars['String']['input']>;
-  /** Prompt profile path (e.g. /agents/ralph) for --prompt. */
+  /** Prompt profile path (e.g. /agents-ralph) for --prompt. */
   prompt?: InputMaybe<Scalars['String']['input']>;
   /** Repo-relative or absolute path for --prompt-file (layer-1 prompt file). */
   promptFile?: InputMaybe<Scalars['String']['input']>;
@@ -1893,6 +2013,13 @@ export type RemainingTasksByPlanIdInput = {
   planId: Scalars['ID']['input'];
 };
 
+export type RemovePermissionFromRoleInput = {
+  /** Permission id to remove */
+  permissionId: Scalars['ID']['input'];
+  /** Role id to remove the permission from */
+  roleId: Scalars['ID']['input'];
+};
+
 export type RemoveRepeatableJobInput = {
   /** Repeatable job key (from repeatableJobs query). Required to remove a repeatable job. */
   key: Scalars['String']['input'];
@@ -1911,6 +2038,13 @@ export type RemoveRepeatableJobResultObject = {
 export type RemoveRoleFromServiceAccountInput = {
   roleId: Scalars['ID']['input'];
   serviceAccountId: Scalars['ID']['input'];
+};
+
+export type RemoveRoleFromUserInput = {
+  /** Role id to remove */
+  roleId: Scalars['ID']['input'];
+  /** User id to remove the role from */
+  userId: Scalars['ID']['input'];
 };
 
 export type RepeatableJobObject = {
@@ -2259,6 +2393,8 @@ export type UpdatePlanInput = {
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Pass null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged. */
+  runConfigJson?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
@@ -2271,6 +2407,14 @@ export type UpdateProjectInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   /** NX project name (e.g. applications/openthrottle-server) */
   nxProjectName?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateRoleInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Role id to update */
+  id: Scalars['ID']['input'];
+  /** Role name. Pass null to leave unchanged. */
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateServiceAccountInput = {
@@ -2427,27 +2571,29 @@ export type HealthCardFragment = {
   websocket: string;
 };
 
-export type RegisterMutationVariables = Exact<{
-  input: RegisterInput;
-}>;
-
-export type RegisterMutation = {
-  __typename?: 'Mutation';
-  register: {
-    __typename?: 'RegisterResultObject';
-    accessToken: string;
-    email: string;
-    id: string;
-  };
+export type RootMetricsFragment = {
+  __typename?: 'ServerMetricsObject';
+  cpuSystemMs: number;
+  cpuUserMs: number;
+  externalMb: number;
+  heapTotalMb: number;
+  heapUsedMb: number;
+  rssMb: number;
 };
 
-export type LoginMutationVariables = Exact<{
-  input: LoginInput;
-}>;
+export type GetMyUserQueryVariables = Exact<{ [key: string]: never }>;
 
-export type LoginMutation = {
-  __typename?: 'Mutation';
-  login: { __typename?: 'LoginResultObject'; accessToken: string };
+export type GetMyUserQuery = {
+  __typename?: 'Query';
+  me?: {
+    __typename?: 'UserObject';
+    createdAt: any;
+    disabledAt?: any | null;
+    email?: string | null;
+    githubUsername: string;
+    id: string;
+    updatedAt: any;
+  } | null;
 };
 
 export type GetRootHealthQueryVariables = Exact<{ [key: string]: never }>;
@@ -2461,16 +2607,6 @@ export type GetRootHealthQuery = {
     redis: string;
     websocket: string;
   };
-};
-
-export type RootMetricsFragment = {
-  __typename?: 'ServerMetricsObject';
-  cpuSystemMs: number;
-  cpuUserMs: number;
-  externalMb: number;
-  heapTotalMb: number;
-  heapUsedMb: number;
-  rssMb: number;
 };
 
 export type GetRootMetricsQueryVariables = Exact<{ [key: string]: never }>;
@@ -2488,19 +2624,34 @@ export type GetRootMetricsQuery = {
   };
 };
 
-export type GetMyUserQueryVariables = Exact<{ [key: string]: never }>;
+export type LoginMutationVariables = Exact<{
+  input: LoginInput;
+}>;
 
-export type GetMyUserQuery = {
-  __typename?: 'Query';
-  me?: {
-    __typename?: 'UserObject';
-    createdAt: any;
-    disabledAt?: any | null;
-    email?: string | null;
-    githubUsername: string;
+export type LoginMutation = {
+  __typename?: 'Mutation';
+  login: { __typename?: 'LoginResultObject'; accessToken: string };
+};
+
+export type LogoutMutationVariables = Exact<{ [key: string]: never }>;
+
+export type LogoutMutation = {
+  __typename?: 'Mutation';
+  signout: { __typename?: 'SignoutResultObject'; success: boolean };
+};
+
+export type RegisterMutationVariables = Exact<{
+  input: RegisterInput;
+}>;
+
+export type RegisterMutation = {
+  __typename?: 'Mutation';
+  register: {
+    __typename?: 'RegisterResultObject';
+    accessToken: string;
+    email: string;
     id: string;
-    updatedAt: any;
-  } | null;
+  };
 };
 
 export type SendAgentMessageMutationVariables = Exact<{
@@ -2825,6 +2976,7 @@ export type PlanDetailsFragment = {
   description?: string | null;
   id: string;
   jobRunHooksJson: string;
+  runConfigJson: string;
   projectId?: string | null;
   status: string;
   summary?: string | null;
@@ -2852,6 +3004,7 @@ export type GetPlanByIdQuery = {
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
+    runConfigJson: string;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -2981,6 +3134,20 @@ export type PlanDetailUpdatePlanJobRunHooksMutation = {
   } | null;
 };
 
+export type PlanDetailUpdatePlanRunConfigMutationVariables = Exact<{
+  input: UpdatePlanInput;
+}>;
+
+export type PlanDetailUpdatePlanRunConfigMutation = {
+  __typename?: 'Mutation';
+  updatePlan?: {
+    __typename?: 'PlanObject';
+    id: string;
+    runConfigJson: string;
+    updatedAt: any;
+  } | null;
+};
+
 export type PlanDetailIndexLoaderQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
 }>;
@@ -2996,6 +3163,7 @@ export type PlanDetailIndexLoaderQuery = {
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
+    runConfigJson: string;
     projectId?: string | null;
     status: string;
     summary?: string | null;
@@ -3047,6 +3215,16 @@ export type PlanDetailIndexLoaderQuery = {
       } | null;
     }>;
   };
+  planRunsByPlanId: Array<{
+    __typename?: 'PlanRunObject';
+    bullmqJobId: string;
+    createdAt: any;
+    executionBackend: string;
+    id: string;
+    runConfigSnapshotJson?: string | null;
+    runKind: string;
+    status: string;
+  }>;
 };
 
 export type UpdatePlanMutationVariables = Exact<{
@@ -4373,6 +4551,7 @@ export const PlanDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -4902,102 +5081,31 @@ export const UsageDailyStatsRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageDailyStatsRowFragment, unknown>;
-export const RegisterDocument = {
+export const GetMyUserDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'register' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'RegisterInput' },
-            },
-          },
-        },
-      ],
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMyUser' },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'register' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
+            name: { kind: 'Name', value: 'me' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
-export const LoginDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'login' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'LoginInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'login' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'githubUsername' },
                 },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
           },
@@ -5005,7 +5113,7 @@ export const LoginDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
+} as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
 export const GetRootHealthDocument = {
   kind: 'Document',
   definitions: [
@@ -5098,31 +5206,49 @@ export const GetRootMetricsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetRootMetricsQuery, GetRootMetricsQueryVariables>;
-export const GetMyUserDocument = {
+export const LoginDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getMyUser' },
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'login' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LoginInput' },
+            },
+          },
+        },
+      ],
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'me' },
+            name: { kind: 'Name', value: 'login' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'disabledAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'githubUsername' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
               ],
             },
           },
@@ -5130,7 +5256,85 @@ export const GetMyUserDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
+} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
+export const LogoutDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'logout' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'signout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LogoutMutation, LogoutMutationVariables>;
+export const RegisterDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'register' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RegisterInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'register' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
 export const SendAgentMessageDocument = {
   kind: 'Document',
   definitions: [
@@ -6107,6 +6311,7 @@ export const GetPlanByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',
@@ -6568,6 +6773,65 @@ export const PlanDetailUpdatePlanJobRunHooksDocument = {
   PlanDetailUpdatePlanJobRunHooksMutation,
   PlanDetailUpdatePlanJobRunHooksMutationVariables
 >;
+export const PlanDetailUpdatePlanRunConfigDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailUpdatePlanRunConfig' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdatePlanInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updatePlan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'runConfigJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailUpdatePlanRunConfigMutation,
+  PlanDetailUpdatePlanRunConfigMutationVariables
+>;
 export const PlanDetailIndexLoaderDocument = {
   kind: 'Document',
   definitions: [
@@ -6743,6 +7007,52 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planRunsByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'limit' },
+                      value: { kind: 'IntValue', value: '10' },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'runConfigSnapshotJson' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
         ],
       },
     },
@@ -6778,6 +7088,7 @@ export const PlanDetailIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           {
             kind: 'Field',

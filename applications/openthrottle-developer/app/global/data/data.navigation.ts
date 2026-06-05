@@ -12,6 +12,7 @@ import {
   GitPullRequest,
   KeyRoundIcon,
   ListOrderedIcon,
+  LogInIcon,
   MonitorCogIcon,
   NotebookTabsIcon,
   NotebookTextIcon,
@@ -138,16 +139,50 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       icon: NotebookTabsIcon,
       to: '/legal/license',
     },
-    // {
-    //   children: 'Privacy Policy',
-    //   icon: NotebookTabsIcon,
-    //   to: '/legal/privacy-policy',
-    // },
-    // {
-    //   children: 'Terms of Use',
-    //   icon: NotebookTabsIcon,
-    //   to: '/legal/terms-of-use',
-    // },
+    {
+      children: 'Privacy Policy',
+      icon: NotebookTabsIcon,
+      to: '/legal/privacy-policy',
+    },
+    {
+      children: 'Terms of Use',
+      icon: NotebookTabsIcon,
+      to: '/legal/terms-of-use',
+    },
   ],
 };
+
+export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
+  Workspace: [
+    {
+      children: 'Login',
+      icon: LogInIcon,
+      to: '/auth',
+    },
+  ],
+  Legal: [
+    {
+      children: 'About',
+      end: true,
+      icon: NotebookTabsIcon,
+      to: '/legal',
+    },
+    {
+      children: 'License',
+      icon: NotebookTabsIcon,
+      to: '/legal/license',
+    },
+    {
+      children: 'Privacy Policy',
+      icon: NotebookTabsIcon,
+      to: '/legal/privacy-policy',
+    },
+    {
+      children: 'Terms of Use',
+      icon: NotebookTabsIcon,
+      to: '/legal/terms-of-use',
+    },
+  ],
+};
+
 /* eslint-enable sort-keys, sort-keys-fix/sort-keys-fix */

@@ -24,9 +24,7 @@ describe('TasksResolver', () => {
 
   const mockTasksService = createMock<TasksService>({
     getRepository: vi.fn().mockReturnValue(repo),
-    syncParentPlanToInProgressWhenTaskInProgress: vi
-      .fn()
-      .mockResolvedValue(false),
+    syncParentPlanStatus: vi.fn().mockResolvedValue(false),
   });
 
   const mockNotificationsService = createMock<NotificationsService>({
@@ -93,12 +91,8 @@ describe('TasksResolver', () => {
   });
 
   beforeEach(() => {
-    vi.mocked(
-      mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-    ).mockReset();
-    vi.mocked(
-      mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-    ).mockResolvedValue(false);
+    vi.mocked(mockTasksService.syncParentPlanStatus).mockReset();
+    vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
     vi.mocked(repo.create).mockClear();
     vi.mocked(repo.save).mockClear();
@@ -382,9 +376,7 @@ describe('TasksResolver', () => {
         ...mockTask,
         status: 'PENDING',
       });
-      vi.mocked(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).mockResolvedValue(true);
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
       );
@@ -403,12 +395,10 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledWith(planId);
+      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledTimes(1);
+      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
+        planId,
+      );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).toHaveBeenCalledWith({
@@ -423,9 +413,7 @@ describe('TasksResolver', () => {
         ...mockTask,
         status: 'PENDING',
       });
-      vi.mocked(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).mockResolvedValue(false);
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
       );
@@ -444,9 +432,9 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledWith(planId);
+      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
+        planId,
+      );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).not.toHaveBeenCalled();
@@ -475,9 +463,7 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).not.toHaveBeenCalled();
+      expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).not.toHaveBeenCalled();
@@ -506,18 +492,14 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).not.toHaveBeenCalled();
+      expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
     });
   });
 
   describe('createTask — parent plan IN_PROGRESS sync', () => {
     test('calls sync and emits when new task is created as IN_PROGRESS and plan was promoted', async () => {
       const planId = mockTask.planId as string;
-      vi.mocked(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).mockResolvedValue(true);
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
       vi.mocked(repo.save).mockResolvedValue({
         ...mockTask,
         id: 'new-task-id',
@@ -538,12 +520,10 @@ describe('TasksResolver', () => {
         title: 'New task',
       });
 
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).toHaveBeenCalledWith(planId);
+      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledTimes(1);
+      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
+        planId,
+      );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).toHaveBeenCalledWith({ planId, status: 'IN_PROGRESS' });
@@ -571,9 +551,7 @@ describe('TasksResolver', () => {
         title: 'Queued task',
       });
 
-      expect(
-        mockTasksService.syncParentPlanToInProgressWhenTaskInProgress,
-      ).not.toHaveBeenCalled();
+      expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
     });
   });
 });

@@ -82,7 +82,6 @@ describe('HealthResolver', () => {
     test('returns object from HealthService.getServerHealth', async () => {
       vi.mocked(mockHealthService.getServerHealth).mockResolvedValueOnce({
         api: 'ok',
-        apiStatus: 'ok',
         database: 'ok',
         redis: 'ok',
         websocket: 'ok',
@@ -92,7 +91,6 @@ describe('HealthResolver', () => {
 
       expect(result).toEqual({
         api: 'ok',
-        apiStatus: 'ok',
         database: 'ok',
         redis: 'ok',
         websocket: 'ok',

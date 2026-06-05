@@ -11,7 +11,7 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const DEFAULT_RALPH_RUNNER = 'cursor';
-export const DEFAULT_RALPH_PROMPT = '/agents/ralph';
+export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
 export const DEFAULT_RALPH_ITERATIONS = 10;
 export const DEFAULT_RALPH_MODEL = 'auto';
 
@@ -40,13 +40,18 @@ export const formatWorkflowRalphExecutionBackendLabel = (
 };
 
 /**
- * @description Default precedence for resolving Ralph prompt + run tuning (matches CLI help).
+ * @description Default precedence for resolving Ralph prompt + run tuning (matches CLI help and
+ * {@link WORKFLOW_RALPH_CONFIG_PRECEDENCE} in `@tools/workflows`).
  */
-const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
-  'CLI flags → WORKFLOW_RALPH_* / RALPH_* env → .workflow-ralph.json → built-in defaults';
+export const WORKFLOW_RALPH_CONFIG_PRECEDENCE =
+  'CLI flags → environment variables → .workflow-ralph.json → built-in defaults' as const;
+
+/** @deprecated Use {@link WORKFLOW_RALPH_CONFIG_PRECEDENCE}. */
+export const WORKFLOW_RALPH_DEFAULT_PRECEDENCE =
+  WORKFLOW_RALPH_CONFIG_PRECEDENCE;
 
 /**
- * @description Env vars for run tuning and layer-1 prompt (matches {@link WORKFLOW_RALPH_DEFAULT_PRECEDENCE}
+ * @description Env vars for run tuning and layer-1 prompt (matches {@link WORKFLOW_RALPH_CONFIG_PRECEDENCE}
  * and `tools/workflows/src/utils/ralph-runtime-config.ts` {@link WORKFLOW_RALPH_ENV}).
  */
 export const WORKFLOW_RALPH_ENV_VARS = {
@@ -55,11 +60,13 @@ export const WORKFLOW_RALPH_ENV_VARS = {
   debugAlias: 'RALPH_DEBUG',
   iterationTimeout: 'WORKFLOW_RALPH_ITERATION_TIMEOUT',
   iterations: 'WORKFLOW_RALPH_ITERATIONS',
+  lifecycleHooksChildJobs: 'OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS',
   model: 'WORKFLOW_RALPH_MODEL',
   project: 'WORKFLOW_RALPH_PROJECT',
   prompt: 'WORKFLOW_RALPH_PROMPT',
   promptFile: 'WORKFLOW_RALPH_PROMPT_FILE',
   skipWorktreeSetup: 'WORKFLOW_RALPH_SKIP_WORKTREE_SETUP',
+  spawnOtRoot: 'WORKFLOW_RALPH_OT_ROOT',
   verbose: 'WORKFLOW_RALPH_VERBOSE',
   worktree: 'WORKFLOW_RALPH_WORKTREE',
   worktreeBase: 'WORKFLOW_RALPH_WORKTREE_BASE',
@@ -801,7 +808,7 @@ export const buildWorkflowRalphDebugBundleText = (
     },
     enqueueRalphTuning: enqueueTuning ?? null,
     planId: input.planId,
-    precedence: WORKFLOW_RALPH_DEFAULT_PRECEDENCE,
+    precedence: WORKFLOW_RALPH_CONFIG_PRECEDENCE,
     queue: {
       jobListPath: `/queues/${PLAN_RUN_BULLMQ_QUEUE_NAME}`,
       name: PLAN_RUN_BULLMQ_QUEUE_NAME,

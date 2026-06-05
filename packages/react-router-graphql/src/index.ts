@@ -26,10 +26,34 @@ export async function executeGraphqlWithAuth<
   const token = getAuthTokenFromCookie(cookieHeader);
 
   if (!token) {
-    return executeGraphql(document, variables);
+    try {
+      return await executeGraphql(document, variables);
+    } catch (error) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+      const isAuthError = message === 'Unauthorized';
+
+      if (isAuthError) {
+        console.error(`💥 ${isAuthError} - no token 💥`, message);
+      }
+
+      throw error;
+    }
   }
 
-  return executeGraphqlWithAuthNodeJS(token, document, variables);
+  try {
+    return await executeGraphqlWithAuthNodeJS(token, document, variables);
+  } catch (error) {
+    const isError = error instanceof Error;
+    const message = isError ? error.message : String(error);
+    const isAuthError = message === 'Unauthorized';
+
+    if (isAuthError) {
+      console.error(`💥 ${isAuthError} - with token 💥`, message);
+    }
+
+    throw error;
+  }
 }
 
 export { executeGraphql };

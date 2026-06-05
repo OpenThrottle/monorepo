@@ -15,19 +15,20 @@ const parseAppsInput = (input) => {
   if (!trimmed) {
     return [];
   }
+
   if (trimmed.startsWith('[')) {
     try {
       const parsed = JSON.parse(trimmed);
       if (!Array.isArray(parsed)) {
         return [];
       }
-      return parsed
-        .map((item) => String(item).trim())
-        .filter(Boolean);
+
+      return parsed.map((item) => String(item).trim()).filter(Boolean);
     } catch {
       return [];
     }
   }
+
   return trimmed
     .split(',')
     .map((s) => s.trim())
@@ -46,7 +47,6 @@ const rawAffected = (() => {
 })();
 
 const affected = Array.isArray(rawAffected) ? rawAffected : [];
-
 const affectedSet = new Set(affected);
 const hit = configuredApps.filter((a) => affectedSet.has(a));
 

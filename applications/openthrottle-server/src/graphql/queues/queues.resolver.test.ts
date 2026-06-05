@@ -22,6 +22,9 @@ describe('QueuesResolver', () => {
   const mockQueuesService = createMock<QueuesService>({
     createQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     duplicateJob: vi.fn().mockResolvedValue({ error: 'not implemented' }),
+    enqueueAgenticTest: vi
+      .fn()
+      .mockResolvedValue({ error: 'not implemented' }),
     enqueueDocIngestion: vi
       .fn()
       .mockResolvedValue({ error: 'not implemented' }),
@@ -440,6 +443,21 @@ describe('QueuesResolver', () => {
       const result = await resolver.queues();
 
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe('enqueueAgenticTest', () => {
+    test('returns success and jobId when service returns jobId', async () => {
+      vi.mocked(mockQueuesService.enqueueAgenticTest).mockResolvedValueOnce({
+        jobId: 'agentic-test-job-123',
+      });
+
+      const result = await resolver.enqueueAgenticTest();
+
+      expect(result.success).toBe(true);
+      expect(result.jobId).toBe('agentic-test-job-123');
+      expect(result.error).toBeNull();
+      expect(mockQueuesService.enqueueAgenticTest).toHaveBeenCalledTimes(1);
     });
   });
 

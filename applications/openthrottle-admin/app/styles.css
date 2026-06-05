@@ -6,12 +6,13 @@
 @source "../../../packages/**/*.{css,ts,tsx}";
 
 :root {
-  --brand: var(--color-orange-500);
+  /* --brand: var(--color-orange-500); */
+  --brand: var(--color-yellow-500);
 }
 
 @utility text-highlight {
   animation: gradient 4s ease infinite;
   background-size: 250% 250%;
 
-  @apply bg-linear-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent;
+  @apply bg-linear-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent;
 }

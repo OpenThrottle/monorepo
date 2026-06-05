@@ -3,6 +3,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { AgenticTestQueueModule } from '../../queues/agentic-test/agentic-test-queue.module';
 import { DailyStatsQueueModule } from '../../queues/daily-stats/daily-stats-queue.module';
 import { DatabaseBackupQueueModule } from '../../queues/database-backup/database-backup-queue.module';
 import { DocIngestionQueueModule } from '../../queues/doc-ingestion/doc-ingestion-queue.module';
@@ -13,6 +14,7 @@ import { QueuesService } from './queues.service';
 @Module({
   exports: [QueuesService],
   imports: [
+    AgenticTestQueueModule,
     DailyStatsQueueModule,
     DatabaseBackupQueueModule,
     DocIngestionQueueModule,

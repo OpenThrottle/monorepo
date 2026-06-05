@@ -8,10 +8,7 @@
   // Exclude exports tagged /** @publicApi */ from unused-export reports (see docs/monorepo/Knip.md).
   "tags": ["-publicApi"],
   // React Router typegen: @/* → .react-router/types/* (generated at build; not on disk for report-only Knip).
-  "ignoreUnresolved": [
-    "@/app/\\+types/.*",
-    "@/app/routes/\\+types/.*",
-  ],
+  "ignoreUnresolved": ["@/app/\\+types/.*", "@/app/routes/\\+types/.*"],
   "entry": [
     // "applications/**/*.{ts,tsx,js,jsx}", // Uncomment this to include all applications
     // NestJS applications
@@ -100,7 +97,6 @@
     "scripts/get-cortex-plan-and-tasks.ts",
     "scripts/link-cortex-plans-tasks-to-existing-projects.ts",
     "scripts/list-cortex-plans-tasks-without-project.ts",
-    "scripts/openthrottle-associate-plans-tasks-with-project.ts",
     // infra/ is Terraform-only (no TS project graph)
     "infra/**",
   ],
@@ -144,7 +140,6 @@
         "scripts/parallelize-tasks.ts",
         "scripts/update-cortex-plan-status.ts",
         "scripts/update-cortex-task-status.ts",
-        "scripts/openthrottle-ingest-plans.ts",
         "scripts/openthrottle-ingest-docs.ts",
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
@@ -399,7 +394,6 @@
         "src/bin/ralph.ts",
         "src/bin/link-merge.ts",
         "src/bin/lighthouse.ts",
-        "src/bin/nx-validate.ts",
         "src/bin/run-iteration.ts",
         "src/doc-ingestion/index.ts",
         "src/utils/cortex-ralph.ts",
@@ -407,10 +401,6 @@
         "scripts/*.{ts,js}",
       ],
       "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,js}"],
-      "ignore": [
-        // PSI collector implementation; covered by unit tests; production metrics use types/system-cpu-metrics until child-job wiring.
-        "src/utils/system-cpu-metrics.ts",
-      ],
     },
   },
   "ignoreIssues": {

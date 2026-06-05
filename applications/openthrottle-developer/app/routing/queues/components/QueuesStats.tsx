@@ -62,7 +62,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
         className={classnames(className)}
         data-testid="QueuesStats"
       >
-        <h2 className="text-lg tracking-tight" id="queues-stats-heading">
+        <h2 className="text-md" id="queues-stats-heading">
           Job counts by queue
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -82,7 +82,9 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="w-full">
           <div className="flex items-center justify-between mb-4">
-            <h2 id="queues-stats-heading">Job counts by queue</h2>
+            <h2 className="text-md" id="queues-stats-heading">
+              Job counts by queue
+            </h2>
 
             <div className="flex items-center gap-4">
               <Switch

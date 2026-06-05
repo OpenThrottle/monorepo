@@ -15,8 +15,8 @@ import type { Route } from '@/app/routes/+types/notes.create';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Create Note',
-  links: (_match) => [{ children: 'All Notes', to: '/notes' }],
+  breadcrumb: (_match) => 'Create',
+  links: (_match) => [{ children: 'Notes', to: '/notes' }],
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {

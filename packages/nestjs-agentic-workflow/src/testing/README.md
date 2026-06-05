@@ -18,14 +18,14 @@ Peer-style dev deps (your app test target should already have them): `@nestjs/te
 Stub `executeGraphqlV2` so it is never invoked, and pass fixed worker auth:
 
 ```typescript
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import {
-  NestjsAgenticWorkflowModule,
-  type AgenticWorkflowExecuteGraphqlV2,
-  type AgenticWorkflowWorkerGraphqlAuth,
-} from '@openthrottle/nestjs-agentic-workflow';
 import { compileAgenticWorkflowTestingModule } from '@openthrottle/nestjs-agentic-workflow/testing';
+import { NestjsAgenticWorkflowModule } from '@openthrottle/nestjs-agentic-workflow';
+import type {
+  AgenticWorkflowExecuteGraphqlV2,
+  AgenticWorkflowWorkerGraphqlAuth,
+} from '@openthrottle/nestjs-agentic-workflow';
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 const workerGraphqlAuth: AgenticWorkflowWorkerGraphqlAuth = {
   token: 'test-token',
