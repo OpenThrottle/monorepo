@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-mcp-developer';
+import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 import { AgentsMcpRouter } from './agents-mcp-router';

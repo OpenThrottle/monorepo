@@ -5,7 +5,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   McpDeveloperMcpSurface,
   NestjsMcpDeveloperService,
-} from '@openthrottle/nestjs-mcp-developer';
+} from '@openthrottle/nestjs-openthrottle-mcp';
 
 describe('NestjsMcpDeveloperService', () => {
   let service: NestjsMcpDeveloperService;
@@ -35,7 +35,7 @@ describe('NestjsMcpDeveloperService', () => {
   });
 
   describe('re-export surface', () => {
-    it('exposes the shared MCP tool surface from mcp-developer/nest', async () => {
+    it('exposes the shared MCP tool surface from openthrottle-mcp/nest', async () => {
       const app = await Test.createTestingModule({
         imports: [],
         providers: [

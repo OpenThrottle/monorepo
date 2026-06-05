@@ -1093,7 +1093,7 @@ type ServiceAccountObject {
   disabledAt: DateTime
   id: String!
 
-  """Stable identifier (e.g. mcp-developer, workflow-ralph)."""
+  """Stable identifier (e.g. openthrottle-mcp, workflow-ralph)."""
   name: String!
 }
 
@@ -2573,7 +2573,7 @@ input RemovePermissionFromRoleInput {
 input CreateServiceAccountInput {
   description: String
 
-  """Stable name (e.g. mcp-developer). Must be unique."""
+  """Stable name (e.g. openthrottle-mcp). Must be unique."""
   name: String!
 }
 

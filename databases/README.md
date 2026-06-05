@@ -6,7 +6,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
 
 1. **Start Postgres and Redis (OpenThrottle)**
 
-   From the repo root, using env from `.env.default` (or copy to `.env`). This brings up **`openthrottle-postgres`** and **`openthrottle-redis`** from the root `docker-compose.yml` (same as `pnpm run database:start`). For the full minimal API + UI path (install, migrate, `openthrottle-server:dev`, optional `openthrottle-developer:dev`), see [docs/openthrottle/run-openthrottle-server-developer.md](../docs/openthrottle/run-openthrottle-server-developer.md). To verify OpenThrottle and the MCP are reachable after the API is up, use the **mcp-developer `health` tool** — see [packages/mcp-developer/docs/verification-environment.md](../packages/mcp-developer/docs/verification-environment.md) (smoke baseline).
+   From the repo root, using env from `.env.default` (or copy to `.env`). This brings up **`openthrottle-postgres`** and **`openthrottle-redis`** from the root `docker-compose.yml` (same as `pnpm run database:start`). For the full minimal API + UI path (install, migrate, `openthrottle-server:dev`, optional `openthrottle-developer:dev`), see [docs/openthrottle/run-openthrottle-server-developer.md](../docs/openthrottle/run-openthrottle-server-developer.md). To verify OpenThrottle and the MCP are reachable after the API is up, use the **openthrottle-mcp `health` tool** — see [packages/openthrottle-mcp/docs/verification-environment.md](../packages/openthrottle-mcp/docs/verification-environment.md) (smoke baseline).
 
    ```bash
    pnpm run database:start
@@ -30,7 +30,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    | `POSTGRES_USER`     | Database user     | `openthrottle_user`     |
    | `POSTGRES_PASSWORD` | Database password | `openthrottle_password` |
 
-   Optional: `POSTGRES_URL` — full connection string (e.g. `postgresql://user:pass@host:port/db`). If set, openthrottle-server and scripts can use it directly (mcp-developer talks to OpenThrottle via GraphQL only); otherwise they build from the five vars above.
+   Optional: `POSTGRES_URL` — full connection string (e.g. `postgresql://user:pass@host:port/db`). If set, openthrottle-server and scripts can use it directly (openthrottle-mcp talks to OpenThrottle via GraphQL only); otherwise they build from the five vars above.
 
 3. **Run migrations**
 
@@ -40,13 +40,13 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:migrate
    ```
 
-   **Service account bootstrap (after migrate, when using `APP_ENABLE_AUTHENTICATION=true`):** Migration `045_seed_service_accounts_bootstrap.sql` creates `mcp-developer` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
+   **Service account bootstrap (after migrate, when using `APP_ENABLE_AUTHENTICATION=true`):** Migration `045_seed_service_accounts_bootstrap.sql` creates `openthrottle-mcp` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
 
    ```bash
    pnpm run database:bootstrap-service-accounts
    ```
 
-   Copy the printed values into `MCP_DEVELOPER_AUTH_TOKEN` (Cursor MCP / mcp-developer) and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (BullMQ Ralph worker GraphQL). Format: `ot_sa_<prefix>_<secret>`. See [packages/mcp-developer/docs/AUTH.md](../packages/mcp-developer/docs/AUTH.md).
+   Copy the printed values into `MCP_DEVELOPER_AUTH_TOKEN` (Cursor MCP / openthrottle-mcp) and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (BullMQ Ralph worker GraphQL). Format: `ot_sa_<prefix>_<secret>`. See [packages/openthrottle-mcp/docs/AUTH.md](../packages/openthrottle-mcp/docs/AUTH.md).
 
    **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON` — see [docs/openthrottle/database-backup-scheduled-job-spec.md](../docs/openthrottle/database-backup-scheduled-job-spec.md).
 
@@ -127,7 +127,7 @@ Indexes are created by migrations in `databases/cortex/migrations/`. Main tables
 - **custom_prompts** – `idx_custom_prompts_prompt_type`, `idx_custom_prompts_labels` (GIN), `idx_custom_prompts_user_id` (partial), `idx_custom_prompts_project_id` (partial), `idx_custom_prompts_file_path` (partial), `idx_custom_prompts_created_at`, `idx_custom_prompts_updated_at`, `idx_custom_prompts_type_created_at`, `idx_custom_prompts_active` (partial WHERE deleted_at IS NULL), `idx_custom_prompts_title_trgm` (GIN, pg_trgm for ILIKE). See migration `036_create_custom_prompts_table.sql`.
 - **custom_prompt_embeddings** – `idx_custom_prompt_embeddings_custom_prompt_id`, `idx_custom_prompt_embeddings_vector` (HNSW cosine), `idx_custom_prompt_embeddings_metadata` (GIN). See migration `037_create_custom_prompt_embeddings_table.sql`.
 
-**When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by mcp-developer (via GraphQL), openthrottle-server, or the OpenThrottle app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/cortex/INDEX_AUDIT.md`.
+**When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by openthrottle-mcp (via GraphQL), openthrottle-server, or the OpenThrottle app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/cortex/INDEX_AUDIT.md`.
 
 ### Embedding dimension strategy (OpenAI and Ollama)
 
@@ -230,7 +230,7 @@ Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose stat
 
 Do **not** use display names, email addresses, or other formats. All write paths (MCP tools, ingest, UI) must accept only a valid GitHub username or null; invalid values should be normalized or rejected.
 
-**Enforcing GitHub username (MCP):** When `GITHUB_USER` or `OPENTHROTTLE_GITHUB_USER` is set, the **mcp-developer** MCP uses that value for **author** and **assignee** on `create_plan`, `update_plan`, `create_task`, `create_tasks`, and `update_task`, so the agent cannot store a display name (e.g. `matt`) instead of the GitHub username (e.g. `visormatt`). Set one of these env vars in the MCP run environment to enforce.
+**Enforcing GitHub username (MCP):** When `GITHUB_USER` or `OPENTHROTTLE_GITHUB_USER` is set, the **openthrottle-mcp** MCP uses that value for **author** and **assignee** on `create_plan`, `update_plan`, `create_task`, `create_tasks`, and `update_task`, so the agent cannot store a display name (e.g. `matt`) instead of the GitHub username (e.g. `visormatt`). Set one of these env vars in the MCP run environment to enforce.
 
 For a strict, hyper-detailed PRD: provide all fields you care about. For rough ideas: use `/cortex/planning-mode` or MCP `create_plan` / `create_task`; the agent infers author (GitHub handle) when missing and always evaluates category (infer or confirm/adjust).
 
@@ -260,7 +260,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/mcp-developer** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/mcp-developer/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
+**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
 
 ## Example queries
 

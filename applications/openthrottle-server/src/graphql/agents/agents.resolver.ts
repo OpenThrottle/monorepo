@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
-} from '@openthrottle/nestjs-mcp-developer';
+} from '@openthrottle/nestjs-openthrottle-mcp';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,

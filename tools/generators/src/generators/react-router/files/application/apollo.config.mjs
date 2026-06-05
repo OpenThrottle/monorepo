@@ -23,10 +23,7 @@ export default {
   client: {
     includes: ['app/**/*.{graphql,ts,tsx}'],
     service: {
-      // headers: {
-      //   Authorization: `Bearer ${supabaseJWT}`,
-      // },
-      name: 'cortex codegen',
+      name: '<%= name %> | Apollo GraphQL Codegen',
       url: `${url}/graphql`,
     },
     tagName: 'gql',

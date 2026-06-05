@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Verifies local prerequisites for OpenThrottle MCP (@openthrottle/mcp-developer):
+# Verifies local prerequisites for OpenThrottle MCP (@openthrottle/openthrottle-mcp):
 # openthrottle-server reachable, embedding config hint, optional auth token.
 set -euo pipefail
 
@@ -58,7 +58,7 @@ if [ -n "${MCP_DEVELOPER_AUTH_TOKEN:-}" ]; then
   fi
 else
   echo "WARN: MCP_DEVELOPER_AUTH_TOKEN unset — authenticated MCP tools will fail until set."
-  echo "      See packages/mcp-developer/docs/AUTH.md"
+  echo "      See packages/openthrottle-mcp/docs/AUTH.md"
 fi
 
 echo ""

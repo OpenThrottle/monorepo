@@ -333,13 +333,13 @@
       "entry": ["src/index.ts", "src/nestjs-typeorm.module.ts"],
       "project": ["src/**/*.ts"],
     },
-    "packages/mcp-developer": {
+    "packages/openthrottle-mcp": {
       "entry": [
         "src/index.ts",
         "src/bin.ts",
         "src/run-server.ts",
         "src/nest-tool-handlers.ts",
-        "src/nest/bootstrap-mcp-developer-app.ts",
+        "src/nest/bootstrap-openthrottle-mcp-app.ts",
       ],
       "project": ["src/**/*.ts"],
     },

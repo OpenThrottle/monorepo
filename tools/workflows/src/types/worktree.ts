@@ -199,7 +199,7 @@ export interface ChildJobInput {
   readonly streamIteration?: number | null;
   /**
    * When true, append each stdout/stderr chunk to Cortex plan_output_stream (same as MCP append_plan_output).
-   * Requires Cortex/mcp-developer and Postgres; stream is updated in real time for API/clients that read plan output.
+   * Requires Cortex/openthrottle-mcp and Postgres; stream is updated in real time for API/clients that read plan output.
    */
   readonly streamToCortex?: boolean;
   /** Optional timeout in milliseconds; on expiry the child is killed (SIGTERM then SIGKILL after grace). */

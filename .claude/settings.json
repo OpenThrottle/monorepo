@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [],
+    "additionalDirectories": [],
+    "deny": ["Read(./.env)"]
+  },
+  "enabledMcpjsonServers": [],
+  "skillOverrides": {}
+}

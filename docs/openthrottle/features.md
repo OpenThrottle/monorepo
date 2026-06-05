@@ -24,12 +24,12 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 
 ### Semantic search (plans and tasks)
 
-- **Semantic search** over plans and tasks (pgvector embeddings). Ask questions in natural language and get relevant plan/task content via **mcp-developer** (OT MCP).
+- **Semantic search** over plans and tasks (pgvector embeddings). Ask questions in natural language and get relevant plan/task content via **openthrottle-mcp** (OT MCP).
 - **Detailed docs:** [databases/README.md](../../databases/README.md) (plan_embeddings, task_embeddings, embedding strategy).
 
 ### Documentation search
 
-- Ingest **docs/** and NX project READMEs into OpenThrottle; search documentation semantically via the **docs-mcp** MCP server (separate from mcp-developer; use docs-mcp for docs content, mcp-developer for plans/tasks).
+- Ingest **docs/** and NX project READMEs into OpenThrottle; search documentation semantically via the **docs-mcp** MCP server (separate from openthrottle-mcp; use docs-mcp for docs content, openthrottle-mcp for plans/tasks).
 - **Detailed docs:** [databases/README.md](../../databases/README.md) (documentation, documentation_embeddings, ingest), [packages/docs-mcp/README.md](../../packages/docs-mcp/README.md).
 
 ### Activity and commit links
@@ -45,7 +45,7 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 
 ### Cursor integration (MCP)
 
-- **mcp-developer** (OT) MCP server in Cursor: ask OpenThrottle / ask OT, list plans by status, create/edit plans and tasks, semantic search, activity by date, output stream, commit links.
+- **openthrottle-mcp** (OT) MCP server in Cursor: ask OpenThrottle / ask OT, list plans by status, create/edit plans and tasks, semantic search, activity by date, output stream, commit links.
 - **Detailed docs:** [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*`.
 
 ### Dashboard (OpenThrottle app)

@@ -22,7 +22,7 @@ Import from the package root; public API is re-exported from `src/index.ts` (Ral
 
 ### Auth and GraphQL URL (orchestrator + `executeWorkflowGraphqlV2`)
 
-- **Bearer token:** `resolveWorkflowAuthTokenFromEnv()` reads, in order, `**OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`**, then `**MCP_DEVELOPER_AUTH_TOKEN\*\*`(same token source as the local mcp-developer client). Pass`token`into`buildWorkflowExecuteGraphqlV2Options`/`resolveWorkflowGraphqlConfigFromEnv`, or inject a test double for `executeGraphqlV2`.
+- **Bearer token:** `resolveWorkflowAuthTokenFromEnv()` reads, in order, `**OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`**, then `**MCP_DEVELOPER_AUTH_TOKEN\*\*`(same token source as the local openthrottle-mcp client). Pass`token`into`buildWorkflowExecuteGraphqlV2Options`/`resolveWorkflowGraphqlConfigFromEnv`, or inject a test double for `executeGraphqlV2`.
 - **Endpoint:** `resolveWorkflowGraphqlUrlOverrideFromEnv()` reads `**OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`** (optional full URL, e.g. `http://localhost:6021/graphql`). When unset, `**API_URL_INTERNAL`**is resolved via`@openthrottle/nodejs-graphql` `\*\*getGraphQLUrl()\*\*` (must be set for the default URL to work).
 - **Preflight:** the orchestrator’s first step is the `**getServerHealth`** query (public on typical servers); transport failures still surface as thrown errors from `**executeGraphqlV2\*\*`.
 

@@ -8,9 +8,9 @@ export default createVitestConfigNode({
   overrides: {
     resolve: {
       alias: {
-        '@openthrottle/mcp-developer/nest': path.resolve(
+        '@openthrottle/openthrottle-mcp/nest': path.resolve(
           getDirname(import.meta.url),
-          '../mcp-developer/src/nest/index.ts',
+          '../openthrottle-mcp/src/nest/index.ts',
         ),
       },
     },

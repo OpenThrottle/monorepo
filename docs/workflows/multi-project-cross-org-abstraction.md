@@ -99,7 +99,7 @@ User registers a **project** and assigns it to one or many OT projects/repositor
 
 ### 3. Configure the MCP globally and carve out plans
 
-User sets up the OT MCP (`mcp-developer`) globally and starts creating plans in OT. A plan may be
+User sets up the OT MCP (`openthrottle-mcp`) globally and starts creating plans in OT. A plan may be
 assigned a `project`; that linkage is what later lets us **autocomplete the working directory**.
 
 ### 4. Run a plan

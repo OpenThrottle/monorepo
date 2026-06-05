@@ -190,7 +190,7 @@ describe('GlobalClsAuthHook', () => {
         description: 'MCP automation',
         disabledAt: null,
         id: saId,
-        name: 'mcp-developer',
+        name: 'openthrottle-mcp',
       }),
     );
     vi.mocked(
@@ -207,7 +207,7 @@ describe('GlobalClsAuthHook', () => {
       });
 
       expect(cls.get('user')).toEqual({
-        displayName: 'mcp-developer',
+        displayName: 'openthrottle-mcp',
         email: '',
         isDeleted: false,
         permissions: ['plans:write'],

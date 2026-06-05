@@ -73,7 +73,7 @@ Add notifications to the openthrottle-developer app by wiring WebSockets end-to-
 
 ### Plan/task status-change events (UI sync)
 
-For keeping the plans detail route in sync without manual refresh (e.g. when status is updated via Cortex/mcp-developer or API):
+For keeping the plans detail route in sync without manual refresh (e.g. when status is updated via Cortex/openthrottle-mcp or API):
 
 - **Transport:** Same WebSocket (Socket.IO) as above. No SSE or polling.
 - **Event names:** `NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED` → `plan.status_changed`, `NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED` → `task.status_changed`.

@@ -4,12 +4,12 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 
 ## Current state
 
-| Surface                 | What exists                                                                          | Source                             |
-| ----------------------- | ------------------------------------------------------------------------------------ | ---------------------------------- |
-| **activityByDate**      | GraphQL query — commits, plan output chunks, tasks updated for a date or last N days | mcp-developer, openthrottle-server |
-| **activityByDateRange** | Same, for an ISO date range                                                          | openthrottle-server                |
-| **Dashboard**           | Recent activity card (commits, output chunks, tasks)                                 | Cortex app, openthrottle-developer |
-| **Semantic search**     | Plans + tasks (mcp-developer); docs (docs-mcp)                                       | Separate MCPs; no cross-source     |
+| Surface                 | What exists                                                                          | Source                                |
+| ----------------------- | ------------------------------------------------------------------------------------ | ------------------------------------- |
+| **activityByDate**      | GraphQL query — commits, plan output chunks, tasks updated for a date or last N days | openthrottle-mcp, openthrottle-server |
+| **activityByDateRange** | Same, for an ISO date range                                                          | openthrottle-server                   |
+| **Dashboard**           | Recent activity card (commits, output chunks, tasks)                                 | Cortex app, openthrottle-developer    |
+| **Semantic search**     | Plans + tasks (openthrottle-mcp); docs (docs-mcp)                                    | Separate MCPs; no cross-source        |
 
 ---
 
@@ -24,7 +24,7 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 
 ## Activity by date (extended)
 
-- **Today:** `get_activity_by_date` (mcp-developer) and `activityByDate` GraphQL return commits, output chunks, tasks updated. Pagination via limit/offset.
+- **Today:** `get_activity_by_date` (openthrottle-mcp) and `activityByDate` GraphQL return commits, output chunks, tasks updated. Pagination via limit/offset.
 - **Extension:** Add a fourth bucket — `docsUpdated` or `docsLanded` — by joining `documentation` on `sha` with commits in range, or by adding docs to the activity result when they land (e.g. docs-watch workflow could insert activity rows).
 - **Fallback:** If we don't want to extend the activity query, a separate `docsByDate` or `docsBySha` query could let the client merge timelines.
 
@@ -33,7 +33,7 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 ## Semantic search across plans / docs / commits
 
 - **Concept:** One query that returns hits from plans, tasks, docs, and (optionally) commits — e.g. "everything about OAuth" or "auth-related work".
-- **Today:** mcp-developer `semantic_search` (plans + tasks); docs-mcp `documentation_semantic_search` (docs). No unified API.
+- **Today:** openthrottle-mcp `semantic_search` (plans + tasks); docs-mcp `documentation_semantic_search` (docs). No unified API.
 - **Options:**
   1. **Federated:** New MCP tool or GraphQL query that calls both, merges results, dedupes by relevance. Client sees one result set.
   2. **Unified table:** Single embedding table with `source_type` + `source_id` (see metadata-model-minimal). One query; simpler but requires migration/ingest changes.
@@ -57,5 +57,5 @@ Sketch of how the "story over time" could be surfaced in UI or APIs. Builds on [
 
 - **Timeline:** Use existing activity data; optionally add docs; improve UI grouping/filtering.
 - **Activity API:** Extend to include docs (join on sha or separate docs-by-date).
-- **Semantic search:** Federate mcp-developer + docs-mcp, or unify embedding storage; optionally add commit embeddings.
+- **Semantic search:** Federate openthrottle-mcp + docs-mcp, or unify embedding storage; optionally add commit embeddings.
 - **Surfaces:** Dashboard, plan detail, project view, unified search — in that order of complexity.
