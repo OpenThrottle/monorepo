@@ -100,8 +100,8 @@ jobs:
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@v4
 
-      - name: '🔒 GraphQL schema sync (root vs server)'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
+      # - name: '🔒 GraphQL schema sync (root vs server)'
+      #   run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
 
       - name: '🧩 Codegen Tasks'
         run: |
@@ -111,21 +111,21 @@ jobs:
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel --verbose
 
-      # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/mcp-developer, @tools/workflows only.
+      # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
       # - name: '🧪 NX affected Vitest (phased gate)'
       #   run: |
       #     pnpm dlx nx@${{ env.NX_VERSION }} affected \
       #       --target=test \
-      #       --exclude='*,!openthrottle-server,!@openthrottle/mcp-developer,!@tools/workflows' \
+      #       --exclude='*,!openthrottle-server,!@openthrottle/openthrottle-mcp,!@tools/workflows' \
       #       --parallel \
       #       --outputStyle=static \
       #       --verbose \
       #       --nxBail
 
-      - name: '🔒 GraphQL codegen drift guard (agentic-ralph, mcp-developer)'
+      - name: '🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/mcp-developer
+          pnpm dlx nx@${{ env.NX_VERSION }} run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"

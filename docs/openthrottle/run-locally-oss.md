@@ -20,7 +20,7 @@ Use this doc for README, website, or pitch copy.
 | **Redis**                      | Queues, caching                                         | OSS, runs locally                            |
 | **OpenThrottle server**        | API, GraphQL, queues, notifications                     | OSS (NestJS), runs locally                   |
 | **OpenThrottle developer app** | Dashboard for plans, queues, PRs                        | OSS (React Router), runs locally             |
-| **Cortex / mcp-developer**     | Plans knowledge base, semantic search, MCP tools        | OSS, runs locally; connects to same Postgres |
+| **Cortex / openthrottle-mcp**  | Plans knowledge base, semantic search, MCP tools        | OSS, runs locally; connects to same Postgres |
 | **Ollama**                     | Local LLM and embedding models                          | OSS, runs locally; optional for embeddings   |
 
 All of the above are Open Source and can run on your machine or your own infrastructure. No vendor lock-in for core workflows.
@@ -41,16 +41,16 @@ All of the above are Open Source and can run on your machine or your own infrast
 
 ---
 
-## Cursor MCP launcher (`scripts/run-mcp-developer.sh`)
+## Cursor MCP launcher (`scripts/run-openthrottle-mcp.sh`)
 
-The launcher starts **@openthrottle/mcp-developer** on stdio for Cursor. It does **not** require **`OPENAI_API_KEY`** in the monorepo root `.env`.
+The launcher starts **@openthrottle/openthrottle-mcp** on stdio for Cursor. It does **not** require **`OPENAI_API_KEY`** in the monorepo root `.env`.
 
 | What you need                   | Where                                                                                                                                                                                      |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **API + auth**                  | `API_URL` / **`API_URL_INTERNAL`** and **`MCP_DEVELOPER_AUTH_TOKEN`** in Cursor MCP `env` (see [AUTH.md](../../packages/mcp-developer/docs/AUTH.md))                                       |
+| **API + auth**                  | `API_URL` / **`API_URL_INTERNAL`** and **`MCP_DEVELOPER_AUTH_TOKEN`** in Cursor MCP `env` (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md))                                    |
 | **Embeddings (optional tools)** | **`OLLAMA_BASE_URL`** (and optional **`OLLAMA_EMBEDDING_MODEL`**) or **`OPENAI_API_KEY`** in **`applications/openthrottle-server/.env`** so `semantic_search` and ingest can embed queries |
 
-**Ollama-only:** set Ollama vars on the server `.env`, run Ollama locally, then use `./scripts/run-mcp-developer.sh` or the committed [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) — no OpenAI key in root `.env`.
+**Ollama-only:** set Ollama vars on the server `.env`, run Ollama locally, then use `./scripts/run-openthrottle-mcp.sh` or the committed [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) — no OpenAI key in root `.env`.
 
 **OpenAI embeddings:** set **`OPENAI_API_KEY`** on the server `.env` instead (or in addition); the launcher still does not read it.
 
@@ -62,7 +62,7 @@ Smoke check: `API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrott
 
 - **Run server + developer (minimal native path):** `docs/openthrottle/run-openthrottle-server-developer.md` — env, ports, `pnpm nx` targets, Postgres/Redis via `pnpm run database:start`.
 - **Cortex (plans, embeddings):** `databases/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
-- **mcp-developer (MCP server):** `packages/mcp-developer/README.md` — Cortex via GraphQL; auth token and API URL.
+- **openthrottle-mcp (MCP server):** `packages/openthrottle-mcp/README.md` — Cortex via GraphQL; auth token and API URL.
 - **Ollama setup:** `docs/monorepo/Ollama.md`, `scripts/ollama.sh`, root `.env.default`.
 - **Local services and ports:** `docs/monorepo/local-services-and-ports.md`.
 - **Server / DB env:** Root `.env.default` (copy to `.env` for `pnpm run database:*`) and `applications/openthrottle-server/.env.default` (copy to `applications/openthrottle-server/.env` when running the API on the host).

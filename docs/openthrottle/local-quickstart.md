@@ -1,8 +1,8 @@
 # OpenThrottle local quickstart
 
-Single path from a fresh clone to a running **openthrottle-server** and a verified **mcp-developer** MCP connection. All commands run from the **monorepo root** unless noted.
+Single path from a fresh clone to a running **openthrottle-server** and a verified **openthrottle-mcp** MCP connection. All commands run from the **monorepo root** unless noted.
 
-**After this:** mental model and agent prompts — [first-time-onboarding.md](./first-time-onboarding.md). Deeper server/UI detail — [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md). MCP env edge cases — [packages/mcp-developer/docs/verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md).
+**After this:** mental model and agent prompts — [first-time-onboarding.md](./first-time-onboarding.md). Deeper server/UI detail — [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md). MCP env edge cases — [packages/openthrottle-mcp/docs/verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md).
 
 ---
 
@@ -30,9 +30,9 @@ Copy defaults into local env files (gitignored):
 
 **Host processes + Docker DB:** In `applications/openthrottle-server/.env`, set `**POSTGRES_HOST=localhost`** and `**REDIS_HOST=localhost\*\*`when the API runs on your machine and only Postgres/Redis are in Compose. Root`.env.default`uses`host.docker.internal`for tools inside Docker; override on the server`.env` for native dev.
 
-**Auth (default):** Server `.env.default` has `**APP_ENABLE_AUTHENTICATION=true`**. MCP and workers need long-lived **service account\*\* tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/mcp-developer/docs/AUTH.md).
+**Auth (default):** Server `.env.default` has `**APP_ENABLE_AUTHENTICATION=true`**. MCP and workers need long-lived **service account\*\* tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 
-**Embeddings:** Configure `**OPENAI_API_KEY`** or `**OLLAMA_BASE_URL**`on`**applications/openthrottle-server/.env\*\*`(not required in root`.env`for the MCP launcher).`[scripts/run-mcp-developer.sh](../../scripts/run-mcp-developer.sh)` starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-mcp-developersh).
+**Embeddings:** Configure `**OPENAI_API_KEY`** or `**OLLAMA_BASE_URL**`on`**applications/openthrottle-server/.env\*\*`(not required in root`.env`for the MCP launcher).`[scripts/run-openthrottle-mcp.sh](../../scripts/run-openthrottle-mcp.sh)` starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-openthrottle-mcpsh).
 
 ---
 
@@ -65,11 +65,11 @@ The script prints `**MCP_DEVELOPER_AUTH_TOKEN**` and `**OPENTHROTTLE_WORKER_GRAP
 1. Copy `**MCP_DEVELOPER_AUTH_TOKEN**` into:
 
 - `applications/openthrottle-server/.env` → `MCP_DEVELOPER_AUTH_TOKEN=ot_sa_…`
-- Cursor MCP `**env**` for `**mcp-developer**` (see step 5).
+- Cursor MCP `**env**` for `**openthrottle-mcp**` (see step 5).
 
 2. Optionally copy `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` for BullMQ / Ralph workers.
 
-Do not commit real tokens. Rotation: [AUTH.md § Credential rotation](../../packages/mcp-developer/docs/AUTH.md#credential-rotation).
+Do not commit real tokens. Rotation: [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation).
 
 ---
 
@@ -100,14 +100,14 @@ Open `**http://localhost:6020**`. MCP verification does not require the UI.
 
 ### Cursor MCP config
 
-Register `**mcp-developer**` in `**.cursor/mcp.json**` (this repo as workspace) or `**~/.cursor/mcp.json**` (secondary workspace). Align URLs with server `**PORT**`:
+Register `**openthrottle-mcp**` in `**.cursor/mcp.json**` (this repo as workspace) or `**~/.cursor/mcp.json**` (secondary workspace). Align URLs with server `**PORT**`:
 
 ```json
 {
   "mcpServers": {
-    "mcp-developer": {
+    "openthrottle-mcp": {
       "command": "bash",
-      "args": ["./scripts/run-mcp-developer.sh"],
+      "args": ["./scripts/run-openthrottle-mcp.sh"],
       "env": {
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",
@@ -118,7 +118,7 @@ Register `**mcp-developer**` in `**.cursor/mcp.json**` (this repo as workspace) 
 }
 ```
 
-When OpenThrottle is **not** the Cursor workspace root, use an **absolute path** to `scripts/run-mcp-developer.sh` in the `args` array. See [verification-environment.md § Secondary workspace](../../packages/mcp-developer/docs/verification-environment.md#secondary-workspace-another-repo-open-in-cursor).
+When OpenThrottle is **not** the Cursor workspace root, use an **absolute path** to `scripts/run-openthrottle-mcp.sh` in the `args` array. See [verification-environment.md § Secondary workspace](../../packages/openthrottle-mcp/docs/verification-environment.md#secondary-workspace-another-repo-open-in-cursor).
 
 Restart Cursor after changing MCP config.
 
@@ -133,7 +133,7 @@ Expect `**OK: GET …/health**`, `**OK: embedding provider configured**` (or a W
 
 ### In Cursor
 
-1. Confirm `**mcp-developer**` is connected.
+1. Confirm `**openthrottle-mcp**` is connected.
 2. Call tool `**health**` (no auth) — `serverHealth` from GraphQL.
 3. Call `**list_sources**` or `**list_plans_by_status**` — confirms `**MCP_DEVELOPER_AUTH_TOKEN**` and RBAC with auth enabled.
 
@@ -160,18 +160,18 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 | Bootstrap: missing service account | Run migrate first (migration **045**)                                                                           |
 | `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                               |
 | `semantic_search` empty or errors  | Set `**OLLAMA_BASE_URL`** or `**OPENAI_API_KEY\*\*`on server`.env` — [run-locally-oss.md](./run-locally-oss.md) |
-| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/mcp-developer/docs/AUTH.md)                  |
-| MCP script not found in Cursor     | Use absolute path to `run-mcp-developer.sh`                                                                     |
+| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)               |
+| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                                  |
 
 ---
 
 ## Related documentation
 
-| Topic                                | Location                                                                                     |
-| ------------------------------------ | -------------------------------------------------------------------------------------------- |
-| First agent workflow after MCP works | [first-time-onboarding.md](./first-time-onboarding.md)                                       |
-| Server + developer daily dev         | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)               |
-| MCP verification detail              | [verification-environment.md](../../packages/mcp-developer/docs/verification-environment.md) |
-| Auth and tokens                      | [AUTH.md](../../packages/mcp-developer/docs/AUTH.md)                                         |
-| DB schema, embeddings, imports       | [databases/README.md](../../databases/README.md)                                             |
-| OSS / Ollama                         | [run-locally-oss.md](./run-locally-oss.md)                                                   |
+| Topic                                | Location                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| First agent workflow after MCP works | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
+| Server + developer daily dev         | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                  |
+| MCP verification detail              | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
+| Auth and tokens                      | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
+| DB schema, embeddings, imports       | [databases/README.md](../../databases/README.md)                                                |
+| OSS / Ollama                         | [run-locally-oss.md](./run-locally-oss.md)                                                      |

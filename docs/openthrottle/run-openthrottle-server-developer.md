@@ -53,7 +53,7 @@ GraphQL URL for tools and MCP: **`http://localhost:6021/graphql`** when using th
 7. **Terminal B — UI:** **`pnpm nx run openthrottle-developer:dev`**
    (`react-router dev`; pulls codegen dependencies.)
 
-**Smoke checks:** Open **`http://localhost:6021/health`** (or `/graphql`), **`http://localhost:6020`** for the developer UI. For MCP auth and GraphQL tokens, see [`packages/mcp-developer/README.md`](../../packages/mcp-developer/README.md) and [`packages/mcp-developer/docs/verification-environment.md`](../../packages/mcp-developer/docs/verification-environment.md).
+**Smoke checks:** Open **`http://localhost:6021/health`** (or `/graphql`), **`http://localhost:6020`** for the developer UI. For MCP auth and GraphQL tokens, see [`packages/openthrottle-mcp/README.md`](../../packages/openthrottle-mcp/README.md) and [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).
 
 ---
 

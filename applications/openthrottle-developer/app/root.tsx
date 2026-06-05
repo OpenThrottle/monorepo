@@ -437,6 +437,7 @@ export default function App(): React.ReactElement {
         >
           <GlobalProviders>
             <GlobalLayout
+              authenticated={data?.user !== null}
               data={data?.user ? dataNavigationV2 : dataNavigationGuest}
               health={data?.serverHealth}
               overrides={{ footer: isFooterHidden }}

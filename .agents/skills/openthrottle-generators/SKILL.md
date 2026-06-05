@@ -28,7 +28,7 @@ description: >-
 | **Any Nx generator** (plugin + local), dry-run, reading generator source, library buildable vs not | **nx-generate** — `.agents/skills/nx-generate/SKILL.md`                         |
 | **Read-only** workspace: project list, `nx show project`, graph, affected                          | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
 | **Execute** `nx run`, `affected`, `run-many` after code exists                                     | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
-| **Plans, Plan-Id / Task-Id, mcp-developer**                                                        | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
+| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                                                     | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
 | **Link workspace packages** after new packages                                                     | **link-workspace-packages** — `.agents/skills/link-workspace-packages/SKILL.md` |
 
 ## Non-negotiable: `NX_ISOLATE_PLUGINS=false`

@@ -106,7 +106,7 @@ describe('RolesService (service accounts)', () => {
     it('returns empty array when service account has no roles', async () => {
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue({
         id: serviceAccountId,
-        name: 'mcp-developer',
+        name: 'openthrottle-mcp',
         roles: [],
       });
 
@@ -128,7 +128,7 @@ describe('RolesService (service accounts)', () => {
 
       vi.mocked(serviceAccountRepository.findOne).mockResolvedValue({
         id: serviceAccountId,
-        name: 'mcp-developer',
+        name: 'openthrottle-mcp',
         roles: [adminRole, viewerRole],
       } as ServiceAccount);
 

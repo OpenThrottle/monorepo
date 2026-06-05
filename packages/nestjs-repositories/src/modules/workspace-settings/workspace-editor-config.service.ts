@@ -133,7 +133,7 @@ export class WorkspaceEditorConfigService {
 
     if (Object.keys(managedMcp).length === 0) {
       warnings.push(
-        'Skipped MCP config: scripts/run-mcp-developer.sh not found in this repository.',
+        'Skipped MCP config: scripts/run-openthrottle-mcp.sh not found in this repository.',
       );
     } else {
       const mcpRelativePath = paths.mcpConfigRelativePath;

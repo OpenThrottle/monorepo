@@ -10,7 +10,7 @@ export class CreateServiceAccountInput {
   description!: string | null;
 
   @Field(() => String, {
-    description: `Stable name (e.g. mcp-developer). Must be unique.`,
+    description: `Stable name (e.g. openthrottle-mcp). Must be unique.`,
   })
   name!: string;
 }

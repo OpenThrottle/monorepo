@@ -238,7 +238,7 @@ Mutation: `applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigur
 - Loads the user’s `enabled_editors` and linked `workspace_local_repositories`.
 - Optional `repositoryIds` limits which repos are updated; omit to apply to all.
 - For each enabled editor and target repo:
-  - **MCP:** merges `mcp-developer` into `.cursor/mcp.json` or `.vscode/mcp.json` when `scripts/run-mcp-developer.sh` exists (OpenThrottle monorepo checkout). Uses `API_URL_INTERNAL` for `API_URL` / `API_URL_INTERNAL` env vars. Does **not** write auth tokens; set `MCP_DEVELOPER_AUTH_TOKEN` in the editor MCP env separately.
+  - **MCP:** merges `openthrottle-mcp` into `.cursor/mcp.json` or `.vscode/mcp.json` when `scripts/run-openthrottle-mcp.sh` exists (OpenThrottle monorepo checkout). Uses `API_URL_INTERNAL` for `API_URL` / `API_URL_INTERNAL` env vars. Does **not** write auth tokens; set `MCP_DEVELOPER_AUTH_TOKEN` in the editor MCP env separately.
   - **Skills paths:** ensures parent directories exist for skill paths from `OPENTHROTTLE_REPO_SKILL_PATHS` (keep aligned with `repo-skills-registry.ts`).
   - **Rules:** ensures `.cursor/rules` or `.vscode` directory exists.
   - **Manifest:** writes `.openthrottle/workspace-editors.json` with applied paths and timestamp.

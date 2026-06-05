@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "mcp-developer": {
+    "openthrottle-mcp": {
       "description": "OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
       "command": "bash",
-      "args": ["./scripts/run-mcp-developer.sh"],
+      "args": ["./scripts/run-openthrottle-mcp.sh"],
       "env": {
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",

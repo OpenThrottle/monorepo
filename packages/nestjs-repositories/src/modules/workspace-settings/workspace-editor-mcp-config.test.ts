@@ -13,31 +13,31 @@ describe('mergeManagedMcpServers', () => {
       {
         mcpServers: {
           fetch: { args: [], command: 'docker' },
-          'mcp-developer': { command: 'old' },
+          'openthrottle-mcp': { command: 'old' },
         },
       },
       {
-        'mcp-developer': {
-          args: ['./scripts/run-mcp-developer.sh'],
+        'openthrottle-mcp': {
+          args: ['./scripts/run-openthrottle-mcp.sh'],
           command: 'bash',
         },
       },
     );
 
     expect(merged.mcpServers?.fetch).toEqual({ args: [], command: 'docker' });
-    expect(merged.mcpServers?.['mcp-developer']).toEqual({
-      args: ['./scripts/run-mcp-developer.sh'],
+    expect(merged.mcpServers?.['openthrottle-mcp']).toEqual({
+      args: ['./scripts/run-openthrottle-mcp.sh'],
       command: 'bash',
     });
   });
 });
 
 describe('buildManagedMcpServers', () => {
-  test('returns mcp-developer when run script exists', () => {
+  test('returns openthrottle-mcp when run script exists', () => {
     const root = mkdtempSync(join(tmpdir(), 'ot-editor-config-'));
     mkdirSync(join(root, 'scripts'), { recursive: true });
     writeFileSync(
-      join(root, 'scripts', 'run-mcp-developer.sh'),
+      join(root, 'scripts', 'run-openthrottle-mcp.sh'),
       '#!/bin/bash\n',
     );
 
@@ -46,7 +46,7 @@ describe('buildManagedMcpServers', () => {
       repositoryRoot: root,
     });
 
-    expect(servers['mcp-developer']).toMatchObject({
+    expect(servers['openthrottle-mcp']).toMatchObject({
       command: 'bash',
       env: {
         API_URL: 'http://localhost:6021',

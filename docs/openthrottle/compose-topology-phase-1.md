@@ -1,6 +1,6 @@
 # Compose topology options — phase 1
 
-This doc records candidate `docker-compose.yml` shapes for running OpenThrottle locally alongside Cursor on the **host**, what is in scope for **phase 1**, what is explicitly **deferred**, and the published ports + env vars an on-host **mcp-developer** needs to talk to a containerized API.
+This doc records candidate `docker-compose.yml` shapes for running OpenThrottle locally alongside Cursor on the **host**, what is in scope for **phase 1**, what is explicitly **deferred**, and the published ports + env vars an on-host **openthrottle-mcp** needs to talk to a containerized API.
 
 It supports OT plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (Docker Compose local OpenThrottle: host integration, paths, and feasibility). Read with [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md), [run-locally-oss.md](./run-locally-oss.md), and [`tools/workflows/README.md`](../../tools/workflows/README.md) (multi-workspace plans, worktrees).
 
@@ -14,7 +14,7 @@ It supports OT plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (Docker Compose l
 
 - **Postgres** (with pgvector) as a compose service — already present.
 - **Redis** as a compose service — already present.
-- **openthrottle-server** (NestJS API + GraphQL + BullMQ Board + WebSocket) — published on the host so `mcp-developer` running inside Cursor can reach it.
+- **openthrottle-server** (NestJS API + GraphQL + BullMQ Board + WebSocket) — published on the host so `openthrottle-mcp` running inside Cursor can reach it.
 - **Migrations** applied via either:
   - host `pnpm run database:migrate` against the published Postgres port, or
   - one-shot container that runs the same script on the compose network.
@@ -36,7 +36,7 @@ It supports OT plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (Docker Compose l
 ```mermaid
 flowchart LR
   subgraph Host
-    Cursor["Cursor IDE\n+ mcp-developer"]
+    Cursor["Cursor IDE\n+ openthrottle-mcp"]
     Dev["openthrottle-developer (Vite SSR)"]
     Workflows["pnpm exec workflow-ralph\n(plans worker / CLI)"]
     Agents["cursor-agent / claude-code\n(spawned by workflows)"]
@@ -75,7 +75,7 @@ docker compose up -d openthrottle-postgres openthrottle-redis openthrottle-serve
 **Why this shape:**
 
 - **Single concern per container.** No agent CLIs, no host filesystem assumptions, no GPU.
-- **Host MCP / agents work today.** `mcp-developer` and `workflow-ralph` already point at `localhost:6021` / `localhost:6010` / `localhost:6011`.
+- **Host MCP / agents work today.** `openthrottle-mcp` and `workflow-ralph` already point at `localhost:6021` / `localhost:6010` / `localhost:6011`.
 - **Trivial rollback.** Same compose file the repo uses for `pnpm run database:start`; just start more services.
 
 ---
@@ -122,16 +122,16 @@ For **phase 1 (Topology A)** the host needs three ports published:
 | `6011`      | openthrottle-redis    | Redis (TCP) for BullMQ from host workers              | `REDIS_PORT`               |
 | `6021`      | openthrottle-server   | HTTP — `/graphql`, `/health`, `/queues`, `/socket.io` | `OPENTHROTTLE_SERVER_PORT` |
 
-`mcp-developer` only needs **6021** to be reachable for plan/task tools (REST `/health` plus GraphQL). Postgres and Redis ports are required only for **host-side** workers (e.g. `pnpm exec workflow-ralph`, `pnpm run database:migrate`, `pnpm run database:import`).
+`openthrottle-mcp` only needs **6021** to be reachable for plan/task tools (REST `/health` plus GraphQL). Postgres and Redis ports are required only for **host-side** workers (e.g. `pnpm exec workflow-ralph`, `pnpm run database:migrate`, `pnpm run database:import`).
 
 ---
 
 ## 5. Env contract — host MCP / Cursor against containerized API
 
-`mcp-developer` reads **`API_URL_INTERNAL`** to discover the GraphQL endpoint. With Topology A, the host-side env (in `~/.cursor/mcp.json`, shell, or `packages/mcp-developer/.env`) only needs:
+`openthrottle-mcp` reads **`API_URL_INTERNAL`** to discover the GraphQL endpoint. With Topology A, the host-side env (in `~/.cursor/mcp.json`, shell, or `packages/openthrottle-mcp/.env`) only needs:
 
 ```bash
-# Host-side mcp-developer: API in a container, MCP on the host
+# Host-side openthrottle-mcp: API in a container, MCP on the host
 API_URL_INTERNAL="http://localhost:6021"
 # Optional bearer token for write tools:
 # OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN="…"

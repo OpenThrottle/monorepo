@@ -12,7 +12,7 @@ So for Node ESM with a plain `tsc` build, use `.js` in relative local imports (e
 ## Shared config
 
 - **`packages/openthrottle/tsconfig.node.json`** sets `module` and `moduleResolution` to **NodeNext** so TypeScript enforces the extension requirement and emit is valid for Node.
-- **mcp-developer** and **nodejs-graphql** extend this file (`../tsconfig.node.json`) so they share the same Node ESM rules.
+- **openthrottle-mcp** and **nodejs-graphql** extend this file (`../tsconfig.node.json`) so they share the same Node ESM rules.
 
 ## If you later use a bundler
 

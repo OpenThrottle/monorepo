@@ -23,12 +23,9 @@ export default {
   client: {
     includes: ['app/**/*.{graphql,ts,tsx}'],
     service: {
-      // headers: {
-      //   Authorization: `Bearer ${supabaseJWT}`,
-      // },
-      name: 'openthrottle-developer GraphQL Codegen',
+      name: 'openthrottle-developer | Apollo GraphQL Codegen',
       url: `${url}/graphql`,
     },
-    // tagName: 'gql',
+    tagName: 'gql',
   },
 };

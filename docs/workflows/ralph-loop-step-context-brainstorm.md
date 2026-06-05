@@ -185,7 +185,7 @@ flowchart TB
   end
   subgraph write [Writers]
     ORC[Orchestrator / workflow-ralph]
-    MCP[mcp-developer → GraphQL]
+    MCP[openthrottle-mcp → GraphQL]
     LOC[Optional local manifest e.g. jsonl]
   end
   subgraph store [Storage]

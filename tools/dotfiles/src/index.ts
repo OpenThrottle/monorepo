@@ -1,4 +1,5 @@
 import { getDirname } from './vite-config.js';
+// import { importX } from 'eslint-plugin-import-x';
 import js from '@eslint/js';
 import pluginImport from 'eslint-plugin-import';
 import pluginImportSort from 'eslint-plugin-simple-import-sort';
@@ -106,9 +107,12 @@ export const eslintConfig = tslint.config([
 
   {
     files: ['*.js', '*.jsx', '*.ts', '*.tsx'],
+    // files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
   },
 
   js.configs.recommended,
+  // importX.flatConfigs.recommended,
+  // importX.flatConfigs.typescript,
 
   // pluginPrettier, // FIXME: Look at this again
   ...tslint.configs.recommended,
@@ -182,6 +186,10 @@ export const eslintConfig = tslint.config([
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       curly: ['error', 'multi-line'],
+
+      // 'import-x/no-dynamic-require': 'warn',
+      // 'import-x/no-nodejs-modules': 'warn',
+
       'import/no-named-as-default-member': 'off',
       // 'import/order': [
       //   'error',
@@ -197,6 +205,7 @@ export const eslintConfig = tslint.config([
       //     'newlines-between': 'never',
       //   },
       // ],
+
       'jsdoc/no-undefined-types': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',

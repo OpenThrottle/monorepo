@@ -10,7 +10,7 @@ This document breaks down the implementation of the Passport local strategy for 
 
 ## Detailed Tasks (for Cortex)
 
-Add these as child tasks of plan `84bf03c3-81d8-43e1-8b2d-0a2026a1e798` via Cortex MCP (mcp-developer) `create_task`.
+Add these as child tasks of plan `84bf03c3-81d8-43e1-8b2d-0a2026a1e798` via Cortex MCP (openthrottle-mcp) `create_task`.
 
 1. **Cortex DB: Add password_hash and email uniqueness for local auth**
    - Add migration in `databases/cortex/migrations/`: column `password_hash` (TEXT, nullable so existing users without passwords remain valid). Add unique index on `email` where email IS NOT NULL so local-auth users have a unique email. Document in Cortex README.

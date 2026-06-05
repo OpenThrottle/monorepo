@@ -1,6 +1,6 @@
 # Audit: docs/openthrottle/features.md vs codebase
 
-Audit date: 2025-02-12. Compare `docs/openthrottle/features.md` to `databases/cortex`, mcp-developer tools, and apps (openthrottle-developer, openthrottle-server) for gaps. Use this list when updating the feature list and links (task: Update feature list and Detailed docs links).
+Audit date: 2025-02-12. Compare `docs/openthrottle/features.md` to `databases/cortex`, openthrottle-mcp tools, and apps (openthrottle-developer, openthrottle-server) for gaps. Use this list when updating the feature list and links (task: Update feature list and Detailed docs links).
 
 ## Gaps and fixes
 
@@ -25,8 +25,8 @@ Audit date: 2025-02-12. Compare `docs/openthrottle/features.md` to `databases/co
 ### 4. Documentation search — separate MCP
 
 - **features.md:** Says ingest docs/ and NX READMEs; search semantically; links to cortex README only.
-- **Codebase:** Documentation search is exposed via **docs-mcp** (separate from mcp-developer). AGENTS.md and cortex rules say use docs-mcp for docs content, mcp-developer for plans/tasks.
-- **Fix:** In Documentation search, state that search is exposed via **docs-mcp** (separate MCP server from mcp-developer). Link to docs-mcp package or README if present.
+- **Codebase:** Documentation search is exposed via **docs-mcp** (separate from openthrottle-mcp). AGENTS.md and cortex rules say use docs-mcp for docs content, openthrottle-mcp for plans/tasks.
+- **Fix:** In Documentation search, state that search is exposed via **docs-mcp** (separate MCP server from openthrottle-mcp). Link to docs-mcp package or README if present.
 
 ### 5. Dashboard link broken
 
@@ -55,7 +55,7 @@ Audit date: 2025-02-12. Compare `docs/openthrottle/features.md` to `databases/co
 ### 9. MCP tool list
 
 - **features.md:** Lists get_plan, create_plan, get_tasks_by_plan_id, create_task, update_task. Doesn’t list `list_tasks_by_category`, `get_remaining_tasks_for_plan`, or project filters.
-- **Codebase:** mcp-developer exposes list_tasks_by_category; get_remaining_tasks_for_plan; list_plans_by_status(project?, projectId?).
+- **Codebase:** openthrottle-mcp exposes list_tasks_by_category; get_remaining_tasks_for_plan; list_plans_by_status(project?, projectId?).
 - **Fix:** In Plans and tasks or Cursor integration, add list_tasks_by_category and get_remaining_tasks_for_plan; note optional project/projectId filter on list_plans_by_status (or leave in Detailed docs only).
 
 ### 10. Users table
