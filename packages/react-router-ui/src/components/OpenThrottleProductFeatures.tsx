@@ -1,5 +1,6 @@
 import * as React from 'react';
 import classnames from 'classnames';
+import { Button } from '@openthrottle/react-router-shadcn';
 
 export interface OpenThrottleProductFeaturesProps {
   className?: string;
@@ -42,16 +43,22 @@ export const OpenThrottleProductFeatures = (
 
         return (
           <div
-            className="p-4 border border-border rounded-lg h-full"
+            className="p-4 flex flex-col border border-border rounded-lg h-full"
             key={feature.title}
           >
             <h2 className="mb-2 flex items-center gap-4">
               <Icon className="size-4" />
               <span>{feature.title}</span>
             </h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs flex-1 text-muted-foreground">
               {feature.description}
             </p>
+
+            <div className="flex justify-end">
+              <Button className="mt-4" size="xs" variant="link">
+                Learn more
+              </Button>
+            </div>
           </div>
         );
       })}
