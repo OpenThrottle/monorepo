@@ -76,6 +76,7 @@ Monorepos streamline our development process by centralizing code management, en
 # OpenThrottle local stack (full walkthrough: docs/openthrottle/local-quickstart.md)
 pnpm run database:start
 pnpm run database:migrate
+
 pnpm nx run openthrottle-server:dev
 pnpm nx run openthrottle-developer:dev
 

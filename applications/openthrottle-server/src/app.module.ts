@@ -41,7 +41,7 @@ import { GlobalAuthGuard } from './guards/global-auth.guard';
 import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module';
 import { HealthModule } from './modules/health/health.module';
-import { McpDeveloperModule } from './modules/openthrottle-mcp/openthrottle-mcp.module';
+import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module';
 import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
