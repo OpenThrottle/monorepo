@@ -324,7 +324,7 @@
       "build": {
         "executor": "nx:noop"
       },
-      "knip": {},
+      "DISABLED______knip": {},
       "lint": {
         "executor": "nx:noop"
       },

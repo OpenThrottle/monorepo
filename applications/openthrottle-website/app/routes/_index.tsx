@@ -35,8 +35,8 @@ export default function Component(
   return (
     <>
       <div className="max-w-7xl mx-auto flex flex-col gap-4 md:gap-8 lg:gap-24 p-4 md:p-8 lg:p-12">
-        <div className="my-20">
-          <OpenThrottleProductGetStarted />
+        <div className="shimmer-border mx-auto my-20">
+          <OpenThrottleProductGetStarted className="border-0" />
         </div>
         <OpenThrottleProductFeatures features={FEATURES} />
       </div>
