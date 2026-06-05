@@ -70,7 +70,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --describe
 
 # 3. List dynamic values (destinations, applications, folders, etc.)
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --list=<key>
-# Examples: --list=destinations, --list=applications, --list=componentFolders --application=openthrottle-cms
+# Examples: --list=destinations, --list=applications, --list=componentFolders --application=openthrottle-developer
 
 # 4. Run generator (use --subGenerator for react/remix/nestjs)
 NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --subGenerator=<type> --<option>=<value> --name=<Name>

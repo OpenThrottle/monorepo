@@ -24,7 +24,6 @@ flowchart TB
     Server["openthrottle-server<br/>(NestJS, GraphQL)"]
     Developer["openthrottle-developer<br/>(React Router)"]
     Admin["openthrottle-admin"]
-    CMS["openthrottle-cms"]
     Email["openthrottle-email"]
     Website["openthrottle-website"]
   end
@@ -93,7 +92,6 @@ sequenceDiagram
 | **openthrottle-server**    | NestJS GraphQL API; auth, plans, tasks, embeddings, commit links, docs, users, RBAC; BullMQ queues; talks to Cortex via `@openthrottle/nestjs-repositories`. |
 | **openthrottle-developer** | React Router UI for developers; plans, tasks, search, commit links; configurable `API_URL` to the server.                                                    |
 | **openthrottle-admin**     | Admin portal (see `docs/openthrottle/admin-portal-architecture.md`).                                                                                         |
-| **openthrottle-cms**       | CMS application.                                                                                                                                             |
 | **openthrottle-email**     | Email-related services.                                                                                                                                      |
 | **openthrottle-website**   | Marketing website.                                                                                                                                           |
 

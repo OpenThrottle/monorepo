@@ -36,7 +36,7 @@ pnpm nx run monorepo:knip                           # dead-code report ONLY — 
 
 ## Architecture
 
-- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-cms`, `openthrottle-email`, `openthrottle-website` are React Router (v7) + Vite apps.
+- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website` are React Router (v7) + Vite apps.
 - **`packages/`** — `@openthrottle/nestjs-*` (server modules: auth, bullmq, typeorm, redis, graphql, …), `@openthrottle/react-router-*` (shared UI/client libs), `openthrottle-agentic-*` / `openthrottle-workflows` (Ralph agentic tooling), `openthrottle-mcp` (the OT MCP server).
 - **`tools/`** — Nx plugins, `@tools/generators` (scaffolding templates), `@tools/workflows` (Ralph CLI).
 - **`databases/`** — OpenThrottle Postgres schema, migrations, local DB scripts.
