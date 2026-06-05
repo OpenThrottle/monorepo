@@ -1,11 +1,5 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@openthrottle/react-router-shadcn';
 import { HOME_FEATURES } from '~/routing/home/data';
 
 export interface HomeFeaturesProps {
@@ -37,14 +31,24 @@ export const HomeFeatures = (props: HomeFeaturesProps): React.ReactElement => {
       )}
       data-testid="HomeFeatures"
     >
-      {HOME_FEATURES.map((feature) => (
-        <Card className="h-full" key={feature.title}>
-          <CardHeader>
-            <CardTitle className="text-lg mb-2">{feature.title}</CardTitle>
-            <CardDescription>{feature.description}</CardDescription>
-          </CardHeader>
-        </Card>
-      ))}
+      {HOME_FEATURES.map((feature) => {
+        const Icon = feature.icon;
+
+        return (
+          <div
+            className="p-4 border border-border rounded-lg h-full"
+            key={feature.title}
+          >
+            <h2 className="text-lg mb-2 flex items-center gap-4">
+              <Icon className="size-4" />
+              <span>{feature.title}</span>
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {feature.description}
+            </p>
+          </div>
+        );
+      })}
     </section>
   );
 };

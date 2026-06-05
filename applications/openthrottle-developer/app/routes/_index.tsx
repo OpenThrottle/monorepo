@@ -5,7 +5,6 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { HomeFeatures } from '~/routing/home/components/HomeFeatures';
 import { HomeGetStarted } from '~/routing/home/components/HomeGetStarted';
-import { HomeHeroV1 } from '~/routing/home/components/HomeHeroV1';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
 
@@ -47,10 +46,10 @@ export default function Component(
 
   return (
     <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12">
-      <HomeHeroV1 className="flex-1 flex h-full min-h-svh items-center" />
-      {/* <HomeBuiltWith /> */}
-      <HomeFeatures />
+      {/* <HomeHeroV1 className="flex-1 flex h-full min-h-svh items-center" /> */}
       <HomeGetStarted />
+      <HomeFeatures />
+      {/* <HomeBuiltWith /> */}
     </GlobalScreen>
   );
 }

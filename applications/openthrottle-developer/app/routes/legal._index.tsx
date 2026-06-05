@@ -1,25 +1,12 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@openthrottle/react-router-shadcn';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { opensource } from '~/routing/legal/data/data.opensource';
-import {
-  OPEN_THROTTLE_CONTACT_EMAIL,
-  OPEN_THROTTLE_CONTACT_PORTFOLIO,
-  OPEN_THROTTLE_CONTACT_PORTFOLIO_REF,
-} from '@openthrottle/react-router-utils';
 import type { Route } from '@/app/routes/+types/legal._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -65,70 +52,17 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="About"
+          title="Legal"
         />
-        <p className="text-sm text-muted-foreground">
-          <Link
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
-            target="_blank"
-            to="https://github.com/OpenThrottle?ref=openthrottle"
-          >
-            OpenThrottle
-          </Link>{' '}
-          is a suite of Open Source and AI-backed tools for developers to create
-          and manage their projects.
-        </p>
 
-        <div className="my-4 flex flex-wrap gap-4">
-          {opensource.map((data) => {
-            const { image, name, url } = data;
-
-            return (
-              <Link key={url} target="_blank" to={url}>
-                <img
-                  alt={name}
-                  className="size-10 grayscale hover:grayscale-0 hover:rotate-12 hover:scale-125 cursor-pointer transition-all duration-300 bg-muted rounded-full p-1"
-                  src={image}
-                />
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 mb-2">
-          <p className="text-sm text-muted-foreground">
-            Created by{' '}
-            <strong>
-              <Link target="_blank" to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}>
-                Matthew Scholta
-              </Link>
-            </strong>
-            , a software developer with a passion for crafting robust platforms
-            and empowering developers. Matthew is dedicated to building
-            high-quality, user-focused solutions for the modern developer.
+        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+          <p>
+            This site is a personal portfolio and developer playground operated
+            by Matthew Scholta. It is provided free of charge, on an as-is
+            basis, primarily to showcase open source work and experiments. It is
+            not a commercial product, and there is no service-level agreement,
+            uptime guarantee, or commitment to maintain any particular feature.
           </p>
-        </div>
-      </div>
-
-      <div className="py-8 relative flex flex-col gap-8">
-        <Avatar className="size-24 md:size-32 mx-auto m-4">
-          <AvatarImage src="https://avatars.githubusercontent.com/u/545829?v=4" />
-          <AvatarFallback className="text-3xl">MS</AvatarFallback>
-        </Avatar>
-
-        <div className="flex flex-col items-center-">
-          <h2 className="text-xl font-bold mb-4">Matthew Scholta</h2>
-          <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-            <OpenThrottleClipboard
-              label={OPEN_THROTTLE_CONTACT_EMAIL}
-              text={OPEN_THROTTLE_CONTACT_EMAIL}
-            />
-          </h3>
-          <div className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-            <Link target="_blank" to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}>
-              {OPEN_THROTTLE_CONTACT_PORTFOLIO}
-            </Link>
-          </div>
         </div>
       </div>
     </GlobalScreen>
