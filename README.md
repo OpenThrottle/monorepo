@@ -1,7 +1,7 @@
 # 🤖 OpenThrottle | AI
 
-[![Continuous Integration](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
-[![NX Release](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
+[![Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
+[![NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
 
 After years of development, I've refined my tech stack to focus on a core set of battle-tested tools, with TypeScript as the foundation. This monorepo represents the culmination of those learnings - a streamlined, production-ready setup that balances flexibility with maintainability.
 
@@ -37,6 +37,16 @@ pnpm exec workflow-ralph \
   --prompt-file .cursor/skills/agents-ralph/SKILL.md
 ```
 
+Or invoke the `agents-ralph` skill from your agent of choice:
+
+```bash
+cursor-agent -p /agents-ralph
+
+claude /agents-ralph
+
+opencode --prompt "skill({ name: "agents-ralph" })"
+```
+
 ## 🏠 Architecture
 
 While many [NX](https://nx.dev/) monorepo implementations specialize in either `task running` or `package publishing`, our setup leverages both capabilities. This dual approach enables external applications to seamlessly integrate with and utilize the packages we develop, manage, and publish from this monorepo.
@@ -45,15 +55,13 @@ While many [NX](https://nx.dev/) monorepo implementations specialize in either `
 ├── .env.default           # Default environment variables (in VC)
 ├── applications           # NodeJS client and server applications
 ├── databases              # OpenThrottle Postgres schema, migrations, and local DB scripts
-├── design                 # Reserved for design assets (future)
 ├── docs                   # Markdown documentation (see docs/)
 ├── infra                  # Infrastructure as code (e.g. GCP, Terraform)
-├── learning               # Reserved for learning notes (future)
 ├── packages               # Shared packages that can also be published
 ├── scripts                # Scripts to make life easier (Bash + TypeScript)
 ├── services               # Shared or standalone services
-├── tools                  # Nx plugins, templates, workflows (see tools/)
-└──
+├── skills                 # Agent skills (Ralph, code review, generators, …)
+└── tools                  # Nx plugins, templates, workflows (see tools/)
 ```
 
 ## ⚙️ Installation
@@ -200,7 +208,7 @@ When issues arise, our goal is to provide straightforward solutions that allow y
 
 We can always re-run the setup script `./scripts/setup.sh`
 
-- Ensures we have the latest NodeJS, NX, and Supabase CLI versions
+- Ensures we have the latest NodeJS and NX versions
 - Then we can install the latest dependencies
 - And we'll build/rebuild anything that needs to be built
 
@@ -222,20 +230,3 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 **4. Other issues?**
 
 Let me know and we'll get to the bottom of things 🤷
-
----
-
-```ts
-// from '@openthrottle/ai-mcp/
-// from '@openthrottle/nestjs-agentic-workflow';
-// from '@openthrottle/openthrottle-agentic-utils';
-// from '@tools/workflows';
-```
-
-```bash
-cursor-agent -p /agents-ralph
-
-claude /agents-ralph
-
-opencode --prompt "skill({ name: "agents-ralph" })"
-```
