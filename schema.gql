@@ -493,6 +493,42 @@ type CommitLinkObject {
   taskId: String
 }
 
+type PreviewCortexDocumentIngestResultObject {
+  """True when the document parsed successfully."""
+  success: Boolean!
+
+  """Parse error code when success is false."""
+  errorCode: String
+
+  """Human-readable error when success is false."""
+  errorMessage: String
+
+  """Detected upload format when parsing ran (e.g. markdown)."""
+  detectedFormat: String
+
+  """Suggested plan title from the document structure."""
+  planTitleSuggested: String
+
+  """JSON array of proposed tasks: { title, description, requirements[] }."""
+  proposedTasksJson: String
+}
+
+type CommitCortexDocumentIngestResultObject {
+  """True when the plan and all tasks were created."""
+  success: Boolean!
+
+  """
+  Error message when success is false (parse failure or rollback after partial task create).
+  """
+  error: String
+
+  """Created plan when success is true."""
+  plan: PlanObject
+
+  """Created tasks when success is true."""
+  tasks: [TaskObject!]!
+}
+
 """A custom prompt document for AI workflow customization"""
 type CustomPromptObject {
   id: String!
@@ -572,6 +608,9 @@ Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket.
 type ServerHealthObject {
   """API status. "ok" when the resolver runs."""
   api: String!
+
+  """Deprecated alias for api. Kept for backwards compatibility."""
+  apiStatus: String! @deprecated(reason: "Use api instead. Example field demonstrating the GraphQL deprecation policy.")
 
   """
   OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
@@ -855,6 +894,9 @@ type TaskRunMetrics {
 }
 
 type JobObject {
+  """BullMQ job id."""
+  id: String!
+
   """JSON string of job data (e.g. { planId } for run-plan)."""
   data: String
 
@@ -863,28 +905,28 @@ type JobObject {
   """
   executionBackend: String
 
-  """Error message if the job failed."""
-  failedReason: String
-
-  """Unix timestamp when the job finished."""
-  finishedOn: Float
-
-  """BullMQ job id."""
-  id: String!
-
   """
   Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.
   """
   name: String
 
-  """Job progress (0-100 or custom)."""
-  progress: Int
+  """Unix timestamp when the job was created."""
+  timestamp: Float
 
   """Unix timestamp when the job started processing."""
   processedOn: Float
 
+  """Unix timestamp when the job finished."""
+  finishedOn: Float
+
+  """Error message if the job failed."""
+  failedReason: String
+
   """Return value from the processor (if completed)."""
   returnvalue: String
+
+  """Job progress (0-100 or custom)."""
+  progress: Int
 
   """Job state: waiting, active, completed, failed, delayed."""
   state: String!
@@ -893,9 +935,6 @@ type JobObject {
   Task-run metrics (process memory/CPU at start and end). Present only for plans-queue jobs that completed with metrics.
   """
   taskRunMetrics: TaskRunMetrics
-
-  """Unix timestamp when the job was created."""
-  timestamp: Float
 }
 
 type QueueStatsObject {
@@ -1956,6 +1995,16 @@ type Mutation {
   """
   linkCommit(input: LinkCommitInput!): CommitLinkObject!
 
+  """
+  Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting.
+  """
+  previewCortexDocumentIngest(input: PreviewCortexDocumentIngestInput!): PreviewCortexDocumentIngestResultObject!
+
+  """
+  Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails.
+  """
+  commitCortexDocumentIngest(input: CommitCortexDocumentIngestInput!): CommitCortexDocumentIngestResultObject!
+
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
 
@@ -2200,6 +2249,54 @@ input LinkCommitInput {
   message: String
 }
 
+input PreviewCortexDocumentIngestInput {
+  """File bytes encoded as standard base64 (no data: URL prefix)."""
+  fileBase64: String!
+
+  """MIME type from the upload when known (e.g. text/markdown)."""
+  mimeType: String
+
+  """Original filename for format detection fallback."""
+  originalFilename: String
+}
+
+input CommitCortexDocumentIngestInput {
+  """File bytes encoded as standard base64 (no data: URL prefix)."""
+  fileBase64: String!
+
+  """MIME type from the upload when known (e.g. text/markdown)."""
+  mimeType: String
+
+  """Original filename for format detection fallback."""
+  originalFilename: String
+
+  """
+  Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used.
+  """
+  plan: CreatePlanInput!
+}
+
+input CreatePlanInput {
+  assignee: String
+  author: String!
+  category: String!
+  description: String
+  project: String
+
+  """
+  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
+  """
+  projectId: ID
+  status: String
+  summary: String
+  title: String!
+
+  """
+  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults.
+  """
+  runConfigJson: String
+}
+
 """Input for creating a new custom prompt"""
 input CreateCustomPromptInput {
   title: String!
@@ -2308,27 +2405,6 @@ input AppendPlanOutputInput {
 
   """Plan id to append output to"""
   planId: ID!
-}
-
-input CreatePlanInput {
-  assignee: String
-  author: String!
-  category: String!
-  description: String
-  project: String
-
-  """
-  Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project.
-  """
-  projectId: ID
-  status: String
-  summary: String
-  title: String!
-
-  """
-  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults.
-  """
-  runConfigJson: String
 }
 
 input UpdatePlanInput {
