@@ -4,7 +4,6 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Button,
   CommandShortcut,
   Input,
   SidebarTrigger,

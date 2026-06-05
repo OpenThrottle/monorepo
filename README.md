@@ -230,3 +230,11 @@ Let me know and we'll get to the bottom of things 🤷
 // from '@openthrottle/openthrottle-agentic-utils';
 // from '@tools/workflows';
 ```
+
+```bash
+cursor-agent -p /agents-ralph
+
+claude /agents-ralph
+
+opencode --prompt "skill({ name: "agents-ralph" })"
+```

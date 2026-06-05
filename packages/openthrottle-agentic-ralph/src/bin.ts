@@ -23,7 +23,7 @@ const parseWorkflowConfigFromArgs = (): WorkflowConfig => {
     worktreeSkipSetup: false,
   };
 
-  const { positionals, values } = parseArgs({
+  const { positionals: _positionals, values } = parseArgs({
     allowPositionals: true,
     options: {
       debug: { short: 'd', type: 'string' },

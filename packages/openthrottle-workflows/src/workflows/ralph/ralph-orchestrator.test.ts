@@ -23,7 +23,7 @@ import type {
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
 } from './contract/ralph-orchestrator-deps.js';
-import { createWorkflowRalphOrchestrator } from './ralph-orchestrator.js';
+import { createWorkflowRalphOrchestrator } from '@openthrottle/openthrottle-agentic-ralph';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';

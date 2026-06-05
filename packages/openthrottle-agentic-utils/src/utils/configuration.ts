@@ -23,7 +23,7 @@ const _workflowSchema = z.object({
   worktreeSkipSetup: z.boolean().default(false),
 });
 
-const parseWorkflowConfig = () => {
+const _parseWorkflowConfig = () => {
   const args = parseArgs({
     allowPositionals: true,
     options: {
