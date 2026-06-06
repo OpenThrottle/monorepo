@@ -1,31 +1,41 @@
 import * as React from 'react';
-// import classnames from 'classnames';
+import classnames from 'classnames';
+import { DataTable } from '@openthrottle/react-router-shadcn';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import {
+  getPersonasTableRowId,
+  personasTableColumns,
+} from '~/routing/personas/config/personas-table-columns';
+import type { PersonasTableColumnValue } from '~/routing/personas/config/personas-table-columns';
 
 export interface PersonasTableProps {
-  // className?: string;
+  className?: string;
+  entries?: RepoPersonaEntry[];
 }
 
 export const PersonasTable = (
-  _props: PersonasTableProps,
+  props: PersonasTableProps,
 ): React.ReactElement => {
-  // const {  } = props;
+  const { className, entries = [] } = props;
 
-  // Hooks
-  const [_bool, _setBool] = React.useState(false);
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+  const data = React.useMemo(() => [...entries], [entries]);
+  const getRowId = React.useCallback(getPersonasTableRowId, []);
 
   return (
-    <div className="p-4" data-testid="PersonasTable">
-      <h2>PersonasTable</h2>
+    <div
+      className={classnames('border ui-border rounded-lg', className)}
+      data-testid="PersonasTable"
+    >
+      <DataTable<RepoPersonaEntry, PersonasTableColumnValue>
+        columns={personasTableColumns}
+        data={data}
+        emptyState={
+          <p className="p-4 text-sm text-muted-foreground">
+            No personas found under <code>.agents/personas/</code>.
+          </p>
+        }
+        getRowId={getRowId}
+      />
     </div>
   );
 };

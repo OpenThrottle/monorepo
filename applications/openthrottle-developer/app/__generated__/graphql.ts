@@ -395,6 +395,7 @@ export type CustomPromptObject = {
 export enum CustomPromptType {
   Agents = 'AGENTS',
   Commands = 'COMMANDS',
+  Personas = 'PERSONAS',
   Prompts = 'PROMPTS',
   Rules = 'RULES',
   Skills = 'SKILLS',

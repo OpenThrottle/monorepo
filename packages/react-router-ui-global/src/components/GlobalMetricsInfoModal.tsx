@@ -128,9 +128,6 @@ export const GlobalMetricsInfoTrigger = (
     // clearParamsOnClose: ['keep'],
     openValue: MODAL_KEY,
     param: MODAL_PARAM,
-    setSearchParamsOptions: {
-      preventScrollReset: true,
-    },
   });
 
   const handleClick = React.useCallback((): void => {

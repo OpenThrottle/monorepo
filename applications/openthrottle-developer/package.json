@@ -8,7 +8,8 @@
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
-    "@openthrottle/nestjs-repositories": "workspace:*"
+    "@openthrottle/nestjs-repositories": "workspace:*",
+    "@openthrottle/openthrottle-skills": "workspace:*"
   },
   "engines": {
     "node": ">=22"

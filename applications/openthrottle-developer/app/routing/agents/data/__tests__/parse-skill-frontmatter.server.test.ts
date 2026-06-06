@@ -12,6 +12,7 @@ describe('parseSkillFrontmatter', () => {
       parseSkillFrontmatter('# Skill title\n\nBody without frontmatter.\n'),
     ).toEqual({
       description: undefined,
+      disableModelInvocation: undefined,
       name: undefined,
     });
   });
@@ -19,6 +20,7 @@ describe('parseSkillFrontmatter', () => {
   test('returns undefined fields when opening --- has no closing delimiter', () => {
     expect(parseSkillFrontmatter('---\nname: orphan\n')).toEqual({
       description: undefined,
+      disableModelInvocation: undefined,
       name: undefined,
     });
   });
@@ -34,6 +36,7 @@ description: Short one-line summary.
 `),
     ).toEqual({
       description: 'Short one-line summary.',
+      disableModelInvocation: undefined,
       name: 'my-skill',
     });
   });
@@ -47,6 +50,7 @@ description: 'Single-quoted summary.'
 `),
     ).toEqual({
       description: 'Single-quoted summary.',
+      disableModelInvocation: undefined,
       name: 'quoted-name',
     });
   });
@@ -59,6 +63,7 @@ license: MIT
 `),
     ).toEqual({
       description: undefined,
+      disableModelInvocation: undefined,
       name: undefined,
     });
   });
@@ -74,6 +79,7 @@ description: >-
 `),
     ).toEqual({
       description: 'First line of the summary. Second line of the summary.',
+      disableModelInvocation: undefined,
       name: 'folded-skill',
     });
   });
@@ -89,6 +95,7 @@ description: >
 `),
     ).toEqual({
       description: 'Line one. Line two.',
+      disableModelInvocation: undefined,
       name: 'folded-plain',
     });
   });
@@ -104,6 +111,7 @@ description: |-
 `),
     ).toEqual({
       description: 'Line one.\nLine two.',
+      disableModelInvocation: undefined,
       name: 'literal-skill',
     });
   });

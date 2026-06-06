@@ -10,7 +10,15 @@ describe('routes/personas._index.tsx', () => {
       <MemoryRouter>
         <PersonasIndex
           actionData={undefined}
-          loaderData={{}}
+          loaderData={{
+            entries: [
+              {
+                repoRelativePath: '.agents/personas/architect.md',
+                slug: 'architect',
+                summary: 'Architecture lens.',
+              },
+            ],
+          }}
           matches={[] as never}
           params={{}}
         />
