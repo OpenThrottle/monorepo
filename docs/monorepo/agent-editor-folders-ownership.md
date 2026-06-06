@@ -1,7 +1,7 @@
 # Agent and editor folders — canonical ownership
 
-**Plan-Id:** `a55015f4-1d17-4f79-9772-d3f4788f8cfc`  
-**Task:** Document editor-unique content and canonical ownership (`9217dfe7-eebb-4a43-85bf-a5fd2c73f71a`)  
+**Plan-Id:** `a55015f4-1d17-4f79-9772-d3f4788f8cfc`
+**Task:** Document editor-unique content and canonical ownership (`9217dfe7-eebb-4a43-85bf-a5fd2c73f71a`)
 **Consolidated reference:** [agent-editor-folders.md](./agent-editor-folders.md) · **Companions:** [inventory](./agent-editor-folders-inventory.md) · [duplication map](./agent-editor-folders-duplication-map.md)
 
 This document answers: **where is the single source of truth** for each agent/editor concern, and **what exists in only one editor tree** (not mirrored elsewhere). Use it when adding or changing rules, skills, personas, MCP config, hooks, or Ralph prompts.
@@ -129,7 +129,7 @@ Ralph uses a **three-layer** model (prompt → backend → run tuning). Only lay
 | ------------------------- | ------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- |
 | **Server package & docs** | `packages/openthrottle-mcp/`                      | Yes                  | GraphQL-only MCP implementation                                                   |
 | **Committed template**    | `.cursor/mcp.json.example`                        | Yes                  | Copy to local `.cursor/mcp.json`; env vars documented in package verification doc |
-| **Live Cursor config**    | `.cursor/mcp.json` or `~/.cursor/mcp.json`        | No (secrets)         | `MCP_DEVELOPER_AUTH_TOKEN`, `API_URL`                                             |
+| **Live Cursor config**    | `.cursor/mcp.json` or `~/.cursor/mcp.json`        | No (secrets)         | `OPENTHROTTLE_MCP_AUTH_TOKEN`, `API_URL`                                          |
 | **VS Code MCP**           | `.vscode/mcp.json`                                | Yes (empty template) | Separate from Cursor path                                                         |
 | **Claude MCP enablement** | `.claude/settings.json` → `enabledMcpjsonServers` | Yes                  | Claude-specific; does not replace openthrottle-mcp wiring                         |
 

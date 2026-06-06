@@ -27,8 +27,9 @@ import {
   runChildJob,
 } from '@tools/workflows';
 import type { ChildJobResult } from '@tools/workflows';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+
 import {
-  getCortexPostgresUrl,
   PlanOutputStreamService,
   PlansService,
   TasksService,
@@ -992,7 +993,7 @@ export class PlansProcessor
       ensureCommit: { runChecks: true },
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
-          canonicalCortexPostgresUrl: getCortexPostgresUrl(),
+          canonicalCortexPostgresUrl: getPostgresUrl(),
           handoff,
           onChunk: (chunk) => {
             appendChildJobChunkToRunOutput(
@@ -1270,7 +1271,7 @@ export class PlansProcessor
         {
           cwd: workspaceRoot,
           env: buildNestedWorkflowRalphSpawnEnv(workspaceRoot, process.env, {
-            canonicalCortexPostgresUrl: getCortexPostgresUrl(),
+            canonicalCortexPostgresUrl: getPostgresUrl(),
           }),
         },
         onStdout,

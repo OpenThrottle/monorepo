@@ -200,7 +200,7 @@ describe('AgentsResolver', () => {
     test('maps auth token errors to a GraphQL-safe message', async () => {
       semanticSearch.mockRejectedValueOnce(
         new Error(
-          'Auth token required for OpenThrottle (OT) GraphQL. Set MCP_DEVELOPER_AUTH_TOKEN.',
+          'Auth token required for OpenThrottle (OT) GraphQL. Set OPENTHROTTLE_MCP_AUTH_TOKEN.',
         ),
       );
 
@@ -211,7 +211,7 @@ describe('AgentsResolver', () => {
 
       expect(out.assistantText).toBeNull();
       expect(out.errorMessage).toContain('Bearer token');
-      expect(out.errorMessage).toContain('MCP_DEVELOPER_AUTH_TOKEN');
+      expect(out.errorMessage).toContain('OPENTHROTTLE_MCP_AUTH_TOKEN');
     });
 
     test('maps other MCP errors to errorMessage without throwing', async () => {

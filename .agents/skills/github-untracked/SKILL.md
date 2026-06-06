@@ -1,10 +1,8 @@
 ---
 name: github-untracked
-description: Instructions
+description: Preview and remove untracked files with git clean after user confirmation. USE WHEN the user runs /github/untracked, wants to clean dangling untracked files, or the workspace has clutter outside git tracking. Always runs git clean -n before git clean -f.
 disable-model-invocation: true
 ---
-
-# Instructions
 
 Your job is to clean up dangling file using `git clean`.
 

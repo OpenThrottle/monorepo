@@ -38,14 +38,14 @@ else
   echo "      MCP starts without a launcher key; semantic_search needs server-side embeddings — see docs/openthrottle/run-locally-oss.md"
 fi
 
-if [ -n "${MCP_DEVELOPER_AUTH_TOKEN:-}" ]; then
-  echo "OK: MCP_DEVELOPER_AUTH_TOKEN is set in the environment"
+if [ -n "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
+  echo "OK: OPENTHROTTLE_MCP_AUTH_TOKEN is set in the environment"
   GRAPHQL_URL="${BASE}/graphql"
   AUTH_BODY='{"query":"query { listSources { sources { name } } }"}'
   HTTP_CODE="$(curl -s -o /tmp/ot-mcp-auth-smoke.json -w "%{http_code}" --max-time 10 \
     -X POST "${GRAPHQL_URL}" \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ${MCP_DEVELOPER_AUTH_TOKEN}" \
+    -H "Authorization: Bearer ${OPENTHROTTLE_MCP_AUTH_TOKEN}" \
     -d "${AUTH_BODY}" || true)"
   if [ "${HTTP_CODE}" = "200" ] && grep -q '"listSources"' /tmp/ot-mcp-auth-smoke.json 2>/dev/null; then
     echo "OK: authenticated GraphQL listSources (APP_ENABLE_AUTHENTICATION + ot_sa token)"
@@ -57,7 +57,7 @@ if [ -n "${MCP_DEVELOPER_AUTH_TOKEN:-}" ]; then
     echo "WARN: authenticated GraphQL smoke inconclusive (HTTP ${HTTP_CODE}) — check server logs and AUTH.md"
   fi
 else
-  echo "WARN: MCP_DEVELOPER_AUTH_TOKEN unset — authenticated MCP tools will fail until set."
+  echo "WARN: OPENTHROTTLE_MCP_AUTH_TOKEN unset — authenticated MCP tools will fail until set."
   echo "      See packages/openthrottle-mcp/docs/AUTH.md"
 fi
 

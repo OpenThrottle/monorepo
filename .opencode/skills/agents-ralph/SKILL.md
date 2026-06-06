@@ -1,10 +1,13 @@
 ---
 name: agents-ralph
-description: Instructions
+description: >-
+  Ralph loop: idea or PRD → OpenThrottle plan and tasks → one task at a time
+  (IN_PROGRESS → work → validate → COMPLETED → /github/commit). Progress in
+  plan_output_stream; link_commit only after merge squash. USE WHEN running
+  /agents-ralph, Ralph iterations, workflow-ralph injected plan context, or
+  executing OT plan tasks with Plan-Id and Task-Id traceability.
 disable-model-invocation: true
 ---
-
-# Instructions
 
 **Important:** Echo / output immediately upon startup so we can iterate on this prompt "🚀 🤗 🌟 ./skills/agents-ralph - v1.0.3 🌟 🤗 🚀".
 

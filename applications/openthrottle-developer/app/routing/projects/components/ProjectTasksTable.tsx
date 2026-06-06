@@ -14,10 +14,44 @@ export interface ProjectTasksTableProps {
   tasks: ProjectTaskRow[];
 }
 
-function buildColumns(): ColumnDef<
+export const ProjectTasksTable = (
+  props: ProjectTasksTableProps,
+): React.ReactElement => {
+  const { className, tasks } = props;
+
+  // Hooks
+  const columns = React.useMemo(() => ProjectTasksTable.buildTable(), []);
+  const data = React.useMemo(() => [...tasks], [tasks]);
+  const getRowId = React.useCallback((task: ProjectTaskRow) => task.id, []);
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div
+      className={classnames('bg-card border ui-border rounded-lg', className)}
+      data-testid="ProjectTasksTable"
+    >
+      <DataTable<ProjectTaskRow, string | number | null | undefined>
+        columns={columns}
+        data={data}
+        getRowId={getRowId}
+      />
+    </div>
+  );
+};
+
+ProjectTasksTable.buildTable = (): ColumnDef<
   ProjectTaskRow,
   string | number | null | undefined
->[] {
+>[] => {
   return [
     {
       accessorKey: 'title',
@@ -95,38 +129,4 @@ function buildColumns(): ColumnDef<
       id: 'plan',
     },
   ];
-}
-
-export const ProjectTasksTable = (
-  props: ProjectTasksTableProps,
-): React.ReactElement => {
-  const { className, tasks } = props;
-
-  // Hooks
-  const columns = React.useMemo(() => buildColumns(), []);
-  const data = React.useMemo(() => [...tasks], [tasks]);
-  const getRowId = React.useCallback((task: ProjectTaskRow) => task.id, []);
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <div
-      className={classnames('border ui-border rounded-lg', className)}
-      data-testid="ProjectTasksTable"
-    >
-      <DataTable<ProjectTaskRow, string | number | null | undefined>
-        columns={columns}
-        data={data}
-        getRowId={getRowId}
-      />
-    </div>
-  );
 };

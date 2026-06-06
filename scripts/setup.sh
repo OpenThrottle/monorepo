@@ -30,6 +30,14 @@ echo ""
 # 3. Run our build script once
 pnpm build
 
+# 4. We need to determine if its the first run, if so...
+pnpm database:build
+pnpm database:start
+pnpm database:migrate
+pnpm database:bootstrap-service-accounts
+
+echo "🤖 setup.sh complete: run "
+
 # Echo we're done and the run command to start things up
 echo ""
 echo "✅ setup.sh"

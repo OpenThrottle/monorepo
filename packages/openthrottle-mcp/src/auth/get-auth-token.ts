@@ -1,6 +1,6 @@
 /**
  * @description Resolves the auth token for GraphQL requests (executeGraphqlWithAuth).
- * Source: per-request store (see {@link withMcpDeveloperAuthToken}), then env MCP_DEVELOPER_AUTH_TOKEN.
+ * Source: per-request store (see {@link withMcpDeveloperAuthToken}), then env OPENTHROTTLE_MCP_AUTH_TOKEN.
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -40,7 +40,7 @@ export async function withMcpDeveloperAuthTokenAsync<T>(
 }
 
 /**
- * @description Reads auth token from per-request store (if any), then env MCP_DEVELOPER_AUTH_TOKEN. Throws if missing so callers do not send an empty Bearer header.
+ * @description Reads auth token from per-request store (if any), then env OPENTHROTTLE_MCP_AUTH_TOKEN. Throws if missing so callers do not send an empty Bearer header.
  * @returns The token to pass to executeGraphqlWithAuth.
  * @throws Error when no token is configured (message instructs setting env var).
  * @publicApi
@@ -51,12 +51,12 @@ export function getAuthToken(): string {
     return fromRequest;
   }
 
-  const token = process.env.MCP_DEVELOPER_AUTH_TOKEN;
+  const token = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   const trimmed = typeof token === 'string' ? token.trim() : '';
 
   if (trimmed === '') {
     throw new Error(
-      'Auth token required for OpenThrottle (OT) GraphQL. Set MCP_DEVELOPER_AUTH_TOKEN in the environment (e.g. in your MCP server config).',
+      'Auth token required for OpenThrottle (OT) GraphQL. Set OPENTHROTTLE_MCP_AUTH_TOKEN in the environment (e.g. in your MCP server config).',
     );
   }
 

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 import { screen } from '@testing-library/react';
 import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugPanel';

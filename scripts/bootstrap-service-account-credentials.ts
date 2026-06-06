@@ -16,7 +16,7 @@ import { DataSource, IsNull } from 'typeorm';
 
 const BOOTSTRAP_ACCOUNTS = [
   {
-    envVar: 'MCP_DEVELOPER_AUTH_TOKEN',
+    envVar: 'OPENTHROTTLE_MCP_AUTH_TOKEN',
     label: 'bootstrap-openthrottle-mcp',
     name: 'openthrottle-mcp',
   },
@@ -112,7 +112,7 @@ async function main(): Promise<void> {
 
     if (minted === 0) {
       console.log(
-        'No new credentials minted. Set MCP_DEVELOPER_AUTH_TOKEN / OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN from existing tokens.',
+        'No new credentials minted. Set OPENTHROTTLE_MCP_AUTH_TOKEN / OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN from existing tokens.',
       );
       return;
     }
@@ -120,7 +120,7 @@ async function main(): Promise<void> {
     console.log('Add the lines above to:');
     console.log('  - applications/openthrottle-server/.env');
     console.log(
-      '  - Cursor ~/.cursor/mcp.json env for openthrottle-mcp (MCP_DEVELOPER_AUTH_TOKEN only)',
+      '  - Cursor ~/.cursor/mcp.json env for openthrottle-mcp (OPENTHROTTLE_MCP_AUTH_TOKEN only)',
     );
     console.log(
       'Tokens are shown once; store them securely and rotate via admin GraphQL when needed.',

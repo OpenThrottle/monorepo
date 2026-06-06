@@ -11,7 +11,7 @@ Web-based email client (React Router v7, flat routes). Uses **@openthrottle/reac
 
 ## Documentation
 
-- **Architecture and generators:** [docs/openthrottle-email/architecture.md](../../docs/openthrottle-email/architecture.md) (route tree, layout, @tools/generators usage)
+- **Architecture and generators:** [openthrottle-email/docs/Architecture.md](../../applications/openthrottle-email/docs/Architecture.md) (route tree, layout, @tools/generators usage)
 - **Core UI design:** [docs/CORE_UI_DESIGN.md](./docs/CORE_UI_DESIGN.md) (inbox, reading pane, folders, search, shadcn-ui map)
 - **Toolbar design:** [docs/TOOLBAR_DESIGN.md](./docs/TOOLBAR_DESIGN.md)
 - **Integration and shadcn-ui conventions:** [docs/INTEGRATION_AND_SHADCN_GUIDE.md](./docs/INTEGRATION_AND_SHADCN_GUIDE.md) (component structure, code comments, backend wiring)

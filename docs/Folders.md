@@ -1,4 +1,4 @@
-# 🗄️ Folders
+# 📂 Folders
 
 Each of our `applications` and `packages` follow a consistent folder structure. This makes it easy to navigate and understand the code. It also makes it easy to generate new routes, components, etc using the generator(s) we have setup.
 

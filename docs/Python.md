@@ -1,4 +1,4 @@
-# Python
+# 🐍 Python
 
 ```bash
 # CD into the application

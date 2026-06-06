@@ -59,6 +59,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
   ],
   Agents: [
     {
+      children: 'Personas',
+      icon: BrainCircuitIcon,
+      to: '/personas',
+    },
+    {
       children: 'Prompts',
       icon: BrainIcon,
       to: '/prompts',

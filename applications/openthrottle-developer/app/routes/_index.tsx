@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GlobalLayoutBreadcrumbsHandle,

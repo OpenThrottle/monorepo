@@ -1,6 +1,6 @@
 # URL-first UI state (Remix / React Router)
 
-Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**, **multi-step flows**, and **list/search** UI with the URL in Remix and React Router 7 apps. This doc supports plan `6a062008-7cae-4922-8152-89f9f17ed257` (URL-first UI state) and aligns with research outcomes in [URL-first overlays learnings](../plans/6bb89ac6-url-first-react-router-shadcn-learnings.md) (research plan `6bb89ac6-630f-4e99-be8b-05122f3ce64c`).
+Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**, **multi-step flows**, and **list/search** UI with the URL in Remix and React Router 7 apps. This doc supports plan `6a062008-7cae-4922-8152-89f9f17ed257` (URL-first UI state) and aligns with research outcomes in [URL-first overlays learnings](../../.agents/learnings/url-first-react-router-shadcn-learnings.md) (research plan `6bb89ac6-630f-4e99-be8b-05122f3ce64c`).
 
 **Default posture:** control overlay roots from **search params** (or real nested routes when the overlay is a first-class route). Keep **Radix/Vaul primitives** controlled via `open` / `onOpenChange`; do not change primitive defaults in `@openthrottle/react-router-shadcn` until shared helpers prove their API (see rollout phasing in the plan).
 
@@ -84,7 +84,7 @@ Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**
 ## 8. Optional path segments vs query overlays
 
 - **Query overlays:** good for **transient** same-route panels (sheet/dialog) without a dedicated route module.
-- **Optional path segments / nested routes:** use when the overlay needs its **own loader**, shareable URL as a “page”, or distinct error boundaries. Tradeoffs are summarized in the [learnings doc](../plans/6bb89ac6-url-first-react-router-shadcn-learnings.md) (parallel routes vs `Outlet`).
+- **Optional path segments / nested routes:** use when the overlay needs its **own loader**, shareable URL as a “page”, or distinct error boundaries. Tradeoffs are summarized in the [learnings doc](../../.agents/learnings/url-first-react-router-shadcn-learnings.md) (parallel routes vs `Outlet`).
 
 ---
 
@@ -345,7 +345,7 @@ export default function IssueDetailPanel(props: Route.ComponentProps) {
 }
 ```
 
-Route filenames and generated `+types` paths depend on your app’s route config; see [learnings: parallel routes vs Outlet](../plans/6bb89ac6-url-first-react-router-shadcn-learnings.md).
+Route filenames and generated `+types` paths depend on your app’s route config; see [learnings: parallel routes vs Outlet](../../.agents/learnings/url-first-react-router-shadcn-learnings.md).
 
 ### 9.8 Form-like flow: URL as committed state
 

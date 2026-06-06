@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formatChatTimestamp } from '../format-chat-timestamp';
+import { formatChatTimestamp } from '../index';
 
 describe('formatChatTimestamp', () => {
   test('should format a valid ISO string', () => {
