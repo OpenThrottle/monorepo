@@ -29,6 +29,10 @@ import {
   UpdateTaskInputSchema,
 } from '../__generated__/schemas.js';
 import type { GenericResult } from '../types/index.js';
+import {
+  maxSortOrderFromTasks,
+  resolveBatchCreateSortOrders,
+} from '../utils/batch-create-sort-order.js';
 import { filterTasksByCategory } from '../utils/filters.js';
 import { getAuthToken } from '../auth/get-auth-token.js';
 import { invalidArgsContent } from '../utils/errors.js';
@@ -83,6 +87,7 @@ const createTasksItemSchema = z.object({
   project: z.string().nullish(),
   projectId: z.string().uuid().nullish(),
   requirements: z.array(z.unknown()).optional(),
+  sortOrder: z.number().int().nullish(),
   status: z.string().nullish(),
   summary: z.string().nullish(),
   title: z.string().min(1),
@@ -104,7 +109,7 @@ export const createTaskToolDescription =
   'Create a new task in Cortex. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId.';
 
 export const createTasksToolDescription =
-  'Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId). Returns created task ids and titles.';
+  'Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId, sortOrder). When sortOrder is omitted per item, tasks append after the plan max sortOrder (1000, 2000, …) preserving array order. Explicit sortOrder per item is respected. Returns created task ids and titles.';
 
 export const deleteTaskToolDescription =
   'Delete a task by id. Returns whether a row was deleted.';
@@ -165,7 +170,17 @@ export async function createTasksToolHandler(
   return runTool<{ created: readonly { id: string; title: string }[] }>(
     'create_tasks',
     async () => {
-      for (const item of items) {
+      const existingResult = await executeGraphqlWithAuth(
+        token,
+        GetTasksByPlanIdDocument,
+        { input: { planId } },
+      );
+      const existingTasks = existingResult?.tasksByPlanId ?? [];
+      const existingMax = maxSortOrderFromTasks(existingTasks);
+      const sortOrders = resolveBatchCreateSortOrders(existingMax, items);
+
+      for (let index = 0; index < items.length; index += 1) {
+        const item = items[index];
         const input = {
           assignee: item.assignee ?? null,
           category: item.category ?? null,
@@ -177,6 +192,7 @@ export async function createTasksToolHandler(
             item.requirements != null
               ? JSON.stringify(item.requirements)
               : null,
+          sortOrder: sortOrders[index],
           status: item.status ?? null,
           summary: item.summary ?? null,
           title: item.title,
