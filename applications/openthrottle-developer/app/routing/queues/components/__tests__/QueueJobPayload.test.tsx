@@ -1,25 +1,47 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import type { QueueJobDetailJob } from '../QueueJobDetail';
 import { QueueJobPayload } from '../QueueJobPayload';
-import type { QueueJobPayloadProps } from '../QueueJobPayload';
+
+const baseJob = (): QueueJobDetailJob => ({
+  data: null,
+  executionBackend: null,
+  failedReason: null,
+  finishedOn: null,
+  id: 'bull-job-1',
+  name: null,
+  processedOn: null,
+  progress: null,
+  returnvalue: null,
+  state: 'completed',
+  taskRunMetrics: null,
+  timestamp: 1_700_000_000_000,
+});
+
+const renderPayload = (job: QueueJobDetailJob): ReturnType<typeof render> => {
+  const Component = () => <QueueJobPayload job={job} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+};
 
 describe('QueueJobPayload Component', () => {
-  let component: RenderResult;
-  let props: QueueJobPayloadProps;
+  test('shows empty payload message when job has no data', () => {
+    renderPayload(baseJob());
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <QueueJobPayload {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    expect(screen.getByText(/No payload on this job/i)).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders copy control when payload JSON exists', () => {
+    renderPayload({
+      ...baseJob(),
+      data: JSON.stringify({ planId: 'plan-uuid' }),
+    });
+
+    expect(
+      screen.getByRole('button', { name: /copy json/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/plan-uuid/)).toBeInTheDocument();
   });
 });

@@ -19,7 +19,9 @@ describe('InputGroup Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders input-group slot', () => {
+    expect(
+      component.container.querySelector('[data-slot="input-group"]'),
+    ).toBeInTheDocument();
   });
 });

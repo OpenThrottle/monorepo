@@ -11,7 +11,7 @@ describe('DialogHeader Component', () => {
   let props: DialogHeaderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Header content' };
 
     const Component = () => <DialogHeader {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,7 @@ describe('DialogHeader Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders dialog header content', () => {
+    expect(component.getByText('Header content')).toBeInTheDocument();
   });
 });

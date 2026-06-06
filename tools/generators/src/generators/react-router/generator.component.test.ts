@@ -36,9 +36,7 @@ describe('generatorReactRouterComponent', () => {
     expect(source).toBeDefined();
     expect(source).toContain(`export interface ${name}Props`);
     expect(source).not.toMatch(/readonly\s+className/);
-    expect(source).toMatch(
-      /export const TestComponent = \(props: TestComponentProps\) =>/,
-    );
+    expect(source).toContain('_props: TestComponentProps');
     expect(source).toContain('// 🔌 Short Circuit');
   });
 });

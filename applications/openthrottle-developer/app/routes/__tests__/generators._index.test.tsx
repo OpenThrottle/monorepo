@@ -1,23 +1,27 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../generators._index';
-import { render, RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import Index from '../generators._index';
 
-describe.skip('routes/generators._index.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/generators._index.tsx', () => {
+  test('renders generators heading and documentation links', () => {
+    const view = render(
+      <MemoryRouter>
+        <Index
+          actionData={undefined}
+          loaderData={{ generators: [] }}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      view.getByRole('heading', { name: 'Generators' }),
+    ).toBeInTheDocument();
+    expect(
+      view.getByRole('link', { name: /AGENT_USAGE/i }),
+    ).toBeInTheDocument();
   });
 });

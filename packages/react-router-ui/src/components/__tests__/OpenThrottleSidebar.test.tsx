@@ -19,7 +19,10 @@ describe('OpenThrottleSidebar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar region and heading', () => {
+    expect(component.getByTestId('OpenThrottleSidebar')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'OpenThrottle Sidebar' }),
+    ).toBeInTheDocument();
   });
 });

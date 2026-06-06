@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { Tabs } from '../Tabs';
 import { TabsContent } from '../TabsContent';
@@ -8,10 +8,10 @@ import { TabsTrigger } from '../TabsTrigger';
 import type { TabsTriggerProps } from '../TabsTrigger';
 
 describe('TabsTrigger Component', () => {
-  test('should render inside Tabs', () => {
+  test('renders tab trigger inside Tabs context', () => {
     const props: TabsTriggerProps = { value: 'a' };
 
-    const { baseElement } = render(
+    render(
       <Tabs defaultValue="a">
         <TabsList>
           <TabsTrigger {...props}>Label</TabsTrigger>
@@ -20,6 +20,6 @@ describe('TabsTrigger Component', () => {
       </Tabs>,
     );
 
-    expect(baseElement).toMatchSnapshot();
+    expect(screen.getByRole('tab', { name: 'Label' })).toBeInTheDocument();
   });
 });

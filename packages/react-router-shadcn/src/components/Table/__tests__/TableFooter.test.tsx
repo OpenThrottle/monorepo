@@ -19,7 +19,7 @@ describe('TableFooter Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a table footer section', () => {
+    expect(component.container.querySelector('tfoot')).toBeInTheDocument();
   });
 });

@@ -22,7 +22,8 @@ describe('OpenThrottleFieldset Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders fieldset with legend', () => {
+    expect(component.getByTestId('OpenThrottleFieldset')).toBeInTheDocument();
+    expect(component.getByText('Fieldset')).toBeInTheDocument();
   });
 });

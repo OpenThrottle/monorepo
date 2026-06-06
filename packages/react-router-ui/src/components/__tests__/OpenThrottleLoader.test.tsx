@@ -19,7 +19,10 @@ describe('OpenThrottleLoader Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders loader region and heading', () => {
+    expect(component.getByTestId('OpenThrottleLoader')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'OpenThrottle Loader' }),
+    ).toBeInTheDocument();
   });
 });

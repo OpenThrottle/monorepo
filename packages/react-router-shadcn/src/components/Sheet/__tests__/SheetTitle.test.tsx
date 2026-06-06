@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SheetTitle } from '../SheetTitle';
+import { Sheet, SheetContent, SheetTitle } from '../index';
 import type { SheetTitleProps } from '../SheetTitle';
 
 describe('SheetTitle Component', () => {
@@ -13,13 +13,21 @@ describe('SheetTitle Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SheetTitle {...props} />;
+    const Component = () => (
+      <Sheet open={true}>
+        <SheetContent>
+          <SheetTitle {...props}>Sheet title</SheetTitle>
+        </SheetContent>
+      </Sheet>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders the sheet title', () => {
+    expect(
+      component.getByRole('heading', { name: 'Sheet title' }),
+    ).toBeInTheDocument();
   });
 });

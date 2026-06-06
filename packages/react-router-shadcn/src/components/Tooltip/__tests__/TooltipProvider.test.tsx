@@ -11,7 +11,7 @@ describe('TooltipProvider Component', () => {
   let props: TooltipProviderProps;
 
   beforeEach(() => {
-    props = { children: null };
+    props = { children: <span>Provider child</span> };
 
     const Component = () => <TooltipProvider {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,7 @@ describe('TooltipProvider Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders tooltip provider children', () => {
+    expect(component.getByText('Provider child')).toBeInTheDocument();
   });
 });

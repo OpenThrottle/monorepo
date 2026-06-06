@@ -1,25 +1,19 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { GlobalProviders } from '../GlobalProviders';
-import type { GlobalProvidersProps } from '../GlobalProviders';
 
 describe('GlobalProviders Component', () => {
-  let component: RenderResult;
-  let props: GlobalProvidersProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <GlobalProviders {...props} />;
+  test('renders child content within providers', () => {
+    const Component = () => (
+      <GlobalProviders>
+        <span>provider-child</span>
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByText('provider-child')).toBeInTheDocument();
   });
 });

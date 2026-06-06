@@ -11,7 +11,7 @@ describe('InputGroupButton Component', () => {
   let props: InputGroupButtonProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Action' };
 
     const Component = () => <InputGroupButton {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,9 @@ describe('InputGroupButton Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders an input group button', () => {
+    expect(
+      component.getByRole('button', { name: 'Action' }),
+    ).toBeInTheDocument();
   });
 });

@@ -19,7 +19,7 @@ describe('InputGroupTextarea Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a textarea control', () => {
+    expect(component.getByRole('textbox')).toBeInTheDocument();
   });
 });

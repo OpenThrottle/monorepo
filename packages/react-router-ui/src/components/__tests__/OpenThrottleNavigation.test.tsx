@@ -19,7 +19,10 @@ describe('OpenThrottleNavigation Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders navigation region and heading', () => {
+    expect(component.getByTestId('OpenThrottleNavigation')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'OpenThrottle Navigation' }),
+    ).toBeInTheDocument();
   });
 });

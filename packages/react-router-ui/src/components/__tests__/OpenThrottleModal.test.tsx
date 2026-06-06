@@ -19,7 +19,7 @@ describe('OpenThrottleModal Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('does not show dialog when search param is not set', () => {
+    expect(component.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

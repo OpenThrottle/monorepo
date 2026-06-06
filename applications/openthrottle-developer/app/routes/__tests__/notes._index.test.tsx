@@ -1,23 +1,23 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../notes._index';
-import { render, RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import Index from '../notes._index';
 
-describe.skip('routes/notes._index.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/notes._index.tsx', () => {
+  test('renders notes introduction and toolbar', () => {
+    const view = render(
+      <MemoryRouter>
+        <Index
+          actionData={undefined}
+          loaderData={{ notes: [], search: '' }}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(view.getByRole('heading', { name: 'Notes' })).toBeInTheDocument();
+    expect(view.getByTestId('NotesToolbar')).toBeInTheDocument();
   });
 });

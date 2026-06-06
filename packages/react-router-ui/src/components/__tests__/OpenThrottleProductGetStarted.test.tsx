@@ -22,7 +22,15 @@ describe('OpenThrottleProductGetStarted Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders intro copy, clone command, and GitHub CTA', () => {
+    expect(component.getByText(INTRODUCTIONS[0].text)).toBeInTheDocument();
+    expect(
+      component.getByRole('button', {
+        name: 'git clone https://github.com/openthrottle/monorepo.git',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'View on GitHub' }),
+    ).toHaveAttribute('href', 'https://github.com/OpenThrottle');
   });
 });

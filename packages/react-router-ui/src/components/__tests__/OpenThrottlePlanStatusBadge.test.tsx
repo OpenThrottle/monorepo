@@ -19,7 +19,14 @@ describe('OpenThrottlePlanStatusBadge Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders plan status badge region and heading', () => {
+    expect(
+      component.getByTestId('OpenThrottlePlanStatusBadge'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', {
+        name: 'OpenThrottle Plan Status Badge',
+      }),
+    ).toBeInTheDocument();
   });
 });

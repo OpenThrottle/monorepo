@@ -41,6 +41,12 @@ pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/shared-ui \
   --name=MyComponent
+
+# Batch: comma-separated --name (confirm via --describe)
+pnpm nx g @tools/generators:react \
+  --subGenerator=component \
+  --destination=@openthrottle/shared-ui \
+  --name=Button,Input,Select
 ```
 
 #### React Router
@@ -93,6 +99,8 @@ pnpm nx g @tools/generators:folders \
 ### Describe (machine-readable contract)
 
 Prints a JSON description of the generator interface and exits (no files written).
+
+The `name` option often includes `"Comma-separated names supported."` — use that to batch related artifacts in one run.
 
 ```bash
 pnpm nx g @tools/generators:react --describe

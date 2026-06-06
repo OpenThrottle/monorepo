@@ -1,23 +1,24 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../personas.create';
-import { render, RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import CreatePersona from '../personas.create';
 
-describe.skip('routes/personas.create.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/personas.create.tsx', () => {
+  test('renders create persona heading', () => {
+    render(
+      <MemoryRouter>
+        <CreatePersona
+          actionData={undefined}
+          loaderData={{}}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByRole('heading', { name: 'PersonasCreate' }),
+    ).toBeInTheDocument();
   });
 });

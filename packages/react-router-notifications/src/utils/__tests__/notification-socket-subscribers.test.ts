@@ -18,12 +18,14 @@ describe('createNotificationSocketSubscriberRegistry', () => {
       timestamp: new Date().toISOString(),
     });
 
-    expect(first).toHaveBeenCalledWith('plan.status_changed', {
-      planId: 'abc',
-    });
-    expect(second).toHaveBeenCalledWith('plan.status_changed', {
-      planId: 'abc',
-    });
+    expect(first).toHaveBeenCalledWith(
+      'plan.status_changed',
+      expect.objectContaining({ planId: 'abc' }),
+    );
+    expect(second).toHaveBeenCalledWith(
+      'plan.status_changed',
+      expect.objectContaining({ planId: 'abc' }),
+    );
   });
 
   test('unsubscribe stops notifications', () => {

@@ -1,25 +1,18 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { PersonasIntroduction } from '../PersonasIntroduction';
-import type { PersonasIntroductionProps } from '../PersonasIntroduction';
 
 describe('PersonasIntroduction Component', () => {
-  let component: RenderResult;
-  let props: PersonasIntroductionProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <PersonasIntroduction {...props} />;
+  test('renders personas heading and intro copy', () => {
+    const Component = () => <PersonasIntroduction />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByRole('heading', { name: 'Personas' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Agentic personas represent/i)).toBeInTheDocument();
   });
 });
