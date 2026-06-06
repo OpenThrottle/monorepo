@@ -1,4 +1,4 @@
-# Google Console CLI
+# ☁️ Google Console CLI
 
 ```bash
 # List available configurations

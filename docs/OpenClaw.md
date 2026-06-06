@@ -1,4 +1,4 @@
-# OpenClaw
+# 🦀 OpenClaw
 
 - [OAuth](https://console.cloud.google.com/apis/credentials?project=openthrottle-staging) (staging)
 - Templates - https://docs.openclaw.ai/reference/templates/IDENTITY
