@@ -72,7 +72,7 @@ const baseTask = (
   project: null,
   projectId: null,
   requirementsJson: '[]',
-  sortOrder: 1000,
+  // sortOrder: 1000,
   status,
   summary: null,
   title: 'Task',

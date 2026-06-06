@@ -126,6 +126,7 @@ describe('createWorkflowRalphOrchestrator task selection', () => {
       context: {
         debug: 'omit',
         iterationMax: 1,
+        iterationTimeout: 1000,
         iterations: 1,
         kind: 'ralph',
         mode: 'plan',
@@ -134,7 +135,11 @@ describe('createWorkflowRalphOrchestrator task selection', () => {
         project: '',
         prompt: 'Do work',
         runner: 'cursor',
+        skipWorktreeSetup: false,
         taskId: '',
+        timeout: 1000,
+        worktree: undefined,
+        worktreeBase: undefined,
       },
     });
 

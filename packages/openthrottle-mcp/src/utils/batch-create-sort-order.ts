@@ -23,7 +23,7 @@ export const maxSortOrderFromTasks = (
  */
 export const resolveBatchCreateSortOrders = (
   existingMaxSortOrder: number | null,
-  items: readonly { sortOrder?: number | null }[],
+  items: readonly { sortOrder?: number | null; title?: string }[],
 ): number[] => {
   let nextAuto =
     existingMaxSortOrder != null
