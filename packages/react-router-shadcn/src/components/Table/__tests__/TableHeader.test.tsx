@@ -19,7 +19,7 @@ describe('TableHeader Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a table header section', () => {
+    expect(component.container.querySelector('thead')).toBeInTheDocument();
   });
 });

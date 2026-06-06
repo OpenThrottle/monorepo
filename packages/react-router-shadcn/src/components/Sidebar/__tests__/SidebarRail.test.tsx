@@ -24,7 +24,9 @@ describe('SidebarRail Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar rail control', () => {
+    expect(
+      component.container.querySelector('[data-slot="sidebar-rail"]'),
+    ).toBeInTheDocument();
   });
 });

@@ -24,7 +24,9 @@ describe('DialogTitle Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders the dialog title', () => {
+    expect(
+      component.getByRole('heading', { name: 'Title' }),
+    ).toBeInTheDocument();
   });
 });

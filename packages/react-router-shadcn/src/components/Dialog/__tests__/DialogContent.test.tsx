@@ -24,7 +24,7 @@ describe('DialogContent Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders dialog content when open', () => {
+    expect(component.getByText('Dialog body')).toBeInTheDocument();
   });
 });

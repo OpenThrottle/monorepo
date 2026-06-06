@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { Tabs } from '../Tabs';
 import { TabsContent } from '../TabsContent';
@@ -8,18 +8,18 @@ import { TabsList } from '../TabsList';
 import { TabsTrigger } from '../TabsTrigger';
 
 describe('TabsContent Component', () => {
-  test('should render inside Tabs', () => {
+  test('renders tab panel content inside Tabs context', () => {
     const props: TabsContentProps = { value: 'a' };
 
-    const { baseElement } = render(
+    render(
       <Tabs defaultValue="a">
         <TabsList>
           <TabsTrigger value="a">Tab</TabsTrigger>
         </TabsList>
-        <TabsContent {...props}>Panel</TabsContent>
+        <TabsContent {...props}>Panel body</TabsContent>
       </Tabs>,
     );
 
-    expect(baseElement).toMatchSnapshot();
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Panel body');
   });
 });

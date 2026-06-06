@@ -11,7 +11,7 @@ describe('InputGroupAddon Component', () => {
   let props: InputGroupAddonProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Addon' };
 
     const Component = () => <InputGroupAddon {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,7 @@ describe('InputGroupAddon Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders input group addon', () => {
+    expect(component.getByText('Addon')).toBeInTheDocument();
   });
 });

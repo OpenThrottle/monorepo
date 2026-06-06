@@ -30,7 +30,9 @@ describe('ChartContainer Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders chart container', () => {
+    expect(
+      component.container.querySelector('.recharts-responsive-container'),
+    ).toBeInTheDocument();
   });
 });

@@ -19,7 +19,9 @@ describe('InputGroupInput Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders an input control', () => {
+    expect(
+      component.container.querySelector('[data-slot="input-group-control"]'),
+    ).toBeInTheDocument();
   });
 });

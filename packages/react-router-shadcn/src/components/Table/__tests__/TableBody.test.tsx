@@ -19,7 +19,7 @@ describe('TableBody Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a table body section', () => {
+    expect(component.container.querySelector('tbody')).toBeInTheDocument();
   });
 });
