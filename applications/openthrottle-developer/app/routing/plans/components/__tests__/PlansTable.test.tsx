@@ -1,6 +1,9 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { describe, expect, test } from 'vitest';
 import { PlansTable } from '../PlansTable';
 import type { PlansTableProps } from '../PlansTable';
 import type { PlanCardFragment } from '~/__generated__/graphql';
@@ -14,6 +17,7 @@ const mockPlans: PlanCardFragment[] = [
     category: 'feature',
     createdAt: '2025-01-01T00:00:00Z',
     description: null,
+    hasCustomRunConfig: false,
     id: 'plan-1',
     projectRelation: {
       __typename: 'ProjectObject',
@@ -33,6 +37,7 @@ const mockPlans: PlanCardFragment[] = [
     category: 'chore',
     createdAt: '2025-01-02T00:00:00Z',
     description: null,
+    hasCustomRunConfig: true,
     id: 'plan-2',
     projectRelation: {
       __typename: 'ProjectObject',
@@ -48,16 +53,16 @@ const mockPlans: PlanCardFragment[] = [
 ];
 
 const renderPlansTable = (tableProps: PlansTableProps): RenderResult =>
-  renderRoutesStub(<PlansTable {...tableProps} />);
+  renderRoutesStub(
+    <TooltipProvider>
+      <PlansTable {...tableProps} />
+    </TooltipProvider>,
+  );
 
 describe('PlansTable Component', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = renderPlansTable({ plans: [] });
-  });
-
   test('shows empty state when plans is empty', () => {
+    const component = renderPlansTable({ plans: [] });
+
     expect(component.getByText('No plans yet')).toBeInTheDocument();
     expect(component.getByRole('link', { name: 'New plan' })).toHaveAttribute(
       'href',
@@ -133,5 +138,52 @@ describe('PlansTable Component', () => {
     expect(
       queryByRole('link', { name: 'Filter by In Progress' }),
     ).not.toBeInTheDocument();
+  });
+
+  describe('custom run configuration indicator', () => {
+    const customConfigLabel =
+      'Custom workflow run configuration (differs from defaults)';
+
+    test('shows indicator link when hasCustomRunConfig is true', () => {
+      const { getByRole } = renderPlansTable({ plans: [mockPlans[1]] });
+
+      const configLink = getByRole('link', { name: customConfigLabel });
+      expect(configLink).toBeInTheDocument();
+      expect(configLink).toHaveAttribute(
+        'href',
+        '/plans/plan-2?tab=configuration',
+      );
+    });
+
+    test('does not show indicator when hasCustomRunConfig is false', () => {
+      const { queryByRole } = renderPlansTable({ plans: [mockPlans[0]] });
+
+      expect(
+        queryByRole('link', { name: customConfigLabel }),
+      ).not.toBeInTheDocument();
+    });
+
+    test('shows tooltip content on hover', async () => {
+      const user = userEvent.setup();
+      const { container, getByRole } = renderPlansTable({
+        plans: [mockPlans[1]],
+      });
+
+      await user.hover(
+        getByRole('link', { name: customConfigLabel }),
+      );
+
+      await waitFor(() => {
+        const tooltip = container.ownerDocument.querySelector(
+          '[data-slot="tooltip-content"]',
+        );
+        expect(tooltip).toHaveTextContent(
+          'Custom workflow run configuration (differs from defaults).',
+        );
+        expect(tooltip).toHaveTextContent(
+          'Open the Configuration tab to view or edit.',
+        );
+      });
+    });
   });
 });

@@ -11,6 +11,7 @@ const mockPlan: PlanCardFragment = {
   category: 'feature',
   createdAt: '2025-01-01T00:00:00Z',
   description: 'Plan description',
+  hasCustomRunConfig: false,
   id: 'plan-1',
   projectRelation: {
     __typename: 'ProjectObject',

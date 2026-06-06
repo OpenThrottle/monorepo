@@ -1333,6 +1333,8 @@ export type PlanObject = {
   category: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  /** True when saved workflow run configuration differs from canonical defaults. */
+  hasCustomRunConfig: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   /** Job-run lifecycle hooks stored on the plan ({ hooks: [...] }). */
   jobRunHooksJson: Scalars['String']['output'];
@@ -3376,6 +3378,7 @@ export type PlanCardFragment = {
   category: string;
   createdAt: any;
   description?: string | null;
+  hasCustomRunConfig: boolean;
   id: string;
   status: string;
   summary?: string | null;
@@ -3435,6 +3438,7 @@ export type GetPlansByStatusQuery = {
       category: string;
       createdAt: any;
       description?: string | null;
+      hasCustomRunConfig: boolean;
       id: string;
       status: string;
       summary?: string | null;
@@ -4633,6 +4637,10 @@ export const PlanCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hasCustomRunConfig' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -7691,6 +7699,10 @@ export const GetPlansByStatusDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hasCustomRunConfig' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',

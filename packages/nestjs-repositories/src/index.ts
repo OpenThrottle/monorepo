@@ -107,6 +107,7 @@ export {
   parsePlanRunConfigJson,
   parsePlanRunConfigSnapshot,
   parsePlanRunConfigStorage,
+  planHasCustomRunConfig,
   planRunConfigFromPlanStorage,
   parsePlanRunIterationTimeoutSeconds,
   planRunConfigFromWorkflowUiState,

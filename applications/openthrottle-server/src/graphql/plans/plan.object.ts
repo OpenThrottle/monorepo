@@ -23,6 +23,11 @@ export class PlanObject implements PlanData {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
+  @Field(() => Boolean, {
+    description: `True when saved workflow run configuration differs from canonical defaults.`,
+  })
+  hasCustomRunConfig?: boolean;
+
   @Field(() => String)
   id!: string;
 
