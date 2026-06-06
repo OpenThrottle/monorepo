@@ -2,9 +2,9 @@
 name: openthrottle-generators
 description: >-
   OpenThrottle monorepo scaffolding with @tools/generators: mandatory
-  NX_ISOLATE_PLUGINS=false, pnpm nx, list/describe/--list discovery, and
-  registered generator names (react-router, nestjs, react, package, folders).
-  USE WHEN scaffolding new code, fixing Unable to resolve @tools/generators or
+  NX_ISOLATE_PLUGINS=false, pnpm nx, list/describe/--list discovery, comma-separated
+  --name batching (confirm via --describe), and registered generator names
+  (react-router, nestjs, react, package, folders). USE WHEN scaffolding new code, fixing Unable to resolve @tools/generators or
   Cannot find generator, aligning with docs/tools/templates/AGENT_USAGE.md or
   personal-generators.mdc, or adding apps, packages, React Router UI, or NestJS
   services. When docs say remix but Nx fails, use react-router generator
@@ -96,6 +96,24 @@ Aligned with `.cursor/rules/personal-generators.mdc`:
 5. **Only then** hand-edit for business logic.
 
 Prefer **`--dry-run`** where supported (see **nx-generate**) before writing files.
+
+## Batch generation (`--name` comma-separated)
+
+Most `@tools/generators` sub-generators accept **multiple names in one invocation** via comma-separated `--name` values (spaces after commas are fine: `A, B, C`).
+
+**Confirm support:** `--describe` JSON includes `"description": "Comma-separated names supported."` on the `name` option when batching works (e.g. `react`, `react-router` component/route/form/modal/table; `react` hook/util). Some generators (e.g. NestJS `application`) use a single slug—always read `--describe` for the generator you chose.
+
+**Example — four package components in one command:**
+
+```bash
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
+  --subGenerator=component \
+  --destination=@openthrottle/react-router-profiling \
+  --folder=components \
+  --name=ProfilingServerMetrics,ProfilingQueueMetrics,ProfilingTaskRunMetrics,ProfilingQueueRunMetrics
+```
+
+Prefer batching when scaffolding related siblings; split only when names need different `--folder`, `--destination`, or sub-generators.
 
 ## Typical OpenThrottle entrypoints
 
