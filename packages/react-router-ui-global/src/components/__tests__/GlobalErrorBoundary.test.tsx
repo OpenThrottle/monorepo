@@ -1,14 +1,13 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as ReactRouter from 'react-router';
-import type { ErrorResponse } from 'react-router';
-import type { MockedFunction } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createRoutesStub } from 'react-router';
 import { GlobalErrorBoundary } from '../GlobalErrorBoundary';
+import { render } from '@testing-library/react';
 import type { GlobalErrorBoundaryProps } from '../GlobalErrorBoundary';
+import type { MockedFunction } from 'vitest';
+import type { RenderResult } from '@testing-library/react';
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>();
@@ -30,7 +29,7 @@ describe('GlobalErrorBoundary Component', () => {
   });
 
   test('renders route error details, support reference, and markdown content', () => {
-    const routeError: ErrorResponse = {
+    const routeError = {
       data: 'Not found content',
       internal: false,
       status: 404,
@@ -51,7 +50,7 @@ describe('GlobalErrorBoundary Component', () => {
   });
 
   test('uses homePath for back link', () => {
-    const routeError: ErrorResponse = {
+    const routeError = {
       data: 'x',
       internal: false,
       status: 500,
