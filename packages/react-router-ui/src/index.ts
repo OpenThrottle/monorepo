@@ -14,6 +14,9 @@ export * from './components/OpenThrottleNavigation';
 export * from './components/OpenThrottlePagination';
 export * from './components/OpenThrottlePaginationSimple';
 export * from './components/OpenThrottlePlanStatusBadge';
+export * from './components/OpenThrottleProductAbout';
+export * from './components/OpenThrottleProductFeatures';
+export * from './components/OpenThrottleProductGetStarted';
 export * from './components/OpenThrottleSidebar';
 export * from './components/OpenThrottleSidebarHeader';
 export * from './components/OpenThrottleStatCard';
@@ -23,6 +26,10 @@ export * from './components/OpenThrottleTabLink';
 export * from './components/OpenThrottleTabsNav';
 export * from './components/OpenThrottleWebsocketDebugger';
 export * from './components/websocket-debugger';
+
+// 📦 Data
+export * from './data/data.features';
+export * from './data/data.introductions';
 
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';

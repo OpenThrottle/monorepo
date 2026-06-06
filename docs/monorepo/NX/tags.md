@@ -154,7 +154,7 @@ Examples:
 - `@tools/generators` - NX generator templates
 - `@tools/dotfiles` - Configuration package
 - `@tools/ollama-proxy` - Local OpenAI-compatible proxy for Ollama (`production:false`)
-- `@openthrottle/mcp-developer` - MCP server (Node-only TypeScript)
+- `@openthrottle/openthrottle-mcp` - MCP server (Node-only TypeScript)
 - `@tools/workflows` - Ralph and workflow CLI (`production:false` where applicable)
 
 ### Specialized Technologies

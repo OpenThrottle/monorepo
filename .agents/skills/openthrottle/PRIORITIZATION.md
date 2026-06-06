@@ -15,16 +15,16 @@ This document resolves overlaps between the Cortex plan’s proposed skills and 
 
 The plan listed eight areas. Below they are merged where overlap would confuse agents or duplicate nx-\* skills.
 
-| #   | Plan area               | Consolidated skill id / folder            | Rationale                                                                                                                                          |
-| --- | ----------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | OT MCP & traceability   | **`openthrottle-plans`**                  | Single home for mcp-developer, fail-loudly, GitHub issues vs Markdown, post-merge `link_commit` / workflow-link-merge                              |
-| 2   | Scaffold-first monorepo | **`openthrottle-monorepo`**               | Adds `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, `docs/tools/templates/AGENT_USAGE.md`; delegates execution to **nx-generate**     |
-| 3   | Tasks & graph           | _(merged into **openthrottle-monorepo**)_ | Prefer **nx affected**, resolve project names via **nx-workspace**, run via **nx-run-tasks** and AGENTS.md — only OT-specific pointers belong here |
-| 4   | Ralph & queue           | **`openthrottle-ralph`**                  | `workflow-ralph`, UUIDs, worker vs orchestrator, `tools/workflows/README.md`; unique                                                               |
-| 5   | NestJS GraphQL          | **`openthrottle-server`**                 | Resolvers (Paginated/List/Result), deprecation, Nest test patterns in this repo                                                                    |
-| 6   | DB, embeddings, imports | **`openthrottle-data`**                   | `databases/README.md`, ingest scripts, Ollama vs hosted                                                                                            |
-| 7   | Remix/React Router UI   | **`openthrottle-developer-ui`**           | App routing under applications, `@openthrottle/react-router-shadcn`, loader/action patterns                                                        |
-| 8   | mcp-developer package   | **`openthrottle-mcp`**                    | Env/smoke, GraphQL boundary, extending MCP tools — references **openthrottle-plans** for product semantics                                         |
+| #   | Plan area                | Consolidated skill id / folder            | Rationale                                                                                                                                          |
+| --- | ------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | OT MCP & traceability    | **`openthrottle-plans`**                  | Single home for openthrottle-mcp, fail-loudly, GitHub issues vs Markdown, post-merge `link_commit` / workflow-link-merge                           |
+| 2   | Scaffold-first monorepo  | **`openthrottle-monorepo`**               | Adds `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, `docs/tools/templates/AGENT_USAGE.md`; delegates execution to **nx-generate**     |
+| 3   | Tasks & graph            | _(merged into **openthrottle-monorepo**)_ | Prefer **nx affected**, resolve project names via **nx-workspace**, run via **nx-run-tasks** and AGENTS.md — only OT-specific pointers belong here |
+| 4   | Ralph & queue            | **`openthrottle-ralph`**                  | `workflow-ralph`, UUIDs, worker vs orchestrator, `tools/workflows/README.md`; unique                                                               |
+| 5   | NestJS GraphQL           | **`openthrottle-server`**                 | Resolvers (Paginated/List/Result), deprecation, Nest test patterns in this repo                                                                    |
+| 6   | DB, embeddings, imports  | **`openthrottle-data`**                   | `databases/README.md`, ingest scripts, Ollama vs hosted                                                                                            |
+| 7   | Remix/React Router UI    | **`openthrottle-developer-ui`**           | App routing under applications, `@openthrottle/react-router-shadcn`, loader/action patterns                                                        |
+| 8   | openthrottle-mcp package | **`openthrottle-mcp`**                    | Env/smoke, GraphQL boundary, extending MCP tools — references **openthrottle-plans** for product semantics                                         |
 
 **Split vs merge decisions**
 
@@ -41,7 +41,7 @@ The plan listed eight areas. Below they are merged where overlap would confuse a
 
 ## Frontmatter naming
 
-Use Cursor skill **`name`** matching the folder (kebab-case), e.g. `name: openthrottle-plans`. Descriptions should include trigger phrases (“OpenThrottle”, “OT”, “mcp-developer”, “workflow-ralph”, “Cortex plan”) so discovery matches team vocabulary from AGENTS.md.
+Use Cursor skill **`name`** matching the folder (kebab-case), e.g. `name: openthrottle-plans`. Descriptions should include trigger phrases (“OpenThrottle”, “OT”, “openthrottle-mcp”, “workflow-ralph”, “Cortex plan”) so discovery matches team vocabulary from AGENTS.md.
 
 ## Related plan
 

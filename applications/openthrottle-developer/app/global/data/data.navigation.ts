@@ -3,6 +3,7 @@ import { IS_DEVELOPMENT } from '@openthrottle/react-router-utils';
 import {
   BellIcon,
   BinaryIcon,
+  BookOpenIcon,
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
@@ -129,12 +130,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
 
   Legal: [
     {
-      children: 'About',
-      end: true,
-      icon: NotebookTabsIcon,
-      to: '/legal',
-    },
-    {
       children: 'License',
       icon: NotebookTabsIcon,
       to: '/legal/license',
@@ -155,18 +150,18 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
 export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
   Workspace: [
     {
+      children: 'About',
+      end: true,
+      icon: BookOpenIcon,
+      to: '/about',
+    },
+    {
       children: 'Login',
       icon: LogInIcon,
       to: '/auth',
     },
   ],
   Legal: [
-    {
-      children: 'About',
-      end: true,
-      icon: NotebookTabsIcon,
-      to: '/legal',
-    },
     {
       children: 'License',
       icon: NotebookTabsIcon,

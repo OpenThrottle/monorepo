@@ -1,7 +1,7 @@
 # 🤖 OpenThrottle | AI
 
-[![Continuous Integration](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
-[![NX Release](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/visormatt/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
+[![Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
+[![NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
 
 After years of development, I've refined my tech stack to focus on a core set of battle-tested tools, with TypeScript as the foundation. This monorepo represents the culmination of those learnings - a streamlined, production-ready setup that balances flexibility with maintainability.
 
@@ -13,11 +13,6 @@ After years of development, I've refined my tech stack to focus on a core set of
   - [⚙️ Installation](#️-installation)
   - [🧑‍💻 Development](#-development)
     - [Common Commands](#common-commands)
-    - [TypeScript Execution (SWC)](#typescript-execution-swc)
-    - [Python Applications](#python-applications)
-  - [🌳 Reserved Worktrees](#-reserved-worktrees)
-    - [Using Reserved Worktrees](#using-reserved-worktrees)
-  - [☁️ GCP Auth | gcloud CLI](#️-gcp-auth--gcloud-cli)
   - [🛟 Troubleshooting](#-troubleshooting)
 
 Specific Reads:
@@ -37,6 +32,16 @@ pnpm exec workflow-ralph \
   --prompt-file .cursor/skills/agents-ralph/SKILL.md
 ```
 
+Or invoke the `agents-ralph` skill from your agent of choice:
+
+```bash
+cursor-agent -p /agents-ralph
+
+claude /agents-ralph
+
+opencode --prompt "skill({ name: "agents-ralph" })"
+```
+
 ## 🏠 Architecture
 
 While many [NX](https://nx.dev/) monorepo implementations specialize in either `task running` or `package publishing`, our setup leverages both capabilities. This dual approach enables external applications to seamlessly integrate with and utilize the packages we develop, manage, and publish from this monorepo.
@@ -45,15 +50,13 @@ While many [NX](https://nx.dev/) monorepo implementations specialize in either `
 ├── .env.default           # Default environment variables (in VC)
 ├── applications           # NodeJS client and server applications
 ├── databases              # OpenThrottle Postgres schema, migrations, and local DB scripts
-├── design                 # Reserved for design assets (future)
 ├── docs                   # Markdown documentation (see docs/)
 ├── infra                  # Infrastructure as code (e.g. GCP, Terraform)
-├── learning               # Reserved for learning notes (future)
 ├── packages               # Shared packages that can also be published
 ├── scripts                # Scripts to make life easier (Bash + TypeScript)
 ├── services               # Shared or standalone services
-├── tools                  # Nx plugins, templates, workflows (see tools/)
-└──
+├── skills                 # Agent skills (Ralph, code review, generators, …)
+└── tools                  # Nx plugins, templates, workflows (see tools/)
 ```
 
 ## ⚙️ Installation
@@ -76,6 +79,7 @@ Monorepos streamline our development process by centralizing code management, en
 # OpenThrottle local stack (full walkthrough: docs/openthrottle/local-quickstart.md)
 pnpm run database:start
 pnpm run database:migrate
+
 pnpm nx run openthrottle-server:dev
 pnpm nx run openthrottle-developer:dev
 
@@ -99,98 +103,6 @@ pnpm add <PROJECT_NAME> --filter openthrottle-developer -S
 pnpm nx run @tools/generators:test --changed --watch
 ```
 
-### TypeScript Execution (SWC)
-
-This monorepo uses [SWC](https://swc.rs/) for faster TypeScript execution instead of ts-node. SWC is automatically enabled when the required packages are installed:
-
-- **Packages**: `@swc-node/register@1.11.1` and `@swc/core@1.15.8` (installed as dev dependencies)
-- **Configuration**: `NX_SWC="true"` is set in `.env.default`
-- **Benefits**: SWC typically provides 2-5x faster TypeScript execution compared to ts-node
-
-NX automatically detects and uses SWC when these packages are installed. No additional configuration is required beyond the environment variable. If you see "falling back to ts-node" warnings, ensure the SWC packages are installed and the environment variable is set.
-
-### Python Applications
-
-```bash
-# CD into the application
-
-# Setup: Create a virtual environment
-python3 -m venv .venv
-
-# Activate the python env
-source .venv/bin/activate
-
-# pipenv shell
-
-# Turn it off
-deactivate
-```
-
-## 🌳 Reserved Worktrees
-
-This monorepo uses Git worktrees to enable multiple branches to be checked out simultaneously. We maintain four reserved worktrees that are pre-configured and ready to use, avoiding the setup cost of creating new worktrees for each branch:
-
-- `monorepo-worktree-one`, `monorepo-worktree-two`, `monorepo-worktree-three` - For feature branches and general development
-- `monorepo-hotfix` - Reserved for hotfixes and urgent one-off fixes
-
-### Using Reserved Worktrees
-
-**Assign a branch to a worktree:**
-
-```bash
-# Checkout your branch in an available worktree
-cd ../monorepo-worktree-one
-git fetch origin
-git checkout your-feature-branch
-```
-
-**For hotfixes:**
-
-```bash
-# Use the dedicated hotfix worktree
-cd ../monorepo-hotfix
-git fetch origin
-git checkout your-hotfix-branch
-
-# or create a new hotfix branch from main
-git checkout -b hotfix/urgent-fix main
-```
-
-**Sync a branch with main:**
-
-```bash
-# From within the worktree
-cd ../monorepo-worktree-one
-# Always pull main first to ensure it's current
-git fetch origin main
-git pull origin main
-# Then rebase your branch onto main
-git rebase origin/main
-```
-
-**List all worktrees:**
-
-```bash
-git worktree list
-```
-
-**Note:** The main `monorepo` directory is reserved for the `main` branch. Each branch can only be checked out in one worktree at a time.
-
-## ☁️ GCP Auth | gcloud CLI
-
-- Good stuff in our [doc here](./docs/infra/gcloud-two-profiles.md)
-
-```bash
-# List configurations and see which is active
-gcloud config configurations list
-
-# Show properties for current config
-gcloud config list
-
-# Show active account
-gcloud auth list
-```
-
 ## 🛟 Troubleshooting
 
 When issues arise, our goal is to provide straightforward solutions that allow you to quickly reset and restore your development environment to a working state.
@@ -199,7 +111,7 @@ When issues arise, our goal is to provide straightforward solutions that allow y
 
 We can always re-run the setup script `./scripts/setup.sh`
 
-- Ensures we have the latest NodeJS, NX, and Supabase CLI versions
+- Ensures we have the latest NodeJS and NX versions
 - Then we can install the latest dependencies
 - And we'll build/rebuild anything that needs to be built
 
@@ -221,20 +133,3 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 **4. Other issues?**
 
 Let me know and we'll get to the bottom of things 🤷
-
----
-
-```ts
-// from '@openthrottle/ai-mcp/
-// from '@openthrottle/nestjs-agentic-workflow';
-// from '@openthrottle/openthrottle-agentic-utils';
-// from '@tools/workflows';
-```
-
-```bash
-cursor-agent -p /agents-ralph
-
-claude /agents-ralph
-
-opencode --prompt "skill({ name: "agents-ralph" })"
-```

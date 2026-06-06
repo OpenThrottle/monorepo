@@ -1,14 +1,52 @@
 {
   "name": "@openthrottle/openthrottle-mcp",
-  "description": "TODO: Add a description",
+  "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "bin": {
+    "openthrottle-mcp": "./dist/src/bin.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
+    "@openthrottle/nodejs-graphql": "workspace:*",
+    "@openthrottle/nestjs-modules": "workspace:*",
+    "@rekog/mcp-nest": "^1.9.9",
+    "zod": "^4.3.6"
+  },
   "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/src/auth/index.js",
+      "require": "./dist/src/auth/index.js",
+      "types": "./dist/src/auth/index.d.ts"
+    },
+    "./nest": {
+      "import": "./dist/src/nest/index.js",
+      "require": "./dist/src/nest/index.js",
+      "types": "./dist/src/nest/index.d.ts"
+    },
+    "./nest-tool-handlers": {
+      "import": "./dist/src/nest-tool-handlers.js",
+      "require": "./dist/src/nest-tool-handlers.js",
+      "types": "./dist/src/nest-tool-handlers.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {
@@ -20,38 +58,60 @@
       "name:@openthrottle/openthrottle-mcp",
       "production:true",
       "publish:false",
-      "technology:react",
-      "technology:react-router",
+      "technology:nodejs",
+      "technology:typescript",
       "type:package"
     ],
     "targets": {
-      "__build": {},
-      "__build-package": {},
+      "__dev": {
+        "continuous": true,
+        "dependsOn": [
+          "codegen-graphql-watch"
+        ],
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "build": {
+        "dependsOn": [
+          "^build",
+          "codegen-graphql"
+        ],
+        "executor": "@nx/js:tsc"
+      },
+      "codegen-graphql": {},
+      "codegen-graphql-watch": {},
       "lint": {},
+      "serve": {
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ./dist/src/bin.js",
+          "cwd": "{projectRoot}"
+        }
+      },
       "test": {},
       "typecheck": {},
-      "typecheck-tests": {}
+      "typecheck-tests": {},
+      "verify-graphql-codegen": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "(cd packages/openthrottle-mcp && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-mcp/src/__generated__",
+          "cwd": "{workspaceRoot}"
+        }
+      }
     }
   },
   "peerDependencies": {},
   "private": true,
   "publishConfig": {
-    "access": "restricted",
-    "exports": {
-      ".": {
-        "import": "./src/index.js",
-        "require": "./src/index.js",
-        "types": "./src/index.d.ts"
-      },
-      "./*": {
-        "import": "./*.js",
-        "require": "./*.js",
-        "types": "./*.d.ts"
-      }
-    },
-    "main": "./src/index.js",
-    "module": "./src/index.js",
-    "types": "./src/index.d.ts"
+    "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},

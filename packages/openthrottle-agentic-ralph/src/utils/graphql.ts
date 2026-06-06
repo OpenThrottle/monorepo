@@ -86,7 +86,7 @@ export async function executeWorkflowGraphqlV2<
 }
 
 /**
- * @description Resolves optional Bearer token from env: `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, then `MCP_DEVELOPER_AUTH_TOKEN` (same token source as mcp-developer for local parity).
+ * @description Resolves optional Bearer token from env: `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, then `MCP_DEVELOPER_AUTH_TOKEN` (same token source as openthrottle-mcp for local parity).
  *
  * **Env-only (never in `.workflow-ralph.json`):** auth tokens and GraphQL URL overrides.
  */

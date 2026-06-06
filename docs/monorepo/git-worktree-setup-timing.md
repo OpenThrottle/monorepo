@@ -83,7 +83,7 @@ Equivalent to `scripts/setup_worktree.sh`:
 ### Observations (comparison)
 
 - **Much faster end-to-end** than copying `node_modules` in this run (~33 s vs ~130 s), almost entirely because **`pnpm install` linked from the local store** (`reused 3254`, `downloaded 0` in the log) instead of reading a full tree copy from disk.
-- **pnpm** emitted **ENOENT** warnings when creating some workspace `.bin` shims before built artifacts existed (e.g. `mcp-developer`, `@tools/workflows` bins). Install still exited 0; **`pnpm build` afterward** produced those `dist` outputs. If you need bins immediately after install, consider ordering or a follow-up `pnpm rebuild` where applicable.
+- **pnpm** emitted **ENOENT** warnings when creating some workspace `.bin` shims before built artifacts existed (e.g. `openthrottle-mcp`, `@tools/workflows` bins). Install still exited 0; **`pnpm build` afterward** produced those `dist` outputs. If you need bins immediately after install, consider ordering or a follow-up `pnpm rebuild` where applicable.
 - This path does **not** run `setup_troubleshooting.sh`, `setup_services.sh`, or `setup_software.sh` (unlike `setup.sh`); aligned with a lighter worktree-only workflow.
 
 ### Commands used (reproducibility)

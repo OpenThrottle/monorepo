@@ -38,7 +38,7 @@ describe('ServiceAccountsResolver', () => {
     description: 'MCP automation',
     disabledAt: null,
     id: '11111111-1111-4111-8111-111111111111',
-    name: 'mcp-developer',
+    name: 'openthrottle-mcp',
   } as ServiceAccount;
 
   const mockCredential: ServiceAccountCredential = {
@@ -88,7 +88,7 @@ describe('ServiceAccountsResolver', () => {
       const result = await resolver.serviceAccounts(humanPrincipal);
 
       expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe('mcp-developer');
+      expect(result[0]?.name).toBe('openthrottle-mcp');
     });
 
     test('rejects service account principal', async () => {

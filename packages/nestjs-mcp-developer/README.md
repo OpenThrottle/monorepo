@@ -1,4 +1,4 @@
-# @openthrottle/nestjs-mcp-developer
+# @openthrottle/nestjs-openthrottle-mcp
 
 Add a short description of this package (purpose, main exports, and who consumes it).
 
@@ -9,11 +9,11 @@ Install with your preferred package manager (list pnpm first in this monorepo):
 **pnpm:**
 
 ```bash
-pnpm add @openthrottle/nestjs-mcp-developer
+pnpm add @openthrottle/nestjs-openthrottle-mcp
 ```
 
 **npm:**
 
 ```bash
-npm install @openthrottle/nestjs-mcp-developer
+npm install @openthrottle/nestjs-openthrottle-mcp
 ```

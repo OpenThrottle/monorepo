@@ -1,6 +1,6 @@
 {
-  "name": "@openthrottle/nestjs-mcp-developer",
-  "description": "Nest-facing entry for the OpenThrottle developer MCP surface; implementation lives in `@openthrottle/mcp-developer/nest`.",
+  "name": "@openthrottle/nestjs-openthrottle-mcp",
+  "description": "Nest-facing entry for the OpenThrottle developer MCP surface; implementation lives in `@openthrottle/openthrottle-mcp/nest`.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/mcp-developer": "workspace:*"
+    "@openthrottle/openthrottle-mcp": "workspace:*"
   },
   "exports": {
     ".": {
@@ -30,7 +30,7 @@
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:@openthrottle/nestjs-mcp-developer",
+      "name:@openthrottle/nestjs-openthrottle-mcp",
       "production:true",
       "publish:false",
       "technology:nestjs",

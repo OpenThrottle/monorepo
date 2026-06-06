@@ -17,8 +17,8 @@ const mockServiceAccount = {
   createdAt: '2026-05-18T12:00:00.000Z',
   description: 'MCP developer',
   disabledAt: null,
-  id: 'sa-mcp-developer',
-  name: 'mcp-developer',
+  id: 'sa-openthrottle-mcp',
+  name: 'openthrottle-mcp',
 };
 
 const mockCredential = {

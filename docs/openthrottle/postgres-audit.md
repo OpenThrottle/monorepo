@@ -145,7 +145,7 @@ No application source in `applications/openthrottle` opens a Postgres connection
 
 ## 3. packages/openthrottle
 
-**Summary:** The only package that contains direct Postgres access is **@openthrottle/nestjs-repositories**. It provides the TypeORM DataSource, entities, and repository services used by openthrottle-server. All other packages in `packages/openthrottle` (mcp-developer, vscode-openthrottle, nodejs-graphql, react-router-\*, etc.) use GraphQL only and do not open Postgres connections.
+**Summary:** The only package that contains direct Postgres access is **@openthrottle/nestjs-repositories**. It provides the TypeORM DataSource, entities, and repository services used by openthrottle-server. All other packages in `packages/openthrottle` (openthrottle-mcp, vscode-openthrottle, nodejs-graphql, react-router-\*, etc.) use GraphQL only and do not open Postgres connections.
 
 ### 3.1 @openthrottle/nestjs-repositories
 
@@ -222,7 +222,7 @@ Each service injects `@InjectRepository(Entity)` and exposes `getRepository()` a
 
 | Package                                                                                                                                                                                | Notes                                                                                                                                                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **@openthrottle/mcp-developer**                                                                                                                                                        | Uses `@openthrottle/nodejs-graphql` only (GraphQL client). No pg/TypeORM. `src/utils/errors.ts` contains error copy "Cortex Postgres is not configured" / "POSTGRES_URL" — user-facing message only, no DB connection. |
+| **@openthrottle/openthrottle-mcp**                                                                                                                                                     | Uses `@openthrottle/nodejs-graphql` only (GraphQL client). No pg/TypeORM. `src/utils/errors.ts` contains error copy "Cortex Postgres is not configured" / "POSTGRES_URL" — user-facing message only, no DB connection. |
 | **@openthrottle/vscode-openthrottle**                                                                                                                                                  | Uses `CortexApiClient` and `@openthrottle/nodejs-graphql` (GraphQL only). No direct Postgres.                                                                                                                          |
 | **@openthrottle/nodejs-graphql**                                                                                                                                                       | GraphQL client utilities (executeGraphql, executeGraphqlWithAuth). No Postgres.                                                                                                                                        |
 | **@openthrottle/react-router-graphql**, **react-router-auth**, **react-router-ui**, **react-router-utils**, **react-router-profiling**, **react-router-editor**, **react-router-chat** | GraphQL or UI only. No direct Postgres.                                                                                                                                                                                |
@@ -236,18 +236,18 @@ Goal: **all** Postgres access is limited to openthrottle-server; every other Ope
 
 ### 4.1 Current state vs goal
 
-| Layer                                                                              | Current state                                                                                                       | Goal                                                                                                                      |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **OT apps** (developer, admin, email, cms, website)                                | Already GraphQL-only                                                                                                | No change.                                                                                                                |
-| **packages/openthrottle** (mcp-developer, vscode, nodejs-graphql, react-router-\*) | Already GraphQL-only                                                                                                | No change.                                                                                                                |
-| **openthrottle-server**                                                            | Single gateway; uses TypeORM (nestjs-repositories) + cortex-server (semantic search) + doc-ingestion state (raw pg) | Keep as the **only** process that opens Postgres connections. Optionally consolidate to one connection story (see below). |
-| **@openthrottle/nestjs-repositories**                                              | Only consumed by openthrottle-server; provides TypeORM + pg                                                         | Remain server-only. Do not import from any other OT app or from mcp-developer/vscode.                                     |
+| Layer                                                                                 | Current state                                                                                                       | Goal                                                                                                                      |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **OT apps** (developer, admin, email, cms, website)                                   | Already GraphQL-only                                                                                                | No change.                                                                                                                |
+| **packages/openthrottle** (openthrottle-mcp, vscode, nodejs-graphql, react-router-\*) | Already GraphQL-only                                                                                                | No change.                                                                                                                |
+| **openthrottle-server**                                                               | Single gateway; uses TypeORM (nestjs-repositories) + cortex-server (semantic search) + doc-ingestion state (raw pg) | Keep as the **only** process that opens Postgres connections. Optionally consolidate to one connection story (see below). |
+| **@openthrottle/nestjs-repositories**                                                 | Only consumed by openthrottle-server; provides TypeORM + pg                                                         | Remain server-only. Do not import from any other OT app or from openthrottle-mcp/vscode.                                  |
 
 ### 4.2 Recommendations
 
 1. **Keep openthrottle-server as the single Postgres gateway**
    - All client apps and packages already use GraphQL (or server APIs). No new direct Postgres access in apps or in packages other than nestjs-repositories.
-   - Enforce that **no** OpenThrottle app or package (other than openthrottle-server) adds a dependency on `@openthrottle/nestjs-repositories`, `pg`, or any Cortex connection env (e.g. `POSTGRES_*` for connection purposes). mcp-developer and vscode should only use `@openthrottle/nodejs-graphql` (or equivalent) against the server.
+   - Enforce that **no** OpenThrottle app or package (other than openthrottle-server) adds a dependency on `@openthrottle/nestjs-repositories`, `pg`, or any Cortex connection env (e.g. `POSTGRES_*` for connection purposes). openthrottle-mcp and vscode should only use `@openthrottle/nodejs-graphql` (or equivalent) against the server.
 
 2. **Optional: consolidate connection paths inside openthrottle-server**
    - Today the server uses (a) TypeORM via nestjs-repositories, (b) cortex-server (`getPostgresConfig()` + raw pg/semantic search), and (c) doc-ingestion state (separate connection string + raw pg in `@tools/workflows/doc-ingestion`).
@@ -260,7 +260,7 @@ Goal: **all** Postgres access is limited to openthrottle-server; every other Ope
    - In CI or in a lint rule, consider disallowing imports of `@openthrottle/nestjs-repositories` or `pg` (for Cortex) in any project other than openthrottle-server and nestjs-repositories itself.
 
 4. **No change for OT apps and GraphQL-only packages**
-   - openthrottle-developer, openthrottle-admin, openthrottle-email, openthrottle-cms, openthrottle-website, mcp-developer, vscode-openthrottle, nodejs-graphql, and react-router-\* packages require no code changes for this goal; they already use GraphQL only.
+   - openthrottle-developer, openthrottle-admin, openthrottle-email, openthrottle-cms, openthrottle-website, openthrottle-mcp, vscode-openthrottle, nodejs-graphql, and react-router-\* packages require no code changes for this goal; they already use GraphQL only.
 
 ### 4.3 Summary
 

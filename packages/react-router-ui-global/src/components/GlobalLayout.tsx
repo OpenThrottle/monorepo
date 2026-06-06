@@ -14,6 +14,7 @@ import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
 import { useScrollContainerRestoration } from '../hooks/use-scroll-container-restoration';
 
 export interface GlobalLayoutProps {
+  readonly authenticated?: boolean;
   readonly children: React.ReactNode;
   readonly className?: string;
   readonly data?: Record<string, GlobalSidebarContentLinkProps[]>;
@@ -31,7 +32,14 @@ export interface GlobalLayoutProps {
  * Top bar includes SidebarTrigger (keyboard: Cmd/Ctrl+B) to toggle sidebar.
  */
 export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
-  const { children, className, data, health, overrides } = props;
+  const {
+    authenticated = false,
+    children,
+    className,
+    data,
+    health,
+    overrides,
+  } = props;
 
   // Hooks
   const refScrollableContent = React.useRef<HTMLDivElement>(null);
@@ -62,7 +70,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
           defaultSectionsExpanded={false}
           sectionDefaultExpanded={{
             Agents: true,
-            Legal: false,
+            Legal: authenticated ? false : true,
             Settings: false,
             User: false,
             Workspace: true,

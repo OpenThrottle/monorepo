@@ -1,4 +1,4 @@
-# Using Two gcloud Profiles Simultaneously
+# Using Two GCP Profiles Simultaneously
 
 Research and setup for using two GCP profiles on the same machine (e.g. two repos, two companies) without logging out and back in when switching.
 
@@ -32,9 +32,9 @@ So you can run different gcloud commands in different terminals (or subshells) w
 
 ### Using configurations in parallel
 
-- **Option A – Same config directory, different active config per process:**  
+- **Option A – Same config directory, different active config per process:**
   Use **`CLOUDSDK_ACTIVE_CONFIG_NAME`** (or `--configuration`) in each shell/repo so that each process uses a different named configuration from the same `~/.config/gcloud` (or same `CLOUDSDK_CONFIG`).
-- **Option B – Separate config directories per profile:**  
+- **Option B – Separate config directories per profile:**
   Set **`CLOUDSDK_CONFIG`** to a different directory per repo (e.g. `~/.config/gcloud-company1`, `~/.config/gcloud-company2`). Each directory has its own set of configurations and its own credentials. No cross-talk between repos.
 
 Option B is stronger isolation (separate credentials and configs); Option A is simpler if you’re fine sharing one config directory and only switching the active config per process.
@@ -230,19 +230,23 @@ Use two terminals (or two repos) to confirm each uses the intended profile.
 ### 5.1 Two terminals, same config directory (Option A)
 
 1. **Terminal 1 (Company 1):**
+
    ```bash
    export CLOUDSDK_ACTIVE_CONFIG_NAME=company1
    gcloud config list
    gcloud auth list
    ```
+
    Confirm the account and project are Company 1’s.
 
 2. **Terminal 2 (Company 2):**
+
    ```bash
    export CLOUDSDK_ACTIVE_CONFIG_NAME=company2
    gcloud config list
    gcloud auth list
    ```
+
    Confirm the account and project are Company 2’s.
 
 3. In each terminal, run a read-only GCP command (e.g. `gcloud projects describe PROJECT_ID`) to ensure the active config is used.
@@ -261,13 +265,13 @@ If you use separate `CLOUDSDK_CONFIG` directories, repeat the same checks with `
 
 ## 6. Short usage guide
 
-| Goal | Action |
-|------|--------|
-| **Create two profiles** | `gcloud config configurations create company1` and `company2` (or use separate `CLOUDSDK_CONFIG` dirs). |
-| **Auth per profile** | `gcloud config configurations activate <name>`, then `gcloud auth login` and `gcloud auth application-default login`. |
-| **Use profile in current shell** | `export CLOUDSDK_ACTIVE_CONFIG_NAME=company1` (or use `.env` / direnv / wrapper script in the repo). |
-| **One-off command** | `CLOUDSDK_ACTIVE_CONFIG_NAME=company2 gcloud ...` or `gcloud --configuration=company2 ...`. |
-| **SDKs / tools (ADC)** | Set `GOOGLE_APPLICATION_CREDENTIALS` per repo, or run `gcloud auth application-default login` with the right config active. |
+| Goal                             | Action                                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Create two profiles**          | `gcloud config configurations create company1` and `company2` (or use separate `CLOUDSDK_CONFIG` dirs).                     |
+| **Auth per profile**             | `gcloud config configurations activate <name>`, then `gcloud auth login` and `gcloud auth application-default login`.       |
+| **Use profile in current shell** | `export CLOUDSDK_ACTIVE_CONFIG_NAME=company1` (or use `.env` / direnv / wrapper script in the repo).                        |
+| **One-off command**              | `CLOUDSDK_ACTIVE_CONFIG_NAME=company2 gcloud ...` or `gcloud --configuration=company2 ...`.                                 |
+| **SDKs / tools (ADC)**           | Set `GOOGLE_APPLICATION_CREDENTIALS` per repo, or run `gcloud auth application-default login` with the right config active. |
 
 **Recommended:** Use **direnv** in each repo with `.envrc` setting `CLOUDSDK_ACTIVE_CONFIG_NAME` (and optionally `GOOGLE_APPLICATION_CREDENTIALS`). Add `.envrc` to `.gitignore` if it contains secrets or project IDs.
 

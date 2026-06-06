@@ -12,7 +12,7 @@ OpenThrottle is context-driven AI for developers: plans, tasks, and knowledge st
 
 OpenThrottle can run **entirely locally** with Open Source models and software—no required SaaS or proprietary APIs for core flows.
 
-- **Local / OSS stack:** Postgres (with pgvector), Redis, Node, and the OpenThrottle server, developer app, and MCP (Cortex/mcp-developer) are all OSS and run on your machine or your infra.
+- **Local / OSS stack:** Postgres (with pgvector), Redis, Node, and the OpenThrottle server, developer app, and MCP (Cortex/openthrottle-mcp) are all OSS and run on your machine or your infra.
 - **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and Cortex ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
 - **Optional — OpenAI:** If you prefer cloud embeddings, set `OPENAI_API_KEY` and leave Ollama unset; the stack uses OpenAI (e.g. `text-embedding-3-small`) for embeddings. Not required for local-only.
 
@@ -85,7 +85,7 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
   - **Developer app:** `pnpm nx run openthrottle-developer:dev` (connects to the server via `API_URL`; default dev port often 5173 or as in `.env`).
   - Ensure `CORS_ORIGINS` on the server includes the developer app origin (e.g. `http://localhost:5173`).
 - **Ports and env:** See `applications/openthrottle/.env.default` for `OPENTHROTTLE_SERVER_PORT`, `OPENTHROTTLE_DEVELOPER_PORT`, and Postgres/Redis. For a single entry point (e.g. Caddy), see `docs/monorepo/local-services-and-ports.md`.
-- **MCP / Cortex:** The plans knowledge base and MCP (mcp-developer) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/mcp-developer/README.md` and `databases/README.md`.
+- **MCP / Cortex:** The plans knowledge base and MCP (openthrottle-mcp) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/openthrottle-mcp/README.md` and `databases/README.md`.
 - **Tests and lint:** From repo root use Nx: `pnpm nx run openthrottle:test`, `pnpm nx run openthrottle:lint`, etc. Individual apps: `pnpm nx run openthrottle-server:test`, `pnpm nx run openthrottle-developer:test`, and so on.
 
 ## Suggestions

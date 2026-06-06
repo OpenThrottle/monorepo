@@ -1,6 +1,6 @@
 # Job run lifecycle hooks
 
-> **OpenThrottle plan:** `0bd23aba-ace8-464c-ae77-363356451b3a` — _Job run lifecycle hooks (OT prompt/skill before & after)_  
+> **OpenThrottle plan:** `0bd23aba-ace8-464c-ae77-363356451b3a` — _Job run lifecycle hooks (OT prompt/skill before & after)_
 > Update this document as tasks complete; tasks live in OT, not here.
 
 ## Problem
@@ -13,7 +13,7 @@ We want composable **lifecycle hooks** so plans can, for example:
 - Summarize or file follow-ups via a prompt profile after the job finishes
 - Eventually react to **GitHub** events (PR opened, CI done, merge) with the same hook runner
 
-**Phase 1 (this plan):** `before_run` and `after_run` on BullMQ plan jobs (`PlansProcessor`, spawn + orchestrator).  
+**Phase 1 (this plan):** `before_run` and `after_run` on BullMQ plan jobs (`PlansProcessor`, spawn + orchestrator).
 **Phase 2 (backlog):** GitHub webhooks / lifecycle triggers reusing the same hook configuration and runner.
 
 > **Jest-style lifecycle (plan `a1c55a0a`, task `c8896177`):** the design to evolve these run-level
@@ -147,7 +147,7 @@ Hooks are **not** argv flags on nested `workflow-ralph`; the processor runs them
 | `skill`          | **Filesystem read** of repo-relative `SKILL.md` (`readJobRunHookSkillMarkdown`): strip YAML frontmatter, prefix with `# Repo skill: <path>`. **Not** MCP `FetchMcpResource` — keeps hooks deterministic, offline-friendly, and aligned with enqueue `requireTargetsExist`. |
 | Plan context     | **Yes** — `formatPlanAndTasksForPrompt` + `Plan-Id` + phase suffix appended after layer-1 (`buildJobRunHookAgentPrompt`).                                                                                                                                                  |
 | Runner overrides | Phase 1: **inherit** main job `executionBackend` + `ralph.model` from BullMQ payload (`execute-plan-job-run-hooks.ts`). Per-hook `JobRunHookRunOptions` on entries deferred.                                                                                               |
-| MCP / OT tools   | Hooks do **not** call `link_commit`. Agent may use tools available to the iteration runner; no separate mcp-developer injection in phase 1.                                                                                                                                |
+| MCP / OT tools   | Hooks do **not** call `link_commit`. Agent may use tools available to the iteration runner; no separate openthrottle-mcp injection in phase 1.                                                                                                                             |
 | Code             | `tools/workflows/src/utils/job-run-hooks-runner.ts`; server wiring `applications/openthrottle-server/src/queues/job-run-hooks/execute-plan-job-run-hooks.ts`.                                                                                                              |
 
 ### Open questions (later)

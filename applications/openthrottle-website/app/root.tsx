@@ -13,8 +13,6 @@ import {
   artwork,
   OPEN_THROTTLE_BUCKET,
 } from '@openthrottle/react-router-utils';
-import { GlobalFooter } from '~/global/components/GlobalFooter';
-import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
@@ -105,9 +103,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
       <body className="min-h-screen flex flex-col">
-        <GlobalHeader />
+        {/* <GlobalHeader /> */}
         <main className="flex flex-1 flex-col">{children}</main>
-        <GlobalFooter />
+        {/* <GlobalFooter /> */}
 
         <ScrollRestoration />
         {/* FIXME: Uncomment this when we have a production environment */}

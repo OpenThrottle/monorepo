@@ -53,7 +53,7 @@ describe('SettingsKeysToolbar Component', () => {
       renderToolbar({
         canCreate: false,
         selectedServiceAccountId: 'sa-1',
-        serviceAccounts: [account({ id: 'sa-1', name: 'mcp-developer' })],
+        serviceAccounts: [account({ id: 'sa-1', name: 'openthrottle-mcp' })],
       });
 
       expect(
@@ -67,10 +67,10 @@ describe('SettingsKeysToolbar Component', () => {
       renderToolbar({
         canCreate: true,
         selectedServiceAccountId: 'sa-1',
-        serviceAccounts: [account({ id: 'sa-1', name: 'mcp-developer' })],
+        serviceAccounts: [account({ id: 'sa-1', name: 'openthrottle-mcp' })],
       });
 
-      expect(screen.getByText(/mcp-developer/)).toBeInTheDocument();
+      expect(screen.getByText(/openthrottle-mcp/)).toBeInTheDocument();
       expect(
         screen.queryByTestId('SettingsKeysToolbar-account-select'),
       ).not.toBeInTheDocument();
@@ -91,7 +91,7 @@ describe('SettingsKeysToolbar Component', () => {
         onServiceAccountChange,
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [
-          account({ id: 'sa-1', name: 'mcp-developer' }),
+          account({ id: 'sa-1', name: 'openthrottle-mcp' }),
           account({ id: 'sa-2', name: 'workflow-ralph' }),
         ],
       });
@@ -108,7 +108,7 @@ describe('SettingsKeysToolbar Component', () => {
         onServiceAccountChange,
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [
-          account({ id: 'sa-1', name: 'mcp-developer' }),
+          account({ id: 'sa-1', name: 'openthrottle-mcp' }),
           account({ id: 'sa-2', name: 'workflow-ralph' }),
         ],
       });
@@ -129,7 +129,7 @@ describe('SettingsKeysToolbar Component', () => {
         onCreateDialogOpenChange,
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [
-          account({ id: 'sa-1', name: 'mcp-developer' }),
+          account({ id: 'sa-1', name: 'openthrottle-mcp' }),
           account({ id: 'sa-2', name: 'workflow-ralph' }),
         ],
       });

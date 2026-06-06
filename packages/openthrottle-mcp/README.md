@@ -1,19 +1,24 @@
 # @openthrottle/openthrottle-mcp
 
-Add a short description of this package (purpose, main exports, and who consumes it).
+Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access). Tools call openthrottle-server over GraphQL only.
+
+For schema, embeddings, and local Postgres setup, see [databases/README.md](../../../databases/README.md). Workspace-wide conventions: [AGENTS.md](../../AGENTS.md).
+
+**Cursor launcher:** [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) does not require a root **`OPENAI_API_KEY`**; configure **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **openthrottle-server** for semantic search. See [docs/verification-environment.md](docs/verification-environment.md) and [run-locally-oss.md](../../docs/openthrottle/run-locally-oss.md).
+
+## Authentication
+
+Authenticated GraphQL calls use a bearer token from the environment. Set **`MCP_DEVELOPER_AUTH_TOKEN`** to a service account token (`ot_sa_<prefix>_<secret>`) minted via `pnpm run database:bootstrap-service-accounts` or admin GraphQL — not a short-lived human JWT. See [docs/AUTH.md](docs/AUTH.md) for setup, rotation, and Cursor MCP config. For local verification (services, env vars, smoke checklist), see [docs/verification-environment.md](docs/verification-environment.md).
 
 ## Installation
 
-Install with your preferred package manager (list pnpm first in this monorepo):
+**In this monorepo:** add `"@openthrottle/openthrottle-mcp": "workspace:*"` where needed, or run the MCP from this package after a build. See [AGENTS.md](../../AGENTS.md) for OpenThrottle MCP usage.
 
-**pnpm:**
-
-```bash
-pnpm add @openthrottle/openthrottle-mcp
-```
-
-**npm:**
+**Build and run (monorepo):**
 
 ```bash
-npm install @openthrottle/openthrottle-mcp
+pnpm nx run @openthrottle/openthrottle-mcp:build
+pnpm nx run @openthrottle/openthrottle-mcp:serve
 ```
+
+This package is **private** to the workspace and is not published to the public registry.

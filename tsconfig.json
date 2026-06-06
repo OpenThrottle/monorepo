@@ -68,7 +68,7 @@
       "path": "./packages/react-router-editor"
     },
     {
-      "path": "./packages/mcp-developer"
+      "path": "./packages/openthrottle-mcp"
     },
     {
       "path": "./packages/nodejs-graphql"
@@ -84,9 +84,6 @@
     },
     {
       "path": "./packages/openthrottle-vscode"
-    },
-    {
-      "path": "./packages/openthrottle-mcp"
     },
     {
       "path": "./packages/openthrottle-postgres"
@@ -179,10 +176,10 @@
       "path": "./packages/nestjs-logging"
     },
     {
-      "path": "./packages/nestjs-mcp-developer"
+      "path": "./packages/openthrottle-agentic-utils"
     },
     {
-      "path": "./packages/openthrottle-agentic-utils"
+      "path": "./packages/nestjs-mcp-developer"
     }
   ]
 }

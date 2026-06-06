@@ -15,7 +15,7 @@ Agents (e.g. Cursor, Ralph) should receive the following rules. Cursor loads `.c
 | `.cursor/rules/personal-generators.mdc`   | Generator-first workflow; **check generators before writing new code**; `NX_ISOLATE_PLUGINS=false`; link to AGENT_USAGE.md |
 | `.cursor/rules/personal-general.mdc`      | UI/API creation (Remix, React, NestJS), testing (component, userEvent, waitFor), shared-ui usage                           |
 | `.cursor/rules/commands/agents.mdc`       | Ralph/agent behavior: plans in Cortex only, commit after task, no Cursor attribution                                       |
-| `.cursor/rules/commands/openthrottle.mdc` | When to use mcp-developer tools (plans, tasks, semantic search, activity)                                                  |
+| `.cursor/rules/commands/openthrottle.mdc` | When to use openthrottle-mcp tools (plans, tasks, semantic search, activity)                                               |
 | `.cursor/rules/commands/github.mdc`       | Conventional commits, PR template, no Co-authored-by, no Cursor attribution                                                |
 | `.cursor/rules/cursor-commands.mdc`       | PNPM, NX, `import * as React`                                                                                              |
 | `.cursor/rules/no-cursor-attribution.mdc` | No "Made with Cursor" anywhere                                                                                             |
@@ -86,7 +86,7 @@ See **[EXAMPLES.md](./EXAMPLES.md)** for copy-paste examples (React, Remix, Nest
 | ------------ | ------------------------------------------------------------------------- |
 | Run tasks    | `nx run <project>:<target>`, `nx run-many`, `nx affected` (see AGENTS.md) |
 | Workflow CLI | `pnpm exec workflow-ralph --plan <uuid>` (see AGENTS.md § Workflow CLI)   |
-| OpenThrottle | Use mcp-developer tools per `.cursor/rules/commands/openthrottle.mdc`     |
+| OpenThrottle | Use openthrottle-mcp tools per `.cursor/rules/commands/openthrottle.mdc`  |
 
 ---
 

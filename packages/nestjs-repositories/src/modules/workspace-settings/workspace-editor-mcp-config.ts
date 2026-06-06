@@ -32,7 +32,7 @@ export const buildManagedMcpServers = (options: {
 }): Record<string, Record<string, unknown>> => {
   const runScriptPath = join(
     options.repositoryRoot,
-    'scripts/run-mcp-developer.sh',
+    'scripts/run-openthrottle-mcp.sh',
   );
 
   if (!existsSync(runScriptPath)) {
@@ -40,8 +40,8 @@ export const buildManagedMcpServers = (options: {
   }
 
   return {
-    'mcp-developer': {
-      args: ['./scripts/run-mcp-developer.sh'],
+    'openthrottle-mcp': {
+      args: ['./scripts/run-openthrottle-mcp.sh'],
       command: 'bash',
       description:
         'OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.',

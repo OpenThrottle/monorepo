@@ -13,7 +13,7 @@
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
-      "path": "../mcp-developer/tsconfig.lib.json"
+      "path": "../openthrottle-mcp/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
