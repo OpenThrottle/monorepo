@@ -325,6 +325,7 @@
         "executor": "nx:noop"
       },
       "check-agent-assets-ssot": {},
+      "validate-agent-assets-frontmatter": {},
       "DISABLED______knip": {},
       "lint": {
         "executor": "nx:noop"
@@ -363,7 +364,7 @@
     "build:packages": "nx run-many --target build --projects tag:type:package,tag:type:tool",
     "caddy": "caddy run --config tools/caddy/Caddyfile",
     "check:local": "pnpm run check:local:validate-tags && pnpm run check:local:agent-assets && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck-tests && pnpm run check:local:affected-test && pnpm run check:local:verify && pnpm run check:local:codegen && pnpm run check:local:knip",
-    "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot",
+    "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter",
     "check:local:affected-lint": "pnpm nx affected --target=lint --parallel",
     "check:local:affected-test": "pnpm nx affected --target=test --exclude='*,!@tools/workflows' --parallel --nxBail",
     "check:local:affected-typecheck-tests": "pnpm nx affected --target=typecheck-tests --parallel",

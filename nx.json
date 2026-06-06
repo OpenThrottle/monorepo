@@ -230,6 +230,14 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "validate-agent-assets-frontmatter": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],

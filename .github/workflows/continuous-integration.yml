@@ -130,6 +130,9 @@ jobs:
       - name: '🔗 Agent assets SSOT (symlink drift guard)'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-agent-assets-ssot
 
+      - name: '📋 Agent assets frontmatter validation (D5)'
+        run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:validate-agent-assets-frontmatter
+
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"
       #   run: |
