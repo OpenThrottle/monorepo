@@ -1,12 +1,14 @@
 import * as React from 'react';
-import { BookOpenIcon } from 'lucide-react';
 import {
-  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { PersonasStats } from '~/routing/personas/components/PersonasStats';
+import { PersonasToolbar } from '~/routing/personas/components/PersonasToolbar';
+import { PersonasTable } from '~/routing/personas/components/PersonasTable';
+import { PersonasIntroduction } from '~/routing/personas/components/PersonasIntroduction';
 import type { Route } from '@/app/routes/+types/personas._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -47,20 +49,10 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div>
-        <GlobalHeading
-          className="mb-4"
-          heading="h1"
-          icon={BookOpenIcon}
-          title="Personas"
-        />
-        <p className="text-sm text-muted-foreground">
-          Agentic personas represent the intersection of computational modeling
-          and autonomous AI. The term generally refers to one of two concepts:
-          dynamically simulated users used for product testing, or defined
-          behavioral profiles built for autonomous AI agents.
-        </p>
-      </div>
+      <PersonasIntroduction />
+      <PersonasStats />
+      <PersonasToolbar />
+      <PersonasTable />
     </GlobalScreen>
   );
 }
