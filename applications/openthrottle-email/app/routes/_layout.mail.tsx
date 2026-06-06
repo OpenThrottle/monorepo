@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { Outlet, useRouteLoaderData } from 'react-router';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { MailLayout } from '~/global/components/MailLayout';

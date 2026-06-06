@@ -322,7 +322,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Toaster />
         <ScrollRestoration />
 
-        {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
+        {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />
 
         {/* Now we add our scripts as they may use the env */}
@@ -347,6 +347,7 @@ export default function App(): React.ReactElement {
 
   // Setup
   const isAuthRoute = pathname.startsWith('/auth');
+  const isIndexRoute = pathname === '/';
   const isLegalRoute = pathname.startsWith('/legal');
   const isPromptsRoute = pathname.startsWith('/prompts/');
   const isProfileRoute = pathname.startsWith('/profile');
@@ -357,6 +358,7 @@ export default function App(): React.ReactElement {
   const _isHeaderHidden = isAuthRoute || isPromptsRoute;
   const isMetricsHidden =
     isAuthRoute ||
+    isIndexRoute ||
     isLegalRoute ||
     isProfileRoute ||
     isPromptsRoute ||

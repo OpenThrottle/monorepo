@@ -1,29 +1,20 @@
 import * as React from 'react';
-import classnames from 'classnames';
-import { OpenThrottleClipboard } from './OpenThrottleClipboard';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  Separator,
-} from '@openthrottle/react-router-shadcn';
 import { getRandomIntroduction } from '../data/data.introductions';
 import { Link } from 'react-router';
 import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OpenThrottleClipboard } from './OpenThrottleClipboard';
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 
 export interface OpenThrottleProductGetStartedProps {
-  className?: string;
   introduction?: string;
 }
 
 export const OpenThrottleProductGetStarted = (
   props: OpenThrottleProductGetStartedProps,
 ): React.ReactElement => {
-  const { className, introduction: introductionProp } = props;
+  const { introduction: introductionProp } = props;
 
   // Hooks
   const [introduction] = React.useState(
@@ -42,48 +33,43 @@ export const OpenThrottleProductGetStarted = (
   // 🔌 Short Circuit
 
   return (
-    <Card className={classnames('max-w-2xl mx-auto', className)}>
-      <CardHeader className="flex w-auto items-center gap-2 justify-start">
+    <>
+      <div className="flex w-auto items-center gap-2 justify-start mb-4">
         <OpenThrottleLogo className="text-xl" />
         <span className="text-muted-foreground/50 font-extralight">
           |&nbsp;
         </span>
         <span className="text-lg font-extralight text-highlight">AI</span>
-      </CardHeader>
+      </div>
 
-      <hr />
+      <div className="shimmer-border max-w-3xl mx-auto">
+        <div className="bg-card p-4 md:p-8 flex flex-col gap-4 lg:gap-8">
+          <p className="text-sm text-muted-foreground">{introduction}</p>
+          <div className="flex items-center justify-center gap-4">
+            <div className="border bg-primary-foreground flex flex-1 items-center relative rounded-xl">
+              <DollarSignIcon
+                className="absolute pointer-events-none left-3 text-accent"
+                size={12}
+              />
+              <OpenThrottleClipboard
+                className="text-xs py-4 pl-8 pr-12 text-left opacity-60 hover:opacity-100 transition-opacity w-full"
+                label={command}
+                text={command}
+              />
+              <ClipboardIcon
+                className="absolute pointer-events-none right-4"
+                size={12}
+              />
+            </div>
 
-      <CardContent>
-        <p className="text-sm text-muted-foreground my-4">{introduction}</p>
-      </CardContent>
-
-      <Separator />
-
-      <CardFooter>
-        <div className="flex items-center justify-center gap-4">
-          <div className="border bg-primary-foreground flex flex-1 items-center relative rounded-xl">
-            <DollarSignIcon
-              className="absolute pointer-events-none left-3 text-accent"
-              size={12}
-            />
-            <OpenThrottleClipboard
-              className="text-xs py-4 pl-8 pr-12 text-left opacity-60 hover:opacity-100 transition-opacity w-full"
-              label={command}
-              text={command}
-            />
-            <ClipboardIcon
-              className="absolute pointer-events-none right-4"
-              size={12}
-            />
+            <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
+              <Button className="text-xs" variant="brand">
+                View on GitHub
+              </Button>
+            </Link>
           </div>
-
-          <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
-            <Button className="text-xs" variant="brand">
-              View on GitHub
-            </Button>
-          </Link>
         </div>
-      </CardFooter>
-    </Card>
+      </div>
+    </>
   );
 };

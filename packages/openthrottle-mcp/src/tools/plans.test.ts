@@ -18,11 +18,11 @@ describe('createPlanToolHandler', () => {
 
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when args are invalid', () => {
@@ -51,7 +51,9 @@ describe('createPlanToolHandler', () => {
       });
 
       expect(result).toMatchObject({
-        content: [{ text: expect.stringMatching(/MCP_DEVELOPER_AUTH_TOKEN/) }],
+        content: [
+          { text: expect.stringMatching(/OPENTHROTTLE_MCP_AUTH_TOKEN/) },
+        ],
         isError: true,
       });
       expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
@@ -60,7 +62,7 @@ describe('createPlanToolHandler', () => {
 
   describe('when GraphQL returns a plan', () => {
     it('returns structured plan content', async () => {
-      process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
       const plan = {
         author: 'visormatt',
         category: 'maintenance',
@@ -95,7 +97,7 @@ describe('createPlanToolHandler', () => {
 
   describe('when GraphQL returns no plan', () => {
     it('returns a no-result error', async () => {
-      process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ createPlan: null });
 
       const result = await createPlanToolHandler({
@@ -113,7 +115,7 @@ describe('createPlanToolHandler', () => {
 
   describe('when GraphQL throws', () => {
     it('returns an error result with the message', async () => {
-      process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
       vi.mocked(executeGraphqlWithAuth).mockRejectedValue(
         new Error('network down'),
       );
@@ -137,11 +139,11 @@ describe('listPlansByStatusToolHandler', () => {
 
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when GraphQL returns plans', () => {

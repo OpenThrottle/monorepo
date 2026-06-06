@@ -46,7 +46,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:bootstrap-service-accounts
    ```
 
-   Copy the printed values into `MCP_DEVELOPER_AUTH_TOKEN` (Cursor MCP / openthrottle-mcp) and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (BullMQ Ralph worker GraphQL). Format: `ot_sa_<prefix>_<secret>`. See [packages/openthrottle-mcp/docs/AUTH.md](../packages/openthrottle-mcp/docs/AUTH.md).
+   Copy the printed values into `OPENTHROTTLE_MCP_AUTH_TOKEN` (Cursor MCP / openthrottle-mcp) and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (BullMQ Ralph worker GraphQL). Format: `ot_sa_<prefix>_<secret>`. See [packages/openthrottle-mcp/docs/AUTH.md](../packages/openthrottle-mcp/docs/AUTH.md).
 
    **Backup (optional):** `pnpm run database:backup` writes `databases/backups/openthrottle-*.zip` (requires `pg_dump` and `zip` on PATH). For a daily BullMQ schedule on openthrottle-server, set `DATABASE_BACKUP_CRON` — see [docs/openthrottle/database-backup-scheduled-job-spec.md](../docs/openthrottle/database-backup-scheduled-job-spec.md).
 
@@ -260,7 +260,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `MCP_DEVELOPER_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
+**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
 
 ## Example queries
 

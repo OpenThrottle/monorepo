@@ -1,14 +1,13 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Button } from '@openthrottle/react-router-shadcn';
+import { Link } from 'react-router';
+import type { DataFeature } from '../data/data.features';
+import { ArrowRightIcon } from 'lucide-react';
 
 export interface OpenThrottleProductFeaturesProps {
   className?: string;
-  features: {
-    description: string;
-    icon: React.ElementType;
-    title: string;
-  }[];
+  features: DataFeature[];
 }
 
 export const OpenThrottleProductFeatures = (
@@ -55,9 +54,11 @@ export const OpenThrottleProductFeatures = (
             </p>
 
             <div className="flex justify-end">
-              <Button className="mt-4" size="xs" variant="link">
-                Learn more
-              </Button>
+              <Link target="_blank" to={feature.link}>
+                <Button className="mt-4" size="xs" variant="link">
+                  View Code <ArrowRightIcon className="size-3" />
+                </Button>
+              </Link>
             </div>
           </div>
         );

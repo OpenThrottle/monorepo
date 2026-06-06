@@ -37,14 +37,14 @@ All worktrees share the same Cortex database (Postgres) and Redis, but execute i
 
 ### Component Responsibilities
 
-| Component                  | Location                               | Responsibility                                                |
-| -------------------------- | -------------------------------------- | ------------------------------------------------------------- |
-| **OpenThrottle Server**    | `applications/openthrottle-server/`    | API, WebSocket, BullMQ job processor                          |
-| **OpenThrottle Developer** | `applications/openthrottle-developer/` | UI for plans, tasks, queues, monitoring                       |
-| **BullMQ Plans Queue**     | `queues/plans/` in server              | Queue and process plan execution jobs                         |
-| **NestjsWorktreesModule**  | `packages/nestjs-worktrees/`           | Provides `WorktreeTargetsTracker` from `WORKTREE_TARGETS` env |
-| **workflow-ralph CLI**     | `tools/workflows/`                     | Spawns cursor-agent, parses signals, updates Cortex           |
-| **Cortex**                 | `databases/cortex/`                    | Plans, tasks, embeddings, output stream (Postgres + pgvector) |
+| Component                  | Location                               | Responsibility                                                               |
+| -------------------------- | -------------------------------------- | ---------------------------------------------------------------------------- |
+| **OpenThrottle Server**    | `applications/openthrottle-server/`    | API, WebSocket, BullMQ job processor                                         |
+| **OpenThrottle Developer** | `applications/openthrottle-developer/` | UI for plans, tasks, queues, monitoring                                      |
+| **BullMQ Plans Queue**     | `queues/plans/` in server              | Queue and process plan execution jobs                                        |
+| **NestjsWorktreesModule**  | `packages/nestjs-worktrees/`           | Provides mutex-wrapped `IWorktreeTargetsTracker` from `WORKTREE_TARGETS` env |
+| **workflow-ralph CLI**     | `tools/workflows/`                     | Spawns cursor-agent, parses signals, updates Cortex                          |
+| **Cortex**                 | `databases/cortex/`                    | Plans, tasks, embeddings, output stream (Postgres + pgvector)                |
 
 ### Execution Modes
 
@@ -59,9 +59,8 @@ All worktrees share the same Cortex database (Postgres) and Redis, but execute i
 
 2. **BullMQ Mode** (Automated via Server)
    - Job enqueued via GraphQL mutation or internal trigger
-   - PlansProcessor acquires a worktree target
-   - Spawns `workflow-ralph` in the worktree's cwd
-   - Releases worktree on completion (success or failure)
+   - **Default:** in-process orchestrator (`AgenticRalphOrchestratorService`) — no worktree acquire/release
+   - **Legacy spawn** (`OPENTHROTTLE_DEFAULT_RUN_KIND=spawn` or job `runKind: 'spawn'`): when `WORKTREE_TARGETS` is set, the spawn processor acquires a worktree target, spawns `workflow-ralph` in the worktree cwd, then releases on completion (see [`plans.processor.backup.ts`](../../applications/openthrottle-server/src/queues/plans/plans.processor.backup.ts))
 
 ### Worktree Target Configuration
 
@@ -77,7 +76,7 @@ WORKTREE_TARGETS='[
 
 ### Impact on Worktrees
 
-When the server dispatches a job to a worktree:
+When the server runs a job on the **legacy spawn + worktree** path (`WORKTREE_TARGETS` set, `runKind: 'spawn'`):
 
 1. **Lock acquired** - The target is marked as locked by the job ID
 2. **Branch created** - A feature branch is created in that worktree

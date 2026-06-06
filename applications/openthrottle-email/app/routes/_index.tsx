@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { redirect } from 'react-router-dom';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';

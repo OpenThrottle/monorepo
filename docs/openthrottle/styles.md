@@ -23,4 +23,4 @@ Implement using **Tailwind utilities** and variables from **`react-router-shadcn
 
 ## Shadcn UI
 
-Theming for shared components: [docs/packages/shadcn-ui/THEMING.md](../packages/shadcn-ui/THEMING.md).
+Theming for shared components: [react-router-shadcn/docs/Theming.md](../../packages/react-router-shadcn/docs/Theming.md).

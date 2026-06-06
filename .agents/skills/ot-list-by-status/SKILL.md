@@ -1,10 +1,12 @@
 ---
 name: ot-list-by-status
-description: Instructions
+description: >-
+  List OpenThrottle plans filtered by status via openthrottle-mcp
+  list_plans_by_status (pending, in_progress, completed, blocked, etc.). USE
+  WHEN the user runs /ot/list-by-status, asks for plans in a given status, or
+  did not specify status and wants pending/in-progress/completed listings.
 disable-model-invocation: true
 ---
-
-# Instructions
 
 Your job is to list plans in OpenThrottle filtered by **status** using the ai-mcp MCP server.
 

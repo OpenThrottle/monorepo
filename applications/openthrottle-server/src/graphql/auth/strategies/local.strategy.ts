@@ -27,7 +27,7 @@ export class LocalStrategy extends PassportStrategy(
       usernameField: 'username',
     });
 
-    console.log('🔑 local-strategy', { usersService: usersService });
+    // console.log('🔑 local-strategy', { usersService: usersService });
   }
 
   /**
@@ -37,7 +37,7 @@ export class LocalStrategy extends PassportStrategy(
     const email = username;
     const user = await this.usersService.findByEmail(email);
 
-    this.logger.info('🔑 local-strategy', { user });
+    // this.logger.info('🔑 local-strategy', { user });
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';

@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    },
+    "openthrottle-mcp": {
+      "args": ["source .env && ./scripts/run-openthrottle-mcp.sh"],
+      "command": "bash",
+      "description": "OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
+      "env": {
+        "API_URL": "${OPENTHROTTLE_SERVER_APP_URL}",
+        "API_URL_INTERNAL": "${OPENTHROTTLE_SERVER_APP_URL}",
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "${OPENTHROTTLE_MCP_AUTH_TOKEN}"
+      }
+    },
+    "shadcn": {
+      "args": ["shadcn@latest", "mcp"],
+      "command": "npx"
+    }
+  }
+}

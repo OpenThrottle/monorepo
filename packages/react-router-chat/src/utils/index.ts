@@ -6,6 +6,7 @@ export const formatChatTimestamp = (iso: string): string | undefined => {
   if (Number.isNaN(date.getTime())) {
     return undefined;
   }
+
   return date.toLocaleString(undefined, {
     dateStyle: 'short',
     timeStyle: 'short',

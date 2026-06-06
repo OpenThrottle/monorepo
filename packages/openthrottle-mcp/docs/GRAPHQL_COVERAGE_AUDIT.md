@@ -68,7 +68,7 @@ This regenerates `src/__generated__/graphql.ts` and `src/__generated__/schemas.t
 Use this to confirm the MCP tool and server mutation against a running API (no automated smoke binary in-repo).
 
 1. **Server and DB:** Run openthrottle-server with Cortex Postgres available (same setup as local development; GraphQL URL is often `http://localhost:6010/graphql` — align with your `API_URL` for codegen).
-2. **Auth:** Set `MCP_DEVELOPER_AUTH_TOKEN` to a valid JWT or API token (see [AUTH.md](./AUTH.md)).
+2. **Auth:** Set `OPENTHROTTLE_MCP_AUTH_TOKEN` to a valid JWT or API token (see [AUTH.md](./AUTH.md)).
 3. **Create a disposable project:** In GraphQL Playground or `curl`, call `createProject` with a unique `name` (and optional `nxProjectName`). Note the returned `id`.
 4. **Invoke the tool:** Call MCP tool `delete_project` with input `{ "id": "<uuid>" }` (e.g. from Cursor MCP or an MCP client connected to `pnpm nx run @openthrottle/openthrottle-mcp:serve`).
 5. **Expect:** Structured content `{ "deleted": true }` and assistant text indicating the project was deleted. Call again with the same `id`: `{ "deleted": false }` and a not-found style message.

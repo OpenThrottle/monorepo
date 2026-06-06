@@ -1,25 +1,23 @@
-import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../about';
+import * as React from 'react';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { default as Route } from '../about';
+import { render, RenderResult } from '@testing-library/react';
 
-describe('routes/about.tsx', () => {
-  // let component: RenderResult;
+describe.skip('routes/about.tsx', () => {
+  let component: RenderResult;
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+  beforeEach(() => {
+    component = render(
+      <Route
+        actionData={{} as any}
+        loaderData={{} as any}
+        matches={[] as any}
+        params={{} as any}
+      />,
+    );
+  });
 
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+  test('should render', () => {
+    expect(component.baseElement).toMatchSnapshot();
   });
 });

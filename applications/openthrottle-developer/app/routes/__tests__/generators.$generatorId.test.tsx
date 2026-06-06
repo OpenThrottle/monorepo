@@ -1,21 +1,23 @@
-import { describe, test } from 'vitest';
-// import { default as Route } from '../generators.$generatorId';
+import * as React from 'react';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { default as Route } from '../generators.$generatorId';
+import { render, RenderResult } from '@testing-library/react';
 
-describe('routes/generators.$generatorId.tsx', () => {
-  // let component: RenderResult;
+describe.skip('routes/generators.$generatorId.tsx', () => {
+  let component: RenderResult;
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
+  beforeEach(() => {
+    component = render(
+      <Route
+        actionData={{} as any}
+        loaderData={{} as any}
+        matches={[] as any}
+        params={{} as any}
+      />,
+    );
+  });
 
-  test.skip('should render', () => {
-    // Deferred: route integration render test (openthrottle-developer test hardening plan).
+  test('should render', () => {
+    expect(component.baseElement).toMatchSnapshot();
   });
 });

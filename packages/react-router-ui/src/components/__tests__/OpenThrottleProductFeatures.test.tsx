@@ -17,6 +17,7 @@ describe('OpenThrottleProductFeatures Component', () => {
         {
           description: 'Test description',
           icon: BotIcon,
+          link: '/test',
           title: 'Test title',
         },
       ],

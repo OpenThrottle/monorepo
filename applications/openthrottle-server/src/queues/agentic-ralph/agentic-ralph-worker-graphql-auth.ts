@@ -18,7 +18,7 @@ const readTrimmedEnv = (key: string): string | undefined => {
  *
  * 1. `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` — preferred for production worker identity.
  * 2. `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN` — shared with CLI workflows.
- * 3. `MCP_DEVELOPER_AUTH_TOKEN` — local parity with openthrottle-mcp.
+ * 3. `OPENTHROTTLE_MCP_AUTH_TOKEN` — local parity with openthrottle-mcp.
  */
 function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
   | string
@@ -26,7 +26,7 @@ function resolveAgenticRalphWorkerGraphqlAuthTokenFromEnv():
   const primary =
     readTrimmedEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN') ??
     readTrimmedEnv('OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN') ??
-    readTrimmedEnv('MCP_DEVELOPER_AUTH_TOKEN');
+    readTrimmedEnv('OPENTHROTTLE_MCP_AUTH_TOKEN');
 
   if (primary != null) {
     return primary;

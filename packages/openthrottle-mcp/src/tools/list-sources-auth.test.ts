@@ -16,25 +16,25 @@ describe('listSourcesToolHandler — auth enabled path', () => {
 
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
-  it('fails when MCP_DEVELOPER_AUTH_TOKEN is unset', async () => {
+  it('fails when OPENTHROTTLE_MCP_AUTH_TOKEN is unset', async () => {
     const result = await listSourcesToolHandler({});
 
     expect(result).toMatchObject({
-      content: [{ text: expect.stringMatching(/MCP_DEVELOPER_AUTH_TOKEN/) }],
+      content: [{ text: expect.stringMatching(/OPENTHROTTLE_MCP_AUTH_TOKEN/) }],
       isError: true,
     });
     expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
   it('calls executeGraphqlWithAuth with ot_sa token from env', async () => {
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
     vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
       listSources: {
         plans: [{ id: 'plan-1', title: 'Smoke plan' }],

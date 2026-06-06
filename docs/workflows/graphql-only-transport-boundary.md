@@ -24,7 +24,7 @@ the Nest/GraphQL abstraction.
 ## Why GraphQL-only
 
 - **One transport, one auth model.** GraphQL requests carry a bearer token
-  (`OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN` → `MCP_DEVELOPER_AUTH_TOKEN`, or worker-injected
+  (`OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN` → `OPENTHROTTLE_MCP_AUTH_TOKEN`, or worker-injected
   `AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH`). No second credential path (Postgres URL/`POSTGRES_*`) to
   secure, rotate, or leak into spawned child env.
 - **Multi-project / cross-org.** A single OpenThrottle install must run workflows across many repos

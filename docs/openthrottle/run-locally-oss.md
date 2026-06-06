@@ -47,7 +47,7 @@ The launcher starts **@openthrottle/openthrottle-mcp** on stdio for Cursor. It d
 
 | What you need                   | Where                                                                                                                                                                                      |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **API + auth**                  | `API_URL` / **`API_URL_INTERNAL`** and **`MCP_DEVELOPER_AUTH_TOKEN`** in Cursor MCP `env` (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md))                                    |
+| **API + auth**                  | `API_URL` / **`API_URL_INTERNAL`** and **`OPENTHROTTLE_MCP_AUTH_TOKEN`** in Cursor MCP `env` (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md))                                 |
 | **Embeddings (optional tools)** | **`OLLAMA_BASE_URL`** (and optional **`OLLAMA_EMBEDDING_MODEL`**) or **`OPENAI_API_KEY`** in **`applications/openthrottle-server/.env`** so `semantic_search` and ingest can embed queries |
 
 **Ollama-only:** set Ollama vars on the server `.env`, run Ollama locally, then use `./scripts/run-openthrottle-mcp.sh` or the committed [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) — no OpenAI key in root `.env`.

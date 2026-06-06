@@ -1,10 +1,9 @@
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommitLinksModule } from './modules/commit-links/commit-links.module';
 import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module';
 import { getTypeOrmOptions } from './database.config';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { Module } from '@nestjs/common';
 import { NotesModule } from './modules/notes/notes.module';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module';
@@ -16,6 +15,7 @@ import { ServiceAccountsModule } from './modules/service-accounts/service-accoun
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { TaskEmbeddingsModule } from './modules/task-embeddings/task-embeddings.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module';
 
@@ -41,8 +41,9 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
   ],
   imports: [
     TypeOrmModule.forRootAsync({
-      useFactory: (): ReturnType<typeof getTypeOrmOptions> =>
-        getTypeOrmOptions(),
+      useFactory: (): ReturnType<typeof getTypeOrmOptions> => {
+        return getTypeOrmOptions();
+      },
     }),
     CommitLinksModule,
     CustomPromptsModule,

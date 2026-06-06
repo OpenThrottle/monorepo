@@ -1,5 +1,6 @@
 /**
- * @description Request-scoped DataLoaders for resolving Project.plans and Project.tasks in key order. Batches by projectId to avoid N+1 when resolving many projects.
+ * @description Request-scoped DataLoaders for resolving Project.plans and
+ * Project.tasks in key order. Batches by projectId to avoid N+1 when resolving many projects.
  */
 
 import { Injectable, Scope } from '@nestjs/common';
@@ -11,7 +12,8 @@ import type { Plan } from './modules/plans/plan.entity';
 import type { Task } from './modules/tasks/task.entity';
 
 /**
- * Holds plansByProjectId and tasksByProjectId DataLoaders for the current request. Injected into ProjectsResolver; resolve plans and tasks via loaders instead of direct service find calls.
+ * Holds plansByProjectId and tasksByProjectId DataLoaders for the current request.
+ * Injected into ProjectsResolver; resolve plans and tasks via loaders instead of direct service find calls.
  */
 @Injectable({ scope: Scope.REQUEST })
 export class ProjectsLoaders {
@@ -31,7 +33,8 @@ export class ProjectsLoaders {
   }
 
   /**
-   * @description Loads plans for many projectIds in one query; returns arrays in key order, each ordered by createdAt DESC.
+   * @description Loads plans for many projectIds in one query; returns arrays
+   * in key order, each ordered by createdAt DESC.
    */
   private async batchPlansByProjectId(
     projectIds: readonly string[],
@@ -58,7 +61,8 @@ export class ProjectsLoaders {
   }
 
   /**
-   * @description Loads tasks for many projectIds in one query; returns arrays in key order, each ordered by createdAt ASC.
+   * @description Loads tasks for many projectIds in one query; returns arrays
+   * in key order, each ordered by createdAt ASC.
    */
   private async batchTasksByProjectId(
     projectIds: readonly string[],

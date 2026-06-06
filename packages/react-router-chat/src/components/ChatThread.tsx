@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { ChatMessageBody } from './ChatMessageBody';
-import { formatChatTimestamp } from './format-chat-timestamp';
+import { formatChatTimestamp } from '../utils/index';
 import type { ChatMessage } from '../types';
 
 export interface ChatThreadProps {

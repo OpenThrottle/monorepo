@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { getMockMessages } from '~/global/data/mock.mail';
 import { MAIL_FOLDER_IDS } from '~/types/mail';

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
   Button,
   Input,
@@ -13,7 +14,7 @@ import {
   type FormSchema,
 } from '~/routing/compose/config/form.compose';
 
-interface ComposeFormProps extends FormProps {
+export interface ComposeFormProps extends FormProps {
   className?: string;
   debug?: boolean;
   initialValues?: FormSchema;
