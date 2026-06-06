@@ -55,5 +55,24 @@ export type {
 } from './validate-agent-asset-frontmatter.js';
 
 /** @publicApi */
+export {
+  AGENT_ASSET_INGEST_PATH_PREFIXES,
+  mapAgentAssetFileToIngestRecord,
+  mapAgentAssetFilesToIngestRecords,
+} from './map-agent-assets-for-ingest.js';
+export type {
+  AgentAssetIngestRecord,
+  AgentAssetPromptType,
+} from './map-agent-assets-for-ingest.js';
+
+/** @publicApi */
+export { collectAgentAssetsForIngest } from './collect-agent-assets-for-ingest.js';
+export type { CollectAgentAssetsForIngestResult } from './collect-agent-assets-for-ingest.js';
+
+/** @publicApi */
 export { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.js';
 export type { WalkAgentAssetsOptions } from './validate-agent-assets-on-disk.js';
+
+/** @publicApi */
+export { walkAgentAssetFiles } from './walk-agent-assets-on-disk.js';
+export type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.js';

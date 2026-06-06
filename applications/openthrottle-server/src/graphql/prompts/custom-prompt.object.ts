@@ -7,6 +7,7 @@ import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 export enum CustomPromptTypeEnum {
   AGENTS = 'agents',
   COMMANDS = 'commands',
+  PERSONAS = 'personas',
   PROMPTS = 'prompts',
   RULES = 'rules',
   SKILLS = 'skills',

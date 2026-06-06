@@ -53,7 +53,7 @@ export const ruleFrontmatterSchema = z
 export type RuleFrontmatter = z.infer<typeof ruleFrontmatterSchema>;
 
 /** @publicApi */
-export type AgentAssetKind = 'persona' | 'rule' | 'skill';
+export type AgentAssetKind = 'persona' | 'prompt' | 'rule' | 'skill';
 
 /** @publicApi */
 export interface AgentAssetValidationIssue {

@@ -94,6 +94,10 @@ export const validateAgentAssetFrontmatter = (
 ): ValidateAgentAssetFrontmatterResult => {
   const { content, expectedSlug, kind, path } = input;
 
+  if (kind === 'prompt') {
+    return { errors: [], warnings: [] };
+  }
+
   if (kind === 'skill') {
     const parsed = parseSkillFrontmatterForValidation(content);
     const result = skillFrontmatterSchema.safeParse(parsed);

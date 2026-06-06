@@ -74,12 +74,12 @@ Validation helpers:
 
 ## Validation points
 
-| Surface                           | Command / import                                         | Behavior                                                            |
-| --------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
-| **CI**                            | `pnpm nx run monorepo:validate-agent-assets-frontmatter` | Hard-fail on skill/persona errors; print rule warnings              |
-| **Local**                         | `pnpm run check:local:agent-assets`                      | SSOT symlink guard + frontmatter validation                         |
-| **Ingest (1.5)**                  | `@openthrottle/openthrottle-skills`                      | Same validators before upsert to `custom_prompts` (task `e73b7fe0`) |
-| **GraphQL / developer app forms** | Future                                                   | Reuse Zod schemas; no in-app git bypass (D2)                        |
+| Surface                           | Command / import                                         | Behavior                                               |
+| --------------------------------- | -------------------------------------------------------- | ------------------------------------------------------ |
+| **CI**                            | `pnpm nx run monorepo:validate-agent-assets-frontmatter` | Hard-fail on skill/persona errors; print rule warnings |
+| **Local**                         | `pnpm run check:local:agent-assets`                      | SSOT symlink guard + frontmatter validation            |
+| **Ingest (1.5)**                  | `pnpm nx run monorepo:ingest-agent-assets`               | Same validators before upsert to `custom_prompts`      |
+| **GraphQL / developer app forms** | Future                                                   | Reuse Zod schemas; no in-app git bypass (D2)           |
 
 Script: [`scripts/validate-agent-assets-frontmatter.ts`](../../scripts/validate-agent-assets-frontmatter.ts).
 

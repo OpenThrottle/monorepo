@@ -325,6 +325,7 @@
         "executor": "nx:noop"
       },
       "check-agent-assets-ssot": {},
+      "ingest-agent-assets": {},
       "validate-agent-assets-frontmatter": {},
       "DISABLED______knip": {},
       "lint": {
@@ -388,6 +389,7 @@
     "__clean:snapshots": "pnpm dlx rimraf --glob **/__snapshots__",
     "database:backup": "tsx ./scripts/openthrottle-database-backup.ts",
     "database:build": "docker compose build openthrottle-redis openthrottle-postgres",
+    "database:import-agent-assets": "tsx ./scripts/openthrottle-ingest-agent-assets.ts",
     "database:import-docs": "node --env-file .env --experimental-strip-types ./scripts/openthrottle-ingest-docs.ts",
     "database:bootstrap-service-accounts": "tsx ./scripts/bootstrap-service-account-credentials.ts",
     "database:migrate": "pnpm run database:backup && tsx ./scripts/openthrottle-database-migrations.ts",
