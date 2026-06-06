@@ -1,21 +1,12 @@
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../<%= name %>';
+import { action, loader } from '../<%= name %>';
 
 describe('routes/<%= name %>.tsx', () => {
-  // let component: RenderResult;
+  test('loader returns empty object', async () => {
+    await expect(loader({} as never)).resolves.toStrictEqual({});
+  });
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+  test('action returns empty object', async () => {
+    await expect(action({} as never)).resolves.toStrictEqual({});
   });
 });

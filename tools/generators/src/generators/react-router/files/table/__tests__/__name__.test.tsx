@@ -12,7 +12,7 @@ describe('<%= name %> Component', () => {
 
   beforeEach(() => {
     props = {
-      data: []
+      data: [],
     };
 
     const Component = () => <<%= name %> {...props} />;
@@ -21,7 +21,9 @@ describe('<%= name %> Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders table region and column headers', () => {
+    expect(component.getByTestId('<%= name %>')).toBeInTheDocument();
+    expect(component.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
+    expect(component.getByRole('columnheader', { name: 'Age' })).toBeInTheDocument();
   });
 });
