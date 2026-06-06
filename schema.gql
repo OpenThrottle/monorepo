@@ -159,6 +159,11 @@ type PlanObject {
   category: String!
   createdAt: DateTime!
   description: String
+
+  """
+  True when saved workflow run configuration differs from canonical defaults.
+  """
+  hasCustomRunConfig: Boolean!
   id: String!
   project: String
 
@@ -186,11 +191,6 @@ type PlanObject {
   Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).
   """
   runConfigJson: String!
-
-  """
-  True when saved workflow run configuration differs from canonical defaults.
-  """
-  hasCustomRunConfig: Boolean!
 }
 
 type PlanStatusCountObject {
