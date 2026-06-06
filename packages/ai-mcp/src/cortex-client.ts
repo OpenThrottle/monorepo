@@ -638,6 +638,7 @@ function _mapTaskRow(r: {
   project: string | null;
   project_id: string | null;
   requirements: unknown;
+  sort_order: number;
   status: string;
   summary: string | null;
   title: string;
@@ -654,6 +655,7 @@ function _mapTaskRow(r: {
     project: r.project,
     projectId: r.project_id,
     requirements: Array.isArray(requirements) ? requirements : [],
+    sortOrder: r.sort_order,
     status: r.status,
     summary: r.summary,
     title: r.title,
@@ -711,6 +713,7 @@ function mapTaskEntityToRow(task: Task): TaskRow {
     project: task.project,
     projectId: task.projectId,
     requirements: Array.isArray(task.requirements) ? task.requirements : [],
+    sortOrder: task.sortOrder,
     status: task.status,
     summary: task.summary,
     title: task.title,

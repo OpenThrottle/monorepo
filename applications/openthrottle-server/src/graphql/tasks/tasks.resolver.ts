@@ -2,6 +2,7 @@
  * @description Resolver for Task queries and mutations. Injects TasksService from @openthrottle/nestjs-repositories and TasksLoaders for batched plan/project resolution. Maps Task entities to TaskObject.
  */
 
+import { ConflictException, NotImplementedException } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -13,15 +14,19 @@ import {
 } from '@nestjs/graphql';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { TasksService } from '@openthrottle/nestjs-repositories';
+import {
+  PLAN_TASK_LIST_ORDER,
+  TasksService,
+} from '@openthrottle/nestjs-repositories';
 import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
-import { In } from 'typeorm';
+import { In, QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PlanObject } from '../plans/plan.object';
 import { ProjectObject } from '../projects/project.object';
 import {
   CreateTaskInput,
   DeleteTaskInput,
+  ReorderPlanTasksInput,
   RemainingTasksByPlanIdInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
@@ -29,6 +34,15 @@ import {
 } from './task.input';
 import { TaskObject, TasksByProjectIdResultObject } from './task.object';
 import { TasksLoaders } from './tasks-loaders';
+
+const SORT_ORDER_UNIQUE_VIOLATION_MESSAGE =
+  'A task with this sortOrder already exists for the plan';
+
+const isSortOrderUniqueViolation = (error: unknown): boolean => {
+  if (!(error instanceof QueryFailedError)) return false;
+  const driverError = error.driverError as { code?: string } | undefined;
+  return driverError?.code === '23505';
+};
 
 @Resolver(() => TaskObject)
 export class TasksResolver {
@@ -91,14 +105,14 @@ export class TasksResolver {
   }
 
   @Query(() => [TaskObject], {
-    description: `List tasks for a plan by plan ID`,
+    description: `List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending`,
   })
   async tasksByPlanId(
     @Args('input', { type: () => TasksByPlanIdInput })
     input: TasksByPlanIdInput,
   ): Promise<Task[]> {
     const entities = await this.tasksService.getRepository().find({
-      order: { createdAt: 'ASC' },
+      order: { ...PLAN_TASK_LIST_ORDER },
       where: { planId: input.planId },
     });
 
@@ -152,14 +166,14 @@ export class TasksResolver {
   }
 
   @Query(() => [TaskObject], {
-    description: `List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED)`,
+    description: `List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending`,
   })
   async remainingTasksByPlanId(
     @Args('input', { type: () => RemainingTasksByPlanIdInput })
     input: RemainingTasksByPlanIdInput,
   ): Promise<Task[]> {
     const entities = await this.tasksService.getRepository().find({
-      order: { createdAt: 'ASC' },
+      order: { ...PLAN_TASK_LIST_ORDER },
       where: {
         planId: input.planId,
         status: In(['PENDING', 'IN_PROGRESS', 'BLOCKED']),
@@ -190,6 +204,11 @@ export class TasksResolver {
       ? (JSON.parse(input.requirements) as unknown[])
       : [];
 
+    const sortOrder =
+      input.sortOrder != null
+        ? input.sortOrder
+        : await this.tasksService.resolveNextSortOrder(input.planId);
+
     const entity = repo.create({
       assignee: input.assignee ?? null,
       category: input.category ?? null,
@@ -198,12 +217,21 @@ export class TasksResolver {
       project: input.project ?? null,
       projectId: input.projectId ?? null,
       requirements: requirementsArr,
+      sortOrder,
       status: (input.status ?? 'PENDING').toUpperCase(),
       summary: input.summary ?? null,
       title: input.title,
     });
 
-    const saved = await repo.save(entity);
+    let saved: Task;
+    try {
+      saved = await repo.save(entity);
+    } catch (error) {
+      if (isSortOrderUniqueViolation(error)) {
+        throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);
+      }
+      throw error;
+    }
 
     if (saved.status === 'IN_PROGRESS') {
       const promoted = await this.tasksService.syncParentPlanStatus(
@@ -279,8 +307,19 @@ export class TasksResolver {
     if (input.project !== undefined) entity.project = input.project;
     if (input.projectId !== undefined) entity.projectId = input.projectId;
     if (input.summary !== undefined) entity.summary = input.summary;
+    if (input.sortOrder !== undefined && input.sortOrder !== null) {
+      entity.sortOrder = input.sortOrder;
+    }
 
-    const saved = await repo.save(entity);
+    let saved: Task;
+    try {
+      saved = await repo.save(entity);
+    } catch (error) {
+      if (isSortOrderUniqueViolation(error)) {
+        throw new ConflictException(SORT_ORDER_UNIQUE_VIOLATION_MESSAGE);
+      }
+      throw error;
+    }
 
     if (saved.status === 'IN_PROGRESS' && previousStatus !== 'IN_PROGRESS') {
       const promoted = await this.tasksService.syncParentPlanStatus(
@@ -295,6 +334,18 @@ export class TasksResolver {
     }
 
     return saved;
+  }
+
+  @Mutation(() => [TaskObject], {
+    description: `Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically.`,
+  })
+  reorderPlanTasks(
+    @Args('input', { type: () => ReorderPlanTasksInput })
+    _input: ReorderPlanTasksInput,
+  ): Promise<Task[]> {
+    throw new NotImplementedException(
+      'reorderPlanTasks is not implemented yet; see plan task reorderPlanTasks GraphQL mutation.',
+    );
   }
 
   @Mutation(() => Boolean, {

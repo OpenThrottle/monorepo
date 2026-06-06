@@ -1,8 +1,13 @@
-import { TasksService } from '@openthrottle/nestjs-repositories';
+import {
+  PLAN_TASK_LIST_ORDER,
+  TasksService,
+} from '@openthrottle/nestjs-repositories';
 import type { Task } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
+import { ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { TasksLoaders } from './tasks-loaders';
 import { TasksResolver } from './tasks.resolver';
@@ -24,6 +29,7 @@ describe('TasksResolver', () => {
 
   const mockTasksService = createMock<TasksService>({
     getRepository: vi.fn().mockReturnValue(repo),
+    resolveNextSortOrder: vi.fn().mockResolvedValue(1000),
     syncParentPlanStatus: vi.fn().mockResolvedValue(false),
   });
 
@@ -67,6 +73,7 @@ describe('TasksResolver', () => {
     projectId: null,
     projectRelation: null,
     requirements: [],
+    sortOrder: 1000,
     status: 'pending',
     summary: null,
     taskEmbeddings: [],
@@ -93,10 +100,13 @@ describe('TasksResolver', () => {
   beforeEach(() => {
     vi.mocked(mockTasksService.syncParentPlanStatus).mockReset();
     vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
+    vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
+    vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
     vi.mocked(repo.create).mockClear();
     vi.mocked(repo.save).mockClear();
     vi.mocked(repo.findOne).mockClear();
+    vi.mocked(repo.find).mockClear();
   });
 
   describe('task', () => {
@@ -158,6 +168,33 @@ describe('TasksResolver', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]?.planId).toBe(mockTask.planId);
+    });
+
+    test('orders by sortOrder then createdAt ascending', async () => {
+      vi.mocked(repo.find).mockResolvedValue([mockTask]);
+
+      await resolver.tasksByPlanId({ planId: mockTask.planId });
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { ...PLAN_TASK_LIST_ORDER },
+        where: { planId: mockTask.planId },
+      });
+    });
+  });
+
+  describe('remainingTasksByPlanId', () => {
+    test('orders by sortOrder then createdAt ascending', async () => {
+      vi.mocked(repo.find).mockResolvedValue([mockTask]);
+
+      await resolver.remainingTasksByPlanId({ planId: mockTask.planId });
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { ...PLAN_TASK_LIST_ORDER },
+        where: {
+          planId: mockTask.planId,
+          status: expect.anything(),
+        },
+      });
     });
   });
 
@@ -390,6 +427,7 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'IN_PROGRESS',
         summary: undefined,
         title: undefined,
@@ -427,6 +465,7 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'IN_PROGRESS',
         summary: undefined,
         title: undefined,
@@ -458,6 +497,7 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'in_progress',
         summary: undefined,
         title: undefined,
@@ -487,12 +527,97 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'COMPLETED',
         summary: undefined,
         title: undefined,
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createTask — sortOrder', () => {
+    const planId = mockTask.planId as string;
+
+    test('auto-assigns sortOrder via resolveNextSortOrder when omitted', async () => {
+      vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(3000);
+      vi.mocked(repo.save).mockResolvedValue({
+        ...mockTask,
+        sortOrder: 3000,
+      });
+
+      await resolver.createTask({
+        assignee: null,
+        category: null,
+        description: null,
+        planId,
+        project: null,
+        projectId: null,
+        requirements: null,
+        sortOrder: null,
+        status: 'PENDING',
+        summary: null,
+        title: 'Appended task',
+      });
+
+      expect(mockTasksService.resolveNextSortOrder).toHaveBeenCalledWith(
+        planId,
+      );
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ sortOrder: 3000 }),
+      );
+    });
+
+    test('uses explicit sortOrder when provided', async () => {
+      vi.mocked(repo.save).mockResolvedValue({
+        ...mockTask,
+        sortOrder: 1500,
+      });
+
+      await resolver.createTask({
+        assignee: null,
+        category: null,
+        description: null,
+        planId,
+        project: null,
+        projectId: null,
+        requirements: null,
+        sortOrder: 1500,
+        status: 'PENDING',
+        summary: null,
+        title: 'Inserted task',
+      });
+
+      expect(mockTasksService.resolveNextSortOrder).not.toHaveBeenCalled();
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ sortOrder: 1500 }),
+      );
+    });
+
+    test('throws ConflictException on sortOrder unique violation', async () => {
+      const uniqueError = new QueryFailedError(
+        'INSERT',
+        [],
+        Object.assign(new Error('duplicate key'), { code: '23505' }),
+      );
+      vi.mocked(repo.save).mockRejectedValue(uniqueError);
+
+      await expect(
+        resolver.createTask({
+          assignee: null,
+          category: null,
+          description: null,
+          planId,
+          project: null,
+          projectId: null,
+          requirements: null,
+          sortOrder: 1000,
+          status: 'PENDING',
+          summary: null,
+          title: 'Duplicate slot',
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
   });
 
@@ -515,6 +640,7 @@ describe('TasksResolver', () => {
         project: null,
         projectId: null,
         requirements: null,
+        sortOrder: null,
         status: 'IN_PROGRESS',
         summary: null,
         title: 'New task',
@@ -546,6 +672,7 @@ describe('TasksResolver', () => {
         project: null,
         projectId: null,
         requirements: null,
+        sortOrder: null,
         status: 'PENDING',
         summary: null,
         title: 'Queued task',
