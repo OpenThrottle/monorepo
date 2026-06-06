@@ -1695,7 +1695,7 @@ export type Query = {
   taskEmbedding?: Maybe<TaskEmbeddingObject>;
   /** List task embeddings by task ID, ordered by createdAt ascending */
   taskEmbeddings: Array<TaskEmbeddingObject>;
-  /** List all tasks, ordered by createdAt ascending */
+  /** List all tasks, ordered by planId then sortOrder then createdAt ascending */
   tasks: Array<TaskObject>;
   /** List tasks for a plan by plan ID */
   tasksByPlanId: Array<TaskObject>;

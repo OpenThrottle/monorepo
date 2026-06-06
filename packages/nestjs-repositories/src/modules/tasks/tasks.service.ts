@@ -14,6 +14,13 @@ export const PLAN_TASK_LIST_ORDER = {
   sortOrder: 'ASC',
 } as const;
 
+/** Canonical order for cross-plan task list queries (within each plan). */
+export const CROSS_PLAN_TASK_LIST_ORDER = {
+  createdAt: 'ASC',
+  planId: 'ASC',
+  sortOrder: 'ASC',
+} as const;
+
 @Injectable()
 export class TasksService {
   constructor(

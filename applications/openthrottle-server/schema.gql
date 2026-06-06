@@ -2160,7 +2160,7 @@ type Query {
   task(id: ID!): TaskObject
 
   """
-  List all tasks, ordered by createdAt ascending
+  List all tasks, ordered by planId then sortOrder then createdAt ascending
   """
   tasks: [TaskObject!]!
 

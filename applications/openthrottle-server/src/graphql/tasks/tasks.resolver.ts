@@ -15,6 +15,7 @@ import {
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
+  CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   TASK_SORT_ORDER_GAP,
   TasksService,
@@ -96,11 +97,11 @@ export class TasksResolver {
   }
 
   @Query(() => [TaskObject], {
-    description: `List all tasks, ordered by createdAt ascending`,
+    description: `List all tasks, ordered by planId then sortOrder then createdAt ascending`,
   })
   async tasks(): Promise<Task[]> {
     const entities = await this.tasksService.getRepository().find({
-      order: { createdAt: 'ASC' },
+      order: { ...CROSS_PLAN_TASK_LIST_ORDER },
     });
 
     return entities;
@@ -138,7 +139,7 @@ export class TasksResolver {
     if (usePagination && take != null) {
       const [entities, totalCount] = await Promise.all([
         repo.find({
-          order: { createdAt: 'ASC' },
+          order: { ...CROSS_PLAN_TASK_LIST_ORDER },
           skip,
           take,
           where,
@@ -155,7 +156,7 @@ export class TasksResolver {
     }
 
     const entities = await repo.find({
-      order: { createdAt: 'ASC' },
+      order: { ...CROSS_PLAN_TASK_LIST_ORDER },
       where,
     });
     return {

@@ -1,4 +1,5 @@
 import {
+  CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -169,6 +170,16 @@ describe('TasksResolver', () => {
       expect(result[0]?.title).toBe(mockTask.title);
     });
 
+    test('orders by planId then sortOrder then createdAt ascending', async () => {
+      vi.mocked(repo.find).mockResolvedValue([mockTask]);
+
+      await resolver.tasks();
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+      });
+    });
+
     test('returns empty array when no tasks', async () => {
       vi.mocked(repo.find).mockResolvedValue([]);
 
@@ -232,7 +243,7 @@ describe('TasksResolver', () => {
       expect(result.tasks).toHaveLength(2);
       expect(result.totalCount).toBe(2);
       expect(repo.find).toHaveBeenCalledWith({
-        order: { createdAt: 'ASC' },
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
         where: { projectId },
       });
       expect(repo.count).not.toHaveBeenCalled();
@@ -252,7 +263,7 @@ describe('TasksResolver', () => {
       expect(result.tasks).toHaveLength(1);
       expect(result.totalCount).toBe(42);
       expect(repo.find).toHaveBeenCalledWith({
-        order: { createdAt: 'ASC' },
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
         skip: 0,
         take: 20,
         where: { projectId },

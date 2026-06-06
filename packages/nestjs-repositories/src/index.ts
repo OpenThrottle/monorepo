@@ -57,6 +57,7 @@ export { taskEmbeddingsFactory } from './modules/task-embeddings/task-embeddings
 export { TaskEmbeddingsService } from './modules/task-embeddings/task-embeddings.service';
 export { tasksFactory } from './modules/tasks/tasks.factory';
 export {
+  CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   TASK_SORT_ORDER_GAP,
   TasksService,

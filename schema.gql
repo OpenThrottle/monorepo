@@ -3,14 +3,10 @@
 # ------------------------------------------------------
 
 type CommitsPerPrRowObject {
-  """
-  Number of commits in the PR.
-  """
+  """Number of commits in the PR."""
   commits: Int!
 
-  """
-  ISO 8601 merged_at; null if not merged.
-  """
+  """ISO 8601 merged_at; null if not merged."""
   mergedAt: String
 
   """
@@ -18,65 +14,43 @@ type CommitsPerPrRowObject {
   """
   period: String
 
-  """
-  Pull request number.
-  """
+  """Pull request number."""
   prNumber: Int!
 }
 
 type LinesAddedDeletedRowObject {
-  """
-  Total lines added across PRs in this bucket.
-  """
+  """Total lines added across PRs in this bucket."""
   additions: Int!
 
-  """
-  GitHub author login.
-  """
+  """GitHub author login."""
   author: String!
 
-  """
-  Total changed files across PRs in this bucket.
-  """
+  """Total changed files across PRs in this bucket."""
   changedFiles: Int!
 
-  """
-  Total lines deleted across PRs in this bucket.
-  """
+  """Total lines deleted across PRs in this bucket."""
   deletions: Int!
 
-  """
-  Period bucket (e.g. YYYY-MM or YYYY-Www in UTC).
-  """
+  """Period bucket (e.g. YYYY-MM or YYYY-Www in UTC)."""
   period: String!
 
-  """
-  Number of merged PRs in this bucket.
-  """
+  """Number of merged PRs in this bucket."""
   prCount: Int!
 }
 
 type OpenPrCountByAuthorObject {
-  """
-  GitHub author login.
-  """
+  """GitHub author login."""
   author: String!
 
-  """
-  Number of open PRs by this author for the repo.
-  """
+  """Number of open PRs by this author for the repo."""
   openCount: Int!
 }
 
 type OpenToMergedCycleTimeObject {
-  """
-  Median number of days from PR open to merge.
-  """
+  """Median number of days from PR open to merge."""
   medianDays: Float
 
-  """
-  90th percentile of days from PR open to merge.
-  """
+  """90th percentile of days from PR open to merge."""
   p90Days: Float
 
   """
@@ -84,9 +58,7 @@ type OpenToMergedCycleTimeObject {
   """
   period: String
 
-  """
-  Number of merged PRs in this bucket.
-  """
+  """Number of merged PRs in this bucket."""
   prCount: Int!
 }
 
@@ -96,38 +68,26 @@ type PrCountByLabelObject {
   """
   count: Int!
 
-  """
-  Label name (e.g. bug, feature, docs).
-  """
+  """Label name (e.g. bug, feature, docs)."""
   label: String!
 }
 
 type PrsMergedPerPeriodObject {
-  """
-  Number of PRs merged in this period.
-  """
+  """Number of PRs merged in this period."""
   count: Int!
 
-  """
-  Period bucket in UTC (e.g. YYYY-MM or YYYY-Www).
-  """
+  """Period bucket in UTC (e.g. YYYY-MM or YYYY-Www)."""
   period: String!
 }
 
 type PrTimeInStateSummaryObject {
-  """
-  Average number of days PRs spent in this state.
-  """
+  """Average number of days PRs spent in this state."""
   avgDaysInState: Float
 
-  """
-  Count of PRs in this state.
-  """
+  """Count of PRs in this state."""
   count: Int!
 
-  """
-  PR state (e.g. open, closed, merged).
-  """
+  """PR state (e.g. open, closed, merged)."""
   state: String!
 }
 
@@ -177,19 +137,13 @@ type ProjectObject {
   id: String!
   name: String!
 
-  """
-  NX project name (e.g. applications/openthrottle-server)
-  """
+  """NX project name (e.g. applications/openthrottle-server)"""
   nxProjectName: String
 
-  """
-  Plans linked to this project; resolved via ResolveField.
-  """
+  """Plans linked to this project; resolved via ResolveField."""
   plans: [PlanObject!]
 
-  """
-  Tasks linked to this project; resolved via ResolveField.
-  """
+  """Tasks linked to this project; resolved via ResolveField."""
   tasks: [TaskObject!]
   updatedAt: DateTime!
 }
@@ -220,16 +174,12 @@ type PlanObject {
   status: String!
   summary: String
 
-  """
-  Number of tasks belonging to this plan. Resolved from tasks table.
-  """
+  """Number of tasks belonging to this plan. Resolved from tasks table."""
   taskCount: Int!
   title: String!
   updatedAt: DateTime!
 
-  """
-  Job-run lifecycle hooks stored on the plan ({ hooks: [...] }).
-  """
+  """Job-run lifecycle hooks stored on the plan ({ hooks: [...] })."""
   jobRunHooksJson: String!
 
   """
@@ -244,15 +194,11 @@ type PlanStatusCountObject {
 }
 
 type PlanRunObject {
-  """
-  BullMQ job id for this run.
-  """
+  """BullMQ job id for this run."""
   bullmqJobId: String!
   createdAt: DateTime!
 
-  """
-  Execution backend selected once for the whole run: cursor or claude.
-  """
+  """Execution backend selected once for the whole run: cursor or claude."""
   executionBackend: String!
   id: String!
   planId: String!
@@ -263,9 +209,7 @@ type PlanRunObject {
   """
   runConfigSnapshotJson: String
 
-  """
-  Ralph run implementation: spawn or orchestrator.
-  """
+  """Ralph run implementation: spawn or orchestrator."""
   runKind: String!
   status: String!
   updatedAt: DateTime!
@@ -277,19 +221,13 @@ type ListPlansByStatusResultObject {
 }
 
 type EnqueuePlanRunResultObject {
-  """
-  Execution backend selected once for the whole run: cursor or claude.
-  """
+  """Execution backend selected once for the whole run: cursor or claude."""
   executionBackend: String!
 
-  """
-  BullMQ job id
-  """
+  """BullMQ job id"""
   jobId: String!
 
-  """
-  Plan id that was enqueued
-  """
+  """Plan id that was enqueued"""
   planId: String!
 
   """
@@ -297,9 +235,7 @@ type EnqueuePlanRunResultObject {
   """
   queuePosition: Int!
 
-  """
-  Total number of jobs waiting in the queue (including this one).
-  """
+  """Total number of jobs waiting in the queue (including this one)."""
   queueTotal: Int!
 }
 
@@ -324,9 +260,7 @@ type CancelPlanRunResultObject {
   """
   planStatusAfter: String
 
-  """
-  Plan id from the request.
-  """
+  """Plan id from the request."""
   planId: String!
 
   """
@@ -342,26 +276,18 @@ type TaskObject {
   description: String
   id: String!
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
   project: String
 
-  """
-  Project UUID (FK to projects table)
-  """
+  """Project UUID (FK to projects table)"""
   projectId: String
 
-  """
-  Resolved project entity when projectId is set
-  """
+  """Resolved project entity when projectId is set"""
   projectRelation: ProjectObject
 
-  """
-  JSON string of requirements array
-  """
+  """JSON string of requirements array"""
   requirementsJson: String!
 
   """
@@ -384,18 +310,14 @@ type ActivityCommitRowObject {
   id: String!
   message: String
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
   planTitle: String!
   repo: String!
   sha: String!
 
-  """
-  Resolved task entity when taskId is set
-  """
+  """Resolved task entity when taskId is set"""
   task: TaskObject
   taskId: String
   taskTitle: String
@@ -407,9 +329,7 @@ type ActivityOutputChunkRowObject {
   id: String!
   iteration: Int
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
   planTitle: String!
@@ -418,17 +338,13 @@ type ActivityOutputChunkRowObject {
 type ActivityTaskUpdatedRowObject {
   id: String!
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
   planTitle: String!
   status: String!
 
-  """
-  Resolved task entity (id is the task id)
-  """
+  """Resolved task entity (id is the task id)"""
   task: TaskObject
   title: String!
   updatedAt: DateTime!
@@ -437,16 +353,12 @@ type ActivityTaskUpdatedRowObject {
 type ActivityByDateResultObject {
   commits: [ActivityCommitRowObject!]!
 
-  """
-  True when limit/offset pagination has more items after this page.
-  """
+  """True when limit/offset pagination has more items after this page."""
   hasNext: Boolean!
   outputChunks: [ActivityOutputChunkRowObject!]!
   tasksUpdated: [ActivityTaskUpdatedRowObject!]!
 
-  """
-  Total number of activity items in the date range (before pagination).
-  """
+  """Total number of activity items in the date range (before pagination)."""
   totalCount: Int!
 }
 
@@ -468,21 +380,15 @@ type LastActivityTaskUpdatePartObject {
 }
 
 type LastActivityResultObject {
-  """
-  Timestamp of the activity.
-  """
+  """Timestamp of the activity."""
   at: DateTime!
 
-  """
-  One of: commit, output_chunk, task_update.
-  """
+  """One of: commit, output_chunk, task_update."""
   kind: String!
   planId: String!
   taskId: String
 
-  """
-  Human-readable summary for the answer.
-  """
+  """Human-readable summary for the answer."""
   summary: String!
   commit: LastActivityCommitPartObject
   outputChunk: LastActivityOutputChunkPartObject
@@ -490,29 +396,19 @@ type LastActivityResultObject {
 }
 
 type EnqueueAgenticWorkflowMockResultObject {
-  """
-  Whether the job was enqueued.
-  """
+  """Whether the job was enqueued."""
   success: Boolean!
 
-  """
-  BullMQ job id when success is true.
-  """
+  """BullMQ job id when success is true."""
   jobId: String
 
-  """
-  BullMQ job name when success is true.
-  """
+  """BullMQ job name when success is true."""
   jobName: String
 
-  """
-  BullMQ queue name when success is true.
-  """
+  """BullMQ queue name when success is true."""
   queueName: String
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
@@ -564,21 +460,15 @@ type AgentsChatTurnResult {
 }
 
 type LoginResultObject {
-  """
-  JWT access token to send in Authorization header or cookie
-  """
+  """JWT access token to send in Authorization header or cookie"""
   accessToken: String!
 }
 
 type RegisterResultObject {
-  """
-  Created user id (UUID)
-  """
+  """Created user id (UUID)"""
   id: String!
 
-  """
-  Registered email
-  """
+  """Registered email"""
   email: String!
 
   """
@@ -588,9 +478,7 @@ type RegisterResultObject {
 }
 
 type SignoutResultObject {
-  """
-  Whether signout completed successfully
-  """
+  """Whether signout completed successfully"""
   success: Boolean!
 }
 
@@ -599,78 +487,18 @@ type CommitLinkObject {
   id: String!
   message: String
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
   repo: String!
   sha: String!
 
-  """
-  Resolved task entity when taskId is set
-  """
+  """Resolved task entity when taskId is set"""
   task: TaskObject
   taskId: String
 }
 
-type PreviewCortexDocumentIngestResultObject {
-  """
-  True when the document parsed successfully.
-  """
-  success: Boolean!
-
-  """
-  Parse error code when success is false.
-  """
-  errorCode: String
-
-  """
-  Human-readable error when success is false.
-  """
-  errorMessage: String
-
-  """
-  Detected upload format when parsing ran (e.g. markdown).
-  """
-  detectedFormat: String
-
-  """
-  Suggested plan title from the document structure.
-  """
-  planTitleSuggested: String
-
-  """
-  JSON array of proposed tasks: { title, description, requirements[] }.
-  """
-  proposedTasksJson: String
-}
-
-type CommitCortexDocumentIngestResultObject {
-  """
-  True when the plan and all tasks were created.
-  """
-  success: Boolean!
-
-  """
-  Error message when success is false (parse failure or rollback after partial task create).
-  """
-  error: String
-
-  """
-  Created plan when success is true.
-  """
-  plan: PlanObject
-
-  """
-  Created tasks when success is true.
-  """
-  tasks: [TaskObject!]!
-}
-
-"""
-A custom prompt document for AI workflow customization
-"""
+"""A custom prompt document for AI workflow customization"""
 type CustomPromptObject {
   id: String!
   createdAt: DateTime!
@@ -686,9 +514,7 @@ type CustomPromptObject {
   deletedAt: DateTime
 }
 
-"""
-Type of custom prompt document
-"""
+"""Type of custom prompt document"""
 enum CustomPromptType {
   AGENTS
   COMMANDS
@@ -699,61 +525,39 @@ enum CustomPromptType {
 }
 
 type DailyStatsObject {
-  """
-  Row created_at.
-  """
+  """Row created_at."""
   createdAt: DateTime!
 
-  """
-  Stats date (YYYY-MM-DD).
-  """
+  """Stats date (YYYY-MM-DD)."""
   date: String!
 
-  """
-  JSON object of plan status -> count for this date.
-  """
+  """JSON object of plan status -> count for this date."""
   plansByStatusJson: String!
 
-  """
-  Plans created on this date.
-  """
+  """Plans created on this date."""
   plansCreated: Int!
 
-  """
-  Plans completed on this date.
-  """
+  """Plans completed on this date."""
   plansCompleted: Int!
 
-  """
-  Plans updated on this date.
-  """
+  """Plans updated on this date."""
   plansUpdated: Int!
 
-  """
-  JSON object of task status -> count for this date.
-  """
+  """JSON object of task status -> count for this date."""
   tasksByStatusJson: String!
 
-  """
-  Tasks created on this date.
-  """
+  """Tasks created on this date."""
   tasksCreated: Int!
 
-  """
-  Tasks completed on this date.
-  """
+  """Tasks completed on this date."""
   tasksCompleted: Int!
 
-  """
-  Tasks updated on this date.
-  """
+  """Tasks updated on this date."""
   tasksUpdated: Int!
 }
 
 type DailyStatsRangeResultObject {
-  """
-  Daily stats rows in the range, ordered by date ascending.
-  """
+  """Daily stats rows in the range, ordered by date ascending."""
   items: [DailyStatsObject!]!
 }
 
@@ -772,18 +576,8 @@ type GeneratorDetailObject {
 Server health: API reachability, OpenThrottle DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable.
 """
 type ServerHealthObject {
-  """
-  API status. "ok" when the resolver runs.
-  """
+  """API status. "ok" when the resolver runs."""
   api: String!
-
-  """
-  Deprecated alias for api. Kept for backwards compatibility.
-  """
-  apiStatus: String!
-    @deprecated(
-      reason: "Use api instead. Example field demonstrating the GraphQL deprecation policy."
-    )
 
   """
   OpenThrottle DB status: ok | unconfigured | unreachable. Reuses existing databaseHealth logic.
@@ -795,9 +589,7 @@ type ServerHealthObject {
   """
   redis: String!
 
-  """
-  WebSocket (Socket.IO) status: ok when server process is running.
-  """
+  """WebSocket (Socket.IO) status: ok when server process is running."""
   websocket: String!
 }
 
@@ -805,102 +597,66 @@ type ServerHealthObject {
 Current process metrics: memory (RSS, heap, external in MB) and CPU (user/system in ms).
 """
 type ServerMetricsObject {
-  """
-  Resident set size (total process memory) in MB.
-  """
+  """Resident set size (total process memory) in MB."""
   rssMb: Float!
 
-  """
-  V8 heap used in MB.
-  """
+  """V8 heap used in MB."""
   heapUsedMb: Float!
 
-  """
-  V8 heap total in MB.
-  """
+  """V8 heap total in MB."""
   heapTotalMb: Float!
 
-  """
-  External (C++ objects bound to JS, e.g. Buffers) in MB.
-  """
+  """External (C++ objects bound to JS, e.g. Buffers) in MB."""
   externalMb: Float!
 
-  """
-  User CPU time in milliseconds (cumulative).
-  """
+  """User CPU time in milliseconds (cumulative)."""
   cpuUserMs: Float!
 
-  """
-  System CPU time in milliseconds (cumulative).
-  """
+  """System CPU time in milliseconds (cumulative)."""
   cpuSystemMs: Float!
 }
 
 type CreateQueueResultObject {
-  """
-  Whether the queue was created (or accepted for registration).
-  """
+  """Whether the queue was created (or accepted for registration)."""
   success: Boolean!
 
-  """
-  Queue name when success is true.
-  """
+  """Queue name when success is true."""
   queueName: String
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
 type DuplicateJobResultObject {
-  """
-  Whether the duplicate was accepted.
-  """
+  """Whether the duplicate was accepted."""
   success: Boolean!
 
-  """
-  New job id when success is true.
-  """
+  """New job id when success is true."""
   jobId: String
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
 type EnqueueAgenticTestResultObject {
-  """
-  Whether the job was enqueued.
-  """
+  """Whether the job was enqueued."""
   success: Boolean!
 
-  """
-  BullMQ job id when success is true.
-  """
+  """BullMQ job id when success is true."""
   jobId: String
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
 type EnqueueDocIngestionResultObject {
-  """
-  Whether the job was enqueued.
-  """
+  """Whether the job was enqueued."""
   success: Boolean!
 
-  """
-  BullMQ job id when success is true.
-  """
+  """BullMQ job id when success is true."""
   jobId: String
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
@@ -908,39 +664,25 @@ type EnqueueDocIngestionResultObject {
 Aggregated CPU and memory metrics for a child process over its lifetime.
 """
 type ChildProcessMetrics {
-  """
-  Average CPU percentage across all samples.
-  """
+  """Average CPU percentage across all samples."""
   avgCpuPercent: Float!
 
-  """
-  Average RSS in MB across all samples.
-  """
+  """Average RSS in MB across all samples."""
   avgRssMb: Float!
 
-  """
-  Peak CPU percentage observed across all samples.
-  """
+  """Peak CPU percentage observed across all samples."""
   peakCpuPercent: Float!
 
-  """
-  Peak RSS in MB observed across all samples.
-  """
+  """Peak RSS in MB observed across all samples."""
   peakRssMb: Float!
 
-  """
-  Process ID of the child that was monitored.
-  """
+  """Process ID of the child that was monitored."""
   pid: Int!
 
-  """
-  Polling interval in milliseconds.
-  """
+  """Polling interval in milliseconds."""
   pollIntervalMs: Int!
 
-  """
-  Number of samples taken.
-  """
+  """Number of samples taken."""
   sampleCount: Int!
 }
 
@@ -948,29 +690,19 @@ type ChildProcessMetrics {
 Process metrics snapshot: memory (RSS, heap, external in MB) and CPU (user/system in ms).
 """
 type ProcessMetricsSnapshot {
-  """
-  User CPU time in milliseconds (cumulative).
-  """
+  """User CPU time in milliseconds (cumulative)."""
   cpuUserMs: Float!
 
-  """
-  External (C++ objects bound to JS, e.g. Buffers) in MB.
-  """
+  """External (C++ objects bound to JS, e.g. Buffers) in MB."""
   externalMb: Float!
 
-  """
-  V8 heap total in MB.
-  """
+  """V8 heap total in MB."""
   heapTotalMb: Float!
 
-  """
-  V8 heap used in MB.
-  """
+  """V8 heap used in MB."""
   heapUsedMb: Float!
 
-  """
-  Resident set size (total process memory) in MB.
-  """
+  """Resident set size (total process memory) in MB."""
   rssMb: Float!
 }
 
@@ -978,94 +710,58 @@ type ProcessMetricsSnapshot {
 Linux Pressure Stall Information (PSI) for CPU. Null fields on non-Linux platforms.
 """
 type PsiCpuMetrics {
-  """
-  Percentage of time all runnable tasks stalled (10s avg).
-  """
+  """Percentage of time all runnable tasks stalled (10s avg)."""
   full10s: Float
 
-  """
-  Percentage of time all runnable tasks stalled (300s avg).
-  """
+  """Percentage of time all runnable tasks stalled (300s avg)."""
   full300s: Float
 
-  """
-  Percentage of time all runnable tasks stalled (60s avg).
-  """
+  """Percentage of time all runnable tasks stalled (60s avg)."""
   full60s: Float
 
-  """
-  Total full stall time in microseconds (cumulative since boot).
-  """
+  """Total full stall time in microseconds (cumulative since boot)."""
   fullTotalUs: Float
 
-  """
-  Percentage of time at least one task stalled (10s avg).
-  """
+  """Percentage of time at least one task stalled (10s avg)."""
   some10s: Float
 
-  """
-  Percentage of time at least one task stalled (300s avg).
-  """
+  """Percentage of time at least one task stalled (300s avg)."""
   some300s: Float
 
-  """
-  Percentage of time at least one task stalled (60s avg).
-  """
+  """Percentage of time at least one task stalled (60s avg)."""
   some60s: Float
 
-  """
-  Total some stall time in microseconds (cumulative since boot).
-  """
+  """Total some stall time in microseconds (cumulative since boot)."""
   someTotalUs: Float
 }
 
-"""
-System load average from os.loadavg().
-"""
+"""System load average from os.loadavg()."""
 type LoadAverageMetrics {
-  """
-  Number of logical CPUs.
-  """
+  """Number of logical CPUs."""
   cpuCount: Int!
 
-  """
-  15-minute load average.
-  """
+  """15-minute load average."""
   load15m: Float!
 
-  """
-  1-minute load average.
-  """
+  """1-minute load average."""
   load1m: Float!
 
-  """
-  5-minute load average.
-  """
+  """5-minute load average."""
   load5m: Float!
 
-  """
-  Per-core load (load1m / cpuCount). > 1 means oversubscribed.
-  """
+  """Per-core load (load1m / cpuCount). > 1 means oversubscribed."""
   perCoreLoad1m: Float!
 }
 
-"""
-System-level CPU metrics snapshot at a point in time.
-"""
+"""System-level CPU metrics snapshot at a point in time."""
 type SystemCpuSnapshot {
-  """
-  Load average at snapshot time.
-  """
+  """Load average at snapshot time."""
   loadAverage: LoadAverageMetrics!
 
-  """
-  PSI metrics at snapshot time (Linux only).
-  """
+  """PSI metrics at snapshot time (Linux only)."""
   psi: PsiCpuMetrics!
 
-  """
-  Timestamp when snapshot was taken (Unix ms).
-  """
+  """Timestamp when snapshot was taken (Unix ms)."""
   timestamp: Float!
 }
 
@@ -1073,19 +769,13 @@ type SystemCpuSnapshot {
 Complete system CPU metrics for a job, including start/end snapshots and pressure interpretation.
 """
 type SystemCpuMetrics {
-  """
-  Snapshot at job end.
-  """
+  """Snapshot at job end."""
   atEnd: SystemCpuSnapshot!
 
-  """
-  Snapshot at job start.
-  """
+  """Snapshot at job start."""
   atStart: SystemCpuSnapshot!
 
-  """
-  Platform: linux, darwin, win32, etc.
-  """
+  """Platform: linux, darwin, win32, etc."""
   platform: String!
 
   """
@@ -1093,25 +783,17 @@ type SystemCpuMetrics {
   """
   pressureLevel: PressureLevel!
 
-  """
-  Delta in PSI full stall time (microseconds) during the job.
-  """
+  """Delta in PSI full stall time (microseconds) during the job."""
   psiFullDeltaUs: Float
 
-  """
-  Delta in PSI some stall time (microseconds) during the job.
-  """
+  """Delta in PSI some stall time (microseconds) during the job."""
   psiSomeDeltaUs: Float
 
-  """
-  Whether PSI metrics are available (Linux with cgroup v2).
-  """
+  """Whether PSI metrics are available (Linux with cgroup v2)."""
   psiAvailable: Boolean!
 }
 
-"""
-System CPU pressure level interpretation.
-"""
+"""System CPU pressure level interpretation."""
 enum PressureLevel {
   high
   low
@@ -1123,24 +805,16 @@ enum PressureLevel {
 Wall-clock and CPU time metrics for determining job workload characteristics.
 """
 type WallClockMetrics {
-  """
-  CPU system time delta in milliseconds.
-  """
+  """CPU system time delta in milliseconds."""
   cpuSystemMs: Float!
 
-  """
-  Total CPU time (user + system) in milliseconds.
-  """
+  """Total CPU time (user + system) in milliseconds."""
   cpuTimeMs: Float!
 
-  """
-  CPU user time delta in milliseconds.
-  """
+  """CPU user time delta in milliseconds."""
   cpuUserMs: Float!
 
-  """
-  End timestamp (Unix ms) when job completed.
-  """
+  """End timestamp (Unix ms) when job completed."""
   endTimestamp: Float!
 
   """
@@ -1148,25 +822,17 @@ type WallClockMetrics {
   """
   interpretation: WallClockInterpretation!
 
-  """
-  Start timestamp (Unix ms) when job began.
-  """
+  """Start timestamp (Unix ms) when job began."""
   startTimestamp: Float!
 
-  """
-  Wall-clock duration in milliseconds.
-  """
+  """Wall-clock duration in milliseconds."""
   wallClockMs: Float!
 
-  """
-  Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound.
-  """
+  """Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound."""
   wallClockToCpuRatio: Float!
 }
 
-"""
-Interpretation of wall-clock to CPU time ratio.
-"""
+"""Interpretation of wall-clock to CPU time ratio."""
 enum WallClockInterpretation {
   cpu_bound
   idle
@@ -1178,41 +844,24 @@ enum WallClockInterpretation {
 Metrics captured at job start and end for a plan/task run, including process snapshots, child process resource usage, wall-clock analysis, and system CPU pressure.
 """
 type TaskRunMetrics {
-  """
-  Process metrics at the end of the task run.
-  """
+  """Process metrics at the end of the task run."""
   atEnd: ProcessMetricsSnapshot!
 
-  """
-  Process metrics at the start of the task run.
-  """
+  """Process metrics at the start of the task run."""
   atStart: ProcessMetricsSnapshot!
 
-  """
-  Aggregated CPU and memory metrics for spawned child processes.
-  """
+  """Aggregated CPU and memory metrics for spawned child processes."""
   childProcessMetrics: ChildProcessMetrics
 
-  """
-  System-level CPU metrics including load average and PSI.
-  """
+  """System-level CPU metrics including load average and PSI."""
   systemCpuMetrics: SystemCpuMetrics
 
-  """
-  Wall-clock vs CPU time metrics for workload characterization.
-  """
+  """Wall-clock vs CPU time metrics for workload characterization."""
   wallClockMetrics: WallClockMetrics
 }
 
 type JobObject {
-  """
-  BullMQ job id.
-  """
-  id: String!
-
-  """
-  JSON string of job data (e.g. { planId } for run-plan).
-  """
+  """JSON string of job data (e.g. { planId } for run-plan)."""
   data: String
 
   """
@@ -1220,201 +869,134 @@ type JobObject {
   """
   executionBackend: String
 
+  """Error message if the job failed."""
+  failedReason: String
+
+  """Unix timestamp when the job finished."""
+  finishedOn: Float
+
+  """BullMQ job id."""
+  id: String!
+
   """
   Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.
   """
   name: String
 
-  """
-  Unix timestamp when the job was created.
-  """
-  timestamp: Float
-
-  """
-  Unix timestamp when the job started processing.
-  """
-  processedOn: Float
-
-  """
-  Unix timestamp when the job finished.
-  """
-  finishedOn: Float
-
-  """
-  Error message if the job failed.
-  """
-  failedReason: String
-
-  """
-  Return value from the processor (if completed).
-  """
-  returnvalue: String
-
-  """
-  Job progress (0-100 or custom).
-  """
+  """Job progress (0-100 or custom)."""
   progress: Int
 
-  """
-  Job state: waiting, active, completed, failed, delayed.
-  """
+  """Unix timestamp when the job started processing."""
+  processedOn: Float
+
+  """Return value from the processor (if completed)."""
+  returnvalue: String
+
+  """Job state: waiting, active, completed, failed, delayed."""
   state: String!
 
   """
   Task-run metrics (process memory/CPU at start and end). Present only for plans-queue jobs that completed with metrics.
   """
   taskRunMetrics: TaskRunMetrics
+
+  """Unix timestamp when the job was created."""
+  timestamp: Float
 }
 
 type QueueStatsObject {
-  """
-  Queue name (e.g. plans).
-  """
+  """Queue name (e.g. plans)."""
   name: String!
 
-  """
-  Number of jobs waiting to be processed.
-  """
+  """Number of jobs waiting to be processed."""
   waitingCount: Int!
 
-  """
-  Number of jobs currently being processed.
-  """
+  """Number of jobs currently being processed."""
   activeCount: Int!
 
-  """
-  Number of completed jobs.
-  """
+  """Number of completed jobs."""
   completedCount: Int!
 
-  """
-  Number of failed jobs.
-  """
+  """Number of failed jobs."""
   failedCount: Int!
 
-  """
-  Number of delayed jobs.
-  """
+  """Number of delayed jobs."""
   delayedCount: Int!
 }
 
 type JobsResultObject {
-  """
-  Paginated list of jobs for the queue.
-  """
+  """Paginated list of jobs for the queue."""
   jobs: [JobObject!]!
 
-  """
-  Whether more jobs exist after this page.
-  """
+  """Whether more jobs exist after this page."""
   hasNext: Boolean!
 }
 
 type QueueDetailsObject {
-  """
-  Queue name (e.g. plans).
-  """
+  """Queue name (e.g. plans)."""
   name: String!
 
-  """
-  Number of jobs waiting to be processed.
-  """
+  """Number of jobs waiting to be processed."""
   waitingCount: Int!
 
-  """
-  Number of jobs currently being processed.
-  """
+  """Number of jobs currently being processed."""
   activeCount: Int!
 
-  """
-  Number of completed jobs.
-  """
+  """Number of completed jobs."""
   completedCount: Int!
 
-  """
-  Number of failed jobs.
-  """
+  """Number of failed jobs."""
   failedCount: Int!
 
-  """
-  Number of delayed jobs.
-  """
+  """Number of delayed jobs."""
   delayedCount: Int!
 
-  """
-  Paginated jobs for this queue (optional; omit for stats-only).
-  """
+  """Paginated jobs for this queue (optional; omit for stats-only)."""
   jobs: JobsResultObject
 }
 
 type RemoveRepeatableJobResultObject {
-  """
-  Whether the repeatable job was removed.
-  """
+  """Whether the repeatable job was removed."""
   success: Boolean!
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
 type RepeatableJobObject {
-  """
-  Unique key for the repeatable job (use with removeRepeatableJob).
-  """
+  """Unique key for the repeatable job (use with removeRepeatableJob)."""
   key: String!
 
-  """
-  Job type name (e.g. run-plan).
-  """
+  """Job type name (e.g. run-plan)."""
   name: String!
 
-  """
-  Optional job id for the next scheduled run.
-  """
+  """Optional job id for the next scheduled run."""
   id: String
 
-  """
-  Unix timestamp when the repeat ends, or null if no end.
-  """
+  """Unix timestamp when the repeat ends, or null if no end."""
   endDate: Float
 
-  """
-  Timezone for cron (e.g. Europe/London), or null.
-  """
+  """Timezone for cron (e.g. Europe/London), or null."""
   tz: String
 
-  """
-  Cron pattern (e.g. "0 9 * * 1-5"), or null for every-based.
-  """
+  """Cron pattern (e.g. "0 9 * * 1-5"), or null for every-based."""
   pattern: String
 
-  """
-  Interval string (e.g. "1 hour", "2 days"), or null for cron.
-  """
+  """Interval string (e.g. "1 hour", "2 days"), or null for cron."""
   every: String
 
-  """
-  Unix timestamp of the next run.
-  """
+  """Unix timestamp of the next run."""
   next: Float
 }
 
 type RetryJobResultObject {
-  """
-  Whether the retry was accepted.
-  """
+  """Whether the retry was accepted."""
   success: Boolean!
 
-  """
-  Job id when success is true.
-  """
+  """Job id when success is true."""
   jobId: String
 
-  """
-  Error message when success is false.
-  """
+  """Error message when success is false."""
   error: String
 }
 
@@ -1422,19 +1004,13 @@ type RetryJobResultObject {
 A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end).
 """
 type PlanRunMetricsEntry {
-  """
-  BullMQ job id for this run.
-  """
+  """BullMQ job id for this run."""
   jobId: String!
 
-  """
-  Unix timestamp when the job finished.
-  """
+  """Unix timestamp when the job finished."""
   finishedOn: Float
 
-  """
-  Execution backend selected once for the whole run: cursor or claude.
-  """
+  """Execution backend selected once for the whole run: cursor or claude."""
   executionBackend: String
 
   """
@@ -1471,14 +1047,10 @@ type PlanEmbeddingObject {
   createdAt: DateTime!
   id: String!
 
-  """
-  JSON string of metadata object
-  """
+  """JSON string of metadata object"""
   metadataJson: String!
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
 }
@@ -1488,14 +1060,10 @@ type PlanOutputStreamChunkObject {
   createdAt: DateTime!
   id: String!
 
-  """
-  Optional iteration number for the output chunk
-  """
+  """Optional iteration number for the output chunk"""
   iteration: Int
 
-  """
-  Resolved plan entity when planId is set
-  """
+  """Resolved plan entity when planId is set"""
   plan: PlanObject
   planId: String!
 }
@@ -1507,18 +1075,14 @@ type ServiceAccountCredentialObject {
   label: String
   lastUsedAt: DateTime
 
-  """
-  Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens.
-  """
+  """Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens."""
   prefix: String!
   revokedAt: DateTime
   serviceAccountId: ID!
 }
 
 type CreateServiceAccountCredentialResultObject {
-  """
-  Saved credential metadata (secret hash is never returned).
-  """
+  """Saved credential metadata (secret hash is never returned)."""
   credential: ServiceAccountCredentialObject!
 
   """
@@ -1531,15 +1095,11 @@ type ServiceAccountObject {
   createdAt: DateTime!
   description: String
 
-  """
-  When set, the service account cannot authenticate.
-  """
+  """When set, the service account cannot authenticate."""
   disabledAt: DateTime
   id: String!
 
-  """
-  Stable identifier (e.g. openthrottle-mcp, workflow-ralph).
-  """
+  """Stable identifier (e.g. openthrottle-mcp, workflow-ralph)."""
   name: String!
 }
 
@@ -1548,9 +1108,7 @@ type PermissionObject {
   description: String
   id: String!
 
-  """
-  Permission identifier (e.g. users:read, settings:write)
-  """
+  """Permission identifier (e.g. users:read, settings:write)"""
   name: String!
 }
 
@@ -1559,47 +1117,31 @@ type RoleObject {
   description: String
   id: String!
 
-  """
-  Role identifier (e.g. admin, user, viewer)
-  """
+  """Role identifier (e.g. admin, user, viewer)"""
   name: String!
 
-  """
-  Permissions assigned to this role
-  """
+  """Permissions assigned to this role"""
   permissions: [PermissionObject!]!
   updatedAt: DateTime!
 }
 
 type SearchChunk {
-  """
-  Chunk content (plan or task text).
-  """
+  """Chunk content (plan or task text)."""
   content: String!
 
-  """
-  Chunk UUID from plan_embeddings or task_embeddings.
-  """
+  """Chunk UUID from plan_embeddings or task_embeddings."""
   id: String!
 
-  """
-  Plan UUID when chunk is from a plan or a plan's task.
-  """
+  """Plan UUID when chunk is from a plan or a plan's task."""
   planId: String
 
-  """
-  Plan title for display and linking.
-  """
+  """Plan title for display and linking."""
   planTitle: String
 
-  """
-  Cosine similarity score (0–1, higher is more relevant).
-  """
+  """Cosine similarity score (0–1, higher is more relevant)."""
   similarity: Float!
 
-  """
-  Source of the chunk: "plan", "task", or "documentation".
-  """
+  """Source of the chunk: "plan", "task", or "documentation"."""
   source: String!
 
   """
@@ -1607,9 +1149,7 @@ type SearchChunk {
   """
   sourcePath: String
 
-  """
-  When source is documentation: GitHub repo (e.g. owner/repo).
-  """
+  """When source is documentation: GitHub repo (e.g. owner/repo)."""
   sourceRepo: String
 
   """
@@ -1617,57 +1157,39 @@ type SearchChunk {
   """
   sourceSha: String
 
-  """
-  Task UUID when chunk is from a task.
-  """
+  """Task UUID when chunk is from a task."""
   taskId: String
 
-  """
-  Task title for display and linking.
-  """
+  """Task title for display and linking."""
   taskTitle: String
 }
 
 type SearchResult {
-  """
-  Ranked search chunks (plans and tasks) by similarity.
-  """
+  """Ranked search chunks (plans and tasks) by similarity."""
   chunks: [SearchChunk!]!
 }
 
 type ListSourceInfoObject {
-  """
-  Source name (e.g. plan, task, documentation).
-  """
+  """Source name (e.g. plan, task, documentation)."""
   name: String!
 
-  """
-  Human-readable description.
-  """
+  """Human-readable description."""
   description: String!
 }
 
 type ListPlanSourceObject {
-  """
-  Plan UUID.
-  """
+  """Plan UUID."""
   id: String!
 
-  """
-  Plan title.
-  """
+  """Plan title."""
   title: String!
 }
 
 type ListSourcesResultObject {
-  """
-  Knowledge-base source types and descriptions.
-  """
+  """Knowledge-base source types and descriptions."""
   sources: [ListSourceInfoObject!]!
 
-  """
-  All plans (id, title) for discovery.
-  """
+  """All plans (id, title) for discovery."""
   plans: [ListPlanSourceObject!]!
 }
 
@@ -1676,14 +1198,10 @@ type TaskEmbeddingObject {
   createdAt: DateTime!
   id: String!
 
-  """
-  JSON string of metadata object
-  """
+  """JSON string of metadata object"""
   metadataJson: String!
 
-  """
-  Resolved task entity when taskId is set
-  """
+  """Resolved task entity when taskId is set"""
   task: TaskObject
   taskId: String!
 }
@@ -1691,38 +1209,26 @@ type TaskEmbeddingObject {
 type UserObject {
   createdAt: DateTime!
 
-  """
-  When set, user is disabled and cannot log in.
-  """
+  """When set, user is disabled and cannot log in."""
   disabledAt: DateTime
   email: String
 
-  """
-  GitHub user or Organization name (e.g. OpenThrottle)
-  """
+  """GitHub user or Organization name (e.g. OpenThrottle)"""
   githubUsername: String!
   id: String!
   updatedAt: DateTime!
 }
 
-"""
-Per-user workspace profile: contact fields and enabled editors.
-"""
+"""Per-user workspace profile: contact fields and enabled editors."""
 type UserWorkspaceProfileObject {
-  """
-  Display name for notifications and workspace attribution.
-  """
+  """Display name for notifications and workspace attribution."""
   contactDisplayName: String
 
-  """
-  Contact email for workspace profile (distinct from auth email).
-  """
+  """Contact email for workspace profile (distinct from auth email)."""
   contactEmail: String
   createdAt: DateTime!
 
-  """
-  Editors the user wants OpenThrottle to configure in linked repos.
-  """
+  """Editors the user wants OpenThrottle to configure in linked repos."""
   enabledEditors: [WorkspaceEditorId!]!
   updatedAt: DateTime!
   userId: ID!
@@ -1732,14 +1238,10 @@ type UserWorkspaceProfileObject {
 Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode.
 """
 enum WorkspaceEditorId {
-  """
-  Cursor IDE
-  """
+  """Cursor IDE"""
   CURSOR
 
-  """
-  Visual Studio Code
-  """
+  """Visual Studio Code"""
   VSCODE
 }
 
@@ -1750,21 +1252,15 @@ type WorkspaceLocalRepositoryObject {
   id: ID!
   userId: ID!
 
-  """
-  Canonical absolute path on the server host.
-  """
+  """Canonical absolute path on the server host."""
   filesystemPath: String!
   displayName: String!
 
-  """
-  Optional git remote URL (origin).
-  """
+  """Optional git remote URL (origin)."""
   gitRemoteUrl: String
   gitDefaultBranch: String
 
-  """
-  Optional Cortex project linked to this checkout.
-  """
+  """Optional Cortex project linked to this checkout."""
   projectId: ID
   project: ProjectObject
   createdAt: DateTime!
@@ -1790,9 +1286,7 @@ type WorkspaceEditorConfigApplicationObject {
   warnings: [String!]!
 }
 
-"""
-Aggregate result of applying workspace editor configuration.
-"""
+"""Aggregate result of applying workspace editor configuration."""
 type ApplyWorkspaceEditorConfigurationResultObject {
   applications: [WorkspaceEditorConfigApplicationObject!]!
 }
@@ -1826,23 +1320,17 @@ type Query {
   """
   Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination.
   """
-  activityByDateRange(
-    input: ActivityByDateRangeInput!
-  ): ActivityByDateResultObject!
+  activityByDateRange(input: ActivityByDateRangeInput!): ActivityByDateResultObject!
 
   """
   Single most recent activity (commit, plan output chunk, or task update) for a plan or task. Use for "What was the last thing we did for <plan> or <task>?".
   """
   lastActivity(input: LastActivityInput!): LastActivityResultObject
 
-  """
-  Get a commit link by ID
-  """
+  """Get a commit link by ID"""
   commitLink(input: GetCommitLinkInput!): CommitLinkObject
 
-  """
-  List all commit links, ordered by createdAt descending
-  """
+  """List all commit links, ordered by createdAt descending"""
   commitLinks: [CommitLinkObject!]!
 
   """
@@ -1850,28 +1338,20 @@ type Query {
   """
   commitLinksByPlanId(input: CommitLinksByPlanIdInput!): [CommitLinkObject!]!
 
-  """
-  List commit links for a task, ordered by createdAt descending
-  """
+  """List commit links for a task, ordered by createdAt descending"""
   commitLinksByTaskId(input: CommitLinksByTaskIdInput!): [CommitLinkObject!]!
 
-  """
-  Get a custom prompt by ID
-  """
+  """Get a custom prompt by ID"""
   customPrompt(id: ID!): CustomPromptObject
 
-  """
-  List custom prompts with optional filters
-  """
+  """List custom prompts with optional filters"""
   customPrompts(input: ListCustomPromptsInput): [CustomPromptObject!]!
 
   """
   Aggregated plan and task stats for a single date (YYYY-MM-DD). Returns null if no row for that date.
   """
   dailyStats(
-    """
-    Date in YYYY-MM-DD format
-    """
+    """Date in YYYY-MM-DD format"""
     date: String!
   ): DailyStatsObject
 
@@ -1879,40 +1359,26 @@ type Query {
   Aggregated plan and task stats for a date range (start and end inclusive, YYYY-MM-DD).
   """
   dailyStatsRange(
-    """
-    Start date (inclusive), YYYY-MM-DD
-    """
+    """Start date (inclusive), YYYY-MM-DD"""
     start: String!
 
-    """
-    End date (inclusive), YYYY-MM-DD
-    """
+    """End date (inclusive), YYYY-MM-DD"""
     end: String!
   ): DailyStatsRangeResultObject!
 
-  """
-  List available NX generators from @tools/generators
-  """
+  """List available NX generators from @tools/generators"""
   generators: [GeneratorObject!]!
 
-  """
-  Get a generator by name (includes schema JSON)
-  """
+  """Get a generator by name (includes schema JSON)"""
   generator(input: GetGeneratorInput!): GeneratorDetailObject
 
-  """
-  List pull requests for a repository (GitHub API)
-  """
+  """List pull requests for a repository (GitHub API)"""
   pulls(input: ListPullsInput!): [PullListItemObject!]!
 
-  """
-  Get one pull request by repository and PR number (GitHub API)
-  """
+  """Get one pull request by repository and PR number (GitHub API)"""
   pull(input: GetPullInput!): PullListItemObject
 
-  """
-  Open PR count per author for a repository (GitHub stats).
-  """
+  """Open PR count per author for a repository (GitHub stats)."""
   openPrCountByAuthor(input: GitHubRepoInput!): [OpenPrCountByAuthorObject!]!
 
   """
@@ -1923,16 +1389,12 @@ type Query {
   """
   Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests.
   """
-  linesAddedDeleted(
-    input: LinesAddedDeletedInput!
-  ): [LinesAddedDeletedRowObject!]!
+  linesAddedDeleted(input: LinesAddedDeletedInput!): [LinesAddedDeletedRowObject!]!
 
   """
   Cycle time for merged PRs: median and P90 of days from open to merged. Optional period buckets by week/month (UTC).
   """
-  openToMergedCycleTime(
-    input: OpenToMergedCycleTimeInput!
-  ): [OpenToMergedCycleTimeObject!]!
+  openToMergedCycleTime(input: OpenToMergedCycleTimeInput!): [OpenToMergedCycleTimeObject!]!
 
   """
   PR counts by label (breakdown by type e.g. bug, feature, docs). Uses Issues API; optional state filter (open/closed/all).
@@ -1942,9 +1404,7 @@ type Query {
   """
   PRs merged per week or month (throughput trend). Buckets by merged_at in UTC.
   """
-  prsMergedPerPeriod(
-    input: PrsMergedPerPeriodInput!
-  ): [PrsMergedPerPeriodObject!]!
+  prsMergedPerPeriod(input: PrsMergedPerPeriodInput!): [PrsMergedPerPeriodObject!]!
 
   """
   Review cycle time for merged PRs: median and P90 of days from last CHANGES_REQUESTED to first subsequent APPROVED or merge. Optional period buckets by week/month (UTC). Paginates reviews; maxPrs caps API calls.
@@ -1966,9 +1426,7 @@ type Query {
   """
   queue(input: QueueDetailsInput!): QueueDetailsObject
 
-  """
-  Single job by id and queue name. Returns null if not found.
-  """
+  """Single job by id and queue name. Returns null if not found."""
   job(jobId: ID!, queueName: String!): JobObject
 
   """
@@ -1981,70 +1439,48 @@ type Query {
   """
   queues: [QueueStatsObject!]!
 
-  """
-  Get a note by ID
-  """
+  """Get a note by ID"""
   note(id: ID!): NoteObject
 
-  """
-  List all notes, ordered by createdAt descending
-  """
+  """List all notes, ordered by createdAt descending"""
   notes: [NoteObject!]!
 
-  """
-  Get a plan embedding by ID
-  """
+  """Get a plan embedding by ID"""
   planEmbedding(input: GetPlanEmbeddingInput!): PlanEmbeddingObject
 
-  """
-  List plan embeddings by plan ID, ordered by createdAt ascending
-  """
+  """List plan embeddings by plan ID, ordered by createdAt ascending"""
   planEmbeddings(input: PlanEmbeddingsByPlanInput!): [PlanEmbeddingObject!]!
 
-  """
-  Get a plan output stream chunk by ID
-  """
-  planOutputStreamChunk(
-    input: GetPlanOutputStreamChunkInput!
-  ): PlanOutputStreamChunkObject
+  """Get a plan output stream chunk by ID"""
+  planOutputStreamChunk(input: GetPlanOutputStreamChunkInput!): PlanOutputStreamChunkObject
 
   """
   List plan output stream chunks by plan ID, ordered by createdAt ascending
   """
-  planOutputStreamChunks(
-    input: ListPlanOutputStreamChunksInput!
-  ): [PlanOutputStreamChunkObject!]!
+  planOutputStreamChunks(input: ListPlanOutputStreamChunksInput!): [PlanOutputStreamChunkObject!]!
 
   """
   Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.
   """
   planRunsByPlanId(input: PlanRunsByPlanIdInput!): [PlanRunObject!]!
 
-  """
-  Get a plan by ID
-  """
+  """Get a plan by ID"""
   plan(id: ID!): PlanObject
 
-  """
-  List all plans
-  """
+  """List all plans"""
   plans: [PlanObject!]!
 
   """
   List plans filtered by status(es), assignee(s), project, title; sorted and paginated. Pass statuses/assignees arrays; empty or "all" in statuses means no status filter.
   """
-  listPlansByStatus(
-    input: ListPlansByStatusInput!
-  ): ListPlansByStatusResultObject!
+  listPlansByStatus(input: ListPlansByStatusInput!): ListPlansByStatusResultObject!
 
   """
   Plan count per status for sidebar/filters (alias: use planCountsByStatus)
   """
   listPlanCountsByStatus: [PlanStatusCountObject!]!
 
-  """
-  Plan count per status for sidebar/filters
-  """
+  """Plan count per status for sidebar/filters"""
   planCountsByStatus: [PlanStatusCountObject!]!
 
   """
@@ -2052,44 +1488,28 @@ type Query {
   """
   searchPlans(input: SearchPlansInput!): ListPlansByStatusResultObject!
 
-  """
-  Distinct category values from plans for filters
-  """
+  """Distinct category values from plans for filters"""
   listDistinctCategories: [String!]!
 
-  """
-  Distinct author and assignee values from plans and tasks for filters
-  """
+  """Distinct author and assignee values from plans and tasks for filters"""
   listDistinctAuthorsAndAssignees: [String!]!
 
-  """
-  Get a project by ID
-  """
+  """Get a project by ID"""
   project(id: ID!): ProjectObject
 
-  """
-  List all projects, ordered by createdAt descending
-  """
+  """List all projects, ordered by createdAt descending"""
   projects: [ProjectObject!]!
 
-  """
-  List all roles with their permissions
-  """
+  """List all roles with their permissions"""
   roles: [RoleObject!]!
 
-  """
-  Get a role by ID
-  """
+  """Get a role by ID"""
   role(id: ID!): RoleObject
 
-  """
-  List all permissions
-  """
+  """List all permissions"""
   permissions: [PermissionObject!]!
 
-  """
-  Get roles assigned to a user
-  """
+  """Get roles assigned to a user"""
   rolesForUser(userId: ID!): [RoleObject!]!
 
   """
@@ -2097,36 +1517,24 @@ type Query {
   """
   permissionsForUser(userId: ID!): [String!]!
 
-  """
-  Get permission names for the current user
-  """
+  """Get permission names for the current user"""
   myPermissions: [String!]!
 
-  """
-  List all service accounts (admin, human only).
-  """
+  """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!
 
-  """
-  Get a service account by ID (admin, human only).
-  """
+  """Get a service account by ID (admin, human only)."""
   serviceAccount(id: ID!): ServiceAccountObject
 
   """
   List credentials for a service account, including revoked (admin, human only).
   """
-  serviceAccountCredentials(
-    serviceAccountId: ID!
-  ): [ServiceAccountCredentialObject!]!
+  serviceAccountCredentials(serviceAccountId: ID!): [ServiceAccountCredentialObject!]!
 
-  """
-  Roles assigned to a service account (admin, human only).
-  """
+  """Roles assigned to a service account (admin, human only)."""
   rolesForServiceAccount(serviceAccountId: ID!): [RoleObject!]!
 
-  """
-  Permission names for a service account (union of role permissions).
-  """
+  """Permission names for a service account (union of role permissions)."""
   permissionsForServiceAccount(serviceAccountId: ID!): [String!]!
 
   """
@@ -2144,28 +1552,22 @@ type Query {
   """
   listSources: ListSourcesResultObject!
 
-  """
-  Get a task embedding by ID
-  """
+  """Get a task embedding by ID"""
   taskEmbedding(input: GetTaskEmbeddingInput!): TaskEmbeddingObject
 
-  """
-  List task embeddings by task ID, ordered by createdAt ascending
-  """
+  """List task embeddings by task ID, ordered by createdAt ascending"""
   taskEmbeddings(input: TaskEmbeddingsByTaskInput!): [TaskEmbeddingObject!]!
 
-  """
-  Get a task by ID
-  """
+  """Get a task by ID"""
   task(id: ID!): TaskObject
 
   """
-  List all tasks, ordered by createdAt ascending
+  List all tasks, ordered by planId then sortOrder then createdAt ascending
   """
   tasks: [TaskObject!]!
 
   """
-  List tasks for a plan by plan ID
+  List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending
   """
   tasksByPlanId(input: TasksByPlanIdInput!): [TaskObject!]!
 
@@ -2175,23 +1577,17 @@ type Query {
   tasksByProjectId(input: TasksByProjectIdInput!): TasksByProjectIdResultObject!
 
   """
-  List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED)
+  List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending
   """
   remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
 
-  """
-  Get a user by ID
-  """
+  """Get a user by ID"""
   user(id: ID!): UserObject
 
-  """
-  Get the currently authenticated user
-  """
+  """Get the currently authenticated user"""
   me: UserObject
 
-  """
-  List all users, ordered by createdAt descending
-  """
+  """List all users, ordered by createdAt descending"""
   users: [UserObject!]!
 
   """
@@ -2199,207 +1595,137 @@ type Query {
   """
   workspaceSettings: WorkspaceSettingsObject!
 
-  """
-  Get a local repository by id for the authenticated user.
-  """
+  """Get a local repository by id for the authenticated user."""
   workspaceLocalRepository(id: ID!): WorkspaceLocalRepositoryObject
 
-  """
-  List local repositories for the authenticated user.
-  """
+  """List local repositories for the authenticated user."""
   workspaceLocalRepositories: [WorkspaceLocalRepositoryObject!]!
 }
 
 input ActivityByDateInput {
-  """
-  Single date (YYYY-MM-DD). Provide exactly one of date or daysBack.
-  """
+  """Single date (YYYY-MM-DD). Provide exactly one of date or daysBack."""
   date: String
 
-  """
-  Last N days (1-365). Provide exactly one of date or daysBack.
-  """
+  """Last N days (1-365). Provide exactly one of date or daysBack."""
   daysBack: Int
   limit: Int
   offset: Int
 }
 
 input ActivityByDateRangeInput {
-  """
-  Start of range (ISO 8601).
-  """
+  """Start of range (ISO 8601)."""
   startIso: String!
 
-  """
-  End of range (ISO 8601).
-  """
+  """End of range (ISO 8601)."""
   endIso: String!
   limit: Int
   offset: Int
 }
 
 input LastActivityInput {
-  """
-  Plan ID (UUID). Returns the single most recent activity for this plan.
-  """
+  """Plan ID (UUID). Returns the single most recent activity for this plan."""
   planId: String!
 
-  """
-  Optional task ID to scope the last activity to that task.
-  """
+  """Optional task ID to scope the last activity to that task."""
   taskId: String
 }
 
 input GetCommitLinkInput {
-  """
-  Commit link id
-  """
+  """Commit link id"""
   id: ID!
 }
 
 input CommitLinksByPlanIdInput {
-  """
-  Plan id to list commit links for
-  """
+  """Plan id to list commit links for"""
   planId: ID!
 }
 
 input CommitLinksByTaskIdInput {
-  """
-  Task id to list commit links for
-  """
+  """Task id to list commit links for"""
   taskId: ID!
 }
 
-"""
-Input for listing custom prompts with optional filters
-"""
+"""Input for listing custom prompts with optional filters"""
 input ListCustomPromptsInput {
-  """
-  Filter by prompt type
-  """
+  """Filter by prompt type"""
   promptType: CustomPromptType
 
-  """
-  Filter by labels (matches any)
-  """
+  """Filter by labels (matches any)"""
   labels: [String!]
 
-  """
-  Search by title (case-insensitive partial match)
-  """
+  """Search by title (case-insensitive partial match)"""
   search: String
 
-  """
-  Filter by project ID
-  """
+  """Filter by project ID"""
   projectId: ID
 
-  """
-  Filter by user ID
-  """
+  """Filter by user ID"""
   userId: ID
 
-  """
-  Include soft-deleted prompts
-  """
+  """Include soft-deleted prompts"""
   includeDeleted: Boolean! = false
 }
 
 input GetGeneratorInput {
-  """
-  Generator name (e.g. from @tools/generators)
-  """
+  """Generator name (e.g. from @tools/generators)"""
   name: String!
 }
 
 input ListPullsInput {
-  """
-  Filter by base branch
-  """
+  """Filter by base branch"""
   base: String
 
-  """
-  Filter by merged (true/false); omit for no filter
-  """
+  """Filter by merged (true/false); omit for no filter"""
   merged: Boolean
 
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 
-  """
-  Filter by state: open, closed, or all
-  """
+  """Filter by state: open, closed, or all"""
   state: String
 }
 
 input GetPullInput {
-  """
-  Pull request number
-  """
+  """Pull request number"""
   number: Int!
 
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 }
 
 input GitHubRepoInput {
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 
-  """
-  Filter by state: open, closed, or all
-  """
+  """Filter by state: open, closed, or all"""
   state: String!
 }
 
 input LinesAddedDeletedInput {
-  """
-  Max merged PRs to fetch for diff stats (default 100); caps API calls.
-  """
+  """Max merged PRs to fetch for diff stats (default 100); caps API calls."""
   maxPrs: Int
 
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Bucket by week (YYYY-Www) or month (YYYY-MM); default month.
-  """
+  """Bucket by week (YYYY-Www) or month (YYYY-MM); default month."""
   period: String
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 }
 
 input OpenToMergedCycleTimeInput {
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
   """
@@ -2407,55 +1733,37 @@ input OpenToMergedCycleTimeInput {
   """
   period: String
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 }
 
 input PrCountByLabelInput {
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 
-  """
-  Filter PRs by state: open, closed, or all (default).
-  """
+  """Filter PRs by state: open, closed, or all (default)."""
   state: String
 }
 
 input PrsMergedPerPeriodInput {
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Period bucket: week (YYYY-Www) or month (YYYY-MM) in UTC.
-  """
+  """Period bucket: week (YYYY-Www) or month (YYYY-MM) in UTC."""
   period: String!
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 }
 
 input ReviewCycleTimeInput {
-  """
-  Max merged PRs to fetch reviews for (default 100); caps API calls.
-  """
+  """Max merged PRs to fetch reviews for (default 100); caps API calls."""
   maxPrs: Int
 
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
   """
@@ -2463,9 +1771,7 @@ input ReviewCycleTimeInput {
   """
   period: String
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 }
 
@@ -2475,41 +1781,27 @@ input CommitsPerPrInput {
   """
   maxPrs: Int
 
-  """
-  Repository owner (e.g. GitHub username or org)
-  """
+  """Repository owner (e.g. GitHub username or org)"""
   owner: String!
 
-  """
-  Bucket by week (YYYY-Www) or month (YYYY-MM); omit for no period.
-  """
+  """Bucket by week (YYYY-Www) or month (YYYY-MM); omit for no period."""
   period: String
 
-  """
-  Repository name
-  """
+  """Repository name"""
   repo: String!
 }
 
 input QueueDetailsInput {
-  """
-  Queue name (e.g. plans).
-  """
+  """Queue name (e.g. plans)."""
   name: String!
 
-  """
-  Max jobs to return. Omit or 0 to skip loading jobs.
-  """
+  """Max jobs to return. Omit or 0 to skip loading jobs."""
   limit: Int
 
-  """
-  Offset for job pagination.
-  """
+  """Offset for job pagination."""
   offset: Int
 
-  """
-  Sort jobs ascending by timestamp.
-  """
+  """Sort jobs ascending by timestamp."""
   asc: Boolean
 
   """
@@ -2519,64 +1811,44 @@ input QueueDetailsInput {
 }
 
 input RepeatableJobsInput {
-  """
-  Queue name (e.g. plans).
-  """
+  """Queue name (e.g. plans)."""
   queueName: String!
 
-  """
-  Start index for pagination.
-  """
+  """Start index for pagination."""
   start: Int
 
-  """
-  End index for pagination.
-  """
+  """End index for pagination."""
   end: Int
 
-  """
-  Sort repeatable jobs ascending.
-  """
+  """Sort repeatable jobs ascending."""
   asc: Boolean
 }
 
 input GetPlanEmbeddingInput {
-  """
-  Plan embedding id
-  """
+  """Plan embedding id"""
   id: ID!
 }
 
 input PlanEmbeddingsByPlanInput {
-  """
-  Plan id to list embeddings for
-  """
+  """Plan id to list embeddings for"""
   planId: ID!
 }
 
 input GetPlanOutputStreamChunkInput {
-  """
-  Chunk id
-  """
+  """Chunk id"""
   id: ID!
 }
 
 input ListPlanOutputStreamChunksInput {
-  """
-  Plan id to list chunks for
-  """
+  """Plan id to list chunks for"""
   planId: ID!
 }
 
 input PlanRunsByPlanIdInput {
-  """
-  Max plan-run audit rows to return, newest first.
-  """
+  """Max plan-run audit rows to return, newest first."""
   limit: Int
 
-  """
-  Plan id whose run audit rows should be returned
-  """
+  """Plan id whose run audit rows should be returned"""
   planId: ID!
 }
 
@@ -2605,75 +1877,53 @@ input ListPlansByStatusInput {
   """
   statuses: [String]
 
-  """
-  Filter plans whose title contains this substring (case-insensitive)
-  """
+  """Filter plans whose title contains this substring (case-insensitive)"""
   titleSubstring: String
 }
 
 input SearchPlansInput {
   limit: Int
 
-  """
-  Semantic search query (embedded for vector similarity)
-  """
+  """Semantic search query (embedded for vector similarity)"""
   query: String!
 }
 
 input SearchInput {
-  """
-  Max number of chunks to return (default 20).
-  """
+  """Max number of chunks to return (default 20)."""
   limit: Int
 
-  """
-  Text query to embed and search by vector similarity.
-  """
+  """Text query to embed and search by vector similarity."""
   query: String!
 }
 
 input GetTaskEmbeddingInput {
-  """
-  Task embedding id
-  """
+  """Task embedding id"""
   id: ID!
 }
 
 input TaskEmbeddingsByTaskInput {
-  """
-  Task id to list embeddings for
-  """
+  """Task id to list embeddings for"""
   taskId: ID!
 }
 
 input TasksByPlanIdInput {
-  """
-  Plan id to list tasks for
-  """
+  """Plan id to list tasks for"""
   planId: ID!
 }
 
 input TasksByProjectIdInput {
-  """
-  Max number of tasks to return. Omit for no limit.
-  """
+  """Max number of tasks to return. Omit for no limit."""
   limit: Float
 
-  """
-  Number of tasks to skip. Omit or 0 for first page.
-  """
+  """Number of tasks to skip. Omit or 0 for first page."""
   offset: Float
 
-  """
-  Project id (FK) to list tasks for
-  """
+  """Project id (FK) to list tasks for"""
   projectId: ID!
 }
 
 input RemainingTasksByPlanIdInput {
-  """
-  Plan id; returns tasks with status in PENDING, IN_PROGRESS, BLOCKED
-  """
+  """Plan id; returns tasks with status in PENDING, IN_PROGRESS, BLOCKED"""
   planId: ID!
 }
 
@@ -2708,9 +1958,7 @@ type Mutation {
   """
   signout: SignoutResultObject!
 
-  """
-  Register a new user. Returns id, email, and JWT access token.
-  """
+  """Register a new user. Returns id, email, and JWT access token."""
   register(input: RegisterInput!): RegisterResultObject!
 
   """
@@ -2718,48 +1966,22 @@ type Mutation {
   """
   linkCommit(input: LinkCommitInput!): CommitLinkObject!
 
-  """
-  Parse an uploaded document and return a suggested plan title and proposed tasks JSON without persisting.
-  """
-  previewCortexDocumentIngest(
-    input: PreviewCortexDocumentIngestInput!
-  ): PreviewCortexDocumentIngestResultObject!
-
-  """
-  Parse an uploaded document, create a plan using the same rules as createPlan, then create tasks using the same fields as createTask. Rolls back the plan if any task insert fails.
-  """
-  commitCortexDocumentIngest(
-    input: CommitCortexDocumentIngestInput!
-  ): CommitCortexDocumentIngestResultObject!
-
-  """
-  Create a new custom prompt
-  """
+  """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
 
-  """
-  Update an existing custom prompt
-  """
+  """Update an existing custom prompt"""
   updateCustomPrompt(input: UpdateCustomPromptInput!): CustomPromptObject
 
-  """
-  Soft delete a custom prompt by ID
-  """
+  """Soft delete a custom prompt by ID"""
   deleteCustomPrompt(id: ID!): Boolean!
 
-  """
-  Permanently delete a custom prompt by ID
-  """
+  """Permanently delete a custom prompt by ID"""
   hardDeleteCustomPrompt(id: ID!): Boolean!
 
-  """
-  Restore a soft-deleted custom prompt
-  """
+  """Restore a soft-deleted custom prompt"""
   restoreCustomPrompt(id: ID!): CustomPromptObject
 
-  """
-  Write a custom prompt to the file system at its configured filePath
-  """
+  """Write a custom prompt to the file system at its configured filePath"""
   writeCustomPromptToFileSystem(id: ID!): Boolean!
 
   """
@@ -2780,9 +2002,7 @@ type Mutation {
   """
   Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error.
   """
-  enqueueDocIngestion(
-    input: EnqueueDocIngestionInput!
-  ): EnqueueDocIngestionResultObject!
+  enqueueDocIngestion(input: EnqueueDocIngestionInput!): EnqueueDocIngestionResultObject!
 
   """
   Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error.
@@ -2792,38 +2012,24 @@ type Mutation {
   """
   Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName).
   """
-  removeRepeatableJob(
-    input: RemoveRepeatableJobInput!
-  ): RemoveRepeatableJobResultObject!
+  removeRepeatableJob(input: RemoveRepeatableJobInput!): RemoveRepeatableJobResultObject!
 
-  """
-  Create a note
-  """
+  """Create a note"""
   createNote(input: CreateNoteInput!): NoteObject!
 
-  """
-  Update a note
-  """
+  """Update a note"""
   updateNote(input: UpdateNoteInput!): NoteObject
 
-  """
-  Delete a note by ID
-  """
+  """Delete a note by ID"""
   deleteNote(id: ID!): Boolean!
 
-  """
-  Append a chunk to a plan's output stream (e.g. agent iteration log).
-  """
+  """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
   appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
 
-  """
-  Create a plan
-  """
+  """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
 
-  """
-  Update a plan
-  """
+  """Update a plan"""
   updatePlan(input: UpdatePlanInput!): PlanObject
 
   """
@@ -2831,9 +2037,7 @@ type Mutation {
   """
   setPlanStatus(input: SetPlanStatusInput!): PlanObject
 
-  """
-  Delete a plan by ID
-  """
+  """Delete a plan by ID"""
   deletePlan(input: DeletePlanInput!): Boolean!
 
   """
@@ -2844,31 +2048,22 @@ type Mutation {
   """
   Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
   """
-  workflowPlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
-    @deprecated(
-      reason: "Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only."
-    )
+  workflowPlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject! @deprecated(reason: "Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.")
 
   """
   Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.
   """
-  enqueuePlanRalphOrchestrator(
-    input: EnqueuePlanRalphOrchestratorInput!
-  ): EnqueuePlanRunResultObject!
+  enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
 
   """
   Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
 
-  """
-  Create a project
-  """
+  """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
 
-  """
-  Update a project
-  """
+  """Update a project"""
   updateProject(input: UpdateProjectInput!): ProjectObject
 
   """
@@ -2876,93 +2071,55 @@ type Mutation {
   """
   deleteProject(input: DeleteProjectInput!): Boolean!
 
-  """
-  Create a role
-  """
+  """Create a role"""
   createRole(input: CreateRoleInput!): RoleObject!
 
-  """
-  Update a role
-  """
+  """Update a role"""
   updateRole(input: UpdateRoleInput!): RoleObject
 
-  """
-  Delete a role
-  """
+  """Delete a role"""
   deleteRole(id: ID!): Boolean!
 
-  """
-  Assign a role to a user
-  """
+  """Assign a role to a user"""
   assignRoleToUser(input: AssignRoleToUserInput!): Boolean!
 
-  """
-  Remove a role from a user
-  """
+  """Remove a role from a user"""
   removeRoleFromUser(input: RemoveRoleFromUserInput!): Boolean!
 
-  """
-  Add a permission to a role
-  """
+  """Add a permission to a role"""
   addPermissionToRole(input: AddPermissionToRoleInput!): Boolean!
 
-  """
-  Remove a permission from a role
-  """
+  """Remove a permission from a role"""
   removePermissionFromRole(input: RemovePermissionFromRoleInput!): Boolean!
 
-  """
-  Create a service account (admin, human only).
-  """
+  """Create a service account (admin, human only)."""
   createServiceAccount(input: CreateServiceAccountInput!): ServiceAccountObject!
 
-  """
-  Update a service account (admin, human only).
-  """
+  """Update a service account (admin, human only)."""
   updateServiceAccount(input: UpdateServiceAccountInput!): ServiceAccountObject
 
-  """
-  Disable a service account (admin, human only).
-  """
+  """Disable a service account (admin, human only)."""
   disableServiceAccount(id: ID!): ServiceAccountObject
 
-  """
-  Re-enable a disabled service account (admin, human only).
-  """
+  """Re-enable a disabled service account (admin, human only)."""
   enableServiceAccount(id: ID!): ServiceAccountObject
 
-  """
-  Create a credential; returns plaintext token once (admin, human only).
-  """
-  createServiceAccountCredential(
-    input: CreateServiceAccountCredentialInput!
-  ): CreateServiceAccountCredentialResultObject
+  """Create a credential; returns plaintext token once (admin, human only)."""
+  createServiceAccountCredential(input: CreateServiceAccountCredentialInput!): CreateServiceAccountCredentialResultObject
 
-  """
-  Revoke a service account credential (admin, human only).
-  """
+  """Revoke a service account credential (admin, human only)."""
   revokeServiceAccountCredential(credentialId: ID!): Boolean!
 
-  """
-  Assign a role to a service account (admin, human only).
-  """
+  """Assign a role to a service account (admin, human only)."""
   assignRoleToServiceAccount(input: AssignRoleToServiceAccountInput!): Boolean!
 
-  """
-  Remove a role from a service account (admin, human only).
-  """
-  removeRoleFromServiceAccount(
-    input: RemoveRoleFromServiceAccountInput!
-  ): Boolean!
+  """Remove a role from a service account (admin, human only)."""
+  removeRoleFromServiceAccount(input: RemoveRoleFromServiceAccountInput!): Boolean!
 
-  """
-  Create a task
-  """
+  """Create a task"""
   createTask(input: CreateTaskInput!): TaskObject!
 
-  """
-  Update a task
-  """
+  """Update a task"""
   updateTask(input: UpdateTaskInput!): TaskObject
 
   """
@@ -2970,69 +2127,45 @@ type Mutation {
   """
   reorderPlanTasks(input: ReorderPlanTasksInput!): [TaskObject!]!
 
-  """
-  Delete a task by ID
-  """
+  """Delete a task by ID"""
   deleteTask(input: DeleteTaskInput!): Boolean!
 
-  """
-  Create a user
-  """
+  """Create a user"""
   createUser(input: CreateUserInput!): UserObject!
 
-  """
-  Update a user
-  """
+  """Update a user"""
   updateUser(input: UpdateUserInput!): UserObject
 
-  """
-  Disable a user; they will not be able to log in.
-  """
+  """Disable a user; they will not be able to log in."""
   disableUser(id: ID!): UserObject
 
-  """
-  Re-enable a disabled user.
-  """
+  """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
 
   """
   Update contact fields and/or enabled editors on the authenticated user's workspace profile.
   """
-  updateWorkspaceProfile(
-    input: UpdateWorkspaceProfileInput!
-  ): UserWorkspaceProfileObject!
+  updateWorkspaceProfile(input: UpdateWorkspaceProfileInput!): UserWorkspaceProfileObject!
 
-  """
-  Register a local filesystem repository for the authenticated user.
-  """
-  createWorkspaceLocalRepository(
-    input: CreateWorkspaceLocalRepositoryInput!
-  ): WorkspaceLocalRepositoryObject!
+  """Register a local filesystem repository for the authenticated user."""
+  createWorkspaceLocalRepository(input: CreateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
 
   """
   Update metadata for a local repository owned by the authenticated user.
   """
-  updateWorkspaceLocalRepository(
-    input: UpdateWorkspaceLocalRepositoryInput!
-  ): WorkspaceLocalRepositoryObject!
+  updateWorkspaceLocalRepository(input: UpdateWorkspaceLocalRepositoryInput!): WorkspaceLocalRepositoryObject!
 
   """
   Assign, change, or clear the Cortex project link for a local repository.
   """
-  setWorkspaceLocalRepositoryProject(
-    input: SetWorkspaceLocalRepositoryProjectInput!
-  ): WorkspaceLocalRepositoryObject!
+  setWorkspaceLocalRepositoryProject(input: SetWorkspaceLocalRepositoryProjectInput!): WorkspaceLocalRepositoryObject!
 
   """
   Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories.
   """
-  applyWorkspaceEditorConfiguration(
-    input: ApplyWorkspaceEditorConfigurationInput
-  ): ApplyWorkspaceEditorConfigurationResultObject!
+  applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigurationInput): ApplyWorkspaceEditorConfigurationResultObject!
 
-  """
-  Remove a local repository owned by the authenticated user.
-  """
+  """Remove a local repository owned by the authenticated user."""
   deleteWorkspaceLocalRepository(id: ID!): Boolean!
 }
 
@@ -3042,105 +2175,154 @@ input AgentsRunChatTurnInput {
   """
   conversationId: String
 
-  """
-  User message text for this turn.
-  """
+  """User message text for this turn."""
   message: String!
 }
 
 input LoginInput {
-  """
-  User email
-  """
+  """User email"""
   email: String!
 
-  """
-  User password
-  """
+  """User password"""
   password: String!
 }
 
 input RegisterInput {
-  """
-  User email (must be unique)
-  """
+  """User email (must be unique)"""
   email: String!
 
-  """
-  User password (stored hashed with bcrypt)
-  """
+  """User password (stored hashed with bcrypt)"""
   password: String!
 
-  """
-  GitHub username for display; defaults to email local part if omitted
-  """
+  """GitHub username for display; defaults to email local part if omitted"""
   githubUsername: String
 }
 
 input LinkCommitInput {
-  """
-  Plan id to link the commit to
-  """
+  """Plan id to link the commit to"""
   planId: ID!
 
-  """
-  Repository (e.g. owner/repo)
-  """
+  """Repository (e.g. owner/repo)"""
   repo: String!
 
-  """
-  Git commit SHA (squash commit after PR merge)
-  """
+  """Git commit SHA (squash commit after PR merge)"""
   sha: String!
 
-  """
-  Optional task id to link the commit to
-  """
+  """Optional task id to link the commit to"""
   taskId: ID
 
-  """
-  Optional commit or PR message
-  """
+  """Optional commit or PR message"""
   message: String
 }
 
-input PreviewCortexDocumentIngestInput {
-  """
-  File bytes encoded as standard base64 (no data: URL prefix).
-  """
-  fileBase64: String!
+"""Input for creating a new custom prompt"""
+input CreateCustomPromptInput {
+  title: String!
+  content: String!
+  description: String
+  promptType: CustomPromptType!
+  labels: [String!]! = []
 
-  """
-  MIME type from the upload when known (e.g. text/markdown).
-  """
-  mimeType: String
+  """File path relative to workspace root for file system persistence"""
+  filePath: String
+  userId: ID
+  projectId: ID
 
-  """
-  Original filename for format detection fallback.
-  """
-  originalFilename: String
+  """Write content to the file system at filePath if provided"""
+  writeToFileSystem: Boolean! = false
 }
 
-input CommitCortexDocumentIngestInput {
+"""Input for updating an existing custom prompt"""
+input UpdateCustomPromptInput {
+  """Custom prompt id to update"""
+  id: ID!
+  title: String
+  content: String
+  description: String
+  promptType: CustomPromptType
+  labels: [String!]
+  filePath: String
+  userId: ID
+  projectId: ID
+
+  """Write content to the file system at filePath if provided"""
+  writeToFileSystem: Boolean! = false
+}
+
+input CreateQueueInput {
+  """Name of the queue to create."""
+  name: String!
+}
+
+input RetryJobInput {
+  """BullMQ job id to retry."""
+  jobId: ID!
+
+  """Queue name (e.g. plans)."""
+  queueName: String!
+}
+
+input EnqueueDocIngestionInput {
   """
-  File bytes encoded as standard base64 (no data: URL prefix).
+  Paths relative to workspace root; each directory is expanded to all .md files (recursive).
   """
-  fileBase64: String!
+  directories: [String!]
+
+  """Individual markdown file paths relative to workspace root."""
+  files: [String!]
 
   """
-  MIME type from the upload when known (e.g. text/markdown).
+  Ingestion scope for prior-state (default: "default"). Use different scopes to keep state separate.
   """
-  mimeType: String
+  scope: String
+
+  """Source repo for metadata (e.g. owner/repo)."""
+  repo: String
+
+  """Source commit SHA for metadata."""
+  sha: String
+}
+
+input DuplicateJobInput {
+  """BullMQ job id to duplicate."""
+  jobId: ID!
+
+  """Queue name (e.g. plans)."""
+  queueName: String!
+}
+
+input RemoveRepeatableJobInput {
+  """Queue name (e.g. plans)."""
+  queueName: String!
 
   """
-  Original filename for format detection fallback.
+  Repeatable job key (from repeatableJobs query). Required to remove a repeatable job.
   """
-  originalFilename: String
+  key: String!
+}
 
-  """
-  Same fields as createPlan. When title is blank or whitespace-only, the parser-suggested title from the document is used.
-  """
-  plan: CreatePlanInput!
+input CreateNoteInput {
+  author: String
+  content: String!
+}
+
+input UpdateNoteInput {
+  author: String
+  content: String
+
+  """Note id to update"""
+  id: ID!
+}
+
+input AppendPlanOutputInput {
+  """Content of the output chunk"""
+  content: String!
+
+  """Optional iteration number for the output chunk"""
+  iteration: Int
+
+  """Plan id to append output to"""
+  planId: ID!
 }
 
 input CreatePlanInput {
@@ -3164,163 +2346,13 @@ input CreatePlanInput {
   runConfigJson: String
 }
 
-"""
-Input for creating a new custom prompt
-"""
-input CreateCustomPromptInput {
-  title: String!
-  content: String!
-  description: String
-  promptType: CustomPromptType!
-  labels: [String!]! = []
-
-  """
-  File path relative to workspace root for file system persistence
-  """
-  filePath: String
-  userId: ID
-  projectId: ID
-
-  """
-  Write content to the file system at filePath if provided
-  """
-  writeToFileSystem: Boolean! = false
-}
-
-"""
-Input for updating an existing custom prompt
-"""
-input UpdateCustomPromptInput {
-  """
-  Custom prompt id to update
-  """
-  id: ID!
-  title: String
-  content: String
-  description: String
-  promptType: CustomPromptType
-  labels: [String!]
-  filePath: String
-  userId: ID
-  projectId: ID
-
-  """
-  Write content to the file system at filePath if provided
-  """
-  writeToFileSystem: Boolean! = false
-}
-
-input CreateQueueInput {
-  """
-  Name of the queue to create.
-  """
-  name: String!
-}
-
-input RetryJobInput {
-  """
-  BullMQ job id to retry.
-  """
-  jobId: ID!
-
-  """
-  Queue name (e.g. plans).
-  """
-  queueName: String!
-}
-
-input EnqueueDocIngestionInput {
-  """
-  Paths relative to workspace root; each directory is expanded to all .md files (recursive).
-  """
-  directories: [String!]
-
-  """
-  Individual markdown file paths relative to workspace root.
-  """
-  files: [String!]
-
-  """
-  Ingestion scope for prior-state (default: "default"). Use different scopes to keep state separate.
-  """
-  scope: String
-
-  """
-  Source repo for metadata (e.g. owner/repo).
-  """
-  repo: String
-
-  """
-  Source commit SHA for metadata.
-  """
-  sha: String
-}
-
-input DuplicateJobInput {
-  """
-  BullMQ job id to duplicate.
-  """
-  jobId: ID!
-
-  """
-  Queue name (e.g. plans).
-  """
-  queueName: String!
-}
-
-input RemoveRepeatableJobInput {
-  """
-  Queue name (e.g. plans).
-  """
-  queueName: String!
-
-  """
-  Repeatable job key (from repeatableJobs query). Required to remove a repeatable job.
-  """
-  key: String!
-}
-
-input CreateNoteInput {
-  author: String
-  content: String!
-}
-
-input UpdateNoteInput {
-  author: String
-  content: String
-
-  """
-  Note id to update
-  """
-  id: ID!
-}
-
-input AppendPlanOutputInput {
-  """
-  Content of the output chunk
-  """
-  content: String!
-
-  """
-  Optional iteration number for the output chunk
-  """
-  iteration: Int
-
-  """
-  Plan id to append output to
-  """
-  planId: ID!
-}
-
 input UpdatePlanInput {
   assignee: String
   author: String
   category: String
   description: String
 
-  """
-  Plan id to update
-  """
+  """Plan id to update"""
   id: ID!
   project: String
 
@@ -3344,9 +2376,7 @@ input UpdatePlanInput {
 }
 
 input SetPlanStatusInput {
-  """
-  Plan id to update status for
-  """
+  """Plan id to update status for"""
   planId: ID!
 
   """
@@ -3356,16 +2386,12 @@ input SetPlanStatusInput {
 }
 
 input DeletePlanInput {
-  """
-  Plan id to delete
-  """
+  """Plan id to delete"""
   id: ID!
 }
 
 input EnqueuePlanRunInput {
-  """
-  Plan id to enqueue a run for
-  """
+  """Plan id to enqueue a run for"""
   planId: ID!
 
   """
@@ -3390,34 +2416,22 @@ input EnqueuePlanRunInput {
 }
 
 input RalphPlanRunTuningInput {
-  """
-  Execution backend (e.g. cursor). Omit to use worktree defaults.
-  """
+  """Execution backend (e.g. cursor). Omit to use worktree defaults."""
   backend: String
 
-  """
-  Per-iteration timeout in seconds (positive integer).
-  """
+  """Per-iteration timeout in seconds (positive integer)."""
   iterationTimeoutSeconds: Int
 
-  """
-  Max Ralph iterations for this run (positive integer).
-  """
+  """Max Ralph iterations for this run (positive integer)."""
   iterations: Int
 
-  """
-  Model id passed to workflow-ralph --model.
-  """
+  """Model id passed to workflow-ralph --model."""
   model: String
 
-  """
-  Nx project name for workflow-ralph --project.
-  """
+  """Nx project name for workflow-ralph --project."""
   project: String
 
-  """
-  Prompt profile path (e.g. /agents-ralph) for --prompt.
-  """
+  """Prompt profile path (e.g. /agents-ralph) for --prompt."""
   prompt: String
 
   """
@@ -3425,9 +2439,7 @@ input RalphPlanRunTuningInput {
   """
   promptFile: String
 
-  """
-  Whether to pass --debug / --verbose to nested workflow-ralph.
-  """
+  """Whether to pass --debug / --verbose to nested workflow-ralph."""
   ralphDebugCli: RalphNestedDebugCli
 
   """
@@ -3435,14 +2447,10 @@ input RalphPlanRunTuningInput {
   """
   worktree: String
 
-  """
-  Cursor-only: branch/ref for --worktree-base.
-  """
+  """Cursor-only: branch/ref for --worktree-base."""
   worktreeBase: String
 
-  """
-  Cursor-only: pass --skip-worktree-setup to cursor-agent.
-  """
+  """Cursor-only: pass --skip-worktree-setup to cursor-agent."""
   skipWorktreeSetup: Boolean
 }
 
@@ -3466,14 +2474,10 @@ input EnqueuePlanRalphOrchestratorInput {
   """
   mode: PlanRalphWorkflowMode
 
-  """
-  Plan id to run the orchestrator for
-  """
+  """Plan id to run the orchestrator for"""
   planId: ID!
 
-  """
-  Job priority (lower = higher priority). Same as enqueuePlanRun.
-  """
+  """Job priority (lower = higher priority). Same as enqueuePlanRun."""
   priority: Int
 
   """
@@ -3481,9 +2485,7 @@ input EnqueuePlanRalphOrchestratorInput {
   """
   ralph: RalphPlanRunTuningInput
 
-  """
-  Required when mode is task; must belong to the plan.
-  """
+  """Required when mode is task; must belong to the plan."""
   taskId: ID
 
   """
@@ -3506,9 +2508,7 @@ enum PlanRalphWorkflowMode {
 }
 
 input CancelPlanRunInput {
-  """
-  Plan id whose in-queue run-plan (Ralph) job should be cancelled
-  """
+  """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
   planId: ID!
 }
 
@@ -3516,111 +2516,79 @@ input CreateProjectInput {
   description: String
   name: String!
 
-  """
-  NX project name (e.g. applications/openthrottle-server)
-  """
+  """NX project name (e.g. applications/openthrottle-server)"""
   nxProjectName: String
 }
 
 input UpdateProjectInput {
   description: String
 
-  """
-  Project id to update
-  """
+  """Project id to update"""
   id: ID!
   name: String
 
-  """
-  NX project name (e.g. applications/openthrottle-server)
-  """
+  """NX project name (e.g. applications/openthrottle-server)"""
   nxProjectName: String
 }
 
 input DeleteProjectInput {
-  """
-  Project id to delete
-  """
+  """Project id to delete"""
   id: ID!
 }
 
 input CreateRoleInput {
   description: String
 
-  """
-  Role name (e.g. admin, user, viewer). Must be unique.
-  """
+  """Role name (e.g. admin, user, viewer). Must be unique."""
   name: String!
 }
 
 input UpdateRoleInput {
   description: String
 
-  """
-  Role id to update
-  """
+  """Role id to update"""
   id: ID!
 
-  """
-  Role name. Pass null to leave unchanged.
-  """
+  """Role name. Pass null to leave unchanged."""
   name: String
 }
 
 input AssignRoleToUserInput {
-  """
-  Role id to assign
-  """
+  """Role id to assign"""
   roleId: ID!
 
-  """
-  User id to assign the role to
-  """
+  """User id to assign the role to"""
   userId: ID!
 }
 
 input RemoveRoleFromUserInput {
-  """
-  Role id to remove
-  """
+  """Role id to remove"""
   roleId: ID!
 
-  """
-  User id to remove the role from
-  """
+  """User id to remove the role from"""
   userId: ID!
 }
 
 input AddPermissionToRoleInput {
-  """
-  Permission id to add
-  """
+  """Permission id to add"""
   permissionId: ID!
 
-  """
-  Role id to add the permission to
-  """
+  """Role id to add the permission to"""
   roleId: ID!
 }
 
 input RemovePermissionFromRoleInput {
-  """
-  Permission id to remove
-  """
+  """Permission id to remove"""
   permissionId: ID!
 
-  """
-  Role id to remove the permission from
-  """
+  """Role id to remove the permission from"""
   roleId: ID!
 }
 
 input CreateServiceAccountInput {
   description: String
 
-  """
-  Stable name (e.g. openthrottle-mcp). Must be unique.
-  """
+  """Stable name (e.g. openthrottle-mcp). Must be unique."""
   name: String!
 }
 
@@ -3628,9 +2596,7 @@ input UpdateServiceAccountInput {
   description: String
   id: ID!
 
-  """
-  Display name. Pass null to leave unchanged.
-  """
+  """Display name. Pass null to leave unchanged."""
   name: String
 }
 
@@ -3655,9 +2621,7 @@ input CreateTaskInput {
   category: String
   description: String
 
-  """
-  Plan id the task belongs to
-  """
+  """Plan id the task belongs to"""
   planId: ID!
   project: String
 
@@ -3666,9 +2630,7 @@ input CreateTaskInput {
   """
   projectId: ID
 
-  """
-  JSON string of requirements array
-  """
+  """JSON string of requirements array"""
   requirements: String
 
   """
@@ -3685,21 +2647,15 @@ input UpdateTaskInput {
   category: String
   description: String
 
-  """
-  Task id to update
-  """
+  """Task id to update"""
   id: ID!
   planId: ID
   project: String
 
-  """
-  Optional. Project UUID. Pass null to clear; omit to leave unchanged.
-  """
+  """Optional. Project UUID. Pass null to clear; omit to leave unchanged."""
   projectId: ID
 
-  """
-  JSON string of requirements array
-  """
+  """JSON string of requirements array"""
   requirements: String
 
   """
@@ -3712,9 +2668,7 @@ input UpdateTaskInput {
 }
 
 input ReorderPlanTasksInput {
-  """
-  Plan id whose tasks are being reordered
-  """
+  """Plan id whose tasks are being reordered"""
   planId: ID!
 
   """
@@ -3724,36 +2678,26 @@ input ReorderPlanTasksInput {
 }
 
 input DeleteTaskInput {
-  """
-  Task id to delete
-  """
+  """Task id to delete"""
   id: ID!
 }
 
 input CreateUserInput {
   email: String
 
-  """
-  GitHub user or Organization name (e.g. OpenThrottle)
-  """
+  """GitHub user or Organization name (e.g. OpenThrottle)"""
   githubUsername: String!
 }
 
 input UpdateUserInput {
-  """
-  Set to null to re-enable a disabled user; omit to leave unchanged.
-  """
+  """Set to null to re-enable a disabled user; omit to leave unchanged."""
   disabledAt: DateTime
   email: String
 
-  """
-  GitHub username. Pass null to leave unchanged.
-  """
+  """GitHub username. Pass null to leave unchanged."""
   githubUsername: String
 
-  """
-  User id to update
-  """
+  """User id to update"""
   id: ID!
 }
 
@@ -3764,9 +2708,7 @@ input UpdateWorkspaceProfileInput {
 }
 
 input CreateWorkspaceLocalRepositoryInput {
-  """
-  Absolute path to an existing directory on the server host.
-  """
+  """Absolute path to an existing directory on the server host."""
   filesystemPath: String!
   displayName: String!
   gitRemoteUrl: String
@@ -3785,9 +2727,7 @@ input UpdateWorkspaceLocalRepositoryInput {
 input SetWorkspaceLocalRepositoryProjectInput {
   id: ID!
 
-  """
-  Cortex project id, or null to clear the link.
-  """
+  """Cortex project id, or null to clear the link."""
   projectId: ID
 }
 
@@ -3795,8 +2735,6 @@ input SetWorkspaceLocalRepositoryProjectInput {
 Optional filter: apply only to these local repository ids. Omit to apply to all linked repos.
 """
 input ApplyWorkspaceEditorConfigurationInput {
-  """
-  When set, only these repositories receive editor configuration.
-  """
+  """When set, only these repositories receive editor configuration."""
   repositoryIds: [ID!]
 }
