@@ -3,7 +3,14 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SelectSeparator } from '../SelectSeparator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '../index';
 import type { SelectSeparatorProps } from '../SelectSeparator';
 
 describe('SelectSeparator Component', () => {
@@ -13,13 +20,24 @@ describe('SelectSeparator Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SelectSeparator {...props} />;
+    const Component = () => (
+      <Select open={true}>
+        <SelectTrigger aria-label="Choose">
+          <SelectValue placeholder="Pick one" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="a">A</SelectItem>
+          <SelectSeparator {...props} />
+          <SelectItem value="b">B</SelectItem>
+        </SelectContent>
+      </Select>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders select separator inside open select', () => {
+    expect(component.getByRole('option', { name: 'A' })).toBeInTheDocument();
   });
 });

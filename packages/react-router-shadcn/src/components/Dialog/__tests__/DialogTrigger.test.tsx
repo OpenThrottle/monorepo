@@ -24,7 +24,9 @@ describe('DialogTrigger Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a dialog trigger button', () => {
+    expect(
+      component.getByRole('button', { name: 'Open dialog' }),
+    ).toBeInTheDocument();
   });
 });

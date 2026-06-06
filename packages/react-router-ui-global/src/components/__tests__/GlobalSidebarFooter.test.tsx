@@ -1,30 +1,22 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { GlobalProviders } from '../GlobalProviders';
 import { GlobalSidebarFooter } from '../GlobalSidebarFooter';
-import type { GlobalSidebarFooterProps } from '../GlobalSidebarFooter';
 
 describe('GlobalSidebarFooter Component', () => {
-  let component: RenderResult;
-  let props: GlobalSidebarFooterProps;
-
-  beforeEach(() => {
-    props = {};
-
+  test('renders system status link', () => {
     const Component = () => (
       <GlobalProviders>
-        <GlobalSidebarFooter {...props} />
+        <GlobalSidebarFooter />
       </GlobalProviders>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByRole('link', { name: /System Status/i }),
+    ).toHaveAttribute('href', expect.stringContaining('/health'));
   });
 });

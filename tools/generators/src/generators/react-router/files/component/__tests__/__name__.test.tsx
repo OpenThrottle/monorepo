@@ -19,7 +19,7 @@ describe('<%= name %> Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('should render the component name', () => {
+    expect(component.getByTestId('<%= name %>')).toBeInTheDocument();
   });
 });

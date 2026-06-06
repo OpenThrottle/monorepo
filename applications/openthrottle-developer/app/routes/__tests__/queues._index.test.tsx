@@ -1,23 +1,23 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../queues._index';
-import { render, RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import QueuesIndex from '../queues._index';
 
-describe.skip('routes/queues._index.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/queues._index.tsx', () => {
+  test('renders queues introduction and table', () => {
+    render(
+      <MemoryRouter>
+        <QueuesIndex
+          actionData={undefined}
+          loaderData={{ queues: [] }}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByRole('heading', { name: 'Queues' })).toBeInTheDocument();
+    expect(screen.getByTestId('QueuesTable')).toBeInTheDocument();
   });
 });

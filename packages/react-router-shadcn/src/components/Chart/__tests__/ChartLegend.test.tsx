@@ -28,7 +28,9 @@ describe('ChartLegend Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('mounts chart legend inside bar chart', () => {
+    expect(
+      component.container.querySelector('.recharts-wrapper'),
+    ).toBeInTheDocument();
   });
 });

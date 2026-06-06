@@ -19,7 +19,7 @@ describe('TableHead Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a column header cell', () => {
+    expect(component.container.querySelector('th')).toBeInTheDocument();
   });
 });

@@ -1,27 +1,21 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import { MCP_DEVELOPER_AUTH_DOC_HREF } from '~/routing/settings/utils/settings-docs-links';
 import { SettingsKeysServiceAccountCredentials } from '../SettingsKeysServiceAccountCredentials';
-import type { SettingsKeysServiceAccountCredentialsProps } from '../SettingsKeysServiceAccountCredentials';
 
 describe('SettingsKeysServiceAccountCredentials Component', () => {
-  let component: RenderResult;
-  let props: SettingsKeysServiceAccountCredentialsProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => (
-      <SettingsKeysServiceAccountCredentials {...props} />
-    );
+  test('renders credential guidance and auth docs link', () => {
+    const Component = () => <SettingsKeysServiceAccountCredentials />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByText('Service account credentials')).toBeInTheDocument();
+    expect(screen.getByText(/One-time secret:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rotation:/i)).toBeInTheDocument();
+    expect(
+      screen.getByTestId('SettingsKeysIntroduction-docs-link'),
+    ).toHaveAttribute('href', MCP_DEVELOPER_AUTH_DOC_HREF);
   });
 });

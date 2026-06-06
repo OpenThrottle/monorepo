@@ -11,7 +11,7 @@ describe('SidebarProvider Component', () => {
   let props: SidebarProviderProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: <span>Sidebar child</span> };
 
     const Component = () => <SidebarProvider {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,9 @@ describe('SidebarProvider Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar provider wrapper', () => {
+    expect(
+      component.container.querySelector('[data-slot="sidebar-wrapper"]'),
+    ).toBeInTheDocument();
   });
 });

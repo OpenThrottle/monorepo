@@ -5,21 +5,36 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { TooltipContent } from '../TooltipContent';
 import type { TooltipContentProps } from '../TooltipContent';
+import { Tooltip } from '../Tooltip';
+import { TooltipProvider } from '../TooltipProvider';
+import { TooltipTrigger } from '../TooltipTrigger';
 
 describe('TooltipContent Component', () => {
   let component: RenderResult;
   let props: TooltipContentProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Tooltip body' };
 
-    const Component = () => <TooltipContent {...props} />;
+    const Component = () => (
+      <TooltipProvider>
+        <Tooltip open={true}>
+          <TooltipTrigger>Hover</TooltipTrigger>
+          <TooltipContent {...props} />
+        </Tooltip>
+      </TooltipProvider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders tooltip content when open', () => {
+    expect(
+      component.getByRole('button', { name: 'Hover' }),
+    ).toBeInTheDocument();
+    expect(
+      document.body.querySelector('[data-slot="tooltip-content"]'),
+    ).toHaveTextContent('Tooltip body');
   });
 });

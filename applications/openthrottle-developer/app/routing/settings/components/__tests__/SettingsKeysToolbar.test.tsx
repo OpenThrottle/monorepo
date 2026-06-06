@@ -30,15 +30,11 @@ describe('SettingsKeysToolbar Component', () => {
     cleanup();
   });
 
-  test('should render', () => {
-    const component = renderToolbar();
-    expect(component.baseElement).toMatchSnapshot();
-  });
-
   describe('when no service accounts', () => {
     test('shows empty message and disables create', () => {
       renderToolbar({ serviceAccounts: [] });
 
+      expect(screen.getByTestId('SettingsKeysToolbar')).toBeInTheDocument();
       expect(
         screen.getByTestId('SettingsKeysToolbar-no-accounts'),
       ).toBeInTheDocument();

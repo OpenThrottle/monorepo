@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SheetFooter } from '../SheetFooter';
+import { Sheet, SheetContent, SheetFooter } from '../index';
 import type { SheetFooterProps } from '../SheetFooter';
 
 describe('SheetFooter Component', () => {
@@ -11,15 +11,21 @@ describe('SheetFooter Component', () => {
   let props: SheetFooterProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Sheet footer' };
 
-    const Component = () => <SheetFooter {...props} />;
+    const Component = () => (
+      <Sheet open={true}>
+        <SheetContent>
+          <SheetFooter {...props} />
+        </SheetContent>
+      </Sheet>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sheet footer content', () => {
+    expect(component.getByText('Sheet footer')).toBeInTheDocument();
   });
 });

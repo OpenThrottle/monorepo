@@ -11,7 +11,7 @@ describe('InputGroupText Component', () => {
   let props: InputGroupTextProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Prefix' };
 
     const Component = () => <InputGroupText {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,7 @@ describe('InputGroupText Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders input group text', () => {
+    expect(component.getByText('Prefix')).toBeInTheDocument();
   });
 });

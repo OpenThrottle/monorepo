@@ -1,25 +1,22 @@
+import * as React from 'react';
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-// import { default as Route } from '../<%= name %>';
+import Component from '../<%= name %>';
 
 describe('routes/<%= name %>.tsx', () => {
-  // let component: RenderResult;
+  test('renders page heading', () => {
+    const view = render(
+      <MemoryRouter>
+        <Component
+          actionData={undefined}
+          loaderData={{}}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
+    );
 
-  // beforeEach(() => {
-  //   component = render(
-  //     <RenderRouteWithOutletContext
-  //       Route={Route}
-  //       context={{}}
-  //       initialEntries={[`/`]}
-  //       path="/"
-  //     />,
-  //   );
-  // });
-
-  // test('should render', () => {
-  //   expect(component.baseElement).toMatchSnapshot();
-  // });
-
-  test('should render', async () => {
-    expect(true).toStrictEqual(false);
+    expect(view.getByRole('heading', { name: '<%= namePascal %>' })).toBeInTheDocument();
   });
 });

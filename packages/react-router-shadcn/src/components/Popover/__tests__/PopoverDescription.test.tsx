@@ -5,21 +5,29 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PopoverDescription } from '../PopoverDescription';
 import type { PopoverDescriptionProps } from '../PopoverDescription';
+import { Popover } from '../Popover';
+import { PopoverContent } from '../PopoverContent';
 
 describe('PopoverDescription Component', () => {
   let component: RenderResult;
   let props: PopoverDescriptionProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Popover description' };
 
-    const Component = () => <PopoverDescription {...props} />;
+    const Component = () => (
+      <Popover open={true}>
+        <PopoverContent>
+          <PopoverDescription {...props} />
+        </PopoverContent>
+      </Popover>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders popover description when open', () => {
+    expect(component.getByText('Popover description')).toBeInTheDocument();
   });
 });

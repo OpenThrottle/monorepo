@@ -19,7 +19,10 @@ describe('OpenThrottleTabLink Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders tab link region and heading', () => {
+    expect(component.getByTestId('OpenThrottleTabLink')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'OpenThrottleTabLink' }),
+    ).toBeInTheDocument();
   });
 });

@@ -1,25 +1,22 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { NotificationPermissionDenied } from '../NotificationPermissionDenied';
-import type { NotificationPermissionDeniedProps } from '../NotificationPermissionDenied';
 
 describe('NotificationPermissionDenied Component', () => {
-  let component: RenderResult;
-  let props: NotificationPermissionDeniedProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <NotificationPermissionDenied {...props} />;
+  test('explains how to re-enable blocked notifications', () => {
+    const Component = () => <NotificationPermissionDenied />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByTestId('NotificationPermissionDenied'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Desktop notifications are blocked. You can re-enable them in your browser's site settings.",
+      ),
+    ).toBeInTheDocument();
   });
 });

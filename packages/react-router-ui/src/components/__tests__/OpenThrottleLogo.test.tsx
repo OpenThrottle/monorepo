@@ -19,7 +19,8 @@ describe('OpenThrottleLogo Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders OpenThrottle brand text', () => {
+    expect(component.getByTestId('OpenThrottleLogo')).toBeInTheDocument();
+    expect(component.getByText('OpenThrottle')).toBeInTheDocument();
   });
 });

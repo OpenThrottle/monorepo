@@ -19,7 +19,7 @@ describe('Table Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a table element', () => {
+    expect(component.getByRole('table')).toBeInTheDocument();
   });
 });

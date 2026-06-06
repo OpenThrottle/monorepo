@@ -32,12 +32,12 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=<APPLICATION_NAME> \
   --folder=<FOLDER_NAME> \
-  --name=<COMPONENT_NAME>
+  --name=<ComponentName>[,<MoreNames>]
 ```
 
 - `<APPLICATION_NAME>` is an Nx application in this monorepo (e.g. `openthrottle-developer`). Use `--list=applications` to enumerate.
 - `<FOLDER_NAME>` is the folder under `applications/<application>/app` (use `--list=componentFolders --application=<APPLICATION_NAME>` when applicable).
-- `<COMPONENT_NAME>` should be PascalCase for components. `--subGenerator=route` and other sub-generators use the same entrypoint; see `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe`.
+- `<COMPONENT_NAME>` should be PascalCase for components. Pass comma-separated names to scaffold multiple components in one run when `--describe` reports comma support on `--name`. `--subGenerator=route` and other sub-generators use the same entrypoint; see `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe`.
 
 ### Updating Existing Files
 

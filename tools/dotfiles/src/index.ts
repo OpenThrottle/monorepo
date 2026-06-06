@@ -239,13 +239,12 @@ export const eslintConfig = tslint.config([
 
   /**
    * Prefer Testing Library-style assertions over Jest/Vitest snapshots under __tests__.
-   * Kept as warn while legacy snapshot tests remain; tighten to error after migration.
    */
   {
     files: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
     rules: {
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           message: `Avoid snapshot tests in __tests__. Prefer getByRole/getByText and assertions on visible behavior.`,
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toMatchSnapshot"]`,

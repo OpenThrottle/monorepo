@@ -39,7 +39,8 @@ describe('ChartTooltipContent Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders chart tooltip labels and values', () => {
+    expect(component.getByText('Sales')).toBeInTheDocument();
+    expect(component.getByText('Q1')).toBeInTheDocument();
   });
 });

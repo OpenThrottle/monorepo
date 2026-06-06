@@ -28,7 +28,9 @@ describe('ChartTooltip Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('mounts chart tooltip inside bar chart', () => {
+    expect(
+      component.container.querySelector('.recharts-wrapper'),
+    ).toBeInTheDocument();
   });
 });

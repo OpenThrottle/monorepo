@@ -5,21 +5,31 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { TooltipTrigger } from '../TooltipTrigger';
 import type { TooltipTriggerProps } from '../TooltipTrigger';
+import { Tooltip } from '../Tooltip';
+import { TooltipProvider } from '../TooltipProvider';
 
 describe('TooltipTrigger Component', () => {
   let component: RenderResult;
   let props: TooltipTriggerProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Hover me' };
 
-    const Component = () => <TooltipTrigger {...props} />;
+    const Component = () => (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger {...props} />
+        </Tooltip>
+      </TooltipProvider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a tooltip trigger', () => {
+    expect(
+      component.getByRole('button', { name: 'Hover me' }),
+    ).toBeInTheDocument();
   });
 });

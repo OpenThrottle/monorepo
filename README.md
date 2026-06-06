@@ -7,14 +7,6 @@ After years of development, I've refined my tech stack to focus on a core set of
 
 **See also:** [docs/](./docs/) for detailed guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
 
-- [🤖 OpenThrottle | AI](#-openthrottle--ai)
-  - [🤖 Ralph Loops](#-ralph-loops)
-  - [🏠 Architecture](#-architecture)
-  - [⚙️ Installation](#️-installation)
-  - [🧑‍💻 Development](#-development)
-    - [Common Commands](#common-commands)
-  - [🛟 Troubleshooting](#-troubleshooting)
-
 Specific Reads:
 
 - [local-quickstart.md](./docs/openthrottle/local-quickstart.md) — env, migrate, bootstrap, server, MCP verify

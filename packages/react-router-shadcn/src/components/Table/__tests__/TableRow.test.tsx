@@ -19,7 +19,7 @@ describe('TableRow Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a table row', () => {
+    expect(component.container.querySelector('tr')).toBeInTheDocument();
   });
 });

@@ -26,7 +26,9 @@ describe('ToggleGroupItem Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toggle group item', () => {
+    const button = component.container.querySelector('button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent('A');
   });
 });
