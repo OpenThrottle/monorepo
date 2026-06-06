@@ -1,25 +1,20 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { NotificationPermissionAvailable } from '../NotificationPermissionAvailable';
-import type { NotificationPermissionAvailableProps } from '../NotificationPermissionAvailable';
 
 describe('NotificationPermissionAvailable Component', () => {
-  let component: RenderResult;
-  let props: NotificationPermissionAvailableProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <NotificationPermissionAvailable {...props} />;
+  test('renders available-permission placeholder', () => {
+    const Component = () => <NotificationPermissionAvailable />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByTestId('NotificationPermissionAvailable'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'NotificationPermissionAvailable' }),
+    ).toBeInTheDocument();
   });
 });
