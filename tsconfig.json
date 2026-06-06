@@ -35,9 +35,6 @@
       "path": "./packages/react-router-ui"
     },
     {
-      "path": "./applications/openthrottle-cms"
-    },
-    {
       "path": "./packages/react-router-profiling"
     },
     {

@@ -13,7 +13,7 @@ nx g @tools/generators:folders --list=applications
 
 # Generate routing folder
 nx g @tools/generators:folders \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing \
   --name=users
 ```
@@ -32,7 +32,7 @@ nx g @tools/generators:folders \
 
 ```bash
 nx g @tools/generators:folders \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=routing \
   --name=users
 ```
@@ -41,7 +41,7 @@ nx g @tools/generators:folders \
 
 ```bash
 nx g @tools/generators:folders \
-  --application=openthrottle-cms \
+  --application=openthrottle-developer \
   --folder=services \
   --name=email-service
 ```

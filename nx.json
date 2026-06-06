@@ -230,8 +230,7 @@
         "command": "knip --config knip.jsonc",
         "cwd": "{workspaceRoot}",
         "env": {
-          "EXPO_PUBLIC_SUPABASE_JWT": "dummy",
-          "EXPO_PUBLIC_SUPABASE_URL_GRAPHQL": "http://dummy"
+          "APP_NAME": "openthrottle-developer"
         }
       }
     },

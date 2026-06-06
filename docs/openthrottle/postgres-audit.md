@@ -90,7 +90,7 @@ Queue modules that import NestjsRepositoriesModule:
 
 ## 2. openthrottle-developer and other OT apps
 
-**Summary:** No direct Postgres access was found in openthrottle-developer, openthrottle-admin, openthrottle-cms, openthrottle-email, or openthrottle-website. These apps use **GraphQL only** (openthrottle-server) for data. The `applications/openthrottle` folder is a meta-project (compose/env/seed); it holds Postgres-related env and compose for services but has no application code that opens a DB connection.
+**Summary:** No direct Postgres access was found in openthrottle-developer, openthrottle-admin, openthrottle-email, or openthrottle-website. These apps use **GraphQL only** (openthrottle-server) for data. The `applications/openthrottle` folder is a meta-project (compose/env/seed); it holds Postgres-related env and compose for services but has no application code that opens a DB connection.
 
 ### 2.1 openthrottle-developer
 
@@ -117,13 +117,7 @@ Queue modules that import NestjsRepositoriesModule:
 | `app/__generated__/*` | Same as above — schema/types only.            |
 | `codegen.ts`          | Commented-out Supabase — not active.          |
 
-### 2.4 openthrottle-cms
-
-| File     | Usage                            |
-| -------- | -------------------------------- |
-| _(none)_ | No direct Postgres access found. |
-
-### 2.5 openthrottle-website
+### 2.4 openthrottle-website
 
 | File                                                    | Usage                                                    |
 | ------------------------------------------------------- | -------------------------------------------------------- |
@@ -131,7 +125,7 @@ Queue modules that import NestjsRepositoriesModule:
 | `app/routing/home/components/HomeContext.tsx`           | `DatabaseIcon` (UI only).                                |
 | `codegen.ts`                                            | Commented-out Supabase — not active.                     |
 
-### 2.6 applications/openthrottle (meta-project)
+### 2.5 applications/openthrottle (meta-project)
 
 | File                                 | Usage                                                                                                                                         |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -260,7 +254,7 @@ Goal: **all** Postgres access is limited to openthrottle-server; every other Ope
    - In CI or in a lint rule, consider disallowing imports of `@openthrottle/nestjs-repositories` or `pg` (for Cortex) in any project other than openthrottle-server and nestjs-repositories itself.
 
 4. **No change for OT apps and GraphQL-only packages**
-   - openthrottle-developer, openthrottle-admin, openthrottle-email, openthrottle-cms, openthrottle-website, openthrottle-mcp, vscode-openthrottle, nodejs-graphql, and react-router-\* packages require no code changes for this goal; they already use GraphQL only.
+   - openthrottle-developer, openthrottle-admin, openthrottle-email, openthrottle-website, openthrottle-mcp, vscode-openthrottle, nodejs-graphql, and react-router-\* packages require no code changes for this goal; they already use GraphQL only.
 
 ### 4.3 Summary
 

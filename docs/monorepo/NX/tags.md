@@ -51,7 +51,7 @@ Examples:
 **Examples:**
 
 - `openthrottle` - React Router application
-- `openthrottle-cms` - React Router application
+- `openthrottle-developer` - React Router application
 - `@openthrottle/react-router-utils` - React Router utilities package
 
 #### `technology:react-native`

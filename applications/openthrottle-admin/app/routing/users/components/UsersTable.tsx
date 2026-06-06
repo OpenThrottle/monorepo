@@ -29,7 +29,7 @@ export const UsersTable = (props: UsersTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('bg-card border ui-border rounded-lg', className)}
       data-testid="UsersTable"
     >
       <DataTable<UserRowFragment, string | number | null | undefined>

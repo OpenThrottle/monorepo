@@ -33,7 +33,7 @@ export const PermissionsTable = (
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('bg-card border ui-border rounded-lg', className)}
       data-testid="PermissionsTable"
     >
       <DataTable<PermissionRowFragment, string | number | null | undefined>

@@ -43,7 +43,7 @@ export const OpenThrottleProductFeatures = (
 
         return (
           <div
-            className="p-4 flex flex-col border border-border rounded-lg h-full"
+            className="bg-card p-4 flex flex-col border border-border rounded-lg h-full"
             key={feature.title}
           >
             <h2 className="mb-2 flex items-center gap-4">

@@ -6,4 +6,5 @@ GraphQL execution helpers for React Router loaders and actions: typed documents 
 
 **In this monorepo:** add `"@openthrottle/react-router-graphql": "workspace:*"` to the consuming package’s `package.json`, then run `pnpm install` from the repository root.
 
-This package is **private** to the workspace and is not published to the public registry.
+> [!Tip]
+> This package is **private** to the workspace and is not published to a public registry.
