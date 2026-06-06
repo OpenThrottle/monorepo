@@ -6,7 +6,7 @@
 
 Canonical criteria are in [databases/README.md](../../databases/README.md) § **Project association (when to set project)**. Summary:
 
-- **Set project when:** Plan or task is clearly scoped to **one** NX project (app or package), e.g. `openthrottle-developer`, `openthrottle-server`, `cortex`, `@openthrottle/ai-mcp`, `@openthrottle/react-router-shadcn`. Use the NX project name from the project graph.
+- **Set project when:** Plan or task is clearly scoped to **one** NX project (app or package), e.g. `openthrottle-developer`, `openthrottle-server`, `OpenThrottle`, `@openthrottle/ai-mcp`, `@openthrottle/react-router-shadcn`. Use the NX project name from the project graph.
 - **Leave unset when:** Infrastructure (Caddy, Ollama, Docker, CI); documentation-only; cross-repo or multi-repo; multi-project work; ideas/backlog not scoped to a project; or when the association is ambiguous. Do not force an association.
 
 When in doubt, leave `project_id` null.

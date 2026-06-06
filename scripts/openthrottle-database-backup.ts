@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 /**
  * @description Backs up the Cortex Postgres database to a timestamped zip file.
  * Uses POSTGRES_URL or POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
- * Writes to databases/cortex/backups/cortex-YYYYMMDD-HHMMSS.zip (plain SQL inside).
+ * Writes to databases/backups/cortex-YYYYMMDD-HHMMSS.zip (plain SQL inside).
  */
 
 const BACKUPS_DIR = join(process.cwd(), 'databases', 'backups');

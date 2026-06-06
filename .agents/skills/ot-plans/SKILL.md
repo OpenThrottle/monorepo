@@ -5,8 +5,7 @@ description: >-
   to openthrottle-server). USE WHEN creating or updating plans/tasks, plans in
   OT only, failing loudly when MCP is unavailable (no Markdown plan
   fallbacks), Plan-Id and Task-Id in commits, link_commit or
-  workflow-link-merge after merge, or the user mentions OpenThrottle, OT,
-  Cortex, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
+  workflow-link-merge after merge, or the user mentions OpenThrottle, OT, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
   over plans, or git–OT traceability. Covers when to use OT vs docs-mcp vs
   databases/README and plan/task lifecycle.
 ---

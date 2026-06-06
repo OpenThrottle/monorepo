@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
+import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { getRandomIntroduction } from '../data/data.introductions';
 import { Link } from 'react-router';
 import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
@@ -63,8 +64,12 @@ export const OpenThrottleProductGetStarted = (
             </div>
 
             <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
-              <Button className="text-xs" variant="brand">
-                View on GitHub
+              <Button
+                className="text-xs flex items-center gap-2"
+                variant="brand"
+              >
+                <span>View on GitHub</span>
+                <GithubLogoIcon weight="fill" />
               </Button>
             </Link>
           </div>

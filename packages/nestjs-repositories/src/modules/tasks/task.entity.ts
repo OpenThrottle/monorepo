@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex tasks table. Matches databases/cortex/migrations (003, 012, 015, 023).
+ * @description TypeORM entity for Cortex tasks table. Matches databases/migrations (003, 012, 015, 023).
  */
 
 import {

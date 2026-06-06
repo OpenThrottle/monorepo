@@ -51,7 +51,7 @@ const buildStubProposal = (file: File): ProposedPlanDecomposition => {
       {
         requirements: [
           'Confirm each task matches sections in the source file.',
-          'Adjust titles before creating the plan in Cortex.',
+          'Adjust titles before creating the plan in OpenThrottle.',
         ],
         title: 'Review imported tasks',
       },

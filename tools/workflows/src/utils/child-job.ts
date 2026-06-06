@@ -55,7 +55,7 @@ function runRalphAsync(
   worktreePath: string,
   ralphArgs: string[],
   options: {
-    readonly canonicalCortexPostgresUrl?: string;
+    readonly canonicalPostgresUrl?: string;
     readonly metricsCollector?: ChildProcessMetricsCollector;
     readonly onChunk?: (chunk: ChildJobStreamChunk) => void;
     readonly signal?: AbortSignal;
@@ -71,7 +71,7 @@ function runRalphAsync(
     const child: ChildProcess = spawn('pnpm', ralphArgs, {
       cwd: worktreePath,
       env: buildNestedWorkflowRalphSpawnEnv(worktreePath, process.env, {
-        canonicalCortexPostgresUrl: options.canonicalCortexPostgresUrl,
+        canonicalPostgresUrl: options.canonicalPostgresUrl,
       }),
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
@@ -240,7 +240,7 @@ export async function runChildJob(
 ): Promise<ChildJobResult> {
   const {
     backend,
-    canonicalCortexPostgresUrl,
+    canonicalPostgresUrl,
     handoff,
     iterationTimeoutSeconds,
     iterations,
@@ -265,7 +265,7 @@ export async function runChildJob(
   const startTimestamp = Date.now();
   const cpuAtStart = process.cpuUsage();
 
-  const trimmedCanonical = canonicalCortexPostgresUrl?.trim();
+  const trimmedCanonical = canonicalPostgresUrl?.trim();
   let config: WorkflowRalphConfig | null = resolveWorkflowRalphConfig();
 
   if (config == null) {
@@ -370,7 +370,7 @@ export async function runChildJob(
         );
 
   const ralph = await runRalphAsync(worktreePath, ralphArgs, {
-    canonicalCortexPostgresUrl: trimmedCanonical,
+    canonicalPostgresUrl: trimmedCanonical,
     metricsCollector,
     onChunk: effectiveOnChunk,
     signal,

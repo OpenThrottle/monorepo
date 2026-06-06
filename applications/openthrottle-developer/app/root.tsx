@@ -481,8 +481,8 @@ export default function App(): React.ReactElement {
                     <span className="mt-2 block text-xs text-muted-foreground">
                       <span className="block">
                         1) Keep typing to narrow the list, or 2) paste one
-                        Cortex UUID for plan/queue/generator/search rows, or 3)
-                        paste two UUIDs with{' '}
+                        OpenThrottle UUID for plan/queue/generator/search rows,
+                        or 3) paste two UUIDs with{' '}
                         <code className="text-[10px]">/</code> or a space to
                         jump to a queue job or a plan task.
                       </span>
@@ -521,8 +521,6 @@ export default function App(): React.ReactElement {
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
-
-  console.log(`🟢 intent: ${intent} - action`);
 
   if (intent === 'commander-search') {
     const jump = formData.get('jump');

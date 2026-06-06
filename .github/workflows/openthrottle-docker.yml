@@ -16,7 +16,7 @@ on:
     paths:
       - 'applications/openthrottle-developer/**'
       - 'applications/openthrottle-server/**'
-      - 'databases/cortex/**'
+      - 'databases/**'
       - 'nx.json'
       - 'package.json'
       - 'packages/**'
@@ -26,7 +26,7 @@ on:
     paths:
       - 'applications/openthrottle-developer/**'
       - 'applications/openthrottle-server/**'
-      - 'databases/cortex/**'
+      - 'databases/**'
       - 'nx.json'
       - 'package.json'
       - 'packages/**'

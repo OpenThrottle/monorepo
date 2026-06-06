@@ -155,7 +155,7 @@ export interface ChildJobInput {
    * When set, nested `workflow-ralph` and parent-side Cortex checks use this URL (e.g. TypeORM `url`
    * from openthrottle-server) so foreign `cwd` cannot desync Postgres identity from the API worker.
    */
-  readonly canonicalCortexPostgresUrl?: string;
+  readonly canonicalPostgresUrl?: string;
   /**
    * Options for child process CPU/memory polling. When set, polls the spawned Ralph process
    * and returns ChildProcessMetrics in the result. Defaults to enabled with 5s interval.

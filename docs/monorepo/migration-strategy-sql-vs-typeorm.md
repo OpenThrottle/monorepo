@@ -74,6 +74,6 @@ For **greenfield** Postgres + TypeORM projects where you need **full SQL** (e.g.
 1. **Postgres-first:** This stack uses Postgres features (pgvector, partial indexes, triggers) that TypeORM’s migration generator does not support well. Raw SQL avoids fighting the ORM and keeps one readable history.
 2. **Portability:** The same migrations can be run by any client (Node script, CI, DBA tools). No lock-in to TypeORM’s CLI or migrations table format.
 3. **Single history:** One ordered list of `.sql` files. No “generated vs hand-written” split; no conversion if we ever change ORMs.
-4. **Trade-off we accept:** Entities must be updated manually after schema changes. We mitigate with JSDoc that references migration numbers (e.g. “Matches databases/cortex/migrations (002, 012)”) and review in PRs.
+4. **Trade-off we accept:** Entities must be updated manually after schema changes. We mitigate with JSDoc that references migration numbers (e.g. “Matches databases/migrations (002, 012)”) and review in PRs.
 
 **Where this is documented:** This doc (`docs/monorepo/migration-strategy-sql-vs-typeorm.md`) holds the full pros/cons and recommendation. `databases/README.md` § Migration strategy (TypeORM vs SQL) states the choice for Cortex and points here.

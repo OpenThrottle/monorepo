@@ -8,7 +8,7 @@ description: >-
   @openthrottle/react-router-shadcn; packages/openthrottle-mcp GraphQL-only
   boundary, auth, verification-environment. USE WHEN changing openthrottle-server,
   openthrottle-developer, databases or database:import, embeddings (Ollama vs
-  hosted), packages/openthrottle-mcp, verify-openthrottle-mcp-env, or Cortex
+  hosted), packages/openthrottle-mcp, verify-openthrottle-mcp-env, or OpenThrottle
   schema and semantic ingest—not for routine OT plan CRUD (see ot-plans).
 ---
 
@@ -21,7 +21,7 @@ description: >-
 - You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
 - You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
 
-Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tasks** for graph and targets, **ot-plans** for Cortex plans/tasks and MCP traceability, **workflow-ralph** for Ralph CLI and queues.
+Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tasks** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, **workflow-ralph** for Ralph CLI and queues.
 
 ## How this fits other skills
 
@@ -61,7 +61,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 ## 2. Data, embeddings, imports (`databases/`)
 
-**Canonical path:** `databases/README.md` (schema, migrations under `databases/cortex/migrations/`, embedding dimensions, Ollama vs OpenAI).
+**Canonical path:** `databases/README.md` (schema, migrations under `databases/migrations/`, embedding dimensions, Ollama vs OpenAI).
 
 **Typical commands (repo root)**
 

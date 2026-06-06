@@ -111,7 +111,7 @@ The **root** `Dockerfile.NestJS.v3` is the Nx Docker plugin–friendly path for 
 ## 7. CI: build and push
 
 - **Workflow:** `.github/workflows/openthrottle-docker.yml`.
-- **Triggers:** Push to `main` and pull requests when paths under `applications/openthrottle-server/`, `applications/openthrottle-developer/`, `packages/openthrottle/`, `databases/cortex/`, `tools/workflows/`, or root `package.json` / `pnpm-lock.yaml` / `nx.json` change.
+- **Triggers:** Push to `main` and pull requests when paths under `applications/openthrottle-server/`, `applications/openthrottle-developer/`, `packages/openthrottle/`, `databases/`, `tools/workflows/`, or root `package.json` / `pnpm-lock.yaml` / `nx.json` change.
 - **Logic:** Uses Nx affected (`nx show projects --affected`) to build only **openthrottle-server** and/or **openthrottle-developer** when those projects or their dependencies are affected. On **push to main**, images are pushed to Artifact Registry with tag `sha-<GITHUB_SHA>`. On **pull requests**, images are built only (no push) to validate Dockerfiles.
 - **Reusable action:** To configure which Nx apps are considered and to read per-app flags without duplicating shell, use the composite action `.github/actions/nx-affected-docker-apps` — see its **README.md** for inputs, outputs, and how to add more `openthrottle-*` (or other) app names.
 - **Registry:** Same as §2; GCP credentials and project come from repo vars/secrets (production on `main`, staging otherwise). The workflow runs `gcloud auth configure-docker us-west2-docker.pkg.dev` so `docker push` succeeds.

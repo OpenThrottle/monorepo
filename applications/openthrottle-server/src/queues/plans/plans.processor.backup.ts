@@ -993,7 +993,7 @@ export class PlansProcessor
       ensureCommit: { runChecks: true },
       runLoop: async (handoff) => {
         childJobResult = await runChildJob({
-          canonicalCortexPostgresUrl: getPostgresUrl(),
+          canonicalPostgresUrl: getPostgresUrl(),
           handoff,
           onChunk: (chunk) => {
             appendChildJobChunkToRunOutput(
@@ -1271,7 +1271,7 @@ export class PlansProcessor
         {
           cwd: workspaceRoot,
           env: buildNestedWorkflowRalphSpawnEnv(workspaceRoot, process.env, {
-            canonicalCortexPostgresUrl: getPostgresUrl(),
+            canonicalPostgresUrl: getPostgresUrl(),
           }),
         },
         onStdout,
