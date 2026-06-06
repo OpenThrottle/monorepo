@@ -3,6 +3,7 @@
  */
 
 import {
+  PLAN_TASK_LIST_ORDER,
   Plan,
   PlanEmbedding,
   Task,
@@ -862,7 +863,7 @@ export async function getTaskById(id: string): Promise<TaskRow | null> {
 }
 
 /**
- * @description Fetches all tasks for a plan, ordered by created_at.
+ * @description Fetches all tasks for a plan, ordered by sortOrder then createdAt.
  */
 export async function getTasksByPlanId(
   planId: string,
@@ -870,7 +871,7 @@ export async function getTasksByPlanId(
   const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const tasks = await repo.find({
-    order: { createdAt: 'ASC' },
+    order: { ...PLAN_TASK_LIST_ORDER },
     where: { planId },
   });
   return tasks.map(mapTaskEntityToRow);
@@ -885,7 +886,7 @@ const REMAINING_TASK_STATUSES = [
 ] as const;
 
 /**
- * @description Fetches tasks for a plan whose status is BACKLOG, BLOCKED, IN_PROGRESS, or PENDING (i.e. remaining work). Ordered by created_at.
+ * @description Fetches tasks for a plan whose status is BACKLOG, BLOCKED, IN_PROGRESS, or PENDING (i.e. remaining work). Ordered by sortOrder then createdAt.
  */
 export async function getRemainingTasksByPlanId(
   planId: string,
@@ -893,7 +894,7 @@ export async function getRemainingTasksByPlanId(
   const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const tasks = await repo.find({
-    order: { createdAt: 'ASC' },
+    order: { ...PLAN_TASK_LIST_ORDER },
     where: {
       planId,
       status: In([...REMAINING_TASK_STATUSES]),

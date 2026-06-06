@@ -41,6 +41,7 @@ fragment Task on TaskObject {
   project
   projectId
   requirementsJson
+  sortOrder
   status
   summary
   title

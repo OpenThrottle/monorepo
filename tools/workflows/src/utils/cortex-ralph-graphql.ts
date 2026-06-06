@@ -75,6 +75,7 @@ export const taskFragmentToRow = (task: TaskFragment): TaskRow => {
     id: task.id,
     planId: task.planId,
     requirements,
+    sortOrder: task.sortOrder,
     status: task.status,
     title: task.title,
     updatedAt: toIsoString(task.updatedAt),

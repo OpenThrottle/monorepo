@@ -1,4 +1,12 @@
 import type { PlanFragment, TaskFragment } from '../__generated__/graphql.js';
+import { sortTasksByPlanListOrder } from './plan-task-list-order.js';
+
+export {
+  comparePlanTaskListOrder,
+  pickRalphTaskForIteration,
+  sortTasksByPlanListOrder,
+} from './plan-task-list-order.js';
+export type { PlanTaskSortFields } from './plan-task-list-order.js';
 
 /**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with
@@ -8,6 +16,7 @@ export const formatPlanAndTasksForPrompt = (
   plan: PlanFragment,
   tasks: readonly TaskFragment[],
 ): string => {
+  const orderedTasks = sortTasksByPlanListOrder(tasks);
   const lines: string[] = [
     '--- OpenThrottle plan (injected by Ralph from Postgres)',
     '',
@@ -30,10 +39,10 @@ export const formatPlanAndTasksForPrompt = (
 
   lines.push('Tasks:');
 
-  if (tasks.length === 0) {
+  if (orderedTasks.length === 0) {
     lines.push('  (none)');
   } else {
-    for (const t of tasks) {
+    for (const t of orderedTasks) {
       lines.push(`  - ${t.id}  ${t.title}  (${t.status})`);
 
       if (t.description?.trim()) {

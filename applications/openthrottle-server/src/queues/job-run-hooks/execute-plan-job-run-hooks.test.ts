@@ -161,7 +161,7 @@ describe('executePlanJobRunHooks', () => {
 
     expect(mockPlanFindOne).toHaveBeenCalledWith({ where: { id: planId } });
     expect(mockTaskFind).toHaveBeenCalledWith({
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'ASC', sortOrder: 'ASC' },
       where: { planId },
     });
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledTimes(1);

@@ -2,6 +2,7 @@
  * @description Shared Ralph plan/task row types and helpers (transport-agnostic).
  */
 
+import { sortTasksByPlanListOrder } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowRalphTransport } from './workflow-transport';
 
 export interface WorkflowRalphConfig {
@@ -22,6 +23,7 @@ export interface TaskRow {
   readonly id: string;
   readonly planId: string;
   readonly requirements: readonly unknown[];
+  readonly sortOrder: number;
   readonly status: string;
   readonly title: string;
   readonly updatedAt: string;
@@ -91,10 +93,11 @@ export const formatPlanAndTasksForPrompt = (
   }
 
   lines.push('Tasks:');
-  if (tasks.length === 0) {
+  const orderedTasks = sortTasksByPlanListOrder(tasks);
+  if (orderedTasks.length === 0) {
     lines.push('  (none)');
   } else {
-    for (const t of tasks) {
+    for (const t of orderedTasks) {
       lines.push(`  - ${t.id}  ${t.title}  (${t.status})`);
       if (t.description?.trim()) {
         lines.push(`    ${t.description.trim().replace(/\n/g, ' ')}`);
