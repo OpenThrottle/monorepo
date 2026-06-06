@@ -111,7 +111,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   const canonical: string = request.url;
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
-  const isRestrictedAccess = process.env.APP_ENABLE_AUTHENTICATION === 'true';
 
   let serverHealth: ServerHealthObject = {
     api: 'ok',
@@ -195,12 +194,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     }
   }
 
-  if (
-    FEATURE_BETA_PREVIEW &&
-    isRestrictedAccess &&
-    userLoadOk &&
-    user === null
-  ) {
+  if (FEATURE_BETA_PREVIEW && userLoadOk && user === null) {
     const pathname = new URL(request.url).pathname;
     const isProtected = PROTECTED_PATH_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),
