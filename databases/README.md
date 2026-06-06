@@ -172,7 +172,7 @@ When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/cort
 - **Required:** `title`, `plan_id` (set when creating under a plan)
 - **Always handled by DB:** `id`, `created_at`, `updated_at` — never need to supply
 - **Default:** `status` → `pending` if omitted; `requirements` → `[]` if omitted
-- **Optional:** `description`, `category`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, SKIPPED), `requirements` (JSONB array), `summary` (per-task wrap-up: actions, usage notes, or why blocked), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project))
+- **Optional:** `description`, `category`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, SKIPPED), `requirements` (JSONB array), `summary` (per-task wrap-up: actions, usage notes, or why blocked), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project)), `sort_order` (see [Task sort_order](#task-sort_order); auto-assigned when omitted)
 
 #### Projects collection (applications only)
 
@@ -228,7 +228,8 @@ Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose stat
 - **Canonical sort:** `sort_order ASC`, `created_at ASC` (tiebreaker only).
 - **Backfill:** existing tasks ordered by `created_at ASC` within each plan → 1000, 2000, 3000, …
 - **Auto-assign on create:** when omitted, append `MAX(sort_order) + 1000` (first task in plan → 1000).
-- **Reorder:** prefer `reorderPlanTasks` / MCP `reorder_plan_tasks` over delete-and-recreate when fixing Ralph execution order. Gap-based `updateTask(sortOrder)` supports mid-list inserts (e.g. 1500 between 1000 and 2000).
+- **Batch create (`create_tasks`):** when `sortOrder` is omitted per item, each new task appends after the plan max (`MAX + 1000`, `MAX + 2000`, …) preserving array order at the end of the plan. Explicit per-item `sortOrder` is respected.
+- **Reorder:** prefer `reorderPlanTasks` / MCP `reorder_plan_tasks` over delete-and-recreate when fixing Ralph execution order. Gap-based `updateTask(sortOrder)` supports mid-list inserts (e.g. 1500 between 1000 and 2000). Bulk reorder renumbers `1000, 2000, …` atomically in the given `taskIds` order.
 
 #### Assignee rule
 
