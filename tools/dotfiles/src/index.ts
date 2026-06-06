@@ -161,20 +161,6 @@ export const eslintConfig = tslint.config([
         'warn',
         { assertionStyle: 'never' },
       ],
-
-      // '@nx/enforce-module-boundaries': [
-      //   'error',
-      //   {
-      //     allow: [],
-      //     depConstraints: [
-      //       {
-      //         onlyDependOnLibsWithTags: ['*'],
-      //         sourceTag: '*',
-      //       },
-      //     ],
-      //     enforceBuildableLibDependency: true,
-      //   },
-      // ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/interface-name-prefix': 'off',
@@ -183,13 +169,14 @@ export const eslintConfig = tslint.config([
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
       ],
       curly: ['error', 'multi-line'],
-
       // 'import-x/no-dynamic-require': 'warn',
       // 'import-x/no-nodejs-modules': 'warn',
-
       'import/no-named-as-default-member': 'off',
       // 'import/order': [
       //   'error',
@@ -199,7 +186,7 @@ export const eslintConfig = tslint.config([
       //       ['sibling', 'parent'], // Then sibling and parent imports. They can be mingled together
       //       'index', // Then index file imports
       //       'object', // Then any arcane TypeScript imports
-
+      //
       //       // Then the omitted imports: internal, external, type, unknown
       //     ],
       //     'newlines-between': 'never',
@@ -214,7 +201,8 @@ export const eslintConfig = tslint.config([
       'react/jsx-boolean-value': ['error', 'always'],
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-sort-props': 'error',
-      'react/jsx-uses-react': 'off',
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
       // 'sort-imports': [

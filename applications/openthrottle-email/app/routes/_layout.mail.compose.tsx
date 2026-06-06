@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { ComposeForm } from '~/routing/compose/components/ComposeForm';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';

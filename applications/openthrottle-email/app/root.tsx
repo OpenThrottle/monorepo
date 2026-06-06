@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
 // import { Analytics } from '@vercel/analytics/react';
 import { APP_URL } from '@openthrottle/react-router-utils';

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { cleanup, render, waitFor, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

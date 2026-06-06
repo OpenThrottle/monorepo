@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useNotificationsSocket } from '@openthrottle/react-router-notifications';

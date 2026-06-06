@@ -1,4 +1,5 @@
 // import { Analytics } from '@vercel/analytics/react';
+import * as React from 'react';
 import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
 import {
   Links,
