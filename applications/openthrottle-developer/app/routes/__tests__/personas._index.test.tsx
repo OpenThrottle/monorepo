@@ -1,23 +1,26 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../personas.$personaId';
-import { render, RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import PersonasIndex from '../personas._index';
 
-describe.skip('routes/personas.$personaId.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/personas._index.tsx', () => {
+  test('renders personas page sections', () => {
+    render(
+      <MemoryRouter>
+        <PersonasIndex
+          actionData={undefined}
+          loaderData={{}}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByRole('heading', { name: 'Personas' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('PersonasToolbar')).toBeInTheDocument();
+    expect(screen.getByTestId('PersonasTable')).toBeInTheDocument();
   });
 });

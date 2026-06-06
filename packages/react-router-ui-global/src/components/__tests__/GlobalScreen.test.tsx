@@ -1,25 +1,37 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { GlobalScreen } from '../GlobalScreen';
-import type { GlobalScreenProps } from '../GlobalScreen';
 
 describe('GlobalScreen Component', () => {
-  let component: RenderResult;
-  let props: GlobalScreenProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <GlobalScreen {...props} />;
+  test('renders children inside content wrapper', () => {
+    const Component = () => (
+      <GlobalScreen>
+        <span>screen-child</span>
+      </GlobalScreen>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
+    expect(screen.getByText('screen-child')).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders beta banner when beta is true', () => {
+    const Component = () => (
+      <GlobalScreen beta={true}>
+        <span>screen-child</span>
+      </GlobalScreen>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    expect(screen.getByText(/Beta:/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /GitHub repository/i }),
+    ).toHaveAttribute(
+      'href',
+      'https://github.com/openthrottle/openthrottle/issues',
+    );
   });
 });

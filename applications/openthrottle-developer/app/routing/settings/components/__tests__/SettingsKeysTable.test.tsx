@@ -79,7 +79,6 @@ describe('SettingsKeysTable Component', () => {
     expect(
       component.getByTestId('SettingsKeysTable-empty'),
     ).toBeInTheDocument();
-    expect(component.baseElement).toMatchSnapshot();
   });
 
   describe('when credentials are empty', () => {

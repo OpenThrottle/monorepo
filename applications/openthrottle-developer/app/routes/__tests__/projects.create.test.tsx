@@ -1,23 +1,24 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../projects.create';
-import { render, RenderResult } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import CreateProject from '../projects.create';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
-describe.skip('routes/projects.create.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
+describe('routes/projects.create.tsx', () => {
+  test('renders project form in create mode', () => {
+    renderRoutesStub(
+      <CreateProject
+        actionData={undefined}
+        loaderData={{}}
+        matches={[] as never}
+        params={{}}
       />,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByTestId('ProjectForm')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Project name')).toBeRequired();
+    expect(
+      screen.getByRole('button', { name: 'Create project' }),
+    ).toBeInTheDocument();
   });
 });

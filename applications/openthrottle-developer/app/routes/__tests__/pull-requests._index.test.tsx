@@ -1,23 +1,39 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../pull-requests._index';
-import { render, RenderResult } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import PullRequestsIndex from '../pull-requests._index';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
-describe.skip('routes/pull-requests._index.tsx', () => {
-  let component: RenderResult;
+const mockLoaderData = {
+  filters: {
+    author: '',
+    authorExact: false,
+    base: '',
+    merged: undefined,
+    owner: 'OpenThrottle',
+    repo: 'monorepo',
+    state: 'open' as const,
+  },
+  listQuery: 'owner=OpenThrottle&repo=monorepo',
+  prPreviewNumber: null,
+  prPreviewPull: null,
+  pulls: [],
+};
 
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
+describe('routes/pull-requests._index.tsx', () => {
+  test('renders pull requests introduction and toolbar', () => {
+    renderRoutesStub(
+      <PullRequestsIndex
+        actionData={undefined}
+        loaderData={mockLoaderData}
+        matches={[] as never}
+        params={{}}
       />,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByRole('heading', { name: 'Pull requests' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument();
   });
 });

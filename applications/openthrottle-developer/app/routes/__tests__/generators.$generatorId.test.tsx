@@ -1,23 +1,35 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../generators.$generatorId';
-import { render, RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+import GeneratorDetail from '../generators.$generatorId';
 
-describe.skip('routes/generators.$generatorId.tsx', () => {
-  let component: RenderResult;
+const mockGenerator: GeneratorDetailCardFragment = {
+  __typename: 'GeneratorDetailObject',
+  description: 'React Router scaffolding',
+  name: '@tools/generators',
+  schemaJson: null,
+};
 
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/generators.$generatorId.tsx', () => {
+  test('renders generator heading and documentation tab', () => {
+    render(
+      <MemoryRouter>
+        <GeneratorDetail
+          actionData={undefined}
+          loaderData={{ generator: mockGenerator }}
+          matches={[] as never}
+          params={{ generatorId: '@tools/generators' }}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByRole('heading', { name: '@tools/generators' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('tab', { name: /documentation/i }),
+    ).toBeInTheDocument();
   });
 });
