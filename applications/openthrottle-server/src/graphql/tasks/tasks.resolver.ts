@@ -2,7 +2,7 @@
  * @description Resolver for Task queries and mutations. Injects TasksService from @openthrottle/nestjs-repositories and TasksLoaders for batched plan/project resolution. Maps Task entities to TaskObject.
  */
 
-import { ConflictException, NotImplementedException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -16,9 +16,11 @@ import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
   PLAN_TASK_LIST_ORDER,
+  TASK_SORT_ORDER_GAP,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
+import type { Plan, Project } from '@openthrottle/nestjs-repositories';
+import { Task } from '@openthrottle/nestjs-repositories';
 import { In, QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { PlanObject } from '../plans/plan.object';
@@ -339,13 +341,60 @@ export class TasksResolver {
   @Mutation(() => [TaskObject], {
     description: `Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically.`,
   })
-  reorderPlanTasks(
+  async reorderPlanTasks(
     @Args('input', { type: () => ReorderPlanTasksInput })
-    _input: ReorderPlanTasksInput,
+    input: ReorderPlanTasksInput,
   ): Promise<Task[]> {
-    throw new NotImplementedException(
-      'reorderPlanTasks is not implemented yet; see plan task reorderPlanTasks GraphQL mutation.',
-    );
+    const repo = this.tasksService.getRepository();
+    const { planId, taskIds } = input;
+
+    if (taskIds.length === 0) {
+      return [];
+    }
+
+    const uniqueTaskIds = [...new Set(taskIds)];
+
+    if (uniqueTaskIds.length !== taskIds.length) {
+      throw new BadRequestException('taskIds must not contain duplicates');
+    }
+
+    const tasks = await repo.find({
+      where: { id: In(taskIds), planId },
+    });
+
+    if (tasks.length !== taskIds.length) {
+      throw new BadRequestException(
+        'One or more taskIds do not belong to the plan',
+      );
+    }
+
+    const taskById = new Map(tasks.map((task) => [task.id, task]));
+    const orderedTasks = taskIds.map((id) => taskById.get(id)!);
+    const temporarySortOrderBase = 1_000_000;
+
+    return repo.manager.transaction(async (manager) => {
+      const taskRepo = manager.getRepository(Task);
+
+      await Promise.all(
+        orderedTasks.map((task, index) =>
+          taskRepo.update(task.id, {
+            sortOrder: temporarySortOrderBase + index,
+          }),
+        ),
+      );
+
+      const results: Task[] = [];
+
+      await Promise.all(
+        orderedTasks.map(async (task, index) => {
+          const sortOrder = (index + 1) * TASK_SORT_ORDER_GAP;
+          await taskRepo.update(task.id, { sortOrder });
+          results[index] = { ...task, sortOrder };
+        }),
+      );
+
+      return results;
+    });
   }
 
   @Mutation(() => Boolean, {

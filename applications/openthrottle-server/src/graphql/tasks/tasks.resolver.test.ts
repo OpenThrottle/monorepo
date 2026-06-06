@@ -4,7 +4,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { Task } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { QueryFailedError } from 'typeorm';
@@ -15,6 +15,10 @@ import { TasksResolver } from './tasks.resolver';
 describe('TasksResolver', () => {
   let resolver: TasksResolver;
 
+  const transactionTaskRepo = {
+    update: vi.fn().mockResolvedValue(undefined),
+  };
+
   const repo = {
     count: vi.fn(),
     create: vi.fn((data: Record<string, unknown>) => ({
@@ -24,6 +28,18 @@ describe('TasksResolver', () => {
     delete: vi.fn(),
     find: vi.fn(),
     findOne: vi.fn(),
+    manager: {
+      transaction: vi.fn(
+        async (
+          work: (manager: {
+            getRepository: () => typeof transactionTaskRepo;
+          }) => unknown,
+        ) =>
+          work({
+            getRepository: () => transactionTaskRepo,
+          }),
+      ),
+    },
     save: vi.fn((entity: Task) => Promise.resolve(entity)),
   };
 
@@ -107,6 +123,8 @@ describe('TasksResolver', () => {
     vi.mocked(repo.save).mockClear();
     vi.mocked(repo.findOne).mockClear();
     vi.mocked(repo.find).mockClear();
+    vi.mocked(transactionTaskRepo.update).mockClear();
+    vi.mocked(repo.manager.transaction).mockClear();
   });
 
   describe('task', () => {
@@ -679,6 +697,72 @@ describe('TasksResolver', () => {
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reorderPlanTasks', () => {
+    const planId = mockTask.planId as string;
+    const taskA = { ...mockTask, id: 'task-a', sortOrder: 2000, title: 'A' };
+    const taskB = {
+      ...mockTask,
+      createdAt: new Date('2026-02-02T21:33:51.891Z'),
+      id: 'task-b',
+      sortOrder: 1000,
+      title: 'B',
+    };
+
+    test('returns empty array when taskIds is empty', async () => {
+      const result = await resolver.reorderPlanTasks({ planId, taskIds: [] });
+
+      expect(result).toEqual([]);
+      expect(repo.find).not.toHaveBeenCalled();
+    });
+
+    test('throws when taskIds contain duplicates', async () => {
+      await expect(
+        resolver.reorderPlanTasks({
+          planId,
+          taskIds: [taskA.id, taskA.id],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('throws when a taskId does not belong to the plan', async () => {
+      vi.mocked(repo.find).mockResolvedValue([taskA]);
+
+      await expect(
+        resolver.reorderPlanTasks({
+          planId,
+          taskIds: [taskA.id, taskB.id],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('renumbers sortOrder 1000, 2000 in taskIds order inside a transaction', async () => {
+      vi.mocked(repo.find).mockResolvedValue([taskA, taskB]);
+
+      const result = await resolver.reorderPlanTasks({
+        planId,
+        taskIds: [taskA.id, taskB.id],
+      });
+
+      expect(repo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskA.id, {
+        sortOrder: 1_000_000,
+      });
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskB.id, {
+        sortOrder: 1_000_001,
+      });
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskA.id, {
+        sortOrder: 1000,
+      });
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskB.id, {
+        sortOrder: 2000,
+      });
+      expect(result).toEqual([
+        { ...taskA, sortOrder: 1000 },
+        { ...taskB, sortOrder: 2000 },
+      ]);
     });
   });
 });
