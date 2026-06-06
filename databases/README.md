@@ -82,7 +82,7 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 
 - **plans** – Plan metadata: `id`, `title`, `author`, `category`, `status`, `description`, `summary` (optional; PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `project_id` (optional, FK to projects; nullable), `created_at`, `updated_at`. In the OpenThrottle API, `projectId` is optional on create/update and in list filters; `projectRelation` is null when `projectId` is unset.
 - **projects** – NX project reference for scoping plans/tasks: `id`, `name`, `nx_project_name` (TEXT; unique when not null per migration 032), `description`, `created_at`, `updated_at`. Only **NX applications** are kept; see [Projects collection (applications only)](#projects-collection-applications-only).
-- **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `created_at`, `updated_at`.
+- **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `sort_order` (INTEGER NOT NULL; explicit execution/list order within the plan; see [Task sort_order](#task-sort_order)), `created_at`, `updated_at`.
 - **plan_embeddings** – Vector embeddings for plan content: `id`, `plan_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **task_embeddings** – Vector embeddings for task content: `id`, `task_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **commit_links** – Git commit linkage to plans/tasks: `id`, `plan_id` (FK), `task_id` (FK, nullable), `repo`, `sha`, `message`, `created_at`. One row per (plan, task, repo, sha); `task_id` null = plan-level link.
@@ -112,7 +112,7 @@ Indexes include HNSW vector indexes on embedding columns for similarity search.
 Indexes are created by migrations in `databases/migrations/`. Main tables and their indexes:
 
 - **plans** – `idx_plans_status`, `idx_plans_category`, `idx_plans_author`, `idx_plans_created_at`, `idx_plans_assignee` (partial), `idx_plans_updated_at`, `idx_plans_status_created_at`, `idx_plans_status_updated_at`, `idx_plans_title_trgm` (GIN, pg_trgm for ILIKE). See `002_create_plans_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`, `017_add_plans_list_sort_indexes.sql`, `018_plans_title_trgm.sql`.
-- **tasks** – `idx_tasks_plan_id`, `idx_tasks_status`, `idx_tasks_category`, `idx_tasks_created_at`, `idx_tasks_requirements` (GIN), `idx_tasks_assignee` (partial). See `003_create_tasks_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`.
+- **tasks** – `idx_tasks_plan_id`, `idx_tasks_status`, `idx_tasks_category`, `idx_tasks_created_at`, `idx_tasks_requirements` (GIN), `idx_tasks_assignee` (partial), `idx_tasks_plan_id_sort_order` (unique on `plan_id`, `sort_order`). See `003_create_tasks_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`, `049_add_sort_order_to_tasks.sql`.
 - **plan_embeddings** – `idx_plan_embeddings_plan_id`, `idx_plan_embeddings_vector` (HNSW cosine), `idx_plan_embeddings_metadata` (GIN). See `004_create_plan_embeddings_table.sql`.
 - **task_embeddings** – `idx_task_embeddings_task_id`, `idx_task_embeddings_vector` (HNSW cosine), `idx_task_embeddings_metadata` (GIN). See `005_create_task_embeddings_table.sql`.
 - **commit_links** – `idx_commit_links_plan_id`, `idx_commit_links_task_id` (partial), `idx_commit_links_repo_sha`, unique on (plan_id, COALESCE(task_id, zero-uuid), repo, sha). See `006_create_commit_links_table.sql`.
@@ -220,6 +220,15 @@ Canonical statuses: **backlog**, **blocked**, **canceled**, **completed**, **in_
 - **skipped** — Deferred or skipped for now (may be revisited later).
 
 Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose status is **not** completed, skipped, or canceled (i.e. backlog, blocked, in_progress, pending).
+
+#### Task sort_order
+
+`sort_order` (GraphQL: `sortOrder`) is the canonical execution and list sequence for tasks **within a plan**. Scoped per `plan_id` only; enforced by `UNIQUE (plan_id, sort_order)` (migration `049_add_sort_order_to_tasks.sql`).
+
+- **Canonical sort:** `sort_order ASC`, `created_at ASC` (tiebreaker only).
+- **Backfill:** existing tasks ordered by `created_at ASC` within each plan → 1000, 2000, 3000, …
+- **Auto-assign on create:** when omitted, append `MAX(sort_order) + 1000` (first task in plan → 1000).
+- **Reorder:** prefer `reorderPlanTasks` / MCP `reorder_plan_tasks` over delete-and-recreate when fixing Ralph execution order. Gap-based `updateTask(sortOrder)` supports mid-list inserts (e.g. 1500 between 1000 and 2000).
 
 #### Assignee rule
 
@@ -355,6 +364,7 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 29. `035_create_subscriptions_table.sql` – Subscriptions table for Stripe Hybrid payment integration (user_id FK, Stripe IDs, status, period dates).
 30. `036_create_custom_prompts_table.sql` – Custom prompts table for AI workflow documents (agents, skills, commands, prompts, rules). Supports type/label tagging, file system path reference, user and project scoping, soft delete.
 31. `037_create_custom_prompt_embeddings_table.sql` – Vector embeddings for custom prompt content (semantic search); same pattern as plan_embeddings.
+32. `049_add_sort_order_to_tasks.sql` – Add `sort_order` (INTEGER NOT NULL) on tasks; backfill per plan by `created_at ASC` → 1000, 2000, …; unique index on `(plan_id, sort_order)` for deterministic ordering.
 
 ### Migration strategy (TypeORM vs SQL)
 
