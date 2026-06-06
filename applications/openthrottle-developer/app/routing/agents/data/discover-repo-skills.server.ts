@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
@@ -74,6 +74,24 @@ const readSkillEntry = (
   };
 };
 
+const isSkillFolder = (
+  absoluteSkillsDir: string,
+  folderName: string,
+  dirent: ReturnType<typeof readdirSync>[number],
+): boolean => {
+  if (dirent.isDirectory()) {
+    return true;
+  }
+  if (!dirent.isSymbolicLink()) {
+    return false;
+  }
+  try {
+    return statSync(join(absoluteSkillsDir, folderName)).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
 const scanSkillsLayout = (
   monorepoRoot: string,
   layout: SkillRegistryLayout,
@@ -95,7 +113,7 @@ const scanSkillsLayout = (
   const entries: RepoSkillEntry[] = [];
 
   for (const dirent of dirents) {
-    if (!dirent.isDirectory()) {
+    if (!isSkillFolder(absoluteSkillsDir, dirent.name, dirent)) {
       continue;
     }
 

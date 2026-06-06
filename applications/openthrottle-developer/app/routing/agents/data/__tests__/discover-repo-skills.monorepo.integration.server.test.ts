@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
@@ -21,11 +21,13 @@ const countOnDiskSkillFolders = (root: string, skillsDir: string): number => {
     return 0;
   }
 
-  return readdirSync(absoluteDir, { withFileTypes: true }).filter(
-    (dirent) =>
-      dirent.isDirectory() &&
-      existsSync(join(absoluteDir, dirent.name, 'SKILL.md')),
-  ).length;
+  return readdirSync(absoluteDir, { withFileTypes: true }).filter((dirent) => {
+    const isFolder =
+      dirent.isDirectory() ||
+      (dirent.isSymbolicLink() &&
+        statSync(join(absoluteDir, dirent.name)).isDirectory());
+    return isFolder && existsSync(join(absoluteDir, dirent.name, 'SKILL.md'));
+  }).length;
 };
 
 describe('discoverRepoSkills monorepo integration', () => {
