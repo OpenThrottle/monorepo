@@ -1,5 +1,8 @@
 ---
 alwaysApply: true
+description:
+globs:
+name: cursor-commands
 ---
 
 # When Running "Cursor Commands"
