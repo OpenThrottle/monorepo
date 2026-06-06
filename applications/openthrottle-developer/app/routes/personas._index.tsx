@@ -19,7 +19,15 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+  const { discoverRepoPersonas } =
+    await import('~/routing/agents/data/discover-repo-personas.server');
+  const { getMonorepoRoot } =
+    await import('~/routing/agents/data/resolve-monorepo-root.server');
+
+  const monorepoRoot = getMonorepoRoot();
+  const entries = discoverRepoPersonas(monorepoRoot);
+
+  return { entries };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -33,26 +41,14 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
-
-  // Hooks
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+  const { entries } = props.loaderData;
 
   return (
     <GlobalScreen>
-      <PersonasIntroduction />
-      <PersonasStats />
+      <PersonasIntroduction entries={entries} />
+      <PersonasStats entries={entries} />
       <PersonasToolbar />
-      <PersonasTable />
+      <PersonasTable className="bg-card" entries={entries} />
     </GlobalScreen>
   );
 }

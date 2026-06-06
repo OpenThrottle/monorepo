@@ -1,31 +1,26 @@
 import * as React from 'react';
-// import classnames from 'classnames';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import { getRepoPersonasRegistryCount } from '~/routing/agents/data/repo-personas-registry';
 
 export interface PersonasStatsProps {
-  // className?: string;
+  entries?: RepoPersonaEntry[];
 }
 
 export const PersonasStats = (
-  _props: PersonasStatsProps,
+  props: PersonasStatsProps,
 ): React.ReactElement => {
-  // const {  } = props;
-
-  // Hooks
-  const [_bool, _setBool] = React.useState(false);
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+  const { entries = [] } = props;
+  const count = getRepoPersonasRegistryCount(entries);
 
   return (
-    <div className="p-4" data-testid="PersonasStats">
-      <h2>PersonasStats</h2>
+    <div
+      className="p-4 text-sm text-muted-foreground"
+      data-testid="PersonasStats"
+    >
+      <span>
+        Discovered <strong className="text-foreground">{count}</strong> persona
+        {count === 1 ? '' : 's'} from disk.
+      </span>
     </div>
   );
 };

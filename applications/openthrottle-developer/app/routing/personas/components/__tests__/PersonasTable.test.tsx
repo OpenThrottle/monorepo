@@ -6,7 +6,17 @@ import { PersonasTable } from '../PersonasTable';
 
 describe('PersonasTable Component', () => {
   test('renders table region', () => {
-    const Component = () => <PersonasTable />;
+    const Component = () => (
+      <PersonasTable
+        entries={[
+          {
+            repoRelativePath: '.agents/personas/architect.md',
+            slug: 'architect',
+            summary: 'Architecture lens.',
+          },
+        ]}
+      />
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

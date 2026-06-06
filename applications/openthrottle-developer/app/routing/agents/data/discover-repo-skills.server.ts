@@ -2,9 +2,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
-import type {
-  RepoSkillEntry,
-  SkillRegistryLayout,
+import {
+  dedupeRepoSkillEntriesBySlug,
+  type RepoSkillEntry,
+  type SkillRegistryLayout,
 } from '~/routing/agents/data/repo-skills-registry';
 
 const SKILL_FILE_NAME = 'SKILL.md';
@@ -156,5 +157,5 @@ export const discoverRepoSkills = (
     entries.push(...scanSkillsLayout(monorepoRoot, layout, skillsDir));
   }
 
-  return sortRepoSkillEntries(entries);
+  return sortRepoSkillEntries([...dedupeRepoSkillEntriesBySlug(entries)]);
 };

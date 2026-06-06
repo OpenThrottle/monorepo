@@ -34,17 +34,17 @@ describe('discoverRepoSkills monorepo integration', () => {
   const monorepoRoot = findMonorepoRootFromPath(monorepoRootCandidate);
 
   test.skipIf(!monorepoRoot || !isMonorepoRootDirectory(monorepoRoot))(
-    'discovered layout counts match on-disk SKILL.md folders',
+    'dedupes symlinked cursor skills and reports unique slugs per layout',
     () => {
       const entries = discoverRepoSkills(monorepoRoot);
       const counts = getRepoSkillsRegistryCounts(entries);
+      const slugs = new Set(entries.map((entry: RepoSkillEntry) => entry.slug));
 
+      expect(slugs.size).toBe(entries.length);
       expect(counts.agents).toBe(
         countOnDiskSkillFolders(monorepoRoot, '.agents/skills'),
       );
-      expect(counts.cursor).toBe(
-        countOnDiskSkillFolders(monorepoRoot, '.cursor/skills'),
-      );
+      expect(counts.agents + counts.cursor).toBe(entries.length);
     },
   );
 
