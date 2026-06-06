@@ -6,7 +6,6 @@
 │   ├── entry.client.tsx
 │   ├── entry.server.tsx
 │   ├── global
-│   ├── PAGE_TITLES.md
 │   ├── root.tsx
 │   ├── root.tsx.graphql
 │   ├── routes

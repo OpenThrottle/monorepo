@@ -4,6 +4,7 @@
  * For more information, see https://remix.run/file-conventions/entry.server
  */
 
+import * as React from 'react';
 import { PassThrough } from 'node:stream';
 import type { AppLoadContext, EntryContext } from 'react-router';
 import { createReadableStreamFromReadable } from '@react-router/node';

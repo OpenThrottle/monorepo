@@ -1,10 +1,8 @@
 ---
 name: github-branch
-description: Instructions
+description: Create and push a feature branch with a conventional name via GitHub CLI. USE WHEN the user runs /github/branch, asks for a new branch for current work, or needs to fork work before opening a PR. Follows github.mdc; pushes the branch and returns a clickable URL.
 disable-model-invocation: true
 ---
-
-# Instructions
 
 Your job is to fork a new branch of work using the GitHub CLI.
 

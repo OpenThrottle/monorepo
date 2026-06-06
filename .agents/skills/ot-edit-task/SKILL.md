@@ -1,10 +1,12 @@
 ---
 name: ot-edit-task
-description: Instructions
+description: >-
+  Edit an existing OpenThrottle task via openthrottle-mcp get_task and
+  update_task (title, description, status, category, requirements, planId). USE
+  WHEN the user runs /ot/edit-task, names a task UUID, or wants to change task
+  status or fields in OT—report what was updated.
 disable-model-invocation: true
 ---
-
-# Instructions
 
 Your job is to **edit** an existing task in OpenThrottle using the ai-mcp MCP server.
 

@@ -13,11 +13,11 @@ This document defines how N worktree targets (or separate repos) are registered 
 - **Format:** Array of targets. Each target is either:
   - `{ "id": string, "path": string }`, or
   - `[id, path]` tuple (id and path as strings).
-- **Where it’s used:** `NestjsWorktreesModule` builds a single `WorktreeTargetsTracker` with `new WorktreeTargetsTracker([...getWorktreeTargetsFromEnv()])` and provides it as `WORKTREE_TRACKER_TOKEN`. The server (e.g. openthrottle-server) has one tracker instance; all BullMQ workers in that process share it.
+- **Where it’s used:** `NestjsWorktreesModule` builds a base `WorktreeTargetsTracker` from env, wraps it with `MutexWorktreeTargetsTracker` (`async-mutex`), and provides the result as `WORKTREE_TRACKER_TOKEN`. The server (e.g. openthrottle-server) has one tracker instance; all BullMQ workers in that process share it.
 
 **In-memory tracker extension:**
 
-- `WorktreeTargetsTracker` (in `@tools/workflows` and re-exported by `@openthrottle/nestjs-worktrees`) supports **dynamic registration**: `register(id, path)`. So targets can be added at runtime in addition to env. The interface `IWorktreeTargetsTracker` does not expose `register`; it is an implementation detail of the in-memory tracker. If a future “registration API” is added, the server could call `tracker.register(id, path)` when using the in-memory implementation, or use a Redis-backed tracker that reads from a Redis set/key.
+- `WorktreeTargetsTracker` (local aligned copy in `@openthrottle/nestjs-worktrees`; canonical implementation in `@tools/workflows`) supports **dynamic registration**: `register(id, path)`. So targets can be added at runtime in addition to env. The interface `IWorktreeTargetsTracker` does not expose `register`; it is an implementation detail of the in-memory tracker. If a future “registration API” is added, the server could call `tracker.register(id, path)` when using the in-memory implementation, or use a Redis-backed tracker that reads from a Redis set/key.
 
 **N repos vs N worktrees:**
 
@@ -109,7 +109,8 @@ This document defines how N worktree targets (or separate repos) are registered 
 
 - **Tracker interface and types:** `tools/workflows/src/types/worktree.ts` (`IWorktreeTargetsTracker`, `ParentJobHandoff`, `ParentJobAcquireOptions`).
 - **In-memory tracker:** `tools/workflows/src/utils/worktree-targets.ts` (`WorktreeTargetsTracker`, `register()`).
-- **Env parsing:** `packages/mattscholta/nestjs-worktrees/src/worktree-targets.env.ts` (`getWorktreeTargetsFromEnv()`).
+- **Env parsing:** `packages/nestjs-worktrees/src/worktree-targets.env.ts` (`getWorktreeTargetsFromEnv()`).
+- **Nest module:** [`packages/nestjs-worktrees/README.md`](../../../packages/nestjs-worktrees/README.md).
 - **Workflow:** `tools/workflows/src/utils/workflow.ts` (`runWorktreeWorkflow`); `parent-job.ts` (`parentJobAcquireAndCreateBranch`); `child-job.ts` (`runChildJob` with `cwd: worktreePath`).
 - **Process model:** [process-model.md](./process-model.md).
 - **Agent CLI `--worktree`:** [ralph-worktree-flag.md](../../../docs/workflows/ralph-worktree-flag.md).

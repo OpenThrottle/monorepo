@@ -1,5 +1,5 @@
 /**
- * @description Flags .tsx files that may need alignment with generator templates and
+ * Flags .tsx files that may need alignment with generator templates and
  * .cursor/rules (default exports in component paths, missing React import).
  * See docs/tools/templates/AUDIT_CHECKLIST.md. Does not modify files.
  */
@@ -26,7 +26,7 @@ interface Flag {
 }
 
 /**
- * @description Returns true if the file path is likely a route/layout/entry (default export allowed).
+ * Returns true if the file path is likely a route/layout/entry (default export allowed).
  */
 function isAllowedDefaultExportPath(filePath: string): boolean {
   const normalized = path.relative(ROOT, filePath);
@@ -34,14 +34,14 @@ function isAllowedDefaultExportPath(filePath: string): boolean {
 }
 
 /**
- * @description Returns true if content looks like it contains JSX.
+ * Returns true if content looks like it contains JSX.
  */
 function hasJsx(content: string): boolean {
   return /<[A-Za-z][\w.-]*[\s/>]|<\s*\/\s*\w+/.test(content);
 }
 
 /**
- * @description Returns true if content uses React (JSX) but does not use the required import.
+ * Returns true if content uses React (JSX) but does not use the required import.
  */
 function missingReactImport(content: string): boolean {
   if (!hasJsx(content)) return false;
@@ -49,7 +49,7 @@ function missingReactImport(content: string): boolean {
 }
 
 /**
- * @description Returns true if content has default export (and path is not in allowed list).
+ * Returns true if content has default export (and path is not in allowed list).
  */
 function hasDisallowedDefaultExport(
   content: string,
@@ -71,8 +71,8 @@ function run(): void {
       } catch {
         continue;
       }
-      const relativePath = path.relative(ROOT, file);
 
+      const relativePath = path.relative(ROOT, file);
       if (hasDisallowedDefaultExport(content, file)) {
         flags.push({
           file: relativePath,
@@ -80,6 +80,7 @@ function run(): void {
             'default export in component-like path (use named export per coding/default-exports.mdc)',
         });
       }
+
       if (missingReactImport(content)) {
         flags.push({
           file: relativePath,
@@ -99,10 +100,12 @@ function run(): void {
 
   console.log('Flagged files (candidates for manual review):');
   console.log('');
+
   for (const { file, reason } of flags) {
     console.log(`${file}`);
     console.log(`  → ${reason}`);
   }
+
   console.log('');
   console.log(
     `Total: ${flags.length} flag(s). See docs/tools/templates/AUDIT_CHECKLIST.md.`,

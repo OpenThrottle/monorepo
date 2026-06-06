@@ -90,12 +90,12 @@ export async function executeWorkflowGraphqlV2<
 }
 
 /**
- * @description Resolves optional Bearer token from env: `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, then `MCP_DEVELOPER_AUTH_TOKEN` (same token source as openthrottle-mcp for local parity).
+ * @description Resolves optional Bearer token from env: `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, then `OPENTHROTTLE_MCP_AUTH_TOKEN` (same token source as openthrottle-mcp for local parity).
  */
 export function resolveWorkflowAuthTokenFromEnv(): string | undefined {
   const raw =
     process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN ??
-    process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
 
   const trimmed = typeof raw === 'string' ? raw.trim() : '';
 

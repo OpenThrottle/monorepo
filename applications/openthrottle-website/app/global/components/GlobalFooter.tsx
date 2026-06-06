@@ -30,7 +30,7 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
-          <div>
+          <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <SpeedometerIcon className="w-5 h-5 text-accent" />
               <span className="font-bold">OpenThrottle</span>
@@ -39,8 +39,8 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
               Context-driven AI for developers.
             </p>
           </div>
-          <div>
-            <h4 className="font-semibold mb-4">Product</h4>
+          {/* <div>
+            <h4 className="mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link
@@ -75,9 +75,9 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
           <div>
-            <h4 className="font-semibold mb-4">Community</h4>
+            <h4 className="mb-4">Community</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link
@@ -100,7 +100,7 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
+            <h4 className="mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link

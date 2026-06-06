@@ -16,11 +16,11 @@ const chunkId = '00000000-0000-4000-8000-000000000001';
 describe('semanticSearchToolHandler', () => {
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when query is invalid', () => {
@@ -90,11 +90,11 @@ describe('semanticSearchToolHandler', () => {
 describe('getDocumentToolHandler', () => {
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when GraphQL returns a chunk', () => {

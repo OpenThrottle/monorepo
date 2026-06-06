@@ -9,7 +9,7 @@ Tools that call authenticated GraphQL (plans, tasks, notes, semantic search, and
 | **Service account** (recommended for MCP) | `ot_sa_<prefix>_<secret>`              | Cursor MCP, CI, Ralph workers | Long-lived; rotate by creating a new credential and revoking the old one |
 | **Human JWT**                             | Standard JWT from `login` / `register` | Developer UI, admin GraphQL   | ~24h; must re-login or refresh manually                                  |
 
-Use a **service account** token for `MCP_DEVELOPER_AUTH_TOKEN` so automation does not depend on a human session that expires. Human JWTs still work when `APP_ENABLE_AUTHENTICATION=true`, but they are a poor fit for always-on MCP.
+Use a **service account** token for `OPENTHROTTLE_MCP_AUTH_TOKEN` so automation does not depend on a human session that expires. Human JWTs still work when `APP_ENABLE_AUTHENTICATION=true`, but they are a poor fit for always-on MCP.
 
 ## Server: `APP_ENABLE_AUTHENTICATION`
 
@@ -37,7 +37,7 @@ Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `op
 
 3. Copy output into env:
 
-- `**MCP_DEVELOPER_AUTH_TOKEN**` — Cursor MCP, CLI, embedded server tools
+- `**OPENTHROTTLE_MCP_AUTH_TOKEN**` — Cursor MCP, CLI, embedded server tools
 - `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` — BullMQ / in-process Ralph orchestrator (optional separate `workflow-ralph` account)
   Also set in `applications/openthrottle-server/.env` if the server or workers read tokens from that file.
 
@@ -48,9 +48,9 @@ If the bootstrap script skips an account because an active credential already ex
 ## Token source (openthrottle-mcp)
 
 - **Per-request (embedded in openthrottle-server):** `withMcpDeveloperAuthToken` / `withMcpDeveloperAuthTokenAsync` from `@openthrottle/openthrottle-mcp/auth` so concurrent GraphQL requests do not share a global token.
-- **Primary (stdio MCP / CLI):** environment variable `**MCP_DEVELOPER_AUTH_TOKEN`\*\*
+- **Primary (stdio MCP / CLI):** environment variable `**OPENTHROTTLE_MCP_AUTH_TOKEN`\*\*
 
-Resolution order: per-request store → `MCP_DEVELOPER_AUTH_TOKEN`. If none is set or the value is empty, authenticated tools throw an error that instructs you to set the env var.
+Resolution order: per-request store → `OPENTHROTTLE_MCP_AUTH_TOKEN`. If none is set or the value is empty, authenticated tools throw an error that instructs you to set the env var.
 
 ## Cursor MCP config
 
@@ -65,7 +65,7 @@ In `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global / secondary work
       "env": {
         "API_URL": "http://localhost:6021",
         "API_URL_INTERNAL": "http://localhost:6021",
-        "MCP_DEVELOPER_AUTH_TOKEN": "ot_sa_<prefix>_<secret>"
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "ot_sa_<prefix>_<secret>"
       }
     }
   }
@@ -87,7 +87,7 @@ Rotate without disabling auth:
 
 2. **Update** env everywhere the old token was stored:
 
-- `MCP_DEVELOPER_AUTH_TOKEN` in Cursor MCP `env`
+- `OPENTHROTTLE_MCP_AUTH_TOKEN` in Cursor MCP `env`
 - `applications/openthrottle-server/.env` if used there
 - CI secrets or deployment env for workers
 
@@ -136,7 +136,7 @@ See `applications/openthrottle-server/.env.default` and [databases/README.md](..
 
 ## Human JWT (optional for MCP)
 
-For one-off testing you can set `MCP_DEVELOPER_AUTH_TOKEN` to a JWT from:
+For one-off testing you can set `OPENTHROTTLE_MCP_AUTH_TOKEN` to a JWT from:
 
 ```graphql
 mutation {

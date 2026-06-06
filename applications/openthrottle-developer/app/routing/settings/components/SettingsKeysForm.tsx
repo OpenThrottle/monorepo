@@ -139,7 +139,7 @@ export const SettingsKeysForm = (
             <div className="space-y-3">
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-50">
                 Store the token in{' '}
-                <code className="text-xs">MCP_DEVELOPER_AUTH_TOKEN</code> or
+                <code className="text-xs">OPENTHROTTLE_MCP_AUTH_TOKEN</code> or
                 your worker environment before closing this dialog.
               </div>
 

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/settings._index';

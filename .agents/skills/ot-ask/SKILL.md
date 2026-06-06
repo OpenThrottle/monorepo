@@ -1,10 +1,13 @@
 ---
 name: ot-ask
-description: Instructions
+description: >-
+  Answer questions from the OpenThrottle plans knowledge base via openthrottle-mcp
+  (semantic_search, list_plans_by_status, list_sources, get_document,
+  get_activity_by_date). USE WHEN the user runs /ot/ask, says "ask OT" or "ask
+  OpenThrottle", or wants semantic search over plans, status listings, or
+  activity by date—answer only from retrieved chunks.
 disable-model-invocation: true
 ---
-
-# Instructions
 
 Your job is to answer the user's question using the **OpenThrottle** (ai-mcp) MCP server—the plans knowledge base.
 

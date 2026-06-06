@@ -148,7 +148,7 @@ export class AgentsResolver {
       failed.toolMetadataJson = null;
 
       if (msg.includes('Auth token required')) {
-        failed.errorMessage = `OpenThrottle tools need a Bearer token on this request or MCP_DEVELOPER_AUTH_TOKEN in the server environment.`;
+        failed.errorMessage = `OpenThrottle tools need a Bearer token on this request or OPENTHROTTLE_MCP_AUTH_TOKEN in the server environment.`;
 
         return failed;
       }

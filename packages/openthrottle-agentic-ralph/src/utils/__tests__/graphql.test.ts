@@ -11,14 +11,14 @@ const INTERNAL_BASE = 'http://localhost:6021';
 beforeEach(() => {
   process.env.API_URL_INTERNAL = INTERNAL_BASE;
   delete process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN;
-  delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+  delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   delete process.env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL;
 });
 
 afterEach(() => {
   delete process.env.API_URL_INTERNAL;
   delete process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN;
-  delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+  delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   delete process.env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL;
 });
 
@@ -85,15 +85,15 @@ describe('buildWorkflowExecuteGraphqlV2Options', () => {
 });
 
 describe('resolveWorkflowAuthTokenFromEnv', () => {
-  it('prefers OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN over MCP_DEVELOPER_AUTH_TOKEN', () => {
+  it('prefers OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN over OPENTHROTTLE_MCP_AUTH_TOKEN', () => {
     process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN = '  primary  ';
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = 'secondary';
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'secondary';
 
     expect(resolveWorkflowAuthTokenFromEnv()).toBe('primary');
   });
 
-  it('falls back to MCP_DEVELOPER_AUTH_TOKEN when workflows token unset', () => {
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = ' mcp ';
+  it('falls back to OPENTHROTTLE_MCP_AUTH_TOKEN when workflows token unset', () => {
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = ' mcp ';
 
     expect(resolveWorkflowAuthTokenFromEnv()).toBe('mcp');
   });

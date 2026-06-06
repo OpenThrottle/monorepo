@@ -27,10 +27,11 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Toaster } from '@openthrottle/react-router-shadcn';
 import {
-  GlobalProviders,
+  GlobalErrorBoundary,
   GlobalLayout,
-  GlobalMetrics,
   GlobalLayoutHeader,
+  GlobalMetrics,
+  GlobalProviders,
 } from '@openthrottle/react-router-ui-global';
 import {
   GetMeDocument,
@@ -173,7 +174,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* FIXME: Uncomment this when we have a production environment */}
         {/* <Analytics /> */}
 
-        {/* 🚨 Any env added here is 100% visible to the public 🚨 */}
+        {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script dangerouslySetInnerHTML={{ __html: html }} />
 
         {/* Now we add our scripts as they may use the env */}
@@ -297,4 +298,4 @@ export const action = async (args: Route.ActionArgs) => {
 /**
  * @link https://reactrouter.com/how-to/error-boundary
  */
-// export const ErrorBoundary = GlobalErrorBoundary;
+export const ErrorBoundary = GlobalErrorBoundary;

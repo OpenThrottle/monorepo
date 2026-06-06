@@ -67,7 +67,7 @@ describe('buildWorkflowRalphSpawnEnv', () => {
   it('sets graphql transport by default and forwards worker GraphQL auth', () => {
     const env: NodeJS.ProcessEnv = {
       FOO: 'bar',
-      MCP_DEVELOPER_AUTH_TOKEN: 'dev-token',
+      OPENTHROTTLE_MCP_AUTH_TOKEN: 'dev-token',
       [WORKFLOW_RALPH_OT_ROOT_ENV]: emptyRoot,
     };
     const out = buildWorkflowRalphSpawnEnv(env);

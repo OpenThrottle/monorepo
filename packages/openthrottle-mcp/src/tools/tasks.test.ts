@@ -20,11 +20,11 @@ const serviceAccountToken = 'ot_sa_testprefix_testsecret';
 describe('createTaskToolHandler', () => {
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when args are invalid', () => {
@@ -45,7 +45,7 @@ describe('createTaskToolHandler', () => {
 
   describe('when GraphQL returns a task', () => {
     it('returns structured task content', async () => {
-      process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
       const task = {
         id: '27956636-1ab4-4ded-b227-8c52bf888b05',
         planId,
@@ -77,7 +77,7 @@ describe('createTaskToolHandler', () => {
 
   describe('when GraphQL returns no task', () => {
     it('returns a no-result error', async () => {
-      process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ createTask: null });
 
       const result = await createTaskToolHandler({
@@ -96,11 +96,11 @@ describe('createTaskToolHandler', () => {
 describe('createTasksToolHandler', () => {
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when GraphQL creates multiple tasks', () => {
@@ -162,11 +162,11 @@ describe('createTasksToolHandler', () => {
 describe('getTasksByPlanIdToolHandler', () => {
   beforeEach(() => {
     vi.mocked(executeGraphqlWithAuth).mockReset();
-    process.env.MCP_DEVELOPER_AUTH_TOKEN = serviceAccountToken;
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
   afterEach(() => {
-    delete process.env.MCP_DEVELOPER_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
   describe('when GraphQL returns tasks', () => {

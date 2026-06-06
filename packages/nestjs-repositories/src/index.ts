@@ -11,10 +11,7 @@ export { CustomPromptsService } from './modules/prompts/custom-prompts.service';
 export { DailyStat } from './modules/daily-stats/daily-stat.entity';
 export { dailyStatsFactory } from './modules/daily-stats/daily-stats.factory';
 export { DailyStatsService } from './modules/daily-stats/daily-stats.service';
-export {
-  getCortexPostgresUrl,
-  getTypeOrmOptions as getCortexTypeOrmOptions,
-} from './database.config';
+export { getTypeOrmOptions as getCortexTypeOrmOptions } from './database.config';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module';
 export { Note } from './modules/notes/note.entity';
 export { notesFactory } from './modules/notes/notes.factory';
