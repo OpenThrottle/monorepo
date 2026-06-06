@@ -4,7 +4,7 @@
 **Task-Id:** `d260da5a-6cef-49c9-9646-5fadf5d9626a`  
 **Decisions:** D1 (skills SSOT), D3 (rules SSOT, keep `.mdc`), D2 (disk write + DB read-only index)
 
-This document defines the **target on-disk layout** for unified agent assets, **symlink conventions** for editor parity, **editor-native exceptions**, a **migration sequence** for task `84ed557c`, and a **CI drift guard** spec. Implementation of symlinks and CI belongs in the next migration task; contributor-facing workflow updates belong in task `3378f82c`.
+This document defines the **canonical on-disk layout** for unified agent assets, **symlink conventions** for editor parity, **editor-native exceptions**, migration sequence, and **CI drift guard** spec. Contributor workflow: [CONTRIBUTING.md](../../CONTRIBUTING.md) § Agent assets, [AGENT_INPUTS.md](../tools/templates/AGENT_INPUTS.md), [AGENTS.md](../../AGENTS.md).
 
 **Related:**
 
@@ -181,13 +181,13 @@ These files **stay in editor trees** and are edited in place. They are **not** m
 | `.agents/skills/openthrottle-generators/SKILL.md` | same                                    | same (already SSOT)                      |
 | `.cursor/rules/README.md`                         | `.agents/rules/README.md`               | symlink                                  |
 
-**Task `3378f82c` must update AGENT_INPUTS** to document:
+**Contributor docs (task `3378f82c`, done):**
 
 - **Edit** under `.agents/rules/` and `.agents/skills/`
 - **Load** via `.cursor/rules/` and `.cursor/skills/` (symlink views)
-- Link to this layout doc and [agent-editor-folders.md](./agent-editor-folders.md)
+- See [AGENT_INPUTS.md](../tools/templates/AGENT_INPUTS.md), [CONTRIBUTING.md](../../CONTRIBUTING.md) § Agent assets
 
-Discoverability checklist (§3 of AGENT_INPUTS) remains valid: `AGENTS.md`, `.cursor/rules/README.md`, `personal-generators.mdc`, `AGENT_USAGE.md` — only **ownership** paths change to `.agents/`.
+Discoverability checklist (§3 of AGENT_INPUTS): `AGENTS.md`, `.agents/rules/README.md`, `personal-generators.mdc`, `AGENT_USAGE.md`.
 
 ---
 
@@ -236,9 +236,9 @@ Add `scripts/check-agent-assets-ssot.sh` (or Nx target `monorepo:check-agent-ass
 
 Exit non-zero on violation; document fix: edit `.agents/` only, recreate symlinks.
 
-### Phase D — Docs (task `3378f82c`)
+### Phase D — Docs (task `3378f82c`) — done
 
-Update `agent-editor-folders.md`, ownership doc, `AGENTS.md`, `AGENT_INPUTS.md` to reflect D1+D3 (not duplicated in this design doc).
+Updated `agent-editor-folders.md`, `AGENTS.md`, `AGENT_INPUTS.md`, `CONTRIBUTING.md` § Agent assets.
 
 ---
 
@@ -257,7 +257,7 @@ Update `agent-editor-folders.md`, ownership doc, `AGENTS.md`, `AGENT_INPUTS.md` 
 
 From symlink spike (`8dc63467`):
 
-- **Require** `git config core.symlinks true` (or WSL clone) on Windows; document in CONTRIBUTING (task `3378f82c`).
+- **Require** `git config core.symlinks true` (or WSL clone) on Windows; see [CONTRIBUTING.md](../../CONTRIBUTING.md) § Agent assets.
 - **CI** runs on Unix — symlinks enforced there.
 - **Sandbox:** symlink creation may need workspace allowlist (Cursor dev OK).
 

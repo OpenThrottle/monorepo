@@ -95,7 +95,7 @@ repo root
 | Cross-editor handbook                 | [`AGENTS.md`](../../AGENTS.md)                                                           | `CLAUDE.md` defers here                                |
 | MCP template (openthrottle-mcp)       | [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example)                             | Local `.cursor/mcp.json`                               |
 
-Full table and editor-unique paths: [ownership doc](./agent-editor-folders-ownership.md) (update in task `3378f82c`).
+Full table and editor-unique paths: [ownership doc](./agent-editor-folders-ownership.md).
 
 ---
 
@@ -176,7 +176,7 @@ When onboarding agents: point them at **AGENT_INPUTS.md** for _what to load_ and
 1. **CI `check-agent-assets-ssot`** — fails on non-symlink copies in `.cursor/skills`, `.claude/skills`, `skills/`, or `.cursor/rules`.
 2. **`.opencode/skills`** — manual copies (`agents-ralph`, `monitor-ci`) until plan 1.5 symlink parity.
 3. **Thin `ot-*` vs thick `ot-plans`** — intentional; both under `.agents/skills/`.
-4. **Windows clones** — require `git config core.symlinks true` or WSL; document in CONTRIBUTING (task `3378f82c`).
+4. **Windows clones** — require `git config core.symlinks true` or WSL; see [CONTRIBUTING.md](../../CONTRIBUTING.md) § Agent assets.
 
 Details: [duplication map §10](./agent-editor-folders-duplication-map.md#10-drift-risks-watch-list).
 
