@@ -5,23 +5,21 @@
 gcloud config configurations list
 
 # Activate a configuration
-gcloud config configurations activate openthrottle-staging
+gcloud config configurations activate <CONFIG_NAME>
 
 # ➕ Create a new configuration
-gcloud config configurations create <NAME>
-# gcloud config configurations create openthrottle-staging
-# gcloud config configurations create openthrottle-production
+gcloud config configurations create <CONFIG_NAME>
 
 # Set individual properties
-gcloud config set project openthrottle-production
-gcloud config set account matthew.scholta@gmail.com
-gcloud config set compute/zone ZONE_NAME
+gcloud config set project <PROJECT_NAME>
+gcloud config set account <EMAIL_ADDRESS>
+gcloud config set compute/zone <ZONE_NAME>
 
 # Remove a configuration
-gcloud config configurations delete openthrottle
+gcloud config configurations delete <CONFIG_NAME>
 
 # Billing related
-gcloud auth application-default set-quota-project openthrottle-staging
+gcloud auth application-default set-quota-project <PROJECT_NAME>
 ```
 
 **Docs:**
