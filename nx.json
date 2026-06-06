@@ -222,6 +222,30 @@
         "codegen-react-router-watch"
       ]
     },
+    "check-agent-assets-ssot": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./scripts/check-agent-assets-ssot.sh",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "validate-agent-assets-frontmatter": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "ingest-agent-assets": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/openthrottle-ingest-agent-assets.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],

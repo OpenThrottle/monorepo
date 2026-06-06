@@ -1,29 +1,16 @@
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';
 import * as React from 'react';
-// import classnames from 'classnames';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 
 export interface PersonasIntroductionProps {
-  // className?: string;
+  entries?: RepoPersonaEntry[];
 }
 
 export const PersonasIntroduction = (
-  _props: PersonasIntroductionProps,
+  props: PersonasIntroductionProps,
 ): React.ReactElement => {
-  // const {  } = props;
-
-  // Hooks
-  const [_bool, _setBool] = React.useState(false);
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+  const { entries = [] } = props;
 
   return (
     <div>
@@ -34,10 +21,10 @@ export const PersonasIntroduction = (
         title="Personas"
       />
       <p className="text-sm text-muted-foreground">
-        Agentic personas represent the intersection of computational modeling
-        and autonomous AI. The term generally refers to one of two concepts:
-        dynamically simulated users used for product testing, or defined
-        behavioral profiles built for autonomous AI agents.
+        Disk-backed Ralph prompt profiles from{' '}
+        <code className="text-xs">.agents/personas/*.md</code> —{' '}
+        {entries.length} discovered. Semantic search and in-app editing are out
+        of scope for phase 1.
       </p>
     </div>
   );

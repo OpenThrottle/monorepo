@@ -6,13 +6,25 @@ import { PersonasIntroduction } from '../PersonasIntroduction';
 
 describe('PersonasIntroduction Component', () => {
   test('renders personas heading and intro copy', () => {
-    const Component = () => <PersonasIntroduction />;
+    const Component = () => (
+      <PersonasIntroduction
+        entries={[
+          {
+            repoRelativePath: '.agents/personas/architect.md',
+            slug: 'architect',
+            summary: 'Architecture lens.',
+          },
+        ]}
+      />
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
     expect(
       screen.getByRole('heading', { name: 'Personas' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Agentic personas represent/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Disk-backed Ralph prompt profiles/i),
+    ).toBeInTheDocument();
   });
 });

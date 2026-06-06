@@ -27,8 +27,6 @@ export const loader = async (_args: Route.LoaderArgs) => {
   const monorepoRoot = getMonorepoRoot();
   const entries = discoverRepoSkills(monorepoRoot);
 
-  console.log('entries', entries);
-
   return { entries };
 };
 

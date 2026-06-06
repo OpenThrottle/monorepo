@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  dedupeRepoSkillEntriesBySlug,
   getRepoSkillsRegistryCounts,
   REQUIRED_AGENTS_SKILL_SLUGS,
   type RepoSkillEntry,
@@ -13,6 +14,47 @@ describe('REQUIRED_AGENTS_SKILL_SLUGS', () => {
       'ot-plans',
       'workflow-ralph',
     ]);
+  });
+});
+
+describe('dedupeRepoSkillEntriesBySlug', () => {
+  test('prefers agents layout when slug appears in agents and cursor', () => {
+    const entries: RepoSkillEntry[] = [
+      {
+        layout: 'cursor',
+        repoRelativePath: '.cursor/skills/shared/SKILL.md',
+        slug: 'shared',
+        summary: 'Cursor copy',
+      },
+      {
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/shared/SKILL.md',
+        slug: 'shared',
+        summary: 'Agents canonical',
+      },
+    ];
+
+    expect(dedupeRepoSkillEntriesBySlug(entries)).toEqual([
+      {
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/shared/SKILL.md',
+        slug: 'shared',
+        summary: 'Agents canonical',
+      },
+    ]);
+  });
+
+  test('keeps cursor-only slugs', () => {
+    const entries: RepoSkillEntry[] = [
+      {
+        layout: 'cursor',
+        repoRelativePath: '.cursor/skills/cursor-only/SKILL.md',
+        slug: 'cursor-only',
+        summary: 'Cursor only',
+      },
+    ];
+
+    expect(dedupeRepoSkillEntriesBySlug(entries)).toEqual(entries);
   });
 });
 

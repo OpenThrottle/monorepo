@@ -1,5 +1,11 @@
 // @vitest-environment node
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
@@ -182,6 +188,31 @@ describe('discoverRepoSkills', () => {
         repoRelativePath: '.agents/skills/has-skill/SKILL.md',
         slug: 'has-skill',
         summary: 'Present.',
+      },
+    ]);
+  });
+
+  test('dedupes symlinked cursor skill when agents layout has the same slug', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'shared-skill',
+      'name: shared-skill\ndescription: Canonical agents skill.',
+    );
+
+    const agentsSkillDir = join(root, '.agents/skills/shared-skill');
+    const cursorSkillsRoot = join(root, '.cursor/skills');
+    mkdirSync(cursorSkillsRoot, { recursive: true });
+    symlinkSync(agentsSkillDir, join(cursorSkillsRoot, 'shared-skill'));
+
+    expect(discoverRepoSkills(root)).toEqual([
+      {
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/shared-skill/SKILL.md',
+        slug: 'shared-skill',
+        summary: 'Canonical agents skill.',
       },
     ]);
   });
