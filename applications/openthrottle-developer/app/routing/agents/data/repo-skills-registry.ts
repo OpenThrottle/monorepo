@@ -7,7 +7,7 @@
  * `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
-export type SkillRegistryLayout = 'agents' | 'cursor';
+export type SkillRegistryLayout = 'agents' | 'claude' | 'cursor' | 'opencode';
 
 /**
  * @description OpenThrottle-specific agent skills that must appear in discovery

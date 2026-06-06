@@ -16,12 +16,16 @@ const LAYOUT_SCAN_TARGETS: ReadonlyArray<{
   readonly skillsDir: string;
 }> = [
   { layout: 'agents', skillsDir: '.agents/skills' },
+  { layout: 'claude', skillsDir: '.claude/skills' },
   { layout: 'cursor', skillsDir: '.cursor/skills' },
+  { layout: 'opencode', skillsDir: '.opencode/skills' },
 ] as const;
 
 const LAYOUT_SORT_ORDER: Readonly<Record<SkillRegistryLayout, number>> = {
   agents: 0,
-  cursor: 1,
+  claude: 1,
+  cursor: 2,
+  opencode: 3,
 };
 
 const sortRepoSkillEntries = (
