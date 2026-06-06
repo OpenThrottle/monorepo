@@ -9,6 +9,7 @@ import {
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
   CancelPlanRunInput,
+  CommitCortexDocumentIngestInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
@@ -52,6 +53,7 @@ import {
   PlanRunsByPlanIdInput,
   PrCountByLabelInput,
   PressureLevel,
+  PreviewCortexDocumentIngestInput,
   PrsMergedPerPeriodInput,
   QueueDetailsInput,
   RalphNestedDebugCli,
@@ -62,6 +64,7 @@ import {
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
   RemoveRoleFromUserInput,
+  ReorderPlanTasksInput,
   RepeatableJobsInput,
   RetryJobInput,
   ReviewCycleTimeInput,
@@ -197,6 +200,17 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
   });
 }
 
+export function CommitCortexDocumentIngestInputSchema(): z.ZodObject<
+  Properties<CommitCortexDocumentIngestInput>
+> {
+  return z.object({
+    fileBase64: z.string(),
+    mimeType: z.string().nullish(),
+    originalFilename: z.string().nullish(),
+    plan: z.lazy(() => CreatePlanInputSchema()),
+  });
+}
+
 export function CommitLinksByPlanIdInputSchema(): z.ZodObject<
   Properties<CommitLinksByPlanIdInput>
 > {
@@ -323,6 +337,7 @@ export function CreateTaskInputSchema(): z.ZodObject<
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string(),
@@ -605,6 +620,16 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
   });
 }
 
+export function PreviewCortexDocumentIngestInputSchema(): z.ZodObject<
+  Properties<PreviewCortexDocumentIngestInput>
+> {
+  return z.object({
+    fileBase64: z.string(),
+    mimeType: z.string().nullish(),
+    originalFilename: z.string().nullish(),
+  });
+}
+
 export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
   Properties<PrsMergedPerPeriodInput>
 > {
@@ -694,6 +719,15 @@ export function RemoveRoleFromUserInputSchema(): z.ZodObject<
   return z.object({
     roleId: z.string(),
     userId: z.string(),
+  });
+}
+
+export function ReorderPlanTasksInputSchema(): z.ZodObject<
+  Properties<ReorderPlanTasksInput>
+> {
+  return z.object({
+    planId: z.string(),
+    taskIds: z.array(z.string()),
   });
 }
 
@@ -875,6 +909,7 @@ export function UpdateTaskInputSchema(): z.ZodObject<
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string().nullish(),

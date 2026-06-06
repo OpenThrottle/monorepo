@@ -10,6 +10,7 @@ fragment PlanTaskRow on TaskObject {
     name
   }
   requirementsJson
+  sortOrder
   status
   summary
   title

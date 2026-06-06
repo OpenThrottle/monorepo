@@ -6,6 +6,10 @@ import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
+import {
+  getPlanTaskStepIndex,
+  sortPlanTasksByListOrder,
+} from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
 import type { ColumnDef } from '@tanstack/react-table';
 
 export interface PlanTabTasksProps {
@@ -16,7 +20,11 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
   const { tasks } = props;
 
   // Hooks
-  const columns = React.useMemo(() => PlanTabTasks.buildTable(), [tasks]);
+  const sortedTasks = React.useMemo(
+    () => sortPlanTasksByListOrder(tasks),
+    [tasks],
+  );
+  const columns = React.useMemo(() => PlanTabTasks.buildTable(), []);
 
   // Setup
   const getRowId = React.useCallback(
@@ -47,7 +55,7 @@ export const PlanTabTasks = (props: PlanTabTasksProps): React.ReactElement => {
       >
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           columns={columns}
-          data={tasks}
+          data={sortedTasks}
           emptyState={<PlanTasksEmpty />}
           getRowId={getRowId}
           getRowProps={getRowProps}
@@ -62,6 +70,18 @@ PlanTabTasks.buildTable = (): ColumnDef<
   string | null | undefined
 >[] => {
   return [
+    {
+      cell: ({ row }) => (
+        <span
+          aria-label={`Step ${getPlanTaskStepIndex(row.index)}`}
+          className="text-muted-foreground tabular-nums"
+        >
+          #{getPlanTaskStepIndex(row.index)}
+        </span>
+      ),
+      header: () => <span className="inline-block w-full text-center">#</span>,
+      id: 'step',
+    },
     {
       accessorKey: 'status',
       cell: ({ row }) => {

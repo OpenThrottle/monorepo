@@ -33,6 +33,7 @@ const mockTask = (
   planId: 'plan-1',
   projectRelation: null,
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: null,
   title: 'Board task',

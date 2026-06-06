@@ -37,6 +37,7 @@ const mockTask = {
   id: 'task-1',
   planId: 'plan-1',
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: null,
   title: 'Test Task',
