@@ -19,7 +19,9 @@ describe('OpenThrottleEmptyState Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders empty state container with title and description regions', () => {
+    expect(component.getByTestId('OpenThrottleEmptyState')).toBeInTheDocument();
+    expect(component.getByRole('heading', { level: 2 })).toBeInTheDocument();
+    expect(component.getByRole('paragraph')).toBeInTheDocument();
   });
 });

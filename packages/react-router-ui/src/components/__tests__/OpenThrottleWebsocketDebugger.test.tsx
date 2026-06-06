@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
@@ -55,7 +56,9 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
     override: Partial<OpenThrottleWebsocketDebuggerProps> = {},
   ) => {
     const Component = () => (
-      <OpenThrottleWebsocketDebugger {...props} {...override} />
+      <TooltipProvider>
+        <OpenThrottleWebsocketDebugger {...props} {...override} />
+      </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
@@ -90,13 +93,15 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
       >([]);
 
       return (
-        <OpenThrottleWebsocketDebugger
-          connectionStatus="connected"
-          initialEntries={mockEntries}
-          onSelectedEventNamesChange={setSelectedEventNames}
-          selectedEventNames={selectedEventNames}
-          subscriptionEnabled={false}
-        />
+        <TooltipProvider>
+          <OpenThrottleWebsocketDebugger
+            connectionStatus="connected"
+            initialEntries={mockEntries}
+            onSelectedEventNamesChange={setSelectedEventNames}
+            selectedEventNames={selectedEventNames}
+            subscriptionEnabled={false}
+          />
+        </TooltipProvider>
       );
     };
 

@@ -29,7 +29,17 @@ describe('OpenThrottleProductFeatures Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders feature title, description, and view code link', () => {
+    expect(
+      component.getByTestId('OpenThrottleProductFeatures'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'Test title' }),
+    ).toBeInTheDocument();
+    expect(component.getByText('Test description')).toBeInTheDocument();
+    expect(component.getByRole('link', { name: /view code/i })).toHaveAttribute(
+      'href',
+      '/test',
+    );
   });
 });

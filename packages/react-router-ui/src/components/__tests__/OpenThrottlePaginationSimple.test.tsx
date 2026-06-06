@@ -23,7 +23,12 @@ describe('OpenThrottlePaginationSimple Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders page summary and pagination controls', () => {
+    expect(component.getByTestId('queue-jobs-pagination')).toBeInTheDocument();
+    expect(
+      component.getByText('Page 1 of 100 · 10 per page'),
+    ).toBeInTheDocument();
+    expect(component.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(component.getByRole('button', { name: 'Next' })).toBeDisabled();
   });
 });
