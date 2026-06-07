@@ -417,6 +417,74 @@ type EnqueueAgenticWorkflowMockResultObject {
   error: String
 }
 
+type AgentConversationObject {
+  createdAt: DateTime!
+  id: String!
+
+  """JSON string of optional conversation metadata object"""
+  metadataJson: String
+
+  """Last router LLM model name when heuristic-only routing was not used"""
+  modelName: String
+
+  """Last router LLM provider when heuristic-only routing was not used"""
+  modelProvider: String
+
+  """Optional linked plan UUID"""
+  planId: String
+
+  """Optional linked project UUID"""
+  projectId: String
+
+  """Conversation lifecycle: active or archived (no hard delete in v1)"""
+  status: String!
+
+  """Display title; auto-set from first user message when omitted on create"""
+  title: String
+  updatedAt: DateTime!
+  userId: String!
+}
+
+type AgentConversationMessageObject {
+  content: String!
+  conversationId: String!
+  createdAt: DateTime!
+  id: String!
+
+  """Message role: user, assistant, system, or tool"""
+  role: String!
+
+  """Router confidence on assistant rows"""
+  routingConfidence: Float
+
+  """Router model on assistant rows"""
+  routingModel: String
+
+  """Router reason on assistant rows"""
+  routingReason: String
+
+  """Router tier on assistant rows"""
+  routingTier: String
+
+  """
+  Monotonic order within the conversation (user+assistant consecutive per turn)
+  """
+  sortOrder: Int!
+
+  """JSON string of tool metadata on assistant rows"""
+  toolMetadataJson: String
+}
+
+type ListAgentConversationsResultObject {
+  conversations: [AgentConversationObject!]!
+  totalCount: Int!
+}
+
+type ListAgentConversationMessagesResultObject {
+  messages: [AgentConversationMessageObject!]!
+  totalCount: Int!
+}
+
 type AgentsChatTurnResult {
   """
   Assistant-visible reply text. Null when the turn failed (see errorMessage).
@@ -1332,6 +1400,19 @@ type Query {
   """
   lastActivity(input: LastActivityInput!): LastActivityResultObject
 
+  """
+  List agent conversations for the authenticated human user (default status=active, limit 20 max 100).
+  """
+  listAgentConversations(input: ListAgentConversationsInput): ListAgentConversationsResultObject!
+
+  """Get one agent conversation by ID for the authenticated human user."""
+  getAgentConversation(id: ID!): AgentConversationObject
+
+  """
+  List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500).
+  """
+  getAgentConversationMessages(input: GetAgentConversationMessagesInput!): ListAgentConversationMessagesResultObject!
+
   """Get a commit link by ID"""
   commitLink(input: GetCommitLinkInput!): CommitLinkObject
 
@@ -1633,6 +1714,27 @@ input LastActivityInput {
 
   """Optional task ID to scope the last activity to that task."""
   taskId: String
+}
+
+input ListAgentConversationsInput {
+  """Page size (default 20, max 100)"""
+  limit: Int = 20
+
+  """Offset for pagination"""
+  offset: Int = 0
+
+  """Filter by status: active or archived (default active)"""
+  status: String = "active"
+}
+
+input GetAgentConversationMessagesInput {
+  conversationId: ID!
+
+  """Page size (default 100, max 500)"""
+  limit: Int = 100
+
+  """Offset for pagination"""
+  offset: Int = 0
 }
 
 input GetCommitLinkInput {
@@ -1948,6 +2050,15 @@ type Mutation {
   """
   enqueueAgenticWorkflowMock: EnqueueAgenticWorkflowMockResultObject!
 
+  """Create an agent conversation for the authenticated human user."""
+  createAgentConversation(input: CreateAgentConversationInput): AgentConversationObject!
+
+  """Archive an owned agent conversation (no hard delete in v1)."""
+  archiveAgentConversation(input: ArchiveAgentConversationInput!): AgentConversationObject!
+
+  """Update the title on an owned agent conversation."""
+  updateAgentConversationTitle(input: UpdateAgentConversationTitleInput!): AgentConversationObject!
+
   """
   Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
   """
@@ -2174,6 +2285,29 @@ type Mutation {
   deleteWorkspaceLocalRepository(id: ID!): Boolean!
 }
 
+input CreateAgentConversationInput {
+  """JSON string of optional metadata object"""
+  metadataJson: String
+
+  """Optional linked plan UUID"""
+  planId: ID
+
+  """Optional linked project UUID"""
+  projectId: ID
+
+  """Optional title; may be set on first persist turn instead"""
+  title: String
+}
+
+input ArchiveAgentConversationInput {
+  conversationId: ID!
+}
+
+input UpdateAgentConversationTitleInput {
+  conversationId: ID!
+  title: String!
+}
+
 input AgentsRunChatTurnInput {
   """
   Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns.
@@ -2182,6 +2316,11 @@ input AgentsRunChatTurnInput {
 
   """User message text for this turn."""
   message: String!
+
+  """
+  When true, persist the turn for an authenticated human JWT user. Omitted or false keeps stateless echo behavior.
+  """
+  persist: Boolean = false
 }
 
 input LoginInput {

@@ -19,4 +19,11 @@ export class AgentsRunChatTurnInput {
     description: `User message text for this turn.`,
   })
   message!: string;
+
+  @Field(() => Boolean, {
+    defaultValue: false,
+    description: `When true, persist the turn for an authenticated human JWT user. Omitted or false keeps stateless echo behavior.`,
+    nullable: true,
+  })
+  persist!: boolean | null;
 }
