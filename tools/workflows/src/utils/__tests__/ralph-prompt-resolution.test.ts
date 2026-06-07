@@ -13,7 +13,9 @@ import {
   DEFAULT_RALPH_PROMPT,
 } from '../ralph-runtime-config';
 import {
+  formatRalphPromptFileProfileLabel,
   readRalphPromptFileUtf8,
+  readRalphPromptFilesUtf8,
   resolveRalphPromptFromSeed,
 } from '../ralph-prompt-resolution';
 
@@ -83,6 +85,57 @@ describe('readRalphPromptFileUtf8', () => {
       );
       expect(readRalphPromptFileUtf8(dir, 'skill.md')).toBe(
         '# Instructions\n\nBody\n',
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+});
+
+describe('readRalphPromptFilesUtf8', () => {
+  it('concatenates multiple files with frontmatter stripped', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-prompt-'));
+    try {
+      writeFileSync(join(dir, 'a.md'), '---\nname: a\n---\n\nFirst\n', 'utf8');
+      writeFileSync(join(dir, 'b.md'), 'Second\n', 'utf8');
+      expect(readRalphPromptFilesUtf8(dir, ['a.md', 'b.md'])).toBe(
+        'First\n\nSecond',
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('throws when any path is empty', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-prompt-'));
+    try {
+      writeFileSync(join(dir, 'a.md'), 'x', 'utf8');
+      expect(() => readRalphPromptFilesUtf8(dir, ['a.md', '   '])).toThrow(
+        /non-empty path/,
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+});
+
+describe('formatRalphPromptFileProfileLabel', () => {
+  it('returns a single absolute path for one file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-prompt-'));
+    try {
+      expect(formatRalphPromptFileProfileLabel(dir, ['x.md'])).toBe(
+        join(dir, 'x.md'),
+      );
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('returns comma-separated absolute paths for multiple files', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-prompt-'));
+    try {
+      expect(formatRalphPromptFileProfileLabel(dir, ['a.md', 'b.md'])).toBe(
+        `${join(dir, 'a.md')}, ${join(dir, 'b.md')}`,
       );
     } finally {
       rmSync(dir, { force: true, recursive: true });

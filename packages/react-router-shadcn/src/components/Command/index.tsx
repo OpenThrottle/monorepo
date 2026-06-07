@@ -127,7 +127,7 @@ const CommandDialog = React.forwardRef<
     ref={ref}
     {...props}
   />
-));
+)) as typeof CmdkCommandDialog;
 CommandDialog.displayName = 'CommandDialog';
 
 /**

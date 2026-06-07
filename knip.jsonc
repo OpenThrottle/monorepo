@@ -142,6 +142,7 @@
         "scripts/openthrottle-ingest-agent-assets.ts",
         "scripts/openthrottle-ingest-docs.ts",
         "scripts/validate-agent-assets-frontmatter.ts",
+        "scripts/check-migration-table-comments.ts",
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
         "scripts/openthrottle-database-reset.ts",

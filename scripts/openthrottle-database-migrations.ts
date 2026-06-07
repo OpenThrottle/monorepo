@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 
 /**
- * @description Runs cortex database migrations from databases/cortex/migrations/ in order.
+ * @description Runs cortex database migrations from databases/migrations/ in order.
  * Uses POSTGRES_URL or POSTGRES_* env vars. Requires cortex Postgres to be running (e.g. docker-compose).
  */
 

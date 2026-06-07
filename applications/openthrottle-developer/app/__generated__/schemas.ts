@@ -62,6 +62,7 @@ import {
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
   RemoveRoleFromUserInput,
+  ReorderPlanTasksInput,
   RepeatableJobsInput,
   RetryJobInput,
   ReviewCycleTimeInput,
@@ -323,6 +324,7 @@ export function CreateTaskInputSchema(): z.ZodObject<
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string(),
@@ -697,6 +699,15 @@ export function RemoveRoleFromUserInputSchema(): z.ZodObject<
   });
 }
 
+export function ReorderPlanTasksInputSchema(): z.ZodObject<
+  Properties<ReorderPlanTasksInput>
+> {
+  return z.object({
+    planId: z.string(),
+    taskIds: z.array(z.string()),
+  });
+}
+
 export function RepeatableJobsInputSchema(): z.ZodObject<
   Properties<RepeatableJobsInput>
 > {
@@ -875,6 +886,7 @@ export function UpdateTaskInputSchema(): z.ZodObject<
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     requirements: z.string().nullish(),
+    sortOrder: z.number().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string().nullish(),

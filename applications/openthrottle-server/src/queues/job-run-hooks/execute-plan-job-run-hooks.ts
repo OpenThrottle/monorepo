@@ -6,6 +6,7 @@
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import {
+  PLAN_TASK_LIST_ORDER,
   PlanOutputStreamService,
   PlansService,
   TasksService,
@@ -131,7 +132,7 @@ export const executePlanJobRunHooks = async (
   const [plan, tasks] = await Promise.all([
     planRepo.findOne({ where: { id: planId } }),
     taskRepo.find({
-      order: { createdAt: 'ASC' },
+      order: { ...PLAN_TASK_LIST_ORDER },
       where: { planId },
     }),
   ]);

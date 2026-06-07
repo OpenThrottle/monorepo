@@ -82,7 +82,7 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 
 - **plans** – Plan metadata: `id`, `title`, `author`, `category`, `status`, `description`, `summary` (optional; PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `project_id` (optional, FK to projects; nullable), `created_at`, `updated_at`. In the OpenThrottle API, `projectId` is optional on create/update and in list filters; `projectRelation` is null when `projectId` is unset.
 - **projects** – NX project reference for scoping plans/tasks: `id`, `name`, `nx_project_name` (TEXT; unique when not null per migration 032), `description`, `created_at`, `updated_at`. Only **NX applications** are kept; see [Projects collection (applications only)](#projects-collection-applications-only).
-- **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `created_at`, `updated_at`.
+- **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `sort_order` (INTEGER NOT NULL; explicit execution/list order within the plan; see [Task sort_order](#task-sort_order)), `created_at`, `updated_at`.
 - **plan_embeddings** – Vector embeddings for plan content: `id`, `plan_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **task_embeddings** – Vector embeddings for task content: `id`, `task_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **commit_links** – Git commit linkage to plans/tasks: `id`, `plan_id` (FK), `task_id` (FK, nullable), `repo`, `sha`, `message`, `created_at`. One row per (plan, task, repo, sha); `task_id` null = plan-level link.
@@ -109,10 +109,10 @@ Indexes include HNSW vector indexes on embedding columns for similarity search.
 
 ### Indexes
 
-Indexes are created by migrations in `databases/cortex/migrations/`. Main tables and their indexes:
+Indexes are created by migrations in `databases/migrations/`. Main tables and their indexes:
 
 - **plans** – `idx_plans_status`, `idx_plans_category`, `idx_plans_author`, `idx_plans_created_at`, `idx_plans_assignee` (partial), `idx_plans_updated_at`, `idx_plans_status_created_at`, `idx_plans_status_updated_at`, `idx_plans_title_trgm` (GIN, pg_trgm for ILIKE). See `002_create_plans_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`, `017_add_plans_list_sort_indexes.sql`, `018_plans_title_trgm.sql`.
-- **tasks** – `idx_tasks_plan_id`, `idx_tasks_status`, `idx_tasks_category`, `idx_tasks_created_at`, `idx_tasks_requirements` (GIN), `idx_tasks_assignee` (partial). See `003_create_tasks_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`.
+- **tasks** – `idx_tasks_plan_id`, `idx_tasks_status`, `idx_tasks_category`, `idx_tasks_created_at`, `idx_tasks_requirements` (GIN), `idx_tasks_assignee` (partial), `idx_tasks_plan_id_sort_order` (unique on `plan_id`, `sort_order`). See `003_create_tasks_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`, `049_add_sort_order_to_tasks.sql`.
 - **plan_embeddings** – `idx_plan_embeddings_plan_id`, `idx_plan_embeddings_vector` (HNSW cosine), `idx_plan_embeddings_metadata` (GIN). See `004_create_plan_embeddings_table.sql`.
 - **task_embeddings** – `idx_task_embeddings_task_id`, `idx_task_embeddings_vector` (HNSW cosine), `idx_task_embeddings_metadata` (GIN). See `005_create_task_embeddings_table.sql`.
 - **commit_links** – `idx_commit_links_plan_id`, `idx_commit_links_task_id` (partial), `idx_commit_links_repo_sha`, unique on (plan_id, COALESCE(task_id, zero-uuid), repo, sha). See `006_create_commit_links_table.sql`.
@@ -127,7 +127,7 @@ Indexes are created by migrations in `databases/cortex/migrations/`. Main tables
 - **custom_prompts** – `idx_custom_prompts_prompt_type`, `idx_custom_prompts_labels` (GIN), `idx_custom_prompts_user_id` (partial), `idx_custom_prompts_project_id` (partial), `idx_custom_prompts_file_path` (partial), `idx_custom_prompts_created_at`, `idx_custom_prompts_updated_at`, `idx_custom_prompts_type_created_at`, `idx_custom_prompts_active` (partial WHERE deleted_at IS NULL), `idx_custom_prompts_title_trgm` (GIN, pg_trgm for ILIKE). See migration `036_create_custom_prompts_table.sql`.
 - **custom_prompt_embeddings** – `idx_custom_prompt_embeddings_custom_prompt_id`, `idx_custom_prompt_embeddings_vector` (HNSW cosine), `idx_custom_prompt_embeddings_metadata` (GIN). See migration `037_create_custom_prompt_embeddings_table.sql`.
 
-**When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by openthrottle-mcp (via GraphQL), openthrottle-server, or the OpenThrottle app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/cortex/INDEX_AUDIT.md`.
+**When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by openthrottle-mcp (via GraphQL), openthrottle-server, or the OpenThrottle app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/INDEX_AUDIT.md`.
 
 ### Embedding dimension strategy (OpenAI and Ollama)
 
@@ -172,7 +172,7 @@ When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/cort
 - **Required:** `title`, `plan_id` (set when creating under a plan)
 - **Always handled by DB:** `id`, `created_at`, `updated_at` — never need to supply
 - **Default:** `status` → `pending` if omitted; `requirements` → `[]` if omitted
-- **Optional:** `description`, `category`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, SKIPPED), `requirements` (JSONB array), `summary` (per-task wrap-up: actions, usage notes, or why blocked), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project))
+- **Optional:** `description`, `category`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, SKIPPED), `requirements` (JSONB array), `summary` (per-task wrap-up: actions, usage notes, or why blocked), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project)), `sort_order` (see [Task sort_order](#task-sort_order); auto-assigned when omitted)
 
 #### Projects collection (applications only)
 
@@ -220,6 +220,16 @@ Canonical statuses: **backlog**, **blocked**, **canceled**, **completed**, **in_
 - **skipped** — Deferred or skipped for now (may be revisited later).
 
 Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose status is **not** completed, skipped, or canceled (i.e. backlog, blocked, in_progress, pending).
+
+#### Task sort_order
+
+`sort_order` (GraphQL: `sortOrder`) is the canonical execution and list sequence for tasks **within a plan**. Scoped per `plan_id` only; enforced by `UNIQUE (plan_id, sort_order)` (migration `049_add_sort_order_to_tasks.sql`).
+
+- **Canonical sort:** `sort_order ASC`, `created_at ASC` (tiebreaker only).
+- **Backfill:** existing tasks ordered by `created_at ASC` within each plan → 1000, 2000, 3000, …
+- **Auto-assign on create:** when omitted, append `MAX(sort_order) + 1000` (first task in plan → 1000).
+- **Batch create (`create_tasks`):** when `sortOrder` is omitted per item, each new task appends after the plan max (`MAX + 1000`, `MAX + 2000`, …) preserving array order at the end of the plan. Explicit per-item `sortOrder` is respected.
+- **Reorder:** prefer `reorderPlanTasks` / MCP `reorder_plan_tasks` over delete-and-recreate when fixing Ralph execution order. Gap-based `updateTask(sortOrder)` supports mid-list inserts (e.g. 1500 between 1000 and 2000). Bulk reorder renumbers `1000, 2000, …` atomically in the given `taskIds` order.
 
 #### Assignee rule
 
@@ -320,7 +330,7 @@ LIMIT 5;
 
 ## Migrations
 
-SQL migrations live in `databases/cortex/migrations/` and are applied in sfilename order by `pnpm run database:migrate`.
+SQL migrations live in `databases/migrations/` and are applied in sfilename order by `pnpm run database:migrate`.
 
 When using **Option A** (Ollama with a 1536-dim embedding model), no additional migration or schema change is required; existing embedding tables (`plan_embeddings`, `task_embeddings`, `documentation_embeddings`) and their `vector(1536)` columns stay as-is. See [Embedding dimension strategy (OpenAI and Ollama)](#embedding-dimension-strategy-openai-and-ollama).
 
@@ -355,12 +365,13 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 29. `035_create_subscriptions_table.sql` – Subscriptions table for Stripe Hybrid payment integration (user_id FK, Stripe IDs, status, period dates).
 30. `036_create_custom_prompts_table.sql` – Custom prompts table for AI workflow documents (agents, skills, commands, prompts, rules). Supports type/label tagging, file system path reference, user and project scoping, soft delete.
 31. `037_create_custom_prompt_embeddings_table.sql` – Vector embeddings for custom prompt content (semantic search); same pattern as plan_embeddings.
+32. `049_add_sort_order_to_tasks.sql` – Add `sort_order` (INTEGER NOT NULL) on tasks; backfill per plan by `created_at ASC` → 1000, 2000, …; unique index on `(plan_id, sort_order)` for deterministic ordering.
 
 ### Migration strategy (TypeORM vs SQL)
 
 We keep **SQL files as the single source of truth** for schema. TypeORM is used only for **runtime** (connection pooling via DataSource, raw SQL in openthrottle-server and scripts; entities for type safety). We do **not** use TypeORM’s migration runner.
 
-- **Applying schema changes:** Add a new numbered `.sql` file in `sdatabases/cortex/migrations/`, then run `pnpm run database:migrate`. The script `scripts/run-cortex-migrations.ts` runs all `.sql` files in filename order.
-- **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/cortex/migrations (002, 012).”
+- **Applying schema changes:** Add a new numbered `.sql` file in `sdatabases/migrations/`, then run `pnpm run database:migrate`. The script `scripts/run-cortex-migrations.ts` runs all `.sql` files in filename order.
+- **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/migrations (002, 012).”
 - **Long-term rationale:** For pros/cons and a greenfield recommendation (SQL-as-source vs TypeORM migrations), see [docs/monorepo/migration-strategy-sql-vs-typeorm.md](../../docs/monorepo/migration-strategy-sql-vs-typeorm.md).
 - **Why not TypeORM migrations:** We already have a long, ordered history osf SQL migrations and a single command (`database:migrate`) that applies them. Introducing TypeORM migrations would duplicate history or require a one-time conversion and a separate “migrations run” table. Keeping SQL as source of truth avoids two migration systems and keeps one readable, version-controlled history.

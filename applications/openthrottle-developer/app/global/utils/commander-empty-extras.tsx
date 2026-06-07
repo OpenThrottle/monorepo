@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 /**
- * @description Matches typical Cortex / RFC UUID strings pasted into the command palette.
+ * @description Matches typical OpenThrottle / RFC UUID strings pasted into the command palette.
  */
 export const REGEX_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

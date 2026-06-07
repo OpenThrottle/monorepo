@@ -44,7 +44,7 @@ All worktrees share the same Cortex database (Postgres) and Redis, but execute i
 | **BullMQ Plans Queue**     | `queues/plans/` in server              | Queue and process plan execution jobs                                        |
 | **NestjsWorktreesModule**  | `packages/nestjs-worktrees/`           | Provides mutex-wrapped `IWorktreeTargetsTracker` from `WORKTREE_TARGETS` env |
 | **workflow-ralph CLI**     | `tools/workflows/`                     | Spawns cursor-agent, parses signals, updates Cortex                          |
-| **Cortex**                 | `databases/cortex/`                    | Plans, tasks, embeddings, output stream (Postgres + pgvector)                |
+| **Cortex**                 | `databases/`                           | Plans, tasks, embeddings, output stream (Postgres + pgvector)                |
 
 ### Execution Modes
 

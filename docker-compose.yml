@@ -104,6 +104,8 @@ services:
       context: ./
       dockerfile: Dockerfile.Postgres
     container_name: openthrottle-postgres
+    env_file:
+      - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

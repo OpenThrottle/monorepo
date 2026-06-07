@@ -12,8 +12,8 @@ OpenThrottle is context-driven AI for developers: plans, tasks, and knowledge st
 
 OpenThrottle can run **entirely locally** with Open Source models and software—no required SaaS or proprietary APIs for core flows.
 
-- **Local / OSS stack:** Postgres (with pgvector), Redis, Node, and the OpenThrottle server, developer app, and MCP (Cortex/openthrottle-mcp) are all OSS and run on your machine or your infra.
-- **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and Cortex ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
+- **Local / OSS stack:** Postgres (with pgvector), Redis, Node, and the OpenThrottle server, developer app, and MCP (OpenThrottle/openthrottle-mcp) are all OSS and run on your machine or your infra.
+- **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and OpenThrottle ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
 - **Optional — OpenAI:** If you prefer cloud embeddings, set `OPENAI_API_KEY` and leave Ollama unset; the stack uses OpenAI (e.g. `text-embedding-3-small`) for embeddings. Not required for local-only.
 
 Details and copy for website or docs: `docs/openthrottle/run-locally-oss.md`.
@@ -24,7 +24,7 @@ The work you do in OpenThrottle—plans, tasks, commits, and output—forms a **
 
 - **Audit trail:** Plans, tasks, commit links, and plan output give you traceability from idea → task → commit → PR.
 - **Complements Git:** Git is the history of code; OpenThrottle is the history of work (intent, status, outcomes).
-- **Replace Jira:** Plans and tasks live in your own Postgres (Cortex); link commits and PRs; run locally and own your data.
+- **Replace Jira:** Plans and tasks live in your own Postgres (OpenThrottle); link commits and PRs; run locally and own your data.
 
 Details and copy for website or docs: `docs/openthrottle/work-as-history.md`.
 
@@ -51,7 +51,7 @@ docker compose build
 
 Compose reads **`applications/openthrottle/.env`** (path is relative to the compose file). Create it from `applications/openthrottle/.env.default` and set at least:
 
-- **Postgres (for server and Postgres service):** `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_VERSION`. When running in Compose, the server and developer run inside the same Docker network, so set **`POSTGRES_HOST=openthrottle-postgres`** and **`REDIS_HOST=openthrottle-redis`** (and use `POSTGRES_DB=cortex` if you use the default Cortex schema).
+- **Postgres (for server and Postgres service):** `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_VERSION`. When running in Compose, the server and developer run inside the same Docker network, so set **`POSTGRES_HOST=openthrottle-postgres`** and **`REDIS_HOST=openthrottle-redis`** (and use `POSTGRES_DB=openthrottle` if you use the default OpenThrottle schema).
 - **Redis:** `REDIS_HOST=openthrottle-redis`, `REDIS_PORT=6379`, `REDIS_VERSION` (e.g. `8.6-rc1`).
 - **openthrottle-server:** `JWT_SECRET`, `CORS_ORIGINS` (include the developer app origin, e.g. `http://localhost:5173`). Optional: `PORT` (default in container is 3000), `OPENAI_API_KEY` or Ollama vars for embeddings (see root `.env.default` and `databases/README.md`).
 - **openthrottle-developer:** `API_URL` must be the URL the **browser** uses to reach the server (e.g. `http://localhost:3000` when using the default host port). Optional: `API_URL_EXTERNAL`, `PORT` (default 5173 in container).
@@ -85,7 +85,7 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
   - **Developer app:** `pnpm nx run openthrottle-developer:dev` (connects to the server via `API_URL`; default dev port often 5173 or as in `.env`).
   - Ensure `CORS_ORIGINS` on the server includes the developer app origin (e.g. `http://localhost:5173`).
 - **Ports and env:** See `applications/openthrottle/.env.default` for `OPENTHROTTLE_SERVER_PORT`, `OPENTHROTTLE_DEVELOPER_PORT`, and Postgres/Redis. For a single entry point (e.g. Caddy), see `docs/monorepo/local-services-and-ports.md`.
-- **MCP / Cortex:** The plans knowledge base and MCP (openthrottle-mcp) talk to the same Postgres/Cortex and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/openthrottle-mcp/README.md` and `databases/README.md`.
+- **MCP / OpenThrottle:** The plans knowledge base and MCP (openthrottle-mcp) talk to the same Postgres/OpenThrottle and openthrottle-server GraphQL. Configure the MCP with the server URL and auth; see `packages/openthrottle-mcp/README.md` and `databases/README.md`.
 - **Tests and lint:** From repo root use Nx: `pnpm nx run openthrottle:test`, `pnpm nx run openthrottle:lint`, etc. Individual apps: `pnpm nx run openthrottle-server:test`, `pnpm nx run openthrottle-developer:test`, and so on.
 
 ## Suggestions

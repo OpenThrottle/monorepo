@@ -8,6 +8,8 @@ import {
   createTaskToolHandler,
   createTasksToolHandler,
   getTasksByPlanIdToolHandler,
+  reorderPlanTasksToolHandler,
+  updateTaskToolHandler,
 } from './tasks.js';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
@@ -75,6 +77,38 @@ describe('createTaskToolHandler', () => {
     });
   });
 
+  describe('when sortOrder is provided', () => {
+    it('passes sortOrder through to GraphQL', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      const task = {
+        id: '27956636-1ab4-4ded-b227-8c52bf888b05',
+        planId,
+        sortOrder: 1500,
+        status: 'PENDING',
+        title: 'Add handler tests',
+      };
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ createTask: task });
+
+      await createTaskToolHandler({
+        planId,
+        sortOrder: 1500,
+        title: 'Add handler tests',
+      });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            planId,
+            sortOrder: 1500,
+            title: 'Add handler tests',
+          },
+        },
+      );
+    });
+  });
+
   describe('when GraphQL returns no task', () => {
     it('returns a no-result error', async () => {
       process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
@@ -106,6 +140,7 @@ describe('createTasksToolHandler', () => {
   describe('when GraphQL creates multiple tasks', () => {
     it('returns all created task ids and titles', async () => {
       vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ tasksByPlanId: [] })
         .mockResolvedValueOnce({
           createTask: {
             id: '27956636-1ab4-4ded-b227-8c52bf888b05',
@@ -138,13 +173,99 @@ describe('createTasksToolHandler', () => {
           ],
         },
       });
-      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(2);
+      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(3);
+    });
+
+    it('assigns sortOrder after plan max when omitted', async () => {
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({
+          tasksByPlanId: [
+            { id: 'existing', sortOrder: 3000, title: 'Existing' },
+          ],
+        })
+        .mockResolvedValueOnce({
+          createTask: { id: 'new-1', title: 'First new' },
+        })
+        .mockResolvedValueOnce({
+          createTask: { id: 'new-2', title: 'Second new' },
+        });
+
+      await createTasksToolHandler({
+        planId,
+        tasks: [{ title: 'First new' }, { title: 'Second new' }],
+      });
+
+      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
+        2,
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: expect.objectContaining({
+            planId,
+            sortOrder: 4000,
+            title: 'First new',
+          }),
+        },
+      );
+      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
+        3,
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: expect.objectContaining({
+            planId,
+            sortOrder: 5000,
+            title: 'Second new',
+          }),
+        },
+      );
+    });
+
+    it('respects explicit sortOrder per item', async () => {
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ tasksByPlanId: [] })
+        .mockResolvedValueOnce({
+          createTask: { id: 'new-1', title: 'Explicit' },
+        })
+        .mockResolvedValueOnce({
+          createTask: { id: 'new-2', title: 'Implicit' },
+        });
+
+      await createTasksToolHandler({
+        planId,
+        tasks: [{ sortOrder: 7500, title: 'Explicit' }, { title: 'Implicit' }],
+      });
+
+      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
+        2,
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: expect.objectContaining({
+            sortOrder: 7500,
+            title: 'Explicit',
+          }),
+        },
+      );
+      expect(executeGraphqlWithAuth).toHaveBeenNthCalledWith(
+        3,
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: expect.objectContaining({
+            sortOrder: 1000,
+            title: 'Implicit',
+          }),
+        },
+      );
     });
   });
 
   describe('when GraphQL creates no tasks', () => {
     it('returns empty created list', async () => {
-      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ createTask: null });
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ tasksByPlanId: [] })
+        .mockResolvedValueOnce({ createTask: null });
 
       const result = await createTasksToolHandler({
         planId,
@@ -206,6 +327,134 @@ describe('getTasksByPlanIdToolHandler', () => {
 
       expect(result).toMatchObject({
         content: [{ text: 'No tasks for this plan.' }],
+        structuredContent: { tasks: [] },
+      });
+    });
+  });
+});
+
+const taskId = '27956636-1ab4-4ded-b227-8c52bf888b05';
+
+describe('updateTaskToolHandler', () => {
+  beforeEach(() => {
+    vi.mocked(executeGraphqlWithAuth).mockReset();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when sortOrder is provided', () => {
+    it('passes sortOrder through to GraphQL', async () => {
+      const task = {
+        id: taskId,
+        planId,
+        sortOrder: 2500,
+        status: 'PENDING',
+        title: 'Reordered task',
+      };
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ updateTask: task });
+
+      await updateTaskToolHandler({
+        id: taskId,
+        sortOrder: 2500,
+      });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            id: taskId,
+            sortOrder: 2500,
+          },
+        },
+      );
+    });
+  });
+});
+
+describe('reorderPlanTasksToolHandler', () => {
+  beforeEach(() => {
+    vi.mocked(executeGraphqlWithAuth).mockReset();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  describe('when args are invalid', () => {
+    it('returns an invalid-args error without calling GraphQL', async () => {
+      const result = await reorderPlanTasksToolHandler({
+        planId,
+      } as Parameters<typeof reorderPlanTasksToolHandler>[0]);
+
+      expect(result).toMatchObject({
+        content: [
+          { text: expect.stringMatching(/Invalid arguments[\s\S]*taskIds/i) },
+        ],
+        isError: true,
+      });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when GraphQL reorders tasks', () => {
+    it('returns structured tasks in new order', async () => {
+      const tasks = [
+        {
+          id: 'c0c8c4ad-2fee-4706-8d59-84f7ed3981a8',
+          planId,
+          sortOrder: 1000,
+          title: 'Second',
+        },
+        {
+          id: taskId,
+          planId,
+          sortOrder: 2000,
+          title: 'First',
+        },
+      ];
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        reorderPlanTasks: tasks,
+      });
+
+      const result = await reorderPlanTasksToolHandler({
+        planId,
+        taskIds: [tasks[0].id, tasks[1].id],
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { tasks },
+      });
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            planId,
+            taskIds: [tasks[0].id, tasks[1].id],
+          },
+        },
+      );
+    });
+  });
+
+  describe('when GraphQL returns no tasks', () => {
+    it('returns an empty task list', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        reorderPlanTasks: [],
+      });
+
+      const result = await reorderPlanTasksToolHandler({
+        planId,
+        taskIds: [taskId],
+      });
+
+      expect(result).toMatchObject({
+        content: [{ text: expect.stringMatching(/no tasks were reordered/) }],
         structuredContent: { tasks: [] },
       });
     });

@@ -30,11 +30,7 @@ const planRunConfigRalphV1Schema = z
     debugCli: z.enum(PLAN_RUN_DEBUG_CLI),
     executionBackend: z.enum(PLAN_RUN_KNOWN_BACKENDS),
     iterationTimeoutText: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    iterations: z
-      .number()
-      .int()
-      .min(1)
-      .max(MAX_PLAN_RUN_ITERATIONS),
+    iterations: z.number().int().min(1).max(MAX_PLAN_RUN_ITERATIONS),
     model: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
     project: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
     prompt: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
@@ -159,7 +155,7 @@ export const parsePlanRunConfigJson = (
  */
 export const planRunConfigFromPlanStorage = (
   stored: unknown,
-  options?: { readonly planId?: string },
+  options?: { readonly planId?: string; readonly taskId?: string },
 ): PlanRunConfigStorage => {
   try {
     return parsePlanRunConfigStorage(stored);

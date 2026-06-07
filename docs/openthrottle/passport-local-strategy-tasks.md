@@ -13,7 +13,7 @@ This document breaks down the implementation of the Passport local strategy for 
 Add these as child tasks of plan `84bf03c3-81d8-43e1-8b2d-0a2026a1e798` via Cortex MCP (openthrottle-mcp) `create_task`.
 
 1. **Cortex DB: Add password_hash and email uniqueness for local auth**
-   - Add migration in `databases/cortex/migrations/`: column `password_hash` (TEXT, nullable so existing users without passwords remain valid). Add unique index on `email` where email IS NOT NULL so local-auth users have a unique email. Document in Cortex README.
+   - Add migration in `databases/migrations/`: column `password_hash` (TEXT, nullable so existing users without passwords remain valid). Add unique index on `email` where email IS NOT NULL so local-auth users have a unique email. Document in Cortex README.
 
 2. **@openthrottle/nestjs-repositories: User entity and UsersService for local auth**
    - Add `passwordHash` to User entity (and UserData). Add `findByEmail(email: string): Promise<User | null>` to UsersService. Add a password verification helper (e.g. `verifyPassword(plainPassword, passwordHash): Promise<boolean>`) using bcrypt; do not store plain passwords. Add bcrypt (and types) as dependency of the package or openthrottle-server where hashing is used.
@@ -46,8 +46,8 @@ Add these as child tasks of plan `84bf03c3-81d8-43e1-8b2d-0a2026a1e798` via Cort
 | Area                   | Path                                                                                                             |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Auth doc               | `docs/openthrottle/openthrottle-server-auth.md`                                                                  |
-| Cortex users migration | `databases/cortex/migrations/026_create_users_table.sql`                                                         |
-| New migration          | `databases/cortex/migrations/031_add_users_password_hash.sql` (or next number)                                   |
+| Cortex users migration | `databases/migrations/026_create_users_table.sql`                                                                |
+| New migration          | `databases/migrations/031_add_users_password_hash.sql` (or next number)                                          |
 | User entity            | `packages/cortex/nestjs-repositories/src/modules/users/user.entity.ts`                                           |
 | UsersService           | `packages/cortex/nestjs-repositories/src/modules/users/users.service.ts`                                         |
 | Auth module            | `applications/openthrottle-server/src/graphql/auth/` (auth.service.ts, auth.resolver.ts, auth-graphql.module.ts) |

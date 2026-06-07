@@ -25,6 +25,7 @@ import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
+  planHasCustomRunConfig,
   PlansService,
   PlanRunsService,
   planRunConfigFromPlanStorage,
@@ -163,6 +164,14 @@ export class PlansResolver {
       stored as Parameters<typeof serializePlanRunConfigForGraphql>[0],
       { planId: parent.id },
     );
+  }
+
+  @ResolveField(() => Boolean, {
+    description: `True when saved workflow run configuration differs from canonical defaults.`,
+  })
+  hasCustomRunConfig(@Parent() parent: PlanObject): boolean {
+    const stored = (parent as PlanObject & { runConfig?: unknown }).runConfig;
+    return planHasCustomRunConfig(stored, { planId: parent.id });
   }
 
   // @ProfileResponseTime('PlansResolver.taskCount')

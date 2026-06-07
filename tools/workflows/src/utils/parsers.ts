@@ -1,4 +1,3 @@
-import { resolve } from 'node:path';
 import { COLORS } from '../config/index';
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
@@ -20,7 +19,8 @@ import {
   DEFAULT_RALPH_PROMPT,
 } from './ralph-runtime-config';
 import {
-  readRalphPromptFileUtf8,
+  formatRalphPromptFileProfileLabel,
+  readRalphPromptFilesUtf8,
   readRalphPromptStdinUtf8,
   resolveRalphPromptFromSeed,
   type RalphPromptProfileKind,
@@ -168,7 +168,7 @@ export const parseRalphArgs = (): RalphArgs => {
 
   /** True when `--prompt` appeared on argv (not only from seed defaults). */
   let explicitNamedPrompt = false;
-  let cliPromptFile: string | undefined;
+  const cliPromptFiles: string[] = [];
   let cliPromptStdin = false;
   let cliWorktree: RalphWorktreeName | undefined;
   let cliWorktreeBase: string | undefined;
@@ -255,7 +255,7 @@ export const parseRalphArgs = (): RalphArgs => {
       explicitNamedPrompt = true;
       i++;
     } else if (arg === '--prompt-file' && i + 1 < args.length) {
-      cliPromptFile = args[i + 1];
+      cliPromptFiles.push(args[i + 1] ?? '');
       i++;
     } else if (arg === '--prompt-stdin') {
       cliPromptStdin = true;
@@ -314,7 +314,7 @@ export const parseRalphArgs = (): RalphArgs => {
    * Layer 1 — prompt profile: explicit CLI flags override seed (CLI > env > file > built-in).
    * `--prompt-stdin` | `--prompt-file` | `--prompt` are mutually exclusive.
    */
-  if (cliPromptStdin && cliPromptFile !== undefined) {
+  if (cliPromptStdin && cliPromptFiles.length > 0) {
     throw new Error(
       `${COLORS.yellow}--prompt-stdin${COLORS.reset} cannot be combined with ${COLORS.yellow}--prompt-file${COLORS.reset}`,
     );
@@ -324,7 +324,7 @@ export const parseRalphArgs = (): RalphArgs => {
       `${COLORS.yellow}--prompt-stdin${COLORS.reset} cannot be combined with ${COLORS.yellow}--prompt${COLORS.reset}`,
     );
   }
-  if (cliPromptFile !== undefined && explicitNamedPrompt) {
+  if (cliPromptFiles.length > 0 && explicitNamedPrompt) {
     throw new Error(
       `${COLORS.yellow}--prompt-file${COLORS.reset} cannot be combined with ${COLORS.yellow}--prompt${COLORS.reset}`,
     );
@@ -343,15 +343,10 @@ export const parseRalphArgs = (): RalphArgs => {
     resolvedPrompt = readRalphPromptStdinUtf8();
     promptProfileKind = 'stdin';
     promptProfileLabel = 'stdin';
-  } else if (cliPromptFile !== undefined) {
-    const userPath = cliPromptFile.trim();
-    if (userPath === '') {
-      throw new Error(`--prompt-file requires a non-empty path`);
-    }
-    const absolute = resolve(cwd, userPath);
-    resolvedPrompt = readRalphPromptFileUtf8(cwd, userPath);
+  } else if (cliPromptFiles.length > 0) {
+    resolvedPrompt = readRalphPromptFilesUtf8(cwd, cliPromptFiles);
     promptProfileKind = 'file';
-    promptProfileLabel = absolute;
+    promptProfileLabel = formatRalphPromptFileProfileLabel(cwd, cliPromptFiles);
   } else if (explicitNamedPrompt) {
     const named = (parsed.prompt ?? DEFAULT_RALPH_PROMPT).trim();
     resolvedPrompt = named;

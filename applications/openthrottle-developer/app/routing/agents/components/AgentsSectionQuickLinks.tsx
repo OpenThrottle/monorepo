@@ -87,9 +87,9 @@ export const AgentsSectionQuickLinks = (
               Usage
             </Link>
             <p className="mt-1 text-muted-foreground">
-              Coarse daily Cortex activity only—no per-prompt or token metrics.
-              Copy the JSON snapshot to compare environments on a support
-              thread.
+              Coarse daily OpenThrottle activity only—no per-prompt or token
+              metrics. Copy the JSON snapshot to compare environments on a
+              support thread.
             </p>
           </li>
         </ul>

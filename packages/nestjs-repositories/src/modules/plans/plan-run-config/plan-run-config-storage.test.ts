@@ -16,6 +16,7 @@ import {
   planRunConfigFromWorkflowUiState,
   workflowUiStateFromPlanRunConfig,
 } from './plan-run-config-storage.round-trip';
+import { planHasCustomRunConfig } from './plan-run-config-storage.compare';
 import type { PlanWorkflowUiState } from './plan-run-config-storage.types';
 import {
   parsePlanRunConfigJson,
@@ -182,6 +183,89 @@ describe('planRunConfig round-trip', () => {
   });
 });
 
+describe('planHasCustomRunConfig', () => {
+  it('returns false for default version-only shell from DB', () => {
+    expect(planHasCustomRunConfig({ version: 1 }, { planId })).toBe(false);
+  });
+
+  it('returns false for canonical default storage', () => {
+    expect(
+      planHasCustomRunConfig(getDefaultPlanRunConfigStorage({ planId }), {
+        planId,
+      }),
+    ).toBe(false);
+  });
+
+  it('returns true when iterations differ from defaults', () => {
+    const stored = planRunConfigFromWorkflowUiState({
+      ...getDefaultPlanWorkflowUiState({ planId }),
+      workflowInput: {
+        ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
+        iterations: 3,
+      },
+    });
+
+    expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
+  });
+
+  it('returns true when prompt differs from defaults', () => {
+    const stored = planRunConfigFromWorkflowUiState({
+      ...getDefaultPlanWorkflowUiState({ planId }),
+      workflowInput: {
+        ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
+        prompt: '/custom-prompt',
+      },
+    });
+
+    expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
+  });
+
+  it('returns true when worktree differs from defaults', () => {
+    const stored = planRunConfigFromWorkflowUiState({
+      ...getDefaultPlanWorkflowUiState({ planId }),
+      workflowInput: {
+        ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
+        worktreeCli: 'named',
+        worktreeName: 'feature-branch',
+      },
+    });
+
+    expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
+  });
+
+  it('returns true when execution backend differs from defaults', () => {
+    const stored = planRunConfigFromWorkflowUiState({
+      ...getDefaultPlanWorkflowUiState({ planId }),
+      workflowInput: {
+        ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
+        executionBackend: 'claude',
+      },
+    });
+
+    expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
+  });
+
+  it('stays consistent through serialize and deserialize round-trip', () => {
+    const customStored = planRunConfigFromWorkflowUiState(fullUiForCompare());
+    expect(planHasCustomRunConfig(customStored, { planId })).toBe(true);
+
+    const serialized = serializePlanRunConfigForGraphql(customStored, {
+      planId,
+    });
+    expect(planHasCustomRunConfig(JSON.parse(serialized), { planId })).toBe(
+      true,
+    );
+
+    const defaultSerialized = serializePlanRunConfigForGraphql(
+      getDefaultPlanRunConfigStorage({ planId }),
+      { planId },
+    );
+    expect(
+      planHasCustomRunConfig(JSON.parse(defaultSerialized), { planId }),
+    ).toBe(false);
+  });
+});
+
 describe('parsePlanRunIterationTimeoutSeconds', () => {
   it('parses positive integers and rejects invalid input', () => {
     expect(parsePlanRunIterationTimeoutSeconds('90')).toBe(90);
@@ -239,3 +323,5 @@ const fullUiForTuning = (): PlanWorkflowUiState => ({
   },
   workingDirectory: '',
 });
+
+const fullUiForCompare = (): PlanWorkflowUiState => fullUiForTuning();

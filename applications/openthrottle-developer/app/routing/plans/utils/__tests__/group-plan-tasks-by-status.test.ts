@@ -17,6 +17,7 @@ const baseTask = (): PlanTaskRowFragment => ({
   planId: 'p1',
   projectRelation: null,
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: null,
   title: 'A',

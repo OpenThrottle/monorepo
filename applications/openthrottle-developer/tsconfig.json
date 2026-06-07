@@ -17,6 +17,12 @@
       "path": "../../tools/dotfiles"
     },
     {
+      "path": "../../packages/nestjs-repositories"
+    },
+    {
+      "path": "../../packages/openthrottle-skills"
+    },
+    {
       "path": "../../packages/react-router-editor"
     },
     {
@@ -48,9 +54,6 @@
     },
     {
       "path": "../../packages/react-router-utils"
-    },
-    {
-      "path": "../../packages/nestjs-repositories"
     }
   ]
 }

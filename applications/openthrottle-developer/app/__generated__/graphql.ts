@@ -354,6 +354,8 @@ export type CreateTaskInput = {
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** JSON string of requirements array */
   requirements?: InputMaybe<Scalars['String']['input']>;
+  /** Optional. Execution order within plan. When omitted, server auto-assigns MAX+1000. */
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
@@ -942,6 +944,8 @@ export type Mutation = {
   removeRoleFromServiceAccount: Scalars['Boolean']['output'];
   /** Remove a role from a user */
   removeRoleFromUser: Scalars['Boolean']['output'];
+  /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
+  reorderPlanTasks: Array<TaskObject>;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Retry a failed job. Validates queue exists and job is in failed state. Returns job id or error. */
@@ -1151,6 +1155,10 @@ export type MutationRemoveRoleFromUserArgs = {
   input: RemoveRoleFromUserInput;
 };
 
+export type MutationReorderPlanTasksArgs = {
+  input: ReorderPlanTasksInput;
+};
+
 export type MutationRestoreCustomPromptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1290,6 +1298,8 @@ export type PlanObject = {
   category: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  /** True when saved workflow run configuration differs from canonical defaults. */
+  hasCustomRunConfig: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   /** Job-run lifecycle hooks stored on the plan ({ hooks: [...] }). */
   jobRunHooksJson: Scalars['String']['output'];
@@ -1593,7 +1603,7 @@ export type Query = {
   queue?: Maybe<QueueDetailsObject>;
   /** List registered BullMQ queues with job counts (waiting, active, completed, failed, delayed). */
   queues: Array<QueueStatsObject>;
-  /** List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED) */
+  /** List remaining tasks for a plan (status in PENDING, IN_PROGRESS, BLOCKED), ordered by sortOrder then createdAt ascending */
   remainingTasksByPlanId: Array<TaskObject>;
   /** List repeatable (scheduled) jobs for a queue. Use the returned key with removeRepeatableJob to remove one. Job types (e.g. run-plan) and future workflow extensibility are documented on JobObject and RepeatableJobObject. */
   repeatableJobs: Array<RepeatableJobObject>;
@@ -1627,9 +1637,9 @@ export type Query = {
   taskEmbedding?: Maybe<TaskEmbeddingObject>;
   /** List task embeddings by task ID, ordered by createdAt ascending */
   taskEmbeddings: Array<TaskEmbeddingObject>;
-  /** List all tasks, ordered by createdAt ascending */
+  /** List all tasks, ordered by planId then sortOrder then createdAt ascending */
   tasks: Array<TaskObject>;
-  /** List tasks for a plan by plan ID */
+  /** List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending */
   tasksByPlanId: Array<TaskObject>;
   /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
   tasksByProjectId: TasksByProjectIdResultObject;
@@ -1988,6 +1998,13 @@ export type RemoveRoleFromUserInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type ReorderPlanTasksInput = {
+  /** Plan id whose tasks are being reordered */
+  planId: Scalars['ID']['input'];
+  /** Task ids in desired order; sortOrder is reassigned 1000, 2000, … atomically */
+  taskIds: Array<Scalars['ID']['input']>;
+};
+
 export type RepeatableJobObject = {
   __typename?: 'RepeatableJobObject';
   /** Unix timestamp when the repeat ends, or null if no end. */
@@ -2253,6 +2270,8 @@ export type TaskObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** JSON string of requirements array */
   requirementsJson: Scalars['String']['output'];
+  /** Execution/list order within plan (gap-based: 1000, 2000, …). UNIQUE per planId. */
+  sortOrder: Scalars['Int']['output'];
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
   title: Scalars['String']['output'];
@@ -2372,6 +2391,8 @@ export type UpdateTaskInput = {
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** JSON string of requirements array */
   requirements?: InputMaybe<Scalars['String']['input']>;
+  /** Optional. Execution order within plan (gap-based insert, e.g. 1500 between 1000 and 2000). */
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
@@ -2886,6 +2907,7 @@ export type PlanTaskRowFragment = {
   id: string;
   planId: string;
   requirementsJson: string;
+  sortOrder: number;
   status: string;
   summary?: string | null;
   title: string;
@@ -2969,6 +2991,7 @@ export type GetTasksByPlanIdQuery = {
     id: string;
     planId: string;
     requirementsJson: string;
+    sortOrder: number;
     status: string;
     summary?: string | null;
     title: string;
@@ -3044,6 +3067,7 @@ export type PlanDetailUpdateTaskMutation = {
     id: string;
     planId: string;
     requirementsJson: string;
+    sortOrder: number;
     status: string;
     summary?: string | null;
     title: string;
@@ -3120,6 +3144,7 @@ export type PlanDetailIndexLoaderQuery = {
     id: string;
     planId: string;
     requirementsJson: string;
+    sortOrder: number;
     status: string;
     summary?: string | null;
     title: string;
@@ -3288,6 +3313,7 @@ export type PlanCardFragment = {
   category: string;
   createdAt: any;
   description?: string | null;
+  hasCustomRunConfig: boolean;
   id: string;
   status: string;
   summary?: string | null;
@@ -3347,6 +3373,7 @@ export type GetPlansByStatusQuery = {
       category: string;
       createdAt: any;
       description?: string | null;
+      hasCustomRunConfig: boolean;
       id: string;
       status: string;
       summary?: string | null;
@@ -4438,6 +4465,7 @@ export const PlanTaskRowFragmentDoc = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -4544,6 +4572,10 @@ export const PlanCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hasCustomRunConfig' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -6351,6 +6383,7 @@ export const GetTasksByPlanIdDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -6638,6 +6671,7 @@ export const PlanDetailUpdateTaskDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -7074,6 +7108,7 @@ export const PlanDetailIndexLoaderDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -7599,6 +7634,10 @@ export const GetPlansByStatusDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'hasCustomRunConfig' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',

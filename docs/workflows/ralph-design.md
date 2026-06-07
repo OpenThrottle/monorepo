@@ -46,7 +46,11 @@
 
 ## Plan-centric task status
 
-The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches remaining tasks (PENDING, IN_PROGRESS, BLOCKED), **resumes the first IN_PROGRESS task if any** (so a previously started task is not skipped), otherwise picks the first PENDING and sets it to `IN_PROGRESS`. It injects that task ID into the agent prompt with a reminder to output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` when done. The agent should also call MCP `update_task(..., 'completed')` when available. The CLI parses both stdout and stderr for the tag and marks those tasks `COMPLETED` via Postgres. **Fallback:** if the agent emits `<promise>COMPLETE</promise>` but does not emit the complete-task tag, the CLI still marks the current iteration’s task (the one set to IN_PROGRESS for that run) as `COMPLETED` so Cortex stays in sync.
+The CLI sets the plan to `IN_PROGRESS` at run start. Each iteration it fetches remaining tasks (PENDING, IN_PROGRESS, BLOCKED), **resumes the lowest `sortOrder` IN_PROGRESS task if any** (so a previously started task is not skipped), otherwise picks the lowest `sortOrder` PENDING or QUEUED task and sets it to `IN_PROGRESS`. Task lists and next-task selection use canonical order **`sortOrder ASC`, `createdAt ASC`** — not `createdAt` alone. See `databases/README.md` § Task sort_order and `packages/openthrottle-agentic-ralph/src/utils/plan-task-list-order.ts` (`pickRalphTaskForIteration`).
+
+To fix execution order without delete-and-recreate, use GraphQL `reorderPlanTasks` or MCP `reorder_plan_tasks` (renumbers `1000, 2000, …` in the given task-id order). Batch `create_tasks` appends new tasks after the plan max when `sortOrder` is omitted per item.
+
+The CLI injects the chosen task ID into the agent prompt with a reminder to output `<ralph:task-complete>TASK_UUID</ralph:task-complete>` when done. The agent should also call MCP `update_task(..., 'completed')` when available. The CLI parses both stdout and stderr for the tag and marks those tasks `COMPLETED` via Postgres. **Fallback:** if the agent emits `<promise>COMPLETE</promise>` but does not emit the complete-task tag, the CLI still marks the current iteration’s task (the one set to IN_PROGRESS for that run) as `COMPLETED` so Cortex stays in sync.
 
 ## Max iterations and task cleanup
 

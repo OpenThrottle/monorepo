@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex projects table. Matches databases/cortex/migrations (024).
+ * @description TypeORM entity for Cortex projects table. Matches databases/migrations (024).
  */
 
 import {

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex permissions table. Matches databases/cortex/migrations/034.
+ * @description TypeORM entity for Cortex permissions table. Matches databases/migrations/034.
  */
 
 import {

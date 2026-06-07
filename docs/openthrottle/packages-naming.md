@@ -48,6 +48,6 @@ The following table lists the **initial set** of `@openthrottle/*` packages to r
 
 - **npm scope:** Confirm or create the **@openthrottle** org at [npmjs.com/org/openthrottle](https://www.npmjs.com/org/openthrottle). Publishing the first package under the scope claims it.
 - **Reserve names:** For each package in the initial set, either (a) publish a minimal placeholder (e.g. `{"name": "@openthrottle/core", "version": "0.0.0-reserved"}) or (b) rely on org claim and document the intended names in this doc so we use them consistently when we publish.
-- **Rebrand steps:** When implementing the rebrand, update each current package’s `package.json` `name` from `@cortex/*` or `@openthrottle/ai-mcp` to the corresponding `@openthrottle/*` name; update imports and docs accordingly. Do not rename on npm until release strategy (e.g. deprecate old names, publish new names) is decided.
+- **Rebrand steps:** When implementing the rebrand, update each current package’s `package.json` `name` from `@xxxxx/*` or `@openthrottle/ai-mcp` to the corresponding `@openthrottle/*` name; update imports and docs accordingly. Do not rename on npm until release strategy (e.g. deprecate old names, publish new names) is decided.
 
 This recommendation feeds into the final naming matrix (see plan task "Synthesize final naming matrix and update plan summary").

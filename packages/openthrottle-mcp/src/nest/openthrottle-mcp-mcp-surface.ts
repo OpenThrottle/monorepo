@@ -281,6 +281,17 @@ export class McpDeveloperMcpSurface {
     return Th.listTasksByCategoryToolHandler(args);
   }
 
+  @Tool({
+    description: Th.reorderPlanTasksToolDescription,
+    name: 'reorder_plan_tasks',
+    parameters: asMcpParameters(Th.reorderPlanTasksToolParameters),
+  })
+  reorderPlanTasks(
+    args: Parameters<typeof Th.reorderPlanTasksToolHandler>[0],
+  ): ReturnType<typeof Th.reorderPlanTasksToolHandler> {
+    return Th.reorderPlanTasksToolHandler(args);
+  }
+
   @ResourceTemplate({
     description: Th.knowledgeBaseChunkResourceDescription,
     mimeType: Th.knowledgeBaseChunkMimeType,

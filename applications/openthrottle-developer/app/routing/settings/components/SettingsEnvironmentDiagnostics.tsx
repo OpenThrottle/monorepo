@@ -10,6 +10,7 @@ import {
 } from '../utils/settings-docs-links';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
+import { MonitorCloudIcon } from 'lucide-react';
 
 const URL_MATRIX_ROWS = [
   { key: 'API_URL_EXTERNAL' as const, label: 'API (external)' },
@@ -75,6 +76,7 @@ export const SettingsEnvironmentDiagnostics = (
   return (
     <>
       <OpenThrottleFieldset
+        icon={MonitorCloudIcon}
         id={`${idPrefix}-build`}
         legend="Environment Diagnostics"
       >

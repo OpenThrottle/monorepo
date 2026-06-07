@@ -1,7 +1,11 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router';
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import {
+  Badge,
+  BadgeProps,
+  DataTable,
+} from '@openthrottle/react-router-shadcn';
 import { Clock, FileText } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PromptCardFragment } from '~/__generated__/graphql';
@@ -10,6 +14,8 @@ import {
   formatPromptDate,
   formatPromptType,
 } from '~/routing/prompts/utils/formatters';
+import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
+import { extractContentAfterFrontmatter } from '@openthrottle/openthrottle-skills';
 
 export interface PromptsTableProps {
   className?: string;
@@ -58,9 +64,34 @@ PromptsTable.buildTable = (): ColumnDef<
       cell: ({ row }) => {
         const prompt = row.original;
 
+        let color: BadgeProps['color'] = 'blue';
+
+        switch (prompt.promptType) {
+          case CustomPromptType.Agents:
+            color = 'blue';
+            break;
+          case CustomPromptType.Commands:
+            color = 'green';
+            break;
+          case CustomPromptType.Personas:
+            color = 'orange';
+            break;
+          case CustomPromptType.Prompts:
+            color = 'yellow';
+            break;
+          case CustomPromptType.Skills:
+            color = 'red';
+            break;
+
+          default:
+            break;
+        }
+
         return (
           <div className="p-2">
-            <Badge size="xs">{formatPromptType(prompt.promptType)}</Badge>
+            <Badge color={color} size="xs">
+              {formatPromptType(prompt.promptType)}
+            </Badge>
           </div>
         );
       },
@@ -129,10 +160,7 @@ PromptsTable.buildTable = (): ColumnDef<
               </div>
 
               <p className="text-xs line-clamp-2 text-muted-foreground mt-2">
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vero
-                quasi dignissimos, commodi ex maiores tempore. Odit recusandae
-                adipisci ab eius asperiores ut cumque illum deserunt. Vel soluta
-                ipsum voluptas maxime.
+                {extractContentAfterFrontmatter(prompt.content)}
               </p>
             </div>
           </div>

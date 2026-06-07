@@ -21,6 +21,7 @@ const mockTask: PlanTaskRowFragment = {
     name: 'Test Project',
   },
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: 'Task summary',
   title: 'Test Task',
