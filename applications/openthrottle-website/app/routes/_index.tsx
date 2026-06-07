@@ -31,7 +31,7 @@ export default function Component(
   const [count, setCount] = React.useState(0);
 
   // Setup
-  const isBeta = count >= 3;
+  const isBeta = count >= 5;
 
   // Handlers
   const onClick = () => {
@@ -62,7 +62,7 @@ export default function Component(
         <div className="mx-auto my-40">
           <OpenThrottleProductGetStarted
             repo={data?.repo ?? 'openthrottle/openthrottle'}
-            stars={Number(data?.stars ?? 0)}
+            stars={data?.stars ?? '0'}
           />
         </div>
         <OpenThrottleProductFeatures features={FEATURES} />

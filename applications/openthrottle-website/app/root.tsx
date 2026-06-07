@@ -44,7 +44,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   const env = getEnvironment();
 
   // FIXME: Replace with the actual repo when we launch
-  const repo = `facebook/react`;
+  // const repo = `facebook/react`;
+  const repo = `openthrottle/openthrottle`;
   const url = `https://api.github.com/repos/${repo}`;
   let stars = '0';
 
