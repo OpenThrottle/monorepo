@@ -7,16 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import { GaugeCircleIcon } from 'lucide-react';
 import {
+  GlobalErrorBoundary,
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ADMIN_PATHS } from '~/global/data/data.navigation';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
-import { GaugeCircleIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
