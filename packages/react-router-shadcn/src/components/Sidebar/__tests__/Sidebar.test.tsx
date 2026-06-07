@@ -24,7 +24,9 @@ describe('Sidebar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar root', () => {
+    expect(
+      component.container.querySelector('[data-slot="sidebar"]'),
+    ).toBeInTheDocument();
   });
 });

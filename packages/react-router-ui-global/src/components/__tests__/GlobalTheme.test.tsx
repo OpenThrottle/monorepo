@@ -1,25 +1,18 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { GlobalTheme } from '../GlobalTheme';
-import type { GlobalThemeProps } from '../GlobalTheme';
 
 describe('GlobalTheme Component', () => {
-  let component: RenderResult;
-  let props: GlobalThemeProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <GlobalTheme {...props} />;
+  test('renders theme placeholder heading', () => {
+    const Component = () => <GlobalTheme />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByTestId('GlobalTheme')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'GlobalTheme' }),
+    ).toBeInTheDocument();
   });
 });

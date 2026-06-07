@@ -5,6 +5,13 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { SidebarMenuAction } from '../SidebarMenuAction';
 import type { SidebarMenuActionProps } from '../SidebarMenuAction';
+import { Sidebar } from '../Sidebar';
+import { SidebarContent } from '../SidebarContent';
+import { SidebarGroup } from '../SidebarGroup';
+import { SidebarGroupContent } from '../SidebarGroupContent';
+import { SidebarMenu } from '../SidebarMenu';
+import { SidebarMenuItem } from '../SidebarMenuItem';
+import { SidebarProvider } from '../SidebarProvider';
 
 describe('SidebarMenuAction Component', () => {
   let component: RenderResult;
@@ -13,13 +20,31 @@ describe('SidebarMenuAction Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SidebarMenuAction {...props} />;
+    const Component = () => (
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuAction {...props} />
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+      </SidebarProvider>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar-menu-action slot', () => {
+    expect(
+      component.container.querySelector('[data-slot="sidebar-menu-action"]'),
+    ).toBeInTheDocument();
   });
 });

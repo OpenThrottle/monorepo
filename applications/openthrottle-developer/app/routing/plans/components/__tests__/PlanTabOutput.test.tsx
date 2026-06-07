@@ -1,25 +1,44 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { Tabs } from '@openthrottle/react-router-shadcn';
+import { describe, expect, test } from 'vitest';
 import { PlanTabOutput } from '../PlanTabOutput';
 import type { PlanTabOutputProps } from '../PlanTabOutput';
 
+const renderOutput = (props: PlanTabOutputProps): ReturnType<typeof render> => {
+  const Component = () => (
+    <Tabs defaultValue="output">
+      <PlanTabOutput {...props} />
+    </Tabs>
+  );
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+};
+
 describe('PlanTabOutput Component', () => {
-  let component: RenderResult;
-  let props: PlanTabOutputProps;
+  test('shows empty state when no chunks', () => {
+    renderOutput({ chunks: [] });
 
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <PlanTabOutput {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    expect(screen.getByTestId('PlanLoggerOutput')).toBeInTheDocument();
+    expect(screen.getByText(/No plan output chunks yet/i)).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders output panel when chunks exist', () => {
+    renderOutput({
+      chunks: [
+        {
+          __typename: 'PlanOutputStreamChunkObject',
+          content: 'Done.',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          iteration: 1,
+        },
+      ],
+    });
+
+    expect(screen.getByTestId('PlanLoggerOutput')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/No plan output chunks yet/i),
+    ).not.toBeInTheDocument();
   });
 });

@@ -12,10 +12,7 @@ describe('ToggleGroup Component', () => {
   let props: ToggleGroupProps;
 
   beforeEach(() => {
-    props = {
-      'aria-label': 'Test',
-      type: 'single',
-    };
+    props = { 'aria-label': 'Test group', type: 'single' };
 
     const Component = () => (
       <ToggleGroup {...props}>
@@ -27,7 +24,9 @@ describe('ToggleGroup Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders toggle group with an item', () => {
+    const button = component.container.querySelector('button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent('A');
   });
 });

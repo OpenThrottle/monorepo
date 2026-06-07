@@ -4,6 +4,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Button,
   CommandShortcut,
   Input,
   SidebarTrigger,
@@ -13,9 +14,11 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
+import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { NotificationBell } from '@openthrottle/react-router-notifications';
+import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 
 /**
  * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.
@@ -169,19 +172,34 @@ export const GlobalLayoutHeader = (
             </Avatar>
           </Link>
           <Link className="text-foreground" to="/auth/logout">
-            <SignOutIcon height={22} width={22} />
+            <SignOutIcon className="size-5" />
           </Link>
         </>
       ) : null}
 
       <NotificationBell />
 
+      <Link
+        className="text-foreground"
+        target="_blank"
+        to={OPEN_THROTTLE_GITHUB_URL}
+      >
+        <Button
+          className="relative size-6 shrink-0 rounded-full"
+          variant="ghost"
+        >
+          <GithubLogoIcon />
+        </Button>
+      </Link>
+
       <Form action="/" className="flex items-center gap-2" method="post">
         <input name="intent" type="hidden" value="logout" />
-        <button className="p-0 text-foreground" type="submit">
-          <SignOutIcon className="size-5" />
-          <span className="sr-only">Sign out</span>
-        </button>
+        <Button
+          className="relative size-6 shrink-0 rounded-full"
+          variant="ghost"
+        >
+          <SignOutIcon />
+        </Button>
       </Form>
     </nav>
   );

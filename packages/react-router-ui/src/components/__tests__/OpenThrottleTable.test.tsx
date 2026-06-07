@@ -19,7 +19,10 @@ describe('OpenThrottleTable Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders table region and heading', () => {
+    expect(component.getByTestId('OpenThrottleTable')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'OpenThrottle Table' }),
+    ).toBeInTheDocument();
   });
 });

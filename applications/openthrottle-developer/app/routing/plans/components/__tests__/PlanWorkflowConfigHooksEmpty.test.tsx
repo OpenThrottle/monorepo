@@ -1,25 +1,18 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { PlanWorkflowConfigHooksEmpty } from '../PlanWorkflowConfigHooksEmpty';
-import type { PlanWorkflowConfigHooksEmptyProps } from '../PlanWorkflowConfigHooksEmpty';
 
 describe('PlanWorkflowConfigHooksEmpty Component', () => {
-  let component: RenderResult;
-  let props: PlanWorkflowConfigHooksEmptyProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <PlanWorkflowConfigHooksEmpty {...props} />;
+  test('renders empty hooks message', () => {
+    const Component = () => <PlanWorkflowConfigHooksEmpty />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(
+      screen.getByTestId('PlanWorkflowConfigHooksEmpty'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/No hooks configured/i)).toBeInTheDocument();
   });
 });

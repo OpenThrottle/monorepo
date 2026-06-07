@@ -24,7 +24,9 @@ describe('SidebarMenuButton Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar menu button slot', () => {
+    expect(
+      component.container.querySelector('[data-slot="sidebar-menu-button"]'),
+    ).toBeInTheDocument();
   });
 });

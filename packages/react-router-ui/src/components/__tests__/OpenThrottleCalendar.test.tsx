@@ -19,7 +19,10 @@ describe('OpenThrottleCalendar Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders calendar region and heading', () => {
+    expect(component.getByTestId('OpenThrottleCalendar')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: 'OpenThrottle Calendar' }),
+    ).toBeInTheDocument();
   });
 });

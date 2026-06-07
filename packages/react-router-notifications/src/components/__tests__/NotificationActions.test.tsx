@@ -1,13 +1,11 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { NotificationActions } from '../NotificationActions';
 import type { NotificationActionsProps } from '../NotificationActions';
 
 describe('NotificationActions Component', () => {
-  let component: RenderResult;
   let props: NotificationActionsProps;
 
   beforeEach(() => {
@@ -16,14 +14,19 @@ describe('NotificationActions Component', () => {
       markAllAsRead: () => undefined,
       setOpen: () => undefined,
     };
-
-    const Component = () => <NotificationActions {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('exposes mark-all-read and dismiss-all actions', () => {
+    const Component = () => <NotificationActions {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    expect(screen.getByTestId('NotificationActions')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Mark all read' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Dismiss all' }),
+    ).toBeInTheDocument();
   });
 });

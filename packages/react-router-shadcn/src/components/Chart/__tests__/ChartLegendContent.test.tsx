@@ -30,7 +30,7 @@ describe('ChartLegendContent Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders chart legend label', () => {
+    expect(component.getByText('Sales')).toBeInTheDocument();
   });
 });

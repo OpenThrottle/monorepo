@@ -19,7 +19,9 @@ describe('ButtonGroup Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders button-group slot', () => {
+    expect(
+      component.container.querySelector('[data-slot="button-group"]'),
+    ).toBeInTheDocument();
   });
 });

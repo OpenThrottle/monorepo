@@ -1,25 +1,17 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { GlobalSidebarHeader } from '../GlobalSidebarHeader';
-import type { GlobalSidebarHeaderProps } from '../GlobalSidebarHeader';
 
 describe('GlobalSidebarHeader Component', () => {
-  let component: RenderResult;
-  let props: GlobalSidebarHeaderProps;
-
-  beforeEach(() => {
-    props = { name: '' };
-
-    const Component = () => <GlobalSidebarHeader {...props} />;
+  test('renders logo link to home', () => {
+    const Component = () => <GlobalSidebarHeader name="" />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByTestId('GlobalSidebarHeader')).toBeInTheDocument();
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/');
+    expect(screen.getByText('OpenThrottle')).toBeInTheDocument();
   });
 });

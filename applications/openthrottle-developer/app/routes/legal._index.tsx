@@ -8,6 +8,7 @@ import { BookOpenIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal._index';
+import { Link } from 'react-router';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -60,9 +61,36 @@ export default function Component(
             This site is a personal portfolio and developer playground operated
             by Matthew Scholta. It is provided free of charge, on an as-is
             basis, primarily to showcase open source work and experiments. It is
-            not a commercial product, and there is no service-level agreement,
-            uptime guarantee, or commitment to maintain any particular feature.
+            not a commercial product or service, and there is no service-level
+            agreement, uptime guarantee, or commitment to maintain any
+            particular feature.
           </p>
+          <ul className="list-disc space-y-1 list-inside">
+            <li>
+              <Link
+                className="hover:underline underline-offset-4 hover:text-foreground transition-colors"
+                to="/legal/license"
+              >
+                License
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="hover:underline underline-offset-4 hover:text-foreground transition-colors"
+                to="/legal/privacy-policy"
+              >
+                Privacy policy
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="hover:underline underline-offset-4 hover:text-foreground transition-colors"
+                to="/legal/terms-of-use"
+              >
+                Terms of use
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
     </GlobalScreen>

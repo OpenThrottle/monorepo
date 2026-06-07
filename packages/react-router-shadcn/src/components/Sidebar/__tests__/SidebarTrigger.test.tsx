@@ -24,7 +24,9 @@ describe('SidebarTrigger Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar toggle button', () => {
+    expect(
+      component.getByRole('button', { name: /toggle sidebar/i }),
+    ).toBeInTheDocument();
   });
 });

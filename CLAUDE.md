@@ -66,10 +66,10 @@ Before writing any new component, route, service, or package by hand, check `@to
 ```bash
 NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<name> --describe
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --subGenerator=component --application=<app> --folder=<folder> --name=<PascalCaseName>
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --subGenerator=component --application=<app> --folder=<folder> --name=<PascalCaseName>[,<MoreNames>]
 ```
 
-All generator commands require the `NX_ISOLATE_PLUGINS=false` prefix. Generators exist for `react`, `react-router`, `nestjs`, `package`, and `folders`. If no generator fits, say so explicitly before writing custom code.
+All generator commands require the `NX_ISOLATE_PLUGINS=false` prefix. Generators exist for `react`, `react-router`, `nestjs`, `package`, and `folders`. Most sub-generators accept comma-separated `--name` values for batch scaffolding—confirm via `--describe` (`name.description`: `Comma-separated names supported.`). If no generator fits, say so explicitly before writing custom code.
 
 ## Code style (from .cursor/rules/)
 

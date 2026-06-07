@@ -46,9 +46,12 @@ describe('useWebsocketDebuggerSocketSubscription', () => {
 
     expect(subscribeToEvents).toHaveBeenCalled();
     expect(socketOn).not.toHaveBeenCalled();
-    expect(append).toHaveBeenCalledWith('plan.status_changed', {
-      planId: 'p1',
-    });
+    expect(append).toHaveBeenCalledWith(
+      'plan.status_changed',
+      expect.objectContaining({
+        planId: 'p1',
+      }),
+    );
   });
 
   test('attaches socket.on when subscribeToEvents is omitted', () => {

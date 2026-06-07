@@ -11,7 +11,7 @@ describe('DialogFooter Component', () => {
   let props: DialogFooterProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Footer content' };
 
     const Component = () => <DialogFooter {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
@@ -19,7 +19,7 @@ describe('DialogFooter Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders dialog footer content', () => {
+    expect(component.getByText('Footer content')).toBeInTheDocument();
   });
 });

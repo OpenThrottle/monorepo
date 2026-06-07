@@ -5,21 +5,28 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PopoverTrigger } from '../PopoverTrigger';
 import type { PopoverTriggerProps } from '../PopoverTrigger';
+import { Popover } from '../Popover';
 
 describe('PopoverTrigger Component', () => {
   let component: RenderResult;
   let props: PopoverTriggerProps;
 
   beforeEach(() => {
-    props = {};
+    props = { children: 'Open popover' };
 
-    const Component = () => <PopoverTrigger {...props} />;
+    const Component = () => (
+      <Popover>
+        <PopoverTrigger {...props} />
+      </Popover>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders a popover trigger', () => {
+    expect(
+      component.getByRole('button', { name: 'Open popover' }),
+    ).toBeInTheDocument();
   });
 });

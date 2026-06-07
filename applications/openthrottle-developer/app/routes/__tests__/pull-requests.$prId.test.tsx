@@ -1,23 +1,62 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../pull-requests.$prId';
-import { render, RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import PullRequestDetail from '../pull-requests.$prId';
 
-describe.skip('routes/pull-requests.$prId.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/pull-requests.$prId.tsx', () => {
+  test('renders not found state when pull is missing', () => {
+    render(
+      <MemoryRouter>
+        <PullRequestDetail
+          actionData={undefined}
+          loaderData={{
+            listQuery: 'owner=OpenThrottle&repo=monorepo',
+            owner: 'OpenThrottle',
+            pull: null,
+            repo: 'monorepo',
+          }}
+          matches={[] as never}
+          params={{ prId: '999' }}
+        />
+      </MemoryRouter>,
     );
+
+    expect(screen.getByTestId('PullRequestNotFound')).toBeInTheDocument();
+    expect(screen.getByText('Pull request not found')).toBeInTheDocument();
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders pull request title and number when found', () => {
+    render(
+      <MemoryRouter>
+        <PullRequestDetail
+          actionData={undefined}
+          loaderData={{
+            listQuery: 'owner=OpenThrottle&repo=monorepo',
+            owner: 'OpenThrottle',
+            pull: {
+              author: 'visormatt',
+              baseRef: 'main',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              headRef: 'feature-branch',
+              mergedAt: null,
+              number: 42,
+              state: 'open',
+              title: 'Fix queues',
+              updatedAt: '2026-01-02T00:00:00.000Z',
+            },
+            repo: 'monorepo',
+          }}
+          matches={[] as never}
+          params={{ prId: '42' }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole('heading', { name: /fix queues/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('#42')).toBeInTheDocument();
+    expect(screen.getByText('visormatt')).toBeInTheDocument();
   });
 });

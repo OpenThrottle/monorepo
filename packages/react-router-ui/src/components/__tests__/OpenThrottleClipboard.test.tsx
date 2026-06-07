@@ -19,7 +19,9 @@ describe('OpenThrottleClipboard Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders copy button with default label', () => {
+    expect(
+      component.getByRole('button', { name: 'Copy to clipboard' }),
+    ).toBeInTheDocument();
   });
 });

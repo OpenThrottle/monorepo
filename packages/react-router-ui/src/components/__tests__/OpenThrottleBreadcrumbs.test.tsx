@@ -19,7 +19,10 @@ describe('OpenThrottleBreadcrumbs Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders breadcrumb navigation', () => {
+    expect(
+      component.getByTestId('OpenThrottleBreadcrumbs'),
+    ).toBeInTheDocument();
+    expect(component.getByRole('navigation')).toBeInTheDocument();
   });
 });

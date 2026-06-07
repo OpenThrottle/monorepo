@@ -19,7 +19,12 @@ describe('OpenThrottleSidebarHeader Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+  test('renders sidebar header with logo link to home', () => {
+    expect(
+      component.getByTestId('OpenThrottleSidebarHeader'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'OpenThrottle' }),
+    ).toHaveAttribute('href', '/');
   });
 });

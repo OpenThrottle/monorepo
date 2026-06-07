@@ -34,6 +34,8 @@ alwaysApply: true
    NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator-name> --subGenerator=<type> --<options>...
    ```
 
+   **Batch multiple artifacts in one run:** Most generators accept comma-separated values on `--name` (e.g. `--name=Foo,Bar,Baz`). Confirm per generator via `--describe` (`name.description` includes `Comma-separated names supported.` when supported). Prefer one command over repeated invocations when scaffolding siblings.
+
 5. **ONLY THEN** add custom logic to the generated files
 
 ## Available Generators

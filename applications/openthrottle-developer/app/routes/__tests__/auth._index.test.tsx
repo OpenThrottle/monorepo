@@ -1,23 +1,21 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../auth._index';
-import { render, RenderResult } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import AuthIndex from '../auth._index';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
-describe.skip('routes/auth._index.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
+describe('routes/auth._index.tsx', () => {
+  test('renders sign-in form', () => {
+    renderRoutesStub(
+      <AuthIndex
+        actionData={undefined}
+        loaderData={{}}
+        matches={[] as never}
+        params={{}}
       />,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
   });
 });

@@ -1,23 +1,24 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../profile._index';
-import { render, RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+import { OPEN_THROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
+import ProfileIndex from '../profile._index';
 
-describe.skip('routes/profile._index.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
-      />,
+describe('routes/profile._index.tsx', () => {
+  test('renders profile name and contact email', () => {
+    render(
+      <MemoryRouter>
+        <ProfileIndex
+          actionData={undefined}
+          loaderData={{}}
+          matches={[] as never}
+          params={{}}
+        />
+      </MemoryRouter>,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByText('Matthew Scholta')).toBeInTheDocument();
+    expect(screen.getByText(OPEN_THROTTLE_CONTACT_EMAIL)).toBeInTheDocument();
   });
 });

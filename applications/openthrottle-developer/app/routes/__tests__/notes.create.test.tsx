@@ -1,23 +1,24 @@
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { default as Route } from '../notes.create';
-import { render, RenderResult } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import CreateNote from '../notes.create';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
-describe.skip('routes/notes.create.tsx', () => {
-  let component: RenderResult;
-
-  beforeEach(() => {
-    component = render(
-      <Route
-        actionData={{} as any}
-        loaderData={{} as any}
-        matches={[] as any}
-        params={{} as any}
+describe('routes/notes.create.tsx', () => {
+  test('renders note form in create mode', () => {
+    renderRoutesStub(
+      <CreateNote
+        actionData={undefined}
+        loaderData={{}}
+        matches={[] as never}
+        params={{}}
       />,
     );
-  });
 
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.getByTestId('NoteForm')).toBeInTheDocument();
+    expect(screen.getByLabelText('Content')).toBeRequired();
+    expect(
+      screen.getByRole('button', { name: /create note/i }),
+    ).toBeInTheDocument();
   });
 });

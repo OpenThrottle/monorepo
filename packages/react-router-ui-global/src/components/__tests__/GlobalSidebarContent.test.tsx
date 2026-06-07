@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { GlobalProviders } from '../GlobalProviders';
 import { GlobalSidebarContent } from '../GlobalSidebarContent';
 import type { GlobalSidebarContentProps } from '../GlobalSidebarContent';
@@ -16,20 +15,13 @@ const StubIcon = (iconProps: { className?: string }) => (
 );
 
 describe('GlobalSidebarContent Component', () => {
-  let component: RenderResult;
-  let props: GlobalSidebarContentProps;
-
-  beforeEach(() => {
-    props = {};
-
-    const Component = () => <GlobalSidebarContent {...props} />;
+  test('renders empty sidebar when no navigation data is provided', () => {
+    const Component = () => <GlobalSidebarContent />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
 
-    component = render(<RoutesStub />);
-  });
-
-  test('should render', () => {
-    expect(component.baseElement).toMatchSnapshot();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });
 
