@@ -43,7 +43,15 @@ export const loader = async (args: Route.LoaderArgs) => {
   const _header = request.headers.get('cookie');
   const env = getEnvironment();
 
-  return { canonical, env };
+  // FIXME: Replace with the actual repo when we launch
+  const repo = `facebook/react`;
+  const url = `https://api.github.com/repos/${repo}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+  const stars = data?.stargazers_count.toLocaleString();
+
+  return { canonical, env, repo, stars };
 };
 
 /**
@@ -106,7 +114,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="min-h-screen flex flex-col">
         {children}
-
         <ScrollRestoration />
 
         {/* FIXME: Uncomment this when we have a production environment */}

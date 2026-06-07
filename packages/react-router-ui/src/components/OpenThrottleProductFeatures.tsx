@@ -44,7 +44,7 @@ export const OpenThrottleProductFeatures = (
             className="bg-card p-4 flex flex-col border border-border rounded-lg h-full"
             key={feature.title}
           >
-            <h2 className="mb-2 flex items-center gap-4">
+            <h2 className="mb-4 flex items-center gap-4">
               <Icon className="size-4" />
               <span>{feature.title}</span>
             </h2>

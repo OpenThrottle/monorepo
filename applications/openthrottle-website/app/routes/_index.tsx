@@ -8,6 +8,8 @@ import {
 } from '@openthrottle/react-router-ui';
 import type { Route } from '@/app/routes/+types/_index';
 import { GlobalFooter } from '~/global/components/GlobalFooter';
+import { useRouteLoaderData } from 'react-router';
+import { loader } from '~/root';
 
 // export const loader = async (_args: Route.LoaderArgs) => {
 //   return {};
@@ -23,6 +25,7 @@ export default function Component(
   const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
+  const data = useRouteLoaderData<typeof loader>('root');
 
   // Setup
 
@@ -38,7 +41,10 @@ export default function Component(
     <main className="flex flex-1 flex-col">
       <div className="max-w-7xl mx-auto flex flex-col gap-4 md:gap-8 lg:gap-24 p-4 md:p-8 lg:p-12">
         <div className="mx-auto my-40">
-          <OpenThrottleProductGetStarted />
+          <OpenThrottleProductGetStarted
+            repo={data?.repo}
+            stars={data?.stars}
+          />
         </div>
         <OpenThrottleProductFeatures features={FEATURES} />
       </div>

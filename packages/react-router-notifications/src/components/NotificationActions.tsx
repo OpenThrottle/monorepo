@@ -1,8 +1,10 @@
 import * as React from 'react';
+import classnames from 'classnames';
 import { Button } from '@openthrottle/react-router-shadcn';
 
 export interface NotificationActionsProps {
   readonly dismissAll: () => void;
+  readonly hasAny: boolean;
   readonly markAllAsRead: () => void;
   readonly setOpen: (open: boolean) => void;
 }
@@ -10,7 +12,7 @@ export interface NotificationActionsProps {
 export const NotificationActions = (
   props: NotificationActionsProps,
 ): React.ReactElement => {
-  const { dismissAll, markAllAsRead, setOpen } = props;
+  const { dismissAll, hasAny, markAllAsRead, setOpen } = props;
 
   // Hooks
 
@@ -25,9 +27,10 @@ export const NotificationActions = (
   // 🔌 Short Circuit
 
   return (
-    <div className="flex gap-1" data-testid="NotificationActions">
+    <div className="flex gap-1 w-full" data-testid="NotificationActions">
       <Button
-        className="h-7 text-xs"
+        className={classnames('flex-1 h-7 text-xs', { 'opacity-25!': !hasAny })}
+        disabled={!hasAny}
         onClick={markAllAsRead}
         size="sm"
         variant="ghost"
@@ -35,7 +38,8 @@ export const NotificationActions = (
         Mark all read
       </Button>
       <Button
-        className="h-7 text-xs"
+        className={classnames('flex-1 h-7 text-xs', { 'opacity-25!': !hasAny })}
+        disabled={!hasAny}
         onClick={() => {
           dismissAll();
           setOpen(false);
