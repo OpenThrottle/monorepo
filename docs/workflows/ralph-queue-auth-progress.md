@@ -76,7 +76,7 @@ Argv for nested runs is built with `buildWorkflowRalphRunTuningArgv` / `mergeRal
 
 ### Package drift note
 
-- **`@openthrottle/nestjs-worktrees`** exports a `runChildJob` that uses `spawnSync` **without** `buildWorkflowRalphSpawnEnv` (`packages/nestjs-worktrees/src/utils/child-job.ts`). The **server queue** imports `runChildJob` from **`@tools/workflows`**, which **does** use `buildWorkflowRalphSpawnEnv`. If another consumer used the nestjs-worktrees copy for Ralph, Cortex URL forcing and spawn env would diverge.
+- **`@openthrottle/nestjs-worktrees`** exports a `runChildJob` that uses `spawnSync` **without** `buildWorkflowRalphSpawnEnv` (`packages/nestjs-worktrees/src/utils/child-job.ts`). The **server queue** imports `runChildJob` from **`@tools/workflows`**, which **does** use `buildWorkflowRalphSpawnEnv`. If another consumer used the nestjs-worktrees copy for Ralph, Postgres URL forcing and spawn env would diverge.
 
 ## Quick verification checklist (queue path)
 

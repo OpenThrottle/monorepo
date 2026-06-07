@@ -150,7 +150,7 @@ describe('getPostgresUrl', () => {
   });
 
   describe('when POSTGRES_URL is set', () => {
-    it('returns POSTGRES_URL when cortex url is absent', () => {
+    it('returns POSTGRES_URL when postgres url is absent', () => {
       const conn = getPostgresUrl({
         POSTGRES_URL: 'postgresql://user:pass@localhost:5432/mydb',
       });

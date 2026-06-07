@@ -703,7 +703,7 @@ describe('PlansResolver', () => {
     /**
      * @description Enqueue with a real directory outside the OT tree so `buildRunPlanJobData` validation
      * passes; BullMQ payload must carry `workingDirectory` for the processor spawn cwd (regression:
-     * nested CLI must still use worker POSTGRES / canonical Cortex URL).
+     * nested CLI must still use worker POSTGRES / canonical OpenThrottle URL).
      */
     test('includes external workingDirectory in queue job data (enqueue → processor contract)', async () => {
       const repo = plansService.getRepository();
