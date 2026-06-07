@@ -70,6 +70,30 @@ query getCommitLinksByPlanId($input: CommitLinksByPlanIdInput!) {
   }
 }
 
+query getAgentConversation($id: ID!) {
+  getAgentConversation(id: $id) {
+    ...AgentConversation
+  }
+}
+
+query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
+  getAgentConversationMessages(input: $input) {
+    messages {
+      ...AgentConversationMessage
+    }
+    totalCount
+  }
+}
+
+query listAgentConversations($input: ListAgentConversationsInput) {
+  listAgentConversations(input: $input) {
+    conversations {
+      ...AgentConversation
+    }
+    totalCount
+  }
+}
+
 query getActivityByDate($input: ActivityByDateInput!) {
   activityByDate(input: $input) {
     commits {
