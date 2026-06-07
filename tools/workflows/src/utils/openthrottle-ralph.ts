@@ -20,9 +20,7 @@ import {
   listProjectsGraphql,
   updatePlanProjectIdGraphql,
   updatePlanStatusGraphql,
-  updatePlanSummaryGraphql,
   updateTaskStatusGraphql,
-  updateTaskSummaryGraphql,
 } from './openthrottle-ralph-graphql';
 import {
   appendPlanOutputPostgres,
@@ -37,9 +35,7 @@ import {
   RALPH_FATAL_UNREACHABLE_SUFFIX,
   updatePlanProjectIdPostgres,
   updatePlanStatusPostgres,
-  updatePlanSummaryPostgres,
   updateTaskStatusPostgres,
-  updateTaskSummaryPostgres,
 } from './openthrottle-ralph-postgres';
 import type {
   CommitLinkInput,
@@ -168,24 +164,6 @@ export const ensureCortexReachable = async (
 
   await ensureGraphqlIsReachable();
 };
-
-export const updatePlanSummary = async (
-  config: WorkflowRalphConfig,
-  planId: string,
-  summary: string,
-): Promise<PlanRow | null> =>
-  isPostgresTransport(config)
-    ? updatePlanSummaryPostgres(config, planId, summary)
-    : updatePlanSummaryGraphql(planId, summary);
-
-export const updateTaskSummary = async (
-  config: WorkflowRalphConfig,
-  taskId: string,
-  summary: string,
-): Promise<boolean> =>
-  isPostgresTransport(config)
-    ? updateTaskSummaryPostgres(config, taskId, summary)
-    : updateTaskSummaryGraphql(taskId, summary);
 
 export const getTaskById = async (
   config: WorkflowRalphConfig,

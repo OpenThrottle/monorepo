@@ -29,11 +29,9 @@
  * - `listProjects` → `getProjects` (filter client-side by `nxProjectName` when matching Nx names)
  * - `ensureProjectForNxName` → `getProjects` then `createProject` if no row matches `nxProjectName`
  * - `updatePlanProjectId` → `updatePlan` with `projectId` / `project` fields (`mutations.graphql`)
- * - `updatePlanSummary` → `updatePlan` with `summary`
  * - `updatePlanStatus` → `updatePlan` with `status` (see behavioral note below)
  * - `promotePlanToInProgressIfNeeded` → `updatePlan` with `status: IN_PROGRESS` (same predicate as `updatePlanStatus` / `syncParentPlanStatus`)
  * - `updateTaskStatus` → `updateTask` with `status`
- * - `updateTaskSummary` → `updateTask` with `summary`
  *
  * ## `ralph.ts` main() path (minimal subset)
  *

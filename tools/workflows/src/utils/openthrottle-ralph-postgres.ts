@@ -66,66 +66,6 @@ export async function ensureCortexReachablePostgres(
   }
 }
 
-export async function updatePlanSummaryPostgres(
-  config: WorkflowRalphConfig,
-  planId: string,
-  summary: string,
-): Promise<PlanRow | null> {
-  const connectionString = requireConnectionString(config);
-  const client = new pg.Client({ connectionString });
-  await client.connect();
-  try {
-    const res = await client.query<{
-      author: string;
-      category: string;
-      created_at: string;
-      description: string | null;
-      id: string;
-      status: string;
-      summary: string | null;
-      title: string;
-      updated_at: string;
-    }>(
-      `UPDATE plans SET summary = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title, author, category, description, status, summary, created_at, updated_at`,
-      [summary, planId],
-    );
-    const row = res.rows[0];
-    if (!row) return null;
-    return {
-      author: row.author,
-      category: row.category,
-      createdAt: row.created_at,
-      description: row.description,
-      id: row.id,
-      status: row.status,
-      summary: row.summary,
-      title: row.title,
-      updatedAt: row.updated_at,
-    };
-  } finally {
-    await client.end();
-  }
-}
-
-export async function updateTaskSummaryPostgres(
-  config: WorkflowRalphConfig,
-  taskId: string,
-  summary: string,
-): Promise<boolean> {
-  const connectionString = requireConnectionString(config);
-  const client = new pg.Client({ connectionString });
-  await client.connect();
-  try {
-    const res = await client.query(
-      `UPDATE tasks SET summary = $1, updated_at = NOW() WHERE id = $2`,
-      [summary, taskId],
-    );
-    return res.rowCount === 1;
-  } finally {
-    await client.end();
-  }
-}
-
 export async function getTaskByIdPostgres(
   config: WorkflowRalphConfig,
   id: string,

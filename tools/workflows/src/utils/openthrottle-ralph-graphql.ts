@@ -103,28 +103,6 @@ export async function ensureGraphqlIsReachable(): Promise<void> {
   );
 }
 
-export async function updatePlanSummaryGraphql(
-  planId: string,
-  summary: string,
-): Promise<PlanRow | null> {
-  const result = await executeWorkflowGraphqlV2(UpdatePlanDocument, {
-    input: { id: planId, summary },
-  });
-
-  return result.updatePlan ? planFragmentToRow(result.updatePlan) : null;
-}
-
-export async function updateTaskSummaryGraphql(
-  taskId: string,
-  summary: string,
-): Promise<boolean> {
-  const result = await executeWorkflowGraphqlV2(UpdateTaskDocument, {
-    input: { id: taskId, summary },
-  });
-
-  return result.updateTask != null;
-}
-
 export async function getTaskByIdGraphql(id: string): Promise<TaskRow | null> {
   const result = await executeWorkflowGraphqlV2(GetTaskDocument, { id });
   return result.task ? taskFragmentToRow(result.task) : null;
