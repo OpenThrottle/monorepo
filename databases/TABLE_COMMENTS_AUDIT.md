@@ -6,36 +6,36 @@ Permanent checklist for `COMMENT ON TABLE` coverage and Cortex → OpenThrottle 
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Last audited               | 2026-06-06                                                                                                                    |
 | Method                     | `obj_description` on `pg_class` (public base tables) cross-checked against `COMMENT ON TABLE` in `databases/migrations/*.sql` |
-| Migrations applied through | `049_add_sort_order_to_tasks.sql`                                                                                             |
+| Migrations applied through | `050_comment_on_openthrottle_tables_batch_a.sql`                                                                              |
 
 ## Summary
 
 | Metric                                      | Count |
 | ------------------------------------------- | ----- |
 | Public base tables                          | 28    |
-| With `COMMENT ON TABLE`                     | 23    |
-| Missing `COMMENT ON TABLE`                  | 5     |
+| With `COMMENT ON TABLE`                     | 28    |
+| Missing `COMMENT ON TABLE`                  | 0     |
 | Cortex prose in existing comments (039–041) | 4     |
 
 ---
 
 ## 1. Tables missing `COMMENT ON TABLE`
 
-Grouped for batched comment-only migrations (≤10 tables per file). Task 3 adds `050_comment_on_openthrottle_tables_batch_a.sql` (or similar); do **not** edit applied migrations `042` / `044` in place.
+Grouped for batched comment-only migrations (≤10 tables per file). Applied in `050_comment_on_openthrottle_tables_batch_a.sql`; do **not** edit applied migrations `042` / `044` in place.
 
 ### Batch A — backfill (5 tables, migration 042 + 044)
 
-Proposed file: `050_comment_on_openthrottle_tables_batch_a.sql`
+Proposed file: `050_comment_on_openthrottle_tables_batch_a.sql` (applied)
 
 | Table                          | Introduced in                              | Backfill |
 | ------------------------------ | ------------------------------------------ | -------- |
-| `user_workspace_settings`      | `042_create_workspace_settings_tables.sql` | - [ ]    |
-| `workspace_local_repositories` | `042_create_workspace_settings_tables.sql` | - [ ]    |
-| `service_accounts`             | `044_create_service_accounts_tables.sql`   | - [ ]    |
-| `service_account_credentials`  | `044_create_service_accounts_tables.sql`   | - [ ]    |
-| `service_account_roles`        | `044_create_service_accounts_tables.sql`   | - [ ]    |
+| `user_workspace_settings`      | `042_create_workspace_settings_tables.sql` | - [x]    |
+| `workspace_local_repositories` | `042_create_workspace_settings_tables.sql` | - [x]    |
+| `service_accounts`             | `044_create_service_accounts_tables.sql`   | - [x]    |
+| `service_account_credentials`  | `044_create_service_accounts_tables.sql`   | - [x]    |
+| `service_account_roles`        | `044_create_service_accounts_tables.sql`   | - [x]    |
 
-**Batch A status:** - [ ] Complete (all five tables commented; `pnpm run database:migrate` verified)
+**Batch A status:** - [x] Complete (all five tables commented; `pnpm run database:migrate` verified)
 
 ---
 
@@ -76,13 +76,13 @@ Tables with comments today (no action for task 3 unless listed above).
 | `projects`                     | 040                               | yes                |
 | `role_permissions`             | 040                               | yes                |
 | `roles`                        | 040                               | yes                |
-| `service_account_credentials`  | —                                 | **no**             |
-| `service_account_roles`        | —                                 | **no**             |
-| `service_accounts`             | —                                 | **no**             |
+| `service_account_credentials`  | 050                               | yes                |
+| `service_account_roles`        | 050                               | yes                |
+| `service_accounts`             | 050                               | yes                |
 | `subscriptions`                | 040                               | yes                |
 | `task_embeddings`              | 040                               | yes                |
 | `tasks`                        | 040                               | yes                |
 | `user_roles`                   | 040                               | yes                |
-| `user_workspace_settings`      | —                                 | **no**             |
+| `user_workspace_settings`      | 050                               | yes                |
 | `users`                        | 041                               | yes                |
-| `workspace_local_repositories` | —                                 | **no**             |
+| `workspace_local_repositories` | 050                               | yes                |
