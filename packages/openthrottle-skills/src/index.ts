@@ -14,7 +14,10 @@ export type {
 } from './schemas/agent-asset-frontmatter.schemas.js';
 
 /** @publicApi */
-export { extractFrontmatterBody } from './frontmatter/extract-frontmatter-body.js';
+export {
+  extractContentAfterFrontmatter,
+  extractFrontmatterBody,
+} from './frontmatter/extract-frontmatter-body.js';
 /** @publicApi */
 export { parseYamlFrontmatter } from './frontmatter/parse-yaml-frontmatter.js';
 export type {

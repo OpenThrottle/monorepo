@@ -4,6 +4,7 @@ fragment PlanCard on PlanObject {
   category
   createdAt
   description
+  hasCustomRunConfig
   id
   projectRelation {
     id

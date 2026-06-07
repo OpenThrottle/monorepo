@@ -32,7 +32,7 @@ const Menubar = React.forwardRef<
 });
 Menubar.displayName = MenubarPrimitive.Root.displayName;
 
-const MenubarMenu = MenubarPrimitive.Menu;
+const MenubarMenu = MenubarPrimitive.Menu as typeof MenubarPrimitive.Menu;
 const MenubarTrigger = MenubarPrimitive.Trigger;
 const MenubarPortal = MenubarPrimitive.Portal;
 const MenubarGroup = MenubarPrimitive.Group;

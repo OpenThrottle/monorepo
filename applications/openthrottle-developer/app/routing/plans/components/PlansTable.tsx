@@ -1,8 +1,15 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { ArrowRightIcon } from 'lucide-react';
-import { Button, DataTable, Input } from '@openthrottle/react-router-shadcn';
+import { ArrowRightIcon, SlidersHorizontal } from 'lucide-react';
+import {
+  Button,
+  DataTable,
+  Input,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
@@ -10,6 +17,7 @@ import { Link, useFetcher, useSearchParams } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanStatusKey } from '~/routing/plans/types';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
+import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 
@@ -130,6 +138,7 @@ PlansTable.buildTable = (
       cell: ({ row }) => {
         const plan = row.original;
         const planHref = `/plans/${plan.id}`;
+        const configurationHref = `${planHref}?${PLANS_DETAIL_TAB_SEARCH_PARAM}=configuration`;
         const title = plan.title ?? 'Untitled';
 
         return (
@@ -145,6 +154,27 @@ PlansTable.buildTable = (
               </Link>
             </h2>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+              {plan.hasCustomRunConfig ? (
+                <Tooltip>
+                  <TooltipTrigger asChild={true}>
+                    <Link
+                      aria-label="Custom workflow run configuration (differs from defaults)"
+                      className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
+                      to={configurationHref}
+                      viewTransition={true}
+                    >
+                      <SlidersHorizontal
+                        aria-hidden={true}
+                        className="size-3.5"
+                      />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs" side="top">
+                    Custom workflow run configuration (differs from defaults).
+                    Open the Configuration tab to view or edit.
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
               {plan.projectRelation != null ? (
                 <Link
                   aria-label={`Project: ${plan.projectRelation.name}`}

@@ -6,6 +6,7 @@ export {
   PLAN_RUN_CONFIG_VERSION,
   PLAN_RUN_CONFIG_UUID_REGEX,
 } from './plan-run-config-storage.constants';
+export { planHasCustomRunConfig } from './plan-run-config-storage.compare';
 export {
   getDefaultPlanRunConfigRalphV1,
   getDefaultPlanRunConfigStorage,

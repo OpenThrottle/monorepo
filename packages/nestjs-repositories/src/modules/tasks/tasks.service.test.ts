@@ -7,7 +7,7 @@ import { Not } from 'typeorm';
 import { PlansService } from '../plans/plans.service';
 import { Task } from './task.entity';
 import { tasksFactory } from './tasks.factory';
-import { TasksService } from './tasks.service';
+import { TASK_SORT_ORDER_GAP, TasksService } from './tasks.service';
 
 describe('TasksService', () => {
   type GetRepository = ReturnType<TasksService['getRepository']>;
@@ -20,6 +20,17 @@ describe('TasksService', () => {
 
   const mockPlansService = createMock<PlansService>({
     getRepository: vi.fn().mockReturnValue(mockPlanRepo),
+  });
+
+  const mockQueryBuilder = {
+    getRawOne: vi.fn(),
+    select: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+  };
+
+  const mockTaskRepo = createMock<GetRepository>({
+    createQueryBuilder: vi.fn().mockReturnValue(mockQueryBuilder),
+    find: () => Promise.resolve(tasksFactory.buildList(2)),
   });
 
   let service: TasksService;
@@ -41,14 +52,18 @@ describe('TasksService', () => {
         },
         {
           provide: getRepositoryToken(Task),
-          useValue: createMock<GetRepository>({
-            find: () => Promise.resolve(tasksFactory.buildList(2)),
-          }),
+          useValue: mockTaskRepo,
         },
       ],
     }).compile();
 
     service = app.get<TasksService>(TasksService);
+  });
+
+  beforeEach(() => {
+    vi.mocked(mockQueryBuilder.getRawOne).mockReset();
+    vi.mocked(mockQueryBuilder.select).mockClear();
+    vi.mocked(mockQueryBuilder.where).mockClear();
   });
 
   beforeEach(() => {
@@ -75,6 +90,26 @@ describe('TasksService', () => {
         status: expect.any(String),
         title: expect.any(String),
       });
+    });
+  });
+
+  describe('resolveNextSortOrder', () => {
+    const planId = '44444444-4444-4444-4444-444444444444';
+
+    it('returns 1000 when plan has no tasks', async () => {
+      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({ max: null });
+
+      const next = await service.resolveNextSortOrder(planId);
+
+      expect(next).toBe(TASK_SORT_ORDER_GAP);
+    });
+
+    it('returns MAX(sort_order) + gap when plan has tasks', async () => {
+      vi.mocked(mockQueryBuilder.getRawOne).mockResolvedValue({ max: '5000' });
+
+      const next = await service.resolveNextSortOrder(planId);
+
+      expect(next).toBe(5000 + TASK_SORT_ORDER_GAP);
     });
   });
 

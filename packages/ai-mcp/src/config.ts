@@ -112,7 +112,7 @@ export interface BuildWorkflowRalphSpawnEnvOptions {
    * regardless of `workerEnv`, so foreign `cwd` tooling cannot desync plan lookup from the API DB.
    * Used when `WORKFLOW_RALPH_TRANSPORT=postgres-direct`.
    */
-  readonly canonicalCortexPostgresUrl?: string;
+  readonly canonicalPostgresUrl?: string;
   /**
    * When set (non-empty), forces nested Ralph GraphQL auth regardless of `workerEnv` (default transport).
    */
@@ -260,7 +260,7 @@ export function buildWorkflowRalphSpawnEnv(
       env = { ...env, OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL: graphqlUrl };
     }
   } else {
-    const trimmed = options?.canonicalCortexPostgresUrl?.trim();
+    const trimmed = options?.canonicalPostgresUrl?.trim();
     const conn =
       trimmed !== undefined && trimmed !== ''
         ? trimmed

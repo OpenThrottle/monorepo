@@ -35,7 +35,7 @@ Traced the flow from agent output → parsing → DB update. The implementation 
 
 ## (4) Does Cortex DB expect different status casing or enum?
 
-- **Schema:** `databases/cortex/migrations/028_plan_task_status_enum.sql`. Column type is `plan_task_status` with values `'BACKLOG'`, `'BLOCKED'`, `'CANCELED'`, `'COMPLETED'`, `'IN_PROGRESS'`, `'PENDING'`, `'SKIPPED'` (uppercase).
+- **Schema:** `databases/migrations/028_plan_task_status_enum.sql`. Column type is `plan_task_status` with values `'BACKLOG'`, `'BLOCKED'`, `'CANCELED'`, `'COMPLETED'`, `'IN_PROGRESS'`, `'PENDING'`, `'SKIPPED'` (uppercase).
 - **Ralph:** Passes `'COMPLETED'` and `'IN_PROGRESS'` (uppercase) to `updateTaskStatus` → Postgres. No casing mismatch.
 - **Conclusion:** DB expects uppercase enum; Ralph sends uppercase. No issue.
 
@@ -90,6 +90,6 @@ So even without the tag, if the agent signals COMPLETE, the task can be marked C
 - `tools/workflows/src/bin/ralph.ts` — main loop, prompt building, parsing, updateTaskStatus calls
 - `tools/workflows/src/utils/parsers.ts` — `parseRalphCompleteTaskSignals`, `isComplete`
 - `tools/workflows/src/utils/cortex-ralph.ts` — `updateTaskStatus`, `updatePlanStatus`
-- `databases/cortex/migrations/028_plan_task_status_enum.sql` — status enum
+- `databases/migrations/028_plan_task_status_enum.sql` — status enum
 - `docs/workflows/ralph-design.md` — Plan-centric task status section
 - `tools/workflows/src/bin/run-iteration.ts` — stdout/stderr combine for both backends

@@ -33,6 +33,7 @@ const mockTask: TaskRow = {
   id: TASK_ID,
   planId: PLAN_ID,
   requirements: [],
+  sortOrder: 1000,
   status: 'IN_PROGRESS',
   title: 'Document current behavior',
   updatedAt: new Date().toISOString(),

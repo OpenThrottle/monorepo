@@ -2,7 +2,7 @@
  * @description GraphQL input types for task mutations and multi-arg queries. Replaces many individual @Args with a single input object.
  */
 
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, ID, InputType, Int } from '@nestjs/graphql';
 
 @InputType()
 export class CreateTaskInput {
@@ -32,6 +32,12 @@ export class CreateTaskInput {
     nullable: true,
   })
   requirements!: string | null;
+
+  @Field(() => Int, {
+    description: `Optional. Execution order within plan. When omitted, server auto-assigns MAX+1000.`,
+    nullable: true,
+  })
+  sortOrder!: number | null;
 
   @Field(() => String, { nullable: true })
   status!: string | null;
@@ -75,6 +81,12 @@ export class UpdateTaskInput {
   })
   requirements!: string | null;
 
+  @Field(() => Int, {
+    description: `Optional. Execution order within plan (gap-based insert, e.g. 1500 between 1000 and 2000).`,
+    nullable: true,
+  })
+  sortOrder!: number | null;
+
   @Field(() => String, { nullable: true })
   status!: string | null;
 
@@ -83,6 +95,19 @@ export class UpdateTaskInput {
 
   @Field(() => String, { nullable: true })
   title!: string | null;
+}
+
+@InputType()
+export class ReorderPlanTasksInput {
+  @Field(() => ID, {
+    description: `Plan id whose tasks are being reordered`,
+  })
+  planId!: string;
+
+  @Field(() => [ID], {
+    description: `Task ids in desired order; sortOrder is reassigned 1000, 2000, … atomically`,
+  })
+  taskIds!: string[];
 }
 
 @InputType()

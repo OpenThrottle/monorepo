@@ -141,11 +141,12 @@ export async function getTaskByIdPostgres(
       id: string;
       plan_id: string;
       requirements: unknown;
+      sort_order: number;
       status: string;
       title: string;
       updated_at: string;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE id = $1`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE id = $1`,
       [id],
     );
     const row = res.rows[0];
@@ -157,6 +158,7 @@ export async function getTaskByIdPostgres(
       id: row.id,
       planId: row.plan_id,
       requirements: taskRequirementsFromRow(row.requirements),
+      sortOrder: row.sort_order,
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
@@ -316,11 +318,12 @@ export async function getTasksByPlanIdPostgres(
       id: string;
       plan_id: string;
       requirements: unknown;
+      sort_order: number;
       status: string;
       title: string;
       updated_at: string;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY created_at`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
       [planId],
     );
     return res.rows.map((row) => ({
@@ -330,6 +333,7 @@ export async function getTasksByPlanIdPostgres(
       id: row.id,
       planId: row.plan_id,
       requirements: taskRequirementsFromRow(row.requirements),
+      sortOrder: row.sort_order,
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
@@ -425,11 +429,12 @@ export async function updateTaskStatusPostgres(
       id: string;
       plan_id: string;
       requirements: unknown;
+      sort_order: number;
       status: string;
       title: string;
       updated_at: string;
     }>(
-      `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, plan_id, title, description, category, status, requirements, created_at, updated_at`,
+      `UPDATE tasks SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at`,
       [status, id],
     );
     const row = res.rows[0];
@@ -441,6 +446,7 @@ export async function updateTaskStatusPostgres(
       id: row.id,
       planId: row.plan_id,
       requirements: taskRequirementsFromRow(row.requirements),
+      sortOrder: row.sort_order,
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,

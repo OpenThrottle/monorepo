@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex commit_links table. Matches databases/cortex/migrations (006).
+ * @description TypeORM entity for Cortex commit_links table. Matches databases/migrations (006).
  */
 
 import {

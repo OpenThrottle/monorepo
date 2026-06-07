@@ -26,10 +26,13 @@ Personas sit in layer 1 only. Pair a persona with the default Ralph loop by usin
 From the monorepo root:
 
 ```bash
-pnpm exec workflow-ralph --plan <plan-uuid> --prompt-file .agents/personas/architect.md
+pnpm exec workflow-ralph --plan <plan-uuid> \
+  --prompt-file .agents/personas/architect.md \
+  --prompt-file .cursor/skills/agents-ralph/SKILL.md \
+  --prompt-file .agents/skills/shadcn/SKILL.md
 ```
 
-- **`--prompt-file`** — UTF-8 path (relative to cwd or absolute). YAML frontmatter is stripped before injection (same as skills).
+- **`--prompt-file`** — UTF-8 path (relative to cwd or absolute). Repeat the flag to compose persona + skills; YAML frontmatter is stripped from each file before concatenation (same as skills).
 - Mutually exclusive with **`--prompt`** (named profile) and **`--prompt-stdin`**.
 - Env: `WORKFLOW_RALPH_PROMPT_FILE=.agents/personas/qa.md`
 - Defaults file: `"promptFile": ".agents/personas/product.md"` in `.workflow-ralph.json`

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex daily_stats table. Matches databases/cortex/migrations (027).
+ * @description TypeORM entity for Cortex daily_stats table. Matches databases/migrations (027).
  */
 
 import {

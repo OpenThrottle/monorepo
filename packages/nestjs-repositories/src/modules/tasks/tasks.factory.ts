@@ -42,6 +42,7 @@ export const tasksFactory = Factory.define<Task>(() => ({
   projectId: null,
   projectRelation: null,
   requirements: [],
+  sortOrder: faker.number.int({ max: 10_000, min: 1000, multipleOf: 1000 }),
   status: faker.helpers.arrayElement([
     'BLOCKED',
     'COMPLETED',

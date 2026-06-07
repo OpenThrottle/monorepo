@@ -115,7 +115,7 @@ describe('buildWorkflowRalphSpawnEnv', () => {
         [WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV]: '/xdg',
         WORKFLOW_RALPH_TRANSPORT: 'postgres-direct',
       },
-      { canonicalCortexPostgresUrl: 'postgresql://c:d@localhost:2/db2' },
+      { canonicalPostgresUrl: 'postgresql://c:d@localhost:2/db2' },
     );
 
     expect(out.HOME).toBe('/vault');

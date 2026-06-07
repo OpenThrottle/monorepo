@@ -14,14 +14,14 @@ Use this doc for README, website, or pitch copy.
 
 ## What runs locally (OSS)
 
-| Component                      | Role                                                    | OSS / local                                  |
-| ------------------------------ | ------------------------------------------------------- | -------------------------------------------- |
-| **Postgres** (with pgvector)   | OpenThrottle app DB + Cortex (plans, tasks, embeddings) | OSS, runs locally (Docker or native)         |
-| **Redis**                      | Queues, caching                                         | OSS, runs locally                            |
-| **OpenThrottle server**        | API, GraphQL, queues, notifications                     | OSS (NestJS), runs locally                   |
-| **OpenThrottle developer app** | Dashboard for plans, queues, PRs                        | OSS (React Router), runs locally             |
-| **Cortex / openthrottle-mcp**  | Plans knowledge base, semantic search, MCP tools        | OSS, runs locally; connects to same Postgres |
-| **Ollama**                     | Local LLM and embedding models                          | OSS, runs locally; optional for embeddings   |
+| Component                      | Role                                                          | OSS / local                                  |
+| ------------------------------ | ------------------------------------------------------------- | -------------------------------------------- |
+| **Postgres** (with pgvector)   | OpenThrottle app DB + OpenThrottle (plans, tasks, embeddings) | OSS, runs locally (Docker or native)         |
+| **Redis**                      | Queues, caching                                               | OSS, runs locally                            |
+| **OpenThrottle server**        | API, GraphQL, queues, notifications                           | OSS (NestJS), runs locally                   |
+| **OpenThrottle developer app** | Dashboard for plans, queues, PRs                              | OSS (React Router), runs locally             |
+| **Cortex / openthrottle-mcp**  | Plans knowledge base, semantic search, MCP tools              | OSS, runs locally; connects to same Postgres |
+| **Ollama**                     | Local LLM and embedding models                                | OSS, runs locally; optional for embeddings   |
 
 All of the above are Open Source and can run on your machine or your own infrastructure. No vendor lock-in for core workflows.
 

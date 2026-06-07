@@ -30,7 +30,10 @@ import {
   parseAgentCompleteTaskSignals,
   agentOutputHasPromiseComplete,
 } from '../utils/output.js';
-import { formatPlanAndTasksForPrompt } from '../utils/index.js';
+import {
+  formatPlanAndTasksForPrompt,
+  pickRalphTaskForIteration,
+} from '../utils/index.js';
 
 /**
  * @description Agent cwd and foreign-repo scoping for orchestrator prompts (parity with `ralph.ts`).
@@ -246,17 +249,7 @@ export const createWorkflowRalphOrchestrator = (
             return onFinished('workflow_tasks_exhausted');
           }
 
-          // Grab any tasks that may already be marked in progress
-          const firstInProgress = remaining.find(
-            (t) => t.status === 'IN_PROGRESS',
-          );
-
-          const nextAvailableTask = remaining.find((t) =>
-            ['QUEUED', 'PENDING'].includes(t.status),
-          );
-
-          // Otherwise we'll pick up the next available task
-          const taskForIteration = firstInProgress ?? nextAvailableTask;
+          const taskForIteration = pickRalphTaskForIteration(remaining);
 
           if (taskForIteration) {
             firstPendingForIteration = taskForIteration.id;

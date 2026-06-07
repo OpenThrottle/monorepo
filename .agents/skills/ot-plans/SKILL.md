@@ -5,8 +5,7 @@ description: >-
   to openthrottle-server). USE WHEN creating or updating plans/tasks, plans in
   OT only, failing loudly when MCP is unavailable (no Markdown plan
   fallbacks), Plan-Id and Task-Id in commits, link_commit or
-  workflow-link-merge after merge, or the user mentions OpenThrottle, OT,
-  Cortex, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
+  workflow-link-merge after merge, or the user mentions OpenThrottle, OT, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands, semantic search
   over plans, or git–OT traceability. Covers when to use OT vs docs-mcp vs
   databases/README and plan/task lifecycle.
 ---
@@ -39,7 +38,7 @@ GraphQL-only boundary to **openthrottle-server**. Typical tools:
 
 - **Read / search:** `semantic_search`, `list_plans_by_status`, `list_sources`, `get_document`
 - **Plans:** `get_plan`, `create_plan`
-- **Tasks:** `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `get_task`, `create_task`, `create_tasks`, `update_task`
+- **Tasks:** `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `get_task`, `create_task`, `create_tasks`, `update_task`, `reorder_plan_tasks` — list tools return tasks in `sortOrder ASC`, `createdAt ASC`. `create_task` / `create_tasks` accept optional `sortOrder` (auto-append `MAX + 1000` when omitted; batch appends preserve array order at end of plan). `update_task` accepts optional `sortOrder` for gap-based mid-list inserts. **`reorder_plan_tasks`** bulk-renumbers `1000, 2000, …` in the given task-id order — **prefer this over delete-and-recreate** when fixing Ralph execution order.
 - **Activity:** `get_activity_by_date`, `get_last_activity`
 - **Output stream (e.g. Ralph):** `append_plan_output`, `get_plan_output`
 - **After merge:** `link_commit`
@@ -69,6 +68,14 @@ When you commit work tied to a plan or task:
 - **Alternative:** `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`
 
 `get_activity_by_date` and `get_last_activity` are aligned with **landed** commits when you link this way.
+
+## Task sortOrder (execution order)
+
+`sortOrder` is the canonical execution and list sequence for tasks within a plan (`UNIQUE (plan_id, sort_order)`). Ralph, prompt injection, and MCP list tools all order by `sortOrder ASC`, `createdAt ASC`.
+
+- **Create:** omit `sortOrder` to append after the plan max; `create_tasks` assigns `MAX+1000`, `MAX+2000`, … in array order.
+- **Reorder:** use `reorder_plan_tasks` instead of deleting and recreating tasks when fixing order.
+- **Schema detail:** `databases/README.md` § Task sort_order.
 
 ## Cross-links
 

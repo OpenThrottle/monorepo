@@ -1,7 +1,8 @@
 ---
+alwaysApply: true
 description:
 globs:
-alwaysApply: true
+name: coding-readonly-properties
 ---
 
 Use `readonly` properties for object types by default. This will prevent accidental mutation at runtime.

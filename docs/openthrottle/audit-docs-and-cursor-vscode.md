@@ -65,7 +65,7 @@ For a rename/relocation: the folder `docs/openthrottle/` would become e.g. `docs
 | `docs/openthrottle/license-key-docker-machine-identification.md` | Cortex Plan-Id.                                                  |
 | `docs/openthrottle/notifications-websockets-plan.md`             | "Plan lives in Cortex", Cortex plan ID, Cortex task IDs.         |
 | `docs/openthrottle/vscode-openthrottle-naming.md`                | Cortex plan ID; rebrand: "Cortex" → "OpenThrottle" in extension. |
-| `docs/openthrottle/packages-naming.md`                           | Cortex plan; packages/cortex/_, @cortex/_; rebrand steps.        |
+| `docs/openthrottle/packages-naming.md`                           | Cortex plan; packages/cortex/_, @openthrottle/_; rebrand steps.  |
 | `docs/openthrottle/naming-matrix.md`                             | Cortex plan ID.                                                  |
 | `docs/openthrottle/naming-criteria.md`                           | Rebrand from Cortex; avoid "Cortex" for OpenThrottle.            |
 | `docs/openthrottle/marketing-website-naming.md`                  | Cortex plan ID.                                                  |

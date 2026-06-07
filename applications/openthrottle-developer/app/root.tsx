@@ -111,7 +111,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   const canonical: string = request.url;
   const cookieHeader = request.headers.get('cookie') ?? '';
   const env = getEnvironment();
-  const isRestrictedAccess = process.env.APP_ENABLE_AUTHENTICATION === 'true';
 
   let serverHealth: ServerHealthObject = {
     api: 'ok',
@@ -195,12 +194,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     }
   }
 
-  if (
-    FEATURE_BETA_PREVIEW &&
-    isRestrictedAccess &&
-    userLoadOk &&
-    user === null
-  ) {
+  if (FEATURE_BETA_PREVIEW && userLoadOk && user === null) {
     const pathname = new URL(request.url).pathname;
     const isProtected = PROTECTED_PATH_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),
@@ -481,8 +475,8 @@ export default function App(): React.ReactElement {
                     <span className="mt-2 block text-xs text-muted-foreground">
                       <span className="block">
                         1) Keep typing to narrow the list, or 2) paste one
-                        Cortex UUID for plan/queue/generator/search rows, or 3)
-                        paste two UUIDs with{' '}
+                        OpenThrottle UUID for plan/queue/generator/search rows,
+                        or 3) paste two UUIDs with{' '}
                         <code className="text-[10px]">/</code> or a space to
                         jump to a queue job or a plan task.
                       </span>
@@ -521,8 +515,6 @@ export default function App(): React.ReactElement {
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
-
-  console.log(`🟢 intent: ${intent} - action`);
 
   if (intent === 'commander-search') {
     const jump = formData.get('jump');

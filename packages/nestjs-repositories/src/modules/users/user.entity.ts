@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex users table. Matches databases/cortex/migrations (026, 031).
+ * @description TypeORM entity for Cortex users table. Matches databases/migrations (026, 031).
  */
 
 import {

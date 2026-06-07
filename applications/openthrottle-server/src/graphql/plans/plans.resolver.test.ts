@@ -1415,6 +1415,34 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('hasCustomRunConfig', () => {
+    test('returns false for default run_config', () => {
+      expect(resolver.hasCustomRunConfig(mockPlan)).toBe(false);
+    });
+
+    test('returns false for legacy version-only shell from DB', () => {
+      const planShellOnly = {
+        ...mockPlan,
+        runConfig: { version: 1 },
+      } as Plan;
+      expect(resolver.hasCustomRunConfig(planShellOnly)).toBe(false);
+    });
+
+    test('returns true when run_config differs from defaults', () => {
+      const planWithCustomConfig = {
+        ...mockPlan,
+        runConfig: {
+          ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
+          ralph: {
+            ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).ralph,
+            iterations: 42,
+          },
+        },
+      } as Plan;
+      expect(resolver.hasCustomRunConfig(planWithCustomConfig)).toBe(true);
+    });
+  });
+
   describe('jobRunHooksJson', () => {
     test('serializes plan job_run_hooks column', () => {
       const planWithHooks = {

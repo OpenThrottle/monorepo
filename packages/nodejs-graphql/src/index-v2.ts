@@ -38,7 +38,7 @@ export interface ExecuteGraphqlOptionsV2 {
 
 /**
  * @description Execute a GraphQL operation against openthrottle-server. Use
- * with typed documents from @cortex/react-router-codegen for type-safe results.
+ * with typed documents from @openthrottle/react-router-codegen for type-safe results.
  *
  * @param document - Typed document (query or mutation) from codegen; result type is inferred.
  * @param variables - Optional variables object.

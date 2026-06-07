@@ -293,7 +293,7 @@ export const SettingsLogsPanel = (
             A tail or subscription to workflow-ralph stderr, queue worker logs,
             or plan-output streams is not wired to this UI yet. Until an
             authenticated operator API exposes those streams, use Plan detail
-            for Cortex output and capture CLI stderr per{' '}
+            for OpenThrottle output and capture CLI stderr per{' '}
             <a
               className="text-primary underline-offset-4 hover:underline"
               href={DEFAULT_SETTINGS_LOGS_DOC}

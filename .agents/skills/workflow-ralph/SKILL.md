@@ -41,7 +41,7 @@ Common tuning env vars (see `--help` for the full list): `WORKFLOW_RALPH_BACKEND
 
 When Ralph injects **Plan-Id**, tasks, and **current task** into the prompt, treat that as source of truth for the iteration: **do not** call `get_plan` or `get_tasks_by_plan_id` to re-fetch the same payload unless you have a reason (for example debugging a mismatch).
 
-**Layer-1 prompt profile:** default **`--prompt`** is command-style **`/agents/ralph`** (see `.cursor/skills/agents-ralph/SKILL.md`). Override with **`--prompt-file`** or **`--prompt-stdin`** when needed.
+**Layer-1 prompt profile:** default **`--prompt`** is command-style **`/agents/ralph`** (see `.cursor/skills/agents-ralph/SKILL.md`). Override with **`--prompt-file`** (repeatable; persona + skills) or **`--prompt-stdin`** when needed.
 
 ## Task completion signals
 

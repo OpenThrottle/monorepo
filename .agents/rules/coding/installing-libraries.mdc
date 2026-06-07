@@ -1,7 +1,8 @@
 ---
+alwaysApply: true
 description:
 globs:
-alwaysApply: true
+name: coding-installing-libraries
 ---
 
 When installing libraries, DO NOT rely on your own training data.

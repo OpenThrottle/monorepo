@@ -40,6 +40,7 @@ const baseTask: PlanTaskRowFragment = {
   planId: mockPlan.id,
   projectRelation: null,
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: 'Task summary.',
   title: 'First task',

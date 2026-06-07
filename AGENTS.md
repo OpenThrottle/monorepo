@@ -46,6 +46,7 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 
 - **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`.agents/skills/openthrottle-generators/SKILL.md`](./.agents/skills/openthrottle-generators/SKILL.md)
 - **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`.agents/skills/openthrottle-stack/SKILL.md`](./.agents/skills/openthrottle-stack/SKILL.md)
+- **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/migrations/`: [`.agents/skills/ot-postgres/SKILL.md`](./.agents/skills/ot-postgres/SKILL.md)
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge `link_commit`: [`.agents/skills/ot-plans/SKILL.md`](./.agents/skills/ot-plans/SKILL.md)
 - **workflow-ralph** — CLI, queue spawn vs orchestrator, commit cadence: [`.agents/skills/workflow-ralph/SKILL.md`](./.agents/skills/workflow-ralph/SKILL.md)
 

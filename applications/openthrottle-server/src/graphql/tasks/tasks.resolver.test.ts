@@ -1,14 +1,24 @@
-import { TasksService } from '@openthrottle/nestjs-repositories';
+import {
+  CROSS_PLAN_TASK_LIST_ORDER,
+  PLAN_TASK_LIST_ORDER,
+  TasksService,
+} from '@openthrottle/nestjs-repositories';
 import type { Task } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { QueryFailedError } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { TasksLoaders } from './tasks-loaders';
 import { TasksResolver } from './tasks.resolver';
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;
+
+  const transactionTaskRepo = {
+    update: vi.fn().mockResolvedValue(undefined),
+  };
 
   const repo = {
     count: vi.fn(),
@@ -19,11 +29,24 @@ describe('TasksResolver', () => {
     delete: vi.fn(),
     find: vi.fn(),
     findOne: vi.fn(),
+    manager: {
+      transaction: vi.fn(
+        async (
+          work: (manager: {
+            getRepository: () => typeof transactionTaskRepo;
+          }) => unknown,
+        ) =>
+          work({
+            getRepository: () => transactionTaskRepo,
+          }),
+      ),
+    },
     save: vi.fn((entity: Task) => Promise.resolve(entity)),
   };
 
   const mockTasksService = createMock<TasksService>({
     getRepository: vi.fn().mockReturnValue(repo),
+    resolveNextSortOrder: vi.fn().mockResolvedValue(1000),
     syncParentPlanStatus: vi.fn().mockResolvedValue(false),
   });
 
@@ -67,6 +90,7 @@ describe('TasksResolver', () => {
     projectId: null,
     projectRelation: null,
     requirements: [],
+    sortOrder: 1000,
     status: 'pending',
     summary: null,
     taskEmbeddings: [],
@@ -93,10 +117,15 @@ describe('TasksResolver', () => {
   beforeEach(() => {
     vi.mocked(mockTasksService.syncParentPlanStatus).mockReset();
     vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
+    vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
+    vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
     vi.mocked(repo.create).mockClear();
     vi.mocked(repo.save).mockClear();
     vi.mocked(repo.findOne).mockClear();
+    vi.mocked(repo.find).mockClear();
+    vi.mocked(transactionTaskRepo.update).mockClear();
+    vi.mocked(repo.manager.transaction).mockClear();
   });
 
   describe('task', () => {
@@ -141,6 +170,16 @@ describe('TasksResolver', () => {
       expect(result[0]?.title).toBe(mockTask.title);
     });
 
+    test('orders by planId then sortOrder then createdAt ascending', async () => {
+      vi.mocked(repo.find).mockResolvedValue([mockTask]);
+
+      await resolver.tasks();
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+      });
+    });
+
     test('returns empty array when no tasks', async () => {
       vi.mocked(repo.find).mockResolvedValue([]);
 
@@ -158,6 +197,33 @@ describe('TasksResolver', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]?.planId).toBe(mockTask.planId);
+    });
+
+    test('orders by sortOrder then createdAt ascending', async () => {
+      vi.mocked(repo.find).mockResolvedValue([mockTask]);
+
+      await resolver.tasksByPlanId({ planId: mockTask.planId });
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { ...PLAN_TASK_LIST_ORDER },
+        where: { planId: mockTask.planId },
+      });
+    });
+  });
+
+  describe('remainingTasksByPlanId', () => {
+    test('orders by sortOrder then createdAt ascending', async () => {
+      vi.mocked(repo.find).mockResolvedValue([mockTask]);
+
+      await resolver.remainingTasksByPlanId({ planId: mockTask.planId });
+
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { ...PLAN_TASK_LIST_ORDER },
+        where: {
+          planId: mockTask.planId,
+          status: expect.anything(),
+        },
+      });
     });
   });
 
@@ -177,7 +243,7 @@ describe('TasksResolver', () => {
       expect(result.tasks).toHaveLength(2);
       expect(result.totalCount).toBe(2);
       expect(repo.find).toHaveBeenCalledWith({
-        order: { createdAt: 'ASC' },
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
         where: { projectId },
       });
       expect(repo.count).not.toHaveBeenCalled();
@@ -197,7 +263,7 @@ describe('TasksResolver', () => {
       expect(result.tasks).toHaveLength(1);
       expect(result.totalCount).toBe(42);
       expect(repo.find).toHaveBeenCalledWith({
-        order: { createdAt: 'ASC' },
+        order: { ...CROSS_PLAN_TASK_LIST_ORDER },
         skip: 0,
         take: 20,
         where: { projectId },
@@ -390,6 +456,7 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'IN_PROGRESS',
         summary: undefined,
         title: undefined,
@@ -427,6 +494,7 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'IN_PROGRESS',
         summary: undefined,
         title: undefined,
@@ -458,6 +526,7 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'in_progress',
         summary: undefined,
         title: undefined,
@@ -487,12 +556,97 @@ describe('TasksResolver', () => {
         project: undefined,
         projectId: undefined,
         requirements: undefined,
+        sortOrder: undefined,
         status: 'COMPLETED',
         summary: undefined,
         title: undefined,
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createTask — sortOrder', () => {
+    const planId = mockTask.planId as string;
+
+    test('auto-assigns sortOrder via resolveNextSortOrder when omitted', async () => {
+      vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(3000);
+      vi.mocked(repo.save).mockResolvedValue({
+        ...mockTask,
+        sortOrder: 3000,
+      });
+
+      await resolver.createTask({
+        assignee: null,
+        category: null,
+        description: null,
+        planId,
+        project: null,
+        projectId: null,
+        requirements: null,
+        sortOrder: null,
+        status: 'PENDING',
+        summary: null,
+        title: 'Appended task',
+      });
+
+      expect(mockTasksService.resolveNextSortOrder).toHaveBeenCalledWith(
+        planId,
+      );
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ sortOrder: 3000 }),
+      );
+    });
+
+    test('uses explicit sortOrder when provided', async () => {
+      vi.mocked(repo.save).mockResolvedValue({
+        ...mockTask,
+        sortOrder: 1500,
+      });
+
+      await resolver.createTask({
+        assignee: null,
+        category: null,
+        description: null,
+        planId,
+        project: null,
+        projectId: null,
+        requirements: null,
+        sortOrder: 1500,
+        status: 'PENDING',
+        summary: null,
+        title: 'Inserted task',
+      });
+
+      expect(mockTasksService.resolveNextSortOrder).not.toHaveBeenCalled();
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ sortOrder: 1500 }),
+      );
+    });
+
+    test('throws ConflictException on sortOrder unique violation', async () => {
+      const uniqueError = new QueryFailedError(
+        'INSERT',
+        [],
+        Object.assign(new Error('duplicate key'), { code: '23505' }),
+      );
+      vi.mocked(repo.save).mockRejectedValue(uniqueError);
+
+      await expect(
+        resolver.createTask({
+          assignee: null,
+          category: null,
+          description: null,
+          planId,
+          project: null,
+          projectId: null,
+          requirements: null,
+          sortOrder: 1000,
+          status: 'PENDING',
+          summary: null,
+          title: 'Duplicate slot',
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
   });
 
@@ -515,6 +669,7 @@ describe('TasksResolver', () => {
         project: null,
         projectId: null,
         requirements: null,
+        sortOrder: null,
         status: 'IN_PROGRESS',
         summary: null,
         title: 'New task',
@@ -546,12 +701,79 @@ describe('TasksResolver', () => {
         project: null,
         projectId: null,
         requirements: null,
+        sortOrder: null,
         status: 'PENDING',
         summary: null,
         title: 'Queued task',
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reorderPlanTasks', () => {
+    const planId = mockTask.planId as string;
+    const taskA = { ...mockTask, id: 'task-a', sortOrder: 2000, title: 'A' };
+    const taskB = {
+      ...mockTask,
+      createdAt: new Date('2026-02-02T21:33:51.891Z'),
+      id: 'task-b',
+      sortOrder: 1000,
+      title: 'B',
+    };
+
+    test('returns empty array when taskIds is empty', async () => {
+      const result = await resolver.reorderPlanTasks({ planId, taskIds: [] });
+
+      expect(result).toEqual([]);
+      expect(repo.find).not.toHaveBeenCalled();
+    });
+
+    test('throws when taskIds contain duplicates', async () => {
+      await expect(
+        resolver.reorderPlanTasks({
+          planId,
+          taskIds: [taskA.id, taskA.id],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('throws when a taskId does not belong to the plan', async () => {
+      vi.mocked(repo.find).mockResolvedValue([taskA]);
+
+      await expect(
+        resolver.reorderPlanTasks({
+          planId,
+          taskIds: [taskA.id, taskB.id],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    test('renumbers sortOrder 1000, 2000 in taskIds order inside a transaction', async () => {
+      vi.mocked(repo.find).mockResolvedValue([taskA, taskB]);
+
+      const result = await resolver.reorderPlanTasks({
+        planId,
+        taskIds: [taskA.id, taskB.id],
+      });
+
+      expect(repo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskA.id, {
+        sortOrder: 1_000_000,
+      });
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskB.id, {
+        sortOrder: 1_000_001,
+      });
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskA.id, {
+        sortOrder: 1000,
+      });
+      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskB.id, {
+        sortOrder: 2000,
+      });
+      expect(result).toEqual([
+        { ...taskA, sortOrder: 1000 },
+        { ...taskB, sortOrder: 2000 },
+      ]);
     });
   });
 });
