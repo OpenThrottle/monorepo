@@ -20,7 +20,7 @@ CREATE TRIGGER update_user_workspace_settings_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Local checkout paths registered by the user; optional link to a Cortex project.
+-- Local checkout paths registered by the user; optional link to a OpenThrottle project.
 CREATE TABLE IF NOT EXISTS workspace_local_repositories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
