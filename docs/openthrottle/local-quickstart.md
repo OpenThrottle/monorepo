@@ -30,7 +30,7 @@ Copy defaults into local env files (gitignored):
 
 **Host processes + Docker DB:** In `applications/openthrottle-server/.env`, set `**POSTGRES_HOST=localhost`** and `**REDIS_HOST=localhost\*\*`when the API runs on your machine and only Postgres/Redis are in Compose. Root`.env.default`uses`host.docker.internal`for tools inside Docker; override on the server`.env` for native dev.
 
-**Auth (default):** Server `.env.default` has `**APP_ENABLE_AUTHENTICATION=true`**. MCP and workers need long-lived **service account\*\* tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
+**Auth (default):** MCP and workers need long-lived \*\*service account\*\* tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 
 **Embeddings:** Configure `**OPENAI_API_KEY`** or `**OLLAMA_BASE_URL**`on`**applications/openthrottle-server/.env\*\*`(not required in root`.env`for the MCP launcher).`[scripts/run-openthrottle-mcp.sh](../../scripts/run-openthrottle-mcp.sh)` starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-openthrottle-mcpsh).
 

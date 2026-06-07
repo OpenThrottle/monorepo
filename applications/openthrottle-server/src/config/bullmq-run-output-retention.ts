@@ -1,8 +1,8 @@
 import { getBullMqRunOutputBaseDirectory } from './bullmq-run-output';
 
-const MAX_AGE_MS_ENV = 'OT_BULLMQ_RUN_OUTPUT_MAX_AGE_MS';
-const MAX_TOTAL_BYTES_ENV = 'OT_BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES';
-const PRUNE_MIN_INTERVAL_MS_ENV = 'OT_BULLMQ_RUN_OUTPUT_PRUNE_MIN_INTERVAL_MS';
+const MAX_AGE_MS_ENV = 'BULLMQ_RUN_OUTPUT_MAX_AGE_MS';
+const MAX_TOTAL_BYTES_ENV = 'BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES';
+const PRUNE_MIN_INTERVAL_MS_ENV = 'BULLMQ_RUN_OUTPUT_PRUNE_MIN_INTERVAL_MS';
 
 const DEFAULT_PRUNE_MIN_INTERVAL_MS = 300_000;
 
@@ -36,7 +36,7 @@ export interface BullMqRunOutputRetentionConfig {
 }
 
 /**
- * @description When `OT_BULLMQ_RUN_OUTPUT_DIR` is set and at least one of max-age or max-total-bytes is set,
+ * @description When `BULLMQ_RUN_OUTPUT_DIR` is set and at least one of max-age or max-total-bytes is set,
  * post-job throttled pruning may run (see {@link BullMqRunOutputRetentionService}).
  */
 export const getBullMqRunOutputRetentionConfig = ():

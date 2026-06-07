@@ -14,7 +14,7 @@ import type {
   ChildJobResult,
   ChildJobStreamChunk,
 } from '../types/worktree';
-import type { WorkflowRalphConfig } from './cortex-ralph';
+import type { WorkflowRalphConfig } from './openthrottle-ralph';
 import {
   appendPlanOutput,
   ensureCortexReachable,
@@ -23,7 +23,7 @@ import {
   RALPH_FATAL_REQUIRED_POSTGRES,
   resolveWorkflowRalphConfig,
   updatePlanStatus,
-} from './cortex-ralph';
+} from './openthrottle-ralph';
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import { resolveRalphWorktreeName } from './ralph-worktree-cli';

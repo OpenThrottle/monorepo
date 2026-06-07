@@ -64,12 +64,14 @@ export const getRalphOutputMarkerFlags = (
 });
 
 /** @publicApi */
-export const isCortexPlanId = (plan: string): boolean =>
-  RALPH_UUID_REGEX.test(plan.trim());
+export const isCortexPlanId = (plan: string): boolean => {
+  return RALPH_UUID_REGEX.test(plan.trim());
+};
 
 /** @publicApi */
-export const isCortexTaskId = (task: string): boolean =>
-  RALPH_UUID_REGEX.test(task.trim());
+export const isCortexTaskId = (task: string): boolean => {
+  return RALPH_UUID_REGEX.test(task.trim());
+};
 
 /**
  * @description Parses agent result for <ralph:task-complete>uuid</ralph:task-complete>. Returns unique task IDs; Ralph marks them completed via Postgres.
@@ -86,8 +88,10 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
     regexExecCount += 1;
     ids.push(m[1]!.toLowerCase());
   }
+
   const unique = [...new Set(ids)];
   const flags = getRalphOutputMarkerFlags(result);
+
   ralphDebugLogger.debug('parseRalphCompleteTaskSignals', {
     ...flags,
     matchesRaw: ids.length,
@@ -95,6 +99,7 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
     resultLen: result.length,
     uniqueTaskIds: unique.length,
   });
+
   if (flags.hasCompleteTaskOpen && unique.length === 0) {
     ralphDebugLogger.verbose(
       'parseRalphCompleteTaskSignals: open tag present but no valid complete-task UUID parsed',
@@ -105,6 +110,7 @@ export const parseRalphCompleteTaskSignals = (result: string): string[] => {
       },
     );
   }
+
   return unique;
 };
 

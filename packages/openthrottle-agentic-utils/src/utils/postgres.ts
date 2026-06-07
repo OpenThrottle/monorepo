@@ -5,7 +5,7 @@ import pg from 'pg';
  * lookup uses the same Cortex DB as the server even when `cwd` is another repo
  * whose tooling overwrites `POSTGRES_URL`.
  */
-export const OPENTHROTTLE_POSTGRES_URL_ENV = `OPENTHROTTLE_CORTEX_POSTGRES_URL`;
+export const OPENTHROTTLE_POSTGRES_URL_ENV = `OPENTHROTTLE_POSTGRES_URL`;
 
 /**
  * Hint appended when Postgres connectivity check fails (detail is interpolated).

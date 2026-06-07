@@ -105,7 +105,7 @@ function normalizePlanStatusForPolicy(status: string): string {
 }
 
 /**
- * @description cortex-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
+ * @description openthrottle-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
  * Allows `PENDING`, `QUEUED`, and idempotent `IN_PROGRESS` → `IN_PROGRESS`.
  */
 function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
@@ -522,7 +522,7 @@ export class PlansResolver {
         nextStatus === 'IN_PROGRESS' &&
         !canApplyInProgressAsTargetStatus(entity.status)
       ) {
-        // Invalid transition: leave entity.status unchanged (cortex-ralph conditional UPDATE).
+        // Invalid transition: leave entity.status unchanged (openthrottle-ralph conditional UPDATE).
       } else if (normalizePlanStatusForPolicy(entity.status) !== nextStatus) {
         entity.status = nextStatus;
         touched = true;

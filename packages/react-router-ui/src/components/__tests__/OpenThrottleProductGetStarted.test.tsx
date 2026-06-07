@@ -14,6 +14,8 @@ describe('OpenThrottleProductGetStarted Component', () => {
   beforeEach(() => {
     props = {
       introduction: INTRODUCTIONS[0].text,
+      repo: 'openthrottle/monorepo',
+      stars: 100,
     };
 
     const Component = () => <OpenThrottleProductGetStarted {...props} />;

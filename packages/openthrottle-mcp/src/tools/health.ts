@@ -20,8 +20,7 @@ type HealthStructured = {
 
 export const healthToolParameters = z.object({});
 
-export const healthToolDescription =
-  'Health check via GraphQL: returns server health (api, database, redis, websocket). No arguments. No direct Postgres; uses getServerHealth query only.';
+export const healthToolDescription = `Health check via GraphQL: returns server health (api, database, redis, websocket). No arguments. No direct Postgres; uses getServerHealth query only.`;
 
 export async function healthToolHandler(
   _args: z.infer<typeof healthToolParameters>,

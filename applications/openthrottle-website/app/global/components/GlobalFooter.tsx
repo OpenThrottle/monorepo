@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SpeedometerIcon } from '@phosphor-icons/react/dist/ssr/Speedometer';
+import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 
 interface GlobalFooterProps {}
 
@@ -25,11 +25,8 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
     >
       <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-8 justify-center md:justify-start">
         <div className="col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <SpeedometerIcon className="w-5 h-5 text-accent" />
-            <span className="font-bold">OpenThrottle</span>
-          </div>
-          <p className="text-sm text-muted-foreground">
+          <OpenThrottleLogo className="text-lg" name="AI" />
+          <p className="text-sm text-muted-foreground mt-2">
             Context-driven AI tools and workflows for the Agentic Developer.
           </p>
         </div>

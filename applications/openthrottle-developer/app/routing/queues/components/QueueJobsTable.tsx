@@ -5,7 +5,10 @@ import {
   Button,
   DataTable,
 } from '@openthrottle/react-router-shadcn';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleClipboard,
+  OpenThrottleEmptyState,
+} from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import classnames from 'classnames';
 import { Link } from 'react-router';
@@ -68,6 +71,12 @@ export const QueueJobsTable = (
       <DataTable<QueueJobsTableJob, string | number | null | undefined>
         columns={columns}
         data={[...jobs]}
+        emptyState={
+          <OpenThrottleEmptyState
+            description="Try again later."
+            title="No jobs in this queue."
+          />
+        }
         getRowId={queueJobRowId}
       />
     </div>

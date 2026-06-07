@@ -56,20 +56,15 @@ export const getPlanToolParameters = z.object({ id: z.string().min(1) });
 export const listPlansByStatusToolParameters = ListPlansByStatusInputSchema();
 export const updatePlanToolParameters = UpdatePlanInputSchema();
 
-export const createPlanToolDescription =
-  'Create a plan in Cortex. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.';
+export const createPlanToolDescription = `Create a plan in Cortex. Required: title, author (e.g. GitHub username), category. Optional: description, status, assignee, project, projectId, summary.`;
 
-export const deletePlanToolDescription =
-  'Delete a plan by id. Returns whether a row was deleted.';
+export const deletePlanToolDescription = `Delete a plan by id. Returns whether a row was deleted.`;
 
-export const getPlanToolDescription =
-  'Fetch a plan by id (UUID). Returns the plan row or not found.';
+export const getPlanToolDescription = `Fetch a plan by id (UUID). Returns the plan row or not found.`;
 
-export const listPlansByStatusToolDescription =
-  'List plans in Cortex by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /cortex/pending or list by status.';
+export const listPlansByStatusToolDescription = `List plans in Cortex by status. Pass statuses (e.g. ["pending"], ["in_progress"], ["completed"]) and optional limit/offset, project, assignees, titleSubstring. Use for /cortex/pending or list by status.`;
 
-export const updatePlanToolDescription =
-  'Update a plan by id. Pass id and any of: title, description, status, author, assignee, category, project, projectId, summary.';
+export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status, author, assignee, category, project, projectId, summary.`;
 
 export async function listPlansByStatusToolHandler(
   args: z.infer<typeof listPlansByStatusToolParameters>,

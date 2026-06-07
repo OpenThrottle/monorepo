@@ -52,10 +52,9 @@ export const SettingsFeatureFlags = (
             See the monorepo doc below.
           </p>
           <p>
-            <span className="font-medium">APP_ENABLE_ANALYTICS</span> and{' '}
-            <span className="font-medium">APP_ENABLE_AUTHENTICATION</span> are
-            not included in <code className="text-xs">window.env</code>; check
-            your environment or deployment config if you need them.
+            <span className="font-medium">APP_ENABLE_ANALYTICS</span> and not
+            included in <code className="text-xs">window.env</code>; check your
+            environment or deployment config if you need them.
           </p>
         </div>
       </div>

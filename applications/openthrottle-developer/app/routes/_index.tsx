@@ -1,14 +1,10 @@
 import * as React from 'react';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { ChatComposer, ChatThread } from '@openthrottle/react-router-chat';
 import {
+  GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  FEATURES,
-  OpenThrottleProductFeatures,
-} from '@openthrottle/react-router-ui';
-import { HomeHeroV1 } from '~/routing/home/components/HomeHeroV1';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
 
@@ -49,9 +45,24 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12">
-      <HomeHeroV1 className="my-20 items-center scale-75" />
-      <OpenThrottleProductFeatures features={FEATURES} />
+    <GlobalScreen className="flex flex-col flex-1 p-4 md:p-8 lg:p-12">
+      {/* <HomeHeroV1 className="my-20 items-center scale-75" /> */}
+      {/* <OpenThrottleProductFeatures features={FEATURES} /> */}
+
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <h1 className="text-2xl text-center">
+          What would you like to build today?
+        </h1>
+      </div>
+
+      <div className="max-w-3xl w-full mx-auto">
+        <ChatThread emptyStateLabel="" messages={[]} />
+        <ChatComposer
+          className="border-t-0"
+          disabled={false}
+          onSubmit={() => {}}
+        />
+      </div>
     </GlobalScreen>
   );
 }

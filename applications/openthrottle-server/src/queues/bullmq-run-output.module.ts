@@ -6,7 +6,7 @@ import { BullMqRunOutputRetentionService } from './bullmq-run-output-retention.s
 import { BULLMQ_RUN_OUTPUT_WRITER } from './bullmq-run-output-writer.token';
 
 /**
- * @description Registers a singleton {@link KeyedJsonlWriter} when `OT_BULLMQ_RUN_OUTPUT_DIR` is set;
+ * @description Registers a singleton {@link KeyedJsonlWriter} when `BULLMQ_RUN_OUTPUT_DIR` is set;
  * otherwise the injection token resolves to `undefined` (use `@Optional()` in processors).
  * {@link BullMqRunOutputRetentionService} is always registered for optional post-job pruning when retention env is set.
  */

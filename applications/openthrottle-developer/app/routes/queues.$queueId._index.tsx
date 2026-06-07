@@ -10,7 +10,6 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import {
-  OpenThrottleEmptyState,
   OpenThrottlePaginationSimple,
   OpenThrottleStatCard,
 } from '@openthrottle/react-router-ui';
@@ -45,6 +44,7 @@ const parseQueueJobsPagination = (
           Math.max(QUEUE_JOBS_LIMIT_MIN, Math.floor(limitParsed)),
         )
       : DEFAULT_PAGINATION_LIMIT;
+
   const offset = (page - 1) * limit;
 
   return { limit, offset, page };
@@ -157,24 +157,17 @@ export default function Component(
         </p>
       </div>
 
-      {/* <QueueJobEmpty /> */}
-
-      {jobs.length === 0 ? (
-        <OpenThrottleEmptyState
-          description="Try again later."
-          title="No jobs in this queue."
-        />
-      ) : (
-        <>
-          <QueueJobsTable className="mb-4" jobs={jobs} queueName={queue.name} />
-          <OpenThrottlePaginationSimple
-            basePath={queueBasePath}
-            limit={limit}
-            page={page}
-            total={queue.jobs?.jobs?.length ?? 0}
-          />
-        </>
-      )}
+      <QueueJobsTable
+        className="bg-card mb-4"
+        jobs={jobs}
+        queueName={queue.name}
+      />
+      <OpenThrottlePaginationSimple
+        basePath={queueBasePath}
+        limit={limit}
+        page={page}
+        total={queue.jobs?.jobs?.length ?? 0}
+      />
     </GlobalScreen>
   );
 }

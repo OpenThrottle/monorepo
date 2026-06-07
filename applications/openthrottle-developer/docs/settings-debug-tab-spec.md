@@ -2,7 +2,7 @@
 
 **Status:** PRD-ready for implementation and regression review.
 
-**Route:** `/settings/debug`  
+**Route:** `/settings/debug`
 **Components:** `app/routes/settings.debug.tsx` (loader), `app/routing/settings/components/SettingsDebugPanel.tsx` (UI), `app/routing/settings/utils/sanitize-client-env.ts` (sanitization).
 
 ## 1. Problem and audience
@@ -27,9 +27,8 @@ Developers and support need a **safe, in-app** place to confirm that the client 
 
 - List at least: `FEATURE_BETA_PREVIEW` with boolean display.
 - Document `REACT_ROUTER_DEV_TOOLS`: set in `.env`, requires Vite dev server restart; link or inline pointer to the monorepo devtools doc.
-- Clarify which flags are **not** on `window.env` (e.g. `APP_ENABLE_ANALYTICS`, `APP_ENABLE_AUTHENTICATION`) so users know where else to look.
-
-**Non-goals:** Live toggles that mutate process env without restart (unless explicitly added later).
+  s
+  **Non-goals:** Live toggles that mutate process env without restart (unless explicitly added later).
 
 ## 4. Sanitized env snapshot
 

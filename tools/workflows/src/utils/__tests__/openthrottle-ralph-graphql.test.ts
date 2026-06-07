@@ -1,5 +1,5 @@
 /**
- * @description Tests for GraphQL transport helpers in cortex-ralph-graphql.
+ * @description Tests for GraphQL transport helpers in openthrottle-ralph-graphql.
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,12 +30,12 @@ const planRow = {
   updatedAt: '2026-01-02T00:00:00.000Z',
 };
 
-describe('cortex-ralph-graphql', () => {
+describe('openthrottle-ralph-graphql', () => {
   beforeEach(() => {
     executeWorkflowGraphqlV2Mock.mockReset();
   });
 
-  it('ensureCortexReachableGraphql throws when database is unreachable', async () => {
+  it('ensureGraphqlIsReachable throws when database is unreachable', async () => {
     executeWorkflowGraphqlV2Mock.mockResolvedValue({
       serverHealth: {
         api: 'ok',
@@ -45,10 +45,10 @@ describe('cortex-ralph-graphql', () => {
       },
     });
 
-    const { ensureCortexReachableGraphql } =
-      await import('../cortex-ralph-graphql.js');
+    const { ensureGraphqlIsReachable: ensureGraphqlIsReachable } =
+      await import('../openthrottle-ralph-graphql.js');
 
-    await expect(ensureCortexReachableGraphql()).rejects.toThrow(
+    await expect(ensureGraphqlIsReachable()).rejects.toThrow(
       /database is unreachable/,
     );
   });
@@ -63,7 +63,7 @@ describe('cortex-ralph-graphql', () => {
     });
 
     const { updatePlanStatusGraphql } =
-      await import('../cortex-ralph-graphql.js');
+      await import('../openthrottle-ralph-graphql.js');
 
     const row = await updatePlanStatusGraphql('plan-1', 'IN_PROGRESS');
 

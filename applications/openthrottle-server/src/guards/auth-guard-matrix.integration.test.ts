@@ -56,8 +56,6 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
   };
 
   beforeEach(async () => {
-    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'true');
-
     const serviceAccountRepository = { findOne: vi.fn() };
     credentialRepository = {
       findOne: vi.fn(),
@@ -146,26 +144,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
     });
   };
 
-  describe('when APP_ENABLE_AUTHENTICATION is false', () => {
-    beforeEach(() => {
-      vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'false');
-    });
-
-    it('allows unauthenticated requests without enforcing @Permissions()', async () => {
-      stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_WRITE] });
-      const req = {};
-
-      await expect(runProtectedRoute(req)).resolves.toBeUndefined();
-
-      expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
-      expect(rolesService.getPermissionsForUser).not.toHaveBeenCalled();
-      expect(
-        rolesService.getPermissionsForServiceAccount,
-      ).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when APP_ENABLE_AUTHENTICATION is true', () => {
+  describe('requires authentication', () => {
     it('rejects missing credentials before permissions guard runs', async () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_READ] });
       vi.mocked(jwtAuthGuard.canActivate).mockResolvedValue(false);

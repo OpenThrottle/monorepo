@@ -16,12 +16,14 @@ import { OpenThrottleLogo } from './OpenThrottleLogo';
 
 export interface OpenThrottleProductGetStartedProps {
   introduction?: string;
+  repo: string;
+  stars: number;
 }
 
 export const OpenThrottleProductGetStarted = (
   props: OpenThrottleProductGetStartedProps,
 ): React.ReactElement => {
-  const { introduction: introductionProp } = props;
+  const { introduction: introductionProp, repo, stars } = props;
 
   // Hooks
   const [introduction] = React.useState(
@@ -29,8 +31,7 @@ export const OpenThrottleProductGetStarted = (
   );
 
   // Setup
-  // const command = `git clone https://github.com/openthrottle/monorepo.git`;
-  const command = `coming soon...`;
+  const command = `git clone https://github.com/${repo}.git`;
 
   // Handlers
 
@@ -72,7 +73,9 @@ export const OpenThrottleProductGetStarted = (
 
             <TooltipProvider>
               <Tooltip delayDuration={1_000}>
-                <TooltipContent>1 star on GitHub</TooltipContent>
+                <TooltipContent>
+                  <b>{stars}</b> stars on GitHub for {repo}
+                </TooltipContent>
                 <TooltipTrigger>
                   <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
                     <Button

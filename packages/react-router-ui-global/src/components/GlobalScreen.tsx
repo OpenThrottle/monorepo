@@ -32,7 +32,7 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
   return (
     <>
       {beta ? (
-        <div className="px-4 md:px-8 lg:px-12 py-4 bg-yellow-500 text-background">
+        <div className="px-4 md:px-8 lg:px-12 py-4 bg-accent/60 text-foreground">
           <p className="text-sm ">
             <span className="font-semibold">Beta:</span> This route is a beta
             feature and may not function as expected. Please report any issues
