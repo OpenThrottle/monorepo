@@ -1,16 +1,23 @@
 // import * as React from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { ChatTurnResult } from '../../types';
+import type {
+  ChatTurnResult,
+  LoadAgentConversationMessagesResult,
+} from '../../types';
 import {
+  LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
   SEND_AGENT_MESSAGE_INTENT,
   useChatTurnFetcher,
 } from '../useChatTurnFetcher';
 
-const mockSubmit = vi.fn();
+const mockTurnSubmit = vi.fn();
+const mockHistorySubmit = vi.fn();
 
-let fetcherState: 'idle' | 'loading' | 'submitting' = 'idle';
-let fetcherData: ChatTurnResult | undefined;
+let turnFetcherState: 'idle' | 'loading' | 'submitting' = 'idle';
+let turnFetcherData: ChatTurnResult | undefined;
+let historyFetcherState: 'idle' | 'loading' | 'submitting' = 'idle';
+let historyFetcherData: LoadAgentConversationMessagesResult | undefined;
 
 const sampleTurn = (
   overrides: Partial<ChatTurnResult> = {},
@@ -27,19 +34,39 @@ const sampleTurn = (
   ...overrides,
 });
 
-vi.mock('react-router', () => ({
-  useFetcher: () => ({
-    data: fetcherData,
-    state: fetcherState,
-    submit: mockSubmit,
-  }),
-}));
+vi.mock('react-router', () => {
+  let fetcherIndex = 0;
+
+  return {
+    useFetcher: () => {
+      fetcherIndex += 1;
+      const isHistoryFetcher = fetcherIndex % 2 === 0;
+
+      if (isHistoryFetcher) {
+        return {
+          data: historyFetcherData,
+          state: historyFetcherState,
+          submit: mockHistorySubmit,
+        };
+      }
+
+      return {
+        data: turnFetcherData,
+        state: turnFetcherState,
+        submit: mockTurnSubmit,
+      };
+    },
+  };
+});
 
 describe('useChatTurnFetcher', () => {
   beforeEach(() => {
-    mockSubmit.mockReset();
-    fetcherState = 'idle';
-    fetcherData = undefined;
+    mockTurnSubmit.mockReset();
+    mockHistorySubmit.mockReset();
+    turnFetcherState = 'idle';
+    turnFetcherData = undefined;
+    historyFetcherState = 'idle';
+    historyFetcherData = undefined;
     sessionStorage.clear();
   });
 
@@ -52,18 +79,18 @@ describe('useChatTurnFetcher', () => {
 
     expect(result.current.messages).toHaveLength(1);
     expect(result.current.messages[0]?.role).toBe('user');
-    expect(mockSubmit).toHaveBeenCalledWith(
+    expect(mockTurnSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         intent: SEND_AGENT_MESSAGE_INTENT,
         message: 'What plans are pending?',
       }),
       { action: '/', method: 'post' },
     );
-    expect(mockSubmit.mock.calls[0]?.[0]?.conversationId).toBeTruthy();
+    expect(mockTurnSubmit.mock.calls[0]?.[0]?.conversationId).toBeTruthy();
   });
 
   test('should disable composer while fetcher is loading', () => {
-    fetcherState = 'loading';
+    turnFetcherState = 'loading';
     const { result } = renderHook(() => useChatTurnFetcher({}));
 
     expect(result.current.composerDisabled).toBe(true);
@@ -77,13 +104,13 @@ describe('useChatTurnFetcher', () => {
       result.current.sendUserMessage('Hello');
     });
 
-    fetcherState = 'submitting';
+    turnFetcherState = 'submitting';
     rerender();
 
-    fetcherData = sampleTurn({
+    turnFetcherData = sampleTurn({
       assistantText: 'Hi there',
     });
-    fetcherState = 'idle';
+    turnFetcherState = 'idle';
     rerender();
 
     await waitFor(() => {
@@ -92,7 +119,7 @@ describe('useChatTurnFetcher', () => {
 
     expect(result.current.messages[1]?.role).toBe('assistant');
     expect(result.current.messages[1]?.body).toBe('Hi there');
-    expect(result.current.lastTurn).toEqual(fetcherData);
+    expect(result.current.lastTurn).toEqual(turnFetcherData);
     expect(result.current.errorMessage).toBeNull();
   });
 
@@ -103,14 +130,14 @@ describe('useChatTurnFetcher', () => {
       result.current.sendUserMessage('Hello');
     });
 
-    fetcherState = 'submitting';
+    turnFetcherState = 'submitting';
     rerender();
 
-    fetcherData = sampleTurn({
+    turnFetcherData = sampleTurn({
       assistantText: null,
       errorMessage: 'Agent unavailable',
     });
-    fetcherState = 'idle';
+    turnFetcherState = 'idle';
     rerender();
 
     await waitFor(() => {
@@ -128,16 +155,16 @@ describe('useChatTurnFetcher', () => {
       result.current.sendUserMessage('Hello');
     });
 
-    fetcherState = 'submitting';
+    turnFetcherState = 'submitting';
     rerender();
 
-    fetcherData = sampleTurn({
+    turnFetcherData = sampleTurn({
       assistantText: 'Reply',
       mcpTool: 'health',
       routingConfidence: 0.4,
       routingReason: 'exact_health_ping',
     });
-    fetcherState = 'idle';
+    turnFetcherState = 'idle';
     rerender();
 
     await waitFor(() => {
@@ -162,9 +189,111 @@ describe('useChatTurnFetcher', () => {
     });
 
     expect(result.current.conversationId).toBe('stored-conv-id');
-    expect(mockSubmit).toHaveBeenCalledWith(
+    expect(mockTurnSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ conversationId: 'stored-conv-id' }),
       expect.any(Object),
     );
+  });
+
+  test('should POST persist=true and avoid client-minted conversation ids when persist is enabled', () => {
+    const { result } = renderHook(() => useChatTurnFetcher({ persist: true }));
+
+    act(() => {
+      result.current.sendUserMessage('Persist this turn');
+    });
+
+    expect(result.current.conversationId).toBeNull();
+    expect(mockTurnSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Persist this turn',
+        persist: 'true',
+      }),
+      expect.any(Object),
+    );
+    expect(mockTurnSubmit.mock.calls[0]?.[0]?.conversationId).toBeUndefined();
+  });
+
+  test('should store server conversationId after a persisted turn', async () => {
+    const { result, rerender } = renderHook(() =>
+      useChatTurnFetcher({ persist: true }),
+    );
+
+    act(() => {
+      result.current.sendUserMessage('Hello');
+    });
+
+    turnFetcherState = 'submitting';
+    rerender();
+
+    turnFetcherData = sampleTurn({
+      assistantText: 'Saved',
+      conversationId: 'server-conv-id',
+    });
+    turnFetcherState = 'idle';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.conversationId).toBe('server-conv-id');
+    });
+
+    expect(sessionStorage.getItem('openthrottle.chat.conversationId')).toBe(
+      'server-conv-id',
+    );
+  });
+
+  test('should load stored conversation history on mount when persist is enabled', () => {
+    sessionStorage.setItem(
+      'openthrottle.chat.conversationId',
+      'stored-server-id',
+    );
+
+    renderHook(() => useChatTurnFetcher({ persist: true }));
+
+    expect(mockHistorySubmit).toHaveBeenCalledWith(
+      {
+        conversationId: 'stored-server-id',
+        intent: LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
+      },
+      { action: '/', method: 'post' },
+    );
+  });
+
+  test('should hydrate messages from history fetcher response', async () => {
+    sessionStorage.setItem(
+      'openthrottle.chat.conversationId',
+      'stored-server-id',
+    );
+
+    const { result, rerender } = renderHook(() =>
+      useChatTurnFetcher({ persist: true }),
+    );
+
+    historyFetcherData = {
+      conversationId: 'stored-server-id',
+      errorMessage: null,
+      messages: [
+        {
+          body: 'Earlier question',
+          createdAt: '2026-06-07T00:00:00.000Z',
+          id: 'msg-user',
+          role: 'user',
+        },
+        {
+          body: 'Earlier answer',
+          createdAt: '2026-06-07T00:00:01.000Z',
+          id: 'msg-assistant',
+          role: 'assistant',
+        },
+      ],
+    };
+    historyFetcherState = 'idle';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.messages).toHaveLength(2);
+    });
+
+    expect(result.current.messages[0]?.body).toBe('Earlier question');
+    expect(result.current.messages[1]?.body).toBe('Earlier answer');
   });
 });

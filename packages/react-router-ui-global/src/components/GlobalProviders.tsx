@@ -10,16 +10,23 @@ import {
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
 
-export interface GlobalProvidersProps extends React.PropsWithChildren {}
+export interface GlobalProvidersProps extends React.PropsWithChildren {
+  /**
+   * When true, chat turns POST `persist=true` and hydrate from server-backed
+   * conversation history on mount.
+   */
+  readonly chatPersist?: boolean;
+}
 
 export const GlobalProviders = (
   props: GlobalProvidersProps,
 ): React.ReactElement => {
-  const { children } = props;
+  const { chatPersist = false, children } = props;
 
   // Hooks
   const { composerDisabled, messages, sendUserMessage } = useChatTurnFetcher({
     action: '/',
+    persist: chatPersist,
   });
 
   // Setup
