@@ -32,6 +32,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 | `workflow-ralph`, BullMQ mental model       | **workflow-ralph** — `.agents/skills/workflow-ralph/SKILL.md`                   |
 | Nx graph, `nx show project`, affected       | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
 | Run `nx` targets                            | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
+| **SQL migrations / table comments**         | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                         |
 | **This file**                               | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package       |
 
 ---
@@ -61,7 +62,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 ## 2. Data, embeddings, imports (`databases/`)
 
-**Canonical path:** `databases/README.md` (schema, migrations under `databases/migrations/`, embedding dimensions, Ollama vs OpenAI).
+**SQL migrations and table comments:** **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md` (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/README.md`**.
 
 **Typical commands (repo root)**
 
