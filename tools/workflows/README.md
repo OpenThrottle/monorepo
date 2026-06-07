@@ -74,6 +74,8 @@ See `docs/oclif-research.md` for past oclif evaluation and migration notes.
 
 - **associate-completed-plans-with-nx-projects** — For each OT plan with status COMPLETED, infers an NX project from title, description, summary, and task titles; ensures a `projects` row and sets `plan.project_id`. Run with `pnpm exec tsx tools/workflows/scripts/associate-completed-plans-with-nx-projects.ts` (optional `--dry-run`). Requires OpenThrottle (OT) and NX project graph.
 
+**Removed:** `update-plan-status.ts`, `update-task-status.ts`, `update-plan-summary.ts`, and `update-task-summary.ts` under `tools/workflows/scripts/`. They duplicated **openthrottle-mcp** `update_plan` / `update_task` (GraphQL-backed). Use the MCP tools or GraphQL mutations for manual plan/task edits instead.
+
 ## Workflow Ralph
 
 Ralph runs the agentic process (prompt + plan) for a fixed number of iterations. **Single workflow:** OpenThrottle only — plan and tasks live in the OpenThrottle DB; progress is the plan, tasks, and `plan_output_stream`. There is no file-based or DB-optional mode; all entry points (ralph, link-merge, scripts under `scripts/`) require OpenThrottle and fail fast at startup if config is missing or the DB is unreachable. Implementation: one flow in `src/bin/ralph.ts` (see the numbered flow in `main()`); shared OpenThrottle helpers and fatal-error prefix live in `src/utils/cortex-ralph.ts`.
