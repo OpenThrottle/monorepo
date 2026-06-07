@@ -1,31 +1,22 @@
 import * as React from 'react';
-// import classnames from 'classnames';
+import classnames from 'classnames';
 
 export interface PersonasToolbarProps {
-  // className?: string;
+  className?: string;
 }
 
 export const PersonasToolbar = (
-  _props: PersonasToolbarProps,
+  props: PersonasToolbarProps,
 ): React.ReactElement => {
-  // const {  } = props;
-
-  // Hooks
-  const [_bool, _setBool] = React.useState(false);
-
-  // Setup
-
-  // Handlers
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
+  const { className } = props;
 
   return (
-    <div className="p-4" data-testid="PersonasToolbar">
-      <h2>PersonasToolbar</h2>
+    <div
+      className={classnames('text-sm text-muted-foreground', className)}
+      data-testid="PersonasToolbar"
+    >
+      Personas are read from <code>.agents/personas/</code> on disk. Edit files
+      in git — no in-app writes in phase 1.
     </div>
   );
 };

@@ -513,6 +513,7 @@ type CustomPromptObject {
 enum CustomPromptType {
   AGENTS
   COMMANDS
+  PERSONAS
   PROMPTS
   RULES
   SKILLS

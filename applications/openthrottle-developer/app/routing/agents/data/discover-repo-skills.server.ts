@@ -1,10 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
-import type {
-  RepoSkillEntry,
-  SkillRegistryLayout,
+import {
+  dedupeRepoSkillEntriesBySlug,
+  type RepoSkillEntry,
+  type SkillRegistryLayout,
 } from '~/routing/agents/data/repo-skills-registry';
 
 const SKILL_FILE_NAME = 'SKILL.md';
@@ -16,12 +17,16 @@ const LAYOUT_SCAN_TARGETS: ReadonlyArray<{
   readonly skillsDir: string;
 }> = [
   { layout: 'agents', skillsDir: '.agents/skills' },
+  { layout: 'claude', skillsDir: '.claude/skills' },
   { layout: 'cursor', skillsDir: '.cursor/skills' },
+  { layout: 'opencode', skillsDir: '.opencode/skills' },
 ] as const;
 
 const LAYOUT_SORT_ORDER: Readonly<Record<SkillRegistryLayout, number>> = {
   agents: 0,
-  cursor: 1,
+  claude: 1,
+  cursor: 2,
+  opencode: 3,
 };
 
 const sortRepoSkillEntries = (
@@ -74,6 +79,24 @@ const readSkillEntry = (
   };
 };
 
+const isSkillFolder = (
+  absoluteSkillsDir: string,
+  folderName: string,
+  dirent: ReturnType<typeof readdirSync>[number],
+): boolean => {
+  if (dirent.isDirectory()) {
+    return true;
+  }
+  if (!dirent.isSymbolicLink()) {
+    return false;
+  }
+  try {
+    return statSync(join(absoluteSkillsDir, folderName)).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
 const scanSkillsLayout = (
   monorepoRoot: string,
   layout: SkillRegistryLayout,
@@ -95,7 +118,7 @@ const scanSkillsLayout = (
   const entries: RepoSkillEntry[] = [];
 
   for (const dirent of dirents) {
-    if (!dirent.isDirectory()) {
+    if (!isSkillFolder(absoluteSkillsDir, dirent.name, dirent)) {
       continue;
     }
 
@@ -134,5 +157,5 @@ export const discoverRepoSkills = (
     entries.push(...scanSkillsLayout(monorepoRoot, layout, skillsDir));
   }
 
-  return sortRepoSkillEntries(entries);
+  return sortRepoSkillEntries([...dedupeRepoSkillEntriesBySlug(entries)]);
 };

@@ -1,11 +1,1 @@
----
-alwaysApply: true
----
-
-# Prompt
-
-You are a highly skilled Software Engineer who favors clean abstractions and bullet point lists of action items. Use the rules below as we work through the Ralph agentic process of tackling executing through the PRD tasks.
-
-- **NEVER** add "Made with Cursor" or any Cursor attribution to commits, PRs, or any output. No exceptions.
-- **Plans in OT only; fail loudly:** Plans and tasks MUST be created and managed in OpenThrottle via the OT MCP (openthrottle-mcp; see [openthrottle.mdc](./openthrottle.mdc)). Do not create plans in Markdown files or [docs/](../../../docs/). If the OT MCP is unavailable or plan/task creation fails, report the error clearly to the user; do not silently fall back to writing a plan to a .md file or skipping.
-- **Commit after completing a task:** When you complete a task (or mark it complete), add and commit the relevant changes with a conventional commit message. Include `Plan-Id: <uuid>` and `Task-Id: <uuid>` in the commit body or footer for traceability. Run `/github/commit` (or stage and commit) so changes are committed per task; do not let uncommitted work pile up.
+../../../.agents/rules/commands/agents.mdc

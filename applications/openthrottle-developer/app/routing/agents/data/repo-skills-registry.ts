@@ -7,7 +7,14 @@
  * `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
-export type SkillRegistryLayout = 'agents' | 'cursor';
+export type SkillRegistryLayout = 'agents' | 'claude' | 'cursor' | 'opencode';
+
+const LAYOUT_PREFERENCE: Readonly<Record<SkillRegistryLayout, number>> = {
+  agents: 0,
+  claude: 1,
+  cursor: 2,
+  opencode: 3,
+};
 
 /**
  * @description OpenThrottle-specific agent skills that must appear in discovery
@@ -26,6 +33,29 @@ export interface RepoSkillEntry {
   readonly slug: string;
   readonly summary: string;
 }
+
+/**
+ * @description Collapses duplicate slugs across editor layouts, preferring `.agents/skills`.
+ */
+export const dedupeRepoSkillEntriesBySlug = (
+  entries: ReadonlyArray<RepoSkillEntry>,
+): readonly RepoSkillEntry[] => {
+  const bySlug = new Map<string, RepoSkillEntry>();
+
+  for (const entry of entries) {
+    const existing = bySlug.get(entry.slug);
+    if (!existing) {
+      bySlug.set(entry.slug, entry);
+      continue;
+    }
+
+    if (LAYOUT_PREFERENCE[entry.layout] < LAYOUT_PREFERENCE[existing.layout]) {
+      bySlug.set(entry.slug, entry);
+    }
+  }
+
+  return [...bySlug.values()];
+};
 
 /**
  * @description Returns layout counts for display next to the discovered skills list.

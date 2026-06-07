@@ -687,6 +687,7 @@ Type of custom prompt document
 enum CustomPromptType {
   AGENTS
   COMMANDS
+  PERSONAS
   PROMPTS
   RULES
   SKILLS

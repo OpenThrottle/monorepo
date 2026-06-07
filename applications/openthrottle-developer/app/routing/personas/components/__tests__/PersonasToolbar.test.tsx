@@ -11,8 +11,7 @@ describe('PersonasToolbar Component', () => {
     render(<RoutesStub />);
 
     expect(screen.getByTestId('PersonasToolbar')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: 'PersonasToolbar' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/read from/i)).toBeInTheDocument();
+    expect(screen.getByText(/no in-app writes/i)).toBeInTheDocument();
   });
 });

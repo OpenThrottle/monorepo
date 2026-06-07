@@ -21,6 +21,7 @@ import { User } from '../users/user.entity';
 export const CUSTOM_PROMPT_TYPES = [
   'agents',
   'commands',
+  'personas',
   'prompts',
   'rules',
   'skills',

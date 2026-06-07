@@ -1,14 +1,15 @@
 {
   "name": "@openthrottle/openthrottle-skills",
-  "description": "TODO: Add a description",
+  "description": "Shared parsers, Zod schemas, and CI validation for .agents/ skill, rule, and persona frontmatter.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {
@@ -33,7 +34,6 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",

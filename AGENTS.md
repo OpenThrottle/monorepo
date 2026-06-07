@@ -27,6 +27,19 @@
 
 For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `.agents/`, `skills/`, duplication strategy, where to edit for common tasks), see [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md). **This file** covers cross-editor handbook topics (Nx, OT, workflow CLI); **that doc** covers physical layout and canonical ownership.
 
+### Contributor workflow (skills & rules)
+
+| Action                       | Path                                                  | Notes                                                                                              |
+| ---------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Write** skills             | [`.agents/skills/<slug>/SKILL.md`](./.agents/skills/) | Sole SSOT (D1). Never edit `.cursor/skills/`, `.claude/skills/`, or `skills/` — they are symlinks. |
+| **Write** rules              | [`.agents/rules/**/*.mdc`](./.agents/rules/)          | Sole SSOT (D3). Keep `.mdc` extension. Never edit `.cursor/rules/` copies — symlinks only.         |
+| **Write** personas / prompts | `.agents/personas/`, `.agents/prompts/`               | Disk-only in MVP; DB ingest deferred to plan 1.5 (D2).                                             |
+| **Load** in Cursor           | `.cursor/rules/`, `.cursor/skills/`                   | Symlink views; stable activation paths for the IDE.                                                |
+| **Validate locally**         | `pnpm nx run monorepo:check-agent-assets-ssot`        | Fails on non-symlink copies in editor trees. Also in `pnpm run check:local:agent-assets`.          |
+| **DB index (read-only)**     | `custom_prompts` via GraphQL                          | Git is write authority; ingest from disk → DB is plan 1.5 — do not edit prompts in the DB.         |
+
+**Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets.
+
 ## Cursor Agent Skills (OpenThrottle)
 
 Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above.
@@ -45,10 +58,10 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 
 ## Code style and preferences
 
-- **Location:** [.cursor/rules/](.cursor/rules/) — code-writing preferences and style guide. See [.cursor/rules/README.md](.cursor/rules/README.md). Use `coding/` for TypeScript/JS and structure; use `commands/` for OpenThrottle (OT), GitHub, and agent behavior.
-- **Agent behavior (plans in OT only; fail loudly):** See [.cursor/rules/README.md](.cursor/rules/README.md) § Agent behavior. That section is the single place for “plans in OpenThrottle only; fail loudly when unavailable”; Cursor and other tooling should follow it.
+- **Location (SSOT):** [`.agents/rules/`](./.agents/rules/) — sole write location for code-writing preferences and style guide. See [`.agents/rules/README.md`](./.agents/rules/README.md). Use `coding/` for TypeScript/JS and structure; use `commands/` for OpenThrottle (OT), GitHub, and agent behavior. **Cursor loads** the same bodies via [`.cursor/rules/`](./.cursor/rules/) symlinks — edit `.agents/rules/` only.
+- **Agent behavior (plans in OT only; fail loudly):** See [`.agents/rules/README.md`](./.agents/rules/README.md) § Agent behavior. That section is the single place for “plans in OpenThrottle only; fail loudly when unavailable”; Cursor and other tooling should follow it.
 
-- **Package READMEs:** For `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Templates live under `tools/generators/src/generators/package/files/`; conventions are summarized in [CONTRIBUTING.md](./CONTRIBUTING.md) and [.cursor/rules/personal-generators.mdc](.cursor/rules/personal-generators.mdc).
+- **Package READMEs:** For `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Templates live under `tools/generators/src/generators/package/files/`; conventions are summarized in [CONTRIBUTING.md](./CONTRIBUTING.md) and [`.agents/rules/personal-generators.mdc`](./.agents/rules/personal-generators.mdc).
 - **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md). CI gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md).
 
 ## OpenThrottle (OT) — plans knowledge base
@@ -56,8 +69,8 @@ Repo-local skills live under [`.agents/skills/`](./.agents/skills/). Each skill�
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/openthrottle-mcp** (GraphQL only; see `.cursor/mcp.json`). Use the **openthrottle-mcp** MCP server for all OT tools.
 - **Local verification:** Minimal server + developer-app flow: [docs/openthrottle/run-openthrottle-server-developer.md](docs/openthrottle/run-openthrottle-server-developer.md). MCP env, smoke checks, secondary workspace: [packages/openthrottle-mcp/docs/verification-environment.md](packages/openthrottle-mcp/docs/verification-environment.md).
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
-- **Rules:** [.cursor/rules/commands/openthrottle.mdc](.cursor/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
-- **OT skills:** `.cursor/skills/ot-*` — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
+- **Rules:** [`.agents/rules/commands/openthrottle.mdc`](./.agents/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
+- **OT skills:** `.agents/skills/ot-*` (Cursor slash via `.cursor/skills/ot-*` symlinks) — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **openthrottle-mcp** MCP server; answer only from retrieved chunks.
 - **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
 

@@ -188,9 +188,39 @@ If you need to update technology tags for an existing project:
 2. Run `pnpm nx:validate-tags` to verify
 3. Ensure the tags accurately reflect the project's technology stack
 
+## Agent assets (skills & rules)
+
+OpenThrottle uses **`.agents/` as the single source of truth** for skill and rule bodies. Editor folders (`.cursor/`, `.claude/`, repo-root `skills/`) are **symlink views** only — edit `.agents/` in your PR.
+
+| Asset              | Write (SSOT)                                        | Load (symlink view)                             |
+| ------------------ | --------------------------------------------------- | ----------------------------------------------- |
+| Skills             | [`.agents/skills/<slug>/SKILL.md`](.agents/skills/) | `.cursor/skills/`, `.claude/skills/`, `skills/` |
+| Rules              | [`.agents/rules/**/*.mdc`](.agents/rules/)          | `.cursor/rules/`                                |
+| Personas / prompts | `.agents/personas/`, `.agents/prompts/`             | Ralph `--prompt-file`                           |
+
+**Workflow:**
+
+1. Add or change content under `.agents/skills/` or `.agents/rules/` only.
+2. Run `pnpm nx run monorepo:check-agent-assets-ssot` before pushing (also: `pnpm run check:local:agent-assets`).
+3. Open a git PR — **do not** edit agent assets in the `custom_prompts` DB; disk is write authority and DB ingest is plan 1.5.
+
+**Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, local `.cursor/mcp.json` (copy from `mcp.json.example`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) for the full tree.
+
+**Windows clones:** Enable symlink support — `git config core.symlinks true` — or clone inside WSL. Without symlinks, editor trees may appear as plain files and CI will fail.
+
+**Recreate symlinks** after adding a skill slug (from repo root):
+
+```bash
+ln -s ../../.agents/skills/<slug> .cursor/skills/<slug>
+ln -s ../../.agents/skills/<slug> .claude/skills/<slug>
+ln -s ../.agents/skills/<slug> skills/<slug>
+```
+
+For rules, symlink each new `.mdc` from `.agents/rules/` into the matching `.cursor/rules/` path. Details: [agent-assets-canonical-layout.md](docs/monorepo/agent-assets-canonical-layout.md).
+
 ## General Guidelines
 
-- **Code style and preferences:** Follow the coding conventions defined in [`.cursor/rules/`](.cursor/rules/). See [.cursor/rules/README.md](.cursor/rules/README.md) for the full style guide: `coding/` holds TypeScript/JS and structure rules; `commands/` holds rules for OpenThrottle (OT), GitHub, and agents. This is the single place to document and evolve how we write code.
+- **Code style and preferences:** Follow the coding conventions defined in [`.agents/rules/`](.agents/rules/). See [.agents/rules/README.md](.agents/rules/README.md) for the full style guide: `coding/` holds TypeScript/JS and structure rules; `commands/` holds rules for OpenThrottle (OT), GitHub, and agents. Cursor loads the same bodies via `.cursor/rules/` symlinks — edit `.agents/rules/` only.
 - Use conventional commits for commit messages
 - Ensure all tests pass before submitting changes
 - Update documentation when adding new features
