@@ -31,6 +31,9 @@ export const stripYamlFrontmatter = (content: string): string => {
   return content.slice(end + 5);
 };
 
+/** Separator between concatenated `--prompt-file` bodies (order preserved). */
+export const RALPH_PROMPT_FILE_SEPARATOR = '\n\n';
+
 /**
  * @description Reads UTF-8 prompt text from `path` resolved against `cwd`.
  */
@@ -40,8 +43,39 @@ export const readRalphPromptFileUtf8 = (
 ): string => {
   const absolute = resolve(cwd, userPath.trim());
   const raw = readFileSync(absolute, 'utf8');
-  return stripYamlFrontmatter(raw);
+  return stripYamlFrontmatter(raw).trimStart();
 };
+
+/**
+ * @description Reads multiple prompt files in order; strips YAML frontmatter from each.
+ */
+export const readRalphPromptFilesUtf8 = (
+  cwd: string,
+  userPaths: readonly string[],
+): string => {
+  if (userPaths.length === 0) {
+    throw new Error('--prompt-file requires at least one non-empty path');
+  }
+
+  const bodies = userPaths.map((userPath) => {
+    const trimmed = userPath.trim();
+    if (trimmed === '') {
+      throw new Error('--prompt-file requires a non-empty path');
+    }
+    return readRalphPromptFileUtf8(cwd, trimmed).trim();
+  });
+
+  return bodies.filter((body) => body !== '').join(RALPH_PROMPT_FILE_SEPARATOR);
+};
+
+/**
+ * @description Log label for one or more `--prompt-file` paths (absolute, comma-separated when multiple).
+ */
+export const formatRalphPromptFileProfileLabel = (
+  cwd: string,
+  userPaths: readonly string[],
+): string =>
+  userPaths.map((userPath) => resolve(cwd, userPath.trim())).join(', ');
 
 /**
  * @description Reads the entire stdin stream as UTF-8 (fd 0). Use only when stdin is not a TTY.

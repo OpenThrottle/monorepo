@@ -35,13 +35,13 @@
       "source": "github/copilot-plugins",
       "sourceType": "github",
       "skillPath": "plugins/advanced-security/skills/secret-scanning/SKILL.md",
-      "computedHash": "58eea7977fc2410c8ab5b162c12e484d6678530a844efcc22776cb7865b0d45f"
+      "computedHash": "05ab3e9afd37ada6902db7c3cc9667771aab9efa454e262ada16bd1b27eb8993"
     },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
+      "computedHash": "8f8bcc9024aa068245fac646d654a18c80280e4b06112ccd3e691a8c96cd66bd"
     }
   }
 }

@@ -6,6 +6,7 @@ fragment TaskByPlanResponse on TaskObject {
   id
   planId
   requirementsJson
+  sortOrder
   status
   summary
   title

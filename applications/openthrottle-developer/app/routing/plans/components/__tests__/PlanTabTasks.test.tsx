@@ -17,6 +17,7 @@ const mockTask: PlanTaskRowFragment = {
   planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
   projectRelation: null,
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: 'Task summary.',
   title: 'First task',
@@ -46,7 +47,53 @@ describe('PlanTabTasks Component', () => {
     const { getByText } = renderTabTasks({ tasks: [mockTask] });
 
     expect(getByText('First task')).toBeInTheDocument();
+    expect(getByText('#')).toBeInTheDocument();
     expect(getByText('Status')).toBeInTheDocument();
     expect(getByText('Title / Context')).toBeInTheDocument();
+  });
+
+  test('shows step index derived from sorted list position', () => {
+    const { getByLabelText } = renderTabTasks({
+      tasks: [
+        {
+          ...mockTask,
+          id: 'task-second',
+          sortOrder: 2000,
+          title: 'Second task',
+        },
+        {
+          ...mockTask,
+          id: 'task-first',
+          sortOrder: 1000,
+          title: 'First by order',
+        },
+      ],
+    });
+
+    expect(getByLabelText('Step 1')).toHaveTextContent('#1');
+    expect(getByLabelText('Step 2')).toHaveTextContent('#2');
+  });
+
+  test('orders rows by sortOrder not input array order', () => {
+    const { getAllByRole } = renderTabTasks({
+      tasks: [
+        {
+          ...mockTask,
+          id: 'task-second',
+          sortOrder: 2000,
+          title: 'Second task',
+        },
+        {
+          ...mockTask,
+          id: 'task-first',
+          sortOrder: 1000,
+          title: 'First by order',
+        },
+      ],
+    });
+
+    const titleLinks = getAllByRole('link', { name: /scroll to task:/i });
+    expect(titleLinks[0]).toHaveTextContent('First by order');
+    expect(titleLinks[1]).toHaveTextContent('Second task');
   });
 });

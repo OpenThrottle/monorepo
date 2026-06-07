@@ -157,13 +157,13 @@ application dependency on `@tools/workflows` is exactly what Phase 2 removes.
 
 ## Transport boundary: Postgres vs GraphQL (today)
 
-| Concern                | Surface #1 (CLI)                                            | Surface #2 (spawn)                                                           | Surface #3 (orchestrator)                                                |
-| ---------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Preflight / health     | `ensureDatabaseReachableOrExit` → `pg` connect + `SELECT 1` | Parent: `ensureCortexReachable` (`pg`); child: same as #1                    | `GetServerHealth` GraphQL query (the **single** documented health check) |
-| Plan/task fetch        | `getPlanById` / `getTasksByPlanId` (`pg`)                   | child = #1; parent `getTasksByPlanId` (`pg`) to mark plan complete           | `GetPlanDocument` / `GetTasksByPlanIdDocument` (GraphQL)                 |
-| Status updates         | `updatePlanStatus` / `updateTaskStatus` (`pg`)              | via child (#1)                                                               | `UpdatePlanDocument` / `UpdateTaskDocument` (GraphQL)                    |
-| Plan output stream     | agent via OT MCP (optional)                                 | `appendPlanOutput` (`pg`) for streamed chunks                                | streamed to BullMQ run output; OT writes via GraphQL                     |
-| Postgres config source | CLI process `POSTGRES_*` / URL (`getPostgresConfig`)        | worker passes `canonicalCortexPostgresUrl` (`getPostgresUrl`) into child env | n/a (no direct Postgres)                                                 |
+| Concern                | Surface #1 (CLI)                                            | Surface #2 (spawn)                                                     | Surface #3 (orchestrator)                                                |
+| ---------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Preflight / health     | `ensureDatabaseReachableOrExit` → `pg` connect + `SELECT 1` | Parent: `ensureCortexReachable` (`pg`); child: same as #1              | `GetServerHealth` GraphQL query (the **single** documented health check) |
+| Plan/task fetch        | `getPlanById` / `getTasksByPlanId` (`pg`)                   | child = #1; parent `getTasksByPlanId` (`pg`) to mark plan complete     | `GetPlanDocument` / `GetTasksByPlanIdDocument` (GraphQL)                 |
+| Status updates         | `updatePlanStatus` / `updateTaskStatus` (`pg`)              | via child (#1)                                                         | `UpdatePlanDocument` / `UpdateTaskDocument` (GraphQL)                    |
+| Plan output stream     | agent via OT MCP (optional)                                 | `appendPlanOutput` (`pg`) for streamed chunks                          | streamed to BullMQ run output; OT writes via GraphQL                     |
+| Postgres config source | CLI process `POSTGRES_*` / URL (`getPostgresConfig`)        | worker passes `canonicalPostgresUrl` (`getPostgresUrl`) into child env | n/a (no direct Postgres)                                                 |
 
 ### The single health-check exception
 

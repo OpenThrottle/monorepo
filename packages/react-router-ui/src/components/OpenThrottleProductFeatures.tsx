@@ -32,7 +32,6 @@ export const OpenThrottleProductFeatures = (
       className={classnames(
         'gap-4 md:gap-8 lg:gap-12',
         'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-        // 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
         className,
       )}
       data-testid="OpenThrottleProductFeatures"
@@ -55,7 +54,11 @@ export const OpenThrottleProductFeatures = (
 
             <div className="flex justify-end">
               <Link target="_blank" to={feature.link}>
-                <Button className="mt-4" size="xs" variant="link">
+                <Button
+                  className="mt-4 text-muted-foreground hover:text-foreground"
+                  size="xs"
+                  variant="link"
+                >
                   View Code <ArrowRightIcon className="size-3" />
                 </Button>
               </Link>

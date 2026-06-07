@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex tasks table. Matches databases/cortex/migrations (003, 012, 015, 023).
+ * @description TypeORM entity for Cortex tasks table. Matches databases/migrations (003, 012, 015, 023, 049).
  */
 
 import {
@@ -29,6 +29,7 @@ export type TaskData = Pick<
   | 'project'
   | 'projectId'
   | 'requirements'
+  | 'sortOrder'
   | 'status'
   | 'summary'
   | 'title'
@@ -57,6 +58,9 @@ export class Task {
 
   @Column({ default: () => "'[]'::jsonb", name: 'requirements', type: 'jsonb' })
   requirements!: unknown[];
+
+  @Column({ name: 'sort_order', type: 'integer' })
+  sortOrder!: number;
 
   @Column({ name: 'assignee', nullable: true, type: 'text' })
   assignee!: string | null;

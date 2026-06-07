@@ -3,6 +3,7 @@
  */
 
 import {
+  PLAN_TASK_LIST_ORDER,
   Plan,
   PlanEmbedding,
   Task,
@@ -638,6 +639,7 @@ function _mapTaskRow(r: {
   project: string | null;
   project_id: string | null;
   requirements: unknown;
+  sort_order: number;
   status: string;
   summary: string | null;
   title: string;
@@ -654,6 +656,7 @@ function _mapTaskRow(r: {
     project: r.project,
     projectId: r.project_id,
     requirements: Array.isArray(requirements) ? requirements : [],
+    sortOrder: r.sort_order,
     status: r.status,
     summary: r.summary,
     title: r.title,
@@ -711,6 +714,7 @@ function mapTaskEntityToRow(task: Task): TaskRow {
     project: task.project,
     projectId: task.projectId,
     requirements: Array.isArray(task.requirements) ? task.requirements : [],
+    sortOrder: task.sortOrder,
     status: task.status,
     summary: task.summary,
     title: task.title,
@@ -859,7 +863,7 @@ export async function getTaskById(id: string): Promise<TaskRow | null> {
 }
 
 /**
- * @description Fetches all tasks for a plan, ordered by created_at.
+ * @description Fetches all tasks for a plan, ordered by sortOrder then createdAt.
  */
 export async function getTasksByPlanId(
   planId: string,
@@ -867,7 +871,7 @@ export async function getTasksByPlanId(
   const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const tasks = await repo.find({
-    order: { createdAt: 'ASC' },
+    order: { ...PLAN_TASK_LIST_ORDER },
     where: { planId },
   });
   return tasks.map(mapTaskEntityToRow);
@@ -882,7 +886,7 @@ const REMAINING_TASK_STATUSES = [
 ] as const;
 
 /**
- * @description Fetches tasks for a plan whose status is BACKLOG, BLOCKED, IN_PROGRESS, or PENDING (i.e. remaining work). Ordered by created_at.
+ * @description Fetches tasks for a plan whose status is BACKLOG, BLOCKED, IN_PROGRESS, or PENDING (i.e. remaining work). Ordered by sortOrder then createdAt.
  */
 export async function getRemainingTasksByPlanId(
   planId: string,
@@ -890,7 +894,7 @@ export async function getRemainingTasksByPlanId(
   const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Task);
   const tasks = await repo.find({
-    order: { createdAt: 'ASC' },
+    order: { ...PLAN_TASK_LIST_ORDER },
     where: {
       planId,
       status: In([...REMAINING_TASK_STATUSES]),

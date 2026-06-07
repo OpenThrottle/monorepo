@@ -56,7 +56,12 @@ export { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity';
 export { taskEmbeddingsFactory } from './modules/task-embeddings/task-embeddings.factory';
 export { TaskEmbeddingsService } from './modules/task-embeddings/task-embeddings.service';
 export { tasksFactory } from './modules/tasks/tasks.factory';
-export { TasksService } from './modules/tasks/tasks.service';
+export {
+  CROSS_PLAN_TASK_LIST_ORDER,
+  PLAN_TASK_LIST_ORDER,
+  TASK_SORT_ORDER_GAP,
+  TasksService,
+} from './modules/tasks/tasks.service';
 export {
   WORKSPACE_EDITOR_IDS,
   isWorkspaceEditorId,
@@ -102,6 +107,7 @@ export {
   parsePlanRunConfigJson,
   parsePlanRunConfigSnapshot,
   parsePlanRunConfigStorage,
+  planHasCustomRunConfig,
   planRunConfigFromPlanStorage,
   parsePlanRunIterationTimeoutSeconds,
   planRunConfigFromWorkflowUiState,

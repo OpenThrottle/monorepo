@@ -50,6 +50,55 @@ describe('parseRalphArgs (prompt file / stdin)', () => {
     }
   });
 
+  it('loads prompt text from multiple --prompt-file flags in order', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wr-arg-'));
+    const origCwd = process.cwd();
+    try {
+      writeFileSync(
+        join(dir, 'persona.md'),
+        '---\nname: architect\ndescription: x\n---\n\n# Architect\n',
+        'utf8',
+      );
+      writeFileSync(join(dir, 'skill.md'), '# Skill body\n', 'utf8');
+      process.chdir(dir);
+      const expectedLabel = [
+        resolve(process.cwd(), 'persona.md'),
+        resolve(process.cwd(), 'skill.md'),
+      ].join(', ');
+      process.argv = [
+        'node',
+        'ralph.js',
+        '--plan',
+        PLAN_UUID,
+        '--prompt-file',
+        'persona.md',
+        '--prompt-file',
+        'skill.md',
+      ];
+      const { parseRalphArgs } = await import('../parsers');
+      const args = parseRalphArgs();
+      expect(args.prompt).toBe('# Architect\n\n# Skill body');
+      expect(args.promptProfileKind).toBe('file');
+      expect(args.promptProfileLabel).toBe(expectedLabel);
+    } finally {
+      process.chdir(origCwd);
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('throws when --prompt-file path is empty', async () => {
+    process.argv = [
+      'node',
+      'ralph.js',
+      '--plan',
+      PLAN_UUID,
+      '--prompt-file',
+      '   ',
+    ];
+    const { parseRalphArgs } = await import('../parsers');
+    expect(() => parseRalphArgs()).toThrow(/non-empty path/);
+  });
+
   it('throws when --prompt and --prompt-file are combined', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'wr-arg-'));
     const origCwd = process.cwd();

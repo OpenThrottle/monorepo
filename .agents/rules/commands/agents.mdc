@@ -1,5 +1,8 @@
 ---
 alwaysApply: true
+description:
+globs:
+name: commands-agents
 ---
 
 # Prompt

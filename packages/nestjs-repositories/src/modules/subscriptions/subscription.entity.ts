@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for Cortex subscriptions table. Matches databases/cortex/migrations/035.
+ * @description TypeORM entity for Cortex subscriptions table. Matches databases/migrations/035.
  * Maps Stripe customer/subscription to users; entitlement state owned by our API.
  */
 

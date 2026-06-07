@@ -15,6 +15,7 @@ const mockTask: PlanTaskCardProps['task'] = {
   planId: 'plan-1',
   projectRelation: null,
   requirementsJson: '[]',
+  sortOrder: 1000,
   status: 'PENDING',
   summary: 'Task summary.',
   title: 'First task',

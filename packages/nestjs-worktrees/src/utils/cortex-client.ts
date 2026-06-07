@@ -36,13 +36,14 @@ interface TaskRow {
   readonly id: string;
   readonly planId: string;
   readonly requirements: readonly unknown[];
+  readonly sortOrder: number;
   readonly status: string;
   readonly title: string;
   readonly updatedAt: string;
 }
 
 /**
- * @description Fetches all tasks for a plan, ordered by created_at.
+ * @description Fetches all tasks for a plan, ordered by sortOrder then createdAt.
  */
 export async function getTasksByPlanId(
   config: CortexRalphConfig,
@@ -58,11 +59,12 @@ export async function getTasksByPlanId(
       id: string;
       plan_id: string;
       requirements: unknown;
+      sort_order: number;
       status: string;
       title: string;
       updated_at: string;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY created_at`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
       [planId],
     );
     return res.rows.map((row) => {
@@ -74,6 +76,7 @@ export async function getTasksByPlanId(
         id: row.id,
         planId: row.plan_id,
         requirements: Array.isArray(requirements) ? requirements : [],
+        sortOrder: row.sort_order,
         status: row.status,
         title: row.title,
         updatedAt: row.updated_at,

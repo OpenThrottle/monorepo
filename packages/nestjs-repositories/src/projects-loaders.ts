@@ -7,7 +7,10 @@ import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 import { In } from 'typeorm';
 import { PlansService } from './modules/plans/plans.service';
-import { TasksService } from './modules/tasks/tasks.service';
+import {
+  CROSS_PLAN_TASK_LIST_ORDER,
+  TasksService,
+} from './modules/tasks/tasks.service';
 import type { Plan } from './modules/plans/plan.entity';
 import type { Task } from './modules/tasks/task.entity';
 
@@ -62,7 +65,7 @@ export class ProjectsLoaders {
 
   /**
    * @description Loads tasks for many projectIds in one query; returns arrays
-   * in key order, each ordered by createdAt ASC.
+   * in key order, each ordered by planId then sortOrder then createdAt ASC.
    */
   private async batchTasksByProjectId(
     projectIds: readonly string[],
@@ -71,7 +74,7 @@ export class ProjectsLoaders {
 
     const ids = [...new Set(projectIds)];
     const tasks = await this.tasksService.getRepository().find({
-      order: { createdAt: 'ASC' },
+      order: { ...CROSS_PLAN_TASK_LIST_ORDER },
       where: { projectId: In(ids) },
     });
 

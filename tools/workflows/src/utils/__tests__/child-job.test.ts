@@ -19,7 +19,7 @@ const buildNestedWorkflowRalphSpawnEnvMock = vi.fn(
   (
     _spawnCwd: string,
     env: NodeJS.ProcessEnv,
-    _options?: { canonicalCortexPostgresUrl?: string },
+    _options?: { canonicalPostgresUrl?: string },
   ) => env,
 );
 
@@ -27,7 +27,7 @@ vi.mock('../../config/build-nested-workflow-ralph-spawn-env', () => ({
   buildNestedWorkflowRalphSpawnEnv: (
     spawnCwd: string,
     env: NodeJS.ProcessEnv,
-    options?: { canonicalCortexPostgresUrl?: string },
+    options?: { canonicalPostgresUrl?: string },
   ) => buildNestedWorkflowRalphSpawnEnvMock(spawnCwd, env, options),
 }));
 
@@ -469,7 +469,7 @@ describe('runChildJob', () => {
     mockCortexState.tasks = [{ status: 'COMPLETED' }];
 
     const input: ChildJobInput = {
-      canonicalCortexPostgresUrl: canonicalUrl,
+      canonicalPostgresUrl: canonicalUrl,
       handoff: handoff(foreignCwd),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
     };
@@ -480,7 +480,7 @@ describe('runChildJob', () => {
         foreignCwd,
         process.env,
         {
-          canonicalCortexPostgresUrl: canonicalUrl,
+          canonicalPostgresUrl: canonicalUrl,
         },
       );
       expect(spawn).toHaveBeenCalledWith(

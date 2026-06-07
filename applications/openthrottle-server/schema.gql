@@ -236,6 +236,11 @@ type PlanObject {
   Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).
   """
   runConfigJson: String!
+
+  """
+  True when saved workflow run configuration differs from canonical defaults.
+  """
+  hasCustomRunConfig: Boolean!
 }
 
 type PlanStatusCountObject {
@@ -363,6 +368,11 @@ type TaskObject {
   JSON string of requirements array
   """
   requirementsJson: String!
+
+  """
+  Execution/list order within plan (gap-based: 1000, 2000, …). UNIQUE per planId.
+  """
+  sortOrder: Int!
   status: String!
   summary: String
   title: String!
@@ -2155,7 +2165,7 @@ type Query {
   task(id: ID!): TaskObject
 
   """
-  List all tasks, ordered by createdAt ascending
+  List all tasks, ordered by planId then sortOrder then createdAt ascending
   """
   tasks: [TaskObject!]!
 
@@ -2961,6 +2971,11 @@ type Mutation {
   updateTask(input: UpdateTaskInput!): TaskObject
 
   """
+  Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically.
+  """
+  reorderPlanTasks(input: ReorderPlanTasksInput!): [TaskObject!]!
+
+  """
   Delete a task by ID
   """
   deleteTask(input: DeleteTaskInput!): Boolean!
@@ -3660,6 +3675,11 @@ input CreateTaskInput {
   JSON string of requirements array
   """
   requirements: String
+
+  """
+  Optional. Execution order within plan. When omitted, server auto-assigns MAX+1000.
+  """
+  sortOrder: Int
   status: String
   summary: String
   title: String!
@@ -3686,9 +3706,26 @@ input UpdateTaskInput {
   JSON string of requirements array
   """
   requirements: String
+
+  """
+  Optional. Execution order within plan (gap-based insert, e.g. 1500 between 1000 and 2000).
+  """
+  sortOrder: Int
   status: String
   summary: String
   title: String
+}
+
+input ReorderPlanTasksInput {
+  """
+  Plan id whose tasks are being reordered
+  """
+  planId: ID!
+
+  """
+  Task ids in desired order; sortOrder is reassigned 1000, 2000, … atomically
+  """
+  taskIds: [ID!]!
 }
 
 input DeleteTaskInput {

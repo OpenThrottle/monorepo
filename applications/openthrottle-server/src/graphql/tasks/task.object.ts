@@ -53,6 +53,11 @@ export class TaskObject {
   })
   requirementsJson!: string;
 
+  @Field(() => Int, {
+    description: `Execution/list order within plan (gap-based: 1000, 2000, …). UNIQUE per planId.`,
+  })
+  sortOrder!: number;
+
   @Field(() => String)
   status!: string;
 

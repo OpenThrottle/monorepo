@@ -15,6 +15,7 @@ import {
   CreatePlanInput,
 } from './__generated__/graphql.js';
 import { UnauthenticatedError } from './errors.js';
+import { sortPlanTasksByListOrder } from './sort-plan-tasks-by-list-order.js';
 
 type GetToken = () => Promise<string | undefined>;
 
@@ -120,6 +121,6 @@ export class OpenThrottleApiClient {
       input: { planId },
     });
 
-    return response.tasksByPlanId;
+    return sortPlanTasksByListOrder(response.tasksByPlanId);
   }
 }

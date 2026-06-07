@@ -1,7 +1,8 @@
 ---
+alwaysApply: true
 description:
 globs:
-alwaysApply: true
+name: coding-enums
 ---
 
 Do not introduce new enums into the codebase. Retain existing enums.

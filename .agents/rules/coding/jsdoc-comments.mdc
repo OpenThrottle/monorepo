@@ -1,7 +1,8 @@
 ---
+alwaysApply: true
 description:
 globs:
-alwaysApply: true
+name: coding-jsdoc-comments
 ---
 
 Use JSDoc comments to annotate functions and types.

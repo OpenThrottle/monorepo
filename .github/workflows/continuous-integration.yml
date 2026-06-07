@@ -133,6 +133,12 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:validate-agent-assets-frontmatter
 
+      # FIXME: Bring this back when we have time to investigate
+      # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
+      #   run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-migration-table-comments
+      #   env:
+      #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
+
       # FIXME: 💰 Re-enable when we want to spend more
       # - name: "🧠 NX ${{ matrix.target }} affected"
       #   run: |

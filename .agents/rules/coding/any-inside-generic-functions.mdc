@@ -1,7 +1,8 @@
 ---
+alwaysApply: true
 description:
 globs:
-alwaysApply: true
+name: coding-any-inside-generic-functions
 ---
 
 When building generic functions, you may need to use any inside the function body.

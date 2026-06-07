@@ -13,7 +13,7 @@ Create standardized, semantic git commits using the Conventional Commits specifi
 
 ## Conventional Commit Format
 
-```bash
+```
 <type>[optional scope]: <description>
 
 [optional body]
@@ -25,17 +25,17 @@ Create standardized, semantic git commits using the Conventional Commits specifi
 
 | Type       | Purpose                        |
 | ---------- | ------------------------------ |
-| `build`    | Build system/dependencies      |
-| `chore`    | Maintenance/misc               |
-| `ci`       | CI/config changes              |
-| `docs`     | Documentation only             |
 | `feat`     | New feature                    |
 | `fix`      | Bug fix                        |
-| `perf`     | Performance improvement        |
-| `refactor` | Code refactor (no feature/fix) |
-| `revert`   | Revert commit                  |
+| `docs`     | Documentation only             |
 | `style`    | Formatting/style (no logic)    |
+| `refactor` | Code refactor (no feature/fix) |
+| `perf`     | Performance improvement        |
 | `test`     | Add/update tests               |
+| `build`    | Build system/dependencies      |
+| `ci`       | CI/config changes              |
+| `chore`    | Maintenance/misc               |
+| `revert`   | Revert commit                  |
 
 ## Breaking Changes
 
