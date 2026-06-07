@@ -256,7 +256,51 @@ The optional **summary** field on plans and tasks supports PRD summarization: ne
 - **What to include:**
   - **Plans:** Next actions for the plan, how to use what was built, or wsrap-up notes (e.g. "Run `pnpm run database:migrate` after pull; summary is optional on create/update.").
   - **Tasks:** Per-task wrap-up: follow-up actions, usage notes, or why the task is blocked (e.g. "Blocked on API key; document env in README when unblocked.").
-- **How:** Use MCP `update_plan` or `update_task` with a `summary` argument, or set `summary` when creating plans/tasks. Ingest reads optional `metadata.summary` (plans) and `summary` (tasks) from plan JSON so file-based and DB stay in sync.
+- **How:** Use MCP `update_plan` or `update_task` with a `summary` argument, or set `summary` when creating plans/tasks. Ingest reads optional `metadata.summary` (plans) and `summary` from plan JSON so file-based and DB stay in sync.
+
+### Agent conversations (web chat persistence)
+
+Migration: `databases/migrations/051_create_agent_conversations_tables.sql`. GraphQL and `agentsRunChatTurn` integration: [applications/openthrottle-server/docs/agent-conversations-design.md](../applications/openthrottle-server/docs/agent-conversations-design.md). Frontend v1: [packages/react-router-chat/README.md](../packages/react-router-chat/README.md) § Persisted conversations.
+
+**Purpose:** Postgres-backed threads for the developer web chat (`agentsRunChatTurn` + `@openthrottle/react-router-chat`). Stores ordered user/assistant messages, router LLM metadata, and MCP tool-turn audit for resumable sessions. **Strictly separate from `plan_output_stream`** — Ralph iteration logs stay in `plan_output_stream`; do not merge or duplicate Ralph output here.
+
+| Table                         | Purpose                                        |
+| ----------------------------- | ---------------------------------------------- |
+| `agent_conversations`         | One row per thread; scoped to a human JWT user |
+| `agent_conversation_messages` | Ordered messages within a thread               |
+
+#### Foreign keys and delete rules
+
+| Column                                        | FK target                 | ON DELETE                                                            |
+| --------------------------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| `agent_conversations.user_id`                 | `users(id)`               | **CASCADE** — deleting a user removes their conversations            |
+| `agent_conversations.plan_id`                 | `plans(id)`               | **SET NULL** — optional plan link cleared when plan is removed       |
+| `agent_conversations.project_id`              | `projects(id)`            | **SET NULL** — optional project link cleared when project is removed |
+| `agent_conversation_messages.conversation_id` | `agent_conversations(id)` | **CASCADE** — messages removed with the conversation row             |
+
+There is **no `task_id` FK in v1**. No `parent_message_id` or tool-role rows on write in v1 (schema allows `system` \| `tool` roles for future use).
+
+#### Lifecycle (archive-only v1)
+
+- **`status`:** `active` (default) or `archived`. No `deleted_at`, no hard delete, no purge API in v1.
+- **Title:** optional; auto-set from the first user message (~80 chars) on create when omitted; updatable via GraphQL `updateAgentConversationTitle`.
+
+#### Message ordering and size caps
+
+- **`sort_order`:** monotonic integer per conversation (not gap-based). User and assistant rows for one turn are written **consecutively** in a single transaction. Unique index on `(conversation_id, sort_order)`.
+- **App-level caps** (enforced in `@openthrottle/nestjs-repositories`, not DB `CHECK`):
+  - `content`: **256 KB** UTF-8 max; truncate with a metadata flag when clipped.
+  - `tool_metadata` (JSONB on assistant rows): **64 KB** UTF-8 max; set `truncated: true` in the envelope when clipped.
+- **Assistant denormalized columns:** `routing_tier`, `routing_confidence`, `routing_model`, `routing_reason`, plus `tool_metadata` for MCP audit. Conversation-level `model_provider` / `model_name` updated when the router LLM runs (null for heuristic-only routing).
+
+#### Boundary vs `plan_output_stream`
+
+| Concern             | `plan_output_stream`                | `agent_conversations`                                                |
+| ------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| Audience            | Ralph / workflow agents             | Human web chat (developer UI)                                        |
+| Scope               | Per **plan**                        | Per **user**                                                         |
+| Content             | Iteration logs, agent output chunks | User/assistant chat turns                                            |
+| MCP read tools (v1) | Yes (append/get output)             | **Deferred** — follow-up plan `fbe54bc3-1a97-49b4-ad40-e9f55edcabb1` |
 
 ## Connecting
 
@@ -274,7 +318,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
+**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health. **Agent conversation read tools** (`list_conversations`, `get_conversation_messages`) are deferred to follow-up plan `fbe54bc3-1a97-49b4-ad40-e9f55edcabb1`; use GraphQL from the developer app in v1.
 
 ## Example queries
 
