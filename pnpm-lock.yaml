@@ -675,6 +675,9 @@ importers:
       '@commitlint/config-nx-scopes':
         specifier: ^20.5.0
         version: 20.5.0(nx@22.6.4(@swc-node/register@1.11.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@swc/core@1.15.33(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.33(@swc/helpers@0.5.21)))
+      '@eslint/js':
+        specifier: ^9.39.2
+        version: 9.39.4
       '@nestjs/schematics':
         specifier: ^11.0.10
         version: 11.1.0(chokidar@4.0.3)(prettier@3.8.3)(typescript@5.9.3)
@@ -810,6 +813,15 @@ importers:
       '@types/yargs':
         specifier: ^17.0.35
         version: 17.0.35
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.53.0
+        version: 8.59.2(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.53.0
+        version: 8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      '@typescript-eslint/utils':
+        specifier: ^8.53.0
+        version: 8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.11(@types/node@24.12.2)(esbuild@0.27.7)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))
@@ -831,6 +843,39 @@ importers:
       cssnano:
         specifier: ^8.0.0
         version: 8.0.0(postcss@8.5.14)
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4(jiti@2.7.0)
+      eslint-plugin-eslint-comments:
+        specifier: ^3.2.0
+        version: 3.2.0(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-import:
+        specifier: ^2.32.0
+        version: 2.32.0(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-import-x:
+        specifier: ^4.16.2
+        version: 4.16.2(@typescript-eslint/utils@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-jest:
+        specifier: ^29.15.1
+        version: 29.15.2(@typescript-eslint/eslint-plugin@8.59.2(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      eslint-plugin-json:
+        specifier: ^4.0.1
+        version: 4.0.1
+      eslint-plugin-react:
+        specifier: ^7.37.5
+        version: 7.37.5(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-react-hooks:
+        specifier: ^7.0.1
+        version: 7.1.1(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-simple-import-sort:
+        specifier: ^13.0.0
+        version: 13.0.0(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-sort-keys-fix:
+        specifier: ^1.1.2
+        version: 1.1.2
+      eslint-plugin-typescript-sort-keys:
+        specifier: ^3.3.0
+        version: 3.3.0(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       globals:
         specifier: ^17.0.0
         version: 17.6.0
@@ -906,6 +951,9 @@ importers:
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
+      typescript-eslint:
+        specifier: ^8.58.0
+        version: 8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       unplugin-swc:
         specifier: ^1.5.9
         version: 1.5.9(@swc/core@1.15.33(@swc/helpers@0.5.21))(rollup@2.80.0)
@@ -9901,10 +9949,10 @@ packages:
         integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==,
       }
 
-  '@react-grab/cli@0.1.39':
+  '@react-grab/cli@0.1.41':
     resolution:
       {
-        integrity: sha512-+2Q9W0OE0MwPb4mBmwZPSs9QgHN0fhf2SVqNuib7tr5JmzEtDo1SWSsFjQ50QiwRTJzIY8I5IZTg6vVb1jOFLw==,
+        integrity: sha512-hQyo+Ook79V09uCiLoIN9hkXtffi6aEftgY891RfIw/ePlMjDtRo5ur8L1drJd6aL05HLevpFTpEU3rC11ueKw==,
       }
     hasBin: true
 
@@ -23837,10 +23885,10 @@ packages:
         integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==,
       }
 
-  react-grab@0.1.39:
+  react-grab@0.1.41:
     resolution:
       {
-        integrity: sha512-5ZzlW7YDLVeR/244ZHB7eukEjE3X0g4wT1uVYHq39HwoNcWeQWKpwYfptIBeydDhcgPBggMaXxQaqZJkyqM4xA==,
+        integrity: sha512-Snht68ypkK9QjktjLdWvqB7edF+yFGsrY8aGsriVqOPqezzKuemloPjnYqd4Xddp20qhotldGGVE6Q8ov7eq3g==,
       }
     hasBin: true
     peerDependencies:
@@ -35011,7 +35059,7 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.39':
+  '@react-grab/cli@0.1.41':
     dependencies:
       agent-install: 0.0.5
       commander: 14.0.3
@@ -44379,9 +44427,9 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.39(react@19.2.4):
+  react-grab@0.1.41(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.39
+      '@react-grab/cli': 0.1.41
       bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
@@ -44534,7 +44582,7 @@ snapshots:
       prompts: 2.4.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.39(react@19.2.4)
+      react-grab: 0.1.41(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 2.1.0
