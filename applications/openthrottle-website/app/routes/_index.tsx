@@ -5,11 +5,12 @@ import {
   FEATURES,
   OpenThrottleProductFeatures,
   OpenThrottleProductGetStarted,
+  OpenThrottleProductTestimonials,
 } from '@openthrottle/react-router-ui';
-import type { Route } from '@/app/routes/+types/_index';
 import { GlobalFooter } from '~/global/components/GlobalFooter';
-import { useRouteLoaderData } from 'react-router';
 import { loader } from '~/root';
+import { useRouteLoaderData } from 'react-router';
+import type { Route } from '@/app/routes/+types/_index';
 
 // export const loader = async (_args: Route.LoaderArgs) => {
 //   return {};
@@ -47,22 +48,9 @@ export default function Component(
           />
         </div>
         <OpenThrottleProductFeatures features={FEATURES} />
-
-        {/* <h2 className="text-foreground">What People Are Saying</h2> */}
-        <div className="flex flex-col gap-4 justify-center items-center my-20">
-          <blockquote className="text-muted-foreground font-normal max-w-3xl leading-relaxed mx-auto">
-            "I may be partially biased, but OpenThrottle is a game-changer for
-            our team. It has completely transformed how we approach software
-            development."
-            <footer className="text-sm text-muted-foreground block mt-4 text-right">
-              <cite className="font-medium block">~ Matthew Scholta</cite>
-              <span className="text-xs text-muted-foreground">
-                Creator of OpenThrottle
-              </span>
-            </footer>
-          </blockquote>
-        </div>
+        <OpenThrottleProductTestimonials />
       </div>
+
       <div className="mt-40">
         <GlobalFooter />
       </div>

@@ -17,6 +17,7 @@ export * from './components/OpenThrottlePlanStatusBadge';
 export * from './components/OpenThrottleProductAbout';
 export * from './components/OpenThrottleProductFeatures';
 export * from './components/OpenThrottleProductGetStarted';
+export * from './components/OpenThrottleProductTestimonials';
 export * from './components/OpenThrottleSidebar';
 export * from './components/OpenThrottleSidebarHeader';
 export * from './components/OpenThrottleStatCard';

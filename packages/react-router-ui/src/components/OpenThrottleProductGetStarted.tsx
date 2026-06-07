@@ -74,7 +74,7 @@ export const OpenThrottleProductGetStarted = (
             <TooltipProvider>
               <Tooltip delayDuration={1_000}>
                 <TooltipContent>
-                  {stars} stars on GitHub for {repo}
+                  <b>{stars}</b> stars on GitHub for {repo}
                 </TooltipContent>
                 <TooltipTrigger>
                   <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
