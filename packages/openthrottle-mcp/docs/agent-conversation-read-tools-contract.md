@@ -2,7 +2,7 @@
 
 Design contract for three read-only MCP tools in `@openthrottle/openthrottle-mcp` that expose persisted **web chat** thread history via GraphQL only. Implements plan `fbe54bc3-1a97-49b4-ad40-e9f55edcabb1` task `1572ea33` (parent GraphQL from plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66`).
 
-**Status:** Locked for implementation (tasks `6c915d91`, `4961543e`, `84fd9eb8`).
+**Status:** Implemented. Handlers: `src/tools/agent-conversations.ts`. User docs: [README.md](../README.md) § Agent conversation read tools.
 
 ## Boundary (grill-me 6A, Q10)
 

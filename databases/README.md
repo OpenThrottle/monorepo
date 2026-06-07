@@ -260,7 +260,7 @@ The optional **summary** field on plans and tasks supports PRD summarization: ne
 
 ### Agent conversations (web chat persistence)
 
-Migration: `databases/migrations/051_create_agent_conversations_tables.sql`. GraphQL and `agentsRunChatTurn` integration: [applications/openthrottle-server/docs/agent-conversations-design.md](../applications/openthrottle-server/docs/agent-conversations-design.md). Frontend v1: [packages/react-router-chat/README.md](../packages/react-router-chat/README.md) § Persisted conversations.
+Migration: `databases/migrations/051_create_agent_conversations_tables.sql`. GraphQL and `agentsRunChatTurn` integration: [applications/openthrottle-server/docs/agent-conversations-design.md](../applications/openthrottle-server/docs/agent-conversations-design.md). Frontend v1: [packages/react-router-chat/README.md](../packages/react-router-chat/README.md) § Persisted conversations. **MCP read tools** (Cursor/agents): [packages/openthrottle-mcp/README.md](../packages/openthrottle-mcp/README.md) § Agent conversation read tools and [agent-conversation-read-tools-contract.md](../packages/openthrottle-mcp/docs/agent-conversation-read-tools-contract.md).
 
 **Purpose:** Postgres-backed threads for the developer web chat (`agentsRunChatTurn` + `@openthrottle/react-router-chat`). Stores ordered user/assistant messages, router LLM metadata, and MCP tool-turn audit for resumable sessions. **Strictly separate from `plan_output_stream`** — Ralph iteration logs stay in `plan_output_stream`; do not merge or duplicate Ralph output here.
 
@@ -295,12 +295,12 @@ There is **no `task_id` FK in v1**. No `parent_message_id` or tool-role rows on 
 
 #### Boundary vs `plan_output_stream`
 
-| Concern             | `plan_output_stream`                | `agent_conversations`                                                |
-| ------------------- | ----------------------------------- | -------------------------------------------------------------------- |
-| Audience            | Ralph / workflow agents             | Human web chat (developer UI)                                        |
-| Scope               | Per **plan**                        | Per **user**                                                         |
-| Content             | Iteration logs, agent output chunks | User/assistant chat turns                                            |
-| MCP read tools (v1) | Yes (append/get output)             | **Deferred** — follow-up plan `fbe54bc3-1a97-49b4-ad40-e9f55edcabb1` |
+| Concern        | `plan_output_stream`                    | `agent_conversations`                                                                                              |
+| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Audience       | Ralph / workflow agents                 | Human web chat (developer UI)                                                                                      |
+| Scope          | Per **plan**                            | Per **user**                                                                                                       |
+| Content        | Iteration logs, agent output chunks     | User/assistant chat turns                                                                                          |
+| MCP read tools | `get_plan_output`, `append_plan_output` | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages` (human JWT only; read-only) |
 
 ## Connecting
 
@@ -318,7 +318,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health. **Agent conversation read tools** (`list_conversations`, `get_conversation_messages`) are deferred to follow-up plan `fbe54bc3-1a97-49b4-ad40-e9f55edcabb1`; use GraphQL from the developer app in v1.
+**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See [packages/openthrottle-mcp/README.md](../packages/openthrottle-mcp/README.md) and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, health, and **agent conversation read tools** (`agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages`) for persisted web chat threads — **human JWT only**, user-scoped, read-only. Use `get_plan_output` / `append_plan_output` for Ralph logs, not conversation tools. Contract: [packages/openthrottle-mcp/docs/agent-conversation-read-tools-contract.md](../packages/openthrottle-mcp/docs/agent-conversation-read-tools-contract.md). Prerequisite: v1 persistence (plan `4fa6d16c`); MCP write tools deferred until `AGENTS_CHAT_ALLOW_MUTATIONS`.
 
 ## Example queries
 
