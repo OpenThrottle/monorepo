@@ -159,6 +159,7 @@ export const GlobalLayoutHeader = (
       <ChatDialog
         title="OpenThrottle Assistant"
         triggerLabel="Chat"
+        // variant="sheet"
         variant="dialog"
       />
 

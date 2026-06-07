@@ -70,3 +70,18 @@ mutation sendAgentMessage($input: AgentsRunChatTurnInput!) {
     toolMetadataJson
   }
 }
+
+query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
+  getAgentConversationMessages(input: $input) {
+    messages {
+      content
+      createdAt
+      id
+      role
+      routingConfidence
+      routingReason
+      toolMetadataJson
+    }
+    totalCount
+  }
+}

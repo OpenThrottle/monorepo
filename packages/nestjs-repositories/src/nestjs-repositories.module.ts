@@ -1,3 +1,4 @@
+import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module';
 import { CommitLinksModule } from './modules/commit-links/commit-links.module';
 import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module';
@@ -22,6 +23,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
 @Module({
   controllers: [],
   exports: [
+    AgentConversationsModule,
     CommitLinksModule,
     CustomPromptsModule,
     DailyStatsModule,
@@ -45,6 +47,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
         return getTypeOrmOptions();
       },
     }),
+    AgentConversationsModule,
     CommitLinksModule,
     CustomPromptsModule,
     DailyStatsModule,

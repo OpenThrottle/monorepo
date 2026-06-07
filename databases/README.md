@@ -104,6 +104,8 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 - **custom_prompt_embeddings** – Vector embeddings for custom prompt content (semantic search): `id`, `custom_prompt_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`. Same pattern as plan_embeddings / documentation_embeddings. See migration `037_create_custom_prompt_embeddings_table.sql`.
 - **user_workspace_settings** – Per-user workspace profile (Settings → Workspace): `user_id` (PK, FK to users), `contact_display_name`, `contact_email`, `enabled_editors` (JSONB array of editor ids, e.g. `cursor`, `vscode`), `created_at`, `updated_at`. See migration `042_create_workspace_settings_tables.sql` and `applications/openthrottle-server/docs/workspace-settings-graphql-design.md`.
 - **workspace_local_repositories** – Local filesystem checkouts registered by a user: `id`, `user_id` (FK), `filesystem_path` (absolute; unique per user), `display_name`, `git_remote_url`, `git_default_branch`, `project_id` (optional FK to projects), `created_at`, `updated_at`. See migration 042 and workspace-settings GraphQL design doc.
+- **agent_conversations** – Persisted web chat/agent threads (human JWT user-scoped): `id`, `user_id` (FK to users, ON DELETE CASCADE), `title` (optional; auto from first user message ~80 chars), `status` (`active` \| `archived`; archive-only in v1, no hard delete), `plan_id` (optional FK, ON DELETE SET NULL), `project_id` (optional FK, ON DELETE SET NULL), `model_provider`, `model_name` (router LLM snapshot per persist turn; null for heuristic-only routing), `metadata` (JSONB), `created_at`, `updated_at`. Strictly separate from **plan_output_stream** (Ralph logs). See migration `051_create_agent_conversations_tables.sql`.
+- **agent_conversation_messages** – Ordered messages within a conversation: `id`, `conversation_id` (FK, ON DELETE CASCADE), `role` (`user` \| `assistant` \| `system` \| `tool`; v1 writes user + assistant only), `content` (TEXT; **app cap 256KB** on insert), `sort_order` (INTEGER NOT NULL; monotonic per conversation; user+assistant consecutive per turn in one txn), denormalized assistant routing columns (`routing_tier`, `routing_confidence`, `routing_model`, `routing_reason`), `tool_metadata` (JSONB; **app cap 64KB**; set `truncated` in envelope when clipped), `created_at`. No `task_id` or `parent_message_id` in v1.
 
 Indexes include HNSW vector indexes on embedding columns for similarity search.
 
@@ -126,6 +128,8 @@ Indexes are created by migrations in `databases/migrations/`. Main tables and th
 - **subscriptions** – `idx_subscriptions_stripe_subscription_id` (unique partial), `idx_subscriptions_user_id`, `idx_subscriptions_status`. See migration `035_create_subscriptions_table.sql`.
 - **custom_prompts** – `idx_custom_prompts_prompt_type`, `idx_custom_prompts_labels` (GIN), `idx_custom_prompts_user_id` (partial), `idx_custom_prompts_project_id` (partial), `idx_custom_prompts_file_path` (partial), `idx_custom_prompts_created_at`, `idx_custom_prompts_updated_at`, `idx_custom_prompts_type_created_at`, `idx_custom_prompts_active` (partial WHERE deleted_at IS NULL), `idx_custom_prompts_title_trgm` (GIN, pg_trgm for ILIKE). See migration `036_create_custom_prompts_table.sql`.
 - **custom_prompt_embeddings** – `idx_custom_prompt_embeddings_custom_prompt_id`, `idx_custom_prompt_embeddings_vector` (HNSW cosine), `idx_custom_prompt_embeddings_metadata` (GIN). See migration `037_create_custom_prompt_embeddings_table.sql`.
+- **agent_conversations** – `idx_agent_conversations_user_status_updated_at` (user_id, status, updated_at DESC), `idx_agent_conversations_plan_id` (partial WHERE plan_id IS NOT NULL). See migration `051_create_agent_conversations_tables.sql`.
+- **agent_conversation_messages** – `idx_agent_conversation_messages_conversation_sort_order` (unique on conversation_id, sort_order). See migration `051_create_agent_conversations_tables.sql`.
 
 **When to add new indexes:** Add a new migration when you introduce a **new filter or sort column** used by openthrottle-mcp (via GraphQL), openthrottle-server, or the OpenThrottle app (e.g. a new WHERE or ORDER BY), or a **new query pattern** that would benefit from a composite or partial index. Prefer composite indexes for common filter+sort combinations (e.g. status + created_at). For substring/ILIKE search on text, consider `pg_trgm` and a GIN index (see `018_plans_title_trgm.sql`). Audit notes: `databases/INDEX_AUDIT.md`.
 
@@ -252,7 +256,51 @@ The optional **summary** field on plans and tasks supports PRD summarization: ne
 - **What to include:**
   - **Plans:** Next actions for the plan, how to use what was built, or wsrap-up notes (e.g. "Run `pnpm run database:migrate` after pull; summary is optional on create/update.").
   - **Tasks:** Per-task wrap-up: follow-up actions, usage notes, or why the task is blocked (e.g. "Blocked on API key; document env in README when unblocked.").
-- **How:** Use MCP `update_plan` or `update_task` with a `summary` argument, or set `summary` when creating plans/tasks. Ingest reads optional `metadata.summary` (plans) and `summary` (tasks) from plan JSON so file-based and DB stay in sync.
+- **How:** Use MCP `update_plan` or `update_task` with a `summary` argument, or set `summary` when creating plans/tasks. Ingest reads optional `metadata.summary` (plans) and `summary` from plan JSON so file-based and DB stay in sync.
+
+### Agent conversations (web chat persistence)
+
+Migration: `databases/migrations/051_create_agent_conversations_tables.sql`. GraphQL and `agentsRunChatTurn` integration: [applications/openthrottle-server/docs/agent-conversations-design.md](../applications/openthrottle-server/docs/agent-conversations-design.md). Frontend v1: [packages/react-router-chat/README.md](../packages/react-router-chat/README.md) § Persisted conversations. **MCP read tools** (Cursor/agents): [packages/openthrottle-mcp/README.md](../packages/openthrottle-mcp/README.md) § Agent conversation read tools and [agent-conversation-read-tools-contract.md](../packages/openthrottle-mcp/docs/agent-conversation-read-tools-contract.md).
+
+**Purpose:** Postgres-backed threads for the developer web chat (`agentsRunChatTurn` + `@openthrottle/react-router-chat`). Stores ordered user/assistant messages, router LLM metadata, and MCP tool-turn audit for resumable sessions. **Strictly separate from `plan_output_stream`** — Ralph iteration logs stay in `plan_output_stream`; do not merge or duplicate Ralph output here.
+
+| Table                         | Purpose                                        |
+| ----------------------------- | ---------------------------------------------- |
+| `agent_conversations`         | One row per thread; scoped to a human JWT user |
+| `agent_conversation_messages` | Ordered messages within a thread               |
+
+#### Foreign keys and delete rules
+
+| Column                                        | FK target                 | ON DELETE                                                            |
+| --------------------------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| `agent_conversations.user_id`                 | `users(id)`               | **CASCADE** — deleting a user removes their conversations            |
+| `agent_conversations.plan_id`                 | `plans(id)`               | **SET NULL** — optional plan link cleared when plan is removed       |
+| `agent_conversations.project_id`              | `projects(id)`            | **SET NULL** — optional project link cleared when project is removed |
+| `agent_conversation_messages.conversation_id` | `agent_conversations(id)` | **CASCADE** — messages removed with the conversation row             |
+
+There is **no `task_id` FK in v1**. No `parent_message_id` or tool-role rows on write in v1 (schema allows `system` \| `tool` roles for future use).
+
+#### Lifecycle (archive-only v1)
+
+- **`status`:** `active` (default) or `archived`. No `deleted_at`, no hard delete, no purge API in v1.
+- **Title:** optional; auto-set from the first user message (~80 chars) on create when omitted; updatable via GraphQL `updateAgentConversationTitle`.
+
+#### Message ordering and size caps
+
+- **`sort_order`:** monotonic integer per conversation (not gap-based). User and assistant rows for one turn are written **consecutively** in a single transaction. Unique index on `(conversation_id, sort_order)`.
+- **App-level caps** (enforced in `@openthrottle/nestjs-repositories`, not DB `CHECK`):
+  - `content`: **256 KB** UTF-8 max; truncate with a metadata flag when clipped.
+  - `tool_metadata` (JSONB on assistant rows): **64 KB** UTF-8 max; set `truncated: true` in the envelope when clipped.
+- **Assistant denormalized columns:** `routing_tier`, `routing_confidence`, `routing_model`, `routing_reason`, plus `tool_metadata` for MCP audit. Conversation-level `model_provider` / `model_name` updated when the router LLM runs (null for heuristic-only routing).
+
+#### Boundary vs `plan_output_stream`
+
+| Concern        | `plan_output_stream`                    | `agent_conversations`                                                                                              |
+| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Audience       | Ralph / workflow agents                 | Human web chat (developer UI)                                                                                      |
+| Scope          | Per **plan**                            | Per **user**                                                                                                       |
+| Content        | Iteration logs, agent output chunks     | User/assistant chat turns                                                                                          |
+| MCP read tools | `get_plan_output`, `append_plan_output` | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages` (human JWT only; read-only) |
 
 ## Connecting
 
@@ -270,7 +318,7 @@ postgresql://openthrottle_user:openthrottle_password@localhost:5556/openthrottle
 
 ### MCP (OpenThrottle plans/tasks)
 
-**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See `packages/openthrottle-mcp/README.md` and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, and health.
+**@openthrottle/openthrottle-mcp** — The OpenThrottle (OT) MCP server. It talks to the backend **via GraphQL only** (openthrottle-server). No direct Postgres. Set `OPENTHROTTLE_AUTH_TOKEN` (or `OPENTHROTTLE_MCP_AUTH_TOKEN`) for authenticated requests. See [packages/openthrottle-mcp/README.md](../packages/openthrottle-mcp/README.md) and `.cursor/mcp.json`. Tools include plans, tasks, notes, commit links, activity, output stream, semantic search, health, and **agent conversation read tools** (`agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages`) for persisted web chat threads — **human JWT only**, user-scoped, read-only. Use `get_plan_output` / `append_plan_output` for Ralph logs, not conversation tools. Contract: [packages/openthrottle-mcp/docs/agent-conversation-read-tools-contract.md](../packages/openthrottle-mcp/docs/agent-conversation-read-tools-contract.md). Prerequisite: v1 persistence (plan `4fa6d16c`); MCP write tools deferred until `AGENTS_CHAT_ALLOW_MUTATIONS`.
 
 ## Example queries
 
@@ -366,6 +414,7 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 30. `036_create_custom_prompts_table.sql` – Custom prompts table for AI workflow documents (agents, skills, commands, prompts, rules). Supports type/label tagging, file system path reference, user and project scoping, soft delete.
 31. `037_create_custom_prompt_embeddings_table.sql` – Vector embeddings for custom prompt content (semantic search); same pattern as plan_embeddings.
 32. `049_add_sort_order_to_tasks.sql` – Add `sort_order` (INTEGER NOT NULL) on tasks; backfill per plan by `created_at ASC` → 1000, 2000, …; unique index on `(plan_id, sort_order)` for deterministic ordering.
+33. `051_create_agent_conversations_tables.sql` – `agent_conversations` and `agent_conversation_messages` for persisted web chat threads (user-scoped, archive-only v1). Monotonic `sort_order` per conversation; app-level caps on message `content` (256KB) and `tool_metadata` (64KB). Separate from `plan_output_stream`.
 
 ### Migration strategy (TypeORM vs SQL)
 

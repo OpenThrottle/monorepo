@@ -4,6 +4,7 @@
 
 export * from './resources/knowledge-base.js';
 export * from './tools/activity.js';
+export * from './tools/agent-conversations.js';
 export * from './tools/commit.js';
 export * from './tools/health.js';
 export * from './tools/notes.js';

@@ -1,10 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  AUTH_PRINCIPAL_KIND_USER,
+} from '@openthrottle/nestjs-auth';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 import { AgentsMcpRouter } from './agents-mcp-router';
 import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
+import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence';
 import { AgentsResolver } from './agents.resolver';
 
 const createConfigStub = (): ConfigService =>
@@ -43,25 +49,63 @@ const createRoutedMcpSurfaceMock = (handlers: {
 };
 
 const createLlmRouterStub = (): {
+  readonly getActiveRouterModelSnapshot: ReturnType<typeof vi.fn>;
   readonly refineRoute: ReturnType<typeof vi.fn>;
   readonly shouldAttemptLlmRefinement: ReturnType<typeof vi.fn>;
 } => ({
+  getActiveRouterModelSnapshot: vi.fn(() => null),
   refineRoute: vi.fn(async () => null),
   shouldAttemptLlmRefinement: vi.fn(() => false),
+});
+
+const createAgentConversationsServiceStub = (): {
+  readonly appendTurn: ReturnType<typeof vi.fn>;
+  readonly createConversation: ReturnType<typeof vi.fn>;
+  readonly getConversationForUser: ReturnType<typeof vi.fn>;
+} => ({
+  appendTurn: vi.fn(async () => ({
+    assistantMessage: {},
+    userMessage: {},
+  })),
+  createConversation: vi.fn(async () => ({
+    id: '11111111-1111-4111-8111-111111111111',
+  })),
+  getConversationForUser: vi.fn(async () => ({ id: 'c1' })),
 });
 
 describe('AgentsResolver', () => {
   let resolver: AgentsResolver;
   let semanticSearch: ReturnType<typeof vi.fn>;
+  let appendTurn: ReturnType<typeof vi.fn>;
+  let createConversation: ReturnType<typeof vi.fn>;
+  let getConversationForUser: ReturnType<typeof vi.fn>;
   const llmRouterStub = createLlmRouterStub();
+
+  const humanPrincipal = {
+    kind: AUTH_PRINCIPAL_KIND_USER,
+    sub: 'user-id',
+  } as const;
+
+  const serviceAccountPrincipal = {
+    kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+    sub: 'sa-id',
+  } as const;
 
   beforeAll(async () => {
     semanticSearch = vi.fn();
+    const agentConversationsStub = createAgentConversationsServiceStub();
+    appendTurn = agentConversationsStub.appendTurn;
+    createConversation = agentConversationsStub.createConversation;
+    getConversationForUser = agentConversationsStub.getConversationForUser;
 
     const app = await Test.createTestingModule({
       providers: [
         AgentsResolver,
         AgentsMcpRouter,
+        {
+          provide: AgentConversationsService,
+          useValue: agentConversationsStub,
+        },
         {
           provide: ConfigService,
           useValue: createConfigStub(),
@@ -80,10 +124,15 @@ describe('AgentsResolver', () => {
     resolver = app.get(AgentsResolver);
   });
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('agentsRunChatTurn', () => {
     test('returns validation result when message is empty after trim', async () => {
       const out = await resolver.agentsRunChatTurn(
         { req: { headers: {} } },
+        undefined,
         { conversationId: 'thread-a', message: '   ' },
       );
 
@@ -109,6 +158,7 @@ describe('AgentsResolver', () => {
 
       const out = await resolver.agentsRunChatTurn(
         { req: { headers: { authorization: 'Bearer jwt-token' } } },
+        undefined,
         { conversationId: 'c1', message: 'What is OT?' },
       );
 
@@ -144,6 +194,10 @@ describe('AgentsResolver', () => {
           AgentsResolver,
           AgentsMcpRouter,
           {
+            provide: AgentConversationsService,
+            useValue: createAgentConversationsServiceStub(),
+          },
+          {
             provide: ConfigService,
             useValue: createConfigStub(),
           },
@@ -162,10 +216,10 @@ describe('AgentsResolver', () => {
       }).compile();
 
       const r = app.get(AgentsResolver);
-      const out = await r.agentsRunChatTurn(
-        { req: {} },
-        { conversationId: null, message: 'health' },
-      );
+      const out = await r.agentsRunChatTurn({ req: {} }, undefined, {
+        conversationId: null,
+        message: 'health',
+      });
 
       expect(health).toHaveBeenCalledWith({});
       expect(semantic).not.toHaveBeenCalled();
@@ -186,10 +240,10 @@ describe('AgentsResolver', () => {
         isError: true,
       });
 
-      const out = await resolver.agentsRunChatTurn(
-        { req: {} },
-        { conversationId: null, message: 'hello' },
-      );
+      const out = await resolver.agentsRunChatTurn({ req: {} }, undefined, {
+        conversationId: null,
+        message: 'hello',
+      });
 
       expect(out.assistantText).toBeNull();
       expect(out.errorMessage).toBe('No embedding service');
@@ -204,10 +258,10 @@ describe('AgentsResolver', () => {
         ),
       );
 
-      const out = await resolver.agentsRunChatTurn(
-        { req: {} },
-        { conversationId: null, message: 'hello' },
-      );
+      const out = await resolver.agentsRunChatTurn({ req: {} }, undefined, {
+        conversationId: null,
+        message: 'hello',
+      });
 
       expect(out.assistantText).toBeNull();
       expect(out.errorMessage).toContain('Bearer token');
@@ -217,10 +271,10 @@ describe('AgentsResolver', () => {
     test('maps other MCP errors to errorMessage without throwing', async () => {
       semanticSearch.mockRejectedValueOnce(new Error('Upstream timeout'));
 
-      const out = await resolver.agentsRunChatTurn(
-        { req: {} },
-        { conversationId: null, message: 'hello' },
-      );
+      const out = await resolver.agentsRunChatTurn({ req: {} }, undefined, {
+        conversationId: null,
+        message: 'hello',
+      });
 
       expect(out.errorMessage).toBe('Upstream timeout');
     });
@@ -228,10 +282,10 @@ describe('AgentsResolver', () => {
     test('maps non-Error rejections', async () => {
       semanticSearch.mockRejectedValueOnce('string failure');
 
-      const out = await resolver.agentsRunChatTurn(
-        { req: {} },
-        { conversationId: null, message: 'hello' },
-      );
+      const out = await resolver.agentsRunChatTurn({ req: {} }, undefined, {
+        conversationId: null,
+        message: 'hello',
+      });
 
       expect(out.errorMessage).toBe('string failure');
     });
@@ -260,6 +314,10 @@ describe('AgentsResolver', () => {
           AgentsResolver,
           AgentsMcpRouter,
           {
+            provide: AgentConversationsService,
+            useValue: createAgentConversationsServiceStub(),
+          },
+          {
             provide: ConfigService,
             useValue: createConfigStub(),
           },
@@ -280,6 +338,7 @@ describe('AgentsResolver', () => {
       const r = app.get(AgentsResolver);
       const out = await r.agentsRunChatTurn(
         { req: { headers: { authorization: 'Bearer jwt' } } },
+        undefined,
         { conversationId: null, message: 'hello' },
       );
 
@@ -290,6 +349,66 @@ describe('AgentsResolver', () => {
       expect(out.assistantText).toBe('KB sources listed');
       const meta = JSON.parse(out.toolMetadataJson ?? '{}');
       expect(meta.routeReason).toBe('llm_fallback:mock_classifier');
+    });
+
+    test('rejects persist when principal is missing', async () => {
+      const out = await resolver.agentsRunChatTurn(
+        { req: { headers: { authorization: 'Bearer jwt-token' } } },
+        undefined,
+        { conversationId: null, message: 'hello', persist: true },
+      );
+
+      expect(out.errorMessage).toBe(PERSISTED_CONVERSATION_AUTH_ERROR);
+      expect(semanticSearch).not.toHaveBeenCalled();
+      expect(createConversation).not.toHaveBeenCalled();
+    });
+
+    test('rejects persist for service account principal', async () => {
+      const out = await resolver.agentsRunChatTurn(
+        { req: { headers: { authorization: 'Bearer jwt-token' } } },
+        serviceAccountPrincipal,
+        { conversationId: null, message: 'hello', persist: true },
+      );
+
+      expect(out.errorMessage).toBe(PERSISTED_CONVERSATION_AUTH_ERROR);
+      expect(semanticSearch).not.toHaveBeenCalled();
+    });
+
+    test('persists successful turn for human principal and mints conversation id', async () => {
+      semanticSearch.mockResolvedValueOnce({
+        content: [{ text: 'Search hits…' }],
+        structuredContent: { ok: true },
+      });
+
+      const out = await resolver.agentsRunChatTurn(
+        { req: { headers: { authorization: 'Bearer jwt-token' } } },
+        humanPrincipal,
+        { conversationId: null, message: 'What is OT?', persist: true },
+      );
+
+      expect(createConversation).toHaveBeenCalledWith('user-id', {
+        title: 'What is OT?',
+      });
+      expect(appendTurn).toHaveBeenCalled();
+      expect(out.conversationId).toBe('11111111-1111-4111-8111-111111111111');
+      expect(out.errorMessage).toBeNull();
+    });
+
+    test('does not persist when MCP reports isError', async () => {
+      semanticSearch.mockResolvedValueOnce({
+        content: [{ text: 'No embedding service' }],
+        isError: true,
+      });
+
+      const out = await resolver.agentsRunChatTurn(
+        { req: { headers: { authorization: 'Bearer jwt-token' } } },
+        humanPrincipal,
+        { conversationId: 'c1', message: 'hello', persist: true },
+      );
+
+      expect(getConversationForUser).toHaveBeenCalledWith('user-id', 'c1');
+      expect(appendTurn).not.toHaveBeenCalled();
+      expect(out.errorMessage).toBe('No embedding service');
     });
   });
 });
