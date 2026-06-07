@@ -27,11 +27,6 @@ export class GqlPermissionsGuard {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
-    if (!isAuthEnabled) {
-      return true;
-    }
-
     const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(
       PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],

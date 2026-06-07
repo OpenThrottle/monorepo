@@ -1,4 +1,4 @@
-const RUN_OUTPUT_DIR_ENV = 'OT_BULLMQ_RUN_OUTPUT_DIR';
+const RUN_OUTPUT_DIR_ENV = 'BULLMQ_RUN_OUTPUT_DIR';
 
 /**
  * @description When set to a non-empty string, plan/workflow BullMQ workers append Ralph spawn

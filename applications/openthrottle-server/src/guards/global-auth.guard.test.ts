@@ -31,7 +31,6 @@ describe('GlobalAuthGuard', () => {
   let serviceAccountAuthService: ServiceAccountAuthService;
 
   beforeEach(() => {
-    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'true');
     reflector = createMock<Reflector>({
       getAllAndOverride: vi.fn(),
     });
@@ -146,22 +145,6 @@ describe('GlobalAuthGuard', () => {
     );
 
     expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
-    expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
-  });
-
-  it('skips auth and CLS when APP_ENABLE_AUTHENTICATION is not true', async () => {
-    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'false');
-    vi.mocked(reflector.getAllAndOverride).mockReturnValue(false);
-    const ctx = createHttpExecutionContext({
-      headers: { authorization: 'Bearer ot_sa_x_y' },
-    });
-
-    await expect(guard.canActivate(ctx)).resolves.toBe(true);
-
-    expect(jwtAuthGuard.canActivate).not.toHaveBeenCalled();
-    expect(
-      serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
-    ).not.toHaveBeenCalled();
     expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
   });
 
