@@ -110,6 +110,50 @@ export type AddPermissionToRoleInput = {
   roleId: Scalars['ID']['input'];
 };
 
+export type AgentConversationMessageObject = {
+  __typename?: 'AgentConversationMessageObject';
+  content: Scalars['String']['output'];
+  conversationId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  /** Message role: user, assistant, system, or tool */
+  role: Scalars['String']['output'];
+  /** Router confidence on assistant rows */
+  routingConfidence?: Maybe<Scalars['Float']['output']>;
+  /** Router model on assistant rows */
+  routingModel?: Maybe<Scalars['String']['output']>;
+  /** Router reason on assistant rows */
+  routingReason?: Maybe<Scalars['String']['output']>;
+  /** Router tier on assistant rows */
+  routingTier?: Maybe<Scalars['String']['output']>;
+  /** Monotonic order within the conversation (user+assistant consecutive per turn) */
+  sortOrder: Scalars['Int']['output'];
+  /** JSON string of tool metadata on assistant rows */
+  toolMetadataJson?: Maybe<Scalars['String']['output']>;
+};
+
+export type AgentConversationObject = {
+  __typename?: 'AgentConversationObject';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  /** JSON string of optional conversation metadata object */
+  metadataJson?: Maybe<Scalars['String']['output']>;
+  /** Last router LLM model name when heuristic-only routing was not used */
+  modelName?: Maybe<Scalars['String']['output']>;
+  /** Last router LLM provider when heuristic-only routing was not used */
+  modelProvider?: Maybe<Scalars['String']['output']>;
+  /** Optional linked plan UUID */
+  planId?: Maybe<Scalars['String']['output']>;
+  /** Optional linked project UUID */
+  projectId?: Maybe<Scalars['String']['output']>;
+  /** Conversation lifecycle: active or archived (no hard delete in v1) */
+  status: Scalars['String']['output'];
+  /** Display title; auto-set from first user message when omitted on create */
+  title?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['String']['output'];
+};
+
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -137,6 +181,8 @@ export type AgentsRunChatTurnInput = {
   conversationId?: InputMaybe<Scalars['String']['input']>;
   /** User message text for this turn. */
   message: Scalars['String']['input'];
+  /** When true, persist the turn for an authenticated human JWT user. Omitted or false keeps stateless echo behavior. */
+  persist?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type AppendPlanOutputInput = {
@@ -158,6 +204,10 @@ export type ApplyWorkspaceEditorConfigurationInput = {
 export type ApplyWorkspaceEditorConfigurationResultObject = {
   __typename?: 'ApplyWorkspaceEditorConfigurationResultObject';
   applications: Array<WorkspaceEditorConfigApplicationObject>;
+};
+
+export type ArchiveAgentConversationInput = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type AssignRoleToServiceAccountInput = {
@@ -258,6 +308,17 @@ export type CommitsPerPrRowObject = {
   period?: Maybe<Scalars['String']['output']>;
   /** Pull request number. */
   prNumber: Scalars['Int']['output'];
+};
+
+export type CreateAgentConversationInput = {
+  /** JSON string of optional metadata object */
+  metadataJson?: InputMaybe<Scalars['String']['input']>;
+  /** Optional linked plan UUID */
+  planId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional linked project UUID */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional title; may be set on first persist turn instead */
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Input for creating a new custom prompt */
@@ -571,6 +632,14 @@ export type GeneratorObject = {
   name: Scalars['String']['output'];
 };
 
+export type GetAgentConversationMessagesInput = {
+  conversationId: Scalars['ID']['input'];
+  /** Page size (default 100, max 500) */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Offset for pagination */
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type GetCommitLinkInput = {
   /** Commit link id */
   id: Scalars['ID']['input'];
@@ -732,6 +801,27 @@ export type LinkCommitInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type ListAgentConversationMessagesResultObject = {
+  __typename?: 'ListAgentConversationMessagesResultObject';
+  messages: Array<AgentConversationMessageObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ListAgentConversationsInput = {
+  /** Page size (default 20, max 100) */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Offset for pagination */
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  /** Filter by status: active or archived (default active) */
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ListAgentConversationsResultObject = {
+  __typename?: 'ListAgentConversationsResultObject';
+  conversations: Array<AgentConversationObject>;
+  totalCount: Scalars['Int']['output'];
+};
+
 /** Input for listing custom prompts with optional filters */
 export type ListCustomPromptsInput = {
   /** Include soft-deleted prompts */
@@ -866,12 +956,16 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories. */
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
+  /** Archive an owned agent conversation (no hard delete in v1). */
+  archiveAgentConversation: AgentConversationObject;
   /** Assign a role to a service account (admin, human only). */
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Create an agent conversation for the authenticated human user. */
+  createAgentConversation: AgentConversationObject;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -962,6 +1056,8 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
+  /** Update the title on an owned agent conversation. */
+  updateAgentConversationTitle: AgentConversationObject;
   /** Update an existing custom prompt */
   updateCustomPrompt?: Maybe<CustomPromptObject>;
   /** Update a note */
@@ -1007,6 +1103,10 @@ export type MutationApplyWorkspaceEditorConfigurationArgs = {
   input?: InputMaybe<ApplyWorkspaceEditorConfigurationInput>;
 };
 
+export type MutationArchiveAgentConversationArgs = {
+  input: ArchiveAgentConversationInput;
+};
+
 export type MutationAssignRoleToServiceAccountArgs = {
   input: AssignRoleToServiceAccountInput;
 };
@@ -1017,6 +1117,10 @@ export type MutationAssignRoleToUserArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCreateAgentConversationArgs = {
+  input?: InputMaybe<CreateAgentConversationInput>;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -1177,6 +1281,10 @@ export type MutationSetPlanStatusArgs = {
 
 export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
   input: SetWorkspaceLocalRepositoryProjectInput;
+};
+
+export type MutationUpdateAgentConversationTitleArgs = {
+  input: UpdateAgentConversationTitleInput;
 };
 
 export type MutationUpdateCustomPromptArgs = {
@@ -1531,6 +1639,10 @@ export type Query = {
   generator?: Maybe<GeneratorDetailObject>;
   /** List available NX generators from @tools/generators */
   generators: Array<GeneratorObject>;
+  /** Get one agent conversation by ID for the authenticated human user. */
+  getAgentConversation?: Maybe<AgentConversationObject>;
+  /** List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500). */
+  getAgentConversationMessages: ListAgentConversationMessagesResultObject;
   /** Fetch a single document chunk by id (UUID from plan_embeddings, task_embeddings, or documentation_embeddings). Use after semantic search to read full chunk content. */
   getDocument?: Maybe<SearchChunk>;
   /** Single job by id and queue name. Returns null if not found. */
@@ -1539,6 +1651,8 @@ export type Query = {
   lastActivity?: Maybe<LastActivityResultObject>;
   /** Lines added/deleted by period (week or month) and author for merged PRs. Uses REST get-per-PR for diff stats; maxPrs caps requests. */
   linesAddedDeleted: Array<LinesAddedDeletedRowObject>;
+  /** List agent conversations for the authenticated human user (default status=active, limit 20 max 100). */
+  listAgentConversations: ListAgentConversationsResultObject;
   /** Distinct author and assignee values from plans and tasks for filters */
   listDistinctAuthorsAndAssignees: Array<Scalars['String']['output']>;
   /** Distinct category values from plans for filters */
@@ -1700,6 +1814,14 @@ export type QueryGeneratorArgs = {
   input: GetGeneratorInput;
 };
 
+export type QueryGetAgentConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryGetAgentConversationMessagesArgs = {
+  input: GetAgentConversationMessagesInput;
+};
+
 export type QueryGetDocumentArgs = {
   id: Scalars['String']['input'];
 };
@@ -1715,6 +1837,10 @@ export type QueryLastActivityArgs = {
 
 export type QueryLinesAddedDeletedArgs = {
   input: LinesAddedDeletedInput;
+};
+
+export type QueryListAgentConversationsArgs = {
+  input?: InputMaybe<ListAgentConversationsInput>;
 };
 
 export type QueryListPlansByStatusArgs = {
@@ -2313,6 +2439,11 @@ export type TasksByProjectIdResultObject = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type UpdateAgentConversationTitleInput = {
+  conversationId: Scalars['ID']['input'];
+  title: Scalars['String']['input'];
+};
+
 /** Input for updating an existing custom prompt */
 export type UpdateCustomPromptInput = {
   content?: InputMaybe<Scalars['String']['input']>;
@@ -2628,6 +2759,28 @@ export type SendAgentMessageMutation = {
     routingReason?: string | null;
     structuredPayloadJson?: string | null;
     toolMetadataJson?: string | null;
+  };
+};
+
+export type GetAgentConversationMessagesQueryVariables = Exact<{
+  input: GetAgentConversationMessagesInput;
+}>;
+
+export type GetAgentConversationMessagesQuery = {
+  __typename?: 'Query';
+  getAgentConversationMessages: {
+    __typename?: 'ListAgentConversationMessagesResultObject';
+    totalCount: number;
+    messages: Array<{
+      __typename?: 'AgentConversationMessageObject';
+      content: string;
+      createdAt: any;
+      id: string;
+      role: string;
+      routingConfidence?: number | null;
+      routingReason?: string | null;
+      toolMetadataJson?: string | null;
+    }>;
   };
 };
 
@@ -5388,6 +5541,94 @@ export const SendAgentMessageDocument = {
 } as unknown as DocumentNode<
   SendAgentMessageMutation,
   SendAgentMessageMutationVariables
+>;
+export const GetAgentConversationMessagesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getAgentConversationMessages' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'GetAgentConversationMessagesInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getAgentConversationMessages' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'messages' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'routingConfidence' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'routingReason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'toolMetadataJson' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetAgentConversationMessagesQuery,
+  GetAgentConversationMessagesQueryVariables
 >;
 export const GetDashboardDocument = {
   kind: 'Document',

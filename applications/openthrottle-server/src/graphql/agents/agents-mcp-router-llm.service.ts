@@ -14,9 +14,42 @@ import {
   parseAgentsMcpLlmRoutingJson,
 } from './agents-mcp-router-llm.parse';
 
+export interface AgentsRouterModelSnapshot {
+  readonly modelName: string;
+  readonly modelProvider: 'ollama' | 'openai';
+}
+
 @Injectable()
 export class AgentsMcpRouterLlmService {
   constructor(private readonly config: ConfigService) {}
+
+  /**
+   * @description Returns the configured router LLM provider and model name when env is set; null when heuristic-only routing applies.
+   */
+  getActiveRouterModelSnapshot(): AgentsRouterModelSnapshot | null {
+    const openAiKey = this.config.get<string>('OPENAI_API_KEY')?.trim();
+
+    if (openAiKey) {
+      const modelName =
+        this.config.get<string>('AGENTS_MCP_ROUTER_LLM_OPENAI_MODEL')?.trim() ||
+        'gpt-4o-mini';
+
+      return { modelName, modelProvider: 'openai' };
+    }
+
+    const ollamaBase = this.config.get<string>('OLLAMA_BASE_URL')?.trim();
+
+    if (ollamaBase) {
+      const modelName =
+        this.config.get<string>('AGENTS_MCP_ROUTER_LLM_OLLAMA_MODEL')?.trim() ||
+        this.config.get<string>('OLLAMA_CHAT_MODEL')?.trim() ||
+        'llama3.2';
+
+      return { modelName, modelProvider: 'ollama' };
+    }
+
+    return null;
+  }
 
   /**
    * @description True when env enables LLM fallback and `decision` is below the configured confidence threshold.

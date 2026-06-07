@@ -10,6 +10,13 @@ export interface ChatMessage {
   readonly role: ChatMessageRole;
 }
 
+/** JSON shape returned by a root `load-agent-conversation-messages` action. */
+export interface LoadAgentConversationMessagesResult {
+  readonly conversationId: string | null;
+  readonly errorMessage: string | null;
+  readonly messages: readonly ChatMessage[];
+}
+
 /** JSON shape returned by a root `send-agent-message` action (mirrors `agentsRunChatTurn`). */
 export interface ChatTurnResult {
   readonly assistantText: string | null;

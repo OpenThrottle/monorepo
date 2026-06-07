@@ -8,10 +8,18 @@ import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
 } from '@openthrottle/nestjs-openthrottle-mcp';
+import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,
 } from './agents-chat-mutation-policy';
+import {
+  PERSISTED_CONVERSATION_AUTH_ERROR,
+  persistSuccessfulAgentsChatTurn,
+  resolveHumanUserForPersist,
+  resolvePersistedConversation,
+} from './agents-chat-persistence';
 import {
   agentsChatTurnFromMcpToolResult,
   parseBearerJwt,
@@ -26,9 +34,30 @@ interface AgentsGqlContext {
   readonly req?: { headers?: Record<string, string | string[] | undefined> };
 }
 
+const buildFailedAgentsChatTurn = (input: {
+  readonly conversationId: string | null;
+  readonly errorMessage: string;
+  readonly readOnlyAgentsChat: boolean;
+}): AgentsChatTurnResult => {
+  const failed = new AgentsChatTurnResult();
+
+  failed.assistantText = null;
+  failed.conversationId = input.conversationId;
+  failed.errorMessage = input.errorMessage;
+  failed.mcpTool = null;
+  failed.readOnlyAgentsChat = input.readOnlyAgentsChat;
+  failed.routingConfidence = null;
+  failed.routingReason = null;
+  failed.structuredPayloadJson = null;
+  failed.toolMetadataJson = null;
+
+  return failed;
+};
+
 @Resolver()
 export class AgentsResolver {
   constructor(
+    private readonly agentConversationsService: AgentConversationsService,
     private readonly config: ConfigService,
     private readonly mcpRouter: AgentsMcpRouter,
     private readonly mcpRouterLlm: AgentsMcpRouterLlmService,
@@ -44,6 +73,7 @@ export class AgentsResolver {
   })
   async agentsRunChatTurn(
     @Context() context: AgentsGqlContext,
+    @CurrentUser() principal: AuthPrincipal | undefined,
     @Args('input', { type: () => AgentsRunChatTurnInput })
     input: AgentsRunChatTurnInput,
   ): Promise<AgentsChatTurnResult> {
@@ -51,23 +81,52 @@ export class AgentsResolver {
     const readOnlyAgentsChat = !readAgentsChatMutationsEnabledFromConfig(
       this.config,
     );
+    const shouldPersist = input.persist === true;
     const conversationEcho = input.conversationId ?? null;
 
     if (!message) {
-      const failed = new AgentsChatTurnResult();
-
-      failed.assistantText = null;
-      failed.conversationId = conversationEcho;
-      failed.errorMessage = 'Message is required.';
-      failed.mcpTool = null;
-      failed.readOnlyAgentsChat = readOnlyAgentsChat;
-      failed.routingConfidence = null;
-      failed.routingReason = null;
-      failed.structuredPayloadJson = null;
-      failed.toolMetadataJson = null;
-
-      return failed;
+      return buildFailedAgentsChatTurn({
+        conversationId: conversationEcho,
+        errorMessage: 'Message is required.',
+        readOnlyAgentsChat,
+      });
     }
+
+    if (shouldPersist && resolveHumanUserForPersist(principal) == null) {
+      return buildFailedAgentsChatTurn({
+        conversationId: conversationEcho,
+        errorMessage: PERSISTED_CONVERSATION_AUTH_ERROR,
+        readOnlyAgentsChat,
+      });
+    }
+
+    let persistedConversationId: string | null = null;
+    const humanUser = resolveHumanUserForPersist(principal);
+
+    if (shouldPersist && humanUser != null) {
+      const resolvedConversation = await resolvePersistedConversation(
+        this.agentConversationsService,
+        {
+          conversationId: input.conversationId,
+          message,
+          userId: humanUser.sub,
+        },
+      );
+
+      if (!resolvedConversation.ok) {
+        return buildFailedAgentsChatTurn({
+          conversationId: conversationEcho,
+          errorMessage: resolvedConversation.errorMessage,
+          readOnlyAgentsChat,
+        });
+      }
+
+      persistedConversationId = resolvedConversation.conversationId;
+    }
+
+    const activeConversationId = shouldPersist
+      ? persistedConversationId
+      : conversationEcho;
 
     const authorization = context.req?.headers?.authorization;
     const bearer = parseBearerJwt(authorization);
@@ -75,14 +134,16 @@ export class AgentsResolver {
     try {
       return await withMcpDeveloperAuthTokenAsync(bearer, async () => {
         let route = this.mcpRouter.route({
-          conversationId: input.conversationId ?? undefined,
+          conversationId: activeConversationId ?? undefined,
           message,
         });
+        let llmRouterUsed = false;
 
         if (this.mcpRouterLlm.shouldAttemptLlmRefinement(route)) {
           const refined = await this.mcpRouterLlm.refineRoute({ message });
 
           if (refined != null) {
+            llmRouterUsed = true;
             route = {
               ...refined,
               reason: `llm_fallback:${refined.reason}`,
@@ -97,7 +158,7 @@ export class AgentsResolver {
           const blocked = new AgentsChatTurnResult();
 
           blocked.assistantText = null;
-          blocked.conversationId = conversationEcho;
+          blocked.conversationId = activeConversationId;
           blocked.errorMessage = `This agents chat path is read-only. Enable AGENTS_CHAT_ALLOW_MUTATIONS on the server to allow routed write tools.`;
           blocked.mcpTool = route.tool;
           blocked.readOnlyAgentsChat = true;
@@ -122,38 +183,57 @@ export class AgentsResolver {
 
         const argumentsWithConversation: Record<string, unknown> = {
           ...route.args,
-          conversationId: input.conversationId ?? undefined,
+          conversationId: activeConversationId ?? undefined,
         };
 
-        return agentsChatTurnFromMcpToolResult(mcpResult, {
+        const turn = agentsChatTurnFromMcpToolResult(mcpResult, {
           arguments: argumentsWithConversation,
           confidence: route.confidence,
-          conversationId: conversationEcho,
+          conversationId: activeConversationId,
           readOnlyAgentsChat,
           routeReason: route.reason,
           tool: route.tool,
         });
+
+        if (
+          shouldPersist &&
+          persistedConversationId != null &&
+          humanUser != null &&
+          turn.errorMessage == null
+        ) {
+          await persistSuccessfulAgentsChatTurn({
+            agentConversationsService: this.agentConversationsService,
+            conversationId: persistedConversationId,
+            llmRouterUsed,
+            message,
+            route,
+            routerModelSnapshot: llmRouterUsed
+              ? this.mcpRouterLlm.getActiveRouterModelSnapshot()
+              : null,
+            turn,
+            userId: humanUser.sub,
+          });
+
+          turn.conversationId = persistedConversationId;
+        }
+
+        return turn;
       });
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
-      const failed = new AgentsChatTurnResult();
-
-      failed.assistantText = null;
-      failed.conversationId = conversationEcho;
-      failed.mcpTool = null;
-      failed.readOnlyAgentsChat = readOnlyAgentsChat;
-      failed.routingConfidence = null;
-      failed.routingReason = null;
-      failed.structuredPayloadJson = null;
-      failed.toolMetadataJson = null;
+      const failed = buildFailedAgentsChatTurn({
+        conversationId: shouldPersist
+          ? persistedConversationId
+          : conversationEcho,
+        errorMessage: msg,
+        readOnlyAgentsChat,
+      });
 
       if (msg.includes('Auth token required')) {
         failed.errorMessage = `OpenThrottle tools need a Bearer token on this request or OPENTHROTTLE_MCP_AUTH_TOKEN in the server environment.`;
 
         return failed;
       }
-
-      failed.errorMessage = msg;
 
       return failed;
     }

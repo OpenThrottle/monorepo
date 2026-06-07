@@ -1,4 +1,5 @@
 export * from './agents-chat-footer';
+export * from './map-persisted-messages';
 export * from './components/ChatComposer';
 export * from './components/ChatDialog';
 export * from './components/ChatMessageBody';

@@ -84,7 +84,10 @@ import {
   callLogoutMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
-import { handleSendAgentMessageIntent } from '~/global/utils/utils.agents-chat';
+import {
+  handleLoadAgentConversationMessagesIntent,
+  handleSendAgentMessageIntent,
+} from '~/global/utils/utils.agents-chat';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 
@@ -431,7 +434,7 @@ export default function App(): React.ReactElement {
         <NotificationsSocketBridge
           webSocketUrl={data?.env.API_URL_EXTERNAL ?? ''}
         >
-          <GlobalProviders>
+          <GlobalProviders chatPersist={data?.user != null}>
             <GlobalLayout
               authenticated={data?.user !== null}
               data={data?.user ? dataNavigationV2 : dataNavigationGuest}
@@ -639,6 +642,10 @@ export const action = async (args: Route.ActionArgs) => {
 
   if (intent === 'send-agent-message') {
     return handleSendAgentMessageIntent(args.request, formData);
+  }
+
+  if (intent === 'load-agent-conversation-messages') {
+    return handleLoadAgentConversationMessagesIntent(args.request, formData);
   }
 
   return null;
