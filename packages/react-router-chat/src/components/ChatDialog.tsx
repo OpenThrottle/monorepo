@@ -11,13 +11,16 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import classnames from 'classnames';
+import { BotIcon, MessageSquarePlus } from 'lucide-react';
 import { useChatOptional } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
 import { ChatThread } from './ChatThread';
 import type { ChatMessage } from '../types';
-import { BotIcon } from 'lucide-react';
 
 type ChatDialogVariant = 'dialog' | 'sheet';
 
@@ -65,6 +68,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
   const open = openProp ?? chatContext?.open;
   const composerDisabled =
     composerDisabledProp ?? chatContext?.composerDisabled ?? false;
+  const onStartNewChat = chatContext?.onStartNewChat;
 
   if (!messages || !onSendMessage) {
     throw new Error(
@@ -89,6 +93,32 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     </div>
   );
 
+  const newChatControl =
+    onStartNewChat != null ? (
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild={true}>
+          <Button
+            aria-label="New chat"
+            className="shrink-0"
+            onClick={onStartNewChat}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <MessageSquarePlus aria-hidden={true} className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>New chat</TooltipContent>
+      </Tooltip>
+    ) : null;
+
+  const headerTitle = (
+    <span className="flex min-w-0 flex-1 items-center gap-4">
+      <BotIcon aria-hidden={true} className="shrink-0 text-muted-foreground" />
+      <span className="truncate">{title}</span>
+    </span>
+  );
+
   // Handlers
 
   // Markup
@@ -110,9 +140,9 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
           side="right"
         >
           <SheetHeader>
-            <SheetTitle className="flex items-center flex-row gap-4">
-              <BotIcon className="text-muted-foreground" />
-              {title}
+            <SheetTitle className="flex w-full items-center gap-2">
+              {headerTitle}
+              {newChatControl}
             </SheetTitle>
           </SheetHeader>
           {shellBody}
@@ -132,9 +162,9 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
         data-testid="ChatDialog"
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-4">
-            <BotIcon className="text-muted-foreground" />
-            {title}
+          <DialogTitle className="flex w-full items-center gap-2">
+            {headerTitle}
+            {newChatControl}
           </DialogTitle>
         </DialogHeader>
         {shellBody}

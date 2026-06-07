@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { ChatProvider } from '../../context/chat-context';
 import { ChatDialog } from '../ChatDialog';
 import type { ChatDialogProps } from '../ChatDialog';
 import type { ChatMessage } from '../../types';
@@ -131,6 +133,48 @@ describe('ChatDialog Component', () => {
       component = render(<RoutesStub />);
       expect(component.getByRole('dialog')).toBeInTheDocument();
       expect(component.getByText('Existing')).toBeInTheDocument();
+    });
+  });
+
+  describe('when ChatProvider supplies onStartNewChat', () => {
+    test('should show New chat control in dialog header', async () => {
+      const user = userEvent.setup();
+      const onStartNewChat = vi.fn();
+      const Comp = () => (
+        <TooltipProvider>
+          <ChatProvider
+            messages={messages}
+            onSendMessage={onSendMessage}
+            onStartNewChat={onStartNewChat}
+          >
+            <ChatDialog triggerLabel="Open assistant" />
+          </ChatProvider>
+        </TooltipProvider>
+      );
+      const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
+      component = render(<RoutesStub />);
+
+      await user.click(
+        component.getByRole('button', { name: 'Open assistant' }),
+      );
+
+      expect(
+        component.getByRole('button', { name: 'New chat' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when onStartNewChat is not provided', () => {
+    test('should not show New chat control', async () => {
+      const user = userEvent.setup();
+      mountDialog();
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+
+      expect(
+        component!.queryByRole('button', { name: 'New chat' }),
+      ).not.toBeInTheDocument();
     });
   });
 

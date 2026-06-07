@@ -24,10 +24,11 @@ export const GlobalProviders = (
   const { chatPersist = false, children } = props;
 
   // Hooks
-  const { composerDisabled, messages, sendUserMessage } = useChatTurnFetcher({
-    action: '/',
-    persist: chatPersist,
-  });
+  const { composerDisabled, messages, sendUserMessage, startNewChat } =
+    useChatTurnFetcher({
+      action: '/',
+      persist: chatPersist,
+    });
 
   // Setup
 
@@ -47,6 +48,7 @@ export const GlobalProviders = (
             composerDisabled={composerDisabled}
             messages={messages}
             onSendMessage={sendUserMessage}
+            onStartNewChat={chatPersist ? startNewChat : undefined}
           >
             {children}
           </ChatProvider>

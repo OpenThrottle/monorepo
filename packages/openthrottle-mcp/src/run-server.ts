@@ -4,6 +4,7 @@ import { bootstrapMcpDeveloperApp, McpTransportType } from './nest/index.js';
 import { getServerName, SERVER_VERSION } from './config/index.js';
 import {
   registerActivityTools,
+  registerAgentConversationTools,
   registerCommitTools,
   registerHealthTool,
   registerKnowledgeBaseResource,
@@ -37,6 +38,7 @@ export async function runServerLocal(): Promise<void> {
   );
 
   registerActivityTools(server);
+  registerAgentConversationTools(server);
   registerCommitTools(server);
   registerHealthTool(server);
   registerKnowledgeBaseResource(server);

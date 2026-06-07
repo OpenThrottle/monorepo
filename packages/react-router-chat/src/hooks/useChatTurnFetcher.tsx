@@ -41,6 +41,11 @@ export interface UseChatTurnFetcherResult extends UseChatMessagesResult {
   readonly isLoadingHistory: boolean;
   readonly isSubmitting: boolean;
   readonly lastTurn: ChatTurnResult | null;
+  /**
+   * Clears the stored conversation id and in-memory thread so the next persisted
+   * send mints a new server conversation.
+   */
+  readonly startNewChat: () => void;
 }
 
 const createConversationId = (): string => {
@@ -273,6 +278,14 @@ export const useChatTurnFetcher = (
       },
     });
 
+  const startNewChat = React.useCallback((): void => {
+    clearConversationIdFromStorage(conversationIdStorageKey);
+    setConversationId(null);
+    setErrorMessage(null);
+    setLastTurn(null);
+    setMessages([]);
+  }, [conversationIdStorageKey, setMessages]);
+
   const isSubmitting =
     turnFetcher.state === 'submitting' || turnFetcher.state === 'loading';
   const isLoadingHistory =
@@ -404,5 +417,6 @@ export const useChatTurnFetcher = (
     messages,
     sendUserMessage,
     setMessages,
+    startNewChat,
   };
 };

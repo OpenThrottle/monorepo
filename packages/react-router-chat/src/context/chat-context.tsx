@@ -6,6 +6,10 @@ export interface ChatContextValue {
   readonly messages: readonly ChatMessage[];
   readonly onOpenChange: ((open: boolean) => void) | undefined;
   readonly onSendMessage: (message: string) => void;
+  /**
+   * When set (persisted chat mode), {@link ChatDialog} renders a New chat control.
+   */
+  readonly onStartNewChat: (() => void) | undefined;
   readonly open: boolean | undefined;
 }
 
@@ -14,6 +18,7 @@ export interface ChatProviderProps extends React.PropsWithChildren {
   readonly messages: readonly ChatMessage[];
   readonly onOpenChange?: (open: boolean) => void;
   readonly onSendMessage: (message: string) => void;
+  readonly onStartNewChat?: () => void;
   readonly open?: boolean;
 }
 
@@ -29,6 +34,7 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
     messages,
     onOpenChange,
     onSendMessage,
+    onStartNewChat,
     open,
   } = props;
 
@@ -38,9 +44,17 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
       messages,
       onOpenChange,
       onSendMessage,
+      onStartNewChat,
       open,
     }),
-    [composerDisabled, messages, onOpenChange, onSendMessage, open],
+    [
+      composerDisabled,
+      messages,
+      onOpenChange,
+      onSendMessage,
+      onStartNewChat,
+      open,
+    ],
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

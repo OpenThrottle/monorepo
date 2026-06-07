@@ -296,4 +296,66 @@ describe('useChatTurnFetcher', () => {
     expect(result.current.messages[0]?.body).toBe('Earlier question');
     expect(result.current.messages[1]?.body).toBe('Earlier answer');
   });
+
+  test('should clear thread state and sessionStorage when startNewChat is called', async () => {
+    const { result, rerender } = renderHook(() =>
+      useChatTurnFetcher({ persist: true }),
+    );
+
+    act(() => {
+      result.current.sendUserMessage('Hello');
+    });
+
+    turnFetcherState = 'submitting';
+    rerender();
+
+    turnFetcherData = sampleTurn({
+      assistantText: 'Saved',
+      conversationId: 'server-conv-id',
+      errorMessage: null,
+    });
+    turnFetcherState = 'idle';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.conversationId).toBe('server-conv-id');
+    });
+
+    act(() => {
+      result.current.startNewChat();
+    });
+
+    expect(result.current.conversationId).toBeNull();
+    expect(result.current.messages).toEqual([]);
+    expect(result.current.errorMessage).toBeNull();
+    expect(result.current.lastTurn).toBeNull();
+    expect(
+      sessionStorage.getItem('openthrottle.chat.conversationId'),
+    ).toBeNull();
+  });
+
+  test('should mint a new server conversation on next send after startNewChat', async () => {
+    sessionStorage.setItem('openthrottle.chat.conversationId', 'old-server-id');
+
+    const { result } = renderHook(() => useChatTurnFetcher({ persist: true }));
+
+    act(() => {
+      result.current.startNewChat();
+    });
+
+    act(() => {
+      result.current.sendUserMessage('Fresh thread');
+    });
+
+    expect(mockTurnSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Fresh thread',
+        persist: 'true',
+      }),
+      expect.any(Object),
+    );
+    expect(
+      mockTurnSubmit.mock.calls.at(-1)?.[0]?.conversationId,
+    ).toBeUndefined();
+  });
 });

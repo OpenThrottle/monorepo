@@ -78,6 +78,19 @@ These checks do **not** depend on which folder is the Cursor workspace root; the
    Adjust the host/port if **`API_URL_INTERNAL`** is not the default. Expect JSON with **`data.serverHealth`**.
 3. **In Cursor (secondary workspace):** after **`health`** succeeds in the MCP panel, call an authenticated tool (**`list_sources`**, **`list_plans_by_status`**, or **`create_plan`** / **`create_task`**) with **`OPENTHROTTLE_MCP_AUTH_TOKEN`** set in the global MCP **`env`** block. **Required:** GraphQL base aligned with the server (**`/graphql`** on the same origin as **`API_URL_INTERNAL`**); token format and acquisition: [AUTH.md](./AUTH.md).
 
+### Agent conversation read tools smoke (human JWT)
+
+These three read-only tools query persisted **web chat** threads (`agent_conversation_*`). They require a **human JWT** in **`OPENTHROTTLE_MCP_AUTH_TOKEN`** — service account tokens (`ot_sa_…`) are rejected with **403 Human authentication required**. See [agent-conversation-read-tools-contract.md](./agent-conversation-read-tools-contract.md) and [AUTH.md](./AUTH.md) § Human JWT.
+
+1. **Token:** Set a valid human JWT (not `ot_sa_…`) in Cursor MCP **`env`** or shell **`OPENTHROTTLE_MCP_AUTH_TOKEN`**.
+2. **Fixture:** Persist at least one chat turn via the developer UI with **`persist: true`**, or call GraphQL **`agentsRunChatTurn`** with **`persist: true`**.
+3. **`agent_conversation_list`** — response **`structuredContent.conversations`** includes the conversation id; default pagination is limit **20**, status **`active`**.
+4. **`agent_conversation_get`** with **`id`** — same conversation row as step 3.
+5. **`agent_conversation_get_messages`** with **`conversationId`** — user and assistant rows; assistant rows include **`routingConfidence`**, **`routingModel`**, **`routingReason`**, **`routingTier`**, **`toolMetadataJson`** when present.
+6. **Boundary:** Tool descriptions warn that these are web chat threads only — use **`get_plan_output`** for Ralph/plan iteration logs.
+
+**Negative check:** With an **`ot_sa_…`** token, expect **403** on all three tools (confirms user-scoped human auth).
+
 ### Containerized API — MCP on the host (Docker Compose)
 
 When **openthrottle-server** runs in Docker and publishes **`OPENTHROTTLE_SERVER_PORT`** to the host (see [compose-topology-phase-1.md](../../../docs/openthrottle/compose-topology-phase-1.md)), **Cursor and openthrottle-mcp on the host** should target **`http://localhost:<port>/graphql`** (same host/port as **`GET /health`**). **`host.docker.internal`** is for processes **inside** a container to reach the host (or host-published ports); it is **not** the right URL for host-side MCP talking **into** a container that listens on `localhost:<published-port>`.

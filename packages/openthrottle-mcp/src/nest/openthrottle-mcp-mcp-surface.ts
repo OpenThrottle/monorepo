@@ -29,6 +29,39 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.getAgentConversationToolDescription,
+    name: 'agent_conversation_get',
+    parameters: asMcpParameters(Th.getAgentConversationToolParameters),
+  })
+  agentConversationGet(
+    args: Parameters<typeof Th.getAgentConversationToolHandler>[0],
+  ): ReturnType<typeof Th.getAgentConversationToolHandler> {
+    return Th.getAgentConversationToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getAgentConversationMessagesToolDescription,
+    name: 'agent_conversation_get_messages',
+    parameters: asMcpParameters(Th.getAgentConversationMessagesToolParameters),
+  })
+  agentConversationGetMessages(
+    args: Parameters<typeof Th.getAgentConversationMessagesToolHandler>[0],
+  ): ReturnType<typeof Th.getAgentConversationMessagesToolHandler> {
+    return Th.getAgentConversationMessagesToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listAgentConversationsToolDescription,
+    name: 'agent_conversation_list',
+    parameters: asMcpParameters(Th.listAgentConversationsToolParameters),
+  })
+  agentConversationList(
+    args: Parameters<typeof Th.listAgentConversationsToolHandler>[0],
+  ): ReturnType<typeof Th.listAgentConversationsToolHandler> {
+    return Th.listAgentConversationsToolHandler(args);
+  }
+
+  @Tool({
     description: Th.createNoteToolDescription,
     name: 'create_note',
     parameters: asMcpParameters(Th.createNoteToolParameters),
