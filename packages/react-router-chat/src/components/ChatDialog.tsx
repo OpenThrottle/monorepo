@@ -81,7 +81,11 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
   const shellBody = (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <ChatThread messages={messages} />
-      <ChatComposer disabled={composerDisabled} onSubmit={onSendMessage} />
+      <ChatComposer
+        className="border-t-0"
+        disabled={composerDisabled}
+        onSubmit={onSendMessage}
+      />
     </div>
   );
 
@@ -98,7 +102,10 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       <Sheet defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
         <SheetTrigger asChild={true}>{triggerNode}</SheetTrigger>
         <SheetContent
-          className={classnames('flex w-full flex-col sm:max-w-md', className)}
+          className={classnames(
+            'flex w-full flex-col sm:max-w-md md:max-w-4xl',
+            className,
+          )}
           data-testid="ChatDialog"
           side="right"
         >
