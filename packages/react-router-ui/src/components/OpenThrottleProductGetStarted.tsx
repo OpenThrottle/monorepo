@@ -23,7 +23,8 @@ export const OpenThrottleProductGetStarted = (
   );
 
   // Setup
-  const command = `git clone https://github.com/openthrottle/monorepo.git`;
+  // const command = `git clone https://github.com/openthrottle/monorepo.git`;
+  const command = `coming soon...`;
 
   // Handlers
 

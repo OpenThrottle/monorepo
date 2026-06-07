@@ -3,6 +3,7 @@ import {
   BookOpenTextIcon,
   BotIcon,
   BotMessageSquareIcon,
+  Code2Icon,
   GaugeCircleIcon,
   InfinityIcon,
   ListIcon,
@@ -20,22 +21,22 @@ export interface DataFeature {
 export const FEATURES_DOC_URL = `${OPEN_THROTTLE_GITHUB_URL}/blob/main/docs/openthrottle/features.md`;
 export const FEATURES: DataFeature[] = [
   {
-    description: `openthrottle-mcp in VSCode or Cursor: ask OpenThrottle, list plans by status, create or edit plans and tasks, semantic search, activity by date, output stream, commit links.`,
-    icon: BotMessageSquareIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'IDE (MCP) integration',
-  },
-  {
-    description: `Turn an idea or PRD into a plan and tasks in OpenThrottle, then execute one task at a time. Progress lives in OpenThrottle; commit with Plan-Id and Task-Id.`,
-    icon: InfinityIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
-    title: 'Agentic Workflows',
-  },
-  {
     description: `Agentic skills, rules, and commands all in one place, available any sized organization.`,
     icon: BotIcon,
     link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
     title: 'Agentic Tooling',
+  },
+  {
+    description: `Turn an idea or PRD into a plan and tasks in OpenThrottle, then execute one task at a time. Progress lives in OpenThrottle; commit with Plan-Id and Task-Id.`,
+    icon: InfinityIcon,
+    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-agentic-workflow#readme`,
+    title: 'Agentic Workflows',
+  },
+  {
+    description: `openthrottle-mcp in VSCode or Cursor: ask OpenThrottle, list plans by status, create or edit plans and tasks, semantic search, activity by date, output stream, commit links.`,
+    icon: BotMessageSquareIcon,
+    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
+    title: 'IDE (MCP) integration',
   },
   {
     description: `Create and manage plans with tasks; track status (pending, in progress, completed, blocked, skipped). List by status and see remaining tasks per plan.`,
@@ -68,9 +69,15 @@ export const FEATURES: DataFeature[] = [
     title: 'Dashboard',
   },
   {
+    description: `Generate code predictable code with a single command and guide the Agent through the process.`,
+    icon: Code2Icon,
+    link: `https://github.com/OpenThrottle/monorepo/tree/main/tools/generators#readme`,
+    title: 'Generators',
+  },
+  {
     description: `Quick notes (unstructured thoughts) with optional author; foundation for planning (e.g. create plan from note). Exposed via MCP.`,
     icon: NotepadTextIcon,
-    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/openthrottle-mcp#readme`,
+    link: `https://github.com/OpenThrottle/monorepo/tree/main/packages/nestjs-repositories#readme`,
     title: 'Notes',
   },
 ] as const;
