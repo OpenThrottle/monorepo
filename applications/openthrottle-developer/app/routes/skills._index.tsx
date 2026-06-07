@@ -58,12 +58,11 @@ export default function Component(
   return (
     <>
       <GlobalScreen>
-        <SkillsIntroduction entries={entries} />
+        <SkillsIntroduction entries={[...entries]} />
 
         <div className="flex flex-col gap-4">
           <SkillsToolbar />
-          <SkillsTable className="bg-card" entries={entries} />
-          {/* <SkillsTable entries={[]} /> */}
+          <SkillsTable className="bg-card" entries={[...entries]} />
         </div>
 
         {/* <AgentsSectionQuickLinks /> */}

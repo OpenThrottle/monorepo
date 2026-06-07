@@ -22,14 +22,14 @@ Ralph injects full plan/task context from Postgres into the prompt; no `@file` o
 - **Foreign cwd (manual CLI, no queue):** When you run `workflow-ralph` from another repo whose `.env` or shell sets a different `POSTGRES_URL`, plan lookup can hit the wrong database and fail with **Plan not found**. Export OpenThrottle's Cortex URL explicitly before invoking Ralph:
 
   ```bash
-  export OPENTHROTTLE_CORTEX_POSTGRES_URL="$(grep '^POSTGRES_URL=' /path/to/openthrottle/.env | cut -d= -f2-)"
+  export OPENTHROTTLE_POSTGRES_URL="$(grep '^POSTGRES_URL=' /path/to/openthrottle/.env | cut -d= -f2-)"
   # or: export POSTGRES_URL=... (same OpenThrottle Cortex string)
 
   cd /path/to/other-repo
   pnpm exec /path/to/openthrottle/node_modules/.bin/workflow-ralph --plan <uuid>
   ```
 
-  `getPostgresConfig()` prefers `OPENTHROTTLE_CORTEX_POSTGRES_URL` over `POSTGRES_URL`. BullMQ spawns inject both vars from the worker automatically; manual runs must set them yourself. Ralph resolves Cortex **before** loading the Nx project graph so a foreign cwd cannot desync plan lookup mid-startup when the correct URL is exported. See [README § Cortex DB identity](../README.md#multi-workspace-plans-workingdirectory) for worker vs nested diagnostics (`WORKFLOW_RALPH_OT_DIAGNOSTICS`, `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`).
+  `getPostgresConfig()` prefers `OPENTHROTTLE_POSTGRES_URL` over `POSTGRES_URL`. BullMQ spawns inject both vars from the worker automatically; manual runs must set them yourself. Ralph resolves Cortex **before** loading the Nx project graph so a foreign cwd cannot desync plan lookup mid-startup when the correct URL is exported. See [README § Cortex DB identity](../README.md#multi-workspace-plans-workingdirectory) for worker vs nested diagnostics (`WORKFLOW_RALPH_OT_DIAGNOSTICS`, `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`).
 
 - **Invocation:** Use the workflow binary from the other repo, e.g. `pnpm exec ../../../../monorepo/node_modules/.bin/workflow-ralph --plan <plan-uuid>`.
 - **Debug / verbose (manual CLI):** `--debug`, `--debug=verbose`, and `--verbose` are valid on `workflow-ralph` (same as `WORKFLOW_RALPH_DEBUG` / `WORKFLOW_RALPH_VERBOSE`). Shim lines go to stderr with the `[workflow-ralph:debug]` prefix. See [README § Debugging Ralph](../README.md#debugging-ralph-shim-logger).
@@ -45,7 +45,7 @@ The foreign root is detected via `resolveForeignWorkspaceContext` (which uses `g
 From another checkout, export OpenThrottle's Cortex URL, invoke this monorepo's binary, and confirm plan load plus debug output:
 
 ```bash
-export OPENTHROTTLE_CORTEX_POSTGRES_URL="$(grep '^POSTGRES_URL=' /path/to/openthrottle/.env | cut -d= -f2-)"
+export OPENTHROTTLE_POSTGRES_URL="$(grep '^POSTGRES_URL=' /path/to/openthrottle/.env | cut -d= -f2-)"
 cd /path/to/other-repo
 WORKFLOW_RALPH_OT_DIAGNOSTICS=1 /path/to/openthrottle/node_modules/.bin/workflow-ralph \
   --plan <cortex-plan-uuid> --debug --iterations 1

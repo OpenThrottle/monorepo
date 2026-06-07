@@ -128,8 +128,8 @@ describe('sanitizePostgresUrlForLogs', () => {
 });
 
 describe('getPostgresUrl', () => {
-  describe('when OPENTHROTTLE_CORTEX_POSTGRES_URL is set', () => {
-    it('prefers OPENTHROTTLE_CORTEX_POSTGRES_URL over POSTGRES_URL', () => {
+  describe('when OPENTHROTTLE_POSTGRES_URL is set', () => {
+    it('prefers OPENTHROTTLE_POSTGRES_URL over POSTGRES_URL', () => {
       const conn = getPostgresUrl({
         [OPENTHROTTLE_POSTGRES_URL_ENV]:
           'postgresql://cortex@db.example:5432/openthrottle',
@@ -139,7 +139,7 @@ describe('getPostgresUrl', () => {
       expect(conn).toBe('postgresql://cortex@db.example:5432/openthrottle');
     });
 
-    it('trims whitespace from OPENTHROTTLE_CORTEX_POSTGRES_URL', () => {
+    it('trims whitespace from OPENTHROTTLE_POSTGRES_URL', () => {
       const conn = getPostgresUrl({
         [OPENTHROTTLE_POSTGRES_URL_ENV]:
           '  postgresql://cortex@db.example:5432/openthrottle  ',
@@ -166,7 +166,7 @@ describe('getPostgresUrl', () => {
       expect(conn).toBe('postgresql://user:pass@localhost:5432/mydb');
     });
 
-    it('falls through empty OPENTHROTTLE_CORTEX_POSTGRES_URL to POSTGRES_URL', () => {
+    it('falls through empty OPENTHROTTLE_POSTGRES_URL to POSTGRES_URL', () => {
       const conn = getPostgresUrl({
         [OPENTHROTTLE_POSTGRES_URL_ENV]: '   ',
         POSTGRES_URL: 'postgresql://user:pass@localhost:5432/mydb',
