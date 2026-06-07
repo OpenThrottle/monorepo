@@ -46,10 +46,19 @@ export const loader = async (args: Route.LoaderArgs) => {
   // FIXME: Replace with the actual repo when we launch
   const repo = `facebook/react`;
   const url = `https://api.github.com/repos/${repo}`;
+  let stars = '0';
 
-  const response = await fetch(url);
-  const data = await response.json();
-  const stars = data?.stargazers_count.toLocaleString();
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    const count = data?.stargazers_count ?? 0;
+
+    stars = count.toLocaleString();
+
+    console.error('🟢 🟢 🟢 success fetch gh stars:', stars);
+  } catch (error) {
+    console.error('🔴 🔴 🔴 error fetch gh stars:', error);
+  }
 
   return { canonical, env, repo, stars };
 };
