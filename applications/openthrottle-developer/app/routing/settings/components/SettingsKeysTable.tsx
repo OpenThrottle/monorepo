@@ -245,21 +245,19 @@ export const SettingsKeysTable = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (credentials.length === 0) {
+  if (credentials.length === 0 && !!actionError) {
     return (
       <div
         className={classnames('space-y-4', className)}
         data-testid="SettingsKeysTable"
       >
-        {actionError ? (
-          <p
-            className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-            data-testid="SettingsKeysTable-action-error"
-            role="alert"
-          >
-            {actionError}
-          </p>
-        ) : null}
+        <p
+          className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          data-testid="SettingsKeysTable-action-error"
+          role="alert"
+        >
+          {actionError}
+        </p>
         <SettingsKeysTableEmpty />
       </div>
     );
@@ -283,6 +281,7 @@ export const SettingsKeysTable = (
         <DataTable<ServiceAccountCredentialFieldsFragment, string | null>
           columns={columns}
           data={[...credentials]}
+          emptyState={<SettingsKeysTableEmpty />}
           getRowId={credentialRowId}
         />
       </div>
