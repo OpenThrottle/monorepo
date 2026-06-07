@@ -16,7 +16,7 @@ const comparePlanTaskListOrder = (
 
 /**
  * @description Injected plan/tasks block for layer-2 agent prompt (parity with
- * `formatPlanAndTasksForPrompt` in `tools/workflows` `cortex-ralph.ts`).
+ * `formatPlanAndTasksForPrompt` in `tools/workflows` `openthrottle-ralph.ts`).
  */
 export const formatPlanAndTasksForPrompt = (
   plan: PlanFragment,

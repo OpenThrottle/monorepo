@@ -6,7 +6,7 @@ import {
   ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updateTaskSummary,
-} from '../src/utils/cortex-ralph';
+} from '../src/utils/openthrottle-ralph';
 
 const taskId = process.argv[2];
 const summary = process.argv.slice(3).join(' ').trim();

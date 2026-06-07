@@ -1586,7 +1586,7 @@ describe('PlansResolver', () => {
       expect(result?.projectId).toBeNull();
     });
 
-    describe('IN_PROGRESS transition (cortex-ralph parity)', () => {
+    describe('IN_PROGRESS transition (openthrottle-ralph parity)', () => {
       /**
        * @description Matches GraphQL clients that send only `id` + changed fields; `undefined`
        * means omitted so the resolver does not treat null clears as updates.

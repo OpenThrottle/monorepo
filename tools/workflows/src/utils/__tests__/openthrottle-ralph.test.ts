@@ -101,7 +101,7 @@ describe('ensureCortexReachable (postgres-direct)', () => {
 
   it('throws with clear message when connection fails', async () => {
     mockState.connectReject = new Error('Connection refused');
-    const { ensureCortexReachable } = await import('../cortex-ralph.js');
+    const { ensureCortexReachable } = await import('../openthrottle-ralph.js');
 
     await expect(ensureCortexReachable(mockConfig)).rejects.toThrow(
       /Cortex database is unreachable/,
@@ -112,7 +112,7 @@ describe('ensureCortexReachable (postgres-direct)', () => {
   });
 
   it('resolves when connection and SELECT 1 succeed', async () => {
-    const { ensureCortexReachable } = await import('../cortex-ralph.js');
+    const { ensureCortexReachable } = await import('../openthrottle-ralph.js');
 
     await expect(ensureCortexReachable(mockConfig)).resolves.toBeUndefined();
   });
@@ -132,7 +132,7 @@ describe('promotePlanToInProgressIfNeeded (postgres-direct)', () => {
 
   it('returns true when plan is promoted from PENDING', async () => {
     const { promotePlanToInProgressIfNeeded } =
-      await import('../cortex-ralph.js');
+      await import('../openthrottle-ralph.js');
 
     const promoted = await promotePlanToInProgressIfNeeded(
       mockConfig,
@@ -146,7 +146,7 @@ describe('promotePlanToInProgressIfNeeded (postgres-direct)', () => {
   it('returns false when plan is already IN_PROGRESS', async () => {
     mockState.planStatus = 'IN_PROGRESS';
     const { promotePlanToInProgressIfNeeded } =
-      await import('../cortex-ralph.js');
+      await import('../openthrottle-ralph.js');
 
     const promoted = await promotePlanToInProgressIfNeeded(
       mockConfig,
@@ -170,7 +170,7 @@ describe('updatePlanStatus (postgres-direct)', () => {
   });
 
   it('promotes PENDING to IN_PROGRESS using status != IN_PROGRESS predicate', async () => {
-    const { updatePlanStatus } = await import('../cortex-ralph.js');
+    const { updatePlanStatus } = await import('../openthrottle-ralph.js');
 
     const row = await updatePlanStatus(mockConfig, 'plan-1', 'IN_PROGRESS');
 
@@ -180,7 +180,7 @@ describe('updatePlanStatus (postgres-direct)', () => {
 
   it('returns null when plan is already IN_PROGRESS', async () => {
     mockState.planStatus = 'IN_PROGRESS';
-    const { updatePlanStatus } = await import('../cortex-ralph.js');
+    const { updatePlanStatus } = await import('../openthrottle-ralph.js');
 
     const row = await updatePlanStatus(mockConfig, 'plan-1', 'IN_PROGRESS');
 
@@ -201,7 +201,7 @@ describe('updateTaskStatus (postgres-direct)', () => {
   });
 
   it('promotes parent plan when task becomes IN_PROGRESS', async () => {
-    const { updateTaskStatus } = await import('../cortex-ralph.js');
+    const { updateTaskStatus } = await import('../openthrottle-ralph.js');
 
     await updateTaskStatus(mockConfig, 'task-1', 'IN_PROGRESS');
 

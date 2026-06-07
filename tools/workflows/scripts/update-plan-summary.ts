@@ -7,7 +7,7 @@ import {
   ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updatePlanSummary,
-} from '../src/utils/cortex-ralph';
+} from '../src/utils/openthrottle-ralph';
 
 const planId = process.argv[2];
 const summary = process.argv.slice(3).join(' ').trim();

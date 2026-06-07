@@ -28,8 +28,8 @@ import type {
   PlanRow,
   ProjectRow,
   TaskRow,
-} from './cortex-ralph-types';
-import { taskRequirementsFromRow } from './cortex-ralph-types';
+} from './openthrottle-ralph-types';
+import { taskRequirementsFromRow } from './openthrottle-ralph-types';
 
 const normalizeStatus = (status: string): string => status.trim().toUpperCase();
 
@@ -85,7 +85,7 @@ export const taskFragmentToRow = (task: TaskFragment): TaskRow => {
 /**
  * @description GraphQL read-before-write preflight (the single documented exception).
  */
-export async function ensureCortexReachableGraphql(): Promise<void> {
+export async function ensureGraphqlIsReachable(): Promise<void> {
   const result = await executeWorkflowGraphqlV2(GetServerHealthDocument, {});
   const database = result.serverHealth.database?.trim().toLowerCase();
 

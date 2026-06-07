@@ -10,7 +10,7 @@
 import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   appendPlanOutputGraphql,
-  ensureCortexReachableGraphql,
+  ensureGraphqlIsReachable,
   ensureProjectForNxNameGraphql,
   getPlanByIdGraphql,
   getTaskByIdGraphql,
@@ -23,7 +23,7 @@ import {
   updatePlanSummaryGraphql,
   updateTaskStatusGraphql,
   updateTaskSummaryGraphql,
-} from './cortex-ralph-graphql';
+} from './openthrottle-ralph-graphql';
 import {
   appendPlanOutputPostgres,
   ensureCortexReachablePostgres,
@@ -40,7 +40,7 @@ import {
   updatePlanSummaryPostgres,
   updateTaskStatusPostgres,
   updateTaskSummaryPostgres,
-} from './cortex-ralph-postgres';
+} from './openthrottle-ralph-postgres';
 import type {
   CommitLinkInput,
   CommitLinkRow,
@@ -49,11 +49,11 @@ import type {
   ProjectRow,
   TaskRow,
   WorkflowRalphConfig,
-} from './cortex-ralph-types';
+} from './openthrottle-ralph-types';
 import {
   formatPlanAndTasksForPrompt,
   taskRequirementsFromRow,
-} from './cortex-ralph-types';
+} from './openthrottle-ralph-types';
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
@@ -166,7 +166,7 @@ export const ensureCortexReachable = async (
     return;
   }
 
-  await ensureCortexReachableGraphql();
+  await ensureGraphqlIsReachable();
 };
 
 export const updatePlanSummary = async (

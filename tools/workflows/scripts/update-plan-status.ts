@@ -6,7 +6,7 @@ import {
   ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   updatePlanStatus,
-} from '../src/utils/cortex-ralph';
+} from '../src/utils/openthrottle-ralph';
 
 const planId = process.argv[2];
 const statusRaw = process.argv[3];
@@ -33,7 +33,7 @@ const status = STATUS_MAP[statusRaw.toLowerCase()] ?? statusRaw;
   const config = getCortexConfigOrExit();
   await ensureDatabaseReachableOrExit(config);
   const row = await updatePlanStatus(config, planId, status);
-  // Direct DB: IN_PROGRESS only applies when current status is not already IN_PROGRESS (see cortex-ralph.updatePlanStatus).
+  // Direct DB: IN_PROGRESS only applies when current status is not already IN_PROGRESS (see openthrottle-ralph.updatePlanStatus).
   if (row) {
     console.log('Updated plan', row.id, 'to status', row.status);
   } else {

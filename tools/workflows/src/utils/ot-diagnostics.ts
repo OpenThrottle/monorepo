@@ -42,7 +42,7 @@ export function logWorkflowRalphOtDiagnostics(params: {
       githubTokenSet: Boolean(env.GITHUB_TOKEN?.trim()),
       graphqlUrlSet: Boolean(env.GRAPHQL_URL?.trim()),
       jwtSecretSet: Boolean(env.JWT_SECRET?.trim()),
-      openthrottleCortexPostgresUrlSet: Boolean(
+      openthrottlePostgresUrlSet: Boolean(
         env.OPENTHROTTLE_POSTGRES_URL?.trim(),
       ),
       openthrottleWorkflowsAuthTokenSet: Boolean(

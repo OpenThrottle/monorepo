@@ -14,7 +14,7 @@ import {
   listPlansByStatus,
   listProjects,
   updatePlanProjectId,
-} from '../src/utils/cortex-ralph';
+} from '../src/utils/openthrottle-ralph';
 import { getNxProjectNames } from '../src/utils/projects';
 
 const dryRun = process.argv.includes('--dry-run');

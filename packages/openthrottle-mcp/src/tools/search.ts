@@ -42,14 +42,11 @@ export const semanticSearchToolParameters = z.object({
   query: z.string().min(1),
 });
 
-export const getDocumentToolDescription =
-  'Fetch a single document chunk by id (UUID from plan_embeddings or task_embeddings). Use after semantic_search to read full chunk content.';
+export const getDocumentToolDescription = `Fetch a single document chunk by id (UUID from plan_embeddings or task_embeddings). Use after semantic_search to read full chunk content.`;
 
-export const listSourcesToolDescription =
-  'List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.';
+export const listSourcesToolDescription = `List knowledge-base sources (plan, task, documentation) and plan titles. Use to discover available collections and plans.`;
 
-export const semanticSearchToolDescription =
-  'Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content via GraphQL. Requires OPENAI_API_KEY or Ollama on the server for query embedding.';
+export const semanticSearchToolDescription = `Search the plans knowledge base by meaning. Runs a vector similarity search over plan and task content via GraphQL. Requires OPENAI_API_KEY or Ollama on the server for query embedding.`;
 
 export async function getDocumentToolHandler(
   args: z.infer<typeof getDocumentToolParameters>,

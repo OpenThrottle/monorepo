@@ -15,8 +15,8 @@ import type {
   ProjectRow,
   TaskRow,
   WorkflowRalphConfig,
-} from './cortex-ralph-types';
-import { taskRequirementsFromRow } from './cortex-ralph-types';
+} from './openthrottle-ralph-types';
+import { taskRequirementsFromRow } from './openthrottle-ralph-types';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
@@ -36,7 +36,7 @@ const requireConnectionString = (config: WorkflowRalphConfig): string => {
 };
 
 /**
- * @description Verifies Cortex Postgres is reachable (connect + SELECT 1).
+ * @description Verifies Postgres is reachable (connect + SELECT 1).
  * @deprecated Import {@link ensurePostgresReachable} from `@openthrottle/openthrottle-agentic-utils` instead.
  */
 export async function ensureCortexReachablePostgres(
