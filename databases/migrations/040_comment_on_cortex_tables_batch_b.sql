@@ -1,9 +1,9 @@
--- Batch B (plan c8be6591-7314-4b43-aaa4-6e4b7ab59e59): COMMENT ON TABLE for Cortex tables (≤10 per batch).
+-- Batch B (plan c8be6591-7314-4b43-aaa4-6e4b7ab59e59): COMMENT ON TABLE for OpenThrottle tables (≤10 per batch).
 -- Tone matches databases/migrations/038_create_plan_runs_table.sql (short purpose-focused prose).
 -- plan_runs: table comment already set in 038_create_plan_runs_table.sql; not repeated here.
 
 COMMENT ON TABLE plan_output_stream IS 'Ordered append-only log chunks per plan for agent or Ralph iteration output stored in the database.';
-COMMENT ON TABLE plans IS 'Cortex plan records with title, status, category, and author for the plans and tasks knowledge base.';
+COMMENT ON TABLE plans IS 'OpenThrottle plan records with title, status, category, and author for the plans and tasks knowledge base.';
 COMMENT ON TABLE projects IS 'Logical or Nx project groupings that scope plans and tasks within the workspace.';
 COMMENT ON TABLE role_permissions IS 'Join of roles to permissions defining which capabilities each RBAC role grants.';
 COMMENT ON TABLE roles IS 'Named RBAC roles for OpenThrottle admin access aligned with application permission sets.';

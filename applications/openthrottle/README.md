@@ -75,7 +75,7 @@ Ports exposed on the host are configurable via **`OPENTHROTTLE_SERVER_PORT`** (d
 - **Prerequisites:** Node.js ≥22, pnpm, and (for full stack) Postgres with pgvector and Redis. The monorepo uses pnpm and Nx; run all commands from the **monorepo root** unless noted.
 - **Clone and install:** From the monorepo root run `pnpm install` to install workspace dependencies.
 - **Environment:** Copy `applications/openthrottle/.env.default` to `applications/openthrottle/.env` and set Postgres/Redis (and optional JWT, CORS, Ollama/OpenAI) as needed. For Docker Compose, use the same `.env`; see [Required `.env`](#required-env) above.
-- **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. Cortex schema and migrations: `databases/README.md`.
+- **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. OpenThrottle schema and migrations: `databases/README.md`.
 - **Optional — embeddings:** For semantic search (plans knowledge base) use Ollama (set `OLLAMA_BASE_URL`) or OpenAI (set `OPENAI_API_KEY`). See root `.env.default` and `docs/openthrottle/run-locally-oss.md`.
 
 ## Development

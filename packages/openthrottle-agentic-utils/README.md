@@ -28,7 +28,7 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 - **Repo rule:** kebab-case file names ([`.cursor/rules/coding/naming-conventions.mdc`](../../.cursor/rules/coding/naming-conventions.mdc)).
 - **Current scaffold** uses `utils.<domain>.ts` (dots, not kebab). **Recommendation:** rename to `src/utils/<domain>.ts` (`postgres.ts`, `workflow.ts`, `nodejs.ts`, `metrics.ts`) before the first real move (task 2). Avoid the `utils.` filename prefix; the directory already signals “utilities”.
-- **Function names:** prefer clear names over legacy `workflow*` / `ralph*` prefixes in the **public** API where semantics are general (e.g. `sanitizePostgresUrlForLogs` not `sanitizePostgresConnectionForLogs`). Keep **env var names** unchanged for compatibility (`POSTGRES_URL`, `WORKFLOW_RALPH_OT_ROOT`, `OPENTHROTTLE_CORTEX_POSTGRES_URL`, etc.).
+- **Function names:** prefer clear names over legacy `workflow*` / `ralph*` prefixes in the **public** API where semantics are general (e.g. `sanitizePostgresUrlForLogs` not `sanitizePostgresConnectionForLogs`). Keep **env var names** unchanged for compatibility (`POSTGRES_URL`, `WORKFLOW_RALPH_OT_ROOT`, `OPENTHROTTLE_POSTGRES_URL`, etc.).
 
 ## Export map
 
@@ -75,9 +75,9 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Overlap resolved (task 2)
 
-- **`getPostgresUrl`** in `src/utils/postgres.ts` is canonical: `OPENTHROTTLE_CORTEX_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*`; **throws** when incomplete (`POSTGRES_URL_MISSING_ERROR`).
+- **`getPostgresUrl`** in `src/utils/postgres.ts` is canonical: `OPENTHROTTLE_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*`; **throws** when incomplete (`POSTGRES_URL_MISSING_ERROR`).
 - **`@openthrottle/ai-mcp`** re-exports via deprecated `resolveCortexPostgresConnectionStringFromEnv` shim (returns `undefined` on missing env for optional spawn paths); `getPostgresConfig()` delegates to `getPostgresUrl()`.
-- **`@tools/workflows`** re-exports `getPostgresUrl` and `OPENTHROTTLE_CORTEX_POSTGRES_URL_ENV` from this package.
+- **`@tools/workflows`** re-exports `getPostgresUrl` and `OPENTHROTTLE_POSTGRES_URL_ENV` from this package.
 - **`@openthrottle/openthrottle-postgres`** duplicate remains; deprecate in a later task.
 
 ## Overlap resolved (task 3)

@@ -18,8 +18,7 @@ type DeleteProjectResult = GenericResult<{
 
 export const deleteProjectToolParameters = DeleteProjectInputSchema();
 
-export const deleteProjectToolDescription =
-  'Delete a Cortex project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.';
+export const deleteProjectToolDescription = `Delete a Cortex project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.`;
 
 export async function deleteProjectToolHandler(
   args: z.infer<typeof deleteProjectToolParameters>,

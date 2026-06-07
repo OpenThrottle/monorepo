@@ -32,7 +32,7 @@ afterAll(() => {
 });
 
 describe('resolveCortexPostgresConnectionStringFromEnv', () => {
-  it('prefers OPENTHROTTLE_CORTEX_POSTGRES_URL over POSTGRES_URL', () => {
+  it('prefers OPENTHROTTLE_POSTGRES_URL over POSTGRES_URL', () => {
     const conn = resolveCortexPostgresConnectionStringFromEnv({
       [OPENTHROTTLE_POSTGRES_URL_ENV]:
         'postgresql://cortex@db.example:5432/openthrottle',

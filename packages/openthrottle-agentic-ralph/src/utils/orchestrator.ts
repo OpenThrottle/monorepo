@@ -104,7 +104,7 @@ const onFailure = (
 
 /**
  * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
- * `cortex-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
+ * `openthrottle-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
  */
 const promotePlanToInProgressIfNeeded = async (
   executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],

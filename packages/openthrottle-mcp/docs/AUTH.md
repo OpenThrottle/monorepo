@@ -9,16 +9,7 @@ Tools that call authenticated GraphQL (plans, tasks, notes, semantic search, and
 | **Service account** (recommended for MCP) | `ot_sa_<prefix>_<secret>`              | Cursor MCP, CI, Ralph workers | Long-lived; rotate by creating a new credential and revoking the old one |
 | **Human JWT**                             | Standard JWT from `login` / `register` | Developer UI, admin GraphQL   | ~24h; must re-login or refresh manually                                  |
 
-Use a **service account** token for `OPENTHROTTLE_MCP_AUTH_TOKEN` so automation does not depend on a human session that expires. Human JWTs still work when `APP_ENABLE_AUTHENTICATION=true`, but they are a poor fit for always-on MCP.
-
-## Server: `APP_ENABLE_AUTHENTICATION`
-
-openthrottle-server defaults to `**APP_ENABLE_AUTHENTICATION=true`\*\* in `applications/openthrottle-server/.env.default`.
-
-- `**true`:\*\* `GlobalAuthGuard` validates every non-`@Public()` route. Bearer `ot_sa_…` is checked first; otherwise a human JWT is required. `GqlPermissionsGuard` enforces `@Permissions()` for both principal kinds.
-- `**false`:\*\* Auth guards are bypassed (legacy local dev). Do not use in environments where RBAC matters.
-
-MCP and workers should assume **auth enabled** and send a valid service account bearer.
+Use a **service account** token for `OPENTHROTTLE_MCP_AUTH_TOKEN` so automation does not depend on a human session that expires. Human JWTs still work, but they are a poor fit for always-on MCP.
 
 ## First-time setup (local)
 
@@ -91,7 +82,8 @@ Rotate without disabling auth:
 - `applications/openthrottle-server/.env` if used there
 - CI secrets or deployment env for workers
 
-3. **Verify** authenticated MCP tools (`list_sources`, `list_plans_by_status`, or `create_plan`) with `APP_ENABLE_AUTHENTICATION=true`.
+3. **Verify** authenticated MCP tools (`list_sources`, `list_plans_by_status`, or `create_plan`)
+
 4. **Revoke** the old credential:
 
 - Admin GraphQL: `revokeServiceAccountCredential(credentialId: …)`

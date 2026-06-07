@@ -113,32 +113,23 @@ export const listTasksByCategoryToolParameters = z.object({
   status: z.string().min(1).optional(),
 });
 
-export const createTaskToolDescription =
-  'Create a new task in Cortex. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted).';
+export const createTaskToolDescription = `Create a new task in Cortex. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted).`;
 
-export const createTasksToolDescription =
-  'Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId, sortOrder). When sortOrder is omitted per item, tasks append after the plan max sortOrder (1000, 2000, …) preserving array order. Explicit sortOrder per item is respected. Returns created task ids and titles.';
+export const createTasksToolDescription = `Create multiple tasks for a plan in one call. Requires planId and tasks (array of objects with title; optional description, category, status, requirements, summary, assignee, project, projectId, sortOrder). When sortOrder is omitted per item, tasks append after the plan max sortOrder (1000, 2000, …) preserving array order. Explicit sortOrder per item is respected. Returns created task ids and titles.`;
 
-export const deleteTaskToolDescription =
-  'Delete a task by id. Returns whether a row was deleted.';
+export const deleteTaskToolDescription = `Delete a task by id. Returns whether a row was deleted.`;
 
-export const getTaskToolDescription =
-  'Fetch a task by id (UUID). Returns the task row or not found.';
+export const getTaskToolDescription = `Fetch a task by id (UUID). Returns the task row or not found.`;
 
-export const getTasksByPlanIdToolDescription =
-  'Fetch all tasks for a plan by plan id (UUID). Ordered by sortOrder ASC, then createdAt ASC.';
+export const getTasksByPlanIdToolDescription = `Fetch all tasks for a plan by plan id (UUID). Ordered by sortOrder ASC, then createdAt ASC.`;
 
-export const getRemainingTasksForPlanToolDescription =
-  'Fetch remaining tasks for a plan (status PENDING, IN_PROGRESS, BLOCKED). Ordered by sortOrder ASC, then createdAt ASC. Use for "What tasks remain for this plan?".';
+export const getRemainingTasksForPlanToolDescription = `Fetch remaining tasks for a plan (status PENDING, IN_PROGRESS, BLOCKED). Ordered by sortOrder ASC, then createdAt ASC. Use for "What tasks remain for this plan?".`;
 
-export const listTasksByCategoryToolDescription =
-  'List tasks filtered by category (e.g. infra, documentation). Optional: planId (UUID), status, limit (1–200). Returns tasks ordered by sortOrder ASC within each plan, then createdAt ASC.';
+export const listTasksByCategoryToolDescription = `List tasks filtered by category (e.g. infra, documentation). Optional: planId (UUID), status, limit (1–200). Returns tasks ordered by sortOrder ASC within each plan, then createdAt ASC.`;
 
-export const reorderPlanTasksToolDescription =
-  'Reorder tasks within a plan. Requires planId and taskIds (array of task UUIDs in desired order). Renumbers sortOrder to 1000, 2000, … atomically. Prefer this over delete-and-recreate when fixing task execution order.';
+export const reorderPlanTasksToolDescription = `Reorder tasks within a plan. Requires planId and taskIds (array of task UUIDs in desired order). Renumbers sortOrder to 1000, 2000, … atomically. Prefer this over delete-and-recreate when fixing task execution order.`;
 
-export const updateTaskToolDescription =
-  'Update a task by id. Pass id and any of: title, description, status, category, assignee, planId, project, projectId, requirements, summary, sortOrder (execution order within plan; gap-based insert e.g. 1500 between 1000 and 2000).';
+export const updateTaskToolDescription = `Update a task by id. Pass id and any of: title, description, status, category, assignee, planId, project, projectId, requirements, summary, sortOrder (execution order within plan; gap-based insert e.g. 1500 between 1000 and 2000).`;
 
 export async function createTaskToolHandler(
   args: z.infer<typeof createTaskToolParameters>,

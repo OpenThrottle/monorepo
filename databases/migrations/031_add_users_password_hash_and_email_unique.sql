@@ -1,5 +1,5 @@
--- Add password_hash and email uniqueness for OpenThrottle local auth (Cortex as user store).
--- See docs/openthrottle/openthrottle-server-auth.md and plan "Implement Passport local strategy for OpenThrottle auth (Cortex DB)".
+-- Add password_hash and email uniqueness for OpenThrottle local auth (OpenThrottle as user store).
+-- See docs/openthrottle/openthrottle-server-auth.md and plan "Implement Passport local strategy for OpenThrottle auth".
 --
 -- password_hash: nullable so existing users (e.g. github_username-only) are not broken.
 -- New auth users should set password_hash (bcrypt) and email for login.

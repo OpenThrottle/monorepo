@@ -10,7 +10,7 @@ Verified daily path for **Postgres, Redis, migrations, API, and optional develop
 2. **Env files:** root `.env`, `applications/openthrottle-server/.env`, and (for the UI) `applications/openthrottle-developer/.env` — copy from each `.env.default`.
 3. **`pnpm run database:start`** — Postgres (**6010**) and Redis (**6011**) via root `docker-compose.yml`.
 4. **`pnpm run database:migrate`** — required before the API can use OT tables.
-5. **Service account tokens (when `APP_ENABLE_AUTHENTICATION=true`):** **`pnpm run database:bootstrap-service-accounts`** — mints `ot_sa_…` values for `OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. Copy into server `.env` and Cursor MCP `env`. See [AUTH.md](./AUTH.md).
+5. **Service account tokens:** **`pnpm run database:bootstrap-service-accounts`** — mints `ot_sa_…` values for `OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. Copy into server `.env` and Cursor MCP `env`. See [AUTH.md](./AUTH.md).
 6. **GraphQL codegen (developer app)** — run **`pnpm nx run openthrottle-developer:codegen-graphql`** if generated artifacts are missing after clone or schema changes.
 7. **API:** **`pnpm nx run openthrottle-server:dev`** — GraphQL at **`http://localhost:6021/graphql`**, health at **`http://localhost:6021/health`** (default **PORT** **6021**).
 8. **Developer UI (optional for MCP):** **`pnpm nx run openthrottle-developer:dev`** — typically **`http://localhost:6020`** for manual smoke checks alongside the API.
@@ -25,7 +25,6 @@ Verified daily path for **Postgres, Redis, migrations, API, and optional develop
 | **Postgres**                      | Server reads/writes OpenThrottle data                            | From server `.env`: often `localhost:6010`                                                                                                                                                                                                                                    |
 | **Redis**                         | Server queues / health                                           | From server `.env`: often `localhost:6011`                                                                                                                                                                                                                                    |
 | **`API_URL_INTERNAL`**            | Base URL for `@openthrottle/nodejs-graphql` (appends `/graphql`) | Must match server, e.g. `http://localhost:6021`                                                                                                                                                                                                                               |
-| **`APP_ENABLE_AUTHENTICATION`**   | Server guard behavior (in server `.env`)                         | Default **`true`** in `.env.default`; MCP smoke should use auth on + service account token                                                                                                                                                                                    |
 | **`OPENTHROTTLE_MCP_AUTH_TOKEN`** | Bearer token for authenticated tools                             | Service account `ot_sa_<prefix>_<secret>` from bootstrap or admin GraphQL; see [AUTH.md](./AUTH.md)                                                                                                                                                                           |
 | **Embeddings (server)**           | `semantic_search` / ingest embed on **openthrottle-server**      | **`OPENAI_API_KEY`** or **`OLLAMA_BASE_URL`** (+ optional **`OLLAMA_EMBEDDING_MODEL`**) in **`applications/openthrottle-server/.env`** — not required by `scripts/run-openthrottle-mcp.sh`. Ollama-only: [run-locally-oss.md](../../../docs/openthrottle/run-locally-oss.md). |
 | **`WORKTREE_ID`**                 | Optional; set by `run-openthrottle-mcp.sh` for MCP server naming | From git worktree basename                                                                                                                                                                                                                                                    |
@@ -42,7 +41,7 @@ From the monorepo root (optional env override `API_URL_INTERNAL`):
 API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
 ```
 
-This probes **`GET /health`** on the API base and reports missing `.env` keys / unset auth token. When **`OPENTHROTTLE_MCP_AUTH_TOKEN`** is set, it also POSTs an authenticated **`listSources`** GraphQL query to confirm **`APP_ENABLE_AUTHENTICATION=true`** accepts the `ot_sa_…` bearer (401/403 fails the script).
+This probes **`GET /health`** on the API base and reports missing `.env` keys / unset auth token. When **`OPENTHROTTLE_MCP_AUTH_TOKEN`** is set, it also POSTs an authenticated **`listSources`** GraphQL query to confirm accepts the `ot_sa_…` bearer (401/403 fails the script).
 
 ## Secondary workspace (another repo open in Cursor)
 
@@ -108,7 +107,7 @@ Or the Cursor launcher (**from the monorepo root**; no root **`OPENAI_API_KEY`**
 
 - **Plans and tasks** live in Postgres; there is no checked-in JSON snapshot required for verification. Use an existing scratch plan or create one via MCP (`create_plan` / `create_task`).
 - **Smoke baseline:** call tool **`health`** (no auth) — confirms GraphQL `getServerHealth` and connectivity.
-- **Authenticated path (auth enabled):** with **`APP_ENABLE_AUTHENTICATION=true`** on the server and a bootstrap or rotated **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (`ot_sa_…`), call **`list_sources`** or **`list_plans_by_status`**. Confirms RBAC + service account strategy, not only connectivity.
+- **Authenticated path (auth enabled):** with server and a bootstrap or rotated **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (`ot_sa_…`), call **`list_sources`** or **`list_plans_by_status`**. Confirms RBAC + service account strategy, not only connectivity.
 
 ## Ports reference
 

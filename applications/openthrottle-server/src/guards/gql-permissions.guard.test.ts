@@ -32,7 +32,6 @@ describe('GqlPermissionsGuard', () => {
   let rolesService: RolesService;
 
   beforeEach(() => {
-    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'true');
     reflector = createMock<Reflector>({
       getAllAndOverride: vi.fn(),
     });
@@ -45,19 +44,6 @@ describe('GqlPermissionsGuard', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
-  });
-
-  it('allows all routes when APP_ENABLE_AUTHENTICATION is not true', async () => {
-    vi.stubEnv('APP_ENABLE_AUTHENTICATION', 'false');
-    vi.mocked(reflector.getAllAndOverride).mockReturnValue([
-      PERMISSIONS.USERS_WRITE,
-    ]);
-    const ctx = createHttpExecutionContext({});
-
-    await expect(guard.canActivate(ctx)).resolves.toBe(true);
-
-    expect(rolesService.getPermissionsForUser).not.toHaveBeenCalled();
-    expect(rolesService.getPermissionsForServiceAccount).not.toHaveBeenCalled();
   });
 
   it('allows access when no @Permissions() metadata is set', async () => {

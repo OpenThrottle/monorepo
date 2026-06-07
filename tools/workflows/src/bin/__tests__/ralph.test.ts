@@ -3,8 +3,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { WorkflowRalphConfig } from '../../utils/cortex-ralph';
-import type { PlanRow, TaskRow } from '../../utils/cortex-ralph';
+import type { WorkflowRalphConfig } from '../../utils/openthrottle-ralph';
+import type { PlanRow, TaskRow } from '../../utils/openthrottle-ralph';
 
 const PLAN_ID = '970aecc7-c647-4948-aa20-410e1bd090fc';
 const TASK_ID = '9e4453e3-8b98-4df2-8cc5-d06afed67222';
@@ -48,9 +48,9 @@ const { updateTaskStatusMock, runIterationMock, getNxProjectNamesMock } =
     updateTaskStatusMock: vi.fn().mockResolvedValue({}),
   }));
 
-vi.mock('../../utils/cortex-ralph', async (importOriginal) => {
+vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../../utils/cortex-ralph')>();
+    await importOriginal<typeof import('../../utils/openthrottle-ralph')>();
   return {
     ...actual,
     ensureDatabaseReachableOrExit: vi.fn().mockResolvedValue(undefined),
@@ -160,7 +160,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
 
   it('resolves Cortex config before NX project validation when --project is set', async () => {
     const callOrder: string[] = [];
-    const cortexRalph = await import('../../utils/cortex-ralph.js');
+    const cortexRalph = await import('../../utils/openthrottle-ralph.js');
     const parsers = await import('../../utils/parsers.js');
 
     vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {
@@ -217,7 +217,7 @@ describe('Ralph main (Cortex before NX project graph)', () => {
 
   it('resolves Cortex config before NX project validation when --project is set', async () => {
     const callOrder: string[] = [];
-    const cortexRalph = await import('../../utils/cortex-ralph.js');
+    const cortexRalph = await import('../../utils/openthrottle-ralph.js');
     const parsers = await import('../../utils/parsers.js');
 
     vi.mocked(cortexRalph.getCortexConfigOrExit).mockImplementation(() => {

@@ -50,12 +50,6 @@ export class GlobalAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    /** When false, skip auth so all routes are open; {@link request.user} is not set. */
-    const isAuthEnabled = process.env.APP_ENABLE_AUTHENTICATION === 'true';
-    if (!isAuthEnabled) {
-      return true;
-    }
-
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),

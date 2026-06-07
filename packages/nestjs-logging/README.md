@@ -133,9 +133,9 @@ Only records whose **`level`** is included in the module’s **`levels`** option
 
 Per-queue, per-job Ralph **stdout/stderr** is a **separate** concern from the single application JSONL stream: use **`KeyedJsonlWriter`** (same package) with its own base directory, lazy open, LRU FD cap, and per-job `close` after the processor finishes. Lines are JSON objects with `timestamp`, `type` (`stdout` | `stderr`), and `data` (string). Do **not** point `runOutputBaseDirectory` at the same tree as `logDirectory` unless you intend to mix artifacts—see [bullmq-run-output-spec.md](./docs/bullmq-run-output-spec.md).
 
-**openthrottle-server:** set **`OT_BULLMQ_RUN_OUTPUT_DIR`** to an absolute or cwd-relative directory. When set, `PlansProcessor` appends spawn/worktree Ralph chunks to `{base}/{sanitizedQueue}/{sanitizedJobId}.jsonl` and call **`close(queueName, jobId)`** in a `finally` block after each job. On worker shutdown they best-effort call **`closeAll()`**. When the env var is unset, no writer is registered and behavior matches the previous logger-only path.
+**openthrottle-server:** set **`BULLMQ_RUN_OUTPUT_DIR`** to an absolute or cwd-relative directory. When set, `PlansProcessor` appends spawn/worktree Ralph chunks to `{base}/{sanitizedQueue}/{sanitizedJobId}.jsonl` and call **`close(queueName, jobId)`** in a `finally` block after each job. On worker shutdown they best-effort call **`closeAll()`**. When the env var is unset, no writer is registered and behavior matches the previous logger-only path.
 
-**Retention (optional):** export **`pruneKeyedRunOutputDirectory`** from this package for custom cron or ops scripts. OpenThrottle’s API also supports **throttled post-job pruning** when `OT_BULLMQ_RUN_OUTPUT_DIR` is set and at least one of **`OT_BULLMQ_RUN_OUTPUT_MAX_AGE_MS`** or **`OT_BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES`** is set; see the BullMQ run output table below and [bullmq-run-output-spec.md](./docs/bullmq-run-output-spec.md) §7.
+**Retention (optional):** export **`pruneKeyedRunOutputDirectory`** from this package for custom cron or ops scripts. OpenThrottle’s API also supports **throttled post-job pruning** when `BULLMQ_RUN_OUTPUT_DIR` is set and at least one of **`BULLMQ_RUN_OUTPUT_MAX_AGE_MS`** or **`BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES`** is set; see the BullMQ run output table below and [bullmq-run-output-spec.md](./docs/bullmq-run-output-spec.md) §7.
 
 ### Example environment flags (app-defined)
 
@@ -152,12 +152,12 @@ This package does not read environment variables directly. Map the names below (
 
 **BullMQ run output (openthrottle-server only):**
 
-| Variable                                     | Purpose                                                                                                      |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `OT_BULLMQ_RUN_OUTPUT_DIR`                   | Base directory for per-job JSONL transcripts from plan/workflow workers. Unset = disabled.                   |
-| `OT_BULLMQ_RUN_OUTPUT_MAX_AGE_MS`            | Delete run transcript files older than this age (mtime), when set with a run output dir.                     |
-| `OT_BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES`       | After age pruning, cap total bytes of remaining `*.jsonl` / `*.log` under the run output dir (oldest first). |
-| `OT_BULLMQ_RUN_OUTPUT_PRUNE_MIN_INTERVAL_MS` | Minimum milliseconds between prune passes after job close (default 300000).                                  |
+| Variable                                  | Purpose                                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `BULLMQ_RUN_OUTPUT_DIR`                   | Base directory for per-job JSONL transcripts from plan/workflow workers. Unset = disabled.                   |
+| `BULLMQ_RUN_OUTPUT_MAX_AGE_MS`            | Delete run transcript files older than this age (mtime), when set with a run output dir.                     |
+| `BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES`       | After age pruning, cap total bytes of remaining `*.jsonl` / `*.log` under the run output dir (oldest first). |
+| `BULLMQ_RUN_OUTPUT_PRUNE_MIN_INTERVAL_MS` | Minimum milliseconds between prune passes after job close (default 300000).                                  |
 
 In production, also wire **handshake authentication** for the logging namespace (for example validate `socket.handshake.auth.token` against a secret from `OT_LOG_WS_TOKEN` or your existing auth module) and restrict **CORS origin** on the host Socket.IO adapter; the gateway in this package sets `cors: { origin: true }` for developer convenience—tighten at the application level when exposing beyond localhost.
 

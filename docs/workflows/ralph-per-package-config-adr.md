@@ -94,7 +94,7 @@ Example:
 
 | Category              | Variables                                                                                                    | Reason                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
-| **Postgres / Cortex** | `POSTGRES_URL`, `POSTGRES_*`, `OPENTHROTTLE_CORTEX_POSTGRES_URL`                                             | Runtime secrets; injected at spawn  |
+| **Postgres / Cortex** | `POSTGRES_URL`, `POSTGRES_*`, `OPENTHROTTLE_POSTGRES_URL`                                                    | Runtime secrets; injected at spawn  |
 | **GraphQL auth**      | `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, `OPENTHROTTLE_MCP_AUTH_TOKEN`, `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Secrets                             |
 | **GraphQL URL**       | `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`, `OPENTHROTTLE_WORKER_GRAPHQL_URL`, `API_URL_INTERNAL`                  | Deployment-specific endpoints       |
 | **API keys**          | `OPENAI_API_KEY`, Ollama keys/URLs when used for embeddings                                                  | Secrets                             |

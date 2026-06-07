@@ -28,7 +28,7 @@ The plan listed eight areas. Below they are merged where overlap would confuse a
 
 **Split vs merge decisions**
 
-- **Merge 2 + 3** into `openthrottle-monorepo`: one skill avoids two triggers firing for every “how do I run/build this?” question; boundaries stay clear via sections (“Scaffold → nx-generate”, “Graph/targets → nx-workspace / nx-run-tasks”).
+- **Merge 2 + 3** into `openthrottle-monorepo`: one skill avoids two triggers firing for every "how do I run/build this?” question; boundaries stay clear via sections ("Scaffold → nx-generate”, "Graph/targets → nx-workspace / nx-run-tasks”).
 - **Keep server/data/UI/MCP separate** (`openthrottle-server`, `openthrottle-data`, `openthrottle-developer-ui`, `openthrottle-mcp`): different triggers (GraphQL vs migrations vs routes vs MCP package) reduce noise; each SKILL stays skimmable.
 - **`openthrottle-plans` vs `git-commit`**: split — plans skill owns OT traceability and linking; git-commit stays generic.
 
@@ -41,7 +41,7 @@ The plan listed eight areas. Below they are merged where overlap would confuse a
 
 ## Frontmatter naming
 
-Use Cursor skill **`name`** matching the folder (kebab-case), e.g. `name: openthrottle-plans`. Descriptions should include trigger phrases (“OpenThrottle”, “OT”, “openthrottle-mcp”, “workflow-ralph”, “Cortex plan”) so discovery matches team vocabulary from AGENTS.md.
+Use Cursor skill **`name`** matching the folder (kebab-case), e.g. `name: openthrottle-plans`. Descriptions should include trigger phrases ("OpenThrottle”, "OT”, "openthrottle-mcp”, "workflow-ralph", "OpenThrottle plan") so discovery matches team vocabulary from AGENTS.md.
 
 ## Related plan
 

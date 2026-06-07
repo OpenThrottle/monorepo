@@ -28,8 +28,8 @@ import type {
   PlanRow,
   ProjectRow,
   TaskRow,
-} from './cortex-ralph-types';
-import { taskRequirementsFromRow } from './cortex-ralph-types';
+} from './openthrottle-ralph-types';
+import { taskRequirementsFromRow } from './openthrottle-ralph-types';
 
 const normalizeStatus = (status: string): string => status.trim().toUpperCase();
 
@@ -85,7 +85,7 @@ export const taskFragmentToRow = (task: TaskFragment): TaskRow => {
 /**
  * @description GraphQL read-before-write preflight (the single documented exception).
  */
-export async function ensureCortexReachableGraphql(): Promise<void> {
+export async function ensureGraphqlIsReachable(): Promise<void> {
   const result = await executeWorkflowGraphqlV2(GetServerHealthDocument, {});
   const database = result.serverHealth.database?.trim().toLowerCase();
 
@@ -101,28 +101,6 @@ export async function ensureCortexReachableGraphql(): Promise<void> {
   throw new Error(
     `${detail} Check API_URL_INTERNAL / OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL and server connectivity.`,
   );
-}
-
-export async function updatePlanSummaryGraphql(
-  planId: string,
-  summary: string,
-): Promise<PlanRow | null> {
-  const result = await executeWorkflowGraphqlV2(UpdatePlanDocument, {
-    input: { id: planId, summary },
-  });
-
-  return result.updatePlan ? planFragmentToRow(result.updatePlan) : null;
-}
-
-export async function updateTaskSummaryGraphql(
-  taskId: string,
-  summary: string,
-): Promise<boolean> {
-  const result = await executeWorkflowGraphqlV2(UpdateTaskDocument, {
-    input: { id: taskId, summary },
-  });
-
-  return result.updateTask != null;
 }
 
 export async function getTaskByIdGraphql(id: string): Promise<TaskRow | null> {

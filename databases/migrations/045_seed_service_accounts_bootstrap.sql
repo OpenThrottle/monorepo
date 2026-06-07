@@ -1,4 +1,4 @@
--- Bootstrap service accounts, automation roles, and Cortex plan permissions (MCP + Ralph workers).
+-- Bootstrap service accounts, automation roles, and OpenThrottle plan permissions (MCP + Ralph workers).
 -- Idempotent: safe to re-run after 044_create_service_accounts_tables.sql.
 -- Credentials are NOT seeded here (plaintext shown once). Run:
 --   pnpm run database:bootstrap-service-accounts
