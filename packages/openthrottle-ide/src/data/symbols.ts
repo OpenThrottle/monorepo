@@ -1,7 +1,7 @@
 import { join, relative, sep } from 'node:path';
 
 import type { ExportedDeclarations, Project, SourceFile } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, ts } from 'ts-morph';
 
 import type {
   ResolvedWorkspaceConfig,
@@ -78,6 +78,181 @@ export async function listExports(
   }
 
   return symbols.sort(compareSymbols);
+}
+
+/** A 1-based source position inside a workspace file. */
+export interface SymbolPosition {
+  /** 1-based column. */
+  column: number;
+  /** 1-based line. */
+  line: number;
+  /** Workspace-relative path of the file. */
+  path: string;
+}
+
+/** A symbol identified by name rather than a source position. */
+export interface SymbolName {
+  /** The declared/exported name to resolve. */
+  name: string;
+}
+
+/** What {@link findDefinition} / {@link findReferences} resolve from. */
+export type SymbolTarget = SymbolName | SymbolPosition;
+
+/** A resolved declaration site. */
+export interface DefinitionLocation {
+  /** 1-based column of the declaration's name. */
+  column: number;
+  /** Declaration kind when known, e.g. `function`, `class`, `const`. */
+  kind?: string;
+  /** 1-based line of the declaration's name. */
+  line: number;
+  /** Declared name when known. */
+  name?: string;
+  /** Workspace-relative POSIX path of the declaration's file. */
+  path: string;
+}
+
+/**
+ * Resolve the definition location(s) for a symbol, given either a source
+ * {@link SymbolPosition} (go-to-definition on an identifier) or a
+ * {@link SymbolName}. Resolves imported symbols across files. Returns an empty
+ * array — never throws — when nothing resolves.
+ *
+ * @publicApi
+ */
+export async function findDefinition(
+  config: WorkspaceConfig,
+  target: SymbolTarget,
+): Promise<DefinitionLocation[]> {
+  const resolved = resolveWorkspaceConfig(config);
+  const project = loadProject(config);
+
+  const declarations = isPositionTarget(target)
+    ? definitionsAtPosition(project, resolved, target)
+    : await definitionsByName(project, resolved, target.name);
+
+  return dedupeLocations(
+    declarations.map((node) => toDefinitionLocation(node, resolved)),
+  );
+}
+
+function definitionsAtPosition(
+  project: Project,
+  resolved: ResolvedWorkspaceConfig,
+  position: SymbolPosition,
+): Node[] {
+  const sourceFile = getOrAddSourceFile(project, resolved, position.path);
+
+  if (sourceFile === undefined) {
+    return [];
+  }
+
+  const offset = ts.getPositionOfLineAndCharacter(
+    sourceFile.compilerNode,
+    position.line - 1,
+    position.column - 1,
+  );
+  const node = sourceFile.getDescendantAtPos(offset);
+
+  if (node === undefined || !Node.isIdentifier(node)) {
+    return [];
+  }
+
+  return node.getDefinitionNodes();
+}
+
+async function definitionsByName(
+  project: Project,
+  resolved: ResolvedWorkspaceConfig,
+  name: string,
+): Promise<Node[]> {
+  const sourceFiles = await addWorkspaceSourceFiles(project, resolved);
+
+  return sourceFiles.flatMap((sourceFile) =>
+    namedDeclarations(sourceFile).filter(
+      (declaration) => getDeclaredName(declaration) === name,
+    ),
+  );
+}
+
+function namedDeclarations(sourceFile: SourceFile): Node[] {
+  return [
+    ...sourceFile.getFunctions(),
+    ...sourceFile.getClasses(),
+    ...sourceFile.getInterfaces(),
+    ...sourceFile.getTypeAliases(),
+    ...sourceFile.getEnums(),
+    ...sourceFile.getModules(),
+    ...sourceFile.getVariableDeclarations(),
+  ];
+}
+
+function toDefinitionLocation(
+  node: Node,
+  resolved: ResolvedWorkspaceConfig,
+): DefinitionLocation {
+  const sourceFile = node.getSourceFile();
+  const anchor = getNameNode(node) ?? node;
+  const { column, line } = sourceFile.getLineAndColumnAtPos(anchor.getStart());
+
+  return {
+    column,
+    kind: resolveKind(node),
+    line,
+    name: getDeclaredName(node),
+    path: toRelativePath(sourceFile.getFilePath(), resolved),
+  };
+}
+
+function isPositionTarget(target: SymbolTarget): target is SymbolPosition {
+  return 'path' in target;
+}
+
+function getNameNode(node: Node): Node | undefined {
+  if (Node.isNamed(node) || Node.isNameable(node)) {
+    return node.getNameNode();
+  }
+
+  return undefined;
+}
+
+function getOrAddSourceFile(
+  project: Project,
+  resolved: ResolvedWorkspaceConfig,
+  relativePath: string,
+): SourceFile | undefined {
+  const absolutePath = join(resolved.root, relativePath);
+
+  return (
+    project.getSourceFile(absolutePath) ??
+    project.addSourceFileAtPathIfExists(absolutePath)
+  );
+}
+
+function dedupeLocations(
+  locations: DefinitionLocation[],
+): DefinitionLocation[] {
+  const seen = new Set<string>();
+  const unique: DefinitionLocation[] = [];
+
+  for (const location of locations) {
+    const key = `${location.path}|${location.line}|${location.column}`;
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(location);
+    }
+  }
+
+  return unique.sort(compareLocations);
+}
+
+function compareLocations(
+  a: DefinitionLocation,
+  b: DefinitionLocation,
+): number {
+  return a.path.localeCompare(b.path) || a.line - b.line || a.column - b.column;
 }
 
 function toExportedSymbol(
