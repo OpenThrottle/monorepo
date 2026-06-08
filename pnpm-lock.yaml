@@ -242,6 +242,9 @@ importers:
       '@openthrottle/openthrottle-developer-codegen':
         specifier: workspace:*
         version: link:packages/openthrottle-developer-codegen
+      '@openthrottle/openthrottle-ide':
+        specifier: workspace:*
+        version: link:packages/openthrottle-ide
       '@openthrottle/openthrottle-mcp':
         specifier: workspace:*
         version: link:packages/openthrottle-mcp
@@ -1493,6 +1496,8 @@ importers:
   packages/openthrottle-agentic-workflow: {}
 
   packages/openthrottle-developer-codegen: {}
+
+  packages/openthrottle-ide: {}
 
   packages/openthrottle-mcp:
     dependencies:
@@ -10006,10 +10011,10 @@ packages:
         integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==,
       }
 
-  '@react-grab/cli@0.1.43':
+  '@react-grab/cli@0.1.44':
     resolution:
       {
-        integrity: sha512-S+UBB0Mwu1g0Cjhff5YzsA33YFYu91DmazPL9uVvF1wDjsO2Lu9hKN/OzBCHYjWlxdBT7TLy2A6pNTS3Sx8o9w==,
+        integrity: sha512-gMDYY2rw6OWajCcDlXSIgs2LC432YJXSb3Lm5yM187uhRgBYddoEVULi36h+IolX3r7jSb3ew7vn9FfI8NSo0A==,
       }
     hasBin: true
 
@@ -23942,10 +23947,10 @@ packages:
         integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==,
       }
 
-  react-grab@0.1.43:
+  react-grab@0.1.44:
     resolution:
       {
-        integrity: sha512-3wplt0CobZE5k1Vf3PBqBm3vlNQnVWEpSGBMHRnnFcj/khYYwGXSMSTedW1s8MI5FqkdhU/CFoJ7hQqGwzqFIA==,
+        integrity: sha512-bDEwBdI90ljq2lhUtPqmWis/HwYB/CvfT0m5i+P9F83Pt0Ot8o9XL8v00s9jcWzdQUlsFDzmq2FO2CHUe8JY8A==,
       }
     hasBin: true
     peerDependencies:
@@ -35116,17 +35121,15 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.43':
+  '@react-grab/cli@0.1.44':
     dependencies:
       agent-install: 0.0.5
       commander: 14.0.3
       ignore: 7.0.5
-      jsonc-parser: 3.3.1
       ora: 9.4.0
       package-manager-detector: 1.6.0
       picocolors: 1.1.1
       prompts: 2.4.2
-      smol-toml: 1.6.1
       tinyexec: 1.1.2
 
   '@react-router/dev@7.15.0(@react-router/serve@7.15.0(react-router@7.15.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(jiti@2.7.0)(less@4.5.1)(lightningcss@1.32.0)(react-router@7.15.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.11(@types/node@24.12.2)(esbuild@0.27.7)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))(yaml@2.8.4)':
@@ -44484,9 +44487,9 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.43(react@19.2.4):
+  react-grab@0.1.44(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.43
+      '@react-grab/cli': 0.1.44
       bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
@@ -44639,7 +44642,7 @@ snapshots:
       prompts: 2.4.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.43(react@19.2.4)
+      react-grab: 0.1.44(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 2.1.0

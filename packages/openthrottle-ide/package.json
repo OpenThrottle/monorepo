@@ -1,0 +1,71 @@
+{
+  "name": "@openthrottle/openthrottle-ide",
+  "description": "TODO: Add a description",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/openthrottle-ide",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {},
+      "typecheck-tests": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}
