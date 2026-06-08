@@ -38,6 +38,15 @@ importers:
       '@as-integrations/express5':
         specifier: ^1.1.2
         version: 1.1.2(@apollo/server@5.5.1(graphql@16.14.0))(express@5.2.1)
+      '@bull-board/api':
+        specifier: 7.0.0
+        version: 7.0.0(@bull-board/ui@7.0.0)
+      '@bull-board/express':
+        specifier: 7.0.0
+        version: 7.0.0
+      '@bull-board/nestjs':
+        specifier: 7.0.0
+        version: 7.0.0(@bull-board/api@7.0.0(@bull-board/ui@7.0.0))(@nestjs/bull-shared@11.0.4(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19))(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@faker-js/faker':
         specifier: ^10.4.0
         version: 10.4.0
@@ -131,6 +140,9 @@ importers:
       '@nestjs/passport':
         specifier: ^11.0.5
         version: 11.0.5(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
+      '@nestjs/platform-socket.io':
+        specifier: ^11.1.18
+        version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.19)(rxjs@7.8.2)
       '@nestjs/swagger':
         specifier: ^11.2.5
         version: 11.4.2(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)
@@ -140,6 +152,9 @@ importers:
       '@nestjs/typeorm':
         specifier: ^11.0.1
         version: 11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3)))
+      '@nestjs/websockets':
+        specifier: ^11.1.18
+        version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/platform-socket.io@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@openthrottle/ai-mcp':
         specifier: workspace:*
         version: link:packages/ai-mcp
@@ -293,6 +308,9 @@ importers:
       '@react-router/serve':
         specifier: ^7.14.0
         version: 7.15.0(react-router@7.15.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3)
+      '@rekog/mcp-nest':
+        specifier: ^1.9.9
+        version: 1.9.9(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(@nestjs/jwt@11.0.2(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/passport@11.0.5(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0))(@nestjs/typeorm@11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3))))(express@5.2.1)(reflect-metadata@0.2.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3)))(zod@4.4.3)
       '@rollbar/react':
         specifier: ^1.0.0
         version: 1.0.0(prop-types@15.8.1)(react@19.2.4)(rollbar@3.1.0)
@@ -401,6 +419,9 @@ importers:
       enhanced-resolve:
         specifier: ^5.18.4
         version: 5.21.0
+      express-basic-auth:
+        specifier: ^1.2.1
+        version: 1.2.1
       fishery:
         specifier: ^2.4.0
         version: 2.4.0
@@ -506,6 +527,15 @@ importers:
       nullthrows:
         specifier: ^1.1.1
         version: 1.1.1
+      openai:
+        specifier: ^6.16.0
+        version: 6.36.0(ws@8.18.0)(zod@4.4.3)
+      passport:
+        specifier: ^0.7.0
+        version: 0.7.0
+      passport-jwt:
+        specifier: ^4.0.1
+        version: 4.0.1
       passport-local:
         specifier: ^1.0.0
         version: 1.0.0
@@ -587,6 +617,9 @@ importers:
       schema-to-yup:
         specifier: ^1.12.18
         version: 1.12.18
+      socket.io:
+        specifier: ^4.8.3
+        version: 4.8.3
       socket.io-client:
         specifier: ^4.8.3
         version: 4.8.3
@@ -801,6 +834,9 @@ importers:
       '@types/node':
         specifier: ^24.1.0
         version: 24.12.2
+      '@types/passport-jwt':
+        specifier: ^4.0.1
+        version: 4.0.1
       '@types/passport-local':
         specifier: ^1.0.38
         version: 1.0.38
@@ -1037,6 +1073,9 @@ importers:
       pg:
         specifier: ^8.17.1
         version: 8.20.0
+      pidusage:
+        specifier: ^4.0.1
+        version: 4.0.1
       typeorm:
         specifier: ^0.3.28
         version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3))

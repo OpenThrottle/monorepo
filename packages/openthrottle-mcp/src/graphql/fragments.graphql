@@ -1,3 +1,31 @@
+fragment AgentConversation on AgentConversationObject {
+  createdAt
+  id
+  metadataJson
+  modelName
+  modelProvider
+  planId
+  projectId
+  status
+  title
+  updatedAt
+  userId
+}
+
+fragment AgentConversationMessage on AgentConversationMessageObject {
+  content
+  conversationId
+  createdAt
+  id
+  role
+  routingConfidence
+  routingModel
+  routingReason
+  routingTier
+  sortOrder
+  toolMetadataJson
+}
+
 fragment Note on NoteObject {
   author
   content

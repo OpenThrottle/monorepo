@@ -6,12 +6,14 @@ import {
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
   ApplyWorkspaceEditorConfigurationInput,
+  ArchiveAgentConversationInput,
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
   CancelPlanRunInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
+  CreateAgentConversationInput,
   CreateCustomPromptInput,
   CreateNoteInput,
   CreatePlanInput,
@@ -31,6 +33,7 @@ import {
   EnqueueDocIngestionInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
+  GetAgentConversationMessagesInput,
   GetCommitLinkInput,
   GetGeneratorInput,
   GetPlanEmbeddingInput,
@@ -41,6 +44,7 @@ import {
   LastActivityInput,
   LinesAddedDeletedInput,
   LinkCommitInput,
+  ListAgentConversationsInput,
   ListCustomPromptsInput,
   ListPlanOutputStreamChunksInput,
   ListPlansByStatusInput,
@@ -73,6 +77,7 @@ import {
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
+  UpdateAgentConversationTitleInput,
   UpdateCustomPromptInput,
   UpdateNoteInput,
   UpdatePlanInput,
@@ -151,6 +156,7 @@ export function AgentsRunChatTurnInputSchema(): z.ZodObject<
   return z.object({
     conversationId: z.string().nullish(),
     message: z.string(),
+    persist: z.boolean().default(false).nullish(),
   });
 }
 
@@ -169,6 +175,14 @@ export function ApplyWorkspaceEditorConfigurationInputSchema(): z.ZodObject<
 > {
   return z.object({
     repositoryIds: z.array(z.string()).nullish(),
+  });
+}
+
+export function ArchiveAgentConversationInputSchema(): z.ZodObject<
+  Properties<ArchiveAgentConversationInput>
+> {
+  return z.object({
+    conversationId: z.string(),
   });
 }
 
@@ -222,6 +236,17 @@ export function CommitsPerPrInputSchema(): z.ZodObject<
     owner: z.string(),
     period: z.string().nullish(),
     repo: z.string(),
+  });
+}
+
+export function CreateAgentConversationInputSchema(): z.ZodObject<
+  Properties<CreateAgentConversationInput>
+> {
+  return z.object({
+    metadataJson: z.string().nullish(),
+    planId: z.string().nullish(),
+    projectId: z.string().nullish(),
+    title: z.string().nullish(),
   });
 }
 
@@ -424,6 +449,16 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   });
 }
 
+export function GetAgentConversationMessagesInputSchema(): z.ZodObject<
+  Properties<GetAgentConversationMessagesInput>
+> {
+  return z.object({
+    conversationId: z.string(),
+    limit: z.number().default(100).nullish(),
+    offset: z.number().default(0).nullish(),
+  });
+}
+
 export function GetCommitLinkInputSchema(): z.ZodObject<
   Properties<GetCommitLinkInput>
 > {
@@ -511,6 +546,16 @@ export function LinkCommitInputSchema(): z.ZodObject<
     repo: z.string(),
     sha: z.string(),
     taskId: z.string().nullish(),
+  });
+}
+
+export function ListAgentConversationsInputSchema(): z.ZodObject<
+  Properties<ListAgentConversationsInput>
+> {
+  return z.object({
+    limit: z.number().default(20).nullish(),
+    offset: z.number().default(0).nullish(),
+    status: z.string().default('active').nullish(),
   });
 }
 
@@ -794,6 +839,15 @@ export function TasksByProjectIdInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     offset: z.number().nullish(),
     projectId: z.string(),
+  });
+}
+
+export function UpdateAgentConversationTitleInputSchema(): z.ZodObject<
+  Properties<UpdateAgentConversationTitleInput>
+> {
+  return z.object({
+    conversationId: z.string(),
+    title: z.string(),
   });
 }
 

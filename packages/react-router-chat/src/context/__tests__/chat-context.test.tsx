@@ -4,6 +4,7 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { ChatDialog } from '../../components/ChatDialog';
 import { ChatProvider, useChat } from '../chat-context';
 import type { ChatMessage } from '../../types';
@@ -43,6 +44,31 @@ describe('ChatProvider', () => {
       await user.type(component.getByLabelText('Message'), 'Via provider');
       await user.click(component.getByRole('button', { name: 'Send' }));
       expect(onSendMessage).toHaveBeenCalledWith('Via provider');
+    });
+  });
+
+  describe('when onStartNewChat is provided', () => {
+    test('should render New chat control in ChatDialog header', async () => {
+      const onStartNewChat = vi.fn();
+      const user = userEvent.setup();
+      const Comp = () => (
+        <TooltipProvider>
+          <ChatProvider
+            messages={messages}
+            onSendMessage={onSendMessage}
+            onStartNewChat={onStartNewChat}
+          >
+            <ChatDialog triggerLabel="Context chat" />
+          </ChatProvider>
+        </TooltipProvider>
+      );
+      const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
+      const component = render(<RoutesStub />);
+
+      await user.click(component.getByRole('button', { name: 'Context chat' }));
+      await user.click(component.getByRole('button', { name: 'New chat' }));
+
+      expect(onStartNewChat).toHaveBeenCalledTimes(1);
     });
   });
 });

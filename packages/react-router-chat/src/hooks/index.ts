@@ -5,6 +5,7 @@ export type {
   UseChatMessagesResult,
 } from './use-chat-messages';
 export {
+  LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
   SEND_AGENT_MESSAGE_INTENT,
   useChatTurnFetcher,
 } from './useChatTurnFetcher';

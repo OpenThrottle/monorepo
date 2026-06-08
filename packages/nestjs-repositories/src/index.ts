@@ -2,6 +2,41 @@ export { CommitLink } from './modules/commit-links/commit-link.entity';
 export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
 export { CommitLinksService } from './modules/commit-links/commit-links.service';
+export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity';
+export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
+export {
+  AGENT_CONVERSATION_CONTENT_MAX_BYTES,
+  AGENT_CONVERSATION_LIST_DEFAULT_LIMIT,
+  AGENT_CONVERSATION_LIST_MAX_LIMIT,
+  AGENT_CONVERSATION_MESSAGE_ROLES,
+  AGENT_CONVERSATION_MESSAGES_DEFAULT_LIMIT,
+  AGENT_CONVERSATION_MESSAGES_MAX_LIMIT,
+  AGENT_CONVERSATION_STATUSES,
+  AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
+} from './modules/agent-conversations/agent-conversation.constants';
+export type {
+  AgentConversationMessageRole,
+  AgentConversationStatus,
+} from './modules/agent-conversations/agent-conversation.constants';
+export type { AgentConversationData } from './modules/agent-conversations/agent-conversation.entity';
+export type { AgentConversationMessageData } from './modules/agent-conversations/agent-conversation-message.entity';
+export {
+  agentConversationMessagesFactory,
+  agentConversationsFactory,
+} from './modules/agent-conversations/agent-conversations.factory';
+export type {
+  AgentConversationFactoryData,
+  AgentConversationMessageFactoryData,
+} from './modules/agent-conversations/agent-conversations.factory';
+export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service';
+export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.service';
+export {
+  capAgentConversationContent,
+  capAgentConversationToolMetadata,
+  clampAgentConversationListLimit,
+  clampAgentConversationMessagesLimit,
+  deriveConversationTitleFromMessage,
+} from './modules/agent-conversations/agent-conversation.util';
 export {
   CustomPrompt,
   CUSTOM_PROMPT_TYPES,

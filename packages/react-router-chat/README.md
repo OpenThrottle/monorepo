@@ -23,9 +23,9 @@ import '@openthrottle/react-router-chat/src/index.css';
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `ChatDialog`                                    | Modal chat (`dialog` or `sheet`); controlled open via `open` / `onOpenChange`, or `defaultOpen` |
 | `ChatThread`, `ChatComposer`, `ChatMessageBody` | Thread list, input, and role-aware body rendering                                               |
-| `ChatProvider`, `useChat`                       | Optional context so `ChatDialog` can omit `messages` / `onSendMessage`                          |
+| `ChatProvider`, `useChat`                       | Optional context so `ChatDialog` can omit `messages` / `onSendMessage` / `onStartNewChat`       |
 | `useChatMessages`                               | Uncontrolled local message list (`sendUserMessage`, `appendMessage`, `setMessages`)             |
-| `useChatTurnFetcher`                            | Local thread + root `send-agent-message` fetcher (optimistic user, assistant on idle)           |
+| `useChatTurnFetcher`                            | Local thread + root `send-agent-message` fetcher (`startNewChat` when persisted)                |
 | `ChatMessage`, `ChatTurnResult`                 | Message model and JSON shape for server chat turns                                              |
 
 ### Controlled vs uncontrolled
@@ -74,12 +74,61 @@ Root actions that call `agentsRunChatTurn` should return JSON matching `ChatTurn
 ```ts
 {
   assistantText: string | null;
+  conversationId: string | null;
   errorMessage: string | null;
+  mcpTool: string | null;
+  readOnlyAgentsChat: boolean;
+  routingConfidence: number | null;
+  routingReason: string | null;
+  structuredPayloadJson: string | null;
   toolMetadataJson: string | null;
 }
 ```
 
 Host apps should expose a root action with `intent: send-agent-message` that returns `ChatTurnResult` JSON (see `openthrottle-developer` `handleSendAgentMessageIntent`).
+
+### Persisted conversations
+
+When the host app authenticates users against openthrottle-server, enable server-backed thread history with `useChatTurnFetcher({ persist: true })`.
+
+**v1 UX (locked):**
+
+| Behavior         | Detail                                                                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `persist: true`  | POST `persist=true` on each turn; server owns conversation ids                                                                     |
+| `sessionStorage` | One thread per key (default `openthrottle.chat.conversationId`)                                                                    |
+| First turn       | No client-minted id; server returns `conversationId` after persist                                                                 |
+| Mount            | If a stored server UUID exists, load history via `load-agent-conversation-messages` (limit 100) and hydrate `useChatMessages`      |
+| Optimistic UI    | User bubble on send; assistant appended when fetcher is idle                                                                       |
+| New chat         | Header control when `persist: true` — clears `sessionStorage` UUID and in-memory thread; next send mints a new server conversation |
+
+**Auth:** persistence requires a human JWT on the server. `persist: true` without auth returns an error from `agentsRunChatTurn`; the hook surfaces `errorMessage` and does not fall back to stateless mode.
+
+**Host wiring (openthrottle-developer):**
+
+```tsx
+const { composerDisabled, messages, sendUserMessage, startNewChat } =
+  useChatTurnFetcher({
+    action: '/',
+    persist: true, // when authenticated
+  });
+
+<ChatProvider
+  composerDisabled={composerDisabled}
+  messages={messages}
+  onSendMessage={sendUserMessage}
+  onStartNewChat={startNewChat}
+>
+  {children}
+</ChatProvider>;
+```
+
+Root action handlers:
+
+- `intent: send-agent-message` — forwards `persist` and optional `conversationId` to `agentsRunChatTurn`.
+- `intent: load-agent-conversation-messages` — calls `getAgentConversationMessages` and maps rows via `mapPersistedAgentConversationMessages`.
+
+Server design (GraphQL CRUD, `persist` contract, pagination): [applications/openthrottle-server/docs/agent-conversations-design.md](../../applications/openthrottle-server/docs/agent-conversations-design.md). Database schema: [databases/README.md](../../databases/README.md) § Agent conversations.
 
 ## Dependencies
 
