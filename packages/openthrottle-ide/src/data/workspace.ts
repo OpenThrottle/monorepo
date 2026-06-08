@@ -17,6 +17,62 @@ export interface WorkspaceFileHash {
 }
 
 /**
+ * The set of changes between two {@link hashWorkspace} snapshots. This is the
+ * Merkle-lite delta downstream layers (symbols, semantic) consume to re-process
+ * only what changed instead of the whole tree.
+ *
+ * @publicApi
+ */
+export interface SnapshotDiff {
+  /** Paths present in `next` but not in `prev`. */
+  added: string[];
+  /** Paths present in both, with a different content hash. */
+  changed: string[];
+  /** Paths present in `prev` but not in `next`. */
+  removed: string[];
+}
+
+/**
+ * Diff two workspace snapshots by path and content hash. Pure and
+ * deterministic — it touches no filesystem and the returned path lists are
+ * sorted, so equal inputs always produce equal output.
+ *
+ * @publicApi
+ */
+export function diffSnapshots(
+  prev: WorkspaceFileHash[],
+  next: WorkspaceFileHash[],
+): SnapshotDiff {
+  const prevByPath = new Map(prev.map((entry) => [entry.path, entry.hash]));
+  const nextByPath = new Map(next.map((entry) => [entry.path, entry.hash]));
+
+  const added: string[] = [];
+  const changed: string[] = [];
+  const removed: string[] = [];
+
+  for (const [path, hash] of nextByPath) {
+    const prevHash = prevByPath.get(path);
+    if (prevHash === undefined) {
+      added.push(path);
+    } else if (prevHash !== hash) {
+      changed.push(path);
+    }
+  }
+
+  for (const path of prevByPath.keys()) {
+    if (!nextByPath.has(path)) {
+      removed.push(path);
+    }
+  }
+
+  return {
+    added: added.sort(),
+    changed: changed.sort(),
+    removed: removed.sort(),
+  };
+}
+
+/**
  * Enumerate every tracked file in the workspace, returning workspace-relative
  * paths. Backed by `rg --files`, so `.gitignore` rules and the config's
  * exclude globs are honored — the same scoping an IDE applies to a project.
