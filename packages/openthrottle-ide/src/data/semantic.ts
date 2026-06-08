@@ -30,8 +30,26 @@ export interface VectorStore {
   clear: (workspaceRoot: string) => Promise<void>;
   /** Remove every chunk belonging to the given workspace-relative file paths. */
   deleteByPaths: (workspaceRoot: string, paths: string[]) => Promise<void>;
+  /**
+   * Return the `topK` chunks nearest to `embedding` for a workspace, each with
+   * a similarity score (higher is closer). The pgvector implementation maps
+   * cosine distance to a `[0, 1]` similarity (`1 - (embedding <=> query)`).
+   */
+  query: (
+    workspaceRoot: string,
+    embedding: number[],
+    topK: number,
+  ) => Promise<VectorMatch[]>;
   /** Insert or replace chunks (keyed by `chunk.id`) for a workspace. */
   upsert: (workspaceRoot: string, records: StoredChunk[]) => Promise<void>;
+}
+
+/** A stored chunk returned by {@link VectorStore.query}, with its similarity score. */
+export interface VectorMatch {
+  /** The matched chunk. */
+  chunk: CodeChunk;
+  /** Similarity score; higher is a closer match. */
+  score: number;
 }
 
 /** Options controlling {@link indexWorkspace}. */
@@ -171,4 +189,67 @@ async function embedAndUpsert(
   }, Promise.resolve());
 
   return chunks.length;
+}
+
+/** A semantic search hit: where the match is, how close it is, and its text. */
+export interface SemanticMatch {
+  /** The matched chunk's raw source text. */
+  content: string;
+  /** 1-based inclusive last line of the match. */
+  endLine: number;
+  /** Workspace-relative POSIX path of the matched file. */
+  path: string;
+  /** Similarity score; higher is a closer match. */
+  score: number;
+  /** 1-based first line of the match. */
+  startLine: number;
+}
+
+/** Options controlling {@link semanticSearch}. */
+export interface SemanticSearchOptions {
+  /** Produces the query embedding (the same client used to index). */
+  provider: EmbeddingsProvider;
+  /** Where vectors are queried from. */
+  store: VectorStore;
+  /** Maximum number of matches to return. Defaults to {@link DEFAULT_TOP_K}. */
+  topK?: number;
+}
+
+/** Default number of matches returned by {@link semanticSearch}. */
+export const DEFAULT_TOP_K = 10;
+
+/**
+ * Run a top-k semantic search over a workspace's indexed code. Embeds the query
+ * with the same provider used to index, runs a vector similarity search against
+ * the store, and returns matches sorted by descending similarity. Returns an
+ * empty array when the provider yields no embedding for the query.
+ *
+ * @publicApi
+ */
+export async function semanticSearch(
+  query: string,
+  config: WorkspaceConfig,
+  options: SemanticSearchOptions,
+): Promise<SemanticMatch[]> {
+  const resolved = resolveWorkspaceConfig(config);
+  const { provider, store } = options;
+  const topK = options.topK ?? DEFAULT_TOP_K;
+
+  const [embedding] = await provider.embed([query]);
+  if (embedding === undefined) {
+    return [];
+  }
+
+  const matches = await store.query(resolved.root, embedding, topK);
+
+  return matches
+    .map((match) => ({
+      content: match.chunk.content,
+      endLine: match.chunk.endLine,
+      path: match.chunk.path,
+      score: match.score,
+      startLine: match.chunk.startLine,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
 }

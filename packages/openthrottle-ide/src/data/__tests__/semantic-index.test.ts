@@ -32,6 +32,7 @@ function createMemoryStore(): VectorStore & {
         }
       }
     },
+    query: async (): Promise<[]> => [],
     upsert: async (_root, records): Promise<void> => {
       for (const record of records) {
         byId.set(record.chunk.id, record);
