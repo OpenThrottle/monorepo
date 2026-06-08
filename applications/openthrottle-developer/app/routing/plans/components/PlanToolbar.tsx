@@ -176,7 +176,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     >
       {/* Status / run group */}
       <div className="flex flex-wrap items-center gap-2">
-        <Tooltip>
+        <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
             <fetcherSetPlanStatus.Form method="post">
               <Input name="intent" type="hidden" value="setPlanStatus" />
@@ -202,7 +202,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
+        <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
             <fetcherRunPlan.Form method="post">
               <Input name="intent" type="hidden" value="runPlan" />
@@ -274,7 +274,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
       {/* Add / edit group: DropdownMenu for secondary actions */}
       <DropdownMenu>
-        <Tooltip>
+        <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
             <DropdownMenuTrigger asChild={true}>
               <Button size="sm" variant="outline">

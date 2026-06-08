@@ -49,7 +49,10 @@ export default function Component(
         <div className="mx-auto mb-8" onClick={onClick}>
           <OpenThrottleLogo className="text-xl mb-4" name="AI" />
           <p className="text-muted-foreground">
-            This is a beta feature. Please come back soon.
+            Check back soon for the public release.
+          </p>
+          <p className="text-muted-foreground/60 text-sm">
+            We're in private beta.
           </p>
         </div>
       </main>

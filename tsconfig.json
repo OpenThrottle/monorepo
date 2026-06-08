@@ -177,6 +177,9 @@
     },
     {
       "path": "./packages/nestjs-mcp-developer"
+    },
+    {
+      "path": "./packages/openthrottle-ide"
     }
   ]
 }
