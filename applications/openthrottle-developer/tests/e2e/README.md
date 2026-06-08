@@ -93,6 +93,67 @@ environment:
 - **No device / “Want to use 0 devices”** (native) — No emulator running or device
   not trusted; for web flows, confirm the flow uses `url` (web) not only `appId`.
 
+## Maestro MCP server
+
+Maestro bundles an [MCP](https://modelcontextprotocol.io) server in the CLI, so an
+agent (Claude Code, Cursor) can drive the app and author flows interactively
+instead of only shelling out to `maestro test`. Start it with:
+
+```bash
+maestro mcp
+```
+
+### Registering it
+
+This repo registers the server in **`.mcp.json`** (Claude Code, committed):
+
+```json
+{
+  "mcpServers": {
+    "maestro": { "command": "maestro", "args": ["mcp"] }
+  }
+}
+```
+
+> **Cursor:** the same entry belongs in `.cursor/mcp.json`, but that file is
+> **git-ignored** (user global gitignore), so it is **not** committed. Each
+> developer must add the `maestro` block to their own local `.cursor/mcp.json`.
+>
+> **Restart required:** MCP servers load when the client starts. After editing
+> `.mcp.json` / `.cursor/mcp.json`, **restart the client** before the `maestro`
+> tools appear.
+>
+> **PATH / Java issues:** if `maestro` is not on `PATH` for the client, set the
+> full binary path and `JAVA_HOME` in the entry's `env` block.
+
+### Tools (Maestro CLI v2.0.9)
+
+The bundled server advertises these tools (verified locally — note this differs
+from the [docs page](https://docs.maestro.dev/get-started/maestro-mcp), which
+lists an older cloud-oriented set):
+
+| Tool                             | Use                                                                  |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `list_devices` / `start_device`  | Find / boot an emulator, simulator, or browser                       |
+| `launch_app` / `stop_app`        | Open / close the app under test (web `url` or native `appId`)        |
+| `inspect_view_hierarchy`         | Read the current view tree to find selectors                         |
+| `take_screenshot`                | Capture the current screen to verify state                           |
+| `tap_on` / `input_text` / `back` | Interactively drive the UI                                           |
+| `run_flow` / `run_flow_files`    | Execute inline steps or existing flow YAML (e.g. `flows/smoke.yaml`) |
+| `check_flow_syntax`              | Validate flow YAML before running                                    |
+| `cheat_sheet` / `query_docs`     | Maestro syntax reference and docs lookup                             |
+
+**Typical agent loop:** `query_docs` / `cheat_sheet` to recall syntax →
+`launch_app` + `inspect_view_hierarchy` to discover selectors → `tap_on` /
+`input_text` to compose steps → `check_flow_syntax` → save to `flows/` →
+`run_flow_files` to confirm green → `take_screenshot` to capture evidence.
+
+### MCP prerequisites
+
+Same as the CLI runbook above: the Maestro CLI on `PATH`, and for **web** flows a
+running dev server (`pnpm nx run openthrottle-developer:dev`, port 6020); for
+**native** flows a booted emulator/simulator or connected device.
+
 ## Layout
 
 ```text
