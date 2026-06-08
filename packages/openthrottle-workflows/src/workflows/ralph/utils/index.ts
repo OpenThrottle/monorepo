@@ -1,8 +1,41 @@
 import type { PlanFragment } from '../../../__generated__/graphql.js';
 
+/** Task fields consumed by {@link formatPlanAndTasksForPrompt} (GraphQL fragment or TypeORM entity). */
+interface FormatPlanTaskForPrompt {
+  readonly createdAt: string | Date;
+  readonly description?: string | null;
+  readonly id: string;
+  readonly requirements?: unknown[];
+  readonly requirementsJson?: string;
+  readonly sortOrder?: number | null;
+  readonly status: string;
+  readonly title: string;
+}
+
+/**
+ * @description Normalizes task requirements from GraphQL `requirementsJson` or entity `requirements`.
+ */
+const taskRequirementsForPrompt = (
+  task: FormatPlanTaskForPrompt,
+): readonly unknown[] => {
+  if (task.requirementsJson?.trim()) {
+    try {
+      const parsed: unknown = JSON.parse(task.requirementsJson);
+
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch {
+      // fall through to entity requirements array
+    }
+  }
+
+  return Array.isArray(task.requirements) ? task.requirements : [];
+};
+
 const comparePlanTaskListOrder = (
-  a: { createdAt: string; sortOrder?: number | null },
-  b: { createdAt: string; sortOrder?: number | null },
+  a: Pick<FormatPlanTaskForPrompt, 'createdAt' | 'sortOrder'>,
+  b: Pick<FormatPlanTaskForPrompt, 'createdAt' | 'sortOrder'>,
 ): number => {
   const orderA = a.sortOrder ?? 0;
   const orderB = b.sortOrder ?? 0;
@@ -20,9 +53,7 @@ const comparePlanTaskListOrder = (
  */
 export const formatPlanAndTasksForPrompt = (
   plan: PlanFragment,
-  // FIXME: __OT_UPDATE__ Lets fix this one
-  tasks: any[],
-  // tasks: readonly TaskFragment[],
+  tasks: readonly FormatPlanTaskForPrompt[],
 ): string => {
   const orderedTasks = [...tasks].sort(comparePlanTaskListOrder);
   const lines: string[] = [
@@ -55,6 +86,12 @@ export const formatPlanAndTasksForPrompt = (
 
       if (t.description?.trim()) {
         lines.push(`    ${t.description.trim().replace(/\n/g, ' ')}`);
+      }
+
+      const requirements = taskRequirementsForPrompt(t);
+
+      if (requirements.length > 0) {
+        lines.push(`    Requirements: ${requirements.map(String).join(', ')}`);
       }
     }
   }

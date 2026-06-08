@@ -102,6 +102,12 @@ export const formatPlanAndTasksForPrompt = (
       if (t.description?.trim()) {
         lines.push(`    ${t.description.trim().replace(/\n/g, ' ')}`);
       }
+
+      if (t.requirements.length > 0) {
+        lines.push(
+          `    Requirements: ${t.requirements.map(String).join(', ')}`,
+        );
+      }
     }
   }
   lines.push('', '---');
