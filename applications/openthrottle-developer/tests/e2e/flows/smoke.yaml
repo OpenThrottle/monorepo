@@ -1,11 +1,14 @@
-# Web smoke: launch dev server URL and assert shell chrome (breadcrumb brand).
-# Prerequisite: `pnpm nx serve openthrottle-developer` (default port 6020 per `.env.default`).
+# Web smoke: launch the dev server URL and assert the unauthenticated shell + nav.
+# Prerequisite: `pnpm nx run openthrottle-developer:dev` (default port 6020 per `.env.default`).
+#
+# The app loads unauthenticated, so this flow asserts elements that are always
+# present without a session (brand chrome + chat landing) and proves navigation
+# by tapping the "About" link and asserting its page content.
 url: http://localhost:6020
 ---
 - launchApp
 - assertVisible: 'OpenThrottle'
+- assertVisible: 'What would you like to build today?'
 
-- tapOn: Dashboard
-- assertVisible: "Get a pulse of all your Plans, Tasks, PR's, Prompts, Skills, and more coming soon."
-# - tapOn:
-#     text: ".*Settings.*"    # Regex for partial match
+- tapOn: 'About'
+- assertVisible: 'Matthew Scholta'
