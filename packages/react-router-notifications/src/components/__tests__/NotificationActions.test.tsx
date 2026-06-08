@@ -11,6 +11,7 @@ describe('NotificationActions Component', () => {
   beforeEach(() => {
     props = {
       dismissAll: () => undefined,
+      hasAny: false,
       markAllAsRead: () => undefined,
       setOpen: () => undefined,
     };

@@ -137,6 +137,9 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.5.0
         version: 6.5.0(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)
+      '@nestjs/typeorm':
+        specifier: ^11.0.1
+        version: 11.0.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3)))
       '@openthrottle/ai-mcp':
         specifier: workspace:*
         version: link:packages/ai-mcp
@@ -347,6 +350,9 @@ importers:
       axios:
         specifier: ^1.13.2
         version: 1.16.0
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
@@ -395,6 +401,9 @@ importers:
       enhanced-resolve:
         specifier: ^5.18.4
         version: 5.21.0
+      fishery:
+        specifier: ^2.4.0
+        version: 2.4.0
       focus-formik-error:
         specifier: ^1.1.0
         version: 1.1.0(formik@2.4.9(@types/react@19.2.7)(react@19.2.4))(react@19.2.4)
@@ -762,6 +771,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
+      '@types/bcrypt':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@types/compression':
         specifier: ^1.8.1
         version: 1.8.1
@@ -9955,10 +9967,10 @@ packages:
         integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==,
       }
 
-  '@react-grab/cli@0.1.41':
+  '@react-grab/cli@0.1.43':
     resolution:
       {
-        integrity: sha512-hQyo+Ook79V09uCiLoIN9hkXtffi6aEftgY891RfIw/ePlMjDtRo5ur8L1drJd6aL05HLevpFTpEU3rC11ueKw==,
+        integrity: sha512-S+UBB0Mwu1g0Cjhff5YzsA33YFYu91DmazPL9uVvF1wDjsO2Lu9hKN/OzBCHYjWlxdBT7TLy2A6pNTS3Sx8o9w==,
       }
     hasBin: true
 
@@ -23891,10 +23903,10 @@ packages:
         integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==,
       }
 
-  react-grab@0.1.41:
+  react-grab@0.1.43:
     resolution:
       {
-        integrity: sha512-Snht68ypkK9QjktjLdWvqB7edF+yFGsrY8aGsriVqOPqezzKuemloPjnYqd4Xddp20qhotldGGVE6Q8ov7eq3g==,
+        integrity: sha512-3wplt0CobZE5k1Vf3PBqBm3vlNQnVWEpSGBMHRnnFcj/khYYwGXSMSTedW1s8MI5FqkdhU/CFoJ7hQqGwzqFIA==,
       }
     hasBin: true
     peerDependencies:
@@ -35065,7 +35077,7 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@react-grab/cli@0.1.41':
+  '@react-grab/cli@0.1.43':
     dependencies:
       agent-install: 0.0.5
       commander: 14.0.3
@@ -36328,7 +36340,7 @@ snapshots:
 
   '@types/bcrypt@6.0.0':
     dependencies:
-      '@types/node': 22.19.17
+      '@types/node': 24.12.2
 
   '@types/body-parser@1.19.6':
     dependencies:
@@ -44433,9 +44445,9 @@ snapshots:
 
   react-fast-compare@2.0.4: {}
 
-  react-grab@0.1.41(react@19.2.4):
+  react-grab@0.1.43(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.41
+      '@react-grab/cli': 0.1.43
       bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
@@ -44588,7 +44600,7 @@ snapshots:
       prompts: 2.4.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-grab: 0.1.41(react@19.2.4)
+      react-grab: 0.1.43(react@19.2.4)
     optionalDependencies:
       esbuild: 0.27.7
       unplugin: 2.1.0

@@ -51,19 +51,15 @@ export const getNoteToolParameters = z.object({ id: z.string().min(1) });
 export const listNotesToolParameters = z.object({});
 export const updateNoteToolParameters = UpdateNoteInputSchema();
 
-export const createNoteToolDescription =
-  'Create a note in Cortex. Requires content; optional author (e.g. GitHub username). For quick unstructured thoughts; foundation for notes route and planning workflow.';
+export const createNoteToolDescription = `Create a note in Cortex. Requires content; optional author (e.g. GitHub username). For quick unstructured thoughts; foundation for notes route and planning workflow.`;
 
-export const deleteNoteToolDescription =
-  'Delete a note by id. Returns whether a row was deleted.';
+export const deleteNoteToolDescription = `Delete a note by id. Returns whether a row was deleted.`;
 
-export const getNoteToolDescription =
-  'Fetch a note by id (UUID). Returns the note row or not found.';
+export const getNoteToolDescription = `Fetch a note by id (UUID). Returns the note row or not found.`;
 
-export const listNotesToolDescription = 'List notes in Cortex, newest first.';
+export const listNotesToolDescription = `List notes in Cortex, newest first.`;
 
-export const updateNoteToolDescription =
-  'Update a note by id. Pass id and any of: content, author.';
+export const updateNoteToolDescription = `Update a note by id. Pass id and any of: content, author.`;
 
 export async function createNoteToolHandler(
   args: z.infer<typeof createNoteToolParameters>,

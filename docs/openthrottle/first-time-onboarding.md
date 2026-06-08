@@ -123,13 +123,13 @@ Summarize how many sources and pending plans you see.
 
 ## Troubleshooting
 
-| Symptom                              | What to check                                                                                                                                                                                                                   |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MCP tools missing or “not connected” | Cursor MCP config, restart Cursor; `API_URL_INTERNAL` matches server port ([verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)).                                                    |
-| GraphQL errors / 401 / 403           | Token: `OPENTHROTTLE_MCP_AUTH_TOKEN`; server `APP_ENABLE_AUTHENTICATION=true`. [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Re-run [bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) if needed. |
-| Bootstrap script skips account       | Active credential already exists — rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation).                                                                                |
-| Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/README.md`](../../databases/README.md).                                                                                                                     |
-| Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc).                                                                                          |
+| Symptom                              | What to check                                                                                                                                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MCP tools missing or “not connected” | Cursor MCP config, restart Cursor; `API_URL_INTERNAL` matches server port ([verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)).                   |
+| GraphQL errors / 401 / 403           | Token: `OPENTHROTTLE_MCP_AUTH_TOKEN`; server. [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Re-run [bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) if needed. |
+| Bootstrap script skips account       | Active credential already exists — rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation).                                               |
+| Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/README.md`](../../databases/README.md).                                                                                    |
+| Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc).                                                         |
 
 ---
 

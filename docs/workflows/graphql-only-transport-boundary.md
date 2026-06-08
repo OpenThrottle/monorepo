@@ -116,7 +116,6 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
 | `promotePlanToInProgressIfNeeded`                                 | `UpdatePlanDocument` (`status: IN_PROGRESS`)                           | Orchestrator already implements this via GraphQL.                 |
 | `updatePlanStatus`                                                | `UpdatePlanDocument`                                                   |                                                                   |
 | `updateTaskStatus`                                                | `UpdateTaskDocument`                                                   |                                                                   |
-| `updatePlanSummary` / `updateTaskSummary`                         | `UpdatePlanDocument` / `UpdateTaskDocument` (summary field)            |                                                                   |
 | `appendPlanOutput`                                                | `AppendPlanOutputDocument`                                             |                                                                   |
 | `insertCommitLink`                                                | `LinkCommitDocument`                                                   | Already GraphQL via `workflow-link-merge`; CLI insert is the dup. |
 | `listProjects` / `ensureProjectForNxName` / `updatePlanProjectId` | `GetProjectsDocument` / `CreateProjectDocument` / `UpdatePlanDocument` | Project autocompletion (multi-project, task `2bdf0145`).          |

@@ -1,5 +1,5 @@
 -- Subscriptions for OpenThrottle payments (Stripe Hybrid).
--- Maps Stripe customer/subscription to Cortex users; entitlement state owned by our API.
+-- Maps Stripe customer/subscription to OpenThrottle users; entitlement state owned by our API.
 -- See docs/openthrottle/payments-provider-choice-and-integration.md.
 
 CREATE TABLE IF NOT EXISTS subscriptions (

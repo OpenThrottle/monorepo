@@ -55,6 +55,7 @@ function formatWallClockCompact(metrics: WallClockMetrics): string {
     metrics.wallClockToCpuRatio === Infinity
       ? '∞'
       : metrics.wallClockToCpuRatio.toFixed(1);
+
   return `ratio ${ratio}x (${metrics.interpretation})`;
 }
 
@@ -64,6 +65,7 @@ function formatWallClockCompact(metrics: WallClockMetrics): string {
  */
 function formatSystemCpuCompact(metrics: SystemCpuMetrics): string {
   const { perCoreLoad1m } = metrics.atEnd.loadAverage;
+
   return `load ${perCoreLoad1m.toFixed(1)}/core (${metrics.pressureLevel})`;
 }
 

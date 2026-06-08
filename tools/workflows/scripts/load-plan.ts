@@ -10,7 +10,7 @@ import {
   getCortexConfigOrExit,
   getPlanById,
   getTasksByPlanId,
-} from '../src/utils/cortex-ralph';
+} from '../src/utils/openthrottle-ralph';
 
 const planId = process.argv[2] ?? 'a58c1ccc-a04e-41a0-9cf6-641b1bc78ab5';
 

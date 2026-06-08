@@ -48,7 +48,7 @@ if [ -n "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
     -H "Authorization: Bearer ${OPENTHROTTLE_MCP_AUTH_TOKEN}" \
     -d "${AUTH_BODY}" || true)"
   if [ "${HTTP_CODE}" = "200" ] && grep -q '"listSources"' /tmp/ot-mcp-auth-smoke.json 2>/dev/null; then
-    echo "OK: authenticated GraphQL listSources (APP_ENABLE_AUTHENTICATION + ot_sa token)"
+    echo "OK: authenticated GraphQL listSources (with ot_sa token)"
   elif [ "${HTTP_CODE}" = "401" ] || [ "${HTTP_CODE}" = "403" ]; then
     echo "FAIL: authenticated GraphQL returned HTTP ${HTTP_CODE} — token revoked, wrong server, or missing plans:* role"
     echo "      Response: $(head -c 200 /tmp/ot-mcp-auth-smoke.json 2>/dev/null || echo '(empty)')"

@@ -96,13 +96,12 @@ export const NotificationBell = (
         sideOffset={8}
       >
         <DropdownMenuLabel className="flex items-center justify-between">
-          {hasAny ? (
-            <NotificationActions
-              dismissAll={dismissAll}
-              markAllAsRead={markAllAsRead}
-              setOpen={setOpen}
-            />
-          ) : null}
+          <NotificationActions
+            dismissAll={dismissAll}
+            hasAny={hasAny}
+            markAllAsRead={markAllAsRead}
+            setOpen={setOpen}
+          />
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
@@ -127,7 +126,7 @@ export const NotificationBell = (
         )}
         <DropdownMenuSeparator />
         <div
-          className="space-y-3 border-t border-border px-2 py-3"
+          className="space-y-3 px-2 py-3"
           data-testid="notification-bell-system-prefs"
           onClick={(e) => e.stopPropagation()}
         >

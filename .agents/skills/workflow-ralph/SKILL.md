@@ -68,7 +68,7 @@ Same OpenThrottle semantics; different host process (see **`tools/workflows/READ
 
 Payload tuning (`RalphNestedRunTuningInput`, argv mapping) is documented in **`applications/openthrottle-server/src/queues/plans/plans.types.ts`** and the README.
 
-**Multi-workspace / foreign cwd:** Plans can pass **`workingDirectory`** (absolute path) so the worker spawns Ralph in another checkout; the worker injects **`OPENTHROTTLE_CORTEX_POSTGRES_URL` / `POSTGRES_URL`** so nested Ralph hits the same OpenThrottle DB. See **`tools/workflows/README.md`** (Multi-workspace plans).
+**Multi-workspace / foreign cwd:** Plans can pass **`workingDirectory`** (absolute path) so the worker spawns Ralph in another checkout; the worker injects **`OPENTHROTTLE_POSTGRES_URL` / `POSTGRES_URL`** so nested Ralph hits the same OpenThrottle DB. See **`tools/workflows/README.md`** (Multi-workspace plans).
 
 ## Debugging hangs
 

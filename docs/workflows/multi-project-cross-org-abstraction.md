@@ -272,7 +272,7 @@ or run in an unintended directory.
   via GraphQL with a bearer token.
 - **OT DB identity (cross-repo).** When a run executes in a foreign repo whose own `.env` sets a
   different `POSTGRES_URL`, OpenThrottle's Cortex identity is injected explicitly
-  (`OPENTHROTTLE_CORTEX_POSTGRES_URL`, with worker/nested diagnostics
+  (`OPENTHROTTLE_POSTGRES_URL`, with worker/nested diagnostics
   `WORKFLOW_RALPH_OT_DIAGNOSTICS` / `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`) so plan lookup never
   desyncs to the wrong database. In the GraphQL-only target, this collapses to injecting the GraphQL
   URL + token (`OPENTHROTTLE_WORKFLOWS_*`) instead of a Postgres URL, removing the second credential

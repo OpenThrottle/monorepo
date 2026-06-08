@@ -31,16 +31,16 @@ TypeORM entities: `packages/nestjs-repositories/src/modules/workspace-settings/`
 
 ### `workspace_local_repositories`
 
-| Column                     | Type                      | Notes                                                   |
-| -------------------------- | ------------------------- | ------------------------------------------------------- |
-| `id`                       | UUID PK                   |                                                         |
-| `user_id`                  | UUID FK → `users`         | Cascade delete                                          |
-| `filesystem_path`          | TEXT NOT NULL             | Canonical absolute path (server-normalized)             |
-| `display_name`             | TEXT NOT NULL             | User-facing label                                       |
-| `git_remote_url`           | TEXT NULL                 | Optional origin URL                                     |
-| `git_default_branch`       | TEXT NULL                 | Optional default branch name                            |
-| `project_id`               | UUID NULL FK → `projects` | Optional Cortex project link (v1: one project per repo) |
-| `created_at`, `updated_at` | TIMESTAMPTZ               |                                                         |
+| Column                     | Type                      | Notes                                                         |
+| -------------------------- | ------------------------- | ------------------------------------------------------------- |
+| `id`                       | UUID PK                   |                                                               |
+| `user_id`                  | UUID FK → `users`         | Cascade delete                                                |
+| `filesystem_path`          | TEXT NOT NULL             | Canonical absolute path (server-normalized)                   |
+| `display_name`             | TEXT NOT NULL             | User-facing label                                             |
+| `git_remote_url`           | TEXT NULL                 | Optional origin URL                                           |
+| `git_default_branch`       | TEXT NULL                 | Optional default branch name                                  |
+| `project_id`               | UUID NULL FK → `projects` | Optional OpenThrottle project link (v1: one project per repo) |
+| `created_at`, `updated_at` | TIMESTAMPTZ               |                                                               |
 
 **Unique constraint:** `(user_id, filesystem_path)` — one registration per path per user.
 

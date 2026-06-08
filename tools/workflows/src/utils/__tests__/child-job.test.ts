@@ -43,7 +43,7 @@ const mockCortexState: {
   updatePlanStatusCalls: [],
 };
 
-vi.mock('../cortex-ralph', () => ({
+vi.mock('../openthrottle-ralph', () => ({
   RALPH_FATAL_REQUIRED_GRAPHQL: 'graphql-required',
   RALPH_FATAL_REQUIRED_POSTGRES: 'postgres-required',
   appendPlanOutput: vi.fn().mockResolvedValue(undefined),
@@ -268,7 +268,7 @@ describe('runChildJob', () => {
   });
 
   it('returns ok: false when Cortex config is missing', async () => {
-    const cortexRalph = await import('../cortex-ralph.js');
+    const cortexRalph = await import('../openthrottle-ralph.js');
     vi.mocked(cortexRalph.resolveWorkflowRalphConfig).mockReturnValueOnce(null);
 
     const dir = createTempDir();
@@ -344,7 +344,7 @@ describe('runChildJob', () => {
         expect(result.commitSha).toBe(commitSha);
         expect(result.planCompleted).toBe(true);
       }
-      const { updatePlanStatus } = await import('../cortex-ralph.js');
+      const { updatePlanStatus } = await import('../openthrottle-ralph.js');
       expect(updatePlanStatus).toHaveBeenCalledWith(
         expect.anything(),
         '2f94f33c-562d-4a70-8c08-c6d9510317e5',
@@ -732,7 +732,7 @@ describe('runChildJob', () => {
       streamIteration: 4,
       streamToCortex: true,
     };
-    const { appendPlanOutput } = await import('../cortex-ralph.js');
+    const { appendPlanOutput } = await import('../openthrottle-ralph.js');
     vi.mocked(appendPlanOutput).mockClear();
     try {
       const result = await runChildJob(input);
@@ -858,7 +858,7 @@ describe('runChildJob', () => {
       streamIteration: 3,
       streamToCortex: true,
     };
-    const { appendPlanOutput } = await import('../cortex-ralph.js');
+    const { appendPlanOutput } = await import('../openthrottle-ralph.js');
     vi.mocked(appendPlanOutput).mockClear();
     try {
       const result = await runChildJob(input);
@@ -910,7 +910,7 @@ describe('runChildJob', () => {
       handoff: handoff(dir),
       planId: '2f94f33c-562d-4a70-8c08-c6d9510317e5',
     };
-    const { updatePlanStatus } = await import('../cortex-ralph.js');
+    const { updatePlanStatus } = await import('../openthrottle-ralph.js');
     vi.mocked(updatePlanStatus).mockClear();
     try {
       const result = await runChildJob(input);

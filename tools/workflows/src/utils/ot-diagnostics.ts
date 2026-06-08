@@ -7,15 +7,13 @@ import { loadWorkflowRalphConfig } from '../config/load-workflow-ralph-config.js
  */
 
 /** When set on `workflow-ralph`, emits one stderr JSON line before plan lookup. */
-export const WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV =
-  'WORKFLOW_RALPH_OT_DIAGNOSTICS' as const;
+export const WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV = `WORKFLOW_RALPH_OT_DIAGNOSTICS`;
 
 /** When set on openthrottle-server (worker), logs spawn cwd + worker Postgres identity before `pnpm exec workflow-ralph`. */
-export const OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV =
-  'OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS' as const;
+export const OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV = `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`;
 
-const OT_DIAGNOSTICS_LOG_PREFIX = '[workflow-ralph:ot-diagnostics]' as const;
-const PLANS_SPAWN_DIAGNOSTICS_PREFIX = '[plans-spawn:ot-diagnostics]' as const;
+const OT_DIAGNOSTICS_LOG_PREFIX = `[workflow-ralph:ot-diagnostics]`;
+const PLANS_SPAWN_DIAGNOSTICS_PREFIX = `[plans-spawn:ot-diagnostics]`;
 
 /**
  * @description One stderr line with cwd, plan id, sanitized Postgres target, and booleans for related env (no token values).
@@ -42,8 +40,8 @@ export function logWorkflowRalphOtDiagnostics(params: {
       githubTokenSet: Boolean(env.GITHUB_TOKEN?.trim()),
       graphqlUrlSet: Boolean(env.GRAPHQL_URL?.trim()),
       jwtSecretSet: Boolean(env.JWT_SECRET?.trim()),
-      openthrottleCortexPostgresUrlSet: Boolean(
-        env.OPENTHROTTLE_CORTEX_POSTGRES_URL?.trim(),
+      openthrottlePostgresUrlSet: Boolean(
+        env.OPENTHROTTLE_POSTGRES_URL?.trim(),
       ),
       openthrottleWorkflowsAuthTokenSet: Boolean(
         env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN?.trim(),
@@ -101,6 +99,7 @@ export function formatPlansProcessorSpawnOtDiagnosticsMessage(
   const postgresIdentity = pgUrl
     ? sanitizePostgresUrlForLogs(pgUrl)
     : `POSTGRES_* host=${env.POSTGRES_HOST ?? '(unset)'} db=${env.POSTGRES_DB ?? '(unset)'}`;
+
   const effectiveUnixUid =
     typeof process.getuid === 'function' ? process.getuid() : null;
 

@@ -70,13 +70,14 @@ export const PlanWorkflowConfigWorkspace = (
   return (
     <OpenThrottleFieldset id="workflow-run-workspace-legend" legend={heading}>
       <p className="text-muted-foreground text-xs">
-        Absolute path to a local project folder for multi-workspace runs. It
-        must be an <strong>Nx workspace root</strong> — the directory that
-        contains <code className="text-xs">nx.json</code> — not a parent folder
-        or an inner subdirectory. When empty, the worker uses the monorepo root
-        (<code className="text-xs">WORKSPACE_ROOT</code> or{' '}
-        <code className="text-xs">process.cwd()</code>). The server validates
-        the path exists, is a directory, and is an Nx workspace root on enqueue.
+        Absolute path to a local repository for cross-repo runs. Use the{' '}
+        <strong>repository root</strong> — not a parent folder or an inner
+        subdirectory — so <code className="text-xs">.workflow-ralph.json</code>,
+        repo-local skills, and git paths resolve correctly. When empty, the
+        worker uses the OpenThrottle monorepo root (
+        <code className="text-xs">WORKSPACE_ROOT</code> or{' '}
+        <code className="text-xs">process.cwd()</code>). The server validates on
+        enqueue that the path is absolute, exists, and is a directory.
       </p>
 
       <div className="space-y-2">
@@ -175,9 +176,9 @@ export const PlanWorkflowConfigWorkspace = (
           {validationError != null ? (
             <span className="text-destructive">{validationError}</span>
           ) : hasValue ? (
-            'Must be an Nx workspace root (contains nx.json); server validates on enqueue.'
+            'Must be an existing directory; server validates on enqueue.'
           ) : (
-            'Empty = monorepo root (default).'
+            'Empty = OpenThrottle monorepo root (default).'
           )}
         </p>
       </div>

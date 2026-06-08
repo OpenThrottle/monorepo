@@ -40,7 +40,7 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:migrate
    ```
 
-   **Service account bootstrap (after migrate, when using `APP_ENABLE_AUTHENTICATION=true`):** Migration `045_seed_service_accounts_bootstrap.sql` creates `openthrottle-mcp` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
+   **Service account bootstrap:** Migration `045_seed_service_accounts_bootstrap.sql` creates `openthrottle-mcp` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
 
    ```bash
    pnpm run database:bootstrap-service-accounts

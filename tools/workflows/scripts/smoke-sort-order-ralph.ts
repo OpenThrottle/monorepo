@@ -3,7 +3,7 @@
  * Smoke test: Ralph task selection follows sortOrder (not createdAt);
  * reorder_plan_tasks reshuffles execution order without delete-and-recreate.
  *
- * Uses Postgres-direct for plan/task setup (same path as cortex-ralph) and optionally
+ * Uses Postgres-direct for plan/task setup (same path as openthrottle-ralph) and optionally
  * GraphQL reorderPlanTasks when the server schema exposes it.
  *
  * Usage: pnpm exec tsx tools/workflows/scripts/smoke-sort-order-ralph.ts
@@ -16,7 +16,7 @@ import {
   ensureDatabaseReachableOrExit,
   getCortexConfigOrExit,
   getTasksByPlanId,
-} from '../src/utils/cortex-ralph';
+} from '../src/utils/openthrottle-ralph';
 
 const serverAppUrl = process.env.OPENTHROTTLE_SERVER_APP_URL?.replace(
   /\/$/,

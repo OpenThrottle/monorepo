@@ -30,8 +30,7 @@ type GetPlanOutputResult = GenericResult<{
 
 export const appendPlanOutputToolParameters = AppendPlanOutputInputSchema();
 
-export const appendPlanOutputToolDescription =
-  'Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number.';
+export const appendPlanOutputToolDescription = `Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number.`;
 
 export async function appendPlanOutputToolHandler(
   args: z.infer<typeof appendPlanOutputToolParameters>,
