@@ -1,6 +1,11 @@
 import { join, relative, sep } from 'node:path';
 
-import type { ExportedDeclarations, Project, SourceFile } from 'ts-morph';
+import type {
+  ExportedDeclarations,
+  Project,
+  ReferencedSymbolEntry,
+  SourceFile,
+} from 'ts-morph';
 import { Node, ts } from 'ts-morph';
 
 import type {
@@ -210,7 +215,12 @@ function isPositionTarget(target: SymbolTarget): target is SymbolPosition {
 }
 
 function getNameNode(node: Node): Node | undefined {
-  if (Node.isNamed(node) || Node.isNameable(node)) {
+  if (
+    Node.isNamed(node) ||
+    Node.isNameable(node) ||
+    Node.isBindingNamed(node) ||
+    Node.isPropertyNamed(node)
+  ) {
     return node.getNameNode();
   }
 
@@ -253,6 +263,113 @@ function compareLocations(
   b: DefinitionLocation,
 ): number {
   return a.path.localeCompare(b.path) || a.line - b.line || a.column - b.column;
+}
+
+/** A single reference to a symbol. */
+export interface ReferenceLocation {
+  /** 1-based column of the reference. */
+  column: number;
+  /** `true` when the reference writes to the symbol, when ts-morph exposes it. */
+  isWrite?: boolean;
+  /** 1-based line of the reference. */
+  line: number;
+  /** Workspace-relative POSIX path of the referencing file. */
+  path: string;
+}
+
+/**
+ * Find every reference to a symbol across the workspace — the declaration site
+ * and all usages, in every file — distinguishing writes from reads. The
+ * inverse of {@link findDefinition}. Returns an empty array (never throws) when
+ * the target resolves to nothing.
+ *
+ * @publicApi
+ */
+export async function findReferences(
+  config: WorkspaceConfig,
+  target: SymbolTarget,
+): Promise<ReferenceLocation[]> {
+  const resolved = resolveWorkspaceConfig(config);
+  const project = loadProject(config);
+  // References can live in any file, so the whole workspace must be loaded.
+  const sourceFiles = await addWorkspaceSourceFiles(project, resolved);
+
+  const targets = isPositionTarget(target)
+    ? identifierAtPosition(project, resolved, target)
+    : sourceFiles.flatMap((sourceFile) =>
+        namedDeclarations(sourceFile).filter(
+          (declaration) => getDeclaredName(declaration) === target.name,
+        ),
+      );
+
+  const locations: ReferenceLocation[] = [];
+
+  for (const node of targets) {
+    if (!Node.isReferenceFindable(node)) {
+      continue;
+    }
+
+    for (const referencedSymbol of node.findReferences()) {
+      for (const entry of referencedSymbol.getReferences()) {
+        locations.push(toReferenceLocation(entry, resolved));
+      }
+    }
+  }
+
+  return dedupeReferences(locations);
+}
+
+function identifierAtPosition(
+  project: Project,
+  resolved: ResolvedWorkspaceConfig,
+  position: SymbolPosition,
+): Node[] {
+  const sourceFile = getOrAddSourceFile(project, resolved, position.path);
+
+  if (sourceFile === undefined) {
+    return [];
+  }
+
+  const offset = ts.getPositionOfLineAndCharacter(
+    sourceFile.compilerNode,
+    position.line - 1,
+    position.column - 1,
+  );
+  const node = sourceFile.getDescendantAtPos(offset);
+
+  return node !== undefined && Node.isIdentifier(node) ? [node] : [];
+}
+
+function toReferenceLocation(
+  entry: ReferencedSymbolEntry,
+  resolved: ResolvedWorkspaceConfig,
+): ReferenceLocation {
+  const node = entry.getNode();
+  const sourceFile = node.getSourceFile();
+  const { column, line } = sourceFile.getLineAndColumnAtPos(node.getStart());
+
+  return {
+    column,
+    isWrite: entry.isWriteAccess(),
+    line,
+    path: toRelativePath(sourceFile.getFilePath(), resolved),
+  };
+}
+
+function dedupeReferences(locations: ReferenceLocation[]): ReferenceLocation[] {
+  const seen = new Set<string>();
+  const unique: ReferenceLocation[] = [];
+
+  for (const location of locations) {
+    const key = `${location.path}|${location.line}|${location.column}`;
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(location);
+    }
+  }
+
+  return unique.sort(compareLocations);
 }
 
 function toExportedSymbol(
@@ -298,7 +415,12 @@ function resolveKind(node: Node): string {
 }
 
 function getDeclaredName(node: Node): string | undefined {
-  if (Node.isNamed(node) || Node.isNameable(node)) {
+  if (
+    Node.isNamed(node) ||
+    Node.isNameable(node) ||
+    Node.isBindingNamed(node) ||
+    Node.isPropertyNamed(node)
+  ) {
     return node.getName();
   }
 
