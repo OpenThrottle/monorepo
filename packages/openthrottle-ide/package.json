@@ -7,8 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@vscode/ripgrep": "^1.18.0"
+  },
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -44,7 +45,6 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",
