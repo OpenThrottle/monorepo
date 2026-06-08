@@ -31,7 +31,7 @@ Treat this README as the source of truth for **where** Maestro files belong and
 In a separate terminal from Maestro:
 
 ```bash
-pnpm nx serve openthrottle-developer
+pnpm nx run openthrottle-developer:dev
 ```
 
 Default port is **6020** (see `applications/openthrottle-developer/.env.default`
