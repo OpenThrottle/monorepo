@@ -9,6 +9,9 @@ import type {
   WorkspaceConfig,
 } from '../config/workspace-config.js';
 import { resolveWorkspaceConfig } from '../config/workspace-config.js';
+import { hashFile } from '../utils/hash.js';
+import type { SnapshotDiff, WorkspaceFileHash } from './workspace.js';
+import { diffSnapshots, hashWorkspace } from './workspace.js';
 
 /** The kind of filesystem change observed for a watched file. */
 export type WatchEventType = 'add' | 'change' | 'unlink';
@@ -162,4 +165,108 @@ function toRelativePath(
   resolved: ResolvedWorkspaceConfig,
 ): string {
   return relative(resolved.root, absolutePath).split(sep).join('/');
+}
+
+/** Receives the {@link SnapshotDiff} for each batch of changes. */
+export type IndexSubscriber = (delta: SnapshotDiff) => void;
+
+/** A live, self-updating workspace index. Returned by {@link createWorkspaceIndex}. */
+export interface WorkspaceIndex {
+  /** Stop watching and release the underlying watcher's resources. */
+  close: () => Promise<void>;
+  /**
+   * The current snapshot: a stable copy of every tracked file's path and
+   * content hash, kept fresh as files change.
+   */
+  getSnapshot: () => WorkspaceFileHash[];
+  /**
+   * Subscribe to incremental deltas. The handler fires once per settled batch
+   * with the `{ added, changed, removed }` diff. Returns an unsubscribe fn.
+   */
+  subscribe: (handler: IndexSubscriber) => () => void;
+}
+
+/**
+ * Build a live in-memory index of a workspace: seed the snapshot from
+ * {@link hashWorkspace}, then keep it fresh by watching for changes. Each
+ * settled batch re-hashes only the added/changed files (never the whole tree),
+ * updates the snapshot, and emits the computed {@link SnapshotDiff} to
+ * subscribers — so downstream layers re-process exactly what moved.
+ *
+ * Subscribers are notified only when a batch actually changes the snapshot, so
+ * a `change` event whose content hash is unchanged emits nothing.
+ *
+ * @publicApi
+ */
+export async function createWorkspaceIndex(
+  config: WorkspaceConfig,
+  handlers?: Pick<WatchHandlers, 'debounceMs' | 'onError'>,
+): Promise<WorkspaceIndex> {
+  const resolved = resolveWorkspaceConfig(config);
+  let snapshot = await hashWorkspace(config);
+  const subscribers = new Set<IndexSubscriber>();
+
+  // Serialize batch processing so concurrent flushes never race on `snapshot`.
+  let queue: Promise<void> = Promise.resolve();
+
+  const applyBatch = async (events: WatchEvent[]): Promise<void> => {
+    const prev = snapshot;
+    const byPath = new Map(prev.map((entry) => [entry.path, entry.hash]));
+
+    // Each path appears at most once per coalesced batch, so re-hashing the
+    // added/changed files concurrently can't race on a shared key.
+    await Promise.all(
+      events.map(async (event) => {
+        if (event.type === 'unlink') {
+          byPath.delete(event.path);
+          return;
+        }
+        try {
+          byPath.set(
+            event.path,
+            await hashFile(join(resolved.root, event.path)),
+          );
+        } catch {
+          // The file vanished between the event and the re-hash; treat as gone.
+          byPath.delete(event.path);
+        }
+      }),
+    );
+
+    const next = [...byPath.entries()]
+      .map(([path, hash]) => ({ hash, path }))
+      .sort((a, b) => a.path.localeCompare(b.path));
+    snapshot = next;
+
+    const delta = diffSnapshots(prev, next);
+    if (delta.added.length || delta.changed.length || delta.removed.length) {
+      for (const handler of subscribers) {
+        handler(delta);
+      }
+    }
+  };
+
+  const watcher = watchWorkspace(config, {
+    debounceMs: handlers?.debounceMs,
+    onError: handlers?.onError,
+    onEvents: (events) => {
+      queue = queue.then(() => applyBatch(events));
+    },
+  });
+
+  return {
+    close: async (): Promise<void> => {
+      await watcher.close();
+      await queue;
+      subscribers.clear();
+    },
+    getSnapshot: (): WorkspaceFileHash[] =>
+      snapshot.map((entry) => ({ ...entry })),
+    subscribe: (handler: IndexSubscriber): (() => void) => {
+      subscribers.add(handler);
+      return () => {
+        subscribers.delete(handler);
+      };
+    },
+  };
 }
