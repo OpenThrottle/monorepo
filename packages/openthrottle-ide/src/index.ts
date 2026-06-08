@@ -24,8 +24,22 @@ export { findDefinition, findReferences, listExports } from './data/symbols.js';
 export type { LoadProjectOptions } from './data/ts-project.js';
 export { loadProject, resetProjectCache } from './data/ts-project.js';
 
-export type { WorkspaceFileHash } from './data/workspace.js';
-export { hashWorkspace, listFiles } from './data/workspace.js';
+export type {
+  IndexSubscriber,
+  WatchEvent,
+  WatchEventType,
+  WatchHandle,
+  WatchHandlers,
+  WorkspaceIndex,
+} from './data/watch.js';
+export {
+  createWorkspaceIndex,
+  DEFAULT_WATCH_DEBOUNCE_MS,
+  watchWorkspace,
+} from './data/watch.js';
+
+export type { SnapshotDiff, WorkspaceFileHash } from './data/workspace.js';
+export { diffSnapshots, hashWorkspace, listFiles } from './data/workspace.js';
 
 export { hashContent, hashFile } from './utils/hash.js';
 export { runRipgrep, workspaceRipgrepArgs } from './utils/ripgrep.js';

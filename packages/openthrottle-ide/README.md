@@ -8,9 +8,10 @@ Headless code-intelligence engine for an IDE-like, agent-driven web experience. 
 - **`data/`** — three tiers, all driven by the same `WorkspaceConfig`:
   - **workspace + text search**: `listFiles` / `hashWorkspace` (gitignore-aware enumeration + per-file fingerprints for incremental re-indexing) and `searchText` (structured ripgrep matches with path/line/column).
   - **symbols (`ts-morph`)**: `loadProject` plus `listExports`, `findDefinition`, and `findReferences` — the LSP-grade tier that lets agents reason about code structure (definitions, references, exports) rather than just text.
+  - **watch + incremental sync**: `watchWorkspace` (debounced, gitignore-aware `add`/`change`/`unlink` events), `diffSnapshots` (pure `{ added, changed, removed }` delta over two `hashWorkspace` snapshots), and `createWorkspaceIndex` (a live in-memory snapshot that re-hashes only what changed and emits deltas to subscribers) — the Merkle-style tier so downstream layers only re-process files that actually moved.
 - **`utils/`** — `runRipgrep` (the bundled `@vscode/ripgrep` binary) and `hashContent` / `hashFile`.
 
-Future layers (file watching, semantic search over the existing pgvector store) plug into the same `WorkspaceConfig`.
+Future layers (semantic search over the existing pgvector store) plug into the same `WorkspaceConfig`.
 
 ## Usage
 
@@ -63,6 +64,47 @@ const refs = await findReferences(config, { name: 'createUser' });
 
 `findDefinition` and `findReferences` return an empty array (never throw) when
 nothing resolves.
+
+### Watch + incremental sync
+
+Keep a workspace snapshot fresh as files change. `watchWorkspace` emits raw,
+debounced events; `createWorkspaceIndex` layers hashing and diffing on top so
+you receive ready-to-consume `{ added, changed, removed }` deltas — re-hashing
+only the files that moved, never the whole tree. Both honor the same
+`.gitignore` + exclude-glob scoping as `listFiles`.
+
+```ts
+import {
+  createWorkspaceIndex,
+  diffSnapshots,
+  hashWorkspace,
+  watchWorkspace,
+} from '@openthrottle/openthrottle-ide';
+
+const config = { root: '/path/to/repo' };
+
+// Low-level: debounced add/change/unlink with workspace-relative POSIX paths.
+const handle = watchWorkspace(config, {
+  onEvents: (events) => {
+    // events: [{ type: 'add' | 'change' | 'unlink', path }, …]
+  },
+});
+await handle.close();
+
+// Pure delta between two snapshots — no filesystem access.
+const before = await hashWorkspace(config);
+const after = await hashWorkspace(config);
+const { added, changed, removed } = diffSnapshots(before, after);
+
+// High-level: a live index that emits deltas as the workspace changes.
+const index = await createWorkspaceIndex(config);
+const unsubscribe = index.subscribe((delta) => {
+  // delta: { added, changed, removed } — re-process only these paths.
+});
+index.getSnapshot(); // current [{ path, hash }, …]
+unsubscribe();
+await index.close();
+```
 
 ## Installation
 
