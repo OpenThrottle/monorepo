@@ -24,18 +24,22 @@ export const IdeSearchForm = (
   // Hooks
   const [query, setQuery] = React.useState(defaultQuery);
 
+  // Setup
+
   // Handlers
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     onSearch?.(query.trim());
   };
 
+  // Markup
+
   // Life Cycle
   React.useEffect(() => {
     setQuery(defaultQuery);
   }, [defaultQuery]);
 
-  // Markup
+  // 🔌 Short Circuit
   return (
     <form
       className={cn('flex items-end gap-2', className)}

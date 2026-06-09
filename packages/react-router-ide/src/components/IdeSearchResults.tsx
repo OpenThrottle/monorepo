@@ -36,7 +36,13 @@ export const IdeSearchResults = (
   const hasQuery = result.query.trim() !== '';
   const hasMatches = result.matches.length > 0;
 
-  // 🔌 Short Circuits
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (loading) {
     return (
       <div
@@ -77,7 +83,6 @@ export const IdeSearchResults = (
     );
   }
 
-  // Markup
   return (
     <div
       className={cn('flex flex-col gap-1', className)}

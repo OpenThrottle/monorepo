@@ -54,7 +54,13 @@ export const WorkspaceFilePalette = (
   const visible = matches.slice(0, maxResults);
   const hiddenCount = matches.length - visible.length;
 
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   return (
     <Command
       className={cn('rounded-lg border', className)}

@@ -44,6 +44,8 @@ export const IdeSearchResultRow = (
 ): React.ReactElement => {
   const { className, match, onSelect } = props;
 
+  // Hooks
+
   // Setup
   const { mid, post, pre } = splitHighlight(
     match.lineText,
@@ -51,7 +53,13 @@ export const IdeSearchResultRow = (
     match.column,
   );
 
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   return (
     <button
       className={cn(

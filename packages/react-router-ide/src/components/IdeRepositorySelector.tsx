@@ -33,6 +33,8 @@ export const IdeRepositorySelector = (
 ): React.ReactElement => {
   const { className, onSelect, options, selectedId } = props;
 
+  // Hooks
+
   // Setup
   const comboboxOptions: ComboboxOption[] = options.map((option) => ({
     label: option.label,
@@ -40,7 +42,13 @@ export const IdeRepositorySelector = (
   }));
   const hasOptions = comboboxOptions.length > 0;
 
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   return (
     <div
       className={cn('w-full max-w-sm', className)}
