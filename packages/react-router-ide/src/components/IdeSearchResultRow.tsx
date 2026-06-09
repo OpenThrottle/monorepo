@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import type { SearchMatch } from '../data/view-models';
+import { splitMatchHighlight } from '../utils/splitMatchHighlight';
 
 export interface IdeSearchResultRowProps {
   className?: string;
@@ -9,28 +10,6 @@ export interface IdeSearchResultRowProps {
   /** Fired with the match when the row is activated. */
   onSelect?: (match: SearchMatch) => void;
 }
-
-/** Split a line into the segments before/at/after the matched substring. */
-const splitHighlight = (
-  lineText: string,
-  matchText: string,
-  column: number,
-): { mid: string; post: string; pre: string } => {
-  const start = column - 1;
-  const fitsAtColumn =
-    start >= 0 && lineText.slice(start, start + matchText.length) === matchText;
-  const index = fitsAtColumn ? start : lineText.indexOf(matchText);
-
-  if (matchText === '' || index < 0) {
-    return { mid: '', post: '', pre: lineText };
-  }
-
-  return {
-    mid: lineText.slice(index, index + matchText.length),
-    post: lineText.slice(index + matchText.length),
-    pre: lineText.slice(0, index),
-  };
-};
 
 /**
  * A single text-search result: `path:line:column` metadata plus the matched line
@@ -47,11 +26,11 @@ export const IdeSearchResultRow = (
   // Hooks
 
   // Setup
-  const { mid, post, pre } = splitHighlight(
-    match.lineText,
-    match.matchText,
-    match.column,
-  );
+  const { mid, post, pre } = splitMatchHighlight({
+    column: match.column,
+    lineText: match.lineText,
+    matchText: match.matchText,
+  });
 
   // Handlers
 
