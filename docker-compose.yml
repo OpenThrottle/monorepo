@@ -84,7 +84,8 @@ services:
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
-    user: 'appuser'
+    # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter.v3 production)
+    # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
 
   #############################################################################
   #
@@ -173,25 +174,16 @@ services:
       POSTGRES_VERSION: ${POSTGRES_VERSION}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
-    # No curl/wget required: Node hits /health on PORT (from OPENTHROTTLE_SERVER_PORT). Dockerfile.NestJS.v3
-    # is distroless and ships its own HEALTHCHECK using /nodejs/bin/node; this compose override is optional.
-    healthcheck:
-      interval: 30s
-      retries: 3
-      start_period: 40s
-      test:
-        [
-          'CMD',
-          '/usr/local/bin/node',
-          '-e',
-          "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})",
-        ]
-      timeout: 10s
+    # Healthcheck is provided by the image: Dockerfile.NestJS.v3 (distroless) ships a HEALTHCHECK
+    # that hits GET /health on PORT via /nodejs/bin/node. Do NOT override it here with
+    # /usr/local/bin/node — that path does not exist on distroless and would mark the server
+    # permanently unhealthy (which would also block openthrottle-developer's depends_on).
     image: openthrottle-server:latest
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
-    user: 'appuser'
+    # No `user:` override: the distroless `nonroot` image already runs as uid 65532, and the pruned
+    # tree is COPYed with --chown=65532. `user: appuser` would fail ("no matching entries in passwd").
 
 #############################################################################
 #
