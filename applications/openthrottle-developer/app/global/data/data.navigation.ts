@@ -7,6 +7,7 @@ import {
   BrainCircuitIcon,
   BrainIcon,
   BugIcon,
+  CodeIcon,
   FileChartColumn,
   FoldersIcon,
   GaugeIcon,
@@ -30,6 +31,11 @@ export const dataNavigationV2: Record<string, GlobalSidebarLinkProps[]> = {
       children: 'Dashboard',
       icon: GaugeIcon,
       to: '/dashboard',
+    },
+    {
+      children: 'IDE',
+      icon: CodeIcon,
+      to: '/ide',
     },
     {
       children: 'Plans',

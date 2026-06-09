@@ -42,8 +42,9 @@ export const useSymbolDetails = (
         name: symbol.name,
         path: symbol.path,
       });
+      const separator = endpoint.includes('?') ? '&' : '?';
 
-      fetcher.load(`${endpoint}?${params.toString()}`);
+      fetcher.load(`${endpoint}${separator}${params.toString()}`);
     },
     [endpoint, fetcher],
   );
