@@ -1047,9 +1047,15 @@ importers:
       '@openthrottle/nestjs-repositories':
         specifier: workspace:*
         version: link:../../packages/nestjs-repositories
+      '@openthrottle/openthrottle-ide':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-ide
       '@openthrottle/openthrottle-skills':
         specifier: workspace:*
         version: link:../../packages/openthrottle-skills
+      '@openthrottle/react-router-ide':
+        specifier: workspace:*
+        version: link:../../packages/react-router-ide
       '@openthrottle/react-router-markdown':
         specifier: workspace:*
         version: link:../../packages/react-router-markdown
