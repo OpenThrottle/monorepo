@@ -1,13 +1,16 @@
 {
   "name": "@openthrottle/react-router-ide",
-  "description": "TODO: Add a description",
+  "description": "Presentational React Router UI for the openthrottle-ide code-intelligence engine: workspace file palette, text/symbol/semantic search, and results components built on react-router-shadcn.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/openthrottle-ide": "workspace:*",
+    "@openthrottle/react-router-shadcn": "workspace:*"
+  },
   "devDependencies": {},
   "main": "./src/index.ts",
   "module": "./src/index.ts",
@@ -33,7 +36,11 @@
       "typecheck-tests": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^7.14.0"
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted",

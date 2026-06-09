@@ -1617,7 +1617,23 @@ importers:
         specifier: ^16.13.2
         version: 16.14.0
 
-  packages/react-router-ide: {}
+  packages/react-router-ide:
+    dependencies:
+      '@openthrottle/openthrottle-ide':
+        specifier: workspace:*
+        version: link:../openthrottle-ide
+      '@openthrottle/react-router-shadcn':
+        specifier: workspace:*
+        version: link:../react-router-shadcn
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      react-router:
+        specifier: ^7.14.0
+        version: 7.15.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
   packages/react-router-markdown:
     dependencies:
