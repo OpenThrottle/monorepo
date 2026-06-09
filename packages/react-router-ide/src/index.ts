@@ -2,8 +2,7 @@
 // Presentational + client-only surface consumed by openthrottle-developer.
 // Subsequent tasks append `@publicApi`-tagged exports here:
 //   export * from './components';
-//   export * from './data';
 //   export * from './hooks';
 //   export * from './utils';
 
-export {};
+export * from './data';
