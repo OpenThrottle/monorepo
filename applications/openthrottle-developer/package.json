@@ -60,6 +60,19 @@
       "codegen-graphql-watch": {},
       "codegen-react-router": {},
       "codegen-react-router-watch": {},
+      "docker-build": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "docker build -f Dockerfile.ReactRouter.v3 --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg NX_VERSION=$NX_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-developer:local .",
+          "cwd": "{workspaceRoot}",
+          "env": {
+            "APP_VERSION": "1.0.0",
+            "NX_VERSION": "22.6.4",
+            "PNPM_VERSION": "10.33.4"
+          }
+        },
+        "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter.v3 (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
+      },
       "lint": {},
       "test": {},
       "test-e2e": {

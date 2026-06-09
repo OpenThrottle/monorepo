@@ -69,7 +69,7 @@ services:
       args:
         <<: *openthrottle-developer
       context: ./
-      dockerfile: Dockerfile.ReactRouter
+      dockerfile: Dockerfile.ReactRouter.v3
       secrets: *build-secrets
       target: production
     container_name: openthrottle-developer
@@ -153,7 +153,7 @@ services:
       args:
         <<: *openthrottle-server
       context: ./
-      dockerfile: Dockerfile.NestJS.v2
+      dockerfile: Dockerfile.NestJS.v3
       secrets: *build-secrets
     container_name: openthrottle-server
     depends_on:
@@ -173,8 +173,8 @@ services:
       POSTGRES_VERSION: ${POSTGRES_VERSION}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
-    # No curl/wget required: Node hits /health on PORT (from OPENTHROTTLE_SERVER_PORT). For Dockerfile.NestJS.v2
-    # (distroless), either drop this block to use the image HEALTHCHECK or use /nodejs/bin/node instead of /usr/local/bin/node.
+    # No curl/wget required: Node hits /health on PORT (from OPENTHROTTLE_SERVER_PORT). Dockerfile.NestJS.v3
+    # is distroless and ships its own HEALTHCHECK using /nodejs/bin/node; this compose override is optional.
     healthcheck:
       interval: 30s
       retries: 3

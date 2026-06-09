@@ -1,9 +1,19 @@
-# React Router apps — multi-stage build from monorepo root.
-# v2: pruned production tree + distroless default; baseline stays in Dockerfile.ReactRouter.
-# Build: docker build -f Dockerfile.ReactRouter.v2 [--build-arg ...] .
-# See docs/openthrottle/docker-image-build-strategy.md and docs/openthrottle/docker-react-router-v2.md.
+# OpenThrottle React Router apps — canonical multi-stage build from the monorepo root.
 #
-# Build stages use node:*-bookworm-slim (glibc) so native addons match distroless production.
+# v3 is the single source of truth for the React Router app images (openthrottle-developer, etc.).
+# It supersedes the baseline `Dockerfile.ReactRouter` and `Dockerfile.ReactRouter.v2` (which used
+# fragile hand-pruning of the server stack).
+#
+# Build: docker build -f Dockerfile.ReactRouter.v3 --target production --build-arg APP_NAME=openthrottle-developer [...] .
+# Or via Nx: pnpm nx run openthrottle-developer:docker-build
+# See docs/openthrottle/docker-image-build-strategy.md.
+#
+# Pruning: each app declares its real runtime deps (see applications/*/package.json), and
+# `pnpm --filter <app> --prod deploy` produces the production tree. No manual
+# `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
+# `--legacy` deploy and is tracked for a real fix (injected strict deploy) in a follow-up plan.
+#
+# Build stages use node:22-bookworm-slim (glibc) so native addons match distroless production.
 ###########################################################################
 #
 #     👀 https://pnpm.io/docker using NX for the monorepo build
@@ -62,36 +72,6 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 
 ################################################################################
 #
-#   DEPENDENCIES ~ Production dependency tree (intermediate; not copied wholesale to v2 production)
-#
-################################################################################
-FROM builder AS dependencies
-
-ENV NODE_ENV="production"
-
-RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile --prod
-
-RUN pnpm store prune
-
-RUN rm -rf /app/node_modules/.pnpm/@langchain \
-  /app/node_modules/.pnpm/@modelcontextprotocol \
-  /app/node_modules/.pnpm/@nestjs \
-  /app/node_modules/.pnpm/ajv* \
-  /app/node_modules/.pnpm/bullmq* \
-  /app/node_modules/.pnpm/jimp* \
-  /app/node_modules/.pnpm/nestjs* \
-  /app/node_modules/.pnpm/passport-local \
-  /app/node_modules/.pnpm/pdf-parse \
-  /app/node_modules/.pnpm/pg \
-  /app/node_modules/.pnpm/reflect-metadata \
-  /app/node_modules/.pnpm/rxjs \
-  /app/node_modules/.pnpm/stripe \
-  /app/node_modules/.pnpm/uuid \
-  /app/node_modules/.pnpm/youtubei.js \
-  /app/node_modules/.pnpm/@nestjs*
-
-################################################################################
-#
 #   BUILD - Nx build + pnpm deploy pruned runtime tree
 #
 ################################################################################
@@ -110,16 +90,17 @@ RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
   export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json && \
   pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build
 
+# App-only runtime tree: pruned package dir with build/ + isolated production node_modules.
 RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 
 ################################################################################
 #
-#   PRODUCTION-ALPINE ~ Debian slim + shell (compose-friendly name; not Alpine)
+#   PRODUCTION-DEBIAN ~ Debian slim + shell (compose-friendly; not Alpine)
 #
 ################################################################################
 # Use when you need a shell or optional curl for healthchecks:
-#   docker build -f Dockerfile.ReactRouter.v2 --target production-alpine ...
-FROM base AS production-alpine
+#   docker build -f Dockerfile.ReactRouter.v3 --target production-debian ...
+FROM base AS production-debian
 
 ENV NODE_ENV="production"
 
@@ -144,4 +125,5 @@ ENV NODE_ENV="production"
 
 COPY --from=build --chown=65532:65532 /app/pruned/. /app/
 
+# ENTRYPOINT is Node; CMD is argv only (see distroless/nodejs README).
 CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]
