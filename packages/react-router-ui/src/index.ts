@@ -29,8 +29,10 @@ export * from './components/OpenThrottleWebsocketDebugger';
 export * from './components/websocket-debugger';
 
 // 📦 Data
+export * from './data/data.artwork';
 export * from './data/data.features';
 export * from './data/data.introductions';
+export * from './data/data.taglines';
 
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';

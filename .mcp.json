@@ -11,6 +11,11 @@
       "command": "uvx",
       "args": ["mcp-server-fetch"]
     },
+    "maestro": {
+      "args": ["mcp"],
+      "command": "maestro",
+      "description": "Maestro E2E testing (maestro.dev). Drive the openthrottle-developer app: list_devices, inspect_screen, take_screenshot, run flows, cheat_sheet, and Maestro Cloud tools. Requires the Maestro CLI on PATH and a running app/device."
+    },
     "openthrottle-mcp": {
       "args": ["source .env && ./scripts/run-openthrottle-mcp.sh"],
       "command": "bash",
