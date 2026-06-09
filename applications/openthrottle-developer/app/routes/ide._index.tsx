@@ -23,6 +23,8 @@ import {
   IdeRepositorySelector,
   IdeSearchForm,
   IdeSearchResults,
+  SemanticSearchForm,
+  SemanticSearchResults,
   WorkspaceFilePalette,
   useSymbolDetails,
 } from '@openthrottle/react-router-ide';
@@ -224,16 +226,18 @@ export default function Component(
             />
           </TabsContent>
 
-          <TabsContent value="semantic">
-            <Empty data-testid="IdeSemanticGated">
-              <EmptyHeader>
-                <EmptyTitle>Semantic index unavailable</EmptyTitle>
-                <EmptyDescription>
-                  Natural-language code search needs the code embeddings index,
-                  which ships separately.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+          <TabsContent className="flex flex-col gap-4" value="semantic">
+            {/* Gated: real wiring is the server-side follow-up plan (depends on the
+                code_embeddings migration). available=false renders the gated state. */}
+            <SemanticSearchForm disabled={true} />
+            <SemanticSearchResults
+              result={{
+                available: false,
+                matches: [],
+                query: '',
+                repository: listing.repository,
+              }}
+            />
           </TabsContent>
         </Tabs>
       )}
