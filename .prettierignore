@@ -3,6 +3,7 @@
 #############################################################################
 **/applications/**/vite.config.ts.timestamp-*.mjs
 **/applications/**/vitest.config.ts.timestamp-*.mjs
+pnpm-lock.yaml
 
 #############################################################################
 # Folders
