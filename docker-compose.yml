@@ -1,5 +1,26 @@
 #############################################################################
 #
+#     🚀 Verified run | from the repo root:
+#
+#         docker compose up --build
+#
+#     Brings up postgres + redis + openthrottle-server + openthrottle-developer.
+#     Config is interpolated from the repo-root `.env` (see `.env.default`).
+#
+#     Canonical images: server → Dockerfile.NestJS.v3, developer →
+#     Dockerfile.ReactRouter.v3, postgres → Dockerfile.Postgres (the Postgres
+#     build COPYs ./databases/seed.sql, so generate it first if missing).
+#
+#     Networking (Docker Desktop): the server reaches postgres/redis via
+#     host.docker.internal:${POSTGRES_PORT}/${REDIS_PORT} (the published host
+#     ports), and the developer reaches the server via
+#     ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}=http://host.docker.internal:${OPENTHROTTLE_SERVER_PORT}.
+#
+#     Verified healthy: server GET /health → 200
+#     {api,database,redis,websocket:ok}; developer GET / → 200.
+#
+#############################################################################
+#
 #     🧩 Fragments | https://docs.docker.com/compose/compose-file/11-extension/
 #
 #############################################################################
@@ -20,6 +41,7 @@ x-openthrottle-developer: &openthrottle-developer
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
   APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
   APP_NAME: ${OPENTHROTTLE_DEVELOPER_APP_NAME}
+  APP_NAME_SHORT: ${OPENTHROTTLE_DEVELOPER_APP_NAME_SHORT}
   APP_URL: ${OPENTHROTTLE_DEVELOPER_APP_URL}
   APP_URL_ADMIN: ${OPENTHROTTLE_DEVELOPER_APP_URL_ADMIN}
   APP_URL_CMS: ${OPENTHROTTLE_DEVELOPER_APP_URL_CMS}
@@ -36,6 +58,7 @@ x-openthrottle-server: &openthrottle-server
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
   APP_ENV: ${OPENTHROTTLE_SERVER_APP_ENV}
   APP_NAME: ${OPENTHROTTLE_SERVER_APP_NAME}
+  APP_NAME_SHORT: ${OPENTHROTTLE_SERVER_APP_NAME_SHORT}
   APP_URL: ${OPENTHROTTLE_SERVER_APP_URL}
   APP_URL_INTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
   APP_URL_EXTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
