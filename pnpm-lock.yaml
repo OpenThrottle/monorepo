@@ -1064,9 +1064,144 @@ importers:
 
   applications/openthrottle-server:
     dependencies:
+      '@graphql-typed-document-node/core':
+        specifier: ^3.2.0
+        version: 3.2.0(graphql@16.14.0)
+      '@langchain/core':
+        specifier: ^1.1.39
+        version: 1.1.45(@opentelemetry/api@1.9.1)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(openai@6.36.0(ws@8.20.0)(zod@4.4.3))(ws@8.20.0)
+      '@langchain/ollama':
+        specifier: ^1.2.0
+        version: 1.2.7(@langchain/core@1.1.45(@opentelemetry/api@1.9.1)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(openai@6.36.0(ws@8.20.0)(zod@4.4.3))(ws@8.20.0))
+      '@langchain/openai':
+        specifier: ^1.2.2
+        version: 1.4.5(@langchain/core@1.1.45(@opentelemetry/api@1.9.1)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(openai@6.36.0(ws@8.20.0)(zod@4.4.3))(ws@8.20.0))(ws@8.20.0)
+      '@nestjs/bullmq':
+        specifier: ^11.0.4
+        version: 11.0.4(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(bullmq@5.76.6)
+      '@nestjs/common':
+        specifier: ^11.1.18
+        version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.2
+        version: 4.0.4(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.18
+        version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/graphql':
+        specifier: ^13.2.3
+        version: 13.4.0(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(graphql@16.14.0)(reflect-metadata@0.2.2)(ts-morph@28.0.0)
+      '@nestjs/jwt':
+        specifier: ^11.0.2
+        version: 11.0.2(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@nestjs/passport':
+        specifier: ^11.0.5
+        version: 11.0.5(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
+      '@nestjs/platform-express':
+        specifier: ^11.1.18
+        version: 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)
+      '@openthrottle/ai-mcp':
+        specifier: workspace:*
+        version: link:../../packages/ai-mcp
+      '@openthrottle/nestjs-agentic-workflow':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-agentic-workflow
+      '@openthrottle/nestjs-auth':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-auth
+      '@openthrottle/nestjs-bullmq':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-bullmq
+      '@openthrottle/nestjs-bullmq-board':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-bullmq-board
+      '@openthrottle/nestjs-github':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-github
+      '@openthrottle/nestjs-graphql':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-graphql
+      '@openthrottle/nestjs-logging':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-logging
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-modules
+      '@openthrottle/nestjs-openthrottle-mcp':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-mcp-developer
+      '@openthrottle/nestjs-profiling':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-profiling
+      '@openthrottle/nestjs-rbac':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-rbac
+      '@openthrottle/nestjs-repositories':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-repositories
+      '@openthrottle/nestjs-stripe':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-stripe
+      '@openthrottle/nestjs-utils':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-utils
+      '@openthrottle/nestjs-websockets':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-websockets
+      '@openthrottle/nestjs-worktrees':
+        specifier: workspace:*
+        version: link:../../packages/nestjs-worktrees
+      '@openthrottle/nodejs-graphql':
+        specifier: workspace:*
+        version: link:../../packages/nodejs-graphql
+      '@openthrottle/openthrottle-agentic-ralph':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-agentic-ralph
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../../packages/openthrottle-agentic-utils
+      '@openthrottle/openthrottle-agentic-workflow':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-agentic-workflow
+      '@openthrottle/openthrottle-notifications':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-notifications
+      '@openthrottle/openthrottle-workflows':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-workflows
+      '@tools/workflows':
+        specifier: workspace:*
+        version: link:../../tools/workflows
+      bullmq:
+        specifier: ^5.73.0
+        version: 5.76.6
+      dataloader:
+        specifier: ^2.2.3
+        version: 2.2.3
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.4.2
+      graphql:
+        specifier: ^16.13.2
+        version: 16.14.0
+      passport-local:
+        specifier: ^1.0.0
+        version: 1.0.0
+      pg:
+        specifier: ^8.17.1
+        version: 8.20.0
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      typeorm:
+        specifier: ^0.3.28
+        version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.10.1)(pg@8.20.0)(ts-node@10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@24.12.2)(typescript@5.9.3))
+      zod:
+        specifier: ^4.3.6
+        version: 4.4.3
 
   applications/openthrottle-website: {}
 
@@ -23172,7 +23307,6 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   '@nestjs/platform-socket.io@11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.19)(rxjs@7.8.2)':
     dependencies:
