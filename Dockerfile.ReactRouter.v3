@@ -86,8 +86,17 @@ COPY . .
 
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
 
+# The @nx/gcs-cache remote cache is best-effort: it needs both a GCS credentials file
+# (the gcs_credentials build secret) and NX_KEY. CI supplies both; local `nx docker-build`,
+# forks, and compose-without-secrets supply neither. Only point GOOGLE_APPLICATION_CREDENTIALS
+# at the secret when it was actually mounted (non-empty file) — otherwise Nx aborts with ENOENT
+# reading a missing credentials file. Likewise unset an empty/placeholder NX_KEY, which Nx would
+# reject with "Failed to decode the Nx key", and disable the remote cache (NX_DISABLE_REMOTE_CACHE)
+# so the build never reaches out to GCS. With neither, the build runs on the local cache only;
+# a real key + credentials (CI) are left intact and the remote cache is used.
 RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
-  export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json && \
+  if [ -s /tmp/gcs-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json; fi && \
+  if [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
   pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build
 
 # App-only runtime tree: pruned package dir with build/ + isolated production node_modules.
