@@ -93,6 +93,7 @@
     "@openthrottle/react-router-chat": "workspace:*",
     "@openthrottle/react-router-editor": "workspace:*",
     "@openthrottle/react-router-graphql": "workspace:*",
+    "@openthrottle/react-router-ide": "workspace:*",
     "@openthrottle/react-router-notifications": "workspace:*",
     "@openthrottle/react-router-shadcn": "workspace:*",
     "@openthrottle/react-router-ui": "workspace:*",
