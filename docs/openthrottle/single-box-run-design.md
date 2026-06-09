@@ -67,10 +67,10 @@ Caddyfile for E2 can mirror [tools/caddy/Caddyfile](../../tools/caddy/Caddyfile)
 
 ## 4. Docker Compose vs systemd + docker run
 
-| Approach                 | Pros                                                                                                                                   | Cons                                                                              |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **Docker Compose**       | Single file; declarative; shared network; easy env and restarts; same pattern as local `applications/openthrottle/docker-compose.yml`. | Requires Docker + Compose on the VM.                                              |
-| **systemd + docker run** | No Compose dependency; fine-grained unit files.                                                                                        | More moving parts; manual network and env; harder to keep in sync with Terraform. |
+| Approach                 | Pros                                                                                                                       | Cons                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Docker Compose**       | Single file; declarative; shared network; easy env and restarts; same pattern as the local repo-root `docker-compose.yml`. | Requires Docker + Compose on the VM.                                              |
+| **systemd + docker run** | No Compose dependency; fine-grained unit files.                                                                            | More moving parts; manual network and env; harder to keep in sync with Terraform. |
 
 **Recommendation:** **Docker Compose.** The Terraform/startup flow (next task) will: install Docker (and Docker Compose plugin or standalone), pull images from Artifact Registry, and run `docker compose up -d` (compose file provided via metadata, startup script, or checked-out repo). Compose file defines:
 
