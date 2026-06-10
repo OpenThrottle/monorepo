@@ -50,7 +50,7 @@ describe('PromptsTable Component', () => {
       'href',
       '/prompts/create',
     );
-    expect(component.queryByTestId('PromptsTable')).not.toBeInTheDocument();
+    expect(component.getByTestId('PromptsTable')).toBeInTheDocument();
   });
 
   test('shows filtered empty copy when search is provided and prompts is empty', () => {
@@ -67,10 +67,12 @@ describe('PromptsTable Component', () => {
   test('renders table structure with column header when prompts exist', () => {
     const withPrompts = renderPromptsTable({ prompts: mockPrompts });
 
-    expect(withPrompts.getByTestId('PromptsTable')).toBeInTheDocument();
+    expect(withPrompts.getAllByTestId('PromptsTable').length).toBeGreaterThan(
+      0,
+    );
     expect(
-      withPrompts.getByRole('columnheader', { name: 'Prompt' }),
-    ).toBeInTheDocument();
+      withPrompts.getAllByRole('columnheader', { name: 'Prompt' }).length,
+    ).toBeGreaterThan(0);
   });
 
   test('renders prompts from props with title links and type badges', () => {

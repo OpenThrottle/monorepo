@@ -25,7 +25,7 @@ describe('SettingsLogsPanel', () => {
     expect(
       screen.getByText('Support bundle', { exact: true }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Workflow & agent logs/i)).toBeInTheDocument();
+    expect(screen.getByText(/Workflow & Server Logs/i)).toBeInTheDocument();
     expect(screen.getByTestId('logs-buffer-summary')).toHaveTextContent(
       '0/1000',
     );

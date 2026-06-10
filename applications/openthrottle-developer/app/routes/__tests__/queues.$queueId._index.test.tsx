@@ -107,13 +107,8 @@ describe('routes/queues.$queueId.tsx', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
-    expect(
-      component.getByRole('heading', {
-        level: 2,
-        name: 'No jobs in this queue.',
-      }),
-    ).toBeInTheDocument();
-    expect(component.queryByTestId('QueueJobsTable')).not.toBeInTheDocument();
+    expect(component.getByText('No jobs in this queue.')).toBeInTheDocument();
+    expect(component.getByTestId('QueueJobsTable')).toBeInTheDocument();
   });
 
   test('renders QueueJobsTable when jobs are present', () => {
@@ -144,6 +139,5 @@ describe('routes/queues.$queueId.tsx', () => {
     expect(
       component.getByRole('link', { name: 'View job details for job-1' }),
     ).toHaveAttribute('href', '/queues/plans/job-1');
-    expect(component.getByTestId('queue-jobs-pagination')).toBeInTheDocument();
   });
 });

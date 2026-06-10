@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -20,14 +21,16 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
 describe('routes/skills._index.tsx', () => {
   test('should render', () => {
     render(
-      <MemoryRouter>
-        <SkillsIndex
-          actionData={undefined}
-          loaderData={{ entries: SAMPLE_ENTRIES }}
-          matches={[] as never}
-          params={{}}
-        />
-      </MemoryRouter>,
+      <TooltipProvider>
+        <MemoryRouter>
+          <SkillsIndex
+            actionData={undefined}
+            loaderData={{ entries: SAMPLE_ENTRIES }}
+            matches={[] as never}
+            params={{}}
+          />
+        </MemoryRouter>
+      </TooltipProvider>,
     );
 
     expect(screen.getByTestId('SkillsTable')).toBeInTheDocument();

@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { cleanup, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsTable } from '../SkillsTable';
 import type { SkillsTableProps } from '../SkillsTable';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
@@ -28,13 +28,14 @@ describe('SkillsTable Component', () => {
     props = {};
   });
 
-  test('when entries is empty renders SkillsEmpty instead of the table', () => {
-    const Component = () => <SkillsTable {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+  test('when entries is empty renders SkillsEmpty inside the table', () => {
+    renderRoutesStub(<SkillsTable {...props} />);
 
-    expect(screen.queryByTestId('SkillsTable')).not.toBeInTheDocument();
-    expect(screen.getByText('No skills yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'No skills found, create your first skill to get started.',
+      ),
+    ).toBeInTheDocument();
   });
 
   describe('when entries are provided', () => {
@@ -44,9 +45,7 @@ describe('SkillsTable Component', () => {
     });
 
     test('renders table shell and column headers', () => {
-      const Component = () => <SkillsTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      render(<RoutesStub />);
+      renderRoutesStub(<SkillsTable {...props} />);
 
       expect(screen.getByTestId('SkillsTable')).toBeInTheDocument();
       expect(screen.getByRole('table')).toBeInTheDocument();
@@ -62,12 +61,10 @@ describe('SkillsTable Component', () => {
     });
 
     test('renders table rows from entries', () => {
-      const Component = () => <SkillsTable {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      render(<RoutesStub />);
+      renderRoutesStub(<SkillsTable {...props} />);
 
-      expect(screen.getByText('agents')).toBeInTheDocument();
-      expect(screen.getByText('cursor')).toBeInTheDocument();
+      expect(screen.getByText('Agents')).toBeInTheDocument();
+      expect(screen.getByText('Cursor')).toBeInTheDocument();
       expect(screen.getByText('/brag-sheet')).toBeInTheDocument();
       expect(screen.getByText('/nx-workspace')).toBeInTheDocument();
       expect(
