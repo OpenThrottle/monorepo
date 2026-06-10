@@ -1653,6 +1653,15 @@ importers:
         specifier: ^2.2.3
         version: 2.2.3
 
+  packages/nestjs-vector-search:
+    dependencies:
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:*
+        version: link:../nestjs-modules
+      '@openthrottle/openthrottle-ide':
+        specifier: workspace:*
+        version: link:../openthrottle-ide
+
   packages/nestjs-websockets:
     dependencies:
       '@nestjs/common':

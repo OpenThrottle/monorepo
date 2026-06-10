@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "rootDirs": ["./src"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.json", "src/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -16,10 +16,10 @@
   ],
   "references": [
     {
-      "path": "../react-router-shadcn/tsconfig.lib.json"
+      "path": "../openthrottle-ide/tsconfig.lib.json"
     },
     {
-      "path": "../openthrottle-ide/tsconfig.lib.json"
+      "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
