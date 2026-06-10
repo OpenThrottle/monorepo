@@ -268,3 +268,66 @@ Whether or not the CLI keeps GraphQL or adopts a shared client (Option A/C), the
 
 > These are documentation edits scoped to a **follow-up implementation plan**, not this
 > investigation. They are listed as Task 4 next-actions.
+
+---
+
+## Task 4 — Decision, blockers, and phased path
+
+### Decision
+
+**Do not adopt the MCP protocol for the workflow surfaces (Option B).** It regresses
+per-context auth identity (collapses worker/workflows/MCP tokens into one), adds per-call
+JSON-RPC + process latency in the orchestrator's hot loop, and introduces child-process
+lifecycle risk inside BullMQ workers and headless cron — for zero benefit, since the _agent_
+(Cursor/Claude) already speaks MCP and the _workflow_ code already speaks GraphQL in-process.
+
+**Adopt the shared GraphQL client library (Option A) as the target, reached via the cheap
+codegen dedupe (Option C) first.** This keeps the GraphQL-only transport boundary intact,
+removes the duplicated documents and operation wrappers, and naturally eliminates the
+Postgres-direct branch and its `IN_PROGRESS` semantic divergence.
+
+### Effort & risk
+
+| Phase | Scope                                                                                                      | Effort | Breaking-change risk                                                             |
+| ----- | ---------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| 0     | Doc/guide reconciliation (Task 3 fixes)                                                                    | S      | None — wording only                                                              |
+| 1     | Codegen dedupe: single document source for B/C/D (Option C)                                                | S–M    | Low — documents must be a superset; codegen output diffed in CI                  |
+| 2     | Extract `@openthrottle/ot-client` leaf lib (Nest-free); repoint B, C, MCP, and CLI GraphQL path (Option A) | M      | Low–Med — call-site churn; injected `executeGraphqlV2` preserves auth            |
+| 3     | Delete Surface A Postgres-direct path + Postgres TCP preflight; finish GraphQL-only boundary               | M      | Med — removes the `postgres-direct` rollback; needs the boundary plan's sign-off |
+
+### Alignment with plan `a1c55a0a-…` (GraphQL-only transport boundary)
+
+Fully aligned and additive. That plan already targets removing Surface A's Postgres path; this
+ADR's Phases 1–2 remove the _reason_ the duplication exists (separate document sets + wrappers),
+and Phase 3 is the boundary plan's existing Phase 2. The `serverHealth` exception is preserved.
+
+### Blockers / open questions
+
+1. **Fragment superset reconciliation.** MCP and agentic-ralph fragments select slightly
+   different field sets; merging documents (Phase 1) requires auditing every fragment so no
+   consumer loses a field. Mechanical but must be exhaustive — gate with codegen diff in CI.
+2. **MCP's own codegen pipeline.** MCP also generates Zod validation schemas
+   (`typescript-validation-schema`) alongside TypedDocumentNodes; a shared document package must
+   keep feeding MCP's Zod generation, or MCP keeps its codegen config pointed at the shared
+   `.graphql` sources.
+3. **Auth injection contract.** The shared lib must accept an injected executor/token resolver
+   (not read env itself) so worker (`OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`), workflows
+   (`OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`), and MCP (`OPENTHROTTLE_MCP_AUTH_TOKEN`) resolution all
+   stay where they are.
+4. **`postgres-direct` deprecation policy.** Phase 3 removes the documented rollback escape
+   hatch; needs explicit sign-off (and a deprecation window) on the boundary plan.
+
+### Test-coverage gaps to close before Phase 2/3
+
+- No cross-transport parity test asserting GraphQL and (legacy) Postgres `updatePlanStatus`
+  produce equivalent observable state for the `IN_PROGRESS` idempotency case.
+- No CI guard that the four agentic-guide mirrors stay in sync.
+- Codegen-drift checks exist per-package (`verify-graphql-codegen`); a shared document package
+  needs its own drift gate wired into `check:local`.
+
+### Recommended next actions
+
+1. Land the Task 3 doc/guide reconciliation (Phase 0) — cheap, immediately reduces confusion.
+2. Open a follow-up implementation plan for Phases 1–3 (codegen dedupe → shared `ot-client`
+   leaf → Postgres-direct removal), explicitly linked to plan `a1c55a0a-…`.
+3. Add the missing CI guards (mirror-sync check, shared-document drift gate) as part of Phase 1.
