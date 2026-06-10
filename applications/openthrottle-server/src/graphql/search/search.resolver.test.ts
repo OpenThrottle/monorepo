@@ -1,18 +1,16 @@
 import {
   embedQuery,
   getChunkById,
-  getPostgresConfig,
   listSources,
   runSemanticSearch,
 } from '@openthrottle/ai-mcp/src/cortex-server';
 import { Test } from '@nestjs/testing';
-import { describe, expect, test, beforeAll, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SearchResolver } from './search.resolver';
 
 vi.mock('@openthrottle/ai-mcp/src/cortex-server', () => ({
   embedQuery: vi.fn(),
   getChunkById: vi.fn(),
-  getPostgresConfig: vi.fn(),
   listSources: vi.fn(),
   runSemanticSearch: vi.fn(),
 }));
@@ -28,25 +26,12 @@ describe('SearchResolver', () => {
     resolver = app.get<SearchResolver>(SearchResolver);
   });
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('search', () => {
-    test('returns empty chunks when Cortex config is missing', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
-
-      const result = await resolver.search({
-        limit: null,
-        query: 'find plans about auth',
-      });
-
-      expect(result).toEqual({ chunks: [] });
-      expect(embedQuery).not.toHaveBeenCalled();
-      expect(runSemanticSearch).not.toHaveBeenCalled();
-    });
-
     test('returns empty chunks when query is empty after trim', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
-      });
-
       const result = await resolver.search({
         limit: null,
         query: '   ',
@@ -57,9 +42,6 @@ describe('SearchResolver', () => {
     });
 
     test('returns empty chunks when embedQuery returns undefined', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
-      });
       vi.mocked(embedQuery).mockResolvedValue(undefined);
 
       const result = await resolver.search({
@@ -72,11 +54,7 @@ describe('SearchResolver', () => {
       expect(runSemanticSearch).not.toHaveBeenCalled();
     });
 
-    test('returns mapped chunks when config, embed, and search succeed', async () => {
-      const config = {
-        connectionString: 'postgresql://localhost/cortex',
-      };
-      vi.mocked(getPostgresConfig).mockReturnValue(config);
+    test('returns mapped chunks when embed and search succeed', async () => {
       vi.mocked(embedQuery).mockResolvedValue([0.1, 0.2]);
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
@@ -107,7 +85,7 @@ describe('SearchResolver', () => {
       });
 
       expect(embedQuery).toHaveBeenCalledWith('find plans about auth');
-      expect(runSemanticSearch).toHaveBeenCalledWith(config, [0.1, 0.2], 5);
+      expect(runSemanticSearch).toHaveBeenCalledWith([0.1, 0.2], 5);
       expect(result.chunks).toHaveLength(2);
       expect(result.chunks[0]).toMatchObject({
         content: 'Plan chunk text',
@@ -132,10 +110,6 @@ describe('SearchResolver', () => {
     });
 
     test('clamps limit to max 50', async () => {
-      const config = {
-        connectionString: 'postgresql://localhost/cortex',
-      };
-      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
 
@@ -144,14 +118,10 @@ describe('SearchResolver', () => {
         query: 'test',
       });
 
-      expect(runSemanticSearch).toHaveBeenCalledWith(config, [0.1], 50);
+      expect(runSemanticSearch).toHaveBeenCalledWith([0.1], 50);
     });
 
     test('uses default limit 20 when limit is null', async () => {
-      const config = {
-        connectionString: 'postgresql://localhost/cortex',
-      };
-      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([]);
 
@@ -160,14 +130,10 @@ describe('SearchResolver', () => {
         query: 'test',
       });
 
-      expect(runSemanticSearch).toHaveBeenCalledWith(config, [0.1], 20);
+      expect(runSemanticSearch).toHaveBeenCalledWith([0.1], 20);
     });
 
     test('maps documentation chunks with sourcePath, sourceRepo, sourceSha', async () => {
-      const config = {
-        connectionString: 'postgresql://localhost/cortex',
-      };
-      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
@@ -202,10 +168,6 @@ describe('SearchResolver', () => {
     });
 
     test('sets sourcePath/sourceRepo/sourceSha to null for non-documentation chunks', async () => {
-      const config = {
-        connectionString: 'postgresql://localhost/cortex',
-      };
-      vi.mocked(getPostgresConfig).mockReturnValue(config);
       vi.mocked(embedQuery).mockResolvedValue([0.1]);
       vi.mocked(runSemanticSearch).mockResolvedValue([
         {
@@ -231,34 +193,16 @@ describe('SearchResolver', () => {
   });
 
   describe('getDocument', () => {
-    test('returns null when Cortex config is missing', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
-
-      const result = await resolver.getDocument('chunk-uuid');
-
-      expect(result).toBeNull();
-      expect(getChunkById).not.toHaveBeenCalled();
-    });
-
     test('returns null when chunk not found', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
-      });
       vi.mocked(getChunkById).mockResolvedValue(null);
 
       const result = await resolver.getDocument('missing-uuid');
 
       expect(result).toBeNull();
-      expect(getChunkById).toHaveBeenCalledWith(
-        expect.any(Object),
-        'missing-uuid',
-      );
+      expect(getChunkById).toHaveBeenCalledWith('missing-uuid');
     });
 
     test('returns mapped chunk when found', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
-      });
       vi.mocked(getChunkById).mockResolvedValue({
         content: 'Chunk content',
         id: 'chunk-uuid',
@@ -286,19 +230,7 @@ describe('SearchResolver', () => {
   });
 
   describe('listSources', () => {
-    test('returns empty sources and plans when Cortex config is missing', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue(undefined);
-
-      const result = await resolver.listSources();
-
-      expect(result).toEqual({ plans: [], sources: [] });
-      expect(listSources).not.toHaveBeenCalled();
-    });
-
-    test('returns mapped sources and plans when config present', async () => {
-      vi.mocked(getPostgresConfig).mockReturnValue({
-        connectionString: 'postgresql://localhost/cortex',
-      });
+    test('returns mapped sources and plans', async () => {
       vi.mocked(listSources).mockResolvedValue({
         plans: [
           { id: 'plan-1', title: 'Plan One' },
