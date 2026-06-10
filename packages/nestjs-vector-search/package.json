@@ -8,8 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/typeorm": "^11.0.1",
     "@openthrottle/nestjs-modules": "workspace:*",
-    "@openthrottle/openthrottle-ide": "workspace:*"
+    "@openthrottle/openthrottle-ide": "workspace:*",
+    "typeorm": "^0.3.28"
   },
   "devDependencies": {},
   "exports": {
