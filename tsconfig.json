@@ -180,6 +180,9 @@
     },
     {
       "path": "./packages/openthrottle-ide"
+    },
+    {
+      "path": "./packages/react-router-markdown"
     }
   ]
 }

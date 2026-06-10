@@ -1,7 +1,5 @@
-// export * from './components';
-// export * from './config';
-// export * from './data';
-// export * from './hooks';
-// export * from './utils';
+// 🧩 React Components
+export * from './components/MarkdownRenderer';
 
-export const REMOVE_ME = `We can remove this when we actually have some code to export.`;
+// 🛠️ Utilities
+export * from './utils/compileMarkdown';

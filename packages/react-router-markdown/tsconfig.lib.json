@@ -14,5 +14,9 @@
     "dist",
     "tests/**"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
 }

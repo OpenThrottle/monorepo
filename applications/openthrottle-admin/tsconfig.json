@@ -17,7 +17,13 @@
       "path": "../../tools/dotfiles"
     },
     {
-      "path": "../../packages/react-router-ui-global"
+      "path": "../../packages/react-router-ui"
+    },
+    {
+      "path": "../openthrottle-developer"
+    },
+    {
+      "path": "../../packages/react-router-shadcn"
     },
     {
       "path": "../../packages/react-router-auth"
@@ -26,10 +32,10 @@
       "path": "../../packages/react-router-graphql"
     },
     {
-      "path": "../../packages/react-router-ui"
+      "path": "../../packages/react-router-ui-global"
     },
     {
-      "path": "../../packages/react-router-shadcn"
+      "path": "../openthrottle-email"
     },
     {
       "path": "../../packages/react-router-utils"

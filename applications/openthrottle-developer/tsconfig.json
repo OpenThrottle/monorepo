@@ -53,6 +53,9 @@
       "path": "../../packages/react-router-shadcn"
     },
     {
+      "path": "../openthrottle-email"
+    },
+    {
       "path": "../../packages/react-router-utils"
     }
   ]
