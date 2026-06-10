@@ -31,6 +31,7 @@ import {
 import type {
   ExportedSymbol,
   IdeExportsResult,
+  IdeSemanticResult,
 } from '@openthrottle/react-router-ide';
 import { Link, useFetcher, useSearchParams } from 'react-router';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
@@ -104,6 +105,9 @@ export default function Component(
   // Hooks
   const [, setSearchParams] = useSearchParams();
   const exportsFetcher = useFetcher<IdeExportsResult>();
+  const semanticFetcher = useFetcher<IdeSemanticResult>();
+  const indexFetcher = useFetcher<{ repositoryId: string; status: string }>();
+  const [semanticQuery, setSemanticQuery] = React.useState('');
   const [selectedSymbol, setSelectedSymbol] = React.useState<
     ExportedSymbol | undefined
   >(undefined);
@@ -142,6 +146,20 @@ export default function Component(
     });
   };
 
+  const loadSemantic = React.useCallback(
+    (nextQuery: string): void => {
+      if (selectedId === null) {
+        return;
+      }
+      const params = new URLSearchParams({ repositoryId: selectedId });
+      if (nextQuery !== '') {
+        params.set('q', nextQuery);
+      }
+      semanticFetcher.load(`/ide/semantic?${params.toString()}`);
+    },
+    [selectedId, semanticFetcher],
+  );
+
   const handleTabChange = (value: string): void => {
     if (
       value === 'symbols' &&
@@ -151,6 +169,30 @@ export default function Component(
     ) {
       exportsFetcher.load(`/ide/symbols?repositoryId=${selectedId}`);
     }
+
+    if (
+      value === 'semantic' &&
+      selectedId !== null &&
+      semanticFetcher.state === 'idle' &&
+      semanticFetcher.data === undefined
+    ) {
+      loadSemantic(semanticQuery);
+    }
+  };
+
+  const handleSemanticSearch = (nextQuery: string): void => {
+    setSemanticQuery(nextQuery);
+    loadSemantic(nextQuery);
+  };
+
+  const handleIndex = (): void => {
+    if (selectedId === null) {
+      return;
+    }
+    indexFetcher.submit(
+      { repositoryId: selectedId },
+      { action: '/ide/semantic', method: 'post' },
+    );
   };
 
   const handleSelectSymbol = (symbol: ExportedSymbol): void => {
@@ -161,6 +203,21 @@ export default function Component(
   // Markup
 
   // Life Cycle
+  // After an index is enqueued, refresh status so the tab reflects "indexing".
+  React.useEffect(() => {
+    if (indexFetcher.state === 'idle' && indexFetcher.data !== undefined) {
+      loadSemantic(semanticQuery);
+    }
+  }, [indexFetcher.state, indexFetcher.data, loadSemantic, semanticQuery]);
+
+  // Poll while indexing until the index becomes ready (or otherwise settles).
+  React.useEffect(() => {
+    if (semanticFetcher.data?.status !== 'indexing') {
+      return;
+    }
+    const timer = setTimeout(() => loadSemantic(semanticQuery), 2500);
+    return () => clearTimeout(timer);
+  }, [semanticFetcher.data, loadSemantic, semanticQuery]);
 
   // 🔌 Short Circuit
   return (
@@ -227,18 +284,31 @@ export default function Component(
           </TabsContent>
 
           <TabsContent className="flex flex-col gap-4" value="semantic">
-            {/* Gated: real wiring is the server-side follow-up plan (depends on the
-                code_embeddings migration). available=false renders the gated state. */}
-            <SemanticSearchForm disabled={true} />
+            <SemanticSearchForm
+              defaultQuery={semanticQuery}
+              disabled={semanticFetcher.data?.status !== 'ready'}
+              indexing={
+                semanticFetcher.data?.status === 'indexing' ||
+                indexFetcher.state !== 'idle'
+              }
+              onIndex={handleIndex}
+              onSearch={handleSemanticSearch}
+            />
             <SemanticSearchResults
-              result={{
-                available: false,
-                indexedChunks: 0,
-                matches: [],
-                query: '',
-                repository: listing.repository,
-                status: 'unavailable',
-              }}
+              loading={
+                semanticFetcher.state !== 'idle' ||
+                semanticFetcher.data === undefined
+              }
+              result={
+                semanticFetcher.data ?? {
+                  available: true,
+                  indexedChunks: 0,
+                  matches: [],
+                  query: semanticQuery,
+                  repository: listing.repository,
+                  status: 'ready',
+                }
+              }
             />
           </TabsContent>
         </Tabs>

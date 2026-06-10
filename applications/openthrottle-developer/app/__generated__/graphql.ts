@@ -3047,6 +3047,53 @@ export type GetGeneratorsQuery = {
   }>;
 };
 
+export type CodeIndexStatusQueryVariables = Exact<{
+  repositoryId: Scalars['ID']['input'];
+}>;
+
+export type CodeIndexStatusQuery = {
+  __typename?: 'Query';
+  codeIndexStatus: {
+    __typename?: 'CodeIndexStatusObject';
+    indexedChunks: number;
+    repositoryId: string;
+    status: string;
+  };
+};
+
+export type CodeSemanticSearchQueryVariables = Exact<{
+  input: CodeSemanticSearchInput;
+}>;
+
+export type CodeSemanticSearchQuery = {
+  __typename?: 'Query';
+  codeSemanticSearch: {
+    __typename?: 'CodeSemanticSearchResult';
+    available: boolean;
+    matches: Array<{
+      __typename?: 'CodeSearchMatch';
+      content: string;
+      endLine: number;
+      path: string;
+      score: number;
+      startLine: number;
+    }>;
+  };
+};
+
+export type IndexCodeRepositoryMutationVariables = Exact<{
+  repositoryId: Scalars['ID']['input'];
+}>;
+
+export type IndexCodeRepositoryMutation = {
+  __typename?: 'Mutation';
+  indexCodeRepository: {
+    __typename?: 'IndexCodeRepositoryResult';
+    repositoryId: string;
+    status: string;
+  };
+};
+
 export type GetNoteByIdQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -6253,6 +6300,197 @@ export const GetGeneratorsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetGeneratorsQuery, GetGeneratorsQueryVariables>;
+export const CodeIndexStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'CodeIndexStatus' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'repositoryId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'codeIndexStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'repositoryId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'indexedChunks' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CodeIndexStatusQuery,
+  CodeIndexStatusQueryVariables
+>;
+export const CodeSemanticSearchDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'CodeSemanticSearch' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CodeSemanticSearchInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'codeSemanticSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'matches' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endLine' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'score' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'startLine' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CodeSemanticSearchQuery,
+  CodeSemanticSearchQueryVariables
+>;
+export const IndexCodeRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'IndexCodeRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'repositoryId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'indexCodeRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'repositoryId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  IndexCodeRepositoryMutation,
+  IndexCodeRepositoryMutationVariables
+>;
 export const GetNoteByIdDocument = {
   kind: 'Document',
   definitions: [
