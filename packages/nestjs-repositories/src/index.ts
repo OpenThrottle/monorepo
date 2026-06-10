@@ -1,3 +1,5 @@
+export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity';
+export { codeEmbeddingsFactory } from './modules/code-embeddings/code-embeddings.factory';
 export { CommitLink } from './modules/commit-links/commit-link.entity';
 export type { CommitLinkData } from './modules/commit-links/commit-links.factory';
 export { commitLinksFactory } from './modules/commit-links/commit-links.factory';
@@ -174,6 +176,7 @@ export type {
   PlanRunKind,
 } from './modules/plan-runs/plan-run.entity';
 export type { SubscriptionData } from './modules/subscriptions/subscription.entity';
+export type { CodeEmbeddingSearchRow } from './modules/code-embeddings/code-embedding.entity';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity';
 export type { ProjectData } from './modules/projects/project.entity';
 export type { TaskData } from './modules/tasks/task.entity';
