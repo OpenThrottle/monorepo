@@ -1,5 +1,6 @@
 import { describe, expect, beforeEach, test } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readJson } from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
 import { packageGenerator } from './generator';
 
@@ -40,6 +41,33 @@ describe('package generator', () => {
         ]),
       );
     });
+
+    test('should add the package to root package.json as a workspace dependency', async () => {
+      await packageGenerator(tree, { name, organization: org, type });
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson.dependencies[`${org}/${name}`]).toBe('workspace:*');
+    });
+
+    test('should not generate a TODO.md', async () => {
+      await packageGenerator(tree, { name, organization: org, type });
+      const files = tree.listChanges().map((change) => change.path);
+
+      expect(files).not.toContain(`tools/${name}/TODO.md`);
+      expect(files.some((file) => file.endsWith('TODO.md'))).toBe(false);
+    });
+
+    test('should return a callback to run install + sync after flush', async () => {
+      // The callback is returned (not invoked here) so the test never runs a
+      // real pnpm install or `nx sync`. Nx invokes it after flushing the Tree.
+      const callback = await packageGenerator(tree, {
+        name,
+        organization: org,
+        type,
+      });
+
+      expect(typeof callback).toBe('function');
+    });
   });
 
   describe('@organization', () => {
@@ -51,7 +79,7 @@ describe('package generator', () => {
       tree = createTreeWithEmptyWorkspace();
     });
 
-    test('should create a new "@tools" package', async () => {
+    test('should create a new "@openthrottle" package', async () => {
       await packageGenerator(tree, { name, organization: org, type });
       const changes = tree.listChanges();
       const files = changes.map((change) => change.path);
@@ -75,6 +103,31 @@ describe('package generator', () => {
           `packages/${name}/vitest.config.ts`,
         ]),
       );
+    });
+
+    test('should add the package to root package.json as a workspace dependency', async () => {
+      await packageGenerator(tree, { name, organization: org, type });
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson.dependencies[`${org}/${name}`]).toBe('workspace:*');
+    });
+
+    test('should not generate a TODO.md', async () => {
+      await packageGenerator(tree, { name, organization: org, type });
+      const files = tree.listChanges().map((change) => change.path);
+
+      expect(files).not.toContain(`packages/${name}/TODO.md`);
+      expect(files.some((file) => file.endsWith('TODO.md'))).toBe(false);
+    });
+
+    test('should return a callback to run install + sync after flush', async () => {
+      const callback = await packageGenerator(tree, {
+        name,
+        organization: org,
+        type,
+      });
+
+      expect(typeof callback).toBe('function');
     });
   });
 });
