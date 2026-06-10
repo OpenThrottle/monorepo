@@ -40,6 +40,7 @@ export * from './components/NavigationMenu';
 export * from './components/Pagination';
 export * from './components/Popover/index';
 export * from './components/Progress';
+export * from './components/ScrollArea';
 export * from './components/Select/index';
 export * from './components/Separator';
 export * from './components/Sonner';
