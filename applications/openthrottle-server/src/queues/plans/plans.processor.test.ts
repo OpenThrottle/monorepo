@@ -1,6 +1,6 @@
 import { spawn as nodeSpawn } from 'child_process';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test, type TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
@@ -15,7 +15,6 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import 'reflect-metadata';
-import { OPENTHROTTLE_POSTGRES_URL_ENV } from '@openthrottle/ai-mcp/src/cortex-server';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
@@ -26,7 +25,6 @@ import {
   PLANS_WORKER_LOCK_DURATION_MS,
   PLANS_WORKER_MAX_STALLED_COUNT,
   PLANS_WORKER_STALLED_INTERVAL_MS,
-  WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import { PlansProcessor } from './plans.processor';
@@ -80,7 +78,7 @@ vi.mock('../job-run-hooks/execute-plan-job-run-hooks', () => ({
 
 const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
   exitCode: 0,
-  reason: 'tasks_exhausted',
+  reason: 'workflow_tasks_exhausted',
   status: 'finished',
 });
 
@@ -152,14 +150,16 @@ const mockPlansQueue = {
 
 describe('PlansProcessor', () => {
   let processor: PlansProcessor;
-  let testingModule: TestingModule;
   let mockJob: RunPlanJob;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
     mockJob = {
-      data: { planId: '2794d106-95f9-427e-904d-e0f9b5cbe734' },
+      data: {
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        runKind: 'orchestrator',
+      },
       id: 'job-1',
     } as RunPlanJob;
 
@@ -241,7 +241,6 @@ describe('PlansProcessor', () => {
       ],
     }).compile();
 
-    testingModule = mod;
     processor = mod.get(PlansProcessor);
   });
 
@@ -267,170 +266,6 @@ describe('PlansProcessor', () => {
     expect(mockRepoUpdate).toHaveBeenCalledWith(
       { id: mockJob.data.planId },
       { status: 'IN_PROGRESS' },
-    );
-  });
-
-  it('should spawn pnpm exec workflow-ralph --plan <planId> and await exit', async () => {
-    await processor.process(mockJob);
-
-    expect(mockSpawn).toHaveBeenCalledTimes(1);
-    expect(mockSpawn).toHaveBeenCalledWith(
-      'pnpm',
-      ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
-      expect.objectContaining({
-        cwd: process.cwd(),
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }),
-    );
-  });
-
-  it('should pass --backend claude when job executionBackend is claude and ralph omits backend', async () => {
-    mockJob = {
-      data: {
-        executionBackend: 'claude',
-        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
-      },
-      id: 'job-1',
-    } as RunPlanJob;
-
-    await processor.process(mockJob);
-
-    expect(mockSpawn).toHaveBeenCalledTimes(1);
-    expect(mockSpawn).toHaveBeenCalledWith(
-      'pnpm',
-      [
-        'exec',
-        'workflow-ralph',
-        '--plan',
-        mockJob.data.planId,
-        '--backend',
-        'claude',
-      ],
-      expect.objectContaining({
-        cwd: process.cwd(),
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }),
-    );
-  });
-
-  it('should inject canonical Cortex Postgres URL into nested workflow-ralph env when POSTGRES_URL is set', async () => {
-    const prevUrl = process.env.POSTGRES_URL;
-    const prevTransport = process.env.WORKFLOW_RALPH_TRANSPORT;
-    process.env.POSTGRES_URL = 'postgresql://u:p@localhost:5432/cortex_test';
-    process.env.WORKFLOW_RALPH_TRANSPORT = 'postgres-direct';
-
-    try {
-      await processor.process(mockJob);
-
-      expect(mockSpawn).toHaveBeenCalledTimes(1);
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'pnpm',
-        ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
-        expect.objectContaining({
-          cwd: process.cwd(),
-          env: expect.objectContaining({
-            [OPENTHROTTLE_POSTGRES_URL_ENV]:
-              'postgresql://u:p@localhost:5432/cortex_test',
-            POSTGRES_URL: 'postgresql://u:p@localhost:5432/cortex_test',
-          }),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        }),
-      );
-    } finally {
-      process.env.POSTGRES_URL = prevUrl;
-      if (prevTransport === undefined) {
-        delete process.env.WORKFLOW_RALPH_TRANSPORT;
-      } else {
-        process.env.WORKFLOW_RALPH_TRANSPORT = prevTransport;
-      }
-    }
-  });
-
-  it('should use workingDirectory as cwd when provided in job data', async () => {
-    mockJob = {
-      data: {
-        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
-        workingDirectory: '/Users/matt/Development/some-project',
-      },
-      id: 'job-1',
-    } as RunPlanJob;
-
-    await processor.process(mockJob);
-
-    expect(mockSpawn).toHaveBeenCalledTimes(1);
-    expect(mockSpawn).toHaveBeenCalledWith(
-      'pnpm',
-      ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
-      expect.objectContaining({
-        cwd: '/Users/matt/Development/some-project',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }),
-    );
-  });
-
-  it('should inject canonical Cortex Postgres into nested env when workingDirectory is a foreign cwd (regression: Plan not found)', async () => {
-    const prevUrl = process.env.POSTGRES_URL;
-    const prevTransport = process.env.WORKFLOW_RALPH_TRANSPORT;
-    process.env.POSTGRES_URL =
-      'postgresql://worker:secret@db.example:5432/openthrottle_cortex';
-    process.env.WORKFLOW_RALPH_TRANSPORT = 'postgres-direct';
-
-    mockJob = {
-      data: {
-        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
-        workingDirectory: '/Users/matt/Development/other-monorepo',
-      },
-      id: 'job-1',
-    } as RunPlanJob;
-
-    try {
-      await processor.process(mockJob);
-
-      expect(mockRepoFindOne.mock.calls[0]?.[0]).toEqual({
-        where: { id: mockJob.data.planId },
-      });
-      expect(mockSpawn).toHaveBeenCalledTimes(1);
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'pnpm',
-        ['exec', 'workflow-ralph', '--plan', mockJob.data.planId],
-        expect.objectContaining({
-          cwd: '/Users/matt/Development/other-monorepo',
-          env: expect.objectContaining({
-            [OPENTHROTTLE_POSTGRES_URL_ENV]:
-              'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
-            POSTGRES_URL:
-              'postgresql://worker:secret@db.example:5432/openthrottle_cortex',
-          }),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        }),
-      );
-    } finally {
-      process.env.POSTGRES_URL = prevUrl;
-      if (prevTransport === undefined) {
-        delete process.env.WORKFLOW_RALPH_TRANSPORT;
-      } else {
-        process.env.WORKFLOW_RALPH_TRANSPORT = prevTransport;
-      }
-    }
-  });
-
-  it('should fall back to process.cwd() when workingDirectory is not set', async () => {
-    mockJob = {
-      data: {
-        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
-      },
-      id: 'job-1',
-    } as RunPlanJob;
-
-    await processor.process(mockJob);
-
-    expect(mockSpawn).toHaveBeenCalledTimes(1);
-    expect(mockSpawn).toHaveBeenCalledWith(
-      'pnpm',
-      expect.any(Array),
-      expect.objectContaining({
-        cwd: process.cwd(),
-      }),
     );
   });
 
@@ -539,91 +374,6 @@ describe('PlansProcessor', () => {
     expect(content).toMatch(/RSS .+ MB, heap .+ MB, CPU user .+ ms/);
   });
 
-  /**
-   * @description Cancelled runs complete the BullMQ job successfully (returnvalue has metrics;
-   * not `failed`). Plan row is set to PENDING by `cancelPlanRun` when the user cancels; the worker
-   * does not mark the plan COMPLETED. Notifications use cancel copy + info severity vs success.
-   */
-  describe('kill / cancel outcome (legacy path)', () => {
-    it('completes the job with cancel notification (info), not success or Bull failed', async () => {
-      mockSpawn.mockImplementationOnce((() => {
-        const closeListeners: Array<
-          (code: number | null, signal: NodeJS.Signals | null) => void
-        > = [];
-
-        const fireClose = (
-          code: number | null,
-          signal: NodeJS.Signals | null,
-        ): void => {
-          for (const fn of closeListeners) {
-            fn(code, signal);
-          }
-        };
-
-        const stub = {
-          kill: vi.fn((_sig?: NodeJS.Signals) => {
-            stub.killed = true;
-            setImmediate(() => fireClose(null, 'SIGTERM'));
-          }),
-          killed: false,
-          on: vi.fn((ev: string, fn: (...args: unknown[]) => void) => {
-            if (ev === 'close') {
-              closeListeners.push(
-                fn as (
-                  code: number | null,
-                  signal: NodeJS.Signals | null,
-                ) => void,
-              );
-            }
-          }),
-          once: vi.fn((ev: string, fn: (...args: unknown[]) => void) => {
-            if (ev === 'close') {
-              closeListeners.push(
-                fn as (
-                  code: number | null,
-                  signal: NodeJS.Signals | null,
-                ) => void,
-              );
-            }
-          }),
-          pid: 42,
-          stderr: { on: vi.fn() },
-          stdout: { on: vi.fn() },
-        };
-        return stub as unknown as ReturnType<typeof nodeSpawn>;
-      }) as typeof nodeSpawn);
-
-      const planRunCancellation = testingModule.get(PlanRunCancellationService);
-      const processPromise = processor.process(mockJob);
-
-      await vi.waitFor(() => {
-        expect(mockSpawn).toHaveBeenCalled();
-      });
-
-      planRunCancellation.abort(mockJob.data.planId);
-      const result = await processPromise;
-
-      const notifications = (
-        processor as unknown as { notifications: NotificationsService }
-      ).notifications;
-
-      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
-        expect.objectContaining({
-          jobType: 'plans',
-          message: expect.stringMatching(/[Cc]ancelled/),
-          planId: mockJob.data.planId,
-          severity: 'info',
-        }),
-      );
-      expect(notifications.emitQueueJobCompleted).not.toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'success' }),
-      );
-      expect(result).toMatchObject({
-        taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
-      });
-    });
-  });
-
   describe('orchestrator path + cancel', () => {
     it('emits cancel notification (info) when orchestrator outcome is cancelled', async () => {
       mockJob = {
@@ -636,7 +386,7 @@ describe('PlansProcessor', () => {
 
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
         exitCode: 0,
-        reason: 'cancelled',
+        reason: 'workflow_cancelled',
         status: 'finished',
       });
 
@@ -657,8 +407,13 @@ describe('PlansProcessor', () => {
     });
   });
 
-  describe('iteration limit notification (legacy path)', () => {
-    it('emits warning when Ralph exits 0 but plan is still IN_PROGRESS', async () => {
+  describe('iteration limit notification (orchestrator path)', () => {
+    it('emits warning when Ralph hits max iterations but plan is still IN_PROGRESS', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_max_iterations',
+        status: 'finished',
+      });
       mockRepoFindOne
         .mockResolvedValueOnce({ status: 'QUEUED', title: 'Test Plan' })
         .mockResolvedValueOnce({ status: 'IN_PROGRESS' });
@@ -681,7 +436,12 @@ describe('PlansProcessor', () => {
       );
     });
 
-    it('emits success when Ralph exits 0 and plan is COMPLETED', async () => {
+    it('emits success when Ralph hits max iterations and plan is COMPLETED', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_max_iterations',
+        status: 'finished',
+      });
       mockRepoFindOne
         .mockResolvedValueOnce({ status: 'QUEUED', title: 'Test Plan' })
         .mockResolvedValueOnce({ status: 'COMPLETED' });
@@ -899,161 +659,6 @@ describe('PlansProcessor', () => {
 
       expect(processorMetadata).toBeDefined();
       expect(processorMetadata?.name).toBe(PLANS_QUEUE_NAME);
-    });
-  });
-
-  describe('Worktree all_locked retry with delay', () => {
-    let processorWithWorktrees: PlansProcessor;
-    let mockMoveToDelayed: ReturnType<typeof vi.fn>;
-    let mockJobWithToken: RunPlanJob;
-    let notificationsForWorktrees: NotificationsService;
-
-    /** Tracker that has targets but all are locked. */
-    const mockAllLockedTracker = {
-      acquire: () => ({ ok: false as const, reason: 'all_locked' as const }),
-      getAvailableTarget: () => undefined,
-      hasAvailableTarget: () => false,
-      listTargets: () =>
-        [
-          {
-            id: 'wt-1',
-            lockedBy: 'job-other',
-            path: '/path/to/wt1',
-            status: 'locked',
-          },
-        ] as const,
-      release: () => ({ ok: false as const, reason: 'not_locked' as const }),
-    };
-
-    beforeEach(async () => {
-      mockMoveToDelayed = vi.fn().mockResolvedValue(undefined);
-      mockJobWithToken = {
-        data: { planId: 'plan-waiting-for-worktree' },
-        id: 'job-worktree-test',
-        moveToDelayed: mockMoveToDelayed,
-        token: 'test-token',
-      } as unknown as RunPlanJob;
-
-      mockRepoFindOne.mockResolvedValue({
-        status: 'QUEUED',
-        title: 'Test Plan',
-      });
-
-      const mod = await Test.createTestingModule({
-        providers: [
-          PlanRunCancellationService,
-          PlansProcessor,
-          {
-            provide: AgenticRalphOrchestratorService,
-            useValue: {
-              runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
-            },
-          },
-          {
-            provide: LoggerService,
-            useValue: createMock<LoggerService>(),
-          },
-          {
-            provide: NotificationsService,
-            useValue: createMock<NotificationsService>(),
-          },
-          {
-            provide: PlansService,
-            useValue: mockPlansService,
-          },
-          {
-            provide: TasksService,
-            useValue: mockTasksService,
-          },
-          {
-            provide: WORKTREE_TRACKER_TOKEN,
-            useValue: mockAllLockedTracker,
-          },
-          {
-            provide: PlanOutputStreamService,
-            useValue: mockPlanOutputStreamService,
-          },
-          {
-            provide: ProcessMetricsService,
-            useValue: mockProcessMetrics,
-          },
-          {
-            provide: getQueueToken(PLANS_QUEUE_NAME),
-            useValue: mockPlansQueue,
-          },
-          {
-            provide: BullMqRunOutputRetentionService,
-            useValue: createMock<BullMqRunOutputRetentionService>({
-              maybePruneAfterJobClose: vi.fn(),
-            }),
-          },
-          {
-            provide: WorkflowLifecycleDispatcherFactory,
-            useValue: createMock<WorkflowLifecycleDispatcherFactory>({
-              create: vi.fn(),
-            }),
-          },
-        ],
-      }).compile();
-
-      processorWithWorktrees = mod.get(PlansProcessor);
-      notificationsForWorktrees = mod.get(NotificationsService);
-    });
-
-    it('moves job to delayed when all worktrees are locked', async () => {
-      await expect(
-        processorWithWorktrees.process(mockJobWithToken),
-      ).rejects.toThrow('All worktrees locked, job moved to delayed');
-
-      expect(mockMoveToDelayed).toHaveBeenCalledTimes(1);
-      const [timestamp, token] = mockMoveToDelayed.mock.calls[0] as [
-        number,
-        string,
-      ];
-      expect(timestamp).toBeGreaterThan(
-        Date.now() + WORKTREE_RETRY_DELAY_MS - 1000,
-      );
-      expect(timestamp).toBeLessThanOrEqual(
-        Date.now() + WORKTREE_RETRY_DELAY_MS + 1000,
-      );
-      expect(token).toBe('test-token');
-    });
-
-    it('emits waiting for worktree notification', async () => {
-      await expect(
-        processorWithWorktrees.process(mockJobWithToken),
-      ).rejects.toThrow();
-
-      expect(
-        notificationsForWorktrees.emitPlanWaitingForWorktree,
-      ).toHaveBeenCalledWith({
-        planId: 'plan-waiting-for-worktree',
-        retryDelayMs: WORKTREE_RETRY_DELAY_MS,
-      });
-    });
-
-    it('resets plan status to QUEUED before moving to delayed', async () => {
-      await expect(
-        processorWithWorktrees.process(mockJobWithToken),
-      ).rejects.toThrow();
-
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: 'plan-waiting-for-worktree' },
-        { status: 'QUEUED' },
-      );
-    });
-
-    it('emits plan status changed notification', async () => {
-      await expect(
-        processorWithWorktrees.process(mockJobWithToken),
-      ).rejects.toThrow();
-
-      expect(
-        notificationsForWorktrees.emitPlanStatusChanged,
-      ).toHaveBeenCalledWith({
-        planId: 'plan-waiting-for-worktree',
-        status: 'QUEUED',
-      });
     });
   });
 
