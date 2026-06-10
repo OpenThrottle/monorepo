@@ -12,21 +12,23 @@ import {
   cn,
 } from '@openthrottle/react-router-shadcn';
 import type { IdeSemanticResult } from '../data/view-models';
+import { IDE_SEMANTIC_STATUS } from '../data/view-models';
 import { formatLocationLabel } from '../utils/formatLocationLabel';
 
 export interface SemanticSearchResultsProps {
   className?: string;
   /** True while the semantic search is in flight. */
   loading?: boolean;
-  /** The semantic-search envelope. When `available` is false, the gated state shows. */
+  /** The semantic-search envelope. `result.status` selects the rendered state. */
   result: IdeSemanticResult;
 }
 
 /**
- * Renders natural-language code-search results: each match's similarity score, its
- * `path:startLine` location, and the matched code snippet. Shows a gated "index
- * unavailable" `Empty` when `result.available` is false, a loading `Skeleton`, or
- * an empty state. Presentational; data arrives via props.
+ * Renders the semantic tier by `result.status`: a gated "index unavailable" `Empty`
+ * (`unavailable`), a "not indexed yet" prompt (`notIndexed`), an indexing-in-progress
+ * affordance (`indexing`), or — when `ready` — a loading `Skeleton`, an empty state,
+ * or the ranked matches (similarity score, `path:startLine` location, snippet).
+ * Presentational; data arrives via props.
  *
  * @publicApi
  */
@@ -46,17 +48,50 @@ export const SemanticSearchResults = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (!result.available) {
+  if (result.status === IDE_SEMANTIC_STATUS.unavailable) {
     return (
       <Empty className={className} data-testid="SemanticSearchResults">
         <EmptyHeader>
           <EmptyTitle>Semantic index unavailable</EmptyTitle>
           <EmptyDescription>
-            Natural-language code search needs the code embeddings index, which
-            ships separately. It will light up once the index is available.
+            Natural-language code search needs an embeddings provider
+            (OPENAI_API_KEY or Ollama) configured on the server. It will light
+            up once a provider is available.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
+    );
+  }
+
+  if (result.status === IDE_SEMANTIC_STATUS.notIndexed) {
+    return (
+      <Empty className={className} data-testid="SemanticSearchResults">
+        <EmptyHeader>
+          <EmptyTitle>Not indexed yet</EmptyTitle>
+          <EmptyDescription>
+            {`Index ${result.repository.displayName} to enable natural-language code search. Use the Index action above.`}
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  if (result.status === IDE_SEMANTIC_STATUS.indexing) {
+    return (
+      <div
+        className={cn('flex flex-col gap-2', className)}
+        data-testid="SemanticSearchResults"
+      >
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>Indexing…</EmptyTitle>
+            <EmptyDescription>
+              {`Building the code index for ${result.repository.displayName}. Search will be available when it finishes.`}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+        <Skeleton className="h-20 w-full" />
+      </div>
     );
   }
 

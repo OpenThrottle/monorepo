@@ -123,18 +123,41 @@ export interface IdeSymbolRef {
 }
 
 /**
- * Semantic-search result envelope (gated tier). When `available` is false the index
- * or embeddings provider is absent and the UI renders the gated Empty state; real
- * data arrives from the server-side wiring (follow-up plan).
+ * Index status for the semantic tier (as-const object; no TS enum). Mirrors the server's
+ * codeIndexStatus and drives which state the Semantic tab renders.
+ * - `unavailable`: no embeddings provider configured (gated Empty state)
+ * - `notIndexed`: provider configured, nothing indexed yet (offer the Index action)
+ * - `indexing`: a code-index job is running (in-progress affordance)
+ * - `ready`: the repository is indexed and searchable
+ * @publicApi
+ */
+export const IDE_SEMANTIC_STATUS = {
+  indexing: 'indexing',
+  notIndexed: 'notIndexed',
+  ready: 'ready',
+  unavailable: 'unavailable',
+} as const;
+
+/** A semantic index status value. @publicApi */
+export type IdeSemanticStatus =
+  (typeof IDE_SEMANTIC_STATUS)[keyof typeof IDE_SEMANTIC_STATUS];
+
+/**
+ * Semantic-search result envelope. `status` selects the rendered state; `available` is
+ * retained for back-compat and is false exactly when `status` is `unavailable`.
  * @publicApi
  */
 export interface IdeSemanticResult {
-  /** False when the semantic index/provider is unavailable (render the gated state). */
+  /** False when the semantic index/provider is unavailable (render the gated state). Equivalent to `status === 'unavailable'`. */
   available: boolean;
+  /** Number of indexed chunks for the repository (0 when not indexed). */
+  indexedChunks: number;
   /** Semantic matches (engine leaf type, passed through). */
   matches: SemanticMatch[];
   /** The query that produced these matches, echoed for the client. */
   query: string;
   /** The repository searched. */
   repository: IdeRepositoryRef;
+  /** Index status driving the rendered state. */
+  status: IdeSemanticStatus;
 }

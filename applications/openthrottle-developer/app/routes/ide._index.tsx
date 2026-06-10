@@ -233,9 +233,11 @@ export default function Component(
             <SemanticSearchResults
               result={{
                 available: false,
+                indexedChunks: 0,
                 matches: [],
                 query: '',
                 repository: listing.repository,
+                status: 'unavailable',
               }}
             />
           </TabsContent>

@@ -24,4 +24,38 @@ describe('SemanticSearchForm Component', () => {
     expect(component.getByRole('searchbox')).toBeDisabled();
     expect(component.getByRole('button', { name: 'Search' })).toBeDisabled();
   });
+
+  test('renders an Index action only when onIndex is provided', () => {
+    component = render(<SemanticSearchForm onIndex={vi.fn()} />);
+
+    expect(
+      component.getByRole('button', { name: 'Index' }),
+    ).toBeInTheDocument();
+  });
+
+  test('does not render the Index action without onIndex', () => {
+    component = render(<SemanticSearchForm />);
+
+    expect(
+      component.queryByRole('button', { name: 'Index' }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('fires onIndex when the Index button is clicked', async () => {
+    const user = userEvent.setup();
+    const onIndex = vi.fn();
+    component = render(<SemanticSearchForm onIndex={onIndex} />);
+
+    await user.click(component.getByRole('button', { name: 'Index' }));
+
+    expect(onIndex).toHaveBeenCalledTimes(1);
+  });
+
+  test('relabels and disables the Index button while indexing', () => {
+    component = render(
+      <SemanticSearchForm indexing={true} onIndex={vi.fn()} />,
+    );
+
+    expect(component.getByRole('button', { name: 'Indexing…' })).toBeDisabled();
+  });
 });
