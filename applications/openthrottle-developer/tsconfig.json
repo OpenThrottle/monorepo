@@ -20,9 +20,6 @@
       "path": "../../packages/nestjs-repositories"
     },
     {
-      "path": "../../packages/react-router-markdown"
-    },
-    {
       "path": "../../packages/openthrottle-skills"
     },
     {
@@ -47,6 +44,9 @@
       "path": "../../packages/react-router-graphql"
     },
     {
+      "path": "../../packages/react-router-markdown"
+    },
+    {
       "path": "../../packages/react-router-ui"
     },
     {
@@ -54,9 +54,6 @@
     },
     {
       "path": "../../packages/react-router-shadcn"
-    },
-    {
-      "path": "../openthrottle-email"
     },
     {
       "path": "../../packages/react-router-utils"

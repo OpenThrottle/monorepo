@@ -20,13 +20,7 @@
       "path": "../../packages/react-router-ui-global"
     },
     {
-      "path": "../openthrottle-developer"
-    },
-    {
       "path": "../../packages/react-router-ui"
-    },
-    {
-      "path": "../openthrottle-email"
     },
     {
       "path": "../../packages/react-router-utils"
