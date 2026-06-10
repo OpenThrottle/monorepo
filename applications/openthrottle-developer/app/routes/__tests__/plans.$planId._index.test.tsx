@@ -80,9 +80,10 @@ describe('routes/plans.$planId.tsx', () => {
 
     expect(component.getByText('Test Plan')).toBeInTheDocument();
     expect(component.getByText('In Progress')).toBeInTheDocument();
-    expect(component.getAllByText('Plan description').length).toBeGreaterThan(
-      0,
-    );
+    // MarkdownRenderer compiles the description asynchronously, so await it.
+    expect(
+      (await component.findAllByText('Plan description')).length,
+    ).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('tab', { name: /Tasks/ }));
 
