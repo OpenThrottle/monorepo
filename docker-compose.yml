@@ -70,7 +70,7 @@ x-openthrottle-server: &openthrottle-server
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
-name: OT
+name: OpenThrottle
 
 #############################################################################
 #
@@ -78,9 +78,6 @@ name: OT
 #
 include:
   - ./services/openclaw/docker-compose.yml
-  # - env_file: ./services/openclaw/.env
-  #   path: ./services/openclaw/docker-compose.yml
-  #   project_directory: ./services/openclaw/
 
 services:
   #############################################################################
