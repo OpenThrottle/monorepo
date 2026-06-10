@@ -6,9 +6,12 @@ import {
   semanticSearch,
 } from '@openthrottle/openthrottle-ide';
 import type {
+  EmbeddingsConfig,
+  EmbeddingsProvider,
   IndexWorkspaceResult,
   SemanticMatch,
 } from '@openthrottle/openthrottle-ide';
+import { AppConfigService } from './app-config.service';
 import { CodeVectorStore } from './code-vector-store';
 
 /** Default number of matches returned by {@link CodeSearchService.codeSemanticSearch}. */
@@ -16,14 +19,15 @@ const DEFAULT_SEARCH_TOP_K = 10;
 
 /**
  * @description Orchestrates code semantic search by running the `@openthrottle/openthrottle-ide`
- * engine server-side: it pairs the engine's env-driven {@link createEmbeddingsProvider} with the
- * pgvector {@link CodeVectorStore} so `indexWorkspace` / `semanticSearch` persist to and read from
- * `code_embeddings`. Workspaces are addressed by their absolute filesystem root (resolved from a
- * registered repository by the caller).
+ * engine server-side: it resolves an explicit {@link EmbeddingsConfig} via {@link AppConfigService}
+ * and pairs the resulting provider with the pgvector {@link CodeVectorStore} so `indexWorkspace` /
+ * `semanticSearch` persist to and read from `code_embeddings`. Workspaces are addressed by their
+ * absolute filesystem root (resolved from a registered repository by the caller).
  */
 @Injectable()
 export class CodeSearchService {
   constructor(
+    private readonly appConfig: AppConfigService,
     private readonly logger: LoggerService,
     private readonly store: CodeVectorStore,
   ) {}
@@ -36,7 +40,7 @@ export class CodeSearchService {
     workspaceRoot: string,
   ): Promise<IndexWorkspaceResult> {
     this.logger.debug(`🧩 indexCodeWorkspace: ${workspaceRoot}`);
-    const provider = createEmbeddingsProvider();
+    const provider = this.resolveProvider();
     return indexWorkspace(
       { root: workspaceRoot },
       { provider, store: this.store },
@@ -49,16 +53,11 @@ export class CodeSearchService {
   }
 
   /**
-   * True when an embeddings provider is configured (OpenAI `OPENAI_API_KEY`, or Ollama
-   * `OLLAMA_BASE_URL` / `OLLAMA_EMBEDDING_MODEL`). Mirrors the engine's provider selection and drives
-   * the UI's `unavailable` state — callers should check this before indexing/searching.
+   * True when an embeddings provider is usable (OpenAI requires an API key; Ollama does not).
+   * Drives the UI's `unavailable` state — callers should check this before indexing/searching.
    */
   isProviderConfigured(): boolean {
-    return (
-      Boolean(process.env.OPENAI_API_KEY?.trim()) ||
-      Boolean(process.env.OLLAMA_BASE_URL?.trim()) ||
-      Boolean(process.env.OLLAMA_EMBEDDING_MODEL?.trim())
-    );
+    return this.appConfig.isEmbeddingsConfigured();
   }
 
   /**
@@ -74,11 +73,25 @@ export class CodeSearchService {
     if (trimmed === '') {
       return [];
     }
-    const provider = createEmbeddingsProvider();
+    const provider = this.resolveProvider();
     return semanticSearch(
       trimmed,
       { root: workspaceRoot },
       { provider, store: this.store, topK },
     );
+  }
+
+  /**
+   * Resolve config and build the provider, failing loudly at this edge with a clear message when
+   * embeddings are not configured — rather than letting a missing key throw from deep in the engine.
+   */
+  private resolveProvider(): EmbeddingsProvider {
+    const config: EmbeddingsConfig = this.appConfig.getEmbeddingsConfig();
+    if (config.kind === 'openai' && !config.apiKey) {
+      throw new Error(
+        'Embeddings are not configured: set OPENAI_API_KEY, or configure Ollama via OLLAMA_BASE_URL / OLLAMA_EMBEDDING_MODEL.',
+      );
+    }
+    return createEmbeddingsProvider(config);
   }
 }

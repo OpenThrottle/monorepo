@@ -15,13 +15,18 @@ export {
 } from './data/chunk.js';
 
 export type {
+  EmbeddingsConfig,
   EmbeddingsProvider,
-  EmbeddingsProviderOptions,
   FetchLike,
 } from './data/embeddings.js';
 export {
   createEmbeddingsProvider,
+  DEFAULT_OLLAMA_BASE_URL,
+  DEFAULT_OLLAMA_EMBEDDING_MODEL,
+  DEFAULT_OPENAI_BASE_URL,
+  DEFAULT_OPENAI_EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
+  MAX_EMBEDDING_CHARS,
 } from './data/embeddings.js';
 
 export type { SearchMatch, SearchOptions } from './data/search.js';

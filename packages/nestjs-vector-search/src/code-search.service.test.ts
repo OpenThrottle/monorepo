@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
@@ -6,6 +5,10 @@ import {
   indexWorkspace,
   semanticSearch,
 } from '@openthrottle/openthrottle-ide';
+import type { EmbeddingsConfig } from '@openthrottle/openthrottle-ide';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { AppConfigService } from './app-config.service';
 import { CodeSearchService } from './code-search.service';
 import { CodeVectorStore } from './code-vector-store';
 
@@ -22,40 +25,42 @@ vi.mock('@openthrottle/openthrottle-ide', async (importActual) => {
 
 const WORKSPACE = '/Users/dev/repo';
 
+const OPENAI_CONFIG: EmbeddingsConfig = {
+  apiKey: 'sk-test',
+  baseUrl: 'https://api.openai.com/v1',
+  kind: 'openai',
+  model: 'text-embedding-3-small',
+};
+
 describe('CodeSearchService', () => {
+  let appConfig: AppConfigService;
   let store: CodeVectorStore;
   let service: CodeSearchService;
   const provider = { embed: vi.fn() };
 
   beforeEach(() => {
     vi.mocked(createEmbeddingsProvider).mockReturnValue(provider);
+    appConfig = createMock<AppConfigService>();
+    vi.mocked(appConfig.getEmbeddingsConfig).mockReturnValue(OPENAI_CONFIG);
+    vi.mocked(appConfig.isEmbeddingsConfigured).mockReturnValue(true);
     store = createMock<CodeVectorStore>();
-    service = new CodeSearchService(createMock<LoggerService>(), store);
+    service = new CodeSearchService(
+      appConfig,
+      createMock<LoggerService>(),
+      store,
+    );
   });
 
   afterEach(() => {
-    vi.unstubAllEnvs();
     vi.clearAllMocks();
   });
 
   describe('isProviderConfigured', () => {
-    it('is true when OPENAI_API_KEY is set', () => {
-      vi.stubEnv('OPENAI_API_KEY', 'sk-test');
-      vi.stubEnv('OLLAMA_BASE_URL', '');
-      vi.stubEnv('OLLAMA_EMBEDDING_MODEL', '');
+    it('delegates to AppConfigService.isEmbeddingsConfigured', () => {
+      vi.mocked(appConfig.isEmbeddingsConfigured).mockReturnValue(true);
       expect(service.isProviderConfigured()).toBe(true);
-    });
 
-    it('is true when an Ollama env var is set', () => {
-      vi.stubEnv('OPENAI_API_KEY', '');
-      vi.stubEnv('OLLAMA_BASE_URL', 'http://localhost:11434');
-      expect(service.isProviderConfigured()).toBe(true);
-    });
-
-    it('is false when no provider env is set', () => {
-      vi.stubEnv('OPENAI_API_KEY', '');
-      vi.stubEnv('OLLAMA_BASE_URL', '');
-      vi.stubEnv('OLLAMA_EMBEDDING_MODEL', '');
+      vi.mocked(appConfig.isEmbeddingsConfigured).mockReturnValue(false);
       expect(service.isProviderConfigured()).toBe(false);
     });
   });
@@ -69,22 +74,35 @@ describe('CodeSearchService', () => {
   });
 
   describe('indexCodeWorkspace', () => {
-    it('runs a full index via the engine with the provider + pgvector store', async () => {
+    it('runs a full index via the engine with the resolved provider + pgvector store', async () => {
       const result = { deletedPaths: 2, embedded: 17 };
       vi.mocked(indexWorkspace).mockResolvedValue(result);
 
       const out = await service.indexCodeWorkspace(WORKSPACE);
 
+      expect(createEmbeddingsProvider).toHaveBeenCalledWith(OPENAI_CONFIG);
       expect(indexWorkspace).toHaveBeenCalledWith(
         { root: WORKSPACE },
         { provider, store },
       );
       expect(out).toEqual(result);
     });
+
+    it('throws a clear error when OpenAI config has no API key', async () => {
+      vi.mocked(appConfig.getEmbeddingsConfig).mockReturnValue({
+        ...OPENAI_CONFIG,
+        apiKey: undefined,
+      });
+
+      await expect(service.indexCodeWorkspace(WORKSPACE)).rejects.toThrow(
+        /not configured/u,
+      );
+      expect(createEmbeddingsProvider).not.toHaveBeenCalled();
+    });
   });
 
   describe('codeSemanticSearch', () => {
-    it('returns [] for a blank query without calling the engine', async () => {
+    it('returns [] for a blank query without resolving a provider', async () => {
       const matches = await service.codeSemanticSearch(WORKSPACE, '   ');
       expect(matches).toEqual([]);
       expect(semanticSearch).not.toHaveBeenCalled();
@@ -103,6 +121,7 @@ describe('CodeSearchService', () => {
         5,
       );
 
+      expect(createEmbeddingsProvider).toHaveBeenCalledWith(OPENAI_CONFIG);
       expect(semanticSearch).toHaveBeenCalledWith(
         'find user',
         { root: WORKSPACE },

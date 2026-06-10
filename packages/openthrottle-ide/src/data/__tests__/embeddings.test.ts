@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import type { FetchLike } from '../embeddings.js';
 import {
   createEmbeddingsProvider,
+  DEFAULT_OLLAMA_BASE_URL,
+  DEFAULT_OLLAMA_EMBEDDING_MODEL,
+  DEFAULT_OPENAI_BASE_URL,
+  DEFAULT_OPENAI_EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
 } from '../embeddings.js';
 
@@ -32,10 +36,15 @@ describe('createEmbeddingsProvider (OpenAI)', () => {
         { embedding: [0.1], index: 0 },
       ],
     });
-    const provider = createEmbeddingsProvider({
+    const provider = createEmbeddingsProvider(
+      {
+        apiKey: 'test-key',
+        baseUrl: DEFAULT_OPENAI_BASE_URL,
+        kind: 'openai',
+        model: DEFAULT_OPENAI_EMBEDDING_MODEL,
+      },
       fetch,
-      openAiApiKey: 'test-key',
-    });
+    );
 
     const vectors = await provider.embed(['first', 'second']);
 
@@ -46,7 +55,15 @@ describe('createEmbeddingsProvider (OpenAI)', () => {
 
   it('returns an empty array (no request) for empty input', async () => {
     const { calls, fetch } = fakeFetch({ data: [] });
-    const provider = createEmbeddingsProvider({ fetch, openAiApiKey: 'k' });
+    const provider = createEmbeddingsProvider(
+      {
+        apiKey: 'k',
+        baseUrl: DEFAULT_OPENAI_BASE_URL,
+        kind: 'openai',
+        model: DEFAULT_OPENAI_EMBEDDING_MODEL,
+      },
+      fetch,
+    );
 
     expect(await provider.embed([])).toEqual([]);
     expect(calls).toHaveLength(0);
@@ -54,19 +71,31 @@ describe('createEmbeddingsProvider (OpenAI)', () => {
 
   it('throws when the API key is missing', async () => {
     const { fetch } = fakeFetch({ data: [] });
-    const provider = createEmbeddingsProvider({ fetch, openAiApiKey: '' });
+    const provider = createEmbeddingsProvider(
+      {
+        apiKey: '',
+        baseUrl: DEFAULT_OPENAI_BASE_URL,
+        kind: 'openai',
+        model: DEFAULT_OPENAI_EMBEDDING_MODEL,
+      },
+      fetch,
+    );
 
-    await expect(provider.embed(['x'])).rejects.toThrow(/OPENAI_API_KEY/u);
+    await expect(provider.embed(['x'])).rejects.toThrow(/API key/u);
   });
 });
 
 describe('createEmbeddingsProvider (Ollama)', () => {
-  it('issues one request per text when Ollama is configured', async () => {
+  it('issues one request per text for the ollama kind', async () => {
     const { calls, fetch } = fakeFetch({ embedding: [0.5] });
-    const provider = createEmbeddingsProvider({
+    const provider = createEmbeddingsProvider(
+      {
+        baseUrl: DEFAULT_OLLAMA_BASE_URL,
+        kind: 'ollama',
+        model: DEFAULT_OLLAMA_EMBEDDING_MODEL,
+      },
       fetch,
-      ollamaModel: 'nomic-embed-text',
-    });
+    );
 
     const vectors = await provider.embed(['a', 'b', 'c']);
 
