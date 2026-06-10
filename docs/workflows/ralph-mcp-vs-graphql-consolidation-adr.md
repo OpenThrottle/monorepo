@@ -111,8 +111,8 @@ Cursor agent runner.
    exported via `./nest-tool-handlers`, auth via AsyncLocalStorage-or-env. This makes
    "import MCP handlers as a library" mechanically plausible.
 4. **The real divergence to watch:** `updatePlanStatus → IN_PROGRESS` semantics differ between
-   Postgres-direct (returns null when already IN_PROGRESS — a non-match) and GraphQL
-   (idempotent success). Consolidating onto GraphQL/MCP _removes_ this divergence, which is a
+   Postgres-direct (returns null when already IN*PROGRESS — a non-match) and GraphQL
+   (idempotent success). Consolidating onto GraphQL/MCP \_removes* this divergence, which is a
    correctness win.
 5. **Auth token names fragment by context:** worker (`OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`)
    → workflows (`OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`) → MCP (`OPENTHROTTLE_MCP_AUTH_TOKEN`).
@@ -123,3 +123,148 @@ Cursor agent runner.
 > `.agents/skills/agents-ralph/SKILL.md` (+ `.opencode/`, `.cursor/skills`, `.claude/skills`
 > mirrors); config defaults schema is `tools/workflows/schemas/workflow-ralph.defaults.schema.json`.
 > Task 3 addresses these.
+
+---
+
+## Task 2 — Consolidation options evaluated
+
+Three execution surfaces consume the I/O layer:
+
+- **#1 Local CLI** — `pnpm exec workflow-ralph …` / `link-merge`. Standalone Node process, not
+  inside Nest. Auth: `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN` → `OPENTHROTTLE_MCP_AUTH_TOKEN`.
+- **#2 Nested spawn** — a Ralph iteration spawns a child agent/process; same CLI lineage and
+  env inheritance as #1.
+- **#3 In-process orchestrator** — `AgenticRalphOrchestratorService` inside the
+  `openthrottle-server` BullMQ worker (already a Nest process). Auth:
+  `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` → workflows → MCP, injected via Nest DI.
+
+### Option A — Extract a shared OT client library (both MCP and workflows import it)
+
+Pull the GraphQL documents + thin operation functions into one new leaf package
+(e.g. `@openthrottle/openthrottle-ot-client`) depending only on `@openthrottle/nodejs-graphql`
+
+- `zod` + a generated-document set. MCP tool handlers and all workflow surfaces import it.
+
+* **Auth:** the library takes an injected `executeGraphqlV2`/token resolver, so each surface
+  keeps its own resolution chain (worker vs workflows vs MCP). No change to env contract.
+* **Latency:** zero added hops — same in-process GraphQL call as today.
+* **Error handling:** one place to normalize the `IN_PROGRESS` idempotency divergence and
+  error shapes; removes the Postgres branch entirely.
+* **BullMQ constraints:** none — it's a leaf lib with no Nest/MCP-SDK deps, safe in workers,
+  CLI, and nested spawn alike.
+* **Cost driver:** today MCP (Surface D) and agentic-ralph (Surface B) maintain **two
+  independent codegen document sets**. Option A unifies them. Risk: MCP and workflows currently
+  select slightly different field sets per fragment; the merged documents must be a superset.
+* **Effort: M.** Net-new package, move documents, repoint ~4 call sites, reconcile fragments,
+  migrate codegen config. No protocol/runtime change.
+
+### Option B — Ralph spawns/connects to `openthrottle-mcp` over the MCP protocol
+
+Workflow surfaces become MCP _clients_, calling `get_plan`/`update_task`/… over stdio.
+
+- **Auth:** must pass `OPENTHROTTLE_MCP_AUTH_TOKEN` into the spawned server's env — collapses
+  the worker/workflows token distinction into one MCP token, which **loses** the per-context
+  identity separation production relies on.
+- **Latency:** adds a process + JSON-RPC round trip per call; for the orchestrator's tight
+  status-update loop this is real overhead.
+- **Error handling:** errors arrive as MCP tool-result envelopes (text/structured) rather than
+  typed GraphQL errors — every caller must re-parse.
+- **BullMQ constraints:** spawning/managing a stdio child from inside a worker (and from nested
+  spawns) is a new failure surface — lifecycle, zombie processes, back-pressure. Headless/cron
+  worker contexts also lack the interactive MCP auth some servers assume.
+- **Effort: L**, and it **regresses** auth identity + latency. Only attractive for the _agent_
+  (Cursor/Claude) which already speaks MCP — which it already does today.
+
+### Option C — Keep GraphQL-only, dedupe documents via one codegen package
+
+The minimal move: stop maintaining two document sets. Make MCP consume the same generated
+documents as agentic-ralph (or vice-versa) from a single codegen source, leaving each surface's
+transport/auth untouched.
+
+- **Auth / latency / errors / BullMQ:** unchanged from today — strictly a build-time dedupe.
+- **Effort: S.** Point MCP's codegen at the shared `.graphql` sources (or extract a
+  `graphql-documents` package), delete the duplicate set, re-run codegen, commit.
+- **Limitation:** dedupes _documents_ but not the _operation wrappers_ (each surface keeps its
+  own thin functions). Doesn't address the Postgres branch in Surface A.
+
+### Comparison
+
+| Dimension                      | A: shared client | B: MCP protocol           | C: codegen dedupe |
+| ------------------------------ | ---------------- | ------------------------- | ----------------- |
+| Removes duplicate documents    | ✅               | n/a (agent already MCP)   | ✅                |
+| Removes duplicate op wrappers  | ✅               | partial                   | ❌                |
+| Removes Postgres-direct branch | ✅ (natural)     | ✅                        | ❌                |
+| Preserves per-context auth     | ✅ (injected)    | ❌ collapses to MCP token | ✅                |
+| Added latency                  | none             | per-call RPC + process    | none              |
+| BullMQ-safe                    | ✅               | ⚠️ new lifecycle risk     | ✅                |
+| Effort                         | M                | L                         | S                 |
+
+**Read:** Option B is the wrong tool for the _workflow_ surfaces (it regresses auth + latency
+and adds process-lifecycle risk in workers) — and redundant for the _agent_, which already uses
+MCP. Option C is a cheap, safe partial win. Option A is the durable target and subsumes C's
+benefit. Recommended sequencing carried into Task 4.
+
+---
+
+## Task 3 — Audit of agentic guides and default prompt files
+
+Files reviewed: `.agents/skills/agents-ralph/SKILL.md` (+ `.opencode/`, `.cursor/skills`,
+`.claude/skills` mirrors), `docs/workflows/ralph-design.md`,
+`tools/workflows/schemas/workflow-ralph.defaults.schema.json` (the live replacement for the
+non-existent `.workflow-ralph.json.example`). `.cursor/commands/agents/ralph.md` no longer
+exists; guidance now lives entirely in the `agents-ralph` SKILL.
+
+### Findings
+
+1. **Stale "from Postgres" framing.** `SKILL.md` rule (line 24) says _"Ralph injects the plan and
+   task list into the prompt from Postgres … (injected by Ralph from Postgres)"_, and
+   `ralph-design.md` says the CLI marks tasks `COMPLETED` _"via Postgres"_ (line 53) and
+   reconciles _"via Postgres"_ (line 72). **But the default transport is now GraphQL** — the
+   config schema's `transport` enum defaults to `graphql`, with `postgres-direct` an opt-in
+   rollback. Postgres is the underlying _database_, not the read/write _transport_ the CLI uses.
+   The wording is misleading on every surface.
+
+2. **Read-vs-write MCP asymmetry is real but reads as accidental.** Guides tell the agent to
+   **not** call `get_plan`/`get_tasks_by_plan_id` (use the injected context — agent-session MCP
+   reads are often unavailable) but **to** call `update_task`/`update_plan`/`append_plan_output`
+   via MCP. This split is deliberate (injection is reliable; mutations need a live call) yet is
+   never stated as a design rule with its rationale, so it looks like a contradiction.
+
+3. **Two write paths, undocumented.** The agent writes status via **MCP**, while the CLI
+   _also_ reconciles status itself — parsing `<ralph:task-complete>TASK_UUID</ralph:task-complete>`
+   (plus the `<promise>COMPLETE</promise>` IN_PROGRESS fallback) and writing through its own
+   transport (GraphQL by default). Docs describe the CLI path as "via Postgres" (stale) and
+   don't explain that both paths hit the same server — so the dual-write model is opaque.
+
+4. **Startup preflight contradicts the boundary doc.** `ralph-design.md` (line 72) documents a
+   **direct Postgres TCP** reachability check (`ensureDatabaseReachableOrExit`), explicitly _not_
+   the GraphQL `getServerHealth` query — while `graphql-only-transport-boundary.md` names
+   `serverHealth` as the _one_ sanctioned exception and flags Postgres-direct paths for removal.
+   The two docs disagree on the intended preflight.
+
+5. **Mirror duplication / drift risk.** `.cursor/skills` and `.claude/skills` copies are
+   byte-identical to `.agents`; `.opencode` has drifted (~17 lines). The startup echo string
+   hard-codes `./.cursor/skills/agents-ralph` even in non-Cursor mirrors. Any wording fix must
+   land in all four copies, and there is no sync check guarding drift.
+
+### Proposed unified guidance (for the follow-up implementation plan)
+
+Whether or not the CLI keeps GraphQL or adopts a shared client (Option A/C), the guides should:
+
+- Replace "injected by Ralph from Postgres" → **"injected by Ralph from OpenThrottle"** (drop the
+  transport claim; the agent doesn't need to know it). Same fix in `ralph-design.md` lines 53/72:
+  "marks … `COMPLETED` in OpenThrottle" rather than "via Postgres".
+- Add an explicit **"reads come from the injected block; writes go through MCP"** rule with the
+  one-line rationale (injection is reliable in-session; mutations require a live call), so the
+  asymmetry is documented intent, not contradiction.
+- Document the **dual-write reconciliation**: agent emits the `<ralph:task-complete>` tag _and_
+  best-effort MCP `update_task`; the CLI reconciles via its configured transport. State that both
+  reach the same OpenThrottle server.
+- Reconcile the **preflight**: align `ralph-design.md` with `graphql-only-transport-boundary.md`
+  (move to `getServerHealth`, or document the Postgres TCP check as a transitional exception with
+  a removal pointer).
+- **Single-source the SKILL** and generate mirrors (or add a CI drift check) so `.agents` /
+  `.opencode` / `.cursor` / `.claude` cannot diverge; fix the hard-coded `.cursor` echo path.
+
+> These are documentation edits scoped to a **follow-up implementation plan**, not this
+> investigation. They are listed as Task 4 next-actions.
