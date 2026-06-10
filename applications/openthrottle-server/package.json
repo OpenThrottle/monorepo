@@ -131,14 +131,18 @@
     "@openthrottle/openthrottle-notifications": "workspace:*",
     "@openthrottle/openthrottle-workflows": "workspace:*",
     "@tools/workflows": "workspace:*",
+    "@vscode/ripgrep": "^1.18.0",
     "bullmq": "^5.73.0",
+    "chokidar": "^5.0.0",
     "dataloader": "^2.2.3",
     "dotenv": "^17.2.3",
     "graphql": "^16.13.2",
+    "ignore": "^7.0.5",
     "passport-local": "^1.0.0",
     "pg": "^8.17.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "ts-morph": "^28.0.0",
     "typeorm": "^0.3.28",
     "zod": "^4.3.6"
   }
