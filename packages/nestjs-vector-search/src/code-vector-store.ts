@@ -40,6 +40,15 @@ function toVectorLiteral(embedding: number[]): string {
 export class CodeVectorStore implements VectorStore {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
+  /** Number of stored chunks for a workspace (drives ready vs not-indexed status). */
+  async count(workspaceRoot: string): Promise<number> {
+    const rows = await this.dataSource.query<{ count: string }[]>(
+      'SELECT COUNT(*)::text AS count FROM code_embeddings WHERE workspace_root = $1',
+      [workspaceRoot],
+    );
+    return Number(rows[0]?.count ?? 0);
+  }
+
   /** Remove every stored chunk for a workspace (full re-index). */
   async clear(workspaceRoot: string): Promise<void> {
     await this.dataSource.query(

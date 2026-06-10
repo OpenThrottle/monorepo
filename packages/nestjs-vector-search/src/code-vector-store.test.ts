@@ -49,6 +49,24 @@ describe('CodeVectorStore', () => {
     });
   });
 
+  describe('count', () => {
+    it('returns the COUNT(*) for the workspace as a number', async () => {
+      queryMock().mockResolvedValueOnce([{ count: '12' }]);
+      const total = await store.count(WORKSPACE);
+
+      const [sql, params] = queryMock().mock.calls[0];
+      expect(sql).toContain('COUNT(*)');
+      expect(sql).toContain('WHERE workspace_root = $1');
+      expect(params).toEqual([WORKSPACE]);
+      expect(total).toBe(12);
+    });
+
+    it('returns 0 when there are no rows', async () => {
+      queryMock().mockResolvedValueOnce([]);
+      expect(await store.count(WORKSPACE)).toBe(0);
+    });
+  });
+
   describe('deleteByPaths', () => {
     it('deletes only the given paths via ANY()', async () => {
       await store.deleteByPaths(WORKSPACE, ['src/a.ts', 'src/b.ts']);

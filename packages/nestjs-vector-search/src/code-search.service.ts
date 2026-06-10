@@ -43,6 +43,11 @@ export class CodeSearchService {
     );
   }
 
+  /** Number of indexed code chunks for a workspace (0 means not yet indexed). */
+  async indexedChunkCount(workspaceRoot: string): Promise<number> {
+    return this.store.count(workspaceRoot);
+  }
+
   /**
    * True when an embeddings provider is configured (OpenAI `OPENAI_API_KEY`, or Ollama
    * `OLLAMA_BASE_URL` / `OLLAMA_EMBEDDING_MODEL`). Mirrors the engine's provider selection and drives

@@ -60,6 +60,14 @@ describe('CodeSearchService', () => {
     });
   });
 
+  describe('indexedChunkCount', () => {
+    it('delegates to the store count', async () => {
+      vi.mocked(store.count).mockResolvedValue(7);
+      expect(await service.indexedChunkCount(WORKSPACE)).toBe(7);
+      expect(store.count).toHaveBeenCalledWith(WORKSPACE);
+    });
+  });
+
   describe('indexCodeWorkspace', () => {
     it('runs a full index via the engine with the provider + pgvector store', async () => {
       const result = { deletedPaths: 2, embedded: 17 };
