@@ -21,6 +21,21 @@ nx g @tools/generators:package \
   --name=ui-components
 ```
 
+## Automatic Workspace Wiring
+
+The generator fully wires a new package into the workspace — there are **no manual
+post-scaffold steps**. After templating the files it:
+
+1. Adds `"<organization>/<name>": "workspace:*"` to the root `package.json`
+   `dependencies`.
+2. Runs `pnpm install` so the new workspace package resolves.
+3. Runs `nx sync` so `tsconfig.base.json` project references include the new
+   package.
+
+You do **not** need to edit the root `package.json`, run `pnpm install`, run
+`nx sync`, or delete any `TODO.md` by hand. Just generate and open the
+scaffolding PR.
+
 ## Package Types
 
 - `nestjs` - NestJS package

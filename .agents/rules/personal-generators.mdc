@@ -46,7 +46,7 @@ See `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators` (source: `tools/ge
 - `react` - For React components
 - `react-router` - For React Router app components, routes, and related UI
 - `nestjs` - For NestJS services/modules
-- `package` - For new packages
+- `package` - For new packages (auto-wires the root `workspace:*` dependency and runs `pnpm install` + `nx sync` — no manual post-scaffold steps)
 - `folders` - For folder structures
 
 ## Important Notes
