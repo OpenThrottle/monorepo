@@ -23,34 +23,34 @@ inputs:
       image name segment and for applications/<app>/package.json (APP_VERSION).
     required: true
   dockerfile-path:
+    default: ''
     description: >-
       Path to the Dockerfile relative to the repository root (build context is
       the repo root). If omitted or empty, uses applications/<app>/Dockerfile.
     required: false
-    default: ''
   github-token:
     description: >-
       Token passed to docker as --build-arg GITHUB_TOKEN (e.g. secrets.GITHUB_TOKEN).
     required: true
+  nx-key:
+    default: ''
+    description: >-
+      Optional Nx Cloud key passed as --build-arg NX_KEY. Empty disables Nx Cloud
+      caching during the image build (the build still succeeds).
+    required: false
   nx-version:
+    default: ''
     description: >-
       Nx CLI version passed as --build-arg NX_VERSION (e.g. from vars.NX_VERSION).
       The canonical root Dockerfiles run `pnpm dlx nx@${NX_VERSION}` during the
       build stage, so this is required for those Dockerfiles to build.
     required: false
-    default: ''
-  nx-key:
-    description: >-
-      Optional Nx Cloud key passed as --build-arg NX_KEY. Empty disables Nx Cloud
-      caching during the image build (the build still succeeds).
-    required: false
-    default: ''
   push:
+    default: 'false'
     description: >-
       If true, run docker push after a successful build. Use string true/false
       (e.g. github.ref == 'refs/heads/main').
     required: false
-    default: 'false'
   registry:
     description: >-
       Registry/repository prefix without trailing slash (e.g.
@@ -75,8 +75,8 @@ runs:
         INPUT_APP: ${{ inputs.app }}
         INPUT_DOCKERFILE_PATH: ${{ inputs.dockerfile-path }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
-        INPUT_NX_VERSION: ${{ inputs.nx-version }}
         INPUT_NX_KEY: ${{ inputs.nx-key }}
+        INPUT_NX_VERSION: ${{ inputs.nx-version }}
         INPUT_PUSH: ${{ inputs.push }}
         INPUT_REGISTRY: ${{ inputs.registry }}
         INPUT_TAG: ${{ inputs.tag }}

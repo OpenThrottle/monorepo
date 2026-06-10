@@ -32,14 +32,27 @@ export interface DefinitionReferencesPanelProps {
   loading?: boolean;
 }
 
-type LocationRow = DefinitionLocation | ReferenceLocation;
+export interface LocationTableProps {
+  rows: (DefinitionLocation | ReferenceLocation)[];
+}
 
-/** A scrollable table of source locations (no ScrollArea primitive yet — see plan c94eec42). */
-const LocationTable = ({
-  rows,
-}: {
-  rows: LocationRow[];
-}): React.ReactElement => {
+/**
+ * A scrollable table of source locations (no ScrollArea primitive yet — see plan c94eec42).
+ */
+const LocationTable = (props: LocationTableProps): React.ReactElement => {
+  const { rows } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (rows.length === 0) {
     return <p className="p-4 text-sm text-muted-foreground">No locations.</p>;
   }

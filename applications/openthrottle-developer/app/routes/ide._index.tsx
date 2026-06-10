@@ -220,6 +220,7 @@ export default function Component(
   }, [semanticFetcher.data, loadSemantic, semanticQuery]);
 
   // 🔌 Short Circuit
+
   return (
     <GlobalScreen beta={true}>
       <IdeRepositorySelector
