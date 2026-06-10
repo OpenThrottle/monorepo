@@ -222,6 +222,9 @@ importers:
       '@openthrottle/nestjs-utils':
         specifier: workspace:*
         version: link:packages/nestjs-utils
+      '@openthrottle/nestjs-vector-search':
+        specifier: workspace:*
+        version: link:packages/nestjs-vector-search
       '@openthrottle/nestjs-websockets':
         specifier: workspace:*
         version: link:packages/nestjs-websockets

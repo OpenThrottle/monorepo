@@ -75,6 +75,7 @@
     "@openthrottle/nestjs-throttler": "workspace:*",
     "@openthrottle/nestjs-typeorm": "workspace:*",
     "@openthrottle/nestjs-utils": "workspace:*",
+    "@openthrottle/nestjs-vector-search": "workspace:*",
     "@openthrottle/nestjs-websockets": "workspace:*",
     "@openthrottle/nestjs-worktrees": "workspace:*",
     "@openthrottle/nodejs-graphql": "workspace:*",
