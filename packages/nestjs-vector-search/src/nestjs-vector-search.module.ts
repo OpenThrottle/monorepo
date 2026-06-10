@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsVectorSearchService } from './nestjs-vector-search.service';
+import { CodeSearchService } from './code-search.service';
+import { CodeVectorStore } from './code-vector-store';
 
+/**
+ * @description Server-side code semantic search. Provides the pgvector {@link CodeVectorStore} and the
+ * {@link CodeSearchService} orchestration over the openthrottle-ide engine. Requires the host app to
+ * configure a TypeORM root (the default DataSource is injected into CodeVectorStore) — e.g.
+ * NestjsRepositoriesModule in openthrottle-server.
+ */
 @Module({
   controllers: [],
-  exports: [NestjsVectorSearchService],
+  exports: [CodeSearchService, CodeVectorStore],
   imports: [LoggerModule],
-  providers: [NestjsVectorSearchService],
+  providers: [CodeSearchService, CodeVectorStore],
 })
 export class NestjsVectorSearchModule {}
