@@ -44,6 +44,9 @@
       "path": "../../packages/react-router-graphql"
     },
     {
+      "path": "../../packages/react-router-markdown"
+    },
+    {
       "path": "../../packages/react-router-ui"
     },
     {

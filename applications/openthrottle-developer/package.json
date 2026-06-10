@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@openthrottle/nestjs-repositories": "workspace:*",
-    "@openthrottle/openthrottle-skills": "workspace:*"
+    "@openthrottle/openthrottle-skills": "workspace:*",
+    "@openthrottle/react-router-markdown": "workspace:*"
   },
   "engines": {
     "node": ">=22"
