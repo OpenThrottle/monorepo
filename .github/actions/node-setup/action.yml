@@ -13,13 +13,6 @@ description: 'Setup NodeJS and PNPM.'
 runs:
   using: 'composite'
   steps:
-    - name: '💾 Cache node modules'
-      id: cache
-      uses: actions/cache@v5.0.5
-      with:
-        key: cache-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
-        path: node_modules
-
     # Node first so Corepack matches .nvmrc (Corepack ships with Node ≥16.13).
     - name: '⚙️ Setup NodeJS'
       uses: actions/setup-node@v6.4.0
@@ -33,14 +26,22 @@ runs:
         corepack prepare pnpm@10.33.4 --activate
       shell: bash
 
-    # Second setup-node restores pnpm store cache; requires pnpm on PATH (Corepack above).
-    - name: '⚙️ Setup NodeJS (pnpm store cache)'
-      if: steps.cache.outputs.cache-hit != 'true'
+    # Cache the pnpm content-addressable store (NOT node_modules). pnpm's isolated
+    # linker keeps each workspace package's symlink tree under <pkg>/node_modules,
+    # which a root-only `path: node_modules` cache never captures — so a cache hit
+    # used to leave newly added per-package deps unlinked. Caching the store and
+    # always running install relinks every package's node_modules from the warm
+    # store (fast) and stays correct. Requires pnpm on PATH (Corepack above).
+    - name: '⚙️ Setup pnpm store cache'
       uses: actions/setup-node@v6.4.0
       with:
         cache: 'pnpm'
         cache-dependency-path: 'pnpm-lock.yaml'
         node-version-file: '.nvmrc'
+
+    - name: '📦 Install packages'
+      run: pnpm install --frozen-lockfile
+      shell: bash
 
     - name: '💾 Cache Nx local cache'
       uses: actions/cache@v5.0.5
@@ -50,29 +51,6 @@ runs:
         path: .nx/cache
         restore-keys: |
           cache-nx-${{ runner.os }}-
-
-    # - name: "💾 Cache pnpm store"
-    #   uses: actions/cache@v5.0.5
-    #   id: pnpm-store-cache
-    #   with:
-    #     key: cache-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-    #     path: ~/.local/share/pnpm/store
-    #     restore-keys: |
-    #       cache-pnpm-store-
-
-    # - name: "💾 Cache node modules"
-    #   uses: actions/cache@v5.0.5
-    #   id: node-modules-cache
-    #   with:
-    #     key: cache-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
-    #     path: node_modules
-    #     restore-keys: |
-    #       cache-node-modules-
-
-    - name: '📦 Install packages'
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: pnpm install
-      shell: bash
 
     # - name: '🔍 Setup Supabase CLI'
     #   uses: supabase/setup-cli@v1
