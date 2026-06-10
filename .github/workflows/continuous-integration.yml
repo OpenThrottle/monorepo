@@ -109,7 +109,7 @@ jobs:
           git diff --exit-code
 
       - name: '🧠 NX ${{ matrix.target }} affected'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel --verbose
+        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,test,typecheck,typecheck-tests --parallel --verbose
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
