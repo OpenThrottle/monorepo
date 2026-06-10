@@ -262,6 +262,47 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+export type CodeIndexStatusObject = {
+  __typename?: 'CodeIndexStatusObject';
+  /** Number of indexed code chunks for the repository (0 when not indexed). */
+  indexedChunks: Scalars['Int']['output'];
+  /** Registered repository id. */
+  repositoryId: Scalars['String']['output'];
+  /** One of: unavailable, indexing, ready, notIndexed. */
+  status: Scalars['String']['output'];
+};
+
+export type CodeSearchMatch = {
+  __typename?: 'CodeSearchMatch';
+  /** Raw source text of the matched chunk. */
+  content: Scalars['String']['output'];
+  /** 1-based inclusive last line of the match. */
+  endLine: Scalars['Int']['output'];
+  /** Workspace-relative POSIX path of the matched file. */
+  path: Scalars['String']['output'];
+  /** Similarity score (0–1, higher is more relevant). */
+  score: Scalars['Float']['output'];
+  /** 1-based first line of the match. */
+  startLine: Scalars['Int']['output'];
+};
+
+export type CodeSemanticSearchInput = {
+  /** Max number of matches to return (default 10). */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Natural-language query to embed and search by vector similarity. */
+  query: Scalars['String']['input'];
+  /** Registered WorkspaceLocalRepository id to search within. */
+  repositoryId: Scalars['ID']['input'];
+};
+
+export type CodeSemanticSearchResult = {
+  __typename?: 'CodeSemanticSearchResult';
+  /** False when no embeddings provider is configured; the UI renders its gated state. */
+  available: Scalars['Boolean']['output'];
+  /** Ranked code matches by similarity (empty when unavailable or no hits). */
+  matches: Array<CodeSearchMatch>;
+};
+
 export type CommitLinkObject = {
   __typename?: 'CommitLinkObject';
   createdAt: Scalars['DateTime']['output'];
@@ -683,6 +724,14 @@ export type GitHubRepoInput = {
   state: Scalars['String']['input'];
 };
 
+export type IndexCodeRepositoryResult = {
+  __typename?: 'IndexCodeRepositoryResult';
+  /** Registered repository id. */
+  repositoryId: Scalars['String']['output'];
+  /** Status after enqueue: indexing, or unavailable when no provider is configured. */
+  status: Scalars['String']['output'];
+};
+
 export type JobObject = {
   __typename?: 'JobObject';
   /** JSON string of job data (e.g. { planId } for run-plan). */
@@ -1024,6 +1073,8 @@ export type Mutation = {
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
+  /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
+  indexCodeRepository: IndexCodeRepositoryResult;
   /** Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA. */
   linkCommit: CommitLinkObject;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
@@ -1229,6 +1280,10 @@ export type MutationEnqueuePlanRunArgs = {
 
 export type MutationHardDeleteCustomPromptArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationIndexCodeRepositoryArgs = {
+  repositoryId: Scalars['ID']['input'];
 };
 
 export type MutationLinkCommitArgs = {
@@ -1613,6 +1668,10 @@ export type Query = {
   activityByDate: ActivityByDateResultObject;
   /** Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination. */
   activityByDateRange: ActivityByDateResultObject;
+  /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
+  codeIndexStatus: CodeIndexStatusObject;
+  /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
+  codeSemanticSearch: CodeSemanticSearchResult;
   /** Get a commit link by ID */
   commitLink?: Maybe<CommitLinkObject>;
   /** List all commit links, ordered by createdAt descending */
@@ -1775,6 +1834,14 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryCodeIndexStatusArgs = {
+  repositoryId: Scalars['ID']['input'];
+};
+
+export type QueryCodeSemanticSearchArgs = {
+  input: CodeSemanticSearchInput;
 };
 
 export type QueryCommitLinkArgs = {
