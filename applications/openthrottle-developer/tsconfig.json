@@ -20,6 +20,9 @@
       "path": "../../packages/nestjs-repositories"
     },
     {
+      "path": "../../packages/react-router-markdown"
+    },
+    {
       "path": "../../packages/openthrottle-skills"
     },
     {
