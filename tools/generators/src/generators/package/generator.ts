@@ -1,7 +1,15 @@
 import * as path from 'path';
+import { execSync } from 'child_process';
 import prompts from 'prompts';
-import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  formatFiles,
+  generateFiles,
+  installPackagesTask,
+  logger,
+  runTasksInSerial,
+} from '@nx/devkit';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
 import { getOrganizationName, getPackageName } from '../../utils/questions';
 import { getCommonVariables } from '../../utils/index';
@@ -21,7 +29,7 @@ export interface PackageGeneratorSchema {
 export async function packageGenerator(
   tree: Tree,
   schema: PackageGeneratorSchema,
-): Promise<void> {
+): Promise<GeneratorCallback | void> {
   const interactive = schema.interactive === true || isInteractiveArgPresent();
 
   if (schema.describe === true) {
@@ -123,9 +131,26 @@ export async function packageGenerator(
   generateFiles(tree, common, destination, data);
   generateFiles(tree, source, destination, data);
 
+  // Wire the new package into the root package.json as a workspace dependency.
+  // pnpm-workspace.yaml already globs packages/* and tools/*, so this entry plus
+  // the install task below registers the package across the workspace.
+  addDependenciesToPackageJson(tree, { [`${org}/${name}`]: 'workspace:*' }, {});
+
   await formatFiles(tree);
 
   logger.info(`\n✅ Package generated!\n`);
+
+  // Returned callbacks run AFTER Nx flushes the Tree to disk: install so the new
+  // workspace dependency resolves, then `nx sync` so tsconfig.base.json project
+  // references include the new package without a deferred build.
+  return runTasksInSerial(
+    () => {
+      installPackagesTask(tree);
+    },
+    () => {
+      execSync('pnpm nx sync', { stdio: 'inherit' });
+    },
+  );
 }
 
 type PackageType = 'nestjs' | 'node' | 'react' | 'tools';
