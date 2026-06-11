@@ -1,10 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
-import {
-  Button,
-  Markdown,
-  TabsContent,
-} from '@openthrottle/react-router-shadcn';
+import { Button, TabsContent } from '@openthrottle/react-router-shadcn';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import type {
   PlanDetailIndexLoaderQuery,
   PlanDetailsFragment,
@@ -162,18 +159,18 @@ export const PlanTabDetails = (
               {hasSummary && (
                 <div>
                   <h2 className="mb-4">Summary</h2>
-                  <Markdown
+                  <MarkdownRenderer
                     className="text-wrap text-sm text-muted-foreground whitespace-normal"
-                    content={plan.summary ?? ''}
+                    source={plan.summary ?? ''}
                   />
                 </div>
               )}
 
               <div>
                 <h2 className="mb-4">Description</h2>
-                <Markdown
+                <MarkdownRenderer
                   className="text-wrap text-sm text-muted-foreground whitespace-normal"
-                  content={plan.description ?? ''}
+                  source={plan.description ?? ''}
                 />
               </div>
             </div>
