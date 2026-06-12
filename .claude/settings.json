@@ -37,7 +37,7 @@
       "mcp__openthrottle-mcp__delete_project",
       "mcp__openthrottle-mcp__delete_task"
     ],
-    "deny": ["Read(./.env)"]
+    "deny": []
   },
   "enabledMcpjsonServers": [],
   "skillOverrides": {}
