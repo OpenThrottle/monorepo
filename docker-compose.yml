@@ -4,7 +4,7 @@
 #
 #         docker compose up --build
 #
-#     Brings up postgres + redis + openthrottle-server + openthrottle-developer.
+#     Brings up postgres + redis + server + developer.
 #     Config is interpolated from the repo-root `.env` (see `.env.default`).
 #
 #     Canonical images: server → Dockerfile.NestJS, developer →
@@ -29,7 +29,7 @@
 x-build-secrets: &build-secrets
   - gcs_credentials
 
-x-openthrottle-common: &openthrottle-common
+x-common: &common
   GITHUB_TOKEN: ${GITHUB_TOKEN}
   NODE_ENV: ${NODE_ENV}
   NODE_VERSION: ${NODE_VERSION}
@@ -37,8 +37,8 @@ x-openthrottle-common: &openthrottle-common
   NX_VERSION: ${NX_VERSION}
   PNPM_VERSION: ${PNPM_VERSION}
 
-x-openthrottle-developer: &openthrottle-developer
-  <<: *openthrottle-common
+x-developer: &developer
+  <<: *common
   API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
   APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
@@ -54,8 +54,8 @@ x-openthrottle-developer: &openthrottle-developer
   APP_VERSION: ${OPENTHROTTLE_DEVELOPER_APP_VERSION}
   PORT: ${OPENTHROTTLE_DEVELOPER_PORT}
 
-x-openthrottle-server: &openthrottle-server
-  <<: *openthrottle-common
+x-server: &server
+  <<: *common
   API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
   API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
   APP_ENV: ${OPENTHROTTLE_SERVER_APP_ENV}
@@ -72,37 +72,37 @@ x-openthrottle-server: &openthrottle-server
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
-name: OT
-
 #############################################################################
 #
 #     🐳 Compose Links | https://docs.docker.com/compose/compose-file/14-include
 #
-include:
-  - ./services/openclaw/docker-compose.yml
+# include:
+#   - ./services/openclaw/docker-compose.yml
+
+name: 'OpenThrottle'
 
 services:
   #############################################################################
   #
-  #     🤖 openthrottle-developer | React Router (MCP developer UI)
+  #     🤖 developer | React Router (MCP developer UI)
   #
-  openthrottle-developer:
+  developer:
     build:
       args:
-        <<: *openthrottle-developer
+        <<: *developer
       context: ./
       dockerfile: Dockerfile.ReactRouter
       secrets: *build-secrets
       target: production
-    container_name: openthrottle-developer
+    container_name: developer
     depends_on:
-      openthrottle-server:
+      server:
         condition: service_healthy
     env_file:
       - .env
     environment:
-      <<: *openthrottle-developer
-    image: openthrottle-developer:latest
+      <<: *developer
+    image: openthrottle/developer:latest
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
@@ -116,7 +116,7 @@ services:
   #     A relational database for plans ingestion with Vector Search
   #     (pgvector) enabled
   #
-  openthrottle-postgres:
+  postgres:
     build:
       args:
         POSTGRES_DB: ${POSTGRES_DB}
@@ -126,7 +126,7 @@ services:
         POSTGRES_VERSION: ${POSTGRES_VERSION}
       context: ./
       dockerfile: Dockerfile.Postgres
-    container_name: openthrottle-postgres
+    container_name: postgres
     env_file:
       - .env
     environment:
@@ -140,12 +140,14 @@ services:
       retries: 10
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       timeout: 5s
+    image: openthrottle/postgres:latest
     ports:
       - ${POSTGRES_PORT}:5432
     restart: always
     shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # - postgres_data:/var/lib/postgresql/data # use with Postgres 17
+      - postgres_data:/var/lib/postgresql # use with Postgres 18
 
   #############################################################################
   #
@@ -154,40 +156,45 @@ services:
   #     Redis is the world’s fastest data platform for caching, vector search,
   #     and NoSQL databases.
   #
-  openthrottle-redis:
+  redis:
     command: redis-server
-    container_name: openthrottle-redis
+    container_name: redis
+    build:
+      args:
+        REDIS_VERSION: ${REDIS_VERSION}
+      context: ./
+      dockerfile: Dockerfile.Redis
     healthcheck:
       interval: 10s
       retries: 3
       test: ['CMD', 'redis-cli', 'ping']
       timeout: 5s
-    image: redis:${REDIS_VERSION}-alpine
+    image: openthrottle/redis:latest
     ports:
       - ${REDIS_PORT}:6379
     restart: always
 
   #############################################################################
   #
-  #     🤖 openthrottle-server | NestJS API (GraphQL, Postgres, Redis, MCP)
+  #     🤖 server | NestJS API (GraphQL, Postgres, Redis, MCP)
   #
-  openthrottle-server:
+  server:
     build:
       args:
-        <<: *openthrottle-server
+        <<: *server
       context: ./
       dockerfile: Dockerfile.NestJS
       secrets: *build-secrets
-    container_name: openthrottle-server
+    container_name: server
     depends_on:
-      openthrottle-postgres:
+      postgres:
         condition: service_healthy
-      openthrottle-redis:
+      redis:
         condition: service_healthy
     env_file:
       - .env
     environment:
-      <<: *openthrottle-server
+      <<: *server
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -199,8 +206,8 @@ services:
     # Healthcheck is provided by the image: Dockerfile.NestJS (distroless) ships a HEALTHCHECK
     # that hits GET /health on PORT via /nodejs/bin/node. Do NOT override it here with
     # /usr/local/bin/node — that path does not exist on distroless and would mark the server
-    # permanently unhealthy (which would also block openthrottle-developer's depends_on).
-    image: openthrottle-server:latest
+    # permanently unhealthy (which would also block developer's depends_on).
+    image: openthrottle/server:latest
     ports:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     restart: always
