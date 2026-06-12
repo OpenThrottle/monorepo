@@ -22,12 +22,7 @@
         "set -a && source ./.env && set +a && export API_URL=\"$OPENTHROTTLE_SERVER_APP_URL\" API_URL_INTERNAL=\"$OPENTHROTTLE_SERVER_APP_URL\" && ./scripts/run-openthrottle-mcp.sh"
       ],
       "command": "bash",
-      "description": "OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
-      "env": {
-        "API_URL": "${OPENTHROTTLE_SERVER_APP_URL}",
-        "API_URL_INTERNAL": "${OPENTHROTTLE_SERVER_APP_URL}",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "${OPENTHROTTLE_MCP_AUTH_TOKEN}"
-      }
+      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."
     },
     "shadcn": {
       "args": ["shadcn@latest", "mcp"],
