@@ -96,7 +96,7 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 # a real key + credentials (CI) are left intact and the remote cache is used.
 RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
   if [ -s /tmp/gcs-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json; fi && \
-  if [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
+  if [ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ] || [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
   pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build
 
 # App-only runtime tree: pruned package dir with build/ + isolated production node_modules.
