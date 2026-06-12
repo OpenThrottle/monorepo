@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { OPEN_THROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/profile._index';
@@ -59,8 +59,8 @@ export default function Component(
           <h2 className="text-xl font-bold">Matthew Scholta</h2>
           <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
             <OpenThrottleClipboard
-              label={OPEN_THROTTLE_CONTACT_EMAIL}
-              text={OPEN_THROTTLE_CONTACT_EMAIL}
+              label={OPENTHROTTLE_CONTACT_EMAIL}
+              text={OPENTHROTTLE_CONTACT_EMAIL}
             />
           </h3>
           {/*

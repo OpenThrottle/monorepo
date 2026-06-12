@@ -1,4 +1,4 @@
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import {
   BookOpenTextIcon,
   BotIcon,
@@ -18,7 +18,7 @@ export interface DataFeature {
   title: string;
 }
 
-export const FEATURES_DOC_URL = `${OPEN_THROTTLE_GITHUB_URL}/blob/main/docs/openthrottle/features.md`;
+export const FEATURES_DOC_URL = `${OPENTHROTTLE_GITHUB_URL}/blob/main/docs/openthrottle/features.md`;
 export const FEATURES: DataFeature[] = [
   {
     description: `Agentic skills, rules, and commands all in one place, available any sized organization.`,

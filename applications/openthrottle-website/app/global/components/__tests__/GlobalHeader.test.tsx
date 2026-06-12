@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { GlobalHeader } from '../GlobalHeader';
 import type { GlobalHeaderProps } from '../GlobalHeader';
 
@@ -27,7 +27,7 @@ describe('GlobalHeader Component', () => {
     ).toHaveAttribute('href', '/');
     expect(component.getByRole('link', { name: '' })).toHaveAttribute(
       'href',
-      OPEN_THROTTLE_GITHUB_URL,
+      OPENTHROTTLE_GITHUB_URL,
     );
   });
 });

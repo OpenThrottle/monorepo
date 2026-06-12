@@ -5,7 +5,7 @@ import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { MAIL_PATHS } from '~/global/data/data.navigation';
 
 /**
@@ -86,7 +86,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
             className="relative size-8 shrink-0 rounded-full"
             variant="ghost"
           >
-            <NavLink target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
+            <NavLink target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
               <GithubLogoIcon className="size-5" />
             </NavLink>
           </Button>

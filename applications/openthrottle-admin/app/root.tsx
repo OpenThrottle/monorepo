@@ -5,8 +5,8 @@ import {
   APP_URL,
   artwork,
   getEnvironment,
-  OPEN_THROTTLE_BUCKET,
-  OPEN_THROTTLE_META_DESCRIPTION,
+  OPENTHROTTLE_BUCKET,
+  OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
 import {
   Links,
@@ -110,7 +110,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 export const meta = (_args: Route.MetaArgs) => {
   return [
     { title: `Welcome | ${SITE_TITLE}` },
-    { content: OPEN_THROTTLE_META_DESCRIPTION, name: 'description' },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
   ];
 };
 
@@ -127,7 +127,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
 
-  const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/yellow/favicon.ico`;
+  const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/yellow/favicon.ico`;
   const manifest = '/manifest.json';
 
   const isProduction = process.env.NODE_ENV === 'production';

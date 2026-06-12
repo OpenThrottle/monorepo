@@ -2,7 +2,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { NavLink } from 'react-router';
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import { SITE_SUBDOMAIN } from '~/global/config/settings';
 
@@ -46,7 +46,7 @@ export const GlobalHeader = (props: GlobalHeaderProps): React.ReactElement => {
           <NavLink
             // className="text-sm h-full hover:text-accent p-4 transition"
             target="_blank"
-            to={OPEN_THROTTLE_GITHUB_URL}
+            to={OPENTHROTTLE_GITHUB_URL}
           >
             <GithubLogoIcon
               className="border rounded-full p-2 text-color-copy hover:text-color-copy transition-colors"
