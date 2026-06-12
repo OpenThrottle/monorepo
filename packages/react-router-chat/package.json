@@ -8,8 +8,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/react-router-shadcn": "workspace:*",
-    "@openthrottle/react-router-ui": "workspace:*",
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-ui": "workspace:^",
     "classnames": "catalog:"
   },
   "main": "./src/index.ts",

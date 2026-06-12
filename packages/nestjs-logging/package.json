@@ -10,7 +10,7 @@
   "dependencies": {
     "@nestjs/platform-socket.io": "catalog:",
     "@nestjs/websockets": "catalog:",
-    "@openthrottle/nestjs-modules": "workspace:*",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "socket.io": "catalog:"
   },
   "exports": {
@@ -63,7 +63,7 @@
   "peerDependencies": {
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
-    "@openthrottle/nestjs-websockets": "workspace:*"
+    "@openthrottle/nestjs-websockets": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@openthrottle/nestjs-websockets": {

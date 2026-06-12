@@ -36,7 +36,7 @@ Keep new hook/phase fields here so the contract stays portable.
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/openthrottle-agentic-workflow": "workspace:*"` to the
+**In this monorepo:** add `"@openthrottle/openthrottle-agentic-workflow": "workspace:^"` to the
 consuming package's `package.json`, then run `pnpm install` from the repository root.
 
 **pnpm:**

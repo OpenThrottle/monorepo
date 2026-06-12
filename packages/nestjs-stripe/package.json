@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nestjs-auth": "workspace:*",
+    "@openthrottle/nestjs-auth": "workspace:^",
     "@nestjs/graphql": "catalog:",
     "graphql": "catalog:",
     "stripe": "catalog:"

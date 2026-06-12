@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "catalog:",
-    "@openthrottle/nestjs-repositories": "workspace:*",
-    "@openthrottle/openthrottle-agentic-utils": "workspace:*",
+    "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "openai": "catalog:",
     "pidusage": "catalog:",
     "pg": "catalog:",

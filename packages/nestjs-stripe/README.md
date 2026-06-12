@@ -10,7 +10,7 @@ From the monorepo workspace:
 pnpm add @openthrottle/nestjs-stripe -w
 ```
 
-Or add `"@openthrottle/nestjs-stripe": "workspace:*"` in a consuming package and run `pnpm install` from the repository root.
+Or add `"@openthrottle/nestjs-stripe": "workspace:^"` in a consuming package and run `pnpm install` from the repository root.
 
 > [!Tip]
 > This package is **private** to the workspace and is not published to a public registry.

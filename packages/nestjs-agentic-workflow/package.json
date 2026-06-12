@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
-    "@openthrottle/nodejs-graphql": "workspace:*",
-    "@openthrottle/openthrottle-agentic-ralph": "workspace:*",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:*"
+    "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
   },
   "exports": {
     ".": {
@@ -99,6 +99,6 @@
   "devDependencies": {
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
-    "@openthrottle/nestjs-modules": "workspace:*"
+    "@openthrottle/nestjs-modules": "workspace:^"
   }
 }

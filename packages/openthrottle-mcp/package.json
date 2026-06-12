@@ -14,8 +14,8 @@
     "@modelcontextprotocol/sdk": "catalog:",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
-    "@openthrottle/nodejs-graphql": "workspace:*",
-    "@openthrottle/nestjs-modules": "workspace:*",
+    "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/nestjs-modules": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
     "zod": "catalog:"
   },

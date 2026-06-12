@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@nestjs/typeorm": "catalog:",
-    "@openthrottle/nestjs-modules": "workspace:*",
-    "@openthrottle/openthrottle-ide": "workspace:*",
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/openthrottle-ide": "workspace:^",
     "typeorm": "catalog:"
   },
   "devDependencies": {},

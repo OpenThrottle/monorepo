@@ -211,12 +211,12 @@ Applications and packages can reference each other directly:
 ```json
 {
   "dependencies": {
-    "@openthrottle/xxxxxx": "workspace:*"
+    "@openthrottle/xxxxxx": "workspace:^"
   }
 }
 ```
 
-The `workspace:*` protocol tells pnpm to use the local workspace version.
+The `workspace:^` protocol tells pnpm to use the local workspace version.
 
 ### Dependency Sharing Patterns
 

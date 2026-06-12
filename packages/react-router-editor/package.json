@@ -39,7 +39,7 @@
     }
   },
   "peerDependencies": {
-    "@openthrottle/react-router-utils": "workspace:*",
+    "@openthrottle/react-router-utils": "workspace:^",
     "react": "^19.0.0",
     "react-router": "catalog:"
   },

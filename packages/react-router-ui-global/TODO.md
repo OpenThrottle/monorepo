@@ -12,7 +12,7 @@ Great stuff! You've successfully generated a new package 🎉 Now, lets quickly 
 
 - [ ] Add this new package to the root `package.json`
   - We add it under the `dependencies`
-  - `"@openthrottle/react-router-ui-global": "workspace:*",`
+  - `"@openthrottle/react-router-ui-global": "workspace:^",`
 - [ ] Now we install to update the PNPM workspace
   - `pnpm install --no-frozen-lockfile`
 - [ ] And we need to update our NX workspace

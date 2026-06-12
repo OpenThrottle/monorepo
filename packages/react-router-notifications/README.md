@@ -4,7 +4,7 @@ React Router providers, hooks, and UI for OpenThrottle in-app notifications: Soc
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/react-router-notifications": "workspace:*"` to the consuming package’s `package.json`, then run `pnpm install` from the repository root.
+**In this monorepo:** add `"@openthrottle/react-router-notifications": "workspace:^"` to the consuming package’s `package.json`, then run `pnpm install` from the repository root.
 
 > [!Tip]
 > This package is **private** to the workspace and is not published to a public registry.

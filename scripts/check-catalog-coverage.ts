@@ -6,7 +6,7 @@ import { join } from 'node:path';
 /**
  * @description Enforces 100% pnpm catalog coverage: every external dependency in every
  * workspace package.json must use the `catalog:` protocol (see MONOREPO.md § Dependency
- * Catalog). `workspace:*` references are always allowed. peerDependencies are exempt by
+ * Catalog). `workspace:^` references are always allowed. peerDependencies are exempt by
  * policy — intentionally wide peer ranges on published packages stay literal.
  */
 

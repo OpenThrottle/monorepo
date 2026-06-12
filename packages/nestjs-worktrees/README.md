@@ -10,7 +10,7 @@ This is a **private workspace package**. Add it as a workspace dependency in you
 
 ```json
 "dependencies": {
-  "@openthrottle/nestjs-worktrees": "workspace:*"
+  "@openthrottle/nestjs-worktrees": "workspace:^"
 }
 ```
 
