@@ -61,9 +61,7 @@ export default function Component(
     >
       <div className="flex flex-col justify-center gap-8 flex-1 h-full items-center">
         <OpenThrottleLogo className="text-2xl mx-auto" name={SITE_SUBDOMAIN} />
-        {isFormEnabled ? (
-          <OpenThrottleAuthForm action="/" title="Sign in" />
-        ) : null}
+        {isFormEnabled ? <OpenThrottleAuthForm action="/" /> : null}
       </div>
     </GlobalScreen>
   );

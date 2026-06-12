@@ -1,21 +1,17 @@
-ARG POSTGRES_VERSION=17
-FROM postgres:${POSTGRES_VERSION}
+ARG POSTGRES_VERSION=18
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    ca-certificates \
-    git \
-    postgresql-server-dev-$PG_MAJOR \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# Official prebuilt pgvector image (postgres base + tested vector.so).
+# Replaces the previous source build, whose -march=native compile produced a
+# vector.so that segfaulted on load under the Docker Desktop VM on Apple Silicon.
+# -trixie matches the Debian 13 / glibc 2.41 base the postgres_data volume was
+# initialized with (the default tag is Debian 12 and triggers a collation
+# version mismatch warning).
+FROM pgvector/pgvector:0.8.2-pg${POSTGRES_VERSION}-trixie
 
-# Clone, build, and install pgvector
-RUN git clone https://github.com/pgvector/pgvector.git /tmp/pgvector \
-    && cd /tmp/pgvector \
-    && make \
-    && make install \
-    && rm -rf /tmp/pgvector
+# The wildcards make the seed optional: a glob matching zero files copies
+# nothing instead of failing the build. `database[s]` must be a glob too:
+# .dockerignore only re-includes seed.sql, so without it the databases/
+# folder is absent from the context and a literal path would fail to lstat.
+COPY ./database[s]/seed.sql* /docker-entrypoint-initdb.d/
 
-# RUN echo '🌱 Seed our database 🌱 '
-COPY ./databases/seed.sql /docker-entrypoint-initdb.d/
+RUN echo '🌱 Seed OpenThrottle database 🌱 '

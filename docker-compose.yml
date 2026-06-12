@@ -7,8 +7,8 @@
 #     Brings up postgres + redis + openthrottle-server + openthrottle-developer.
 #     Config is interpolated from the repo-root `.env` (see `.env.default`).
 #
-#     Canonical images: server → Dockerfile.NestJS.v3, developer →
-#     Dockerfile.ReactRouter.v3, postgres → Dockerfile.Postgres (the Postgres
+#     Canonical images: server → Dockerfile.NestJS, developer →
+#     Dockerfile.ReactRouter, postgres → Dockerfile.Postgres (the Postgres
 #     build COPYs ./databases/seed.sql, so generate it first if missing).
 #
 #     Networking (Docker Desktop): the server reaches postgres/redis via
@@ -19,6 +19,8 @@
 #     Verified healthy: server GET /health → 200
 #     {api,database,redis,websocket:ok}; developer GET / → 200.
 #
+#############################################################################
+
 #############################################################################
 #
 #     🧩 Fragments | https://docs.docker.com/compose/compose-file/11-extension/
@@ -70,7 +72,7 @@ x-openthrottle-server: &openthrottle-server
   JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
   PORT: ${OPENTHROTTLE_SERVER_PORT}
 
-name: OpenThrottle
+name: OT
 
 #############################################################################
 #
@@ -89,7 +91,7 @@ services:
       args:
         <<: *openthrottle-developer
       context: ./
-      dockerfile: Dockerfile.ReactRouter.v3
+      dockerfile: Dockerfile.ReactRouter
       secrets: *build-secrets
       target: production
     container_name: openthrottle-developer
@@ -104,7 +106,7 @@ services:
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     restart: always
-    # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter.v3 production)
+    # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter production)
     # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
 
   #############################################################################
@@ -174,7 +176,7 @@ services:
       args:
         <<: *openthrottle-server
       context: ./
-      dockerfile: Dockerfile.NestJS.v3
+      dockerfile: Dockerfile.NestJS
       secrets: *build-secrets
     container_name: openthrottle-server
     depends_on:
@@ -194,7 +196,7 @@ services:
       POSTGRES_VERSION: ${POSTGRES_VERSION}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
-    # Healthcheck is provided by the image: Dockerfile.NestJS.v3 (distroless) ships a HEALTHCHECK
+    # Healthcheck is provided by the image: Dockerfile.NestJS (distroless) ships a HEALTHCHECK
     # that hits GET /health on PORT via /nodejs/bin/node. Do NOT override it here with
     # /usr/local/bin/node — that path does not exist on distroless and would mark the server
     # permanently unhealthy (which would also block openthrottle-developer's depends_on).
