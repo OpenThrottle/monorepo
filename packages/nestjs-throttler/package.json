@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/throttler": "^6.5.0"
+    "@nestjs/throttler": "catalog:"
   },
   "devDependencies": {},
   "exports": {

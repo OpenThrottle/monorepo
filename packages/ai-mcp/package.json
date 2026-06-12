@@ -11,14 +11,14 @@
     "ai-mcp": "./dist/src/bin.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "catalog:",
     "@openthrottle/nestjs-repositories": "workspace:*",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
-    "openai": "^6.16.0",
-    "pidusage": "^4.0.1",
-    "pg": "^8.17.1",
-    "typeorm": "^0.3.28",
-    "zod": "^4.3.6"
+    "openai": "catalog:",
+    "pidusage": "catalog:",
+    "pg": "catalog:",
+    "typeorm": "catalog:",
+    "zod": "catalog:"
   },
   "exports": {
     ".": {

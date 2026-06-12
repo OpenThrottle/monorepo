@@ -92,9 +92,9 @@
     }
   },
   "dependencies": {
-    "@graphql-typed-document-node/core": "3.2.0",
-    "@vscode/vsce": "^3.2.1",
-    "graphql": "^16.13.2"
+    "@graphql-typed-document-node/core": "catalog:",
+    "@vscode/vsce": "catalog:",
+    "graphql": "catalog:"
   },
   "description": "VS Code and Cursor extension for OpenThrottle plans and tasks, backed by openthrottle-server GraphQL.",
   "devDependencies": {},

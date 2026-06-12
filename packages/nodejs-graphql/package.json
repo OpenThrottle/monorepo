@@ -5,7 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "graphql": "^16.13.2"
+    "graphql": "catalog:"
   },
   "description": "Fetch-based GraphQL client for React Router loaders and actions against openthrottle-server, using TypedDocumentNode from codegen.",
   "devDependencies": {},

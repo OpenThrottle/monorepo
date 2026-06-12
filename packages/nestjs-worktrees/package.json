@@ -11,7 +11,7 @@
     "@openthrottle/openthrottle-mcp": "workspace:*",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@tools/workflows": "workspace:*",
-    "pg": "^8.17.1"
+    "pg": "catalog:"
   },
   "exports": {
     ".": {

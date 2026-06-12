@@ -11,13 +11,13 @@
     "openthrottle-mcp": "./dist/src/bin.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/core": "^11.1.18",
+    "@modelcontextprotocol/sdk": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
     "@openthrottle/nodejs-graphql": "workspace:*",
     "@openthrottle/nestjs-modules": "workspace:*",
-    "@rekog/mcp-nest": "^1.9.9",
-    "zod": "^4.3.6"
+    "@rekog/mcp-nest": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {},
   "exports": {

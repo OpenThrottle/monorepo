@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
-    "@phosphor-icons/react": "^2.1.7",
-    "classnames": "^2.5.1",
-    "jotai": "^2.19.0"
+    "@monaco-editor/react": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "classnames": "catalog:",
+    "jotai": "catalog:"
   },
   "devDependencies": {},
   "main": "./src/index.ts",
@@ -41,7 +41,7 @@
   "peerDependencies": {
     "@openthrottle/react-router-utils": "workspace:*",
     "react": "^19.0.0",
-    "react-router": "^7.14.0"
+    "react-router": "catalog:"
   },
   "private": true,
   "publishConfig": {

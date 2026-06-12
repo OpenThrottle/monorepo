@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@openthrottle/nestjs-auth": "workspace:*",
-    "@nestjs/graphql": "^13.2.4",
-    "graphql": "^16.13.2",
-    "stripe": "^20.3.1"
+    "@nestjs/graphql": "catalog:",
+    "graphql": "catalog:",
+    "stripe": "catalog:"
   },
   "exports": {
     ".": {

@@ -10,7 +10,7 @@
   "dependencies": {
     "@openthrottle/react-router-shadcn": "workspace:*",
     "@openthrottle/react-router-ui": "workspace:*",
-    "classnames": "^2.5.1"
+    "classnames": "catalog:"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",

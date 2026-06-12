@@ -11,10 +11,10 @@
     "@openthrottle/react-router-shadcn": "workspace:*",
     "@openthrottle/openthrottle-notifications": "workspace:*",
     "@openthrottle/react-router-utils": "workspace:*",
-    "classnames": "^2.5.1",
-    "lucide-react": "^1.7.0",
-    "react-router": "^7.14.0",
-    "socket.io-client": "^4.8.3"
+    "classnames": "catalog:",
+    "lucide-react": "catalog:",
+    "react-router": "catalog:",
+    "socket.io-client": "catalog:"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
@@ -64,6 +64,6 @@
   "type": "module",
   "types": "./src/index.ts",
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1"
+    "@testing-library/jest-dom": "catalog:"
   }
 }

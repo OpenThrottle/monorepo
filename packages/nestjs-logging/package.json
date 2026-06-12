@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/platform-socket.io": "^11.1.18",
-    "@nestjs/websockets": "^11.1.18",
+    "@nestjs/platform-socket.io": "catalog:",
+    "@nestjs/websockets": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:*",
-    "socket.io": "^4.8.3"
+    "socket.io": "catalog:"
   },
   "exports": {
     ".": {
@@ -61,8 +61,8 @@
     }
   },
   "peerDependencies": {
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/core": "^11.1.18",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
     "@openthrottle/nestjs-websockets": "workspace:*"
   },
   "peerDependenciesMeta": {

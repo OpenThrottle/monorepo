@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "dataloader": "^2.2.3"
+    "dataloader": "catalog:"
   },
   "exports": {
     ".": {
