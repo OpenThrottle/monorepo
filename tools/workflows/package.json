@@ -9,14 +9,14 @@
     "workflow-ralph": "./dist/src/bin/ralph.js"
   },
   "dependencies": {
-    "@nx/devkit": "22.6.4",
+    "@nx/devkit": "catalog:",
     "@openthrottle/ai-mcp": "workspace:*",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:*",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@tools/generators": "workspace:*",
-    "commander": "^14.0.2",
-    "pg": "^8.17.1",
-    "pidusage": "^4.0.1"
+    "commander": "catalog:",
+    "pg": "catalog:",
+    "pidusage": "catalog:"
   },
   "exports": {
     ".": {
@@ -84,6 +84,6 @@
   },
   "types": "./src/index.ts",
   "devDependencies": {
-    "@types/pidusage": "^2.0.5"
+    "@types/pidusage": "catalog:"
   }
 }
