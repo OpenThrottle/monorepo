@@ -9,4 +9,4 @@ export const OPENTHROTTLE_GITHUB_URL = `https://github.com/OpenThrottle`;
 export const OPENTHROTTLE_GITHUB_URL_DISCUSSIONS = `https://github.com/orgs/OpenThrottle/discussions`;
 export const OPENTHROTTLE_GITHUB_URL_TEAM = `https://github.com/orgs/OpenThrottle/people`;
 
-export const OPENTHROTTLE_META_DESCRIPTION = `tbd...`;
+export const OPENTHROTTLE_META_DESCRIPTION = `OpenThrottle is an open-source, AI-backed toolkit for planning and shipping software — plans, tasks, agentic workflows, and semantic search, right in your IDE.`;
