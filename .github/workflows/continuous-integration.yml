@@ -45,6 +45,7 @@ env:
   NX_KEY: ${{ vars.NX_KEY }}
   NX_SWC: 'true'
   NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
+  OUTPUT_DEBUG: ${{ vars.DEBUG && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
   OUTPUT_FILE: dependency-graph.html
   RELEASE_DRY_RUN: ${{ (github.head_ref == 'main' || github.ref_name == 'main') && '--verbose' || '--dry-run --verbose' }}
@@ -108,11 +109,14 @@ jobs:
 
       - name: '🧩 Codegen Tasks'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel --verbose
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
       - name: '🧠 NX ${{ matrix.target }} affected'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,test,typecheck,typecheck-tests --parallel --verbose
+        run: |
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --projects tag:type:package --target=test --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --projects tag:type:application --target=test --parallel ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
