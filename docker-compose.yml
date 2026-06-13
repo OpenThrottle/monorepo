@@ -116,11 +116,17 @@ services:
       - .env
     environment:
       <<: *developer
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # the IDE engine runs in this SSR process and reads registered checkouts.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
     image: openthrottle/developer:latest
     ports:
       - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
     profiles: [prod]
     restart: always
+    volumes:
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
     # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter production)
     # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
 
@@ -174,6 +180,10 @@ services:
       # No GCS credentials at runtime — a present NX_KEY would otherwise make Nx
       # reach for the remote cache and abort (same guard as the Dockerfile build).
       NX_DISABLE_REMOTE_CACHE: 'true'
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # the IDE engine runs in this SSR process and reads registered checkouts.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
       npm_config_store_dir: /pnpm/store
     image: openthrottle/developer:dev
     ports:
@@ -182,6 +192,7 @@ services:
     restart: 'no'
     volumes:
       - pnpm_store:/pnpm/store
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
 
   #############################################################################
   #
@@ -269,6 +280,10 @@ services:
       - .env
     environment:
       <<: *server
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # registered checkout paths are validated/searched/executed in this process.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -286,6 +301,8 @@ services:
       - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
     profiles: [prod]
     restart: always
+    volumes:
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
     # No `user:` override: the distroless `nonroot` image already runs as uid 65532, and the pruned
     # tree is COPYed with --chown=65532. `user: appuser` would fail ("no matching entries in passwd").
 
@@ -340,9 +357,18 @@ services:
       POSTGRES_VERSION: ${POSTGRES_VERSION}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      # Mounted checkouts are owned by a host uid; trust them for git operations
+      # (worktrees, status) without needing an entrypoint script.
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: '*'
       # No GCS credentials at runtime — a present NX_KEY would otherwise make Nx
       # reach for the remote cache and abort (same guard as the Dockerfile build).
       NX_DISABLE_REMOTE_CACHE: 'true'
+      # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
+      # registered checkout paths are validated/searched/executed in this process.
+      OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
+      OPENTHROTTLE_HOST_WORKSPACES_DIR: ${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}
       npm_config_store_dir: /pnpm/store
     # The development image has no in-image HEALTHCHECK (that lives in the
     # distroless production stage); probe /health with the image's own node.
@@ -367,6 +393,10 @@ services:
     restart: 'no'
     volumes:
       - pnpm_store:/pnpm/store
+      - '${OPENTHROTTLE_WORKSPACES_DIR:-/tmp/openthrottle-workspaces}:/workspaces'
+      # SSH-based git remotes (optional, Docker Desktop): uncomment to forward the
+      # host SSH agent; HTTPS remotes already work via the GITHUB_TOKEN env.
+      # - '/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock'
 
 #############################################################################
 #

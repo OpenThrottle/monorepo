@@ -208,7 +208,8 @@ environment:
 The distroless production images have **no shell and no git**, so the bridge cannot run on them. Per-image decision:
 
 - **Server (bridge host):** consumer compose runs the server from the **debian shell-capable target** (the `production-debian` pattern that already exists in `Dockerfile.ReactRouter`; `Dockerfile.NestJS` gains the same stage) with `git` added in that stage only. Distroless remains the default build target for bridge-less/hosted deployments.
-- **Developer app:** stays distroless everywhere — it never touches the mount; all filesystem access goes through the server's GraphQL/IDE APIs.
+- **Developer app:** ALSO mounts the workspace (correction discovered during implementation: the IDE engine — `@openthrottle/openthrottle-ide`, file listing/search/symbols — runs inside the developer app's SSR process via `ide-engine.server.ts`, resolving `filesystemPath` from GraphQL and reading the tree directly). Distroless is still fine for it: the engine needs only Node + the bundled `@vscode/ripgrep` binary, no shell and no git. Git-dependent flows stay in the server.
+- **Editor-config apply** (`applyWorkspaceEditorConfiguration`, which writes MCP/skills config into checkouts from `@openthrottle/nestjs-repositories`) is a known v1 gap: it does not yet translate paths. Tracked as follow-up; the IDE/browse/search/execute paths are covered.
 - A git **sidecar** container was considered and rejected for v1: it would need the same mount plus an RPC seam between server and sidecar that doesn't exist today. The debian target is one stage in a Dockerfile we already own.
 
 ### 6.5 Out of scope (decided)
