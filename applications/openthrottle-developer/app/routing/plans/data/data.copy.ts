@@ -6,6 +6,6 @@
  */
 
 export const PLAN_TASK_NOT_FOUND_COPY = {
-  description: 'The task you are looking for does not exist.',
-  title: 'Task not found',
+  description: `The task you are looking for does not exist.`,
+  title: `Task not found`,
 } as const;

@@ -6,8 +6,8 @@
  */
 
 export const PROMPTS_EMPTY_COPY = {
-  description: 'Create your first prompt to get started.',
-  searchDescription: 'Try clearing the search to see all prompts.',
-  searchTitle: 'No prompts match your filters',
-  title: 'No prompts yet',
+  description: `Create your first prompt to get started.`,
+  searchDescription: `Try clearing the search to see all prompts.`,
+  searchTitle: `No prompts match your filters`,
+  title: `No prompts yet`,
 } as const;

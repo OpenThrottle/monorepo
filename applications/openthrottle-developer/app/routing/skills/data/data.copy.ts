@@ -6,6 +6,6 @@
  */
 
 export const SKILLS_EMPTY_COPY = {
-  searchTitle: 'No skills found, try clearing the search to see all skills.',
-  title: 'No skills found, create your first skill to get started.',
+  searchTitle: `No skills found, try clearing the search to see all skills.`,
+  title: `No skills found, create your first skill to get started.`,
 } as const;

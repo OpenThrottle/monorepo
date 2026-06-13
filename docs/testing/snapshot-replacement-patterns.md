@@ -126,8 +126,8 @@ does not live in the component file.)
 ```ts
 // app/routing/projects/data/data.copy.ts
 export const PROJECT_NOT_FOUND_COPY = {
-  description: 'The project you’re looking for doesn’t exist or was removed.',
-  title: 'Project not found',
+  description: `The project you’re looking for doesn’t exist or was removed.`,
+  title: `Project not found`,
 } as const;
 ```
 
