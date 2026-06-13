@@ -18,7 +18,10 @@ describe('routes/legal.license.tsx', () => {
     );
 
     expect(
-      view.getByRole('heading', { level: 1, name: 'MIT License' }),
+      view.getByRole('heading', {
+        level: 1,
+        name: 'End User License Agreement',
+      }),
     ).toBeInTheDocument();
   });
 });
