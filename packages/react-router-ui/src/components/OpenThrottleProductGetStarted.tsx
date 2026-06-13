@@ -10,7 +10,7 @@ import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { getRandomIntroduction } from '../data/data.introductions';
 import { Link } from 'react-router';
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from './OpenThrottleClipboard';
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 
@@ -77,7 +77,7 @@ export const OpenThrottleProductGetStarted = (
                   <b>{stars}</b> stars on GitHub
                 </TooltipContent>
                 <TooltipTrigger>
-                  <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
+                  <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
                     <Button
                       className="text-xs flex items-center gap-2"
                       variant="brand"

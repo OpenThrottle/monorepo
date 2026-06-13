@@ -10,6 +10,7 @@ import {
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
   CancelPlanRunInput,
+  CodeSemanticSearchInput,
   CommitLinksByPlanIdInput,
   CommitLinksByTaskIdInput,
   CommitsPerPrInput,
@@ -209,6 +210,16 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string(),
+  });
+}
+
+export function CodeSemanticSearchInputSchema(): z.ZodObject<
+  Properties<CodeSemanticSearchInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
+    query: z.string(),
+    repositoryId: z.string(),
   });
 }
 

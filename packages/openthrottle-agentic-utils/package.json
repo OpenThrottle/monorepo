@@ -9,10 +9,10 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/pidusage": "^2.0.5",
-    "nx": "22.6.4",
-    "pg": "^8.17.1",
-    "pidusage": "^4.0.1"
+    "@types/pidusage": "catalog:",
+    "nx": "catalog:",
+    "pg": "catalog:",
+    "pidusage": "catalog:"
   },
   "exports": {
     ".": {
@@ -51,8 +51,8 @@
   },
   "peerDependencies": {
     "nx": "^22.0.0",
-    "pg": "^8.17.1",
-    "pidusage": "^4.0.1"
+    "pg": "catalog:",
+    "pidusage": "catalog:"
   },
   "private": true,
   "publishConfig": {

@@ -4,7 +4,7 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { CodeIcon } from 'lucide-react';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { Link } from 'react-router';
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 
 export interface HomeHeroV1Props {
   className?: string;
@@ -54,7 +54,7 @@ export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
               className="bg-accent hover:bg-accent/90 flex items-center gap-4 p-4 rounded-xl text-white cursor-pointer"
               size="lg"
             >
-              <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
+              <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
                 Try Now
                 <CodeIcon size={20} />
               </Link>
@@ -66,7 +66,7 @@ export const HomeHeroV1 = (props: HomeHeroV1Props): React.ReactElement => {
               size="lg"
               variant="outline"
             >
-              <Link target="_blank" to={OPEN_THROTTLE_GITHUB_URL}>
+              <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
                 View on GitHub
                 <GithubLogoIcon size={20} weight="fill" />
               </Link>

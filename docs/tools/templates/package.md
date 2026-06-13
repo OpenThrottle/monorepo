@@ -26,7 +26,7 @@ nx g @tools/generators:package \
 The generator fully wires a new package into the workspace — there are **no manual
 post-scaffold steps**. After templating the files it:
 
-1. Adds `"<organization>/<name>": "workspace:*"` to the root `package.json`
+1. Adds `"<organization>/<name>": "workspace:^"` to the root `package.json`
    `dependencies`.
 2. Runs `pnpm install` so the new workspace package resolves.
 3. Runs `nx sync` so `tsconfig.base.json` project references include the new

@@ -1,14 +1,12 @@
 {
   "mcpServers": {
     "openthrottle-mcp": {
-      "description": "OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.",
+      "args": [
+        "-c",
+        "set -a && source ./.env && set +a && export API_URL=\"$OPENTHROTTLE_SERVER_APP_URL\" API_URL_INTERNAL=\"$OPENTHROTTLE_SERVER_APP_URL\" && ./scripts/run-openthrottle-mcp.sh"
+      ],
       "command": "bash",
-      "args": ["./scripts/run-openthrottle-mcp.sh"],
-      "env": {
-        "API_URL": "http://localhost:6021",
-        "API_URL_INTERNAL": "http://localhost:6021",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "ot_sa_<prefix>_<secret>"
-      }
+      "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."
     }
   }
 }

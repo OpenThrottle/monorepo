@@ -8,11 +8,11 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@apollo/server": "^5.2.0",
-    "@apollo/server-plugin-response-cache": "^5.0.0",
-    "@nestjs/apollo": "^13.2.3",
-    "@nestjs/graphql": "^13.2.3",
-    "graphql": "^16.13.2"
+    "@apollo/server": "catalog:",
+    "@apollo/server-plugin-response-cache": "catalog:",
+    "@nestjs/apollo": "catalog:",
+    "@nestjs/graphql": "catalog:",
+    "graphql": "catalog:"
   },
   "exports": {
     ".": {

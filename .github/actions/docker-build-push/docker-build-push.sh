@@ -34,10 +34,25 @@ REGISTRY="${INPUT_REGISTRY%%/}"
 APP_VERSION="$(node -p "require('./${PACKAGE_JSON}').version")"
 IMAGE="${REGISTRY}/${INPUT_APP}:${INPUT_TAG}"
 
+# The canonical root Dockerfiles (Dockerfile.NestJS.v3, Dockerfile.ReactRouter.v3) are
+# parameterized: APP_NAME selects which app to build, PNPM_VERSION pins the pnpm used in
+# every stage, and the build stage runs `pnpm dlx nx@${NX_VERSION}`. Derive PNPM_VERSION from
+# the root package.json `packageManager` field so CI and local builds stay in lockstep.
+PNPM_VERSION="$(node -p "(require('./package.json').packageManager || '').replace(/^pnpm@/, '').split('+')[0]")"
+if [[ -z "${PNPM_VERSION}" ]]; then
+  echo "::error::Could not derive PNPM_VERSION from root package.json packageManager field"
+  exit 1
+fi
+
 docker build \
   -f "${DOCKERFILE}" \
-  --build-arg GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}" \
+  --target production \
+  --build-arg APP_NAME="${INPUT_APP}" \
   --build-arg APP_VERSION="${APP_VERSION}" \
+  --build-arg GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}" \
+  --build-arg NX_KEY="${INPUT_NX_KEY:-}" \
+  --build-arg NX_VERSION="${INPUT_NX_VERSION:-}" \
+  --build-arg PNPM_VERSION="${PNPM_VERSION}" \
   -t "${IMAGE}" \
   .
 

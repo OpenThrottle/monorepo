@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { PromptToolbar } from '../PromptToolbar';
 import type { PromptToolbarProps } from '../PromptToolbar';
 
@@ -21,10 +20,7 @@ describe('PromptToolbar Component', () => {
   beforeEach(() => {
     props = { ...DEFAULT_PROPS };
 
-    const Component = () => <PromptToolbar {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    component = render(<RoutesStub />);
+    component = renderRoutesStub(<PromptToolbar {...props} />);
   });
 
   test('should have data-testid PromptToolbar', () => {
@@ -50,9 +46,7 @@ describe('PromptToolbar Component', () => {
   });
 
   test('should render sort dropdown', () => {
-    expect(
-      component.getByTestId('PromptSortDropdown'),
-    ).toBeInTheDocument();
+    expect(component.getByTestId('PromptSortDropdown')).toBeInTheDocument();
   });
 
   test('should render create button', () => {
@@ -62,9 +56,7 @@ describe('PromptToolbar Component', () => {
   });
 
   test('should have create button linking to /prompts/create', () => {
-    const createButton = component.getByTestId(
-      'PromptToolbar-create-button',
-    );
+    const createButton = component.getByTestId('PromptToolbar-create-button');
     expect(createButton).toHaveAttribute('href', '/prompts/create');
   });
 
@@ -72,10 +64,7 @@ describe('PromptToolbar Component', () => {
     beforeEach(() => {
       props = { ...DEFAULT_PROPS, types: ['AGENTS'] };
 
-      const Component = () => <PromptToolbar {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-      component = render(<RoutesStub />);
+      component = renderRoutesStub(<PromptToolbar {...props} />);
     });
 
     test('should show clear filters button', () => {
@@ -89,10 +78,7 @@ describe('PromptToolbar Component', () => {
     beforeEach(() => {
       props = { ...DEFAULT_PROPS };
 
-      const Component = () => <PromptToolbar {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-      component = render(<RoutesStub />);
+      component = renderRoutesStub(<PromptToolbar {...props} />);
     });
 
     test('should not show clear filters button', () => {

@@ -23,8 +23,6 @@ export interface OpenThrottleAuthFormProps {
   readonly isLoading?: boolean;
   /** Called after form submit with email and password. Use when handling submit client-side or via fetcher. */
   readonly onSubmit?: (payload: { email: string; password: string }) => void;
-  /** Title text for the card header. */
-  readonly title?: string;
 }
 
 /**
@@ -34,19 +32,12 @@ export interface OpenThrottleAuthFormProps {
 export const OpenThrottleAuthForm = (
   props: OpenThrottleAuthFormProps,
 ): React.ReactElement => {
-  const {
-    action = '/',
-    className,
-    error,
-    isLoading = false,
-    onSubmit,
-    title = 'Sign in',
-  } = props;
+  const { action = '/', className, error, isLoading = false, onSubmit } = props;
 
   // Hooks
-  const [email, setEmail] = React.useState('matt@domain.com');
+  const [email, setEmail] = React.useState('developer@openthrottle.com');
   const [intent, setIntent] = React.useState<'login' | 'register'>('login');
-  const [password, setPassword] = React.useState('Test1234!');
+  const [password, setPassword] = React.useState('FullThrottle2026!');
 
   // Setup
   const isLogin = intent === 'login';
@@ -87,15 +78,17 @@ export const OpenThrottleAuthForm = (
           <input name="intent" type="hidden" value={intent} />
 
           <CardHeader>
-            <CardTitle className="text-lg">{title}</CardTitle>
-            <CardDescription className="mb-4">
+            <CardTitle className="text-lg font-normal">
+              {isLogin ? 'Sign in' : 'Sign up'}
+            </CardTitle>
+            <CardDescription className="text-xs">
               {isLogin
                 ? 'Enter your email and password to sign in.'
                 : 'Enter your email and password to register.'}
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex flex-col gap-4 my-8">
             {error ? (
               <p className="text-destructive text-sm" role="alert">
                 {error}
@@ -128,7 +121,7 @@ export const OpenThrottleAuthForm = (
             </div>
           </CardContent>
 
-          <CardFooter className="mt-4">
+          <CardFooter>
             <Button
               className="w-full"
               disabled={isLoading}

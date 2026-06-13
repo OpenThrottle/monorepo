@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Index from '../prompts._index';
 import type { PromptCardFragment } from '~/__generated__/graphql';
 import { CustomPromptType } from '~/__generated__/graphql';
+import { renderRoutesStub } from '~/testing/route-fixtures';
 
 const mockPrompt: PromptCardFragment = {
   __typename: 'CustomPromptObject',
@@ -45,16 +44,14 @@ const mockLoaderDataEmpty = {
 
 describe('routes/prompts._index.tsx', () => {
   test('renders PromptsTable with prompt rows and no card grid', () => {
-    const Component = () => (
+    const view = renderRoutesStub(
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataWithPrompts}
         matches={[] as never}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     expect(view.getByTestId('PromptsTable')).toBeInTheDocument();
     expect(view.getByText('Route Test Prompt')).toBeInTheDocument();
@@ -63,24 +60,22 @@ describe('routes/prompts._index.tsx', () => {
   });
 
   test('renders empty state inside table path when no prompts', () => {
-    const Component = () => (
+    const view = renderRoutesStub(
       <Index
         actionData={undefined}
         loaderData={mockLoaderDataEmpty}
         matches={[] as never}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     expect(view.getByText('No prompts yet')).toBeInTheDocument();
-    expect(view.queryByTestId('PromptsTable')).not.toBeInTheDocument();
+    expect(view.getByTestId('PromptsTable')).toBeInTheDocument();
     expect(view.queryByTestId('PromptCard')).not.toBeInTheDocument();
   });
 
   test('renders pagination when prompts exist', () => {
-    const Component = () => (
+    const view = renderRoutesStub(
       <Index
         actionData={undefined}
         loaderData={{
@@ -92,10 +87,8 @@ describe('routes/prompts._index.tsx', () => {
         }}
         matches={[] as never}
         params={{}}
-      />
+      />,
     );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const view = render(<RoutesStub />);
 
     expect(view.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
     const pageLink = view.getByRole('link', { name: '2' });

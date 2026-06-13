@@ -31,7 +31,7 @@ This is a **private workspace package**. Add it in your app's `package.json`:
 
 ```json
 "dependencies": {
-  "@openthrottle/nestjs-worktrees": "workspace:*"
+  "@openthrottle/nestjs-worktrees": "workspace:^"
 }
 ```
 

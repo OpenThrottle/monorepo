@@ -7,6 +7,7 @@ if (typeof window !== 'undefined') {
     API_URL_INTERNAL: 'http://localhost:6021',
     APP_ENV: 'test',
     APP_NAME: 'openthrottle-website',
+    APP_NAME_SHORT: 'OT',
     APP_URL: 'http://localhost',
     APP_URL_ADMIN: 'http://localhost:6022',
     APP_URL_CMS: 'http://localhost:6023',

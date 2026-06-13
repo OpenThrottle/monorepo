@@ -27,6 +27,8 @@ import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic
 import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations-graphql.module';
 import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
+import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.module';
+import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graphql.module';
 import { CommitLinksGraphqlModule } from './graphql/commit-links/commit-links-graphql.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
@@ -110,6 +112,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
 
     // 🧩 Application Modules
     AgenticTestQueueModule,
+    CodeIndexQueueModule,
     DailyStatsQueueModule,
     DatabaseBackupQueueModule,
     DevelopmentModule,
@@ -124,6 +127,7 @@ import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
     AgentConversationsGraphqlModule,
     AgentsGraphqlModule,
     AuthGraphqlModule,
+    CodeSearchGraphqlModule,
     CommitLinksGraphqlModule,
     CustomPromptsGraphqlModule,
     DailyStatsGraphqlModule,

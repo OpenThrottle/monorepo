@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
@@ -33,12 +34,18 @@ const defaultJobOptions = {
     //   // validatePredefined: true,
     //   // validationSchema: configValidationSchema,
     // }),
-    BullModule.forRoot({
-      connection: {
-        host: redisConfig().host,
-        port: Number(redisConfig().port),
-      },
-      defaultJobOptions,
+    // forRootAsync defers the REDIS_HOST read to bootstrap; importing this
+    // package must not require Redis env vars (e.g. unit tests of consumers).
+    BullModule.forRootAsync({
+      imports: [ConfigModule.forFeature(redisConfig)],
+      inject: [redisConfig.KEY],
+      useFactory: (redis: ConfigType<typeof redisConfig>) => ({
+        connection: {
+          host: redis.host,
+          port: Number(redis.port),
+        },
+        defaultJobOptions,
+      }),
     }),
   ],
   providers: [LoggerService],

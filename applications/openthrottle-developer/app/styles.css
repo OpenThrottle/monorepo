@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@import '@openthrottle/react-router-markdown/src/index.css';
 @import '@openthrottle/react-router-shadcn/src/theme.css';
 
 @source "../../../packages/**/*.{css,ts,tsx}";

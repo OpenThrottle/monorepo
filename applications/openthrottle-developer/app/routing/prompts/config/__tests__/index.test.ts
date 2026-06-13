@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { CustomPromptType } from '~/__generated__/graphql';
 import {
   PROMPTS_BASE_PATH,
   PROMPTS_DEFAULT_CONTENT,

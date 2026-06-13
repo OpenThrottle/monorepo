@@ -19,7 +19,7 @@ import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardI
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
-import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
+// import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
 import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -105,7 +105,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <DashboardStats />
+      {/* <DashboardStats /> */}
       <DashboardIntroduction />
 
       <div

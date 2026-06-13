@@ -6,6 +6,7 @@
 import type { DataSourceOptions } from 'typeorm';
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity';
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
+import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity';
 import { CommitLink } from './modules/commit-links/commit-link.entity';
 import { CustomPrompt } from './modules/prompts/custom-prompt.entity';
 import { DailyStat } from './modules/daily-stats/daily-stat.entity';
@@ -35,6 +36,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
     entities: [
       AgentConversation,
       AgentConversationMessage,
+      CodeEmbedding,
       CommitLink,
       CustomPrompt,
       DailyStat,

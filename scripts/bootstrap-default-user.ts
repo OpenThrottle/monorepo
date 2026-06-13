@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+
+/**
+ * @description Creates the default local development user with all roles (admin, user, viewer)
+ * assigned, ready for openthrottle-developer / openthrottle-admin login. Idempotent: an existing
+ * user keeps their password (unless they have none); missing roles are assigned on every run.
+ * Requires migrations 026/031/034 and a running OpenThrottle Postgres.
+ */
+
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  getCortexTypeOrmOptions,
+  Role,
+  RolesService,
+  ServiceAccount,
+  User,
+  UsersService,
+} from '@openthrottle/nestjs-repositories';
+import { DataSource } from 'typeorm';
+
+const DEFAULT_USER = {
+  email: 'developer@openthrottle.com',
+  githubUsername: 'openthrottle-developer',
+  password: 'FullThrottle2026!',
+} as const;
+
+const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
+
+async function ensureDefaultUser(usersService: UsersService): Promise<User> {
+  const existing = await usersService.findByEmail(DEFAULT_USER.email);
+
+  if (existing == null) {
+    const created = await usersService.create({
+      email: DEFAULT_USER.email,
+      githubUsername: DEFAULT_USER.githubUsername,
+      passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
+    });
+    console.log(`Created user ${DEFAULT_USER.email} (${created.id}).`);
+    return created;
+  }
+
+  if (existing.passwordHash == null) {
+    const updated = await usersService.update(existing.id, {
+      passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
+    });
+    console.log(
+      `Set default password for existing user ${DEFAULT_USER.email}.`,
+    );
+    return updated ?? existing;
+  }
+
+  console.log(
+    `Skip create: ${DEFAULT_USER.email} already exists (password unchanged).`,
+  );
+  return existing;
+}
+
+async function ensureAllRoles(
+  rolesService: RolesService,
+  userId: string,
+): Promise<void> {
+  /* eslint-disable no-await-in-loop -- role assignments mutate the same user row; run in order */
+  for (const roleName of ROLE_NAMES) {
+    const role = await rolesService.findByName(roleName);
+
+    if (role == null) {
+      console.error(
+        `Missing role "${roleName}". Run: pnpm run database:migrate`,
+      );
+      process.exit(1);
+    }
+
+    await rolesService.assignRoleToUser(userId, role.id);
+    console.log(`Role ${roleName}: assigned.`);
+  }
+  /* eslint-enable no-await-in-loop */
+}
+
+async function main(): Promise<void> {
+  const dataSource = new DataSource(getCortexTypeOrmOptions());
+  await dataSource.initialize();
+
+  try {
+    const logger = { debug: () => undefined } as unknown as LoggerService;
+
+    const userRepository = dataSource.getRepository(User);
+    const roleRepository = dataSource.getRepository(Role);
+
+    const usersService = new UsersService(logger, userRepository);
+    const rolesService = new RolesService(
+      logger,
+      roleRepository,
+      userRepository,
+      dataSource.getRepository(ServiceAccount),
+    );
+
+    const user = await ensureDefaultUser(usersService);
+    await ensureAllRoles(rolesService, user.id);
+
+    console.log('');
+    console.log(`Default user ready: ${DEFAULT_USER.email}`);
+  } finally {
+    await dataSource.destroy();
+  }
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

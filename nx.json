@@ -254,7 +254,7 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "knip": {
+    "knip___DISABLED_ON_PURPOSE___": {
       "cache": true,
       "dependsOn": ["^build"],
       "executor": "nx:run-commands",

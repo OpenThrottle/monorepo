@@ -8,9 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^6.2.1",
-    "@graphql-codegen/client-preset": "^5.2.4",
-    "graphql-codegen-typescript-validation-schema": "^0.18.1"
+    "@graphql-codegen/cli": "catalog:",
+    "@graphql-codegen/client-preset": "catalog:",
+    "graphql-codegen-typescript-validation-schema": "catalog:"
   },
   "devDependencies": {},
   "main": "./src/index.ts",

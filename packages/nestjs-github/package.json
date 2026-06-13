@@ -8,9 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@apollo/cache-control-types": "^1.0.3",
-    "@nestjs/graphql": "^13.2.4",
-    "graphql": "^16.13.2"
+    "@apollo/cache-control-types": "catalog:",
+    "@nestjs/graphql": "catalog:",
+    "graphql": "catalog:"
   },
   "devDependencies": {},
   "peerDependencies": {

@@ -13,10 +13,26 @@ import { WorktreeTargetsTracker } from '../worktree-targets';
 function createTempGitRepo(): string {
   const dir = mkdtempSync(join(tmpdir(), 'workflow-git-'));
   spawnSync('git', ['init', '-b', 'main'], { cwd: dir, encoding: 'utf-8' });
-  spawnSync('git', ['commit', '--allow-empty', '-m', 'init'], {
-    cwd: dir,
-    encoding: 'utf-8',
-  });
+  // CI runners have no global git identity; -c keeps the commit self-contained.
+  spawnSync(
+    'git',
+    [
+      '-c',
+      'user.name=test',
+      '-c',
+      'user.email=test@example.com',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '--allow-empty',
+      '-m',
+      'init',
+    ],
+    {
+      cwd: dir,
+      encoding: 'utf-8',
+    },
+  );
   return dir;
 }
 

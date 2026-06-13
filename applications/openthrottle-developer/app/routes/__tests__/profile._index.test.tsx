@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { OPEN_THROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_CONTACT_EMAIL } from '@openthrottle/react-router-utils';
 import ProfileIndex from '../profile._index';
 
 describe('routes/profile._index.tsx', () => {
@@ -19,6 +19,6 @@ describe('routes/profile._index.tsx', () => {
     );
 
     expect(screen.getByText('Matthew Scholta')).toBeInTheDocument();
-    expect(screen.getByText(OPEN_THROTTLE_CONTACT_EMAIL)).toBeInTheDocument();
+    expect(screen.getByText(OPENTHROTTLE_CONTACT_EMAIL)).toBeInTheDocument();
   });
 });

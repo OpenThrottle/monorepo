@@ -6,15 +6,15 @@ This document records the chosen **image build strategy** and **registry** for *
 
 ## 1. Build strategy summary
 
-| Decision             | Choice                                                                                                                                                                                                                                                               |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Build context**    | Monorepo root. Images are built with `docker build -f applications/<app>/Dockerfile .` so Nx and pnpm can resolve workspace dependencies.                                                                                                                            |
-| **Dockerfiles**      | One baseline Dockerfile per app: `Dockerfile.NestJS`, `Dockerfile.ReactRouter`. Optimized variants: `Dockerfile.NestJS.v2`, `Dockerfile.ReactRouter.v2` (same build args; smaller production stage). Both families are multi-stage and parameterized via build args. |
-| **Stages**           | Base → dependencies (pnpm install) → builder (Nx build + pnpm deploy pruned) → production (copy pruned app only, non-root user, `CMD start:docker`).                                                                                                                 |
-| **Tooling in image** | Node 22, pnpm (version pinned), Nx via `pnpm dlx nx@<version>`. No global Nx install; lockfile and workspace define deps.                                                                                                                                            |
-| **Registry**         | **Google Artifact Registry** in region `us-west2`: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`. Aligns with existing monorepo pattern (see [Google-Cloud.md](../monorepo/Google-Cloud.md)).                                                   |
-| **Image naming**     | `openthrottle-server`, `openthrottle-developer`. Full path: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/openthrottle-server` and same for `openthrottle-developer`.                                                                                          |
-| **Tagging**          | `latest` (optional), Git SHA (e.g. `sha-abc1234`), and/or app version from `package.json` (e.g. `1.3.0`). CI should set tag from `GITHUB_SHA` or version.                                                                                                            |
+| Decision             | Choice                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Build context**    | Monorepo root. Images are built with `docker build -f Dockerfile.<App>.v3 .` (context `.`) so Nx and pnpm can resolve workspace dependencies.                                                                                                                                                                                                                            |
+| **Dockerfiles**      | **One canonical Dockerfile per app**, both at the repo root: `Dockerfile.NestJS.v3` (openthrottle-server) and `Dockerfile.ReactRouter.v3` (openthrottle-developer). The old baseline (`Dockerfile.NestJS`, `Dockerfile.ReactRouter`) and `.v2` variants have been **deleted** — v3 is the single source of truth. Both are multi-stage and parameterized via build args. |
+| **Stages**           | base → builder (pnpm install) → build (Nx build + `pnpm --filter <app> --prod deploy /app/pruned --legacy`) → production (distroless `nodejs22-debian12:nonroot`, copy the pruned tree only). No manual `rm -rf node_modules/.pnpm` pruning — each app declares its own runtime deps and `pnpm --prod deploy` produces the tree.                                         |
+| **Tooling in image** | Node 22, pnpm (version pinned), Nx via `pnpm dlx nx@<version>`. No global Nx install; lockfile and workspace define deps.                                                                                                                                                                                                                                                |
+| **Registry**         | **Google Artifact Registry** in region `us-west2`: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`. Aligns with existing monorepo pattern (see [Google-Cloud.md](../monorepo/Google-Cloud.md)).                                                                                                                                                       |
+| **Image naming**     | `openthrottle-server`, `openthrottle-developer`. Full path: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/openthrottle-server` and same for `openthrottle-developer`.                                                                                                                                                                                              |
+| **Tagging**          | `latest` (optional), Git SHA (e.g. `sha-abc1234`), and/or app version from `package.json` (e.g. `1.3.0`). CI should set tag from `GITHUB_SHA` or version.                                                                                                                                                                                                                |
 
 ---
 
@@ -34,12 +34,13 @@ This document records the chosen **image build strategy** and **registry** for *
   - `pnpm install --frozen-lockfile` sees the full workspace.
   - `pnpm dlx nx@<version> run <APP_NAME>:build` can resolve and build dependencies (e.g. `@tools/workflows`, openthrottle packages).
 - **Stages:**
-  1. **base** — Node 22 (slim or alpine), pnpm, non-root user, build args (`APP_NAME`, `APP_VERSION`, `NX_VERSION`, `PNPM_VERSION`; `GITHUB_TOKEN` only in dependencies layer if needed for private deps).
-  2. **dependencies** — `COPY . .`, `pnpm install --frozen-lockfile` (with cache mount for store).
-  3. **builder** — `NODE_ENV=production`, `pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build`, then `pnpm --filter=${APP_NAME} --prod deploy pruned`. Output is `/app/pruned` with the app and its production node_modules.
-  4. **production** — Copy `--from=builder /app/pruned ./`, set ownership to non-root user, `CMD ["pnpm", "start:docker"]`.
-- **openthrottle-server:** NestJS; `start:docker` is `node -r dotenv/config ./build/src/main.js` (already in package.json). No extra stage.
-- **openthrottle-developer:** React Router; `start:docker` is `react-router-serve ./build/server/index.js` (added in package.json). Same Dockerfile pattern as root `Dockerfile.ReactRouter`.
+  1. **base** — `node:22-bookworm-slim` (glibc, so native addons match the distroless runtime), pnpm pinned via `PNPM_VERSION`, non-root identity, build args (`APP_NAME`, `APP_VERSION`, `NX_VERSION`, `PNPM_VERSION`, `GITHUB_TOKEN`, `NX_KEY`).
+  2. **builder** — `python3 make g++`, copy app `package.json` + `packages/` + `tools/`, `pnpm install --frozen-lockfile`.
+  3. **build** — `NODE_ENV=production`, `COPY . .`, `pnpm install --frozen-lockfile`, `pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build` (server also runs the package/tool builds), then `pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy`. Output is `/app/pruned` with the app, its `build/`, and a production `node_modules`.
+  4. **production** — `gcr.io/distroless/nodejs22-debian12:nonroot`, `COPY --from=build /app/pruned/. /app/`. Distroless has no shell/curl: the server ships an in-image `HEALTHCHECK` using `/nodejs/bin/node` against `/health`; the entrypoint is Node and `CMD` is argv only.
+- **openthrottle-server:** NestJS; production `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
+- **openthrottle-developer:** React Router; production `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
+- **Pruning caveat:** `pnpm --prod deploy --legacy` in this non-injected workspace copies the whole-workspace **production** store rather than a strict per-app closure, so each image is larger than its true footprint (the foreign stack is present but unused). The blunt `rm -rf .pnpm` hacks that used to mask this are removed; the precise fix (injected strict deploy) is tracked in plan `cd59757e-23db-4cd1-ad66-a89c49c66376`.
 
 ---
 
@@ -55,56 +56,48 @@ This document records the chosen **image build strategy** and **registry** for *
 
 ---
 
-## 5. Dockerfiles added
+## 5. Canonical Dockerfiles (both at repo root)
 
-- **`Dockerfile.NestJS`** — Multi-stage (base → dependencies → builder → production), mirrors the uncommented NestJS pattern from root `Dockerfile.NestJS`, with `APP_NAME=openthrottle-server` and `CMD ["pnpm", "start:docker"]`.
-- **`Dockerfile.ReactRouter`** — Same pattern as root `Dockerfile.ReactRouter`; `APP_NAME=openthrottle-developer`; requires `start:docker` in `package.json` (see below).
+- **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless production), `APP_NAME=openthrottle-server`, in-image `/health` probe, `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
+- **`Dockerfile.ReactRouter.v3`** — openthrottle-developer. Same stage shape; distroless production plus an optional `production-debian` target (debian-slim + shell for curl healthchecks). `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
 
-Both are intended to be built from the repo root, e.g.:
+The old `Dockerfile.NestJS`, `Dockerfile.ReactRouter`, and both `.v2` variants have been deleted.
+
+### 5.1. Nx `docker-build` targets
+
+Both apps expose an Nx `docker-build` target that wraps `docker build` with the correct flags and `cwd` = repo root, so the build context is always the monorepo root:
 
 ```bash
-docker build -f Dockerfile.NestJS \
-  --build-arg APP_NAME=openthrottle-server \
-  --build-arg APP_VERSION=1.3.0 \
-  --build-arg NX_VERSION=22.6.4 \
-  -t openthrottle-server:local .
+pnpm nx run openthrottle-server:docker-build       # -> Dockerfile.NestJS.v3,    -t openthrottle-server:local
+pnpm nx run openthrottle-developer:docker-build    # -> Dockerfile.ReactRouter.v3, -t openthrottle-developer:local
 ```
 
-### 5.1. Root Dockerfile.NestJS.v3 and Nx docker-build (openthrottle-server)
+Each target sets default env (`APP_VERSION`, `NX_VERSION=22.6.4`, `PNPM_VERSION=10.33.4`) and passes `--target production`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and the Nx remote cache (both optional for a local build).
 
-The **root** `Dockerfile.NestJS.v3` is the Nx Docker plugin–friendly path for building openthrottle-server from the monorepo root. It is wired via an Nx target so the build context is always the repo root.
-
-- **Nx target (recommended):** From repo root run
-  `nx run openthrottle-server:docker-build`
-  This runs `docker build` with `-f Dockerfile.NestJS.v3`, `--target production`, and build context `.`. The target sets default env: `APP_VERSION=1.3.0`, `NX_VERSION=22.6.4`. Set `GITHUB_TOKEN` and `NX_KEY` in your environment for private deps and Nx cache (optional for local builds without cache).
-- **Manual build from repo root:**
+- **Manual build from repo root** (server shown; developer is identical with `-f Dockerfile.ReactRouter.v3` and `APP_NAME=openthrottle-developer`):
 
   ```bash
-  export APP_NAME=openthrottle-server
-  export APP_VERSION=1.3.0
-  export NX_VERSION=22.6.4
-  export GITHUB_TOKEN=${GITHUB_TOKEN:-}
-  export NX_KEY=${NX_KEY:-}
-
   docker build -f Dockerfile.NestJS.v3 --target production \
-    --build-arg APP_NAME=$APP_NAME \
-    --build-arg APP_VERSION=$APP_VERSION \
-    --build-arg NX_VERSION=$NX_VERSION \
-    --build-arg GITHUB_TOKEN=$GITHUB_TOKEN \
-    --build-arg NX_KEY=$NX_KEY \
+    --build-arg APP_NAME=openthrottle-server \
+    --build-arg APP_VERSION=1.3.0 \
+    --build-arg NX_VERSION=22.6.4 \
+    --build-arg PNPM_VERSION=10.33.4 \
+    --build-arg GITHUB_TOKEN=${GITHUB_TOKEN:-} \
+    --build-arg NX_KEY=${NX_KEY:-} \
     -t openthrottle-server:local .
   ```
 
-- **Build-args:** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`; `PNPM_VERSION` defaults to `9` in the Dockerfile. See root `Dockerfile.NestJS.v3` for all args.
-- **Docker Compose:** `applications/openthrottle/docker-compose.yml` uses `dockerfile: Dockerfile.NestJS.v3` with `context: ../..` so the server image is built from the v3 Dockerfile.
+- **Build-args:** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, **`PNPM_VERSION`** (no usable default — must be passed; use the root `packageManager` pin, currently `10.33.4`).
+- **Docker Compose:** the repo-root `docker-compose.yml` builds the server with `dockerfile: Dockerfile.NestJS.v3` and the developer with `dockerfile: Dockerfile.ReactRouter.v3` (`context: ./`).
 
 ---
 
-## 6. openthrottle-developer: `start:docker` script
+## 6. Production entrypoints (`start:docker`)
 
-- **Change:** In `applications/openthrottle-developer/package.json`, add:
-  - `"start:docker": "react-router-serve ./build/server/index.js"`
-- **Reason:** Matches the standard React Router production entrypoint (`react-router-serve`) so multi-stage images can use `CMD ["pnpm", "start:docker"]`.
+Both apps define a `start:docker` script used outside the distroless images (the distroless `production` stage runs Node directly via the Dockerfile `CMD`):
+
+- **openthrottle-server:** `node -r dotenv/config ./build/src/main.js`
+- **openthrottle-developer:** `react-router-serve ./build/server/index.js`
 
 ---
 
@@ -121,26 +114,18 @@ The **root** `Dockerfile.NestJS.v3` is the Nx Docker plugin–friendly path for 
 
 ## 8. Docker Compose (local run)
 
-- **Compose file:** `applications/openthrottle/docker-compose.yml` defines Postgres, Redis, openthrottle-server, and openthrottle-developer. Server and developer use `context: ../..` (monorepo root). The server image is built with **Dockerfile.NestJS.v3** (v2 remains available but is not used by compose).
-- **Run from repo root** so the build context resolves:
-  `docker compose -f applications/openthrottle/docker-compose.yml up --build`
-- **Required env:** Put `.env` in `applications/openthrottle/` (see that directory’s **README.md** § Docker Compose). Set `POSTGRES_HOST=openthrottle-postgres` and `REDIS_HOST=openthrottle-redis` for container-to-container access; `API_URL` in the developer app must be the URL the browser uses to reach the server (e.g. `http://localhost:3000`).
+- **Compose file:** the repo-root **`docker-compose.yml`** defines `openthrottle-postgres`, `openthrottle-redis`, `openthrottle-server` (built from `Dockerfile.NestJS.v3`), and `openthrottle-developer` (built from `Dockerfile.ReactRouter.v3`), all with `context: ./`.
+- **Run from repo root:**
+  `docker compose up --build`
+- **Required env:** populate the repo-root `.env`. For container-to-container access set `POSTGRES_HOST=openthrottle-postgres` and `REDIS_HOST=openthrottle-redis`; the server also needs `POSTGRES_PORT`/`REDIS_PORT`, `OPENTHROTTLE_SERVER_PORT`, `CORS_ORIGINS`/`CORS_CREDENTIALS`, `JWT_SECRET`; the developer needs `API_URL_INTERNAL`/`API_URL_EXTERNAL` (the URL the browser uses to reach the server, e.g. `http://localhost:3000`), the `APP_URL*` family, and `OPENTHROTTLE_DEVELOPER_PORT`.
 
-### 8.1. Verification (v3 build)
+### 8.1. Verification
 
-To confirm the openthrottle-server image builds and runs with Dockerfile.NestJS.v3:
+1. **Server image (Nx target):** `pnpm nx run openthrottle-server:docker-build` — builds `openthrottle-server:local` from `Dockerfile.NestJS.v3`. Pass `PNPM_VERSION` via the target (defaulted to `10.33.4`); pnpm@9/@11 placeholders will fail.
+2. **Developer image (Nx target):** `pnpm nx run openthrottle-developer:docker-build` — builds `openthrottle-developer:local` from `Dockerfile.ReactRouter.v3`.
+3. **Full stack:** from the repo root, `docker compose up --build` brings up postgres + redis + server + developer. Expect the server `/health` to return `200 {"api":"ok","database":"ok","redis":"ok","websocket":"ok"}` and the developer to serve `/`.
 
-1. **Docker Compose (from repo root):**
-   `docker compose -f applications/openthrottle/docker-compose.yml up openthrottle-server --build`
-   Ensure the build completes without errors. Dockerfile.NestJS.v3 uses `PNPM_VERSION=9` by default; if your `.env` sets `PNPM_VERSION=11`, either remove it or set `PNPM_VERSION=9` for v3 (pnpm@11 does not exist and will cause a build failure).
-
-2. **Nx docker-build (alternative):**
-   `nx run openthrottle-server:docker-build`
-   builds the server image with the same Dockerfile from the repo root. You can then run compose without `--build` for the server, or use the built image tag as needed.
-
-3. **Full stack (optional):**
-   `docker compose -f applications/openthrottle/docker-compose.yml up --build`
-   builds and runs openthrottle-server and openthrottle-developer together for full stack verification.
+> The production trees were independently proven complete via `pnpm --filter <app> --prod deploy /tmp/pruned-<app> --legacy` + boot test (server `/health`=200; developer serves via `react-router-serve`) — see plan `b5a36ccf-f4a6-4cd9-bbd3-6e2b41fa6923` Task `79d837be`.
 
 ### 8.2. Local push to Artifact Registry (same names as CI)
 
@@ -165,6 +150,7 @@ Pushing images built on a developer machine must use the **same registry prefix 
 ## 9. References
 
 - Current run/build and existing Docker usage: [run-build-and-docker-current-state.md](./run-build-and-docker-current-state.md).
-- Root templates: `Dockerfile.NestJS`, `Dockerfile.ReactRouter` (repo root).
+- Canonical Dockerfiles: `Dockerfile.NestJS.v3`, `Dockerfile.ReactRouter.v3` (repo root).
+- Strict per-app deploy follow-up: plan `cd59757e-23db-4cd1-ad66-a89c49c66376`.
 - Registry / gcloud: [Google-Cloud.md](../monorepo/Google-Cloud.md).
 - Infra (E2, no images yet): `infra/applications/openthrottle/main.tf`.

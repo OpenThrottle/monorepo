@@ -44,6 +44,25 @@ export interface RalphNestedRunTuningInput {
 }
 
 /**
+ * @description Normalizes legacy uppercase debug values (e.g. persisted `DEBUG` / `VERBOSE`)
+ * to the canonical lowercase {@link WorkflowConfigDebug} union so argv and merge output stay consistent.
+ */
+const normalizeWorkflowConfigDebug = (
+  debug: WorkflowConfigDebug | undefined,
+): WorkflowConfigDebug | undefined => {
+  if (debug === undefined) {
+    return undefined;
+  }
+
+  const lowered = String(debug).toLowerCase();
+  if (lowered === 'debug' || lowered === 'omit' || lowered === 'verbose') {
+    return lowered;
+  }
+
+  return debug;
+};
+
+/**
  * @description Returns argv segments after `--plan <uuid>` (or `--task`) for nested workflow-ralph invocations.
  */
 export const buildWorkflowRalphRunTuningArgv = (
@@ -98,7 +117,7 @@ export const buildWorkflowRalphRunTuningArgv = (
     );
   }
 
-  switch (input.debug) {
+  switch (normalizeWorkflowConfigDebug(input.debug)) {
     case 'debug':
       ralphArgs.push('--debug');
       break;
@@ -142,7 +161,7 @@ export const mergeRalphNestedRunTuningWithExecutionBackend = (
 
   const hasBackend = base.backend != null;
   const backend = hasBackend ? base.backend : (executionBackend ?? 'cursor');
-  const debug = base.debug;
+  const debug = normalizeWorkflowConfigDebug(base.debug);
 
   return {
     ...base,

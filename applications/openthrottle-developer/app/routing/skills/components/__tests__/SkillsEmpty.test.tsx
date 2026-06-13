@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { cleanup, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsEmpty } from '../SkillsEmpty';
 import type { SkillsEmptyProps } from '../SkillsEmpty';
 
@@ -13,13 +13,12 @@ describe('SkillsEmpty Component', () => {
   });
 
   test('when there is no search shows empty list copy and link to create', () => {
-    const Component = () => <SkillsEmpty {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    renderRoutesStub(<SkillsEmpty {...props} />);
 
-    expect(screen.getByText('No skills yet')).toBeInTheDocument();
     expect(
-      screen.getByText('Create your first skill to get started.'),
+      screen.getByText(
+        'No skills found, create your first skill to get started.',
+      ),
     ).toBeInTheDocument();
     const link = screen.getByRole('link', { name: 'New skill' });
     expect(link).toHaveAttribute('href', '/skills/create');
@@ -32,15 +31,12 @@ describe('SkillsEmpty Component', () => {
     });
 
     test('shows filtered-empty copy and link to clear filters', () => {
-      const Component = () => <SkillsEmpty {...props} />;
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      render(<RoutesStub />);
+      renderRoutesStub(<SkillsEmpty {...props} />);
 
       expect(
-        screen.getByText('No skills match your filters'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('Try clearing the search to see all skills.'),
+        screen.getByText(
+          'No skills found, try clearing the search to see all skills.',
+        ),
       ).toBeInTheDocument();
       const link = screen.getByRole('link', { name: 'Clear filters' });
       expect(link).toHaveAttribute('href', '/skills');

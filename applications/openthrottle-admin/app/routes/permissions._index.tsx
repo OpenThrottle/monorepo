@@ -8,7 +8,7 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GetPermissionsDocument } from '~/__generated__/testing';
+import { GetPermissionsDocument } from '~/__generated__/graphql';
 import { KeyRoundIcon } from 'lucide-react';
 import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
 import { SITE_TITLE } from '~/global/config/settings';

@@ -165,6 +165,21 @@ const normalizeOptionalString = (
   return t;
 };
 
+/**
+ * Normalizes a raw Ralph debug shim level to a nested `debug` value, lowercasing
+ * legacy uppercase inputs. Returns `undefined` for anything that is not a known
+ * non-`omit` level (so unknown or `omit` values are dropped from job payloads).
+ */
+const normalizeNestedDebug = (
+  value: string | null | undefined,
+): Extract<WorkflowConfigDebug, 'debug' | 'verbose'> | undefined => {
+  if (value == null) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'debug') return 'debug';
+  if (normalized === 'verbose') return 'verbose';
+  return undefined;
+};
+
 type ChildJobRalphTuning = Pick<
   ChildJobInput,
   | 'backend'
@@ -187,7 +202,7 @@ export const ralphTuningForChildJob = (
   r: RalphNestedRunTuningInput | undefined,
 ): ChildJobRalphTuning => {
   if (!r) return {};
-  const ralphDebugCli = r.debug;
+  const ralphDebugCli = normalizeNestedDebug(r.debug);
 
   return {
     ...(r.backend != null ? { backend: r.backend } : {}),
@@ -257,8 +272,7 @@ export const parseEnqueueRalphTuning = (
   const worktree = normalizeOptionalString(input.worktree);
   const worktreeBase = normalizeOptionalString(input.worktreeBase);
 
-  // FIXME: we can fix this up
-  const ralphDebugCli = input.ralphDebugCli as WorkflowConfigDebug;
+  const ralphDebugCli = normalizeNestedDebug(input.ralphDebugCli);
 
   const tuning: RalphNestedRunTuningInput = {
     ...(backendRaw !== undefined
@@ -272,9 +286,7 @@ export const parseEnqueueRalphTuning = (
     ...(project !== undefined ? { project } : {}),
     ...(prompt !== undefined ? { prompt } : {}),
     ...(promptFile !== undefined ? { promptFile } : {}),
-    ...(ralphDebugCli !== undefined && ralphDebugCli !== 'omit'
-      ? { debug: ralphDebugCli }
-      : {}),
+    ...(ralphDebugCli !== undefined ? { debug: ralphDebugCli } : {}),
     ...(worktree !== undefined ? { worktree } : {}),
     ...(worktreeBase !== undefined ? { worktreeBase } : {}),
     ...(input.skipWorktreeSetup === true ? { skipWorktreeSetup: true } : {}),

@@ -4,7 +4,7 @@ React components and hooks for displaying **server process metrics** (current sn
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/react-router-profiling": "workspace:*"` (and `@openthrottle/react-router-shadcn` as needed) to the app’s `package.json`, then run `pnpm install` from the repository root.
+**In this monorepo:** add `"@openthrottle/react-router-profiling": "workspace:^"` (and `@openthrottle/react-router-shadcn` as needed) to the app’s `package.json`, then run `pnpm install` from the repository root.
 
 > [!Tip]
 > This package is **private** to the workspace and is not published to a public registry.

@@ -24,9 +24,7 @@ describe('SettingsSupportBundle Component', () => {
   test('renders support bundle copy and action buttons', () => {
     renderRoutesStub(<SettingsSupportBundle />);
 
-    expect(
-      screen.getByRole('heading', { name: 'Support bundle' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Support bundle')).toBeInTheDocument();
     expect(screen.getByText(/sanitized/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Copy bundle JSON' }),

@@ -80,11 +80,12 @@ describe('routes/plans.$planId.tsx', () => {
 
     expect(component.getByText('Test Plan')).toBeInTheDocument();
     expect(component.getByText('In Progress')).toBeInTheDocument();
-    expect(component.getAllByText('Plan description').length).toBeGreaterThan(
-      0,
-    );
+    // MarkdownRenderer compiles the description asynchronously, so await it.
+    expect(
+      (await component.findAllByText('Plan description')).length,
+    ).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole('tab', { name: 'Tasks' }));
+    await user.click(screen.getByRole('tab', { name: /Tasks/ }));
 
     const paramsAfterTasks = new URLSearchParams(
       screen.getByTestId('plan-detail-search-params').textContent ?? '',
@@ -117,11 +118,9 @@ describe('routes/plans.$planId.tsx', () => {
     const component = render(<RoutesStub initialEntries={['/?view=table']} />);
     expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'Tasks' }));
+    await user.click(screen.getByRole('tab', { name: /Tasks/ }));
 
-    expect(
-      component.getByRole('heading', { name: 'No plans yet' }),
-    ).toBeInTheDocument();
+    expect(component.getByText('No plans yet')).toBeInTheDocument();
     expect(
       component.getByText('Create your first plan to get started.'),
     ).toBeInTheDocument();
@@ -178,7 +177,7 @@ describe('routes/plans.$planId.tsx', () => {
       />,
     );
 
-    const tasksTab = screen.getByRole('tab', { name: 'Tasks' });
+    const tasksTab = screen.getByRole('tab', { name: /Tasks/ });
     expect(tasksTab).toHaveAttribute('data-state', 'active');
 
     await user.click(screen.getByRole('tab', { name: 'Details' }));

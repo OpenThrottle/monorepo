@@ -10,10 +10,7 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
-import {
-  artwork,
-  OPEN_THROTTLE_BUCKET,
-} from '@openthrottle/react-router-utils';
+import { artwork, OPENTHROTTLE_BUCKET } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
@@ -82,7 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const env = data?.env ?? {};
   const html = `window.env = ${JSON.stringify(env)}`;
 
-  const favicon = `${OPEN_THROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
+  const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/red/favicon.ico`;
   const manifest = `/manifest.json`;
 
   const isProduction = process.env.NODE_ENV === 'production';
