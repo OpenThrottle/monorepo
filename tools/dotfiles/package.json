@@ -1,6 +1,6 @@
 {
   "name": "@tools/dotfiles",
-  "description": "Shared ESLint, Vite, and Vitest configuration for the monorepo.",
+  "description": "Shared ESLint, Prettier, Vite, and Vitest configuration for the monorepo.",
   "version": "3.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -25,6 +25,8 @@
     "eslint-plugin-simple-import-sort": "catalog:",
     "eslint-plugin-sort-keys-fix": "catalog:",
     "eslint-plugin-typescript-sort-keys": "catalog:",
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:",
     "typescript-eslint": "catalog:"
   },
   "main": "./dist/src/index.js",
@@ -41,6 +43,12 @@
       "import": "./dist/src/config.js",
       "require": "./dist/src/config.js",
       "default": "./dist/src/config.js"
+    },
+    "./prettier-config": {
+      "types": "./src/prettier-config.ts",
+      "import": "./dist/src/prettier-config.js",
+      "require": "./dist/src/prettier-config.js",
+      "default": "./dist/src/prettier-config.js"
     },
     "./vite-config": {
       "types": "./src/vite-config.ts",
