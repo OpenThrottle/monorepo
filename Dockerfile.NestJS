@@ -95,9 +95,24 @@ FROM builder AS development
 ENV NODE_ENV="development"
 ENV NX_DAEMON="false"
 
+# procps: nx/dev-server process management spawns `ps` (pidtree) — absent from
+# bookworm-slim. git: common dev tooling shells out to it.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends git procps \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY . .
 
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Workspace packages/tools resolve from their dist/ outputs, which only the
+# production `build` stage produces — build them once here so the dev server
+# starts clean; the dev target's ^dev watchers keep them fresh afterwards.
+# No GCS credentials in this stage: force the remote cache off. NODE_ENV=production
+# for this command only — the codegen-graphql configs read the committed schema.gql
+# but hard-require API_URL_INTERNAL (a live server) when NODE_ENV=development.
+RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
+  pnpm dlx nx@${NX_VERSION} run-many --target build --projects tag:type:package,tag:type:tool
 
 CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 

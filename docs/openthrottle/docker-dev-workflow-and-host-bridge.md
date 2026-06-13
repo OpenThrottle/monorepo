@@ -36,23 +36,25 @@ The override-file pattern (`docker compose -f docker-compose.yml -f docker-compo
 
 - **Drift.** The root compose already carries a large shared env contract (`x-common`, `x-developer`, `x-server` fragments). An override file either duplicates those anchors (YAML anchors don't cross files) or mutates services in ways that are invisible when reading one file. Profiles keep one file, one set of anchors, one diff surface.
 - **Invocation errors.** `-f` juggling is order-sensitive and easy to get wrong; `--profile dev` is one flag and `COMPOSE_PROFILES=dev` makes it sticky.
-- **Our prod path is already verified on the root file.** Profiles are purely additive: services without a `profiles:` key keep starting by default, so `docker compose up --build` is byte-for-byte unaffected.
+- **Our prod path is already verified on the root file.** With `COMPOSE_PROFILES="prod"` defaulted in `.env`, `docker compose up --build` behaves exactly as today.
 
 Shape (root `docker-compose.yml`):
 
 - `postgres`, `redis` — **no profile** (shared by all modes; both prod and dev services depend on them).
-- `server`, `developer` — **no profile** (production parity, unchanged).
+- `server`, `developer` — `profiles: [prod]`, enabled by default via `COMPOSE_PROFILES="prod"` in `.env` (from `.env.default`).
 - `server-dev`, `developer-dev` — `profiles: [dev]`, `build.target: development`, `restart: 'no'`, `develop.watch`, debug ports.
+
+Profile-less services are _always_ enabled by compose, so the prod services must carry a profile too — otherwise `--profile dev` would start both modes onto the same published ports. The `--profile` flag (or `COMPOSE_PROFILES` in the invoking shell) overrides the `.env` default, which keeps the two modes mutually exclusive; the dev services reuse `${OPENTHROTTLE_SERVER_PORT}` / `${OPENTHROTTLE_DEVELOPER_PORT}` so the browser/MCP contract is identical in both modes.
 
 Commands:
 
 ```bash
-docker compose up --build                  # production parity (unchanged)
+docker compose up --build                  # production parity (COMPOSE_PROFILES=prod from .env)
 docker compose --profile dev watch         # dev mode: build dev images, start, watch + sync
 docker compose --profile dev up --build    # dev mode without file watching
 ```
 
-Note: prod `server`/`developer` and dev `server-dev`/`developer-dev` are distinct services and must not be started at the same time on the same ports — the dev services reuse `${OPENTHROTTLE_SERVER_PORT}` / `${OPENTHROTTLE_DEVELOPER_PORT}` so the browser/MCP contract is identical in both modes. Starting `--profile dev` alongside the default services is a port-conflict user error; document it, don't engineer around it.
+Migration note: existing `.env` files (gitignored) need the new `COMPOSE_PROFILES="prod"` line from `.env.default`, or `docker compose up` will start only postgres/redis.
 
 ## 3. Dockerfile `development` targets
 

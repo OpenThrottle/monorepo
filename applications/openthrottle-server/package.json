@@ -57,6 +57,17 @@
           "^dev"
         ]
       },
+      "dev-debug": {
+        "continuous": true,
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "nest start --path {projectRoot}/tsconfig.app.json --debug 0.0.0.0:9229 --watch"
+        },
+        "dependsOn": [
+          "^dev"
+        ],
+        "description": "dev with the Node inspector bound to 0.0.0.0:9229 (used by the compose dev profile so a host debugger can attach; --debug flags only the Nest app process, unlike NODE_OPTIONS)."
+      },
       "lint": {
         "options": {
           "command": "pnpm exec eslint -c ./eslint.config.mts .",
