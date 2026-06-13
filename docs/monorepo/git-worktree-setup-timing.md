@@ -7,6 +7,10 @@ This doc compares two Cursor worktree setups from `.cursor/worktrees.json`:
 
 Timings are **machine-specific** (disk, pnpm store warmth, Nx Cloud cache).
 
+> `setup_worktree.sh` also offsets the worktree's app ports onto a `7000`-range
+> block so its dev servers don't collide with the main checkout — see
+> [worktree-port-allocation.md](worktree-port-allocation.md).
+
 ---
 
 ## Baseline: copy `node_modules` + `scripts/setup.sh`
