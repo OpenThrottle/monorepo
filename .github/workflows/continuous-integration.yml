@@ -108,14 +108,13 @@ jobs:
 
       - name: '🧩 Codegen Tasks'
         run: |
+          pnpm dlx nx@${{ env.NX_VERSION }} run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
           pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
           pnpm dlx nx@${{ env.NX_VERSION }} affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
-        # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
-        # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=test --parallel ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
