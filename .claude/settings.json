@@ -9,6 +9,10 @@
       "mcp__openthrottle-mcp__create_plan",
       "mcp__openthrottle-mcp__create_task",
       "mcp__openthrottle-mcp__create_tasks",
+      "mcp__openthrottle-mcp__delete_note",
+      "mcp__openthrottle-mcp__delete_plan",
+      "mcp__openthrottle-mcp__delete_project",
+      "mcp__openthrottle-mcp__delete_task",
       "mcp__openthrottle-mcp__get_activity_by_date",
       "mcp__openthrottle-mcp__get_document",
       "mcp__openthrottle-mcp__get_last_activity",
@@ -28,15 +32,19 @@
       "mcp__openthrottle-mcp__semantic_search",
       "mcp__openthrottle-mcp__update_note",
       "mcp__openthrottle-mcp__update_plan",
-      "mcp__openthrottle-mcp__update_task"
+      "mcp__openthrottle-mcp__update_task",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh issue *)",
+      "Bash(pnpm nx *)"
     ],
     "additionalDirectories": [],
-    "ask": [
-      "mcp__openthrottle-mcp__delete_note",
-      "mcp__openthrottle-mcp__delete_plan",
-      "mcp__openthrottle-mcp__delete_project",
-      "mcp__openthrottle-mcp__delete_task"
-    ],
+    "ask": [],
     "deny": []
   },
   "enabledMcpjsonServers": [],
