@@ -26,7 +26,7 @@ export const SheetDescription = React.forwardRef<
 
   return (
     <SheetPrimitive.Description
-      className={cn('text-sm text-muted-foreground', className)}
+      className={cn('text-muted-foreground text-sm', className)}
       ref={ref}
       {...rest}
     />

@@ -54,7 +54,7 @@ export const UsageSnapshot = (
   // 🔌 Short Circuit
 
   return (
-    <Card className="border-dashed bg-muted/15">
+    <Card className="bg-muted/15 border-dashed">
       <CardHeader>
         <CardTitle className="text-base">Export coarse usage data</CardTitle>
         <CardDescription>

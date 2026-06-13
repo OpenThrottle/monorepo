@@ -56,15 +56,15 @@ export const PlanTasksColumn = (
       role="region"
     >
       <Card className="flex max-h-[min(70vh,560px)] min-h-[200px] flex-col overflow-hidden">
-        <CardHeader className="shrink-0 space-y-0 pb-2 pt-3">
+        <CardHeader className="shrink-0 space-y-0 pt-3 pb-2">
           <h3
-            className="text-sm font-semibold leading-none tracking-tight"
+            className="text-sm leading-none font-semibold tracking-tight"
             id={headingId}
           >
             {title}
           </h3>
         </CardHeader>
-        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3 pt-0">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pt-0 pb-3">
           {isEmpty ? (
             <p className="text-muted-foreground py-6 text-center text-sm">
               {emptyLabel}

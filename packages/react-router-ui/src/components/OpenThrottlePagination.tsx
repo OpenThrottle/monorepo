@@ -103,7 +103,7 @@ export const OpenThrottlePagination = (
 
   return (
     <div className={className}>
-      <p className="text-sm text-muted-foreground text-center my-4">
+      <p className="text-muted-foreground my-4 text-center text-sm">
         Showing {startItem}-{endItem} of {total} {resultLabel}
       </p>
 

@@ -62,10 +62,10 @@ export const SettingsEnvironment = (
             <tbody>
               {Object.entries(envSnapshot).map(([key, value]) => (
                 <tr className="border-t" key={key}>
-                  <td className="align-top p-2 font-mono text-muted-foreground">
+                  <td className="text-muted-foreground p-2 align-top font-mono">
                     {key}
                   </td>
-                  <td className="break-all p-2 font-mono">{value}</td>
+                  <td className="p-2 font-mono break-all">{value}</td>
                 </tr>
               ))}
             </tbody>

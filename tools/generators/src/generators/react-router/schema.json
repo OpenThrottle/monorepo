@@ -42,9 +42,7 @@
     {
       "description": "Allow invocation without subGenerator (e.g. to support CLI-driven prompting).",
       "not": {
-        "required": [
-          "subGenerator"
-        ]
+        "required": ["subGenerator"]
       }
     },
     {
@@ -53,14 +51,10 @@
           "const": true
         }
       },
-      "required": [
-        "describe"
-      ]
+      "required": ["describe"]
     },
     {
-      "required": [
-        "list"
-      ]
+      "required": ["list"]
     },
     {
       "properties": {
@@ -68,10 +62,7 @@
           "const": "application"
         }
       },
-      "required": [
-        "subGenerator",
-        "name"
-      ]
+      "required": ["subGenerator", "name"]
     },
     {
       "properties": {
@@ -79,12 +70,7 @@
           "const": "component"
         }
       },
-      "required": [
-        "subGenerator",
-        "application",
-        "folder",
-        "name"
-      ]
+      "required": ["subGenerator", "application", "folder", "name"]
     },
     {
       "properties": {
@@ -92,12 +78,7 @@
           "const": "form"
         }
       },
-      "required": [
-        "subGenerator",
-        "application",
-        "folder",
-        "name"
-      ]
+      "required": ["subGenerator", "application", "folder", "name"]
     },
     {
       "properties": {
@@ -105,12 +86,7 @@
           "const": "modal"
         }
       },
-      "required": [
-        "subGenerator",
-        "application",
-        "folder",
-        "name"
-      ]
+      "required": ["subGenerator", "application", "folder", "name"]
     },
     {
       "properties": {
@@ -118,11 +94,7 @@
           "const": "route"
         }
       },
-      "required": [
-        "subGenerator",
-        "application",
-        "name"
-      ]
+      "required": ["subGenerator", "application", "name"]
     },
     {
       "properties": {
@@ -130,12 +102,7 @@
           "const": "table"
         }
       },
-      "required": [
-        "subGenerator",
-        "application",
-        "folder",
-        "name"
-      ]
+      "required": ["subGenerator", "application", "folder", "name"]
     }
   ]
 }

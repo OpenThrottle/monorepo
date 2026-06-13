@@ -152,7 +152,7 @@ export default function Component(
             <CardContent className="space-y-4">
               {project.description != null && project.description !== '' && (
                 <>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {project.description}
                   </p>
                   <Separator />

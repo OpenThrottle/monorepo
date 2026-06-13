@@ -38,7 +38,7 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
         data-testid="NoteForm"
         method="post"
       >
-        <div className="space-y-4 w-full">
+        <div className="w-full space-y-4">
           <div>
             <Label htmlFor="content">Content</Label>
             <TextArea

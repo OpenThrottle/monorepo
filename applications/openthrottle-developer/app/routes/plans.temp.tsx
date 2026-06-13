@@ -58,9 +58,9 @@ export default function Component(
         links={[{ children: 'Plans', to: '/plans' }]}
       />
 
-      <div className="max-w-3xl mx-auto">
+      <div className="mx-auto max-w-3xl">
         <Form
-          className="flex flex-col gap-4 bg-accent-foreground"
+          className="bg-accent-foreground flex flex-col gap-4"
           method="post"
           // onSubmit={handleSubmit}
         >

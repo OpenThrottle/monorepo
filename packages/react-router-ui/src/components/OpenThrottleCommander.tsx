@@ -162,7 +162,7 @@ export const OpenThrottleCommander = (
       translate="no"
     >
       <CommandInput
-        className="p-4 flex-1 leading-none text-sm! pb-4 border-b! border-border!"
+        className="border-border! flex-1 border-b! p-4 pb-4 text-sm! leading-none"
         onValueChange={setSearch}
         placeholder={placeholder}
         value={search}
@@ -172,7 +172,7 @@ export const OpenThrottleCommander = (
         {groups.map((group, groupIndex) => (
           <React.Fragment key={group.heading}>
             {groupIndex > 0 ? (
-              <CommandSeparator className="px-4! my-4" />
+              <CommandSeparator className="my-4 px-4!" />
             ) : null}
             <CommandGroup
               className="visormatt-testing m-0! p-0!"
@@ -180,7 +180,7 @@ export const OpenThrottleCommander = (
             >
               {group.items.map((item) => (
                 <CommandItem
-                  className="rounded-none! p-2! px-4! m-0! h-auto!"
+                  className="m-0! h-auto! rounded-none! p-2! px-4!"
                   key={item.id}
                   onSelect={() => handleSelect(item)}
                   value={item.value ?? item.id}
@@ -245,29 +245,29 @@ export const OpenThrottleCommander = (
         )}
       </CommandList>
 
-      <div className="text-[10px] px-2 py-2 border-t border-border text-muted-foreground gap-4 flex justify-between items-center">
+      <div className="border-border text-muted-foreground flex items-center justify-between gap-4 border-t px-2 py-2 text-[10px]">
         {footerHint ? (
-          <span className="text-left max-w-[min(100%,18rem)] leading-snug line-clamp-2">
+          <span className="line-clamp-2 max-w-[min(100%,18rem)] text-left leading-snug">
             {footerHint}
           </span>
         ) : (
           <span />
         )}
-        <div className="gap-4 flex justify-end items-center shrink-0">
-          <div className="gap-1.5 flex items-center">
-            <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+        <div className="flex shrink-0 items-center justify-end gap-4">
+          <div className="flex items-center gap-1.5">
+            <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">
               ↑↓
             </CommandShortcut>
             <span className="font-regular">navigate</span>
           </div>
-          <div className="gap-1.5 flex items-center">
-            <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+          <div className="flex items-center gap-1.5">
+            <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">
               ↵
             </CommandShortcut>
             <span className="font-regular">select</span>
           </div>
-          <div className="gap-1.5 flex items-center">
-            <CommandShortcut className="w-auto whitespace-nowrap border border-muted-foreground items-center flex text-[8px]! ">
+          <div className="flex items-center gap-1.5">
+            <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">
               esc
             </CommandShortcut>
             <span className="font-regular">close</span>

@@ -73,9 +73,7 @@ export const buildPlanRunConfigSnapshot = (
 
   const hooks = input.jobRunHooks;
   const hasHooks =
-    hooks != null &&
-    Array.isArray(hooks.hooks) &&
-    hooks.hooks.length > 0;
+    hooks != null && Array.isArray(hooks.hooks) && hooks.hooks.length > 0;
 
   return {
     ...(hasHooks ? { jobRunHooks: hooks } : {}),

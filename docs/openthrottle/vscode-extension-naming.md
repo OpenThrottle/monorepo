@@ -20,12 +20,12 @@ The VSCode extension needs:
 
 ## 2. Extension ID options
 
-| Option | Extension ID | Pros | Cons / notes |
-|--------|----------------|------|----------------------|
-| **A. openthrottle.openthrottle** | `openthrottle.openthrottle` | Matches brand exactly; one word repeated (common pattern, e.g. `ms-vscode.vscode`). | Redundant; some tooling shortens to "openthrottle" in UI. |
-| **B. openthrottle.vscode** | `openthrottle.vscode` | Clearly "the OpenThrottle VS Code extension"; aligns with possible npm package `@openthrottle/vscode`. | "vscode" is generic; other editors (Cursor) also use VS Code extension host. |
-| **C. openthrottle.extension** | `openthrottle.extension` | Generic "extension" suffix. | Less specific than "vscode"; "extension" is very generic. |
-| **D. OpenThrottle.openthrottle** | N/A (Marketplace IDs are lowercase) | — | Publisher and name are normalized to lowercase; use `openthrottle.openthrottle` or `openthrottle.vscode`. |
+| Option                           | Extension ID                        | Pros                                                                                                   | Cons / notes                                                                                              |
+| -------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| **A. openthrottle.openthrottle** | `openthrottle.openthrottle`         | Matches brand exactly; one word repeated (common pattern, e.g. `ms-vscode.vscode`).                    | Redundant; some tooling shortens to "openthrottle" in UI.                                                 |
+| **B. openthrottle.vscode**       | `openthrottle.vscode`               | Clearly "the OpenThrottle VS Code extension"; aligns with possible npm package `@openthrottle/vscode`. | "vscode" is generic; other editors (Cursor) also use VS Code extension host.                              |
+| **C. openthrottle.extension**    | `openthrottle.extension`            | Generic "extension" suffix.                                                                            | Less specific than "vscode"; "extension" is very generic.                                                 |
+| **D. OpenThrottle.openthrottle** | N/A (Marketplace IDs are lowercase) | —                                                                                                      | Publisher and name are normalized to lowercase; use `openthrottle.openthrottle` or `openthrottle.vscode`. |
 
 **Note:** Marketplace extension IDs are case-insensitive and stored lowercase. Publisher must be registered (e.g. create publisher `openthrottle` on the Marketplace) before first publish.
 
@@ -33,12 +33,12 @@ The VSCode extension needs:
 
 ## 3. Display name options
 
-| Option | Display name | Pros | Cons / notes |
-|--------|--------------|------|----------------------|
-| **A. OpenThrottle** | OpenThrottle | Short; matches brand; consistent with "OpenThrottle API", "OpenThrottle Developer Portal". | In Extensions view, "OpenThrottle" alone may be ambiguous (e.g. other products could use similar names). |
-| **B. OpenThrottle for VS Code** | OpenThrottle for VS Code | Explicit "for VS Code"; good for Marketplace search and clarity. | Slightly longer; Cursor also runs VS Code extensions, so "for VS Code" is still accurate. |
-| **C. OpenThrottle for Cursor** | OpenThrottle for Cursor | If primary audience is Cursor users. | Narrows to one editor; extension runs in any VS Code–compatible host (VS Code, Cursor, etc.). |
-| **D. OpenThrottle – Plans & Tasks** | OpenThrottle – Plans & Tasks | Describes function (plans/tasks). | Longer; function may change over time; other docs use "OpenThrottle" + product (API, Portal). |
+| Option                              | Display name                 | Pros                                                                                       | Cons / notes                                                                                             |
+| ----------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **A. OpenThrottle**                 | OpenThrottle                 | Short; matches brand; consistent with "OpenThrottle API", "OpenThrottle Developer Portal". | In Extensions view, "OpenThrottle" alone may be ambiguous (e.g. other products could use similar names). |
+| **B. OpenThrottle for VS Code**     | OpenThrottle for VS Code     | Explicit "for VS Code"; good for Marketplace search and clarity.                           | Slightly longer; Cursor also runs VS Code extensions, so "for VS Code" is still accurate.                |
+| **C. OpenThrottle for Cursor**      | OpenThrottle for Cursor      | If primary audience is Cursor users.                                                       | Narrows to one editor; extension runs in any VS Code–compatible host (VS Code, Cursor, etc.).            |
+| **D. OpenThrottle – Plans & Tasks** | OpenThrottle – Plans & Tasks | Describes function (plans/tasks).                                                          | Longer; function may change over time; other docs use "OpenThrottle" + product (API, Portal).            |
 
 ---
 

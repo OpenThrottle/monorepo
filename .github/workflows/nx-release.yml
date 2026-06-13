@@ -1,16 +1,16 @@
-name: "🚀 NX Release"
+name: '🚀 NX Release'
 on:
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
-      - "docs/**"
-      - "**/*.md"
+      - 'docs/**'
+      - '**/*.md'
   push:
     branches:
       - main
     paths-ignore:
-      - "docs/**"
-      - "**/*.md"
+      - 'docs/**'
+      - '**/*.md'
 
 concurrency:
   cancel-in-progress: true
@@ -39,34 +39,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: "📦 Checkout the code"
+      - name: '📦 Checkout the code'
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
 
       # Inject the dynamic bucket name directly into nx.json
       # Security: By using Strategy 2, you maintain the "Two-Bucket" security model which is the only way to protect your production cache from CREEP (CVE-2025-36852) when using bucket-based remote caching.
-      - name: "🪣 NX Setup Cache"
+      - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
 
-      - name: "🌥️ Google Cloud Provider (GCP)"
+      - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud
         with:
           branch: ${{ env.BRANCH_NAME }}
           credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
-      - name: "🤖 Node Setup"
+      - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
-      - name: "🐙 Setup Git"
+      - name: '🐙 Setup Git'
         run: |
           git config user.email "matthew.scholta@gmail.com"
           git config user.name "visormatt"
 
-      - name: "🔍 Print Environment Info"
+      - name: '🔍 Print Environment Info'
         run: pnpm dlx nx@${{ env.NX_VERSION }} report
 
-      - name: "🚀 Release"
+      - name: '🚀 Release'
         run: pnpm dlx nx@${{ env.NX_VERSION }} release ${{ env.RELEASE_DRY_RUN }} ${{ env.RELEASE_PUBLISH }}

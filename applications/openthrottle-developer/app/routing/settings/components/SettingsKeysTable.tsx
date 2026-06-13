@@ -162,7 +162,7 @@ const SettingsKeysRevokeCell = (
 
   // 🔌 Short Circuit
   if (status !== 'active') {
-    return <span className="px-3 py-2 text-xs text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground px-3 py-2 text-xs">—</span>;
   }
 
   return (
@@ -252,7 +252,7 @@ export const SettingsKeysTable = (
         data-testid="SettingsKeysTable"
       >
         <p
-          className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
           data-testid="SettingsKeysTable-action-error"
           role="alert"
         >
@@ -270,14 +270,14 @@ export const SettingsKeysTable = (
     >
       {actionError ? (
         <p
-          className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
           data-testid="SettingsKeysTable-action-error"
           role="alert"
         >
           {actionError}
         </p>
       ) : null}
-      <div className="border ui-border rounded-lg">
+      <div className="ui-border rounded-lg border">
         <DataTable<ServiceAccountCredentialFieldsFragment, string | null>
           columns={columns}
           data={[...credentials]}
@@ -303,7 +303,7 @@ SettingsKeysTable.buildTable = (
           <div className="min-w-0 px-3 py-2">
             <p className="text-sm font-medium">{name}</p>
             {credential.label?.trim() ? (
-              <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 font-mono text-xs">
                 {credential.prefix}
               </p>
             ) : null}
@@ -326,7 +326,7 @@ SettingsKeysTable.buildTable = (
     {
       accessorKey: 'createdAt',
       cell: ({ row }) => (
-        <span className="px-3 py-2 text-sm tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground px-3 py-2 text-sm tabular-nums">
           {formatCredentialTimestamp(row.original.createdAt)}
         </span>
       ),
@@ -338,7 +338,7 @@ SettingsKeysTable.buildTable = (
     {
       accessorKey: 'expiresAt',
       cell: ({ row }) => (
-        <span className="px-3 py-2 text-sm tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground px-3 py-2 text-sm tabular-nums">
           {formatCredentialTimestamp(row.original.expiresAt)}
         </span>
       ),
@@ -350,7 +350,7 @@ SettingsKeysTable.buildTable = (
     {
       accessorKey: 'lastUsedAt',
       cell: ({ row }) => (
-        <span className="px-3 py-2 text-sm tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground px-3 py-2 text-sm tabular-nums">
           {formatCredentialTimestamp(row.original.lastUsedAt)}
         </span>
       ),

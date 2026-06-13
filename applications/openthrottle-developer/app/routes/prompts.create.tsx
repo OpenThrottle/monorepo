@@ -134,13 +134,13 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen className="flex flex-col gap-4 md:gap-8 lg:gap-12 max-w-5xl-- h-full w-full">
+    <GlobalScreen className="max-w-5xl-- flex h-full w-full flex-col gap-4 md:gap-8 lg:gap-12">
       <div
       // className="h-full flex flex-col items-center justify-between p-4 border-b border-gray-700 bg-gray-900"
       >
         <div className="flex items-center gap-4 p-4">
           <a
-            className="text-sm text-gray-400 hover:text-white transition-colors"
+            className="text-sm text-gray-400 transition-colors hover:text-white"
             href={PROMPTS_BASE_PATH}
           >
             ← Back to prompts
@@ -161,8 +161,8 @@ export default function Component(
         </div>
 
         {/* Form fields */}
-        <div className="p-4 bg-gray-800/50 border-b border-gray-700 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-4 border-b border-gray-700 bg-gray-800/50 p-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Title */}
             <div>
               <Label htmlFor="title">Title *</Label>
@@ -211,7 +211,7 @@ export default function Component(
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Description */}
             <div>
               <Label htmlFor="description">Description (optional)</Label>

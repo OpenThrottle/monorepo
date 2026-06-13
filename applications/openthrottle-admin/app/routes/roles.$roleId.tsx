@@ -202,7 +202,7 @@ export default function Component(
   // 🔌 Short Circuit
   if (role == null) {
     return (
-      <main className="mx-auto max-w-7xl w-full p-4 md:p-8 lg:p-12">
+      <main className="mx-auto w-full max-w-7xl p-4 md:p-8 lg:p-12">
         <p className="text-muted-foreground">Role not found.</p>
       </main>
     );

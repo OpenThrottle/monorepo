@@ -4,7 +4,9 @@ import { ProfileResponseTime } from './profile-response-time.decorator';
 
 describe('ProfileResponseTime', () => {
   it('measures and reports sync method execution time', () => {
-    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    const logSpy = vi
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     class TestClass {
       @ProfileResponseTime('sync-op')
@@ -24,7 +26,9 @@ describe('ProfileResponseTime', () => {
   });
 
   it('measures and reports async method execution time', async () => {
-    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    const logSpy = vi
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     class TestClass {
       @ProfileResponseTime('async-op')
@@ -44,7 +48,9 @@ describe('ProfileResponseTime', () => {
   });
 
   it('uses method name as tag when label is omitted', () => {
-    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    const logSpy = vi
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => {});
 
     class TestClass {
       @ProfileResponseTime()

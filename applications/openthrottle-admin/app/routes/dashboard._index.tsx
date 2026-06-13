@@ -69,7 +69,7 @@ export default function Component(
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 w-full">
+      <div className="flex w-full flex-1 flex-col gap-4">
         <section
           aria-label="Overview cards"
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -87,7 +87,7 @@ export default function Component(
               <CardDescription>Manage permission definitions</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 View and manage permission scopes used for role-based access.
               </p>
             </CardContent>
@@ -105,7 +105,7 @@ export default function Component(
               <CardDescription>Manage roles</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Create and assign roles with permissions for your organisation.
               </p>
             </CardContent>
@@ -123,7 +123,7 @@ export default function Component(
               <CardDescription>Manage users</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 View users and assign roles. Server metrics are shown below.
               </p>
             </CardContent>

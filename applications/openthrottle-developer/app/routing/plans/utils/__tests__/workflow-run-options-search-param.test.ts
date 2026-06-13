@@ -14,7 +14,10 @@ describe('workflow-run-options-search-param', () => {
 
   test('isWorkflowRunOptionsExpandedFromSearchParams is true when param is expanded sentinel', () => {
     const q = new URLSearchParams();
-    q.set(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM, WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE);
+    q.set(
+      WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
+      WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
+    );
     expect(isWorkflowRunOptionsExpandedFromSearchParams(q)).toBe(true);
   });
 

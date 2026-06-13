@@ -21,7 +21,7 @@ export const NotificationEmpty = (
 
   return (
     <div
-      className="py-6 text-center text-sm text-muted-foreground"
+      className="text-muted-foreground py-6 text-center text-sm"
       data-testid="NotificationEmpty"
     >
       No notifications

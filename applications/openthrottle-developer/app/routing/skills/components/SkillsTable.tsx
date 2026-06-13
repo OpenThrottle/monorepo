@@ -33,7 +33,7 @@ export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="SkillsTable"
     >
       <DataTable<RepoSkillEntry, SkillsTableColumnValue>

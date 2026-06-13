@@ -47,7 +47,7 @@ export const MailLayout = (props: MailLayoutProps): React.ReactElement => {
           data-testid="MailLayout"
         >
           <MailToolbar />
-          <main className="w-full flex flex-col gap-6 p-4 md:p-8 lg:p-12">
+          <main className="flex w-full flex-col gap-6 p-4 md:p-8 lg:p-12">
             {children}
           </main>
         </SidebarInset>

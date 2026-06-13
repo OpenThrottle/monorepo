@@ -92,7 +92,7 @@ export default function Component(
   if (!loaderData) {
     return (
       <GlobalScreen>
-        <p className="text-sm text-muted-foreground">Loading settings…</p>
+        <p className="text-muted-foreground text-sm">Loading settings…</p>
       </GlobalScreen>
     );
   }
@@ -106,7 +106,7 @@ export default function Component(
           icon={SwatchBookIcon}
           title="Appearance"
         />
-        <p className="mb-4 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mb-4 text-sm">
           Theme controls for this portal. Diagnostics below mirror General
           settings and help verify URLs and build metadata.
         </p>
@@ -139,7 +139,7 @@ export default function Component(
                 Dark
               </ToggleGroupItem>
             </ToggleGroup>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Default: {DEFAULT_APPEARANCE_CONFIG.theme}
             </p>
           </section>
@@ -160,7 +160,7 @@ export default function Component(
                 </Button>
               ) : null}
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {isDefaultBrand
                 ? `Using theme default (${DEFAULT_BRAND_HSL}). Pick a color to override.`
                 : `Custom brand color applied (${config.brand}).`}
@@ -169,17 +169,17 @@ export default function Component(
 
           <section className="space-y-3">
             <Collapsible>
-              <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium hover:bg-muted/50">
+              <CollapsibleTrigger className="group hover:bg-muted/50 flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium">
                 <span>CSS tokens affected by a custom brand</span>
                 <ChevronDownIcon
                   aria-hidden={true}
                   className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180"
                 />
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-3 space-y-4 text-sm text-muted-foreground">
+              <CollapsibleContent className="text-muted-foreground mt-3 space-y-4 text-sm">
                 <p>
                   A custom brand updates these{' '}
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                  <code className="bg-muted rounded px-1 py-0.5 text-xs">
                     :root
                   </code>{' '}
                   variables (injected on refresh by the app shell):
@@ -191,15 +191,15 @@ export default function Component(
                 </ul>
                 <p>
                   Tailwind{' '}
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                  <code className="bg-muted rounded px-1 py-0.5 text-xs">
                     @theme
                   </code>{' '}
                   color tokens that resolve through those variables (for example{' '}
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                  <code className="bg-muted rounded px-1 py-0.5 text-xs">
                     bg-primary
                   </code>
                   ,{' '}
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                  <code className="bg-muted rounded px-1 py-0.5 text-xs">
                     ring
                   </code>
                   , sidebar accents):

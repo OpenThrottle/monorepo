@@ -40,14 +40,14 @@ export const SettingsSupportBundle = (
   return (
     <OpenThrottleFieldset id="support-bundle" legend="Support bundle">
       <div className="flex flex-col gap-4">
-        <p className="space-y-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground space-y-2 text-sm">
           Includes sanitized <code className="text-xs">window.env</code>, page
           URL, user agent, language, and the{' '}
-          <strong className="font-medium text-foreground">full</strong> client
+          <strong className="text-foreground font-medium">full</strong> client
           log buffer (not the filtered view). Attach the file or pasted JSON to
           bug reports; omit sensitive context outside this bundle if needed.
         </p>
-        <div className="flex flex-wrap gap-2 justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button
             onClick={handleCopyBundle}
             size="sm"

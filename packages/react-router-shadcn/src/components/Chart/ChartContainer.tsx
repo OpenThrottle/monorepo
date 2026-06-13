@@ -48,7 +48,7 @@ export const ChartContainer = (
   return (
     <ChartConfigContext.Provider value={config}>
       <ResponsiveContainer
-        className={cn('w-full h-full', className)}
+        className={cn('h-full w-full', className)}
         height="100%"
         style={varStyle}
         width="100%"

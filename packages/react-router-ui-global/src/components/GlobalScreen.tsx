@@ -32,13 +32,13 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
   return (
     <>
       {beta ? (
-        <div className="px-4 md:px-8 lg:px-12 py-4 bg-accent/60 text-foreground">
-          <p className="text-sm ">
+        <div className="bg-accent/60 text-foreground px-4 py-4 md:px-8 lg:px-12">
+          <p className="text-sm">
             <span className="font-semibold">Beta:</span> This route is a beta
             feature and may not function as expected. Please report any issues
             to the{' '}
             <Link
-              className="underline underline-offset-4 hover:text-background transition-colors"
+              className="hover:text-background underline underline-offset-4 transition-colors"
               target="_blank"
               to="https://github.com/openthrottle/openthrottle/issues"
             >

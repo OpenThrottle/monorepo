@@ -45,12 +45,12 @@ export const GlobalMetricsInfoModal = (
     <GlobalModal param={MODAL_PARAM} value={MODAL_KEY}>
       <div data-testid="GlobalMetricsInfoModal">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-card-foreground">
+          <DialogTitle className="text-card-foreground text-base font-semibold">
             What you are looking at
           </DialogTitle>
-          <DialogDescription className="text-sm font-normal leading-snug text-muted-foreground">
+          <DialogDescription className="text-muted-foreground text-sm leading-snug font-normal">
             Each poll calls the{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[11px] text-foreground">
+            <code className="bg-muted text-foreground rounded px-1 py-0.5 text-[11px]">
               serverMetrics
             </code>{' '}
             field on{' '}
@@ -62,8 +62,8 @@ export const GlobalMetricsInfoModal = (
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 text-sm text-muted-foreground">
-          <p className="mb-2 text-sm font-semibold text-card-foreground">
+        <div className="text-muted-foreground mt-4 text-sm">
+          <p className="text-card-foreground mb-2 text-sm font-semibold">
             Stat cards
           </p>
           <ul className="mb-3 list-disc space-y-2 pl-4 font-normal">
@@ -74,7 +74,7 @@ export const GlobalMetricsInfoModal = (
               </li>
             ))}
           </ul>
-          <p className="mb-2 text-sm font-semibold text-card-foreground">
+          <p className="text-card-foreground mb-2 text-sm font-semibold">
             Poll &amp; chart
           </p>
           <ul className="list-disc space-y-2 pl-4 font-normal">
@@ -94,9 +94,9 @@ export const GlobalMetricsInfoModal = (
             </li>
           </ul>
           {definitionsHref ? (
-            <p className="mt-3 border-t border-border pt-3 text-xs font-normal leading-snug">
+            <p className="border-border mt-3 border-t pt-3 text-xs leading-snug font-normal">
               <a
-                className="font-medium text-primary underline underline-offset-2"
+                className="text-primary font-medium underline underline-offset-2"
                 data-testid="GlobalMetricsInfoModal-definitions-link"
                 href={definitionsHref}
               >

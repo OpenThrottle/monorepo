@@ -64,7 +64,7 @@ export const NotesTable = (props: NotesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="NotesTable"
     >
       <DataTable<NoteCardFragment, string | number | null | undefined>
@@ -90,17 +90,17 @@ NotesTable.buildTable = (): ColumnDef<
 
         return (
           <div className="overflow-hidden p-2">
-            <h2 className="mb-2 line-clamp-1 text-ellipsis text-sm font-medium">
+            <h2 className="mb-2 line-clamp-1 text-sm font-medium text-ellipsis">
               <Link
                 aria-label={`View note: ${label}`}
-                className="underline underline-offset-2 hover:text-primary"
+                className="hover:text-primary underline underline-offset-2"
                 to={noteHref}
                 viewTransition={true}
               >
                 {label}
               </Link>
             </h2>
-            <p className="line-clamp-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground line-clamp-2 text-xs">
               {note.content.trim() || '—'}
             </p>
           </div>
@@ -114,7 +114,7 @@ NotesTable.buildTable = (): ColumnDef<
         const author = row.original.author?.trim();
 
         return (
-          <div className="p-2 text-sm text-muted-foreground">
+          <div className="text-muted-foreground p-2 text-sm">
             {author ? (
               <span aria-label={`Author: ${author}`}>{author}</span>
             ) : (
@@ -133,7 +133,7 @@ NotesTable.buildTable = (): ColumnDef<
         const created = formatNoteDate(note.createdAt);
 
         return (
-          <div className="p-2 text-xs text-muted-foreground">
+          <div className="text-muted-foreground p-2 text-xs">
             <div>
               Updated: <span aria-label={`Updated: ${updated}`}>{updated}</span>
             </div>

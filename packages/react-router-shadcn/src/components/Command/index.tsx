@@ -18,7 +18,7 @@ const Command = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CmdkCommand
     className={cn(
-      'flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground',
+      'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
       className,
     )}
     ref={ref}
@@ -33,7 +33,7 @@ const CommandInput = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CmdkCommandInput
     className={cn(
-      'flex w-full rounded-md border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
+      'border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex w-full rounded-md border text-sm focus:ring-2 focus:ring-offset-0 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     ref={ref}
@@ -47,7 +47,7 @@ const CommandList = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CmdkCommandList>
 >(({ className, ...props }, ref) => (
   <CmdkCommandList
-    className={cn('max-h-[300px] overflow-y-auto overflow-x-hidden', className)}
+    className={cn('max-h-[300px] overflow-x-hidden overflow-y-auto', className)}
     ref={ref}
     {...props}
   />
@@ -68,7 +68,7 @@ const CommandGroup = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CmdkCommandGroup
     className={cn(
-      'overflow-hidden p-1 text-foreground [&_[data-slot=command-group-heading]]:px-2 [&_[data-slot=command-group-heading]]:py-1.5 [&_[data-slot=command-group-heading]]:text-md [&_[data-slot=command-group-heading]]:font-extrabold [&_[data-slot=command-group-heading]]:text-muted-foreground',
+      'text-foreground [&_[data-slot=command-group-heading]]:text-md [&_[data-slot=command-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[data-slot=command-group-heading]]:px-2 [&_[data-slot=command-group-heading]]:py-1.5 [&_[data-slot=command-group-heading]]:font-extrabold',
       className,
     )}
     ref={ref}
@@ -83,7 +83,7 @@ const CommandItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CmdkCommandItem
     className={cn(
-      'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50',
+      'data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
       className,
     )}
     ref={ref}
@@ -97,7 +97,7 @@ const CommandSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CmdkCommandSeparator>
 >(({ className, ...props }, ref) => (
   <CmdkCommandSeparator
-    className={cn('-mx-1 h-px bg-border', className)}
+    className={cn('bg-border -mx-1 h-px', className)}
     ref={ref}
     {...props}
   />

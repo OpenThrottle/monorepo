@@ -57,7 +57,7 @@ export const GeneratorTabDocumentation = (
 
           <p className="text-muted-foreground">
             Clone path for local reference:{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
               docs/tools/templates/AGENT_USAGE.md
             </code>
           </p>

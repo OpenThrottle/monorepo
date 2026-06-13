@@ -60,11 +60,11 @@ export default function Component(
           title="End User License Agreement"
         />
 
-        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+        <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
             Copyright (c) 2026 Matthew Scholta -{' '}
             <Link
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              className="hover:text-foreground underline underline-offset-4 transition-colors"
               target="_blank"
               to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}
             >
@@ -169,7 +169,7 @@ export default function Component(
             For commercial licensing or questions regarding this Agreement,
             contact Licensor at{' '}
             <Link
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              className="hover:text-foreground underline underline-offset-4 transition-colors"
               target="_blank"
               to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}
             >

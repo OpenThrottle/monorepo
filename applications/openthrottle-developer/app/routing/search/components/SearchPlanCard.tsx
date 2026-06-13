@@ -42,7 +42,7 @@ export const SearchPlanCard = (
   const similarityBlock =
     result.similarity != null ? (
       <p
-        className="text-xs text-muted-foreground"
+        className="text-muted-foreground text-xs"
         data-testid="SearchPlanCard-similarity"
       >
         Relevance: {Math.round(result.similarity * 100)}%
@@ -80,7 +80,7 @@ export const SearchPlanCard = (
             <h3 className={TITLE_CLASS}>{result.planTitle ?? 'Plan'}</h3>
           )}
           {hasTaskOnPlan && result.planId != null ? (
-            <span className="text-sm font-normal text-muted-foreground">
+            <span className="text-muted-foreground text-sm font-normal">
               <Link
                 className="underline-offset-4 hover:underline"
                 data-testid="SearchPlanCard-taskLink"
@@ -96,7 +96,7 @@ export const SearchPlanCard = (
       </CardHeader>
       {/* <Separator /> */}
       <CardContent className="space-y-3 pt-4">
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-muted-foreground text-sm leading-relaxed">
           {result.content}
         </p>
         {similarityBlock}

@@ -19,7 +19,7 @@ export const DashboardStats = (
   // 🔌 Short Circuit
 
   return (
-    <div className="grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
+    <div className="grid gap-4 md:grid-cols-3 md:gap-8 lg:gap-12">
       <OpenThrottleStatCard title="Total plans" value={12} />
       <OpenThrottleStatCard title="Active tasks" value={3} />
       <OpenThrottleStatCard title="Scheduled tasks" value={23} />

@@ -50,7 +50,9 @@ describe('MessageList Component', () => {
 
   test('renders default inbox empty state', () => {
     expect(component.getByText('No messages in Inbox')).toBeInTheDocument();
-    expect(component.getByText('New messages will appear here.')).toBeInTheDocument();
+    expect(
+      component.getByText('New messages will appear here.'),
+    ).toBeInTheDocument();
   });
 
   describe('when messages is empty', () => {
@@ -122,7 +124,10 @@ describe('MessageList Component', () => {
       await user.click(c.getByRole('checkbox', { name: 'Select all' }));
 
       expect(onSelectionChange).toHaveBeenCalledOnce();
-      expect(Array.from(onSelectionChange.mock.calls[0][0])).toEqual(['1', '2']);
+      expect(Array.from(onSelectionChange.mock.calls[0][0])).toEqual([
+        '1',
+        '2',
+      ]);
     });
 
     test('row checkbox toggles a single id', async () => {
@@ -139,7 +144,9 @@ describe('MessageList Component', () => {
       ]);
       const c = render(<RoutesStub />);
 
-      await user.click(c.getByRole('checkbox', { name: 'Select Test subject' }));
+      await user.click(
+        c.getByRole('checkbox', { name: 'Select Test subject' }),
+      );
 
       expect(onSelectionChange).toHaveBeenCalledOnce();
       expect(Array.from(onSelectionChange.mock.calls[0][0])).toEqual(['1']);

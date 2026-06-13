@@ -165,7 +165,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
-      <body className="min-h-screen flex flex-col relative">
+      <body className="relative flex min-h-screen flex-col">
         <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />

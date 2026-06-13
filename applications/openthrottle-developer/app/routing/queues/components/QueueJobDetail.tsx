@@ -129,7 +129,7 @@ export const QueueJobDetail = (
             {job.state}
           </Badge>
           {job.name != null && job.name !== '' && (
-            <span className="text-lg font-medium leading-tight">
+            <span className="text-lg leading-tight font-medium">
               {job.name}
             </span>
           )}
@@ -166,7 +166,7 @@ export const QueueJobDetail = (
       </div>
 
       {parsed.parseError != null && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <div className="border-destructive/50 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm">
           Payload: {parsed.parseError}
         </div>
       )}
@@ -179,11 +179,11 @@ export const QueueJobDetail = (
       </div>
       <QueueJobResults job={job} />
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Retry calls GraphQL{' '}
-        <code className="rounded bg-muted px-1">retryJob</code> (failed jobs
+        <code className="bg-muted rounded px-1">retryJob</code> (failed jobs
         only). Cancel calls{' '}
-        <code className="rounded bg-muted px-1">cancelPlanRun</code> for the
+        <code className="bg-muted rounded px-1">cancelPlanRun</code> for the
         plan id in the payload — same behavior as the plan toolbar stop control.
       </p>
     </div>

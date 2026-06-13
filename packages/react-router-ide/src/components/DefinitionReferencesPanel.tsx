@@ -54,7 +54,7 @@ const LocationTable = (props: LocationTableProps): React.ReactElement => {
 
   // 🔌 Short Circuit
   if (rows.length === 0) {
-    return <p className="p-4 text-sm text-muted-foreground">No locations.</p>;
+    return <p className="text-muted-foreground p-4 text-sm">No locations.</p>;
   }
 
   return (
@@ -77,7 +77,7 @@ const LocationTable = (props: LocationTableProps): React.ReactElement => {
                   </Badge>
                 ) : null}
               </TableCell>
-              <TableCell className="text-right text-xs text-muted-foreground">
+              <TableCell className="text-muted-foreground text-right text-xs">
                 {row.line}:{row.column}
               </TableCell>
             </TableRow>
@@ -143,7 +143,7 @@ export const DefinitionReferencesPanel = (
     >
       <p className="font-mono text-sm">
         {details.symbol.name}
-        <span className="ml-2 text-xs text-muted-foreground">
+        <span className="text-muted-foreground ml-2 text-xs">
           {details.symbol.path}:{details.symbol.line}
         </span>
       </p>

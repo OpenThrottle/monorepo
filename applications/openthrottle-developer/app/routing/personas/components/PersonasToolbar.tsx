@@ -12,7 +12,7 @@ export const PersonasToolbar = (
 
   return (
     <div
-      className={classnames('text-sm text-muted-foreground', className)}
+      className={classnames('text-muted-foreground text-sm', className)}
       data-testid="PersonasToolbar"
     >
       Personas are read from <code>.agents/personas/</code> on disk. Edit files

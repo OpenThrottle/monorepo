@@ -77,7 +77,7 @@ export default function Component(
   if (!loaderData) {
     return (
       <GlobalScreen>
-        <p className="text-sm text-muted-foreground">Loading diagnostics…</p>
+        <p className="text-muted-foreground text-sm">Loading diagnostics…</p>
       </GlobalScreen>
     );
   }

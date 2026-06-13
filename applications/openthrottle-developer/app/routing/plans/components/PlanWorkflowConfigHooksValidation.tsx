@@ -27,7 +27,7 @@ export const PlanWorkflowConfigHooksValidation = (
 
   return (
     <div
-      className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+      className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
       data-testid="job-run-hooks-validation"
       role="alert"
     >

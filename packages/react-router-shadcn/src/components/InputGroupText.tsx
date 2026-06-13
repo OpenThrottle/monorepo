@@ -24,7 +24,7 @@ export const InputGroupText = React.forwardRef<
   return (
     <span
       className={cn(
-        'flex items-center gap-2 text-sm text-muted-foreground [&_svg:not([class*="size-"])]:size-4 [&_svg]:pointer-events-none',
+        'text-muted-foreground flex items-center gap-2 text-sm [&_svg]:pointer-events-none [&_svg:not([class*="size-"])]:size-4',
         className,
       )}
       data-slot="input-group-text"

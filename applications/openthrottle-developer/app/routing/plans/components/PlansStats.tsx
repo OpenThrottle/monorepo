@@ -36,7 +36,7 @@ export const PlansStats = (props: PlansStatsProps): React.ReactElement => {
   return (
     <div
       className={classnames(
-        'grid md:grid-cols-3 gap-4 md:gap-8 lg:gap-12',
+        'grid gap-4 md:grid-cols-3 md:gap-8 lg:gap-12',
         className,
       )}
     >

@@ -90,48 +90,48 @@ export const GlobalRootLoaderFailureBanner = (
   return (
     <div
       className={classnames(
-        'flex w-full flex-wrap items-center justify-center gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive-foreground',
+        'border-destructive/40 bg-destructive/15 text-destructive-foreground flex w-full flex-wrap items-center justify-center gap-2 border-b px-4 py-2 text-sm',
       )}
       data-testid="GlobalRootLoaderFailureBanner"
       role="alert"
     >
       <AlertTriangle
         aria-hidden={true}
-        className="size-4 shrink-0 text-destructive"
+        className="text-destructive size-4 shrink-0"
       />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span className="flex flex-wrap items-center gap-2">
           <span className="font-semibold">{title}</span>
           {failure?.httpStatus != null ? (
-            <span className="rounded border border-border/80 bg-muted/50 px-1.5 py-0 font-mono text-[11px] font-normal text-muted-foreground">
+            <span className="border-border/80 bg-muted/50 text-muted-foreground rounded border px-1.5 py-0 font-mono text-[11px] font-normal">
               HTTP {failure.httpStatus.toString()}
             </span>
           ) : null}
         </span>
         {stepLine ? (
-          <span className="text-xs text-muted-foreground">{stepLine}</span>
+          <span className="text-muted-foreground text-xs">{stepLine}</span>
         ) : null}
         {graphqlBase ? (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             GraphQL base (server):{' '}
-            <code className="rounded bg-muted/50 px-1 py-0 text-[11px]">
+            <code className="bg-muted/50 rounded px-1 py-0 text-[11px]">
               {graphqlBase}
             </code>
           </span>
         ) : null}
-        <span className="break-words text-muted-foreground">{detail}</span>
+        <span className="text-muted-foreground break-words">{detail}</span>
         {failure && isTruncated ? (
-          <details className="text-xs text-muted-foreground">
-            <summary className="cursor-pointer select-none underline decoration-dotted">
+          <details className="text-muted-foreground text-xs">
+            <summary className="cursor-pointer underline decoration-dotted select-none">
               Full error message
             </summary>
-            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded border border-border/60 bg-muted/40 p-2 font-mono text-[11px] leading-snug">
+            <pre className="border-border/60 bg-muted/40 mt-1 max-h-40 overflow-auto rounded border p-2 font-mono text-[11px] leading-snug break-words whitespace-pre-wrap">
               {failure.message}
             </pre>
           </details>
         ) : null}
         {timingParts.length > 0 ? (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {timingParts.join(' · ')}
           </span>
         ) : null}
@@ -152,7 +152,7 @@ export const GlobalRootLoaderFailureBanner = (
       </Button>
       <Button
         aria-label="Dismiss banner"
-        className="shrink-0 size-8 p-0 text-destructive-foreground hover:bg-destructive/20"
+        className="text-destructive-foreground hover:bg-destructive/20 size-8 shrink-0 p-0"
         onClick={handleDismiss}
         type="button"
         variant="ghost"

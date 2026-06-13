@@ -62,13 +62,13 @@ export const createPullRequestsTableColumns = (
         const pull = row.original;
         return (
           <div className="p-2">
-            <div className="flex items-center gap-4 mb-2">
+            <div className="mb-2 flex items-center gap-4">
               <PullRequestStatus state={pull.state} />
-              <h3 className="font-medium line-clamp-1">
+              <h3 className="line-clamp-1 font-medium">
                 #{row.original.number} {row.original.title}
               </h3>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — Updated{' '}
               {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
             </p>
@@ -84,8 +84,8 @@ export const createPullRequestsTableColumns = (
         const { owner, repo } = context.filters;
 
         return (
-          <div className="p-2 flex flex-col gap-2">
-            <span className="text-sm font-medium text-foreground">
+          <div className="flex flex-col gap-2 p-2">
+            <span className="text-foreground text-sm font-medium">
               {row.original.author}
             </span>
 
@@ -167,13 +167,13 @@ export const createPullRequestsTableColumns = (
           <div className="flex flex-wrap gap-2 p-2">
             <Button asChild={true} size="xs" variant="outline">
               <Link to={previewPath} viewTransition={true}>
-                <PanelRightIcon aria-hidden={true} className="w-4 h-4" />
+                <PanelRightIcon aria-hidden={true} className="h-4 w-4" />
                 <span className="sr-only">Preview in side panel</span>
               </Link>
             </Button>
             <Button asChild={true} size="xs" variant="outline">
               <Link to={portalPath} viewTransition={true}>
-                <ArrowRightIcon aria-hidden={true} className="w-4 h-4" />
+                <ArrowRightIcon aria-hidden={true} className="h-4 w-4" />
                 <span className="sr-only">Open full pull request page</span>
               </Link>
             </Button>
@@ -187,7 +187,7 @@ export const createPullRequestsTableColumns = (
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <GitPullRequestIcon className="w-4 h-4" />
+                <GitPullRequestIcon className="h-4 w-4" />
                 <span className="sr-only">GitHub PR</span>
               </a>
             </Button>

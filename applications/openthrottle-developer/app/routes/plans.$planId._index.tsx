@@ -433,14 +433,14 @@ export default function Component(
 
   return (
     <>
-      <GlobalScreen className="flex flex-col p-4 md:p-8 lg:p-12 gap-4 md:gap-8 lg:gap-12 h-full w-full max-w-5xl">
+      <GlobalScreen className="flex h-full w-full max-w-5xl flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
         <div>
           <GlobalHeading
             className="mb-4"
             icon={NotebookTextIcon}
             title={plan.title ?? 'Untitled'}
           />
-          <div className="text-sm text-muted-foreground line-clamp-3">
+          <div className="text-muted-foreground line-clamp-3 text-sm">
             <PlanStatusBadge status={status} /> &bull; Last updated:{' '}
             {formatPlanDate(plan.updatedAt)}
             {/* {plan.description ?? 'No description'} */}
@@ -448,21 +448,21 @@ export default function Component(
           {plan.projectRelation != null ||
           (plan.project != null && plan.project !== '') ? (
             <div
-              className="mt-3 rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+              className="bg-muted/40 text-muted-foreground mt-3 rounded-md border px-3 py-2 text-sm"
               role="note"
             >
               Project:{' '}
               {plan.projectRelation != null ? (
                 <Link
                   aria-label={`Project: ${plan.projectRelation.name}`}
-                  className="font-medium underline underline-offset-2 hover:text-foreground"
+                  className="hover:text-foreground font-medium underline underline-offset-2"
                   to={`/projects/${plan.projectRelation.id}`}
                   viewTransition={true}
                 >
                   {plan.projectRelation.name}
                 </Link>
               ) : (
-                <span className="font-medium text-foreground">
+                <span className="text-foreground font-medium">
                   {plan.project}
                 </span>
               )}
@@ -479,7 +479,7 @@ export default function Component(
             }}
           >
             <TabsList
-              className="mb-8 gap-4 justify-start max-w-full overflow-x-auto overflow-y-hidden w-full"
+              className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
               variant="line"
             >
               <TabsTrigger className="flex-0 cursor-pointer" value="overview">
@@ -555,17 +555,17 @@ export default function Component(
               workingDirectory={workingDirectory}
             />
             {saveJobRunHooksError != null ? (
-              <p className="text-destructive text-xs px-4" role="alert">
+              <p className="text-destructive px-4 text-xs" role="alert">
                 {saveJobRunHooksError}
               </p>
             ) : null}
             {saveRunConfigError != null ? (
-              <p className="text-destructive text-xs px-4" role="alert">
+              <p className="text-destructive px-4 text-xs" role="alert">
                 {saveRunConfigError}
               </p>
             ) : null}
             {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
-              <p className="text-muted-foreground text-xs px-4" role="note">
+              <p className="text-muted-foreground px-4 text-xs" role="note">
                 Save configuration blocked: {runConfigSaveBlockedReason}
               </p>
             ) : null}
@@ -575,7 +575,7 @@ export default function Component(
       </GlobalScreen>
 
       {isBoardView ? (
-        <Card className="overflow-hidden mx-4">
+        <Card className="mx-4 overflow-hidden">
           <PlanTasksBoard planId={plan.id} tasks={tasks} />
         </Card>
       ) : null}

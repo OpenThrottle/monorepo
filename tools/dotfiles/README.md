@@ -28,7 +28,7 @@ export default eslintConfig;
 ### Vite Configuration
 
 ```typescript
-import { createViteConfig } from '@tools/dotfiles/vite-config';
+import { createViteConfig } from '@tools/dotfiles';
 
 export default createViteConfig({
   // Your Vite options

@@ -34,7 +34,7 @@ export const SettingsKeysIntroduction = (
         icon={KeyRoundIcon}
         title="Keys"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Long-lived bearer tokens for automation (MCP, Ralph workers, CI). Each
         credential uses the{' '}
       </p>

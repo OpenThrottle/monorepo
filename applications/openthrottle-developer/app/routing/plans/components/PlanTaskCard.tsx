@@ -61,10 +61,10 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
             </Badge>
           )}
         </div>
-        <h4 className="text-sm font-medium leading-snug">
+        <h4 className="text-sm leading-snug font-medium">
           <Link
             aria-label={`Open task: ${title}`}
-            className="underline underline-offset-2 hover:text-primary"
+            className="hover:text-primary underline underline-offset-2"
             to={taskHref}
             viewTransition={true}
           >
@@ -79,7 +79,7 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
         {task.projectRelation ? (
           <p className="text-xs">
             <Link
-              className="text-muted-foreground underline underline-offset-2 hover:text-primary"
+              className="text-muted-foreground hover:text-primary underline underline-offset-2"
               to={`/projects/${task.projectRelation.id}`}
               viewTransition={true}
             >

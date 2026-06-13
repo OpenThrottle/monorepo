@@ -35,11 +35,11 @@ export const GlobalSidebarFooter = (
   // 🔌 Short Circuit
 
   return (
-    <SidebarFooter className="border-t border-border bg-card px-6 py-4 overflow-hidden text-center">
+    <SidebarFooter className="border-border bg-card overflow-hidden border-t px-6 py-4 text-center">
       <SidebarMenu>
         <SidebarMenuItem>
           <Link
-            className="flex items-center text-xs text-muted-foreground"
+            className="text-muted-foreground flex items-center text-xs"
             target="_blank"
             to={`${ENV_SOURCE.API_URL_EXTERNAL}/health`}
           >

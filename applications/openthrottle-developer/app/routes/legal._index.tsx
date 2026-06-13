@@ -56,7 +56,7 @@ export default function Component(
           title="Legal"
         />
 
-        <div className="text-sm max-w-3xl text-muted-foreground space-y-4 md:space-y-8">
+        <div className="text-muted-foreground max-w-3xl space-y-4 text-sm md:space-y-8">
           <p>
             This site is a personal portfolio and developer playground operated
             by Matthew Scholta. It is provided free of charge, on an as-is
@@ -65,10 +65,10 @@ export default function Component(
             agreement, uptime guarantee, or commitment to maintain any
             particular feature.
           </p>
-          <ul className="list-disc space-y-1 list-inside">
+          <ul className="list-inside list-disc space-y-1">
             <li>
               <Link
-                className="hover:underline underline-offset-4 hover:text-foreground transition-colors"
+                className="hover:text-foreground underline-offset-4 transition-colors hover:underline"
                 to="/legal/license"
               >
                 License
@@ -76,7 +76,7 @@ export default function Component(
             </li>
             <li>
               <Link
-                className="hover:underline underline-offset-4 hover:text-foreground transition-colors"
+                className="hover:text-foreground underline-offset-4 transition-colors hover:underline"
                 to="/legal/privacy-policy"
               >
                 Privacy policy
@@ -84,7 +84,7 @@ export default function Component(
             </li>
             <li>
               <Link
-                className="hover:underline underline-offset-4 hover:text-foreground transition-colors"
+                className="hover:text-foreground underline-offset-4 transition-colors hover:underline"
                 to="/legal/terms-of-use"
               >
                 Terms of use

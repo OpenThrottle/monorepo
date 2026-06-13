@@ -52,10 +52,10 @@ export const QueueJobResults = (
       <div className="space-y-4">
         {job.failedReason != null && job.failedReason !== '' && (
           <div>
-            <p className="mb-1 text-sm font-medium text-destructive">
+            <p className="text-destructive mb-1 text-sm font-medium">
               Failure reason
             </p>
-            <pre className="whitespace-pre-wrap rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm wrap-break-word">
+            <pre className="border-destructive/40 bg-destructive/5 rounded-md border p-3 text-sm wrap-break-word whitespace-pre-wrap">
               {job.failedReason}
             </pre>
           </div>
@@ -70,7 +70,7 @@ export const QueueJobResults = (
                 text={returnValuePretty}
               />
             </div>
-            <pre className="max-h-80 overflow-auto rounded-md border bg-muted/40 p-3 text-xs">
+            <pre className="bg-muted/40 max-h-80 overflow-auto rounded-md border p-3 text-xs">
               {returnValuePretty}
             </pre>
           </div>

@@ -29,7 +29,7 @@ export const QueuesIntroduction = (
         {/* <QueuesToolbar queues={queues} /> */}
       </GlobalHeading>
       <p
-        className="mt-4 text-sm text-muted-foreground"
+        className="text-muted-foreground mt-4 text-sm"
         data-testid="queues-operational-hint"
       >
         Worker queues (BullMQ). Open a queue to browse jobs; open a job for full

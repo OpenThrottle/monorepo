@@ -7,21 +7,21 @@
 #     - https://nx.dev/recipes/ci/monorepo-ci-github-actions#configuring-ci-using-github-actions-and-nx-
 #
 ################################################################################
-name: "🤖 Continuous Integration"
+name: '🤖 Continuous Integration'
 on:
   merge_group:
     types: [checks_requested]
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
-      - "docs/**"
-      - "**/*.md"
+      - 'docs/**'
+      - '**/*.md'
   push:
     branches:
-      - "main"
+      - 'main'
     paths-ignore:
-      - "docs/**"
-      - "**/*.md"
+      - 'docs/**'
+      - '**/*.md'
 
 # Concurrency: Cancel in-progress runs when a new commit is pushed to the same ref
 # This prevents wasting resources on outdated runs while allowing parallel matrix jobs
@@ -39,7 +39,7 @@ env:
   NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
 
   NX_KEY: ${{ vars.NX_KEY }}
-  NX_SWC: "true"
+  NX_SWC: 'true'
   NX_VERSION: ${{ vars.NX_VERSION }} # https://github.com/visormatt/monorepo/settings/variables/actions
   OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
@@ -70,7 +70,7 @@ jobs:
     strategy:
       matrix:
         jobIndex: [1] # must be in sync with "jobCount"
-        target: ["lint,typecheck,typecheck-tests,test"] # One box per target
+        target: ['lint,typecheck,typecheck-tests,test'] # One box per target
 
     # openthrottle-developer:test (264 jsdom files) used to cost ~12 CPU-minutes
     # because forks re-imported the full module graph per file, which forced the
@@ -79,21 +79,21 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: "📦 Checkout the code"
+      - name: '📦 Checkout the code'
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
 
       # Inject the dynamic bucket name directly into nx.json
       # Security: By using Strategy 2, you maintain the "Two-Bucket" security model which is the only way to protect your production cache from CREEP (CVE-2025-36852) when using bucket-based remote caching.
-      - name: "🪣 NX Setup Cache"
+      - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
 
-      - name: "🤖 Node Setup"
+      - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
-      - name: "🌥️ Google Cloud Provider (GCP)"
+      - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud
         with:
           branch: ${{ env.BRANCH_NAME }}
@@ -106,12 +106,12 @@ jobs:
       # - name: '🔒 GraphQL schema sync (root vs server)'
       #   run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
 
-      - name: "🧩 Codegen Tasks"
+      - name: '🧩 Codegen Tasks'
         run: |
           pnpm dlx nx@${{ env.NX_VERSION }} affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
-      - name: "🧠 NX ${{ matrix.target }} affected"
+      - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
           pnpm dlx nx@${{ env.NX_VERSION }} affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
         # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
@@ -129,14 +129,14 @@ jobs:
       #       --verbose \
       #       --nxBail
 
-      - name: "🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)"
+      - name: '🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)'
         run: |
           pnpm dlx nx@${{ env.NX_VERSION }} run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
-      - name: "🔗 Agent assets SSOT (symlink drift guard)"
+      - name: '🔗 Agent assets SSOT (symlink drift guard)'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:check-agent-assets-ssot
 
-      - name: "📋 Agent assets frontmatter validation (D5)"
+      - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm dlx nx@${{ env.NX_VERSION }} run monorepo:validate-agent-assets-frontmatter
 
       # FIXME: Bring this back when we have time to investigate
@@ -164,22 +164,22 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: "📦 Checkout the code"
+      - name: '📦 Checkout the code'
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
 
-      - name: "🤖 Node Setup"
+      - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
-      - name: "🌥️ Google Cloud Provider (GCP)"
+      - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud
         with:
           branch: ${{ env.BRANCH_NAME }}
           credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
-      - name: "🔍 Check for circular dependencies"
+      - name: '🔍 Check for circular dependencies'
         run: |
           pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
@@ -191,26 +191,26 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: "📦 Checkout the code"
+      - name: '📦 Checkout the code'
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
 
-      - name: "🤖 Node Setup"
+      - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
-      - name: "🌥️ Google Cloud Provider (GCP)"
+      - name: '🌥️ Google Cloud Provider (GCP)'
         uses: ./.github/actions/google-cloud
         with:
           branch: ${{ env.BRANCH_NAME }}
           credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
-      - name: "📊 Generate dependency graph visualization"
+      - name: '📊 Generate dependency graph visualization'
         run: |
           pnpm exec tsx ./scripts/nx-dependency-graph.ts
 
-      - name: "📤 Upload dependency graph artifact"
+      - name: '📤 Upload dependency graph artifact'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dependency-graph

@@ -62,7 +62,7 @@ export const GeneratorTabDebug = (
           {/* <CardTitle>Last CLI output (support)</CardTitle> */}
           <CardDescription>
             Paste stdout/stderr from your last{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">nx g</code>{' '}
+            <code className="bg-muted rounded px-1 py-0.5 text-xs">nx g</code>{' '}
             run. Stored only in this browser for triage and copy into support
             bundles.
             {!mounted ? ' Loading saved output…' : ''}
@@ -95,7 +95,7 @@ export const GeneratorTabDebug = (
             </Button>
           </div>
           <Separator />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Support bundle includes generator name, ISO timestamp, and pasted
             output.
           </p>

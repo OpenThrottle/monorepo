@@ -164,13 +164,13 @@ export const SettingsLogsPanel = (
           icon={ScrollText}
           title="Logs"
         />
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-muted-foreground mb-4 text-sm">
           Capture browser console output in this tab, copy lines, and export a
           sanitized support bundle (JSON) with env metadata and log lines.
           Server workflow and agent streams are described below—when an operator
           API exists, optional tailing can plug into the same bundle shape.
         </p>
-        <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
+        <p className="text-foreground mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs">
           Logs may include URLs or user-visible strings. Only copy or export
           what you intend to share; the support bundle redacts env secrets but
           not every substring inside log lines.
@@ -218,7 +218,7 @@ export const SettingsLogsPanel = (
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground space-y-4 text-sm">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" role="status">
             <span aria-live="polite" data-testid="logs-buffer-summary">
               Buffer {entries.length}/{CLIENT_LOG_BUFFER_MAX_ENTRIES}
@@ -229,7 +229,7 @@ export const SettingsLogsPanel = (
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-medium text-foreground">Levels</span>
+            <span className="text-foreground text-xs font-medium">Levels</span>
             <ToggleGroup
               aria-label="Filter by log level"
               className="flex flex-wrap justify-start gap-1"
@@ -250,7 +250,7 @@ export const SettingsLogsPanel = (
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs text-foreground" htmlFor={searchFieldId}>
+            <Label className="text-foreground text-xs" htmlFor={searchFieldId}>
               Search
             </Label>
             <Input
@@ -265,7 +265,7 @@ export const SettingsLogsPanel = (
           </div>
 
           <p className="text-xs">
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               log / info / warn / error / debug
             </span>{' '}
             plus uncaught <code className="text-xs">window.onerror</code> and{' '}
@@ -274,7 +274,7 @@ export const SettingsLogsPanel = (
             (memory). Data stays on this device unless you copy or export.
           </p>
           <pre
-            className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-3 font-mono text-xs text-foreground"
+            className="bg-muted text-foreground max-h-72 overflow-auto rounded-md border p-3 font-mono text-xs break-words whitespace-pre-wrap"
             ref={logPreRef}
           >
             {renderViewerBody()}
@@ -288,7 +288,7 @@ export const SettingsLogsPanel = (
         id="workflow-agent-logs"
         legend="Workflow & Server Logs"
       >
-        <div className="space-y-3 text-sm text-muted-foreground">
+        <div className="text-muted-foreground space-y-3 text-sm">
           <p>
             A tail or subscription to workflow-ralph stderr, queue worker logs,
             or plan-output streams is not wired to this UI yet. Until an

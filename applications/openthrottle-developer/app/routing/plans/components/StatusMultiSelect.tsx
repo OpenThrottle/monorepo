@@ -83,7 +83,7 @@ export const StatusMultiSelect = (
 
   return (
     <Label className="focus:[&__button]:z-10!" data-testid={dataTestId}>
-      <span className="text-sm font-medium hidden text-foreground/80">
+      <span className="text-foreground/80 hidden text-sm font-medium">
         Status
       </span>
       <Popover onOpenChange={setOpen} open={open}>
@@ -91,7 +91,7 @@ export const StatusMultiSelect = (
           <Button
             aria-expanded={open}
             className={cn(
-              'justify-between font-normal text-muted-foreground',
+              'text-muted-foreground justify-between font-normal',
               compact ? 'min-w-20 shrink-0' : 'w-full min-w-40',
             )}
             role="combobox"
@@ -149,7 +149,7 @@ export const StatusMultiSelect = (
                   {label}
                   <button
                     aria-label={`Remove ${label}`}
-                    className="rounded-full p-0.5 hover:bg-muted-foreground/20 focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="hover:bg-muted-foreground/20 focus:ring-ring rounded-full p-0.5 focus:ring-2 focus:outline-none"
                     onClick={(e) => {
                       e.preventDefault();
                       remove(v);

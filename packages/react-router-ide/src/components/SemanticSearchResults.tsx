@@ -131,7 +131,7 @@ export const SemanticSearchResults = (
     >
       {result.matches.map((match) => (
         <Card key={`${match.path}:${match.startLine}:${match.endLine}`}>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+          <CardHeader className="text-muted-foreground flex flex-row items-center justify-between gap-2 text-xs">
             <span className="truncate font-medium">
               {formatLocationLabel({ line: match.startLine, path: match.path })}
               {match.endLine > match.startLine ? `–${match.endLine}` : ''}
@@ -139,7 +139,7 @@ export const SemanticSearchResults = (
             <Badge size="xs">{match.score.toFixed(2)}</Badge>
           </CardHeader>
           <CardContent>
-            <pre className="overflow-auto rounded-md bg-muted p-2 font-mono text-xs">
+            <pre className="bg-muted overflow-auto rounded-md p-2 font-mono text-xs">
               {match.content}
             </pre>
           </CardContent>
