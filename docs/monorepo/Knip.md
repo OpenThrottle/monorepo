@@ -36,7 +36,7 @@ Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type 
 These can change source on save/commit but **do not** run Knip or remove `export` keywords:
 
 - **ESLint `--fix`** via lint-staged and optional `source.fixAll.eslint` in the editor.
-- **Prettier** via lint-staged and `editor.formatOnSave`.
+- **Prettier** via lint-staged and `editor.formatOnSave`, or repo-wide with `pnpm format` / `pnpm format:check`. Config is the single `prettierConfig` from `@tools/dotfiles`.
 
 ### Canonical report command
 
