@@ -66,13 +66,26 @@ else
   git -C "$REPO_ROOT" worktree add -b "$BRANCH" "$WTREE" >&2
 fi
 
+# 5b. Resolve a deterministic app-port block for this worktree and export it so
+#     setup_worktree.sh can rewrite the .env files (and pin it in the worktree's
+#     .worktree-ports cache, now that the directory exists).
+# shellcheck source=scripts/worktree_ports.sh
+. "$REPO_ROOT/scripts/worktree_ports.sh"
+if resolve_worktree_ports "$NAME" "$WTREE"; then
+  log "    ports:  app block ${OT_PORT_BASE}-$((OT_PORT_BASE + 5)) (developer ${OT_PORT_DEVELOPER}, server ${OT_PORT_SERVER})"
+else
+  log "⚠️  port allocation failed; worktree will use the default 6020-6025 block"
+fi
+
 # 6. Run the per-worktree setup INSIDE the new worktree. All output -> stderr,
 #    stdin closed so any prompt takes its default instead of hanging the hook.
 #    Set CLAUDE_WORKTREE_SETUP=0 to skip setup (smoke-testing the hook itself).
 if [ "${CLAUDE_WORKTREE_SETUP:-1}" != "0" ]; then
   (
     cd "$WTREE"
-    ./scripts/setup_worktree.sh </dev/null >&2
+    # Let setup copy real service-account tokens from this (known-good) checkout
+    # into the worktree's reset-to-default .env files.
+    OT_SOURCE_REPO="$REPO_ROOT" ./scripts/setup_worktree.sh </dev/null >&2
   )
 else
   log "⏭️  CLAUDE_WORKTREE_SETUP=0 — skipping setup_worktree.sh"

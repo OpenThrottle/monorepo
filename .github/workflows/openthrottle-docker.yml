@@ -8,30 +8,30 @@
 #   docs/openthrottle/single-box-run-design.md.
 #
 ################################################################################
-name: '🐳 OpenThrottle Docker'
+name: "🐳 OpenThrottle Docker"
 on:
   push:
     branches:
       - main
     paths:
-      - 'applications/openthrottle-developer/**'
-      - 'applications/openthrottle-server/**'
-      - 'databases/**'
-      - 'nx.json'
-      - 'package.json'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - 'tools/workflows/**'
+      - "applications/openthrottle-developer/**"
+      - "applications/openthrottle-server/**"
+      - "databases/**"
+      - "nx.json"
+      - "package.json"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "tools/workflows/**"
   pull_request:
     paths:
-      - 'applications/openthrottle-developer/**'
-      - 'applications/openthrottle-server/**'
-      - 'databases/**'
-      - 'nx.json'
-      - 'package.json'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - 'tools/workflows/**'
+      - "applications/openthrottle-developer/**"
+      - "applications/openthrottle-server/**"
+      - "databases/**"
+      - "nx.json"
+      - "package.json"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "tools/workflows/**"
 
 concurrency:
   cancel-in-progress: true
@@ -57,36 +57,36 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: '📦 Checkout'
+      - name: "📦 Checkout"
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
 
-      - name: '🤖 Node Setup'
+      - name: "🤖 Node Setup"
         uses: ./.github/actions/node-setup
 
-      - name: '🌥️ GCP and Docker (Artifact Registry)'
+      - name: "🌥️ GCP and Docker (Artifact Registry)"
         uses: ./.github/actions/google-cloud
         with:
           branch: ${{ env.BRANCH_NAME }}
           credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
-      - name: '🐳 Configure Docker for Artifact Registry'
+      - name: "🐳 Configure Docker for Artifact Registry"
         run: |
           gcloud auth configure-docker ${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev -q
 
       - name: "🕵️ NX Set SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
-      - name: '📋 Affected OpenThrottle apps'
+      - name: "📋 Affected OpenThrottle apps"
         id: affected
         uses: ./.github/actions/nx-affected-docker-apps
         with:
           apps: openthrottle-developer,openthrottle-server
           nx-version: ${{ env.NX_VERSION }}
 
-      - name: '🐳 Build (and push on main) openthrottle-server'
+      - name: "🐳 Build (and push on main) openthrottle-server"
         if: steps.affected.outputs.build-openthrottle-server == 'true'
         uses: ./.github/actions/docker-build-push
         with:
@@ -98,7 +98,7 @@ jobs:
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
 
-      - name: '🐳 Build (and push on main) openthrottle-developer'
+      - name: "🐳 Build (and push on main) openthrottle-developer"
         if: steps.affected.outputs.build-openthrottle-developer == 'true'
         uses: ./.github/actions/docker-build-push
         with:
