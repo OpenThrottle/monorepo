@@ -62,8 +62,8 @@ describe('PlansLoaders', () => {
   describe('taskCountByPlanIdLoader', () => {
     test('issues one grouped count query for N planIds and maps counts in key order', async () => {
       getRawMany.mockResolvedValue([
-        { count: '3', planId: 'plan-a' },
-        { count: '1', planId: 'plan-c' },
+        { count: '3', key: 'plan-a' },
+        { count: '1', key: 'plan-c' },
       ]);
 
       const counts = await Promise.all([
