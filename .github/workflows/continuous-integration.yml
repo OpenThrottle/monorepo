@@ -70,7 +70,7 @@ jobs:
     strategy:
       matrix:
         jobIndex: [1] # must be in sync with "jobCount"
-        target: ['lint,typecheck,typecheck-tests', 'test'] # One box for each item in the matrix
+        target: ['lint,typecheck,typecheck-tests,test'] # One box per target
 
     # 30 instead of 15: openthrottle-developer:test alone needs ~12 CPU-minutes
     # (264 jsdom test files), which exceeds the old budget on 4-vCPU runners.
