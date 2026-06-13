@@ -9,6 +9,7 @@ import {
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
+  Link,
   redirect,
   useFetcher,
   useRevalidator,
@@ -444,6 +445,29 @@ export default function Component(
             {formatPlanDate(plan.updatedAt)}
             {/* {plan.description ?? 'No description'} */}
           </div>
+          {plan.projectRelation != null ||
+          (plan.project != null && plan.project !== '') ? (
+            <div
+              className="mt-3 rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+              role="note"
+            >
+              Project:{' '}
+              {plan.projectRelation != null ? (
+                <Link
+                  aria-label={`Project: ${plan.projectRelation.name}`}
+                  className="font-medium underline underline-offset-2 hover:text-foreground"
+                  to={`/projects/${plan.projectRelation.id}`}
+                  viewTransition={true}
+                >
+                  {plan.projectRelation.name}
+                </Link>
+              ) : (
+                <span className="font-medium text-foreground">
+                  {plan.project}
+                </span>
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="">
