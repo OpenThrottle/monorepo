@@ -9,6 +9,18 @@ export interface SkillsEmptyProps {
   search?: string;
 }
 
+/**
+ * User-facing copy for the empty/filtered-empty states, single-sourced so a
+ * wording change updates the rendered string and its spec in one place (specs
+ * import this instead of duplicating the literal).
+ *
+ * @publicApi
+ */
+export const SKILLS_EMPTY_COPY = {
+  searchTitle: 'No skills found, try clearing the search to see all skills.',
+  title: 'No skills found, create your first skill to get started.',
+} as const;
+
 export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   const { className, search } = props;
 
@@ -28,11 +40,7 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
     <Empty className={classnames('my-8', className)}>
       <GlobalHeading
         heading="h3"
-        title={
-          search
-            ? 'No skills found, try clearing the search to see all skills.'
-            : 'No skills found, create your first skill to get started.'
-        }
+        title={search ? SKILLS_EMPTY_COPY.searchTitle : SKILLS_EMPTY_COPY.title}
       />
       {/* <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />

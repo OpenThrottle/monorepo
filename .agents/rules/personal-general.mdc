@@ -53,6 +53,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
 - Generate mock data from GraphQL in the `mocks.ts` file of the given application.
 - Each if statement in the logic should have its own `describe` block.
 - Always include tests for edge cases to ensure robustness.
+- Assert behavior and structure (roles, labels, `href`, test-ids), not marketing/UI copy. Prefer `getByRole`/`getByLabelText` over `getByText` for sentence-length strings. When the exact copy _is_ the contract (error/empty-state messages, branded text), single-source it: export the string as a `@publicApi` constant the component renders, and have the spec import that same constant instead of duplicating the literal — a wording change then updates one place and no spec breaks. See [docs/testing/snapshot-replacement-patterns.md](mdc:docs/testing/snapshot-replacement-patterns.md).
 
 ## API Applications
 

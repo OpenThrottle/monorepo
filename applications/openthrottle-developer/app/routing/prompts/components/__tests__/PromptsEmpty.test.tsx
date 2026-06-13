@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PromptsEmpty } from '../PromptsEmpty';
+import { PROMPTS_EMPTY_COPY, PromptsEmpty } from '../PromptsEmpty';
 import type { PromptsEmptyProps } from '../PromptsEmpty';
 
 describe('PromptsEmpty Component', () => {
@@ -15,13 +15,13 @@ describe('PromptsEmpty Component', () => {
   test('when there is no search shows empty list copy and link to create', () => {
     const Component = () => <PromptsEmpty {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(screen.getByText('No prompts yet')).toBeInTheDocument();
+    expect(component.getByText(PROMPTS_EMPTY_COPY.title)).toBeInTheDocument();
     expect(
-      screen.getByText('Create your first prompt to get started.'),
+      component.getByText(PROMPTS_EMPTY_COPY.description),
     ).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: 'New prompt' });
+    const link = component.getByRole('link', { name: 'New prompt' });
     expect(link).toHaveAttribute('href', '/prompts/create');
   });
 
@@ -34,15 +34,15 @@ describe('PromptsEmpty Component', () => {
     test('shows filtered-empty copy and link to clear filters', () => {
       const Component = () => <PromptsEmpty {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      render(<RoutesStub />);
+      const component = render(<RoutesStub />);
 
       expect(
-        screen.getByText('No prompts match your filters'),
+        component.getByText(PROMPTS_EMPTY_COPY.searchTitle),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('Try clearing the search to see all prompts.'),
+        component.getByText(PROMPTS_EMPTY_COPY.searchDescription),
       ).toBeInTheDocument();
-      const link = screen.getByRole('link', { name: 'Clear filters' });
+      const link = component.getByRole('link', { name: 'Clear filters' });
       expect(link).toHaveAttribute('href', '/prompts');
     });
   });

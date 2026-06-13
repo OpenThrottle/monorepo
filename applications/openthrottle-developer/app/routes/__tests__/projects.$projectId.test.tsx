@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import ProjectDetail from '../projects.$projectId';
 import type { Route } from '@/app/routes/+types/projects.$projectId';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/components/ProjectNotFound';
 
 const mockProject = {
   __typename: 'ProjectObject' as const,
@@ -174,8 +175,12 @@ describe('routes/projects.$projectId.tsx', () => {
         />
       </MemoryRouter>,
     );
-    expect(component.getByText('Project not found')).toBeInTheDocument();
-    expect(component.getByText(/was removed/)).toBeInTheDocument();
+    expect(
+      component.getByText(PROJECT_NOT_FOUND_COPY.title),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(PROJECT_NOT_FOUND_COPY.description),
+    ).toBeInTheDocument();
     expect(component.getByRole('link', { name: 'Projects' })).toHaveAttribute(
       'href',
       '/projects',

@@ -9,6 +9,18 @@ import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 
 export interface PlanTaskNotFoundProps {}
 
+/**
+ * User-facing copy for this not-found state, single-sourced so a wording change
+ * updates the rendered string and its spec in one place (specs import this
+ * instead of duplicating the literal).
+ *
+ * @publicApi
+ */
+export const PLAN_TASK_NOT_FOUND_COPY = {
+  description: 'The task you are looking for does not exist.',
+  title: 'Task not found',
+} as const;
+
 export const PlanTaskNotFound = (
   _props: PlanTaskNotFoundProps,
 ): React.ReactElement => {
@@ -29,9 +41,9 @@ export const PlanTaskNotFound = (
       <EmptyMedia variant="icon">
         <PuzzlePieceIcon size={48} />
       </EmptyMedia>
-      <EmptyTitle>Task not found</EmptyTitle>
+      <EmptyTitle>{PLAN_TASK_NOT_FOUND_COPY.title}</EmptyTitle>
       <EmptyDescription>
-        The task you are looking for does not exist.
+        {PLAN_TASK_NOT_FOUND_COPY.description}
       </EmptyDescription>
     </Empty>
   );

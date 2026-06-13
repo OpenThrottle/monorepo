@@ -10,6 +10,18 @@ import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 
 export interface ProjectNotFoundProps {}
 
+/**
+ * User-facing copy for this not-found state, single-sourced so a wording change
+ * updates the rendered string and its spec in one place (specs import this
+ * instead of duplicating the literal).
+ *
+ * @publicApi
+ */
+export const PROJECT_NOT_FOUND_COPY = {
+  description: 'The project you’re looking for doesn’t exist or was removed.',
+  title: 'Project not found',
+} as const;
+
 export const ProjectNotFound = (
   _props: ProjectNotFoundProps,
 ): React.ReactElement => {
@@ -38,9 +50,9 @@ export const ProjectNotFound = (
       </nav>
       <Empty>
         <EmptyHeader>
-          <EmptyTitle>Project not found</EmptyTitle>
+          <EmptyTitle>{PROJECT_NOT_FOUND_COPY.title}</EmptyTitle>
           <EmptyDescription>
-            The project you’re looking for doesn’t exist or was removed.
+            {PROJECT_NOT_FOUND_COPY.description}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

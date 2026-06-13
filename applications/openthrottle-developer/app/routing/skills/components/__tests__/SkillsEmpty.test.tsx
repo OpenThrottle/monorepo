@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { cleanup, screen } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
-import { SkillsEmpty } from '../SkillsEmpty';
+import { SKILLS_EMPTY_COPY, SkillsEmpty } from '../SkillsEmpty';
 import type { SkillsEmptyProps } from '../SkillsEmpty';
 
 describe('SkillsEmpty Component', () => {
@@ -13,14 +13,10 @@ describe('SkillsEmpty Component', () => {
   });
 
   test('when there is no search shows empty list copy and link to create', () => {
-    renderRoutesStub(<SkillsEmpty {...props} />);
+    const component = renderRoutesStub(<SkillsEmpty {...props} />);
 
-    expect(
-      screen.getByText(
-        'No skills found, create your first skill to get started.',
-      ),
-    ).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: 'New skill' });
+    expect(component.getByText(SKILLS_EMPTY_COPY.title)).toBeInTheDocument();
+    const link = component.getByRole('link', { name: 'New skill' });
     expect(link).toHaveAttribute('href', '/skills/create');
   });
 
@@ -31,14 +27,12 @@ describe('SkillsEmpty Component', () => {
     });
 
     test('shows filtered-empty copy and link to clear filters', () => {
-      renderRoutesStub(<SkillsEmpty {...props} />);
+      const component = renderRoutesStub(<SkillsEmpty {...props} />);
 
       expect(
-        screen.getByText(
-          'No skills found, try clearing the search to see all skills.',
-        ),
+        component.getByText(SKILLS_EMPTY_COPY.searchTitle),
       ).toBeInTheDocument();
-      const link = screen.getByRole('link', { name: 'Clear filters' });
+      const link = component.getByRole('link', { name: 'Clear filters' });
       expect(link).toHaveAttribute('href', '/skills');
     });
   });

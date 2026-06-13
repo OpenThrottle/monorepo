@@ -92,6 +92,73 @@ test('exposes primary actions and headline', () => {
 
 Tune the selectors to each component; avoid asserting on entire `baseElement` HTML.
 
+## Copy / text assertions (de-brittling)
+
+Specs that assert sentence-length UI copy with a duplicated literal break on every
+wording change even when behavior is unchanged — training developers to treat red
+specs as noise. Pick the right tool by what is actually under test:
+
+### Behavior / structure — assert the contract, not the prose
+
+For empty states, cards, toolbars, etc. the contract is usually a landmark, heading,
+or action, **not** the body sentence. Assert those and drop the descriptive copy:
+
+```ts
+// brittle: breaks if the description is reworded
+expect(
+  component.getByText('Create your first prompt to get started.'),
+).toBeInTheDocument();
+
+// stable: the action link is the real contract
+const link = component.getByRole('link', { name: 'New prompt' });
+expect(link).toHaveAttribute('href', '/prompts/create');
+```
+
+### When the copy IS the contract — single-source it as a `@publicApi` constant
+
+Error and empty-state messages users must read are part of the contract, so keep
+asserting them — but don't duplicate the literal. Export the string from the
+component and have the spec import the **same** constant. A wording change then
+updates exactly one place and every spec follows automatically.
+
+```tsx
+// ProjectNotFound.tsx
+/** @publicApi */
+export const PROJECT_NOT_FOUND_COPY = {
+  description: 'The project you’re looking for doesn’t exist or was removed.',
+  title: 'Project not found',
+} as const;
+
+// <EmptyTitle>{PROJECT_NOT_FOUND_COPY.title}</EmptyTitle>
+// <EmptyDescription>{PROJECT_NOT_FOUND_COPY.description}</EmptyDescription>
+```
+
+```ts
+// ProjectNotFound.test.tsx — and ANY other spec that renders this state
+import { PROJECT_NOT_FOUND_COPY } from '../ProjectNotFound';
+
+expect(
+  component.getByRole('heading', { name: PROJECT_NOT_FOUND_COPY.title }),
+).toBeInTheDocument();
+expect(
+  component.getByText(PROJECT_NOT_FOUND_COPY.description),
+).toBeInTheDocument();
+```
+
+Notes:
+
+- The `@publicApi` JSDoc tag is required: Knip ignores `__tests__`, so a constant
+  consumed only by its component + spec would otherwise report as an unused export
+  (see [Knip.md](mdc:docs/monorepo/Knip.md)).
+- Worked examples in `openthrottle-developer`: `ProjectNotFound`, `PlanTaskNotFound`,
+  `SkillsEmpty`, `PromptsEmpty` (and the `projects.$projectId` route spec, which
+  imports `PROJECT_NOT_FOUND_COPY` rather than re-typing the sentence).
+- Spot-check after refactoring: change the copy in one component and run the suite —
+  only fixtures that still hard-code the literal should break; constant-bound specs
+  stay green.
+- Copy that comes from **data** (seeded skill descriptions, fixtures) should assert
+  against the fixture object the test already defines, not a re-typed literal.
+
 ## Optional follow-up (task 4 in plan)
 
 After migration, consider ESLint `no-restricted-syntax` or CI grep for `toMatchSnapshot` under `__tests__` to prevent regressions.
