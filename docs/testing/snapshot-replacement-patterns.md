@@ -164,6 +164,12 @@ Notes:
   stay green.
 - Copy that comes from **data** (seeded skill descriptions, fixtures) should assert
   against the fixture object the test already defines, not a re-typed literal.
+- Don't write a dedicated spec for a pure hardcoded data file (`data.copy.ts`, a
+  static list): a test that re-states its literals is a tautology and a
+  change-detector, and the consuming component/route spec already covers usage. Spec
+  a data file only when it has logic or an invariant worth guarding (derivation,
+  parsing, filtering, uniqueness, "every entry is a valid URL") — and assert the rule,
+  not the values. See [coding/component-data-boundaries.mdc](mdc:.agents/rules/coding/component-data-boundaries.mdc).
 
 ## Optional follow-up (task 4 in plan)
 

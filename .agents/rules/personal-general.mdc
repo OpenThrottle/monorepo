@@ -40,10 +40,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
 - `<FOLDER_NAME>` is the folder under `applications/<application>/app` (use `--list=componentFolders --application=<APPLICATION_NAME>` when applicable).
 - `<COMPONENT_NAME>` should be PascalCase for components. Pass comma-separated names to scaffold multiple components in one run when `--describe` reports comma support on `--name`. `--subGenerator=route` and other sub-generators use the same entrypoint; see `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe`.
 
-### Component and data file boundaries
-
-- A file in a `components` folder exports **only** its component and the props generated with it (e.g. `Foo` + `FooProps`). Infrequently it may export one extra related type/interface — but not constants, hardcoded data, or copy.
-- Hardcoded data, lists, mock data, and user-facing copy belong in the nearest `data` folder, not inlined in components. Use the standardized `data.<name>.ts` naming (e.g. `data.copy.ts`, `.tsx` when JSX is needed) so one file can export many related values. Copy specifically goes in `data.copy.ts`; the component imports and renders it, which both de-clutters the component and lets specs assert against the same source of truth.
+- Components export only their component + generated props; hardcoded data/lists/mock/copy live in the nearest `data/` folder (`data.<name>.ts`, copy → `data.copy.ts`). See [coding/component-data-boundaries.mdc](./coding/component-data-boundaries.mdc).
 
 ### Updating Existing Files
 
