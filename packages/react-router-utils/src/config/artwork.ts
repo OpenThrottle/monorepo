@@ -1,6 +1,9 @@
 import { APP_URL } from './application';
 
-const domain = APP_URL.replace('https://', '');
+// APP_URL may be unset when this barrel-exported module is evaluated before
+// the environment is populated (e.g. test import ordering); the decorative
+// banner must never throw at module-load time over a missing env var.
+const domain = (APP_URL ?? '').replace('https://', '');
 const year = new Date().getFullYear();
 
 /**

@@ -38,7 +38,7 @@ export default createViteConfig({
 ### Vitest Configuration
 
 ```typescript
-import { createVitestConfigJsdom } from '@tools/dotfiles/vitest-config';
+import { createVitestConfigJsdom } from '@tools/dotfiles';
 
 export default createVitestConfigJsdom({
   // Your Vitest options

@@ -10,7 +10,7 @@
 # Build (from repo root): docker build -f Dockerfile.Migrations -t openthrottle/migrations:local .
 # Published as openthrottle/migrations:<tag> alongside server/developer.
 ###########################################################################
-ARG NODE_VERSION="22"
+ARG NODE_VERSION="24"
 FROM node:${NODE_VERSION}-bookworm-slim AS production
 
 WORKDIR /app

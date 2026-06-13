@@ -6,8 +6,8 @@
 #
 ################################################################################
 
-name: "🌥️ Google Cloud Provider (GCP)"
-description: "Configure the runner with GCP credentials so we can build, push, and deploy via CI/CD."
+name: '🌥️ Google Cloud Provider (GCP)'
+description: 'Configure the runner with GCP credentials so we can build, push, and deploy via CI/CD.'
 inputs:
   branch:
     description: 'What branch are we deploying with "main" going to production'
@@ -16,23 +16,23 @@ inputs:
     description: "Actions don't support the parents secrets, so we have to pass it down."
     required: true
   google_cloud_project:
-    description: "The Google Cloud project to use"
+    description: 'The Google Cloud project to use'
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: "🔐 GCP Authentication"
-      uses: "google-github-actions/auth@v2"
+    - name: '🔐 GCP Authentication'
+      uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
       with:
         credentials_json: ${{ inputs.credentials_json }}
 
-    - name: "⚙️ GCP SDK Installation"
-      uses: "google-github-actions/setup-gcloud@v1"
+    - name: '⚙️ GCP SDK Installation'
+      uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       with:
-        install_components: "gke-gcloud-auth-plugin"
+        install_components: 'gke-gcloud-auth-plugin'
 
-    - name: "🔧 GCP Configuration"
+    - name: '🔧 GCP Configuration'
       # if: ${{ (inputs.branch != "main") }}
       shell: bash
       run: |

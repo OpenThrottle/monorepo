@@ -12,6 +12,18 @@ pnpm run database:start
 docker compose --profile dev watch
 ```
 
+🌳 Worktree:
+
+```bash
+git worktree list                    # See all worktrees
+git worktree remove <path>           # Delete a specific worktree
+git worktree prune                   # Clean up stale worktree entries
+
+# Claude
+/exit-worktree                       # Exit and preserve the worktree
+# Then manually delete with: git worktree remove <path>
+```
+
 ```<bash></bash>
 cursor ~/.claude.json
 cursor ~/.cursor/mcp.json

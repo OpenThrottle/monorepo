@@ -5,7 +5,7 @@ import {
   createVitestConfigJsdom,
   createVitestConfigNode,
   getDirname,
-} from '@tools/dotfiles/vitest-config';
+} from '@tools/dotfiles';
 
 import {
   createVitestConfigHappyDom,

@@ -18,13 +18,13 @@
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
 # `--legacy` deploy and is tracked for a real fix (injected strict deploy) in a follow-up plan.
 #
-# Build stages use node:22-bookworm-slim (glibc) so native addons match distroless production.
+# Build stages use node:24-bookworm-slim (glibc) so native addons match distroless production.
 ###########################################################################
 #
 #     👀 https://pnpm.io/docker using NX for the monorepo build
 #
 ###########################################################################
-ARG NODE_VERSION="22"
+ARG NODE_VERSION="24"
 FROM node:${NODE_VERSION}-bookworm-slim AS base
 
 WORKDIR /app
@@ -165,7 +165,7 @@ CMD ["node", "node_modules/@react-router/serve/bin.js", "build/server/index.js"]
 #   PRODUCTION ~ Distroless (default target)
 #
 ################################################################################
-FROM gcr.io/distroless/nodejs22-debian12:nonroot AS production
+FROM gcr.io/distroless/nodejs24-debian12:nonroot AS production
 
 WORKDIR /app
 

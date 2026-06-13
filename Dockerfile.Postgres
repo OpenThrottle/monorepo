@@ -13,5 +13,3 @@ FROM pgvector/pgvector:0.8.2-pg${POSTGRES_VERSION}-trixie
 # .dockerignore only re-includes seed.sql, so without it the databases/
 # folder is absent from the context and a literal path would fail to lstat.
 COPY ./database[s]/seed.sql* /docker-entrypoint-initdb.d/
-
-RUN echo '🤖 OpenThrottle | Postgres initialized 🤖'
