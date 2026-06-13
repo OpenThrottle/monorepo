@@ -2,8 +2,9 @@ import * as React from 'react';
 import { cleanup, render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PROMPTS_EMPTY_COPY, PromptsEmpty } from '../PromptsEmpty';
+import { PromptsEmpty } from '../PromptsEmpty';
 import type { PromptsEmptyProps } from '../PromptsEmpty';
+import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/data.copy';
 
 describe('PromptsEmpty Component', () => {
   let props: PromptsEmptyProps;

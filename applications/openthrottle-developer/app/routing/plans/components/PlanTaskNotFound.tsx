@@ -6,20 +6,9 @@ import {
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
+import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanTaskNotFoundProps {}
-
-/**
- * User-facing copy for this not-found state, single-sourced so a wording change
- * updates the rendered string and its spec in one place (specs import this
- * instead of duplicating the literal).
- *
- * @publicApi
- */
-export const PLAN_TASK_NOT_FOUND_COPY = {
-  description: 'The task you are looking for does not exist.',
-  title: 'Task not found',
-} as const;
 
 export const PlanTaskNotFound = (
   _props: PlanTaskNotFoundProps,

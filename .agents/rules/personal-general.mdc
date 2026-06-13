@@ -40,6 +40,11 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
 - `<FOLDER_NAME>` is the folder under `applications/<application>/app` (use `--list=componentFolders --application=<APPLICATION_NAME>` when applicable).
 - `<COMPONENT_NAME>` should be PascalCase for components. Pass comma-separated names to scaffold multiple components in one run when `--describe` reports comma support on `--name`. `--subGenerator=route` and other sub-generators use the same entrypoint; see `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe`.
 
+### Component and data file boundaries
+
+- A file in a `components` folder exports **only** its component and the props generated with it (e.g. `Foo` + `FooProps`). Infrequently it may export one extra related type/interface — but not constants, hardcoded data, or copy.
+- Hardcoded data, lists, mock data, and user-facing copy belong in the nearest `data` folder, not inlined in components. Use the standardized `data.<name>.ts` naming (e.g. `data.copy.ts`, `.tsx` when JSX is needed) so one file can export many related values. Copy specifically goes in `data.copy.ts`; the component imports and renders it, which both de-clutters the component and lets specs assert against the same source of truth.
+
 ### Updating Existing Files
 
 - Use components from `@openthrottle/react-router-shadcn` when possible. Source for those primitives lives under `packages/react-router-shadcn/src/components` if they ever need to be updated.
@@ -53,7 +58,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
 - Generate mock data from GraphQL in the `mocks.ts` file of the given application.
 - Each if statement in the logic should have its own `describe` block.
 - Always include tests for edge cases to ensure robustness.
-- Assert behavior and structure (roles, labels, `href`, test-ids), not marketing/UI copy. Prefer `getByRole`/`getByLabelText` over `getByText` for sentence-length strings. When the exact copy _is_ the contract (error/empty-state messages, branded text), single-source it: export the string as a `@publicApi` constant the component renders, and have the spec import that same constant instead of duplicating the literal — a wording change then updates one place and no spec breaks. See [docs/testing/snapshot-replacement-patterns.md](mdc:docs/testing/snapshot-replacement-patterns.md).
+- Assert behavior and structure (roles, labels, `href`, test-ids), not marketing/UI copy. Prefer `getByRole`/`getByLabelText` over `getByText` for sentence-length strings. When the exact copy _is_ the contract (error/empty-state messages, branded text), single-source it in the area's `data/data.copy.ts` (`.tsx` if it needs JSX): the component renders the constant and the spec imports the same constant, so a wording change updates one place and no spec breaks. See [docs/testing/snapshot-replacement-patterns.md](mdc:docs/testing/snapshot-replacement-patterns.md).
 
 ## API Applications
 

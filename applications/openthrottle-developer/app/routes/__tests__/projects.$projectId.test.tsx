@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import ProjectDetail from '../projects.$projectId';
 import type { Route } from '@/app/routes/+types/projects.$projectId';
-import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/components/ProjectNotFound';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 
 const mockProject = {
   __typename: 'ProjectObject' as const,

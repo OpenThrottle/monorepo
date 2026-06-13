@@ -114,28 +114,33 @@ const link = component.getByRole('link', { name: 'New prompt' });
 expect(link).toHaveAttribute('href', '/prompts/create');
 ```
 
-### When the copy IS the contract — single-source it as a `@publicApi` constant
+### When the copy IS the contract — single-source it in `data/data.copy.ts`
 
 Error and empty-state messages users must read are part of the contract, so keep
-asserting them — but don't duplicate the literal. Export the string from the
-component and have the spec import the **same** constant. A wording change then
-updates exactly one place and every spec follows automatically.
+asserting them — but don't duplicate the literal. Put the string in the area's
+`data/data.copy.ts`; the component renders that constant and the spec imports the
+**same** one. A wording change then updates exactly one place and every spec follows
+automatically. (Components stay limited to exporting the component + its props — copy
+does not live in the component file.)
 
-```tsx
-// ProjectNotFound.tsx
-/** @publicApi */
+```ts
+// app/routing/projects/data/data.copy.ts
 export const PROJECT_NOT_FOUND_COPY = {
   description: 'The project you’re looking for doesn’t exist or was removed.',
   title: 'Project not found',
 } as const;
+```
 
+```tsx
+// ProjectNotFound.tsx
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 // <EmptyTitle>{PROJECT_NOT_FOUND_COPY.title}</EmptyTitle>
 // <EmptyDescription>{PROJECT_NOT_FOUND_COPY.description}</EmptyDescription>
 ```
 
 ```ts
 // ProjectNotFound.test.tsx — and ANY other spec that renders this state
-import { PROJECT_NOT_FOUND_COPY } from '../ProjectNotFound';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 
 expect(
   component.getByRole('heading', { name: PROJECT_NOT_FOUND_COPY.title }),
@@ -147,13 +152,14 @@ expect(
 
 Notes:
 
-- The `@publicApi` JSDoc tag is required: Knip ignores `__tests__`, so a constant
-  consumed only by its component + spec would otherwise report as an unused export
-  (see [Knip.md](mdc:docs/monorepo/Knip.md)).
+- Keep the copy in `data/data.copy.ts`, not co-located in the component: the component
+  imports it (a real cross-module use reachable from a route entry), so Knip sees it as
+  used with no `@publicApi` tag needed — and the component file stays limited to its
+  component + props.
 - Worked examples in `openthrottle-developer`: `ProjectNotFound`, `PlanTaskNotFound`,
   `SkillsEmpty`, `PromptsEmpty` (and the `projects.$projectId` route spec, which
   imports `PROJECT_NOT_FOUND_COPY` rather than re-typing the sentence).
-- Spot-check after refactoring: change the copy in one component and run the suite —
+- Spot-check after refactoring: change a value in `data.copy.ts` and run the suite —
   only fixtures that still hard-code the literal should break; constant-bound specs
   stay green.
 - Copy that comes from **data** (seeded skill descriptions, fixtures) should assert

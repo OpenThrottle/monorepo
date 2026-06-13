@@ -3,23 +3,12 @@ import classnames from 'classnames';
 import { Button, Empty } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillsEmptyProps {
   className?: string;
   search?: string;
 }
-
-/**
- * User-facing copy for the empty/filtered-empty states, single-sourced so a
- * wording change updates the rendered string and its spec in one place (specs
- * import this instead of duplicating the literal).
- *
- * @publicApi
- */
-export const SKILLS_EMPTY_COPY = {
-  searchTitle: 'No skills found, try clearing the search to see all skills.',
-  title: 'No skills found, create your first skill to get started.',
-} as const;
 
 export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   const { className, search } = props;

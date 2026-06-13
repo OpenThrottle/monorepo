@@ -2,8 +2,9 @@ import * as React from 'react';
 import { cleanup } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
-import { SKILLS_EMPTY_COPY, SkillsEmpty } from '../SkillsEmpty';
+import { SkillsEmpty } from '../SkillsEmpty';
 import type { SkillsEmptyProps } from '../SkillsEmpty';
+import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
 
 describe('SkillsEmpty Component', () => {
   let props: SkillsEmptyProps;

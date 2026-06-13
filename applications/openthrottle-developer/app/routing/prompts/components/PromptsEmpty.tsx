@@ -9,25 +9,12 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
+import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/data.copy';
 
 export interface PromptsEmptyProps {
   className?: string;
   search?: string;
 }
-
-/**
- * User-facing copy for the empty/filtered-empty states, single-sourced so a
- * wording change updates the rendered string and its spec in one place (specs
- * import this instead of duplicating the literal).
- *
- * @publicApi
- */
-export const PROMPTS_EMPTY_COPY = {
-  description: 'Create your first prompt to get started.',
-  searchDescription: 'Try clearing the search to see all prompts.',
-  searchTitle: 'No prompts match your filters',
-  title: 'No prompts yet',
-} as const;
 
 export const PromptsEmpty = (props: PromptsEmptyProps): React.ReactElement => {
   const { className, search } = props;

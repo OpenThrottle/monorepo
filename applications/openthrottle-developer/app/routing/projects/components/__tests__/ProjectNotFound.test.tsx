@@ -1,8 +1,9 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PROJECT_NOT_FOUND_COPY, ProjectNotFound } from '../ProjectNotFound';
+import { ProjectNotFound } from '../ProjectNotFound';
 import type { ProjectNotFoundProps } from '../ProjectNotFound';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 describe('ProjectNotFound Component', () => {
