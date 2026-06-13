@@ -99,7 +99,7 @@ jobs:
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
       - name: "🕵️‍♂️ NX Setup SHA's"
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@v5
 
       # - name: '🔒 GraphQL schema sync (root vs server)'
       #   run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
