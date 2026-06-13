@@ -248,7 +248,6 @@
     },
     "format-write": {
       "cache": false,
-      "dependsOn": [{ "projects": ["@tools/dotfiles"], "target": "build" }],
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --write \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
@@ -257,7 +256,6 @@
     },
     "format-check": {
       "cache": true,
-      "dependsOn": [{ "projects": ["@tools/dotfiles"], "target": "build" }],
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --check \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
@@ -286,7 +284,6 @@
     },
     "lint": {
       "cache": true,
-      "dependsOn": ["@tools/dotfiles:build"],
       "executor": "nx:run-commands",
       "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
