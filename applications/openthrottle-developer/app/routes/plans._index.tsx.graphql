@@ -6,6 +6,7 @@ fragment PlanCard on PlanObject {
   description
   hasCustomRunConfig
   id
+  project
   projectRelation {
     id
     name
