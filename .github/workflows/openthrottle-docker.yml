@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: '📦 Checkout'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.0.1
         with:
           fetch-depth: 0
 
@@ -77,7 +77,7 @@ jobs:
           gcloud auth configure-docker ${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev -q
 
       - name: "🕵️ NX Set SHA's"
-        uses: nrwl/nx-set-shas@v5
+        uses: nrwl/nx-set-shas@v5.0.1
 
       - name: '📋 Affected OpenThrottle apps'
         id: affected

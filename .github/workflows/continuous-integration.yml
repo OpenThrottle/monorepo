@@ -78,7 +78,7 @@ jobs:
 
     steps:
       - name: '📦 Checkout the code'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v5.0.1'
         with:
           fetch-depth: 0
 
@@ -99,7 +99,7 @@ jobs:
           google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
       - name: "🕵️‍♂️ NX Setup SHA's"
-        uses: nrwl/nx-set-shas@v5
+        uses: nrwl/nx-set-shas@v5.0.1
 
       # - name: '🔒 GraphQL schema sync (root vs server)'
       #   run: pnpm dlx nx@${{ env.NX_VERSION }} run openthrottle-server:verify-graphql-schema-sync
@@ -163,7 +163,7 @@ jobs:
 
     steps:
       - name: '📦 Checkout the code'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v5.0.1'
         with:
           fetch-depth: 0
 
@@ -190,7 +190,7 @@ jobs:
 
     steps:
       - name: '📦 Checkout the code'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v5.0.1'
         with:
           fetch-depth: 0
 
@@ -223,7 +223,7 @@ jobs:
   #   timeout-minutes: 15
   #   steps:
   #     - name: "📦 Checkout the code"
-  #       uses: "actions/checkout@v5"
+  #       uses: "actions/checkout@v5.0.1"
   #       with:
   #         fetch-depth: 0
 

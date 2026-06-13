@@ -34,7 +34,7 @@ The compute step writes `build-<nx-project-name>=true|false` for every name in `
 
 ```yaml
 - name: "🕵️ NX Set SHA's"
-  uses: nrwl/nx-set-shas@v5
+  uses: nrwl/nx-set-shas@v5.0.1
 
 - name: '📋 Affected Docker apps'
   id: affected
