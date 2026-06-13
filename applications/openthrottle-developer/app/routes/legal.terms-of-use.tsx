@@ -95,8 +95,9 @@ export default function Component(
             Intellectual property and source code
           </h2>
           <p>
-            The source code that powers this site is open source and licensed
-            under the MIT License. You can read the full license at{' '}
+            The source code that powers this site is source-available and
+            licensed under a proprietary End User License Agreement (EULA). You
+            can read the full license at{' '}
             <Link
               className="underline underline-offset-4 hover:text-foreground transition-colors"
               to="/legal/license"

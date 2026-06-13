@@ -12,7 +12,7 @@
     <img src="https://img.shields.io/github/actions/workflow/status/OpenThrottle/monorepo/nx-release.yml?branch=main&style=for-the-badge" alt="Release">
   </a>
   <a href="LICENSE.md">
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License">
+    <img src="https://img.shields.io/badge/License-EULA-red.svg?style=for-the-badge" alt="Standard EULA">
   </a>
 </p>
 
