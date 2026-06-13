@@ -326,7 +326,6 @@
     "lighthouse": "catalog:",
     "lightningcss": "catalog:",
     "lint-staged": "catalog:",
-    "metro-config": "catalog:",
     "nx": "catalog:",
     "only-allow": "catalog:",
     "postcss-import": "catalog:",
