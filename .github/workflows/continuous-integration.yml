@@ -64,7 +64,7 @@ jobs:
       group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
     env:
       jobCount: 1 # must be in sync with "jobIndex"
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
 
     # FIXME: 💰 Increase as needed - balance with cost and time to completion
     strategy:
@@ -158,7 +158,7 @@ jobs:
 
   nx-circular-dependencies:
     if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     timeout-minutes: 10
 
     steps:
@@ -185,7 +185,7 @@ jobs:
     # FIXME: 💰 Re-enable when we want to spend more
     # if: ${{ (github.actor != 'dependabot[bot]') && (github.ref_name == 'main') }}
     if: false
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     timeout-minutes: 10
 
     steps:
@@ -219,7 +219,7 @@ jobs:
 
   # nx-release:
   #   if: ${{ github.actor != 'dependabot[bot]' }}
-  #   runs-on: ubuntu-latest
+  #   runs-on: blacksmith-4vcpu-ubuntu-2204
   #   timeout-minutes: 15
   #   steps:
   #     - name: "📦 Checkout the code"
