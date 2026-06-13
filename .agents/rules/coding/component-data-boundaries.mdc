@@ -1,0 +1,21 @@
+---
+alwaysApply: true
+description: Components export only their component + props; hardcoded data/lists/mock/copy live in the nearest data/ folder (copy → data.copy.ts), and pure data files don't warrant specs.
+globs:
+name: coding-component-data-boundaries
+---
+
+Component and data file boundaries:
+
+- A file in a `components/` folder exports **only** its component and the props generated with it (e.g. `Foo` + `FooProps`). Infrequently it may export one extra closely-related type/interface — but never constants, hardcoded data, lists, mock data, or copy.
+- Hardcoded data, lists, mock data, and user-facing copy belong in the nearest `data/` folder, not inlined in components. Use the standardized `data.<name>.ts` naming (`.tsx` only when it needs JSX) so one file can export many related values:
+  - User-facing copy → `data.copy.ts`
+  - Mock fixtures → `mock.<name>.ts` (existing convention)
+  - Other static data/lists → `data.<name>.ts`
+- The component imports the data via the `~/routing/<area>/data/...` alias and renders it. Because the component imports it (a real cross-module use reachable from a route entry), Knip treats it as used — no `@publicApi` tag is needed on data exports.
+
+Testing data files:
+
+- **Pure hardcoded data files do not warrant their own spec.** A test that re-states the literals (`expect(COPY.title).toBe('…')`, `expect(names).toContain('X')`) is a tautology and a change-detector: it breaks on every intentional edit and protects nothing. The component / route spec that renders the data already covers that it is used.
+- **Spec a data file only when it carries logic or an invariant worth guarding** — derivation, parsing, filtering, computed/sorted lists, uniqueness, or a shape rule (e.g. "every entry is a valid URL"). Assert the **rule/behavior**, not the specific values.
+- When copy is the contract, the consuming component/route spec asserts against the imported constant from `data.copy.ts` (single source of truth) rather than a duplicated literal — see [docs/testing/snapshot-replacement-patterns.md](../../../docs/testing/snapshot-replacement-patterns.md).

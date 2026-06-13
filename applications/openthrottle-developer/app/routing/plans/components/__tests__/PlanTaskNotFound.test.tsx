@@ -5,6 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanTaskNotFound } from '../PlanTaskNotFound';
 import type { PlanTaskNotFoundProps } from '../PlanTaskNotFound';
+import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/data.copy';
 
 describe('PlanTaskNotFound Component', () => {
   let component: RenderResult;
@@ -21,10 +22,10 @@ describe('PlanTaskNotFound Component', () => {
 
   test('renders empty state for missing task', () => {
     expect(
-      component.getByRole('heading', { name: 'Task not found' }),
+      component.getByRole('heading', { name: PLAN_TASK_NOT_FOUND_COPY.title }),
     ).toBeInTheDocument();
     expect(
-      component.getByText('The task you are looking for does not exist.'),
+      component.getByText(PLAN_TASK_NOT_FOUND_COPY.description),
     ).toBeInTheDocument();
   });
 });

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "command": "./scripts/create_worktree.sh",
-            "statusMessage": "🌳 Creating worktree...",
+            "statusMessage": "🌳 OT | Creating worktree...",
             "type": "command"
           }
         ]
