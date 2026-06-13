@@ -1,7 +1,12 @@
+.markdown {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+}
+
 /**
- * Markdown content styles.
- * Uses style-guide theme tokens (--color-*, --font-*, --text-* from theme-v4.css).
- */
+* Markdown content styles.
+* Uses style-guide theme tokens (--color-*, --font-*, --text-* from theme-v4.css).
+*/
 .markdown h1,
 .markdown h2,
 .markdown h3,
@@ -10,7 +15,7 @@
 .markdown h6 {
   color: var(--color-foreground);
   font-family: var(--font-mono);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   margin-bottom: 0.5rem;
   margin-top: 2.5rem;
 }
@@ -40,7 +45,6 @@
 
 .markdown p {
   margin-bottom: 1rem;
-  /* line-height: 1.5rem; */
 }
 
 .markdown p:last-of-type p {
@@ -60,7 +64,7 @@
   overflow: auto;
   border-radius: 0.5rem;
   padding: 1rem;
-  font-size: var(--text-sm, 14px);
+  font-size: var(--text-base);
 }
 
 .markdown blockquote {
@@ -71,7 +75,7 @@
   margin-bottom: 1rem;
   border-radius: 0 0.5rem 0.5rem 0;
   padding: 1rem;
-  font-size: var(--text-sm, 14px);
+  font-size: var(--text-base);
   font-style: italic;
 }
 
@@ -93,14 +97,13 @@
 
 .markdown ol,
 .markdown ul {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  font-size: var(--text-sm, 14px);
+  @apply space-y-2 text-xs my-4;
 }
 
 .markdown ol li,
 .markdown ul li {
   margin-left: 1rem;
+  /* margin-bottom: 0.3rem; */
 }
 
 .markdown ul ol,
