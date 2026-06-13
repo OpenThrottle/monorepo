@@ -32,7 +32,7 @@ console.log(`📦 Updating "${name}" package.json`);
 
 /**
  * Transform our monorepo -> package -> package.json into something that we
- * can publish. This requires swapping instances of "workspace:*" with the
+ * can publish. This requires swapping instances of "workspace:^" with the
  * correct version number, after versioning updates have been made. We also
  * make use of a "publishConfig" property that PNPM will use to adjust the
  * package.json before publishing, allowing us to update the "main", "module",

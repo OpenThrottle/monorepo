@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { OPEN_THROTTLE_META_DESCRIPTION } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_META_DESCRIPTION } from '@openthrottle/react-router-utils';
 import { getMockMessages } from '~/global/data/mock.mail';
 import { MailGlobalErrorBoundary } from '~/global/components/MailGlobalErrorBoundary';
 import { MAIL_FOLDER_IDS } from '~/types/mail';
@@ -21,7 +21,7 @@ export const loader = async (_args: Route.LoaderArgs) => {
 export const meta = (_args: Route.MetaArgs) => {
   return [
     { title: SITE_TITLE },
-    { content: OPEN_THROTTLE_META_DESCRIPTION, name: 'description' },
+    { content: OPENTHROTTLE_META_DESCRIPTION, name: 'description' },
   ];
 };
 

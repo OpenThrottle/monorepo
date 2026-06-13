@@ -4,10 +4,10 @@ Centralizes GraphQL Codegen dependencies for the OpenThrottle monorepo (`client`
 
 ## Installation
 
-Workspace packages depend on this package via the root `package.json` or a direct `workspace:*` reference. Do not add individual `@graphql-codegen/*` packages to consumers unless a config needs a plugin outside the shared set.
+Workspace packages depend on this package via the root `package.json` or a direct `workspace:^` reference. Do not add individual `@graphql-codegen/*` packages to consumers unless a config needs a plugin outside the shared set.
 
 ```bash
-pnpm add @openthrottle/graphql-codegen@workspace:*
+pnpm add @openthrottle/graphql-codegen@workspace:^
 ```
 
 ## Usage

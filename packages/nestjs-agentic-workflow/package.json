@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@graphql-typed-document-node/core": "3.2.0",
-    "@openthrottle/nodejs-graphql": "workspace:*",
-    "@openthrottle/openthrottle-agentic-ralph": "workspace:*",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:*"
+    "@graphql-typed-document-node/core": "catalog:",
+    "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
   },
   "exports": {
     ".": {
@@ -97,8 +97,8 @@
   "type": "commonjs",
   "types": "./src/index.ts",
   "devDependencies": {
-    "@golevelup/ts-vitest": "^4.0.0",
-    "@nestjs/testing": "^11.1.18",
-    "@openthrottle/nestjs-modules": "workspace:*"
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^"
   }
 }

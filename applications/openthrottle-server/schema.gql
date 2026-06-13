@@ -555,6 +555,54 @@ type SignoutResultObject {
   success: Boolean!
 }
 
+type CodeSearchMatch {
+  """Raw source text of the matched chunk."""
+  content: String!
+
+  """1-based inclusive last line of the match."""
+  endLine: Int!
+
+  """Workspace-relative POSIX path of the matched file."""
+  path: String!
+
+  """Similarity score (0–1, higher is more relevant)."""
+  score: Float!
+
+  """1-based first line of the match."""
+  startLine: Int!
+}
+
+type CodeSemanticSearchResult {
+  """
+  False when no embeddings provider is configured; the UI renders its gated state.
+  """
+  available: Boolean!
+
+  """Ranked code matches by similarity (empty when unavailable or no hits)."""
+  matches: [CodeSearchMatch!]!
+}
+
+type CodeIndexStatusObject {
+  """Number of indexed code chunks for the repository (0 when not indexed)."""
+  indexedChunks: Int!
+
+  """Registered repository id."""
+  repositoryId: String!
+
+  """One of: unavailable, indexing, ready, notIndexed."""
+  status: String!
+}
+
+type IndexCodeRepositoryResult {
+  """Registered repository id."""
+  repositoryId: String!
+
+  """
+  Status after enqueue: indexing, or unavailable when no provider is configured.
+  """
+  status: String!
+}
+
 type CommitLinkObject {
   createdAt: DateTime!
   id: String!
@@ -1413,6 +1461,16 @@ type Query {
   """
   getAgentConversationMessages(input: GetAgentConversationMessagesInput!): ListAgentConversationMessagesResultObject!
 
+  """
+  Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.
+  """
+  codeSemanticSearch(input: CodeSemanticSearchInput!): CodeSemanticSearchResult!
+
+  """
+  Index status for a registered repository: unavailable, indexing, ready, or notIndexed.
+  """
+  codeIndexStatus(repositoryId: ID!): CodeIndexStatusObject!
+
   """Get a commit link by ID"""
   commitLink(input: GetCommitLinkInput!): CommitLinkObject
 
@@ -1735,6 +1793,17 @@ input GetAgentConversationMessagesInput {
 
   """Offset for pagination"""
   offset: Int = 0
+}
+
+input CodeSemanticSearchInput {
+  """Max number of matches to return (default 10)."""
+  limit: Int
+
+  """Natural-language query to embed and search by vector similarity."""
+  query: String!
+
+  """Registered WorkspaceLocalRepository id to search within."""
+  repositoryId: ID!
 }
 
 input GetCommitLinkInput {
@@ -2076,6 +2145,11 @@ type Mutation {
 
   """Register a new user. Returns id, email, and JWT access token."""
   register(input: RegisterInput!): RegisterResultObject!
+
+  """
+  Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured.
+  """
+  indexCodeRepository(repositoryId: ID!): IndexCodeRepositoryResult!
 
   """
   Associate a git commit with a plan (and optionally a task). Use after PR merge with squash SHA.

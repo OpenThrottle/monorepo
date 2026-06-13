@@ -20,6 +20,9 @@
       "path": "../../packages/nestjs-repositories"
     },
     {
+      "path": "../../packages/openthrottle-ide"
+    },
+    {
       "path": "../../packages/openthrottle-skills"
     },
     {
@@ -27,6 +30,9 @@
     },
     {
       "path": "../../packages/openthrottle-notifications"
+    },
+    {
+      "path": "../../packages/react-router-ide"
     },
     {
       "path": "../../packages/react-router-notifications"

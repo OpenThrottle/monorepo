@@ -228,7 +228,7 @@ export const PlanWorkflowRunTransparency = (
                           </Link>
                         </td>
                         <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                          {row.createdAt.toISOString()}
+                          {new Date(row.createdAt).toISOString()}
                         </td>
                         <td className="py-1.5 pr-2 align-top text-[0.65rem]">
                           {row.runKind}

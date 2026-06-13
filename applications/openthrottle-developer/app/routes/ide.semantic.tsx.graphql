@@ -1,0 +1,27 @@
+query CodeIndexStatus($repositoryId: ID!) {
+  codeIndexStatus(repositoryId: $repositoryId) {
+    indexedChunks
+    repositoryId
+    status
+  }
+}
+
+query CodeSemanticSearch($input: CodeSemanticSearchInput!) {
+  codeSemanticSearch(input: $input) {
+    available
+    matches {
+      content
+      endLine
+      path
+      score
+      startLine
+    }
+  }
+}
+
+mutation IndexCodeRepository($repositoryId: ID!) {
+  indexCodeRepository(repositoryId: $repositoryId) {
+    repositoryId
+    status
+  }
+}

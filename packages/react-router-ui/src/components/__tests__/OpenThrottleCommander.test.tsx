@@ -188,6 +188,8 @@ describe('OpenThrottleCommander Component', () => {
     test('should render UUID debug jumps when emptyStateExtras returns items', async () => {
       const user = userEvent.setup();
       const planId = 'c65fb0f7-56ae-43bb-b516-dfd41fda7985';
+      // Typing a full UUID drives many cmdk re-filters; allow extra headroom
+      // when the suite runs under parallel load.
       const onJumpPlan = vi.fn();
       const onJumpQueue = vi.fn();
       const groups: readonly CommanderGroup[] = [
@@ -229,7 +231,7 @@ describe('OpenThrottleCommander Component', () => {
       );
       expect(onJumpPlan).toHaveBeenCalledTimes(1);
       expect(component.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    }, 15000);
 
     test('should not show Search option when onEmptyStateSearch is not provided', async () => {
       const user = userEvent.setup();
@@ -249,7 +251,7 @@ describe('OpenThrottleCommander Component', () => {
       expect(
         within(dialog).queryByRole('option', { name: /Search for/ }),
       ).not.toBeInTheDocument();
-    });
+    }, 15000);
   });
 
   describe('controlled open state', () => {

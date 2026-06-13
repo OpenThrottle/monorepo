@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "logform": "^2.7.0",
-    "nestjs-cls": "^6.2.0",
-    "winston": "^3.19.0",
-    "winston-transport": "^4.9.0"
+    "logform": "catalog:",
+    "nestjs-cls": "catalog:",
+    "winston": "catalog:",
+    "winston-transport": "catalog:"
   },
   "exports": {
     ".": {

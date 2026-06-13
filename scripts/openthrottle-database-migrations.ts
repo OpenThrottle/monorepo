@@ -33,6 +33,9 @@ async function main(): Promise<void> {
   const client = new Client({ connectionString });
   await client.connect();
 
+  // console.error('🌟 connected 🌟', sqlFiles);
+  console.error('🌟 client.connection 🌟', client.connection);
+
   try {
     /* eslint-disable no-await-in-loop -- migrations must run in order */
     for (const file of sqlFiles) {
@@ -46,6 +49,9 @@ async function main(): Promise<void> {
     /* eslint-enable no-await-in-loop */
 
     console.log('Migrations completed.');
+  } catch (e) {
+    console.error(' 🔴  🔴  🔴 Migration failed:', e);
+    process.exit(1);
   } finally {
     await client.end();
   }

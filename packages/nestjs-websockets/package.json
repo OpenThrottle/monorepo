@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/platform-socket.io": "^11.1.18",
-    "@nestjs/websockets": "^11.1.18",
-    "socket.io": "^4.8.3"
+    "@nestjs/common": "catalog:",
+    "@nestjs/platform-socket.io": "catalog:",
+    "@nestjs/websockets": "catalog:",
+    "socket.io": "catalog:"
   },
   "devDependencies": {},
   "exports": {

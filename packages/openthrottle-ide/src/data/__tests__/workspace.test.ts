@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { hashContent } from '../../utils/hash.js';
-import { hashWorkspace, listFiles } from '../workspace.js';
+import type { WorkspaceFileHash } from '../workspace.js';
+import { diffSnapshots, hashWorkspace, listFiles } from '../workspace.js';
 
 describe('workspace enumeration', () => {
   let root: string;
@@ -43,5 +44,57 @@ describe('workspace enumeration', () => {
 
     expect(byPath.get('src/a.ts')).toBe(hashContent('export const a = 1;\n'));
     expect(byPath.size).toBe(3);
+  });
+});
+
+describe('diffSnapshots', () => {
+  const snapshot = (entries: Record<string, string>): WorkspaceFileHash[] =>
+    Object.entries(entries).map(([path, content]) => ({
+      hash: hashContent(content),
+      path,
+    }));
+
+  it('reports added, changed, and removed paths', () => {
+    const prev = snapshot({
+      'src/a.ts': 'a1',
+      'src/b.ts': 'b1',
+      'src/gone.ts': 'g1',
+    });
+    const next = snapshot({
+      'src/a.ts': 'a1',
+      'src/b.ts': 'b2',
+      'src/new.ts': 'n1',
+    });
+
+    expect(diffSnapshots(prev, next)).toEqual({
+      added: ['src/new.ts'],
+      changed: ['src/b.ts'],
+      removed: ['src/gone.ts'],
+    });
+  });
+
+  it('returns empty lists for identical snapshots', () => {
+    const snap = snapshot({ 'src/a.ts': 'a1', 'src/b.ts': 'b1' });
+
+    expect(diffSnapshots(snap, snap)).toEqual({
+      added: [],
+      changed: [],
+      removed: [],
+    });
+  });
+
+  it('sorts each list for deterministic output', () => {
+    const prev = snapshot({});
+    const next = snapshot({
+      'src/a.ts': 'a',
+      'src/m.ts': 'm',
+      'src/z.ts': 'z',
+    });
+
+    expect(diffSnapshots(prev, next).added).toEqual([
+      'src/a.ts',
+      'src/m.ts',
+      'src/z.ts',
+    ]);
   });
 });

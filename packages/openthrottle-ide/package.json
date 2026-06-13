@@ -8,7 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@vscode/ripgrep": "^1.18.0"
+    "@vscode/ripgrep": "catalog:",
+    "chokidar": "catalog:",
+    "ignore": "catalog:",
+    "ts-morph": "catalog:"
   },
   "exports": {
     ".": {

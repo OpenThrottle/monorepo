@@ -113,7 +113,9 @@ describe('QueueJobDetail Component', () => {
     test('renders formatted return value block', () => {
       const job: QueueJobDetailJob = {
         ...baseJob(),
+        failedReason: 'boom',
         returnvalue: JSON.stringify({ ok: true }),
+        state: 'failed',
       };
       const view = renderDetail(job);
 

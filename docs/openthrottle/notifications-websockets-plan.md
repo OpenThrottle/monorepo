@@ -67,7 +67,7 @@ Add notifications to the openthrottle-developer app by wiring WebSockets end-to-
 
 ## Shared contract: @openthrottle/openthrottle-notifications
 
-- **Package:** `packages/openthrottle/notifications`; add dependency `"@openthrottle/openthrottle-notifications": "workspace:*"` in server and developer app.
+- **Package:** `packages/openthrottle/notifications`; add dependency `"@openthrottle/openthrottle-notifications": "workspace:^"` in server and developer app.
 - **Event names:** `NOTIFICATION_EVENT_NAMES.PLAN_UPDATED` → `plan.updated`, `TASK_COMPLETED` → `task.completed`, `QUEUE_JOB_COMPLETED` → `queue.job.completed`, `SYSTEM_ALERT` → `system.alert`.
 - **Payload types:** `PlanUpdatedPayload`, `TaskCompletedPayload`, `QueueJobCompletedPayload`, `SystemAlertPayload` (all extend base with `message`, `severity`, `timestamp`; event-specific fields in package README).
 

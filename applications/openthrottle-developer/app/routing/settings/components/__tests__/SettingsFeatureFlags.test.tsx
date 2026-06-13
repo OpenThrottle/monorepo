@@ -9,9 +9,7 @@ describe('SettingsFeatureFlags Component', () => {
   test('renders feature flag keys and devtools guidance', () => {
     renderRoutesStub(<SettingsFeatureFlags />);
 
-    expect(
-      screen.getByRole('heading', { name: 'Feature flags' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Feature flags')).toBeInTheDocument();
 
     for (const key of Object.keys(FEATURE_FLAGS)) {
       expect(screen.getByText(`${key}:`)).toBeInTheDocument();

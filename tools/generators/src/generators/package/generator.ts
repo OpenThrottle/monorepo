@@ -134,7 +134,7 @@ export async function packageGenerator(
   // Wire the new package into the root package.json as a workspace dependency.
   // pnpm-workspace.yaml already globs packages/* and tools/*, so this entry plus
   // the install task below registers the package across the workspace.
-  addDependenciesToPackageJson(tree, { [`${org}/${name}`]: 'workspace:*' }, {});
+  addDependenciesToPackageJson(tree, { [`${org}/${name}`]: 'workspace:^' }, {});
 
   await formatFiles(tree);
 

@@ -8,6 +8,7 @@ const testWindowEnv = {
   API_URL_INTERNAL: 'http://localhost/api/internal',
   APP_ENV: 'test',
   APP_NAME: 'test-app',
+  APP_NAME_SHORT: 'OT',
   APP_URL: 'http://localhost',
   APP_URL_ADMIN: 'http://localhost/admin',
   APP_URL_CMS: 'http://localhost/cms',

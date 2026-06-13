@@ -26,12 +26,17 @@ export function createProfileExecutionFileWriter(
   options: ProfileExecutionFileWriterOptions,
 ): (result: ProfileExecutionResult) => void {
   const { outputPath } = options;
+  let writeChain: Promise<void> = Promise.resolve();
 
   return (result: ProfileExecutionResult): void => {
-    void fs
-      .appendFile(outputPath, JSON.stringify(result) + '\n', 'utf8')
+    // Serialize appends so NDJSON line order matches report order.
+    writeChain = writeChain
+      .then(() =>
+        fs.appendFile(outputPath, JSON.stringify(result) + '\n', 'utf8'),
+      )
       .catch(() => {
         // Fire-and-forget: no rethrow
       });
+    void writeChain;
   };
 }

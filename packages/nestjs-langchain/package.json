@@ -8,21 +8,21 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@langchain/classic": "^1.0.28",
-    "@langchain/community": "^1.1.27",
-    "@langchain/core": "^1.1.39",
-    "@langchain/google-vertexai": "^2.1.10",
-    "@langchain/ollama": "^1.2.0",
-    "cheerio": "^1.1.2",
-    "glob": "^13.0.0",
-    "ignore": "^7.0.5",
-    "pdf-parse": "^2.4.5",
-    "pg": "^8.17.1",
-    "youtubei.js": "^17.0.1"
+    "@langchain/classic": "catalog:",
+    "@langchain/community": "catalog:",
+    "@langchain/core": "catalog:",
+    "@langchain/google-vertexai": "catalog:",
+    "@langchain/ollama": "catalog:",
+    "cheerio": "catalog:",
+    "glob": "catalog:",
+    "ignore": "catalog:",
+    "pdf-parse": "catalog:",
+    "pg": "catalog:",
+    "youtubei.js": "catalog:"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0",
-    "typescript": "^5.9.3"
+    "@types/pg": "catalog:",
+    "typescript": "catalog:"
   },
   "exports": {
     ".": {

@@ -14,7 +14,7 @@ Authenticated GraphQL calls use a bearer token from the environment. Set **`OPEN
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/openthrottle-mcp": "workspace:*"` where needed, or run the MCP from this package after a build. See [AGENTS.md](../../AGENTS.md) for OpenThrottle MCP usage.
+**In this monorepo:** add `"@openthrottle/openthrottle-mcp": "workspace:^"` where needed, or run the MCP from this package after a build. See [AGENTS.md](../../AGENTS.md) for OpenThrottle MCP usage.
 
 **Build and run (monorepo):**
 

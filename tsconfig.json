@@ -183,6 +183,12 @@
     },
     {
       "path": "./packages/openthrottle-ide"
+    },
+    {
+      "path": "./packages/nestjs-vector-search"
+    },
+    {
+      "path": "./packages/react-router-ide"
     }
   ]
 }

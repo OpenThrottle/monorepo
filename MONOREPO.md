@@ -184,6 +184,26 @@ cd applications/my-app
 pnpm add <package-name>
 ```
 
+### Dependency Catalog (required)
+
+All external dependency versions are managed through the [pnpm catalog](https://pnpm.io/catalogs) defined in `pnpm-workspace.yaml`. Every `dependencies`, `devDependencies`, and `optionalDependencies` entry in every workspace `package.json` must use the `catalog:` protocol — never a literal version:
+
+```json
+{
+  "dependencies": {
+    "zod": "catalog:"
+  }
+}
+```
+
+To add or upgrade a dependency, edit (or add) its entry in the `catalog:` section of `pnpm-workspace.yaml`, reference it with `"<name>": "catalog:"` in the consuming `package.json`, and run `pnpm install`.
+
+**peerDependencies policy:** peer ranges on published packages are part of their public API. A peer entry uses `catalog:` only when its range is intentionally identical to the catalog version; intentionally _wide_ ranges (e.g. `"react": ">=18.0.0"`, `"@nestjs/common": "^11.0.0"`) stay literal so consumers outside this workspace aren't over-constrained.
+
+`pnpm publish` replaces `catalog:` with the concrete version at pack time, so published `@openthrottle/*` manifests never contain the protocol.
+
+Coverage is enforced by `scripts/check-catalog-coverage.ts` (run as part of `pnpm run check:local`).
+
 ### Internal Package References
 
 Applications and packages can reference each other directly:
@@ -191,12 +211,12 @@ Applications and packages can reference each other directly:
 ```json
 {
   "dependencies": {
-    "@openthrottle/xxxxxx": "workspace:*"
+    "@openthrottle/xxxxxx": "workspace:^"
   }
 }
 ```
 
-The `workspace:*` protocol tells pnpm to use the local workspace version.
+The `workspace:^` protocol tells pnpm to use the local workspace version.
 
 ### Dependency Sharing Patterns
 

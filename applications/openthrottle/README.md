@@ -52,7 +52,7 @@ docker compose build
 Compose reads **`applications/openthrottle/.env`** (path is relative to the compose file). Create it from `applications/openthrottle/.env.default` and set at least:
 
 - **Postgres (for server and Postgres service):** `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_VERSION`. When running in Compose, the server and developer run inside the same Docker network, so set **`POSTGRES_HOST=openthrottle-postgres`** and **`REDIS_HOST=openthrottle-redis`** (and use `POSTGRES_DB=openthrottle` if you use the default OpenThrottle schema).
-- **Redis:** `REDIS_HOST=openthrottle-redis`, `REDIS_PORT=6379`, `REDIS_VERSION` (e.g. `8.6-rc1`).
+- **Redis:** `REDIS_HOST=openthrottle-redis`, `REDIS_PORT=6379`, `REDIS_VERSION` (e.g. `8.8.0`).
 - **openthrottle-server:** `JWT_SECRET`, `CORS_ORIGINS` (include the developer app origin, e.g. `http://localhost:5173`). Optional: `PORT` (default in container is 3000), `OPENAI_API_KEY` or Ollama vars for embeddings (see root `.env.default` and `databases/README.md`).
 - **openthrottle-developer:** `API_URL` must be the URL the **browser** uses to reach the server (e.g. `http://localhost:3000` when using the default host port). Optional: `API_URL_EXTERNAL`, `PORT` (default 5173 in container).
 

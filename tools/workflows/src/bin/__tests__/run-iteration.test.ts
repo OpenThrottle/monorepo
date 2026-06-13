@@ -69,7 +69,7 @@ describe('runIteration (sync) backend dispatch', () => {
     expect(spawnSync).toHaveBeenCalledTimes(1);
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
     expect(firstArg).toMatch(
-      /^claude --bare --permission-mode acceptEdits -p "/,
+      /^claude --bare -p --permission-mode acceptEdits "/,
     );
     expect(firstArg).not.toContain('--model');
   });
@@ -132,7 +132,7 @@ describe('runIteration (sync) backend dispatch', () => {
     });
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
     expect(firstArg).toMatch(
-      /^claude --bare --permission-mode acceptEdits -p "/,
+      /^claude --bare -p --permission-mode acceptEdits "/,
     );
     expect(firstArg).toContain('-w my-wt');
     expect(firstArg).not.toContain('--worktree-base');
@@ -178,7 +178,7 @@ describe('runIterationAsync backend dispatch', () => {
     expect(spawn).toHaveBeenCalledTimes(1);
     const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
     expect(firstArg).toMatch(
-      /^claude --bare --permission-mode acceptEdits -p "/,
+      /^claude --bare -p --permission-mode acceptEdits "/,
     );
   });
 

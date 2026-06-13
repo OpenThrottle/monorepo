@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/openthrottle-mcp": "workspace:*",
-    "@openthrottle/openthrottle-agentic-utils": "workspace:*",
-    "@tools/workflows": "workspace:*",
-    "pg": "^8.17.1"
+    "@openthrottle/openthrottle-mcp": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@tools/workflows": "workspace:^",
+    "pg": "catalog:"
   },
   "exports": {
     ".": {

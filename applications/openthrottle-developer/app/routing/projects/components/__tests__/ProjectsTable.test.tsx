@@ -76,7 +76,7 @@ describe('ProjectsTable Component', () => {
   });
 
   test('shows no results when projects is empty', () => {
-    expect(component.getByText('No results.')).toBeDefined();
+    expect(component.getByText('No projects yet')).toBeInTheDocument();
   });
 
   test('renders projects from props when provided', () => {
@@ -117,8 +117,8 @@ describe('ProjectsTable Component', () => {
     expect(
       getAllByRole('columnheader', { name: 'Updated' }).length,
     ).toBeGreaterThan(0);
-    // Updated column shows short date (MMM d, yyyy); exact string depends on timezone
-    const updatedCells = getAllByText(/Jan \d, 2025/);
+    // Updated column shows relative time (e.g. "over 1 year ago")
+    const updatedCells = getAllByText(/ago$/);
     expect(updatedCells.length).toBe(2);
   });
 });

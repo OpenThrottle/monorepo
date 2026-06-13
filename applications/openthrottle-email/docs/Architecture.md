@@ -140,7 +140,7 @@ The **`OpenThrottleEnv`** / **`OpenThrottleClientEnv`** types in **`packages/ope
 | Sibling OpenThrottle apps | `APP_URL_ADMIN`, `APP_URL_CMS`, `APP_URL_DEVELOPER`, `APP_URL_EMAIL`, `APP_URL_SERVER`, `APP_URL_WEBSITE` |
 | API / infra               | `API_URL`, `NODE_ENV`, `ROLLBAR_TOKEN`                                                                    |
 
-In TypeScript, prefer **`import { APP_URL, … } from '@openthrottle/react-router-utils'`** (or **`IS_PRODUCTION`**, **`OPEN_THROTTLE_*`**, etc.) instead of hardcoding URLs or inventing new `APP_*` names.
+In TypeScript, prefer **`import { APP_URL, … } from '@openthrottle/react-router-utils'`** (or **`IS_PRODUCTION`**, **`OPENTHROTTLE_*`**, etc.) instead of hardcoding URLs or inventing new `APP_*` names.
 
 ### openthrottle-email locally
 

@@ -1,22 +1,27 @@
 import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Index from '../_index';
 
 describe('routes/_index.tsx', () => {
-  test('renders home hero and product features', () => {
+  test('renders home build prompt heading', () => {
     const view = render(
-      <MemoryRouter>
-        <Index
-          actionData={undefined}
-          loaderData={{}}
-          matches={[] as never}
-          params={{}}
-        />
-      </MemoryRouter>,
+      <TooltipProvider>
+        <MemoryRouter>
+          <Index
+            actionData={undefined}
+            loaderData={{}}
+            matches={[] as never}
+            params={{}}
+          />
+        </MemoryRouter>
+      </TooltipProvider>,
     );
 
-    expect(view.getByTestId('HomeHeroV1')).toBeInTheDocument();
+    expect(
+      view.getByText('What would you like to build today?'),
+    ).toBeInTheDocument();
   });
 });

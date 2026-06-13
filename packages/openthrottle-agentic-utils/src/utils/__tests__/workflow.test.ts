@@ -18,17 +18,20 @@ import {
   WORKFLOW_RUNNER_IDS,
 } from '../../config/index.js';
 
+/** Marker file that identifies the OpenThrottle monorepo root. */
+const OPENTHROTTLE_WORKSPACE_MARKER = '.openthrottle.mjs';
+
 /** Temp dir without a workspace marker. */
 let emptyRoot: string;
-/** Temp dir with pnpm-workspace.yaml to simulate the OpenThrottle monorepo root. */
+/** Temp dir with the OpenThrottle marker to simulate the monorepo root. */
 let otRoot: string;
 
 beforeAll(() => {
   emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-empty-'));
   otRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-root-'));
   fs.writeFileSync(
-    path.join(otRoot, 'pnpm-workspace.yaml'),
-    'packages:\n  - packages/*\n',
+    path.join(otRoot, OPENTHROTTLE_WORKSPACE_MARKER),
+    'export default {};\n',
   );
 });
 
@@ -51,11 +54,13 @@ describe('getOpenThrottleRoot', () => {
 
     expect(resolved).toBeDefined();
     expect(
-      fs.existsSync(path.join(resolved as string, 'pnpm-workspace.yaml')),
+      fs.existsSync(
+        path.join(resolved as string, OPENTHROTTLE_WORKSPACE_MARKER),
+      ),
     ).toBe(true);
   });
 
-  it('prefers WORKSPACE_ROOT when it contains pnpm-workspace.yaml', () => {
+  it('prefers WORKSPACE_ROOT when it contains the workspace marker', () => {
     expect(getOpenThrottleRoot({ WORKSPACE_ROOT: otRoot })).toBe(otRoot);
   });
 
@@ -73,7 +78,9 @@ describe('getOpenThrottleRoot', () => {
 
     expect(resolved).toBeDefined();
     expect(
-      fs.existsSync(path.join(resolved as string, 'pnpm-workspace.yaml')),
+      fs.existsSync(
+        path.join(resolved as string, OPENTHROTTLE_WORKSPACE_MARKER),
+      ),
     ).toBe(true);
   });
 });

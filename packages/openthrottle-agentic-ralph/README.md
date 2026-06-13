@@ -43,7 +43,7 @@ Depends on **`@openthrottle/openthrottle-agentic-workflow`** (transport-free con
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/openthrottle-agentic-ralph": "workspace:*"` to the
+**In this monorepo:** add `"@openthrottle/openthrottle-agentic-ralph": "workspace:^"` to the
 consuming package's `package.json`, then run `pnpm install` from the repository root.
 
 **pnpm:**
