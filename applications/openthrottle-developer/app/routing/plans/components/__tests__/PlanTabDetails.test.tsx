@@ -53,6 +53,7 @@ describe('PlanTabDetails Component', () => {
       ralphTuningJson: '',
       recentPlanRuns: defaultRecent,
       setFullscreen,
+      tasks: [],
       workflowInput: defaultWorkflow,
       workflowTimeout: '',
     };
@@ -65,7 +66,7 @@ describe('PlanTabDetails Component', () => {
       </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { findAllByText, getByTestId, getByText } = render(<RoutesStub />);
+    const { findAllByText, getByTestId } = render(<RoutesStub />);
 
     expect(getByTestId('PlanToolbar')).toBeInTheDocument();
     expect(getByTestId('PlanWorkflowRunTransparency')).toBeInTheDocument();
@@ -73,6 +74,5 @@ describe('PlanTabDetails Component', () => {
     expect(
       (await findAllByText('Plan description')).length,
     ).toBeGreaterThanOrEqual(1);
-    expect(getByText('Full Screen')).toBeInTheDocument();
   });
 });

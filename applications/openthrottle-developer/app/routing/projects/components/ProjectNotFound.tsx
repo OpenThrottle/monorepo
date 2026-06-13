@@ -7,6 +7,7 @@ import {
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 
 export interface ProjectNotFoundProps {}
 
@@ -38,9 +39,9 @@ export const ProjectNotFound = (
       </nav>
       <Empty>
         <EmptyHeader>
-          <EmptyTitle>Project not found</EmptyTitle>
+          <EmptyTitle>{PROJECT_NOT_FOUND_COPY.title}</EmptyTitle>
           <EmptyDescription>
-            The project you’re looking for doesn’t exist or was removed.
+            {PROJECT_NOT_FOUND_COPY.description}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

@@ -9,6 +9,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
+import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/data.copy';
 
 export interface PromptsEmptyProps {
   className?: string;
@@ -36,12 +37,12 @@ export const PromptsEmpty = (props: PromptsEmptyProps): React.ReactElement => {
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
       <EmptyTitle>
-        {search ? 'No prompts match your filters' : 'No prompts yet'}
+        {search ? PROMPTS_EMPTY_COPY.searchTitle : PROMPTS_EMPTY_COPY.title}
       </EmptyTitle>
       <EmptyDescription>
         {search
-          ? 'Try clearing the search to see all prompts.'
-          : 'Create your first prompt to get started.'}
+          ? PROMPTS_EMPTY_COPY.searchDescription
+          : PROMPTS_EMPTY_COPY.description}
       </EmptyDescription>
       <Button asChild={true} variant="secondary">
         {search ? (

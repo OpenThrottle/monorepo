@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import { Button, Empty } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillsEmptyProps {
   className?: string;
@@ -28,11 +29,7 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
     <Empty className={classnames('my-8', className)}>
       <GlobalHeading
         heading="h3"
-        title={
-          search
-            ? 'No skills found, try clearing the search to see all skills.'
-            : 'No skills found, create your first skill to get started.'
-        }
+        title={search ? SKILLS_EMPTY_COPY.searchTitle : SKILLS_EMPTY_COPY.title}
       />
       {/* <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />

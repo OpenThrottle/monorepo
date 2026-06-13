@@ -12,6 +12,16 @@ pnpm run database:start
 docker compose --profile dev watch
 ```
 
+🤖 Claude:
+
+```bash
+/plugin install claude-code-setup@claude-plugins-official
+
+# "recommend automations for this project"
+# "help me set up Claude Code"
+# "what hooks should I use?"
+```
+
 🌳 Worktree:
 
 ```bash
