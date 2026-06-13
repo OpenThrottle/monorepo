@@ -63,18 +63,18 @@ jobs:
     # if: ${{ (github.head_ref != 'main') && (github.ref_name != 'main') }}
 
     # FIXME: 💰 Re-enable when we want to spend more
-    # concurrency:
-    #   cancel-in-progress: true
-    #   group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
+    concurrency:
+      cancel-in-progress: true
+      group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
     env:
       jobCount: 1 # must be in sync with "jobIndex"
     runs-on: ubuntu-latest
 
     # FIXME: 💰 Re-enable when we want to spend more
-    # strategy:
-    #   matrix:
-    #     jobIndex: [1] # must be in sync with "jobCount"
-    #     target: ["lint", "typecheck"] # the test suite is just disabled right now
+    strategy:
+      matrix:
+        jobIndex: [1] # must be in sync with "jobCount"
+        target: ['lint', 'typecheck', 'typecheck-tests', 'test']
 
     # 30 instead of 15: openthrottle-developer:test alone needs ~12 CPU-minutes
     # (264 jsdom test files), which exceeds the old budget on 4-vCPU runners.
@@ -91,6 +91,7 @@ jobs:
       - name: '🪣 NX Setup Cache'
         run: |
           sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
+
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
 
@@ -114,8 +115,9 @@ jobs:
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=test --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=${{ matrix.target }} --parallel ${{ env.OUTPUT_DEBUG }}
+        # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
+        # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=test --parallel ${{ env.OUTPUT_DEBUG }}
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
