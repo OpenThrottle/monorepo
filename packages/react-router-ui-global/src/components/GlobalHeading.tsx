@@ -39,7 +39,7 @@ export const GlobalHeading = (
         )}
         data-testid="GlobalHeading"
       >
-        {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
+        {Icon ? <Icon className="text-muted-foreground size-4" /> : null}
         {title}
       </Heading>
       {children && children}

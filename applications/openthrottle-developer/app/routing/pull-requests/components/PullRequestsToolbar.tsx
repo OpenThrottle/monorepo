@@ -31,12 +31,12 @@ export const PullRequestsToolbar = (
     <Form
       className={classnames(
         // 'mb-8 flex flex-col gap-4 rounded-lg border border-border p-4',
-        'flex flex-col gap-4 w-full',
+        'flex w-full flex-col gap-4',
         className,
       )}
       method="get"
     >
-      <div className="flex gap-2 w-full">
+      <div className="flex w-full gap-2">
         <div className="flex items-center gap-2">
           <Building2Icon className="size-4" />
           <Input
@@ -60,7 +60,7 @@ export const PullRequestsToolbar = (
         <div className="flex items-center gap-2">
           <GitGraphIcon className="size-4" />
           <select
-            className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
             defaultValue={filters.state ?? ''}
             id="pr-filter-state"
             name="state"
@@ -112,7 +112,7 @@ export const PullRequestsToolbar = (
         <div className="flex flex-col gap-2">
           <Label htmlFor="pr-filter-state">State</Label>
           <select
-            className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
             defaultValue={filters.state ?? ''}
             id="pr-filter-state"
             name="state"
@@ -141,7 +141,7 @@ export const PullRequestsToolbar = (
             placeholder="GitHub login"
             type="text"
           />
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <label className="text-muted-foreground flex cursor-pointer items-center gap-2 text-sm">
             <input
               className="border-input accent-primary h-4 w-4 rounded"
               defaultChecked={filters.authorExact ?? false}
@@ -156,7 +156,7 @@ export const PullRequestsToolbar = (
         <div className="flex flex-col gap-2">
           <Label htmlFor="pr-filter-merged">Merged (optional)</Label>
           <select
-            className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
             defaultValue={
               filters.merged === true
                 ? 'true'

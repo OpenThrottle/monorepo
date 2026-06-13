@@ -71,7 +71,7 @@ export const OpenThrottleAuthForm = (
   return (
     <>
       <Card
-        className={cn('w-full max-w-sm mx-auto', className)}
+        className={cn('mx-auto w-full max-w-sm', className)}
         data-testid="OpenThrottleAuthForm"
       >
         <form action={action} method="POST" onSubmit={handleSubmit}>
@@ -88,7 +88,7 @@ export const OpenThrottleAuthForm = (
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-4 my-8">
+          <CardContent className="my-8 flex flex-col gap-4">
             {error ? (
               <p className="text-destructive text-sm" role="alert">
                 {error}
@@ -132,7 +132,7 @@ export const OpenThrottleAuthForm = (
             </Button>
           </CardFooter>
           <Button
-            className="w-full font-normal mb-4 text-xs text-muted-foreground"
+            className="text-muted-foreground mb-4 w-full text-xs font-normal"
             disabled={isLoading}
             onClick={() => setIntent(isLogin ? 'register' : 'login')}
             type="button"

@@ -6,6 +6,6 @@
  */
 
 export const <%= nameUppercase %>_NOT_FOUND_COPY = {
-  description: `The <%= nameSingular %> you're looking for doesn't exist or was removed.`,
-  title: `<%= nameSingular %> not found`,
+  description: `The <%= singular %> you're looking for doesn't exist or was removed.`,
+  title: `<%= singular %> not found`,
 } as const;

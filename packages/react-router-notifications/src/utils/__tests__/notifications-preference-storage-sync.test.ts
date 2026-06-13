@@ -9,7 +9,8 @@ import { subscribeToNotificationsPreferenceStorageEvents } from '../notification
 describe('subscribeToNotificationsPreferenceStorageEvents', () => {
   test('invokes listener when storage event targets notifications preference key', () => {
     const listener = vi.fn();
-    const unsubscribe = subscribeToNotificationsPreferenceStorageEvents(listener);
+    const unsubscribe =
+      subscribeToNotificationsPreferenceStorageEvents(listener);
 
     window.dispatchEvent(
       new StorageEvent('storage', {
@@ -26,7 +27,8 @@ describe('subscribeToNotificationsPreferenceStorageEvents', () => {
 
   test('does not invoke listener when storage key is unrelated', () => {
     const listener = vi.fn();
-    const unsubscribe = subscribeToNotificationsPreferenceStorageEvents(listener);
+    const unsubscribe =
+      subscribeToNotificationsPreferenceStorageEvents(listener);
 
     window.dispatchEvent(
       new StorageEvent('storage', {
@@ -43,7 +45,8 @@ describe('subscribeToNotificationsPreferenceStorageEvents', () => {
 
   test('unsubscribe removes listener so later storage events are ignored', () => {
     const listener = vi.fn();
-    const unsubscribe = subscribeToNotificationsPreferenceStorageEvents(listener);
+    const unsubscribe =
+      subscribeToNotificationsPreferenceStorageEvents(listener);
     unsubscribe();
 
     window.dispatchEvent(

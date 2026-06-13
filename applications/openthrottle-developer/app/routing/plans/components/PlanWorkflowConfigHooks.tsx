@@ -160,7 +160,7 @@ export const PlanWorkflowConfigHooks = (
   return (
     <>
       <OpenThrottleFieldset id="job-run-hooks-legend" legend={heading}>
-        <div className="pb-2 mb-4 flex flex-row flex-wrap items-center justify-between gap-4">
+        <div className="mb-4 flex flex-row flex-wrap items-center justify-between gap-4 pb-2">
           <p className="text-muted-foreground text-xs font-normal">
             Run a prompt profile or repo skill before or after the main Ralph
             job (server-side; not CLI flags). Saved on the plan and sent on
@@ -191,7 +191,7 @@ export const PlanWorkflowConfigHooks = (
       </OpenThrottleFieldset>
 
       <fieldset
-        className="space-y-4 ml-4"
+        className="ml-4 space-y-4"
         data-testid="PlanWorkflowConfigHooks"
       >
         <PlanWorkflowConfigHooksValidation validation={validation} />
@@ -212,7 +212,7 @@ export const PlanWorkflowConfigHooks = (
 
               return (
                 <li
-                  className="rounded-lg border border-border p-4 space-y-3"
+                  className="border-border space-y-3 rounded-lg border p-4"
                   data-testid={`job-run-hook-row-${index}`}
                   key={row.draftId}
                 >

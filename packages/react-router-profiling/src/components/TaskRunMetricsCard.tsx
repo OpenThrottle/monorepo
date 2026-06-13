@@ -101,7 +101,7 @@ export function TaskRunMetricsCard(
         )}
         {jobId != null && jobId !== '' && error != null && (
           <p
-            className="text-sm text-destructive"
+            className="text-destructive text-sm"
             data-testid="TaskRunMetricsCard-error"
             role="alert"
           >
@@ -150,7 +150,7 @@ export function TaskRunMetricsCard(
               className="border-muted border-t pt-3"
               data-testid="TaskRunMetricsCard-interpretation"
             >
-              <p className="text-muted-foreground mb-1.5 text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wide uppercase">
                 How to interpret
               </p>
               <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-xs">

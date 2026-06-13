@@ -64,7 +64,7 @@ export const GeneratorNxBridge = (
             <CardTitle>Generator schema (JSON)</CardTitle>
             <CardDescription>
               Snapshot from the GraphQL API; use{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              <code className="bg-muted rounded px-1 py-0.5 text-xs">
                 --describe
               </code>{' '}
               locally for the live schema.
@@ -72,11 +72,11 @@ export const GeneratorNxBridge = (
           </CardHeader>
           <CardContent>
             <Collapsible>
-              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium hover:bg-muted/50">
+              <CollapsibleTrigger className="hover:bg-muted/50 flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium">
                 Show schema
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-3">
-                <pre className="max-h-96 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed">
+                <pre className="bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs leading-relaxed">
                   <code>{formattedSchema}</code>
                 </pre>
               </CollapsibleContent>

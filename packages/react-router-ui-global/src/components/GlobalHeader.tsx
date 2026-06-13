@@ -33,11 +33,11 @@ export const GlobalHeader = (
   return (
     <nav
       className={classnames(
-        'border-b border-border',
+        'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
-        'py-2 px-4',
+        'px-4 py-2',
         // FIXME: Bring this back when we can populate with breadcrumbs easily
-        'sticky w-full top-0 z-10',
+        'sticky top-0 z-10 w-full',
         'flex items-center justify-between',
         className,
       )}
@@ -59,7 +59,7 @@ export const GlobalHeader = (
       <Form action="/" method="post">
         <input name="intent" type="hidden" value="signout" />
         <Button
-          className="flex justify-start p-4 text-left gap-2 w-full text-foreground"
+          className="text-foreground flex w-full justify-start gap-2 p-4 text-left"
           size="sm"
           type="submit"
           variant="link"

@@ -39,9 +39,9 @@ export const SettingsPortsTroubleshootingCard = (
       id={SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID}
       legend="Local dev: ports, hosts & API URLs"
     >
-      <div className="space-y-4 text-sm text-muted-foreground">
+      <div className="text-muted-foreground space-y-4 text-sm">
         <p>
-          <span className="font-medium text-foreground">
+          <span className="text-foreground font-medium">
             How requests resolve:
           </span>{' '}
           the browser calls <code className="text-xs">API_URL_EXTERNAL</code>;
@@ -49,14 +49,14 @@ export const SettingsPortsTroubleshootingCard = (
           <code className="text-xs">API_URL_INTERNAL</code>. They should both
           reach the same openthrottle-server origin in typical local setups. If
           one is wrong you get{' '}
-          <span className="font-medium text-foreground">
+          <span className="text-foreground font-medium">
             client-only vs navigation-only
           </span>{' '}
           failures (e.g. hydration works but a loader 500s).
         </p>
 
         <p>
-          <span className="font-medium text-foreground">
+          <span className="text-foreground font-medium">
             Monorepo template (
             <code className="text-xs">
               applications/openthrottle-developer/.env.default
@@ -78,7 +78,7 @@ export const SettingsPortsTroubleshootingCard = (
         </p>
 
         <div>
-          <p className="mb-2 font-medium text-foreground">
+          <p className="text-foreground mb-2 font-medium">
             If something breaks, check in this order
           </p>
           <ol className="list-inside list-decimal space-y-1.5">
@@ -108,10 +108,10 @@ export const SettingsPortsTroubleshootingCard = (
         </div>
 
         <div>
-          <p className="mb-2 font-medium text-foreground">Common mistakes</p>
+          <p className="text-foreground mb-2 font-medium">Common mistakes</p>
           <ul className="list-inside list-disc space-y-2">
             <li>
-              <span className="font-medium text-foreground">Vite port:</span>{' '}
+              <span className="text-foreground font-medium">Vite port:</span>{' '}
               <code className="text-xs">PORT</code> in{' '}
               <code className="text-xs">.env</code> overrides the Vite default
               (often <code className="text-xs">3000</code> in{' '}
@@ -120,14 +120,14 @@ export const SettingsPortsTroubleshootingCard = (
               prints on startup.
             </li>
             <li>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 External vs internal:
               </span>{' '}
               mismatched bases cause GraphQL or WebSocket issues only on some
               navigations; compare both URLs to your actual server URL.
             </li>
             <li>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 Docker / containers:
               </span>{' '}
               <code className="text-xs">localhost</code> inside a container is
@@ -138,7 +138,7 @@ export const SettingsPortsTroubleshootingCard = (
               runs on the host.
             </li>
             <li>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 Reverse proxy / HTTPS:
               </span>{' '}
               Caddy path-based vs host-based setups must align{' '}

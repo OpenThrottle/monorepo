@@ -24,12 +24,7 @@ const planRunConfigSnapshotRalphV1Schema = z
     debug: z.enum(['debug', 'omit', 'verbose']).optional(),
     executionBackend: z.enum(PLAN_RUN_KNOWN_BACKENDS),
     iterationTimeoutSeconds: z.number().int().min(1).optional(),
-    iterations: z
-      .number()
-      .int()
-      .min(1)
-      .max(MAX_PLAN_RUN_ITERATIONS)
-      .optional(),
+    iterations: z.number().int().min(1).max(MAX_PLAN_RUN_ITERATIONS).optional(),
     model: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
     project: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
     prompt: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),

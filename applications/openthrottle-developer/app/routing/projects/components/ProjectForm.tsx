@@ -70,7 +70,7 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
           </div>
 
           {error ? (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-destructive text-sm" role="alert">
               {error}
             </p>
           ) : null}

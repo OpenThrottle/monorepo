@@ -20,6 +20,8 @@ import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 /** @publicApi */
 export type { Config as EslintFlatConfig } from 'eslint/config';
 /** @publicApi */
+export { prettierConfig } from './prettier-config.js';
+/** @publicApi */
 export {
   createViteConfig,
   defineViteConfig,

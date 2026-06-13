@@ -40,7 +40,7 @@ export const EditorSidebarFile = (
   return (
     <div
       className={classnames(
-        'py-1 px-2 cursor-pointer rounded-sm transition-colors',
+        'cursor-pointer rounded-sm px-2 py-1 transition-colors',
         'hover:bg-white/10',
         {
           'bg-white/15': isActive,

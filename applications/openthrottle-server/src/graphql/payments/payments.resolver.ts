@@ -38,9 +38,10 @@ export class PaymentsResolver {
   })
   async stripeProducts(): Promise<StripeProductObject[]> {
     const products = await this.stripeProductsService.listActiveProducts();
-    const priceMap = await this.stripeProductsService.listActivePricesForProducts(
-      products.map((p) => p.id),
-    );
+    const priceMap =
+      await this.stripeProductsService.listActivePricesForProducts(
+        products.map((p) => p.id),
+      );
 
     return products.map((product) =>
       stripeProductToGql(product, {
@@ -62,9 +63,8 @@ export class PaymentsResolver {
       return null;
     }
 
-    const priceMap = await this.stripeProductsService.listActivePricesForProducts(
-      [id],
-    );
+    const priceMap =
+      await this.stripeProductsService.listActivePricesForProducts([id]);
 
     return stripeProductToGql(product, {
       prices: [...(priceMap.get(id) ?? [])],

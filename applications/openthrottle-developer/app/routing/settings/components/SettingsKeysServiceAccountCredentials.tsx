@@ -30,7 +30,7 @@ export const SettingsKeysServiceAccountCredentials = (
       id="service-account-credentials"
       legend="Service account credentials"
     >
-      <div className="space-y-4 text-sm text-muted-foreground">
+      <div className="text-muted-foreground space-y-4 text-sm">
         <p>
           Long-lived bearer tokens for automation (MCP, Ralph workers, CI). Each
           credential uses the{' '}
@@ -38,14 +38,14 @@ export const SettingsKeysServiceAccountCredentials = (
           format in the <code className="text-xs">Authorization</code> header.
         </p>
         <p>
-          <span className="font-medium text-foreground">One-time secret:</span>{' '}
+          <span className="text-foreground font-medium">One-time secret:</span>{' '}
           when you create a credential, the full token is shown once. Copy it
           immediately into{' '}
           <code className="text-xs">OPENTHROTTLE_MCP_AUTH_TOKEN</code> or worker
           env — it cannot be retrieved again.
         </p>
         <p>
-          <span className="font-medium text-foreground">Rotation:</span> create
+          <span className="text-foreground font-medium">Rotation:</span> create
           a new credential, update your env, then revoke the old one from the
           table below. Revoked or expired credentials stop working at the next
           request.

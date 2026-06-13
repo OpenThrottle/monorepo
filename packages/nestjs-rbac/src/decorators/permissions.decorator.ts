@@ -26,4 +26,5 @@ export const PERMISSIONS_KEY = 'permissions';
  */
 export const Permissions = (
   ...permissions: Permission[]
-): MethodDecorator & ClassDecorator => SetMetadata(PERMISSIONS_KEY, permissions);
+): MethodDecorator & ClassDecorator =>
+  SetMetadata(PERMISSIONS_KEY, permissions);

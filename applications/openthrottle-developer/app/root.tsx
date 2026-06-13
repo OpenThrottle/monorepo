@@ -313,7 +313,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <script dangerouslySetInnerHTML={{ __html: artwork }} />
       </head>
-      <body className="h-screen flex flex-col relative">
+      <body className="relative flex h-screen flex-col">
         <div className="flex flex-1 flex-col">{children}</div>
 
         <Toaster />
@@ -471,11 +471,11 @@ export default function App(): React.ReactElement {
                 className="m-0! p-0!"
                 emptyStateExtras={commanderEmptyExtras}
                 emptyStateMessage={
-                  <span className="block px-2 text-center leading-relaxed text-sm">
+                  <span className="block px-2 text-center text-sm leading-relaxed">
                     <span className="block font-medium">
                       Nothing matched that filter
                     </span>
-                    <span className="mt-2 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-2 block text-xs">
                       <span className="block">
                         1) Keep typing to narrow the list, or 2) paste one
                         OpenThrottle UUID for plan/queue/generator/search rows,
@@ -484,12 +484,12 @@ export default function App(): React.ReactElement {
                         jump to a queue job or a plan task.
                       </span>
                     </span>
-                    <span className="mt-2 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-2 block text-xs">
                       When you have typed text (even if it is not a UUID), the
                       list below offers browse shortcuts and a full-text search
                       action.
                     </span>
-                    <span className="mt-2 block text-[10px] text-muted-foreground">
+                    <span className="text-muted-foreground mt-2 block text-[10px]">
                       Server metrics (when visible) use{' '}
                       <code className="text-[10px]">serverMetrics</code> from
                       openthrottle-server; definitions and GraphQL health:

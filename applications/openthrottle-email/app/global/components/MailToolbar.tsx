@@ -130,8 +130,8 @@ export const MailToolbar = (props: MailToolbarProps): React.ReactElement => {
   return (
     <header
       className={classnames(
-        'flex flex-wrap items-center gap-3 px-4 py-3 min-w-0',
-        'border-b border-border bg-background/95',
+        'flex min-w-0 flex-wrap items-center gap-3 px-4 py-3',
+        'border-border bg-background/95 border-b',
         'sticky top-0 z-50',
         className,
       )}
@@ -157,7 +157,7 @@ export const MailToolbar = (props: MailToolbarProps): React.ReactElement => {
         >
           <MagnifyingGlassIcon
             aria-hidden={true}
-            className="pointer-events-none absolute left-3 size-4 text-muted-foreground"
+            className="text-muted-foreground pointer-events-none absolute left-3 size-4"
           />
           <Input
             aria-label="Search mail"
@@ -252,7 +252,7 @@ export const MailToolbar = (props: MailToolbarProps): React.ReactElement => {
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64">
             <p className="text-sm font-medium">Quick tips</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-muted-foreground">
+            <ul className="text-muted-foreground mt-2 list-inside list-disc space-y-1 text-sm">
               <li>Use search to find messages</li>
               <li>Select rows for bulk actions</li>
               <li>Archive or delete from the reading pane</li>

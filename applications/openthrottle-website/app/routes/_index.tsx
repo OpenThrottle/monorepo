@@ -45,9 +45,9 @@ export default function Component(
   // 🔌 Short Circuit
   if (!isBeta) {
     return (
-      <main className="max-w-7xl mx-auto justify-center items-center flex flex-col gap-4 md:gap-8 lg:gap-24 p-4 md:p-8 lg:p-12 flex-1">
+      <main className="mx-auto flex max-w-7xl flex-1 flex-col items-center justify-center gap-4 p-4 md:gap-8 md:p-8 lg:gap-24 lg:p-12">
         <div className="mx-auto mb-8" onClick={onClick}>
-          <OpenThrottleLogo className="text-xl mb-4" name="AI" />
+          <OpenThrottleLogo className="mb-4 text-xl" name="AI" />
           <p className="text-muted-foreground">
             Check back soon for the public release.
           </p>
@@ -61,7 +61,7 @@ export default function Component(
 
   return (
     <main className="flex flex-1 flex-col">
-      <div className="max-w-7xl mx-auto flex flex-col gap-4 md:gap-8 lg:gap-24 p-4 md:p-8 lg:p-12">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-24 lg:p-12">
         <div className="mx-auto my-40">
           <OpenThrottleProductGetStarted
             repo={data?.repo ?? 'openthrottle/openthrottle'}

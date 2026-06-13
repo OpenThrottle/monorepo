@@ -55,13 +55,13 @@ export const SettingsStorage = (
 
       <div className="space-y-4 text-sm">
         <div>
-          <p className="mb-2 font-medium text-foreground">local storage</p>
+          <p className="text-foreground mb-2 font-medium">local storage</p>
           {localEntries.length === 0 ? (
             <p className="text-muted-foreground">No keys.</p>
           ) : (
             <div className="max-h-48 overflow-auto rounded-md border">
               <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 bg-muted/80">
+                <thead className="bg-muted/80 sticky top-0">
                   <tr>
                     <th className="p-2 font-medium">Key</th>
                     <th className="p-2 font-medium">Preview</th>
@@ -70,10 +70,10 @@ export const SettingsStorage = (
                 <tbody>
                   {localEntries.map((row) => (
                     <tr className="border-t" key={row.key}>
-                      <td className="align-top p-2 font-mono text-muted-foreground">
+                      <td className="text-muted-foreground p-2 align-top font-mono">
                         {row.key}
                       </td>
-                      <td className="break-all p-2 font-mono">{row.preview}</td>
+                      <td className="p-2 font-mono break-all">{row.preview}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -82,13 +82,13 @@ export const SettingsStorage = (
           )}
         </div>
         <div>
-          <p className="mb-2 font-medium text-foreground">session storage</p>
+          <p className="text-foreground mb-2 font-medium">session storage</p>
           {sessionEntries.length === 0 ? (
             <p className="text-muted-foreground">No keys.</p>
           ) : (
             <div className="max-h-48 overflow-auto rounded-md border">
               <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 bg-muted/80">
+                <thead className="bg-muted/80 sticky top-0">
                   <tr>
                     <th className="p-2 font-medium">Key</th>
                     <th className="p-2 font-medium">Preview</th>
@@ -97,10 +97,10 @@ export const SettingsStorage = (
                 <tbody>
                   {sessionEntries.map((row) => (
                     <tr className="border-t" key={row.key}>
-                      <td className="align-top p-2 font-mono text-muted-foreground">
+                      <td className="text-muted-foreground p-2 align-top font-mono">
                         {row.key}
                       </td>
-                      <td className="break-all p-2 font-mono">{row.preview}</td>
+                      <td className="p-2 font-mono break-all">{row.preview}</td>
                     </tr>
                   ))}
                 </tbody>

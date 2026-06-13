@@ -26,7 +26,7 @@ export const Markdown = (props: MarkdownProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('markdown overflow-auto max-w-full', className)}
+      className={classnames('markdown max-w-full overflow-auto', className)}
       contentEditable={contentEditable}
     >
       <code>

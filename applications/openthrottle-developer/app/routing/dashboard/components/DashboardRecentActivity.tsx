@@ -182,7 +182,7 @@ export const DashboardRecentActivity = (
 
       {activityRows.length === 0 ? (
         <p
-          className="text-sm text-muted-foreground"
+          className="text-muted-foreground text-sm"
           data-testid="DashboardRecentActivity-empty"
         >
           No recent activity.

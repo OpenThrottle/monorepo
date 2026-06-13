@@ -47,9 +47,9 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Card className="w-full p-8 gap-8" data-testid="PlanForm">
+    <Card className="w-full gap-8 p-8" data-testid="PlanForm">
       <CardContent className="pt-8">
-        <Form className="gap-4 md:gap-12 w-full flex" method="post">
+        <Form className="flex w-full gap-4 md:gap-12" method="post">
           <div className="flex-1 space-y-4">
             {isEdit ? <Input name="id" type="hidden" value={plan.id} /> : null}
             <div>
@@ -100,7 +100,7 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
                 type="text"
               />
               {isEdit ? null : (
-                <p className="text-muted-foreground text-xs mt-1">
+                <p className="text-muted-foreground mt-1 text-xs">
                   Leave blank only when the API server has GITHUB_USER set;
                   otherwise create will fail validation.
                 </p>
@@ -163,13 +163,13 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
             </div>
 
             {error ? (
-              <p className="text-sm text-destructive" role="alert">
+              <p className="text-destructive text-sm" role="alert">
                 {error}
               </p>
             ) : null}
           </div>
 
-          <div className="gap-8 flex flex-col flex-2">
+          <div className="flex flex-2 flex-col gap-8">
             <div>
               <Label htmlFor="plan-summary">
                 Summary{' '}

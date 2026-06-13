@@ -164,7 +164,7 @@ export default function Component(
           icon={FileUpIcon}
           title="Upload document"
         />
-        <p className="mb-6 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mb-6 text-sm">
           Upload markdown, CSV, HTML, JSON, or Excel. After parsing (stubbed
           here), review the proposed plan and tasks, then commit once the ingest
           service is wired.
@@ -187,7 +187,7 @@ export default function Component(
                 required={true}
                 type="file"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Supported for ingestion (when live): MD, XLSX, CSV, HTML, JSON —
                 max {String(MAX_UPLOAD_BYTES / (1024 * 1024))} MiB.
               </p>
@@ -202,7 +202,7 @@ export default function Component(
           <DocumentUploadProgress state={progressState} />
 
           {fetcherError !== undefined ? (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-destructive text-sm" role="alert">
               {fetcherError}
             </p>
           ) : null}

@@ -7,7 +7,8 @@ import { Field, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class CreateQueueResultObject {
   @Field(() => Boolean, {
-    description: 'Whether the queue was created (or accepted for registration).',
+    description:
+      'Whether the queue was created (or accepted for registration).',
   })
   success!: boolean;
 

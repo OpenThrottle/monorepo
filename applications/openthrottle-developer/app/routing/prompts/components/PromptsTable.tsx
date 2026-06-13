@@ -42,7 +42,7 @@ export const PromptsTable = (props: PromptsTableProps): React.ReactElement => {
 
   return (
     <div
-      className={classnames('border ui-border rounded-lg', className)}
+      className={classnames('ui-border rounded-lg border', className)}
       data-testid="PromptsTable"
     >
       <DataTable<PromptCardFragment, string | number | null | undefined>
@@ -111,10 +111,10 @@ PromptsTable.buildTable = (): ColumnDef<
 
         return (
           <div className="p-2">
-            <h2 className="line-clamp-1 pb-2 text-ellipsis text-sm font-medium w-full">
+            <h2 className="line-clamp-1 w-full pb-2 text-sm font-medium text-ellipsis">
               <Link
                 aria-label={`View prompt: ${title}`}
-                className="underline underline-offset-2 hover:text-primary"
+                className="hover:text-primary underline underline-offset-2"
                 to={promptHref}
                 viewTransition={true}
               >
@@ -124,7 +124,7 @@ PromptsTable.buildTable = (): ColumnDef<
 
             <div className="max-w-3xl">
               {prompt.description ? (
-                <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mb-2 line-clamp-2 text-xs">
                   {prompt.description}
                 </p>
               ) : null}
@@ -140,7 +140,7 @@ PromptsTable.buildTable = (): ColumnDef<
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                 {fileBasename ? (
                   <span
                     className="flex items-center gap-1"
@@ -159,7 +159,7 @@ PromptsTable.buildTable = (): ColumnDef<
                 </span>
               </div>
 
-              <p className="text-xs line-clamp-2 text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 line-clamp-2 text-xs">
                 {extractContentAfterFrontmatter(prompt.content)}
               </p>
             </div>

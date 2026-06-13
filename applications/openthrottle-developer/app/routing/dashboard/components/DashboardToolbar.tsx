@@ -58,7 +58,7 @@ export const DashboardToolbar = (
 
   return (
     <div
-      className={classnames('p-4 flex gap-4', className)}
+      className={classnames('flex gap-4 p-4', className)}
       data-testid="DashboardToolbar"
     >
       <Select onValueChange={onChangeOrg} value={owner}>

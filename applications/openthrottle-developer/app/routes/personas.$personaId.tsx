@@ -65,7 +65,7 @@ export default function Component(
     <GlobalScreen>
       <div className="mb-4">
         <Link
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground text-sm"
           to="/personas"
         >
           ← Back to personas
@@ -77,7 +77,7 @@ export default function Component(
         icon={BookOpenIcon}
         title={persona.slug}
       />
-      <p className="mb-4 text-sm text-muted-foreground">{persona.summary}</p>
+      <p className="text-muted-foreground mb-4 text-sm">{persona.summary}</p>
       <div className="mb-4 flex items-center gap-2 text-sm">
         <code>{persona.repoRelativePath}</code>
         <OpenThrottleClipboard
@@ -86,11 +86,11 @@ export default function Component(
         />
       </div>
       {content ? (
-        <pre className="overflow-x-auto rounded-lg border ui-border bg-card p-4 text-xs whitespace-pre-wrap">
+        <pre className="ui-border bg-card overflow-x-auto rounded-lg border p-4 text-xs whitespace-pre-wrap">
           {content}
         </pre>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Persona file could not be read from disk.
         </p>
       )}

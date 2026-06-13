@@ -126,7 +126,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <div className="grid md:grid-cols-5 gap-4 md:gap-8 lg:gap-12">
+      <div className="grid gap-4 md:grid-cols-5 md:gap-8 lg:gap-12">
         <OpenThrottleStatCard title="Completed" value={queue.completedCount} />
         <OpenThrottleStatCard title="Active" value={queue.activeCount} />
         <OpenThrottleStatCard title="Waiting" value={queue.waitingCount} />
@@ -142,17 +142,17 @@ export default function Component(
           title={`Queues: ${queue.name}`}
         />
         <p
-          className="mb-6 text-sm text-muted-foreground"
+          className="text-muted-foreground mb-6 text-sm"
           data-testid="queue-detail-operational-hint"
         >
           Jobs use URL pagination (
-          <code className="rounded bg-muted px-1 text-xs">?page=</code>,{' '}
-          <code className="rounded bg-muted px-1 text-xs">?limit=</code>,{' '}
+          <code className="bg-muted rounded px-1 text-xs">?page=</code>,{' '}
+          <code className="bg-muted rounded px-1 text-xs">?limit=</code>,{' '}
           {QUEUE_JOBS_LIMIT_MIN}–{QUEUE_JOBS_LIMIT_MAX}). Open a job for the
           full payload, timestamps, failure or return value, retry (
-          <code className="rounded bg-muted px-1 text-xs">retryJob</code>),
+          <code className="bg-muted rounded px-1 text-xs">retryJob</code>),
           cancel plan run when applicable (
-          <code className="rounded bg-muted px-1 text-xs">cancelPlanRun</code>),
+          <code className="bg-muted rounded px-1 text-xs">cancelPlanRun</code>),
           and plan/task deep links from the parsed payload.
         </p>
       </div>

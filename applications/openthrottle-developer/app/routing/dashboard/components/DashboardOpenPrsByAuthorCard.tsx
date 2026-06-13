@@ -55,7 +55,7 @@ export const DashboardOpenPrsByAuthorCard = (
   if (isEmpty) {
     return (
       <div
-        className={classnames('text-sm text-muted-foreground', className)}
+        className={classnames('text-muted-foreground text-sm', className)}
         data-testid="DashboardOpenPrsByAuthorCard"
       >
         No PRs by author.
@@ -69,7 +69,7 @@ export const DashboardOpenPrsByAuthorCard = (
       data-testid="DashboardOpenPrsByAuthorCard"
     >
       <ChartContainer
-        className="min-h-[240px] mt-4 w-full"
+        className="mt-4 min-h-[240px] w-full"
         config={PRS_BY_AUTHOR_CHART_CONFIG}
       >
         <BarChart

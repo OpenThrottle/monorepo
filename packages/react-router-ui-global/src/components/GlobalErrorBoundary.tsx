@@ -109,16 +109,16 @@ export const GlobalErrorBoundary = (
       IS_BROWSER && isUsableRollbarClientToken(window.env?.ROLLBAR_TOKEN);
 
     return (
-      <div className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm">
-        <p className="font-medium text-foreground">Support reference</p>
-        <p className="mt-1 font-mono text-xs break-all text-muted-foreground">
+      <div className="border-border bg-muted/40 mt-6 rounded-md border p-4 text-sm">
+        <p className="text-foreground font-medium">Support reference</p>
+        <p className="text-muted-foreground mt-1 font-mono text-xs break-all">
           {incidentReferenceId}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Classification: </span>
+        <p className="text-muted-foreground mt-2 text-xs">
+          <span className="text-foreground font-medium">Classification: </span>
           {classificationSummary}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-2 text-xs">
           Include this id when contacting support.{' '}
           {crashReportingConfigured
             ? 'When crash reporting is configured, this id is attached to the automated report so support can correlate your session.'
@@ -145,14 +145,14 @@ export const GlobalErrorBoundary = (
   const renderClassification = () => {
     if (isRouteErr) {
       return (
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-2 text-sm">
           {routeHttpErrorSummary(error.status)}
         </p>
       );
     }
 
     return (
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="text-muted-foreground mt-2 text-sm">
         {clientErrorKindLabel(kind)}
       </p>
     );
@@ -160,7 +160,7 @@ export const GlobalErrorBoundary = (
 
   const renderActions = () => {
     return (
-      <div className="flex flex-1 items-center justify-center gap-4 my-20 w-full">
+      <div className="my-20 flex w-full flex-1 items-center justify-center gap-4">
         <Link className="ui-button secondary base" to={homePath}>
           Back to Home
         </Link>
@@ -240,7 +240,7 @@ export const GlobalErrorBoundary = (
     return (
       <div className={className}>
         <h1 className="text-lg">{javascriptErrorBoundaryTitle(subtype)}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-2 text-sm">
           {javascriptErrorBoundaryHint(subtype)}
         </p>
         <p className="mt-4">{error.message}</p>
@@ -278,7 +278,7 @@ export const GlobalErrorBoundary = (
         later.
       </p>
       {error != null ? (
-        <p className="mt-2 font-mono text-xs text-muted-foreground break-all">
+        <p className="text-muted-foreground mt-2 font-mono text-xs break-all">
           {String(error)}
         </p>
       ) : null}

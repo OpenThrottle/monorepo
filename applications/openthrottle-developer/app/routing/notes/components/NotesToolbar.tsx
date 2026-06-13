@@ -55,11 +55,11 @@ export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
     <div className={classnames('w-full', className)} data-testid="NotesToolbar">
       <form onSubmit={handleSearchSubmit} role="search">
         <div
-          className={classnames('flex flex-wrap items-center w-full', 'gap-2')}
+          className={classnames('flex w-full flex-wrap items-center', 'gap-2')}
         >
           <Input
             aria-label="Search notes"
-            className="min-w-[100px] w-[170px] border border-input bg-background px-2.5 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-[170px] min-w-[100px] border px-2.5 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
             name="q"
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search notes"
@@ -69,10 +69,10 @@ export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
           <Button type="submit" variant="outline">
             Search
           </Button>
-          <div className="flex-1 min-w-0" />
+          <div className="min-w-0 flex-1" />
           <Button asChild={true} className="shrink-0" variant="outline">
             <Link to="/notes/create" viewTransition={true}>
-              <PlusIcon className="w-4 h-4" /> Create note
+              <PlusIcon className="h-4 w-4" /> Create note
             </Link>
           </Button>
         </div>

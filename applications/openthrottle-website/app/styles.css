@@ -3,7 +3,7 @@
 
 @import '@openthrottle/react-router-shadcn/src/theme.css';
 
-@source "../../../packages/**/*.{css,ts,tsx}";
+@source '../../../packages/**/*.{css,ts,tsx}';
 
 :root {
   --brand: hsl(0, 100%, 50%);

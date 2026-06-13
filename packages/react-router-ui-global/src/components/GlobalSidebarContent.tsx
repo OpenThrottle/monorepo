@@ -118,12 +118,12 @@ export const GlobalSidebarContent = (
                   className="justify-between gap-2"
                   type="button"
                 >
-                  <span className="min-w-0 flex-1 text-left truncate">
+                  <span className="min-w-0 flex-1 truncate text-left">
                     {section}
                   </span>
                   <ChevronDown
                     aria-hidden={true}
-                    className="size-4 text-muted-foreground/50 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"
+                    className="text-muted-foreground/50 size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"
                   />
                 </CollapsibleTrigger>
               </SidebarGroupLabel>

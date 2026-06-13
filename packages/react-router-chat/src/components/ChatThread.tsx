@@ -90,13 +90,13 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
               className={classnames('max-w-[85%] rounded-lg px-3 py-2', {
                 'bg-muted text-foreground': message.role === 'assistant',
                 'bg-primary text-primary-foreground': message.role === 'user',
-                'border border-dashed text-muted-foreground':
+                'text-muted-foreground border border-dashed':
                   message.role === 'system',
               })}
             >
               <ChatMessageBody body={message.body} role={message.role} />
               {message.footer != null && message.footer.trim() !== '' ? (
-                <p className="text-muted-foreground mt-2 border-t border-border/60 pt-2 font-mono text-xs">
+                <p className="text-muted-foreground border-border/60 mt-2 border-t pt-2 font-mono text-xs">
                   {message.footer}
                 </p>
               ) : null}

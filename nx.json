@@ -246,6 +246,24 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "format-write": {
+      "cache": false,
+      "dependsOn": [{ "projects": ["@tools/dotfiles"], "target": "build" }],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "format-check": {
+      "cache": true,
+      "dependsOn": [{ "projects": ["@tools/dotfiles"], "target": "build" }],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --check \"**/*.{css,html,js,json,jsx,less,md,mdx,sass,scss,ts,tsx,yaml,yml}\"",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "ingest-agent-assets": {
       "cache": false,
       "executor": "nx:run-commands",

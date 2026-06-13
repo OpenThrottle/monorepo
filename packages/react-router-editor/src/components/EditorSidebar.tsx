@@ -32,8 +32,8 @@ export const EditorSidebar = (
   return (
     <div
       className={classnames(
-        'overflow-ellipsis text-xs w-[220px]',
-        'p-4 flex flex-col gap-0.5',
+        'w-[220px] text-xs overflow-ellipsis',
+        'flex flex-col gap-0.5 p-4',
         'border-l border-gray-700',
         className,
       )}
@@ -43,7 +43,7 @@ export const EditorSidebar = (
       }}
     >
       {filteredFiles.length === 0 ? (
-        <div className="text-gray-500 text-center py-4">No files found</div>
+        <div className="py-4 text-center text-gray-500">No files found</div>
       ) : (
         filteredFiles.map((file) => (
           <EditorSidebarFile

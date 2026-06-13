@@ -43,30 +43,30 @@ export const OpenThrottleProductGetStarted = (
 
   return (
     <>
-      <div className="flex w-auto items-center gap-2 justify-start mb-4">
+      <div className="mb-4 flex w-auto items-center justify-start gap-2">
         <OpenThrottleLogo className="text-xl" />
         <span className="text-muted-foreground/50 font-extralight">
           |&nbsp;
         </span>
-        <span className="text-lg font-extralight text-highlight">AI</span>
+        <span className="text-highlight text-lg font-extralight">AI</span>
       </div>
 
-      <div className="shimmer-border max-w-3xl mx-auto">
-        <div className="bg-card p-4 md:p-8 flex flex-col gap-4 lg:gap-8">
-          <p className="text-sm text-muted-foreground">{introduction}</p>
+      <div className="shimmer-border mx-auto max-w-3xl">
+        <div className="bg-card flex flex-col gap-4 p-4 md:p-8 lg:gap-8">
+          <p className="text-muted-foreground text-sm">{introduction}</p>
           <div className="flex items-center justify-center gap-4">
-            <div className="border bg-primary-foreground flex flex-1 items-center relative rounded-xl">
+            <div className="bg-primary-foreground relative flex flex-1 items-center rounded-xl border">
               <DollarSignIcon
-                className="absolute pointer-events-none left-3 text-accent"
+                className="text-accent pointer-events-none absolute left-3"
                 size={12}
               />
               <OpenThrottleClipboard
-                className="text-xs py-4 pl-8 pr-12 text-left opacity-60 hover:opacity-100 transition-opacity w-full"
+                className="w-full py-4 pr-12 pl-8 text-left text-xs opacity-60 transition-opacity hover:opacity-100"
                 label={command}
                 text={command}
               />
               <ClipboardIcon
-                className="absolute pointer-events-none right-4"
+                className="pointer-events-none absolute right-4"
                 size={12}
               />
             </div>
@@ -79,7 +79,7 @@ export const OpenThrottleProductGetStarted = (
                 <TooltipTrigger>
                   <Link target="_blank" to={OPENTHROTTLE_GITHUB_URL}>
                     <Button
-                      className="text-xs flex items-center gap-2"
+                      className="flex items-center gap-2 text-xs"
                       variant="brand"
                     >
                       <span>View on GitHub</span>

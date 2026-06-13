@@ -57,7 +57,7 @@ export const EventSubscriptionsSection = (
   return (
     <div
       className={classnames(
-        'space-y-0 bg-card rounded-lg border border-card-border p-4',
+        'bg-card border-card-border space-y-0 rounded-lg border p-4',
         className,
       )}
     >
@@ -72,7 +72,7 @@ export const EventSubscriptionsSection = (
               <Label htmlFor={`event-subscription-${row.id}`}>
                 {row.label}
               </Label>
-              <p className="text-sm text-muted-foreground">{row.description}</p>
+              <p className="text-muted-foreground text-sm">{row.description}</p>
             </div>
             <Switch
               aria-label={`Subscribe to ${row.label}`}

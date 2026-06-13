@@ -51,7 +51,7 @@ export default function Component(
   if (!loaderData) {
     return (
       <GlobalScreen>
-        <p className="text-sm text-muted-foreground">Loading settings…</p>
+        <p className="text-muted-foreground text-sm">Loading settings…</p>
       </GlobalScreen>
     );
   }
@@ -65,7 +65,7 @@ export default function Component(
           icon={CogIcon}
           title="Application"
         />
-        <p className="mb-4 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mb-4 text-sm">
           Theme controls for this portal. Diagnostics below mirror General
           settings and help verify URLs and build metadata.
         </p>

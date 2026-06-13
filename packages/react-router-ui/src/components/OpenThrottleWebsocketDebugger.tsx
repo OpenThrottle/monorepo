@@ -145,7 +145,7 @@ export const OpenThrottleWebsocketDebugger = (
       data-testid="OpenThrottleWebsocketDebugger"
     >
       <div className="flex flex-row flex-wrap items-center justify-between gap-4">
-        <p className="text-sm font-normal text-muted-foreground">
+        <p className="text-muted-foreground text-sm font-normal">
           Live notification events from the shared WebSocket connection.
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -173,11 +173,11 @@ export const OpenThrottleWebsocketDebugger = (
 
       <div className="space-y-4 py-4">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground flex items-center gap-2">
+          <p className="text-foreground flex items-center gap-2 text-sm font-medium">
             <span>Event filter</span>
             <Tooltip>
               <TooltipTrigger>
-                <InfoIcon className="size-4 text-muted-foreground" />
+                <InfoIcon className="text-muted-foreground size-4" />
               </TooltipTrigger>
               <TooltipContent>
                 <p className="text-xs">
@@ -201,7 +201,7 @@ export const OpenThrottleWebsocketDebugger = (
           data-testid="OpenThrottleWebsocketDebugger-log"
         >
           {displayEntries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No events yet. Change a plan status or wait for queue activity
               when connected.
             </p>
@@ -228,20 +228,20 @@ const WebsocketDebuggerLogRow = (
 
   return (
     <article
-      className="space-y-2 rounded-md border bg-background p-3 text-sm"
+      className="bg-background space-y-2 rounded-md border p-3 text-sm"
       data-testid={`OpenThrottleWebsocketDebugger-entry-${entry.id}`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <time
-          className="font-mono text-xs text-muted-foreground"
+          className="text-muted-foreground font-mono text-xs"
           dateTime={entry.receivedAt}
         >
           {formatWebsocketDebuggerReceivedAt(entry.receivedAt)}
         </time>
         <Badge variant="secondary">{eventLabel}</Badge>
-        <code className="text-xs text-muted-foreground">{entry.event}</code>
+        <code className="text-muted-foreground text-xs">{entry.event}</code>
       </div>
-      <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-md border bg-muted p-2 font-mono text-xs">
+      <pre className="bg-muted max-h-48 overflow-auto rounded-md border p-2 font-mono text-xs break-words whitespace-pre-wrap">
         {formatWebsocketDebuggerPayload(entry.payload)}
       </pre>
     </article>

@@ -44,7 +44,7 @@ export const PlanTaskInlineActions = (
     <div className="flex items-center gap-2">
       <Link
         aria-label={`View task: ${title}`}
-        className="text-xs underline underline-offset-2 hover:text-primary"
+        className="hover:text-primary text-xs underline underline-offset-2"
         to={anchor}
         viewTransition={true}
       >
@@ -55,7 +55,7 @@ export const PlanTaskInlineActions = (
         <Popover>
           <PopoverTrigger
             aria-label={`View full details for task: ${title}`}
-            className="text-xs underline underline-offset-2 hover:text-primary"
+            className="hover:text-primary text-xs underline underline-offset-2"
           >
             Details
           </PopoverTrigger>
@@ -66,25 +66,25 @@ export const PlanTaskInlineActions = (
             <div className="space-y-3 overflow-y-auto pr-1">
               {description ? (
                 <section>
-                  <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                     Description
                   </h3>
-                  <p className="whitespace-pre-wrap text-sm">{description}</p>
+                  <p className="text-sm whitespace-pre-wrap">{description}</p>
                 </section>
               ) : null}
 
               {summary ? (
                 <section>
-                  <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                     Summary
                   </h3>
-                  <p className="whitespace-pre-wrap text-sm">{summary}</p>
+                  <p className="text-sm whitespace-pre-wrap">{summary}</p>
                 </section>
               ) : null}
 
               {requirementsList.length > 0 ? (
                 <section>
-                  <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                     Requirements
                   </h3>
                   <ul className="list-inside list-disc space-y-1 text-sm">

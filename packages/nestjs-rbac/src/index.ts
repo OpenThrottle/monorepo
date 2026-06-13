@@ -1,5 +1,8 @@
 export { Roles, ROLES_KEY } from './decorators/roles.decorator';
-export { Permissions, PERMISSIONS_KEY } from './decorators/permissions.decorator';
+export {
+  Permissions,
+  PERMISSIONS_KEY,
+} from './decorators/permissions.decorator';
 export { getCorsConfiguration, getCorsOptions, type CorsOptions } from './cors';
 export { PermissionsGuard } from './guards/permissions.guard';
 export { RolesGuard, type RbacUser } from './guards/roles.guard';

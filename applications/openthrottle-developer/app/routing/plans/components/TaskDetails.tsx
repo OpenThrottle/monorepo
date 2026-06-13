@@ -76,7 +76,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
     <div className={className} data-testid="TaskDetails">
       <Card className="mb-6">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1.5 w-full">
+          <div className="w-full space-y-1.5">
             <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
               {task.assignee != null && task.assignee !== '' && (
                 <div className="flex flex-wrap gap-x-2">
@@ -132,7 +132,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
               <div className="space-y-1">
                 <p
                   className={classnames(
-                    'text-sm text-muted-foreground',
+                    'text-muted-foreground text-sm',
                     showDescriptionPreview && 'line-clamp-4',
                   )}
                 >
@@ -154,7 +154,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
               <div className="space-y-1">
                 <blockquote
                   className={classnames(
-                    'border-l-4 border-muted-foreground/30 pl-4 text-sm italic text-muted-foreground',
+                    'border-muted-foreground/30 text-muted-foreground border-l-4 pl-4 text-sm italic',
                     showSummaryPreview && 'line-clamp-3',
                   )}
                 >
@@ -173,7 +173,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
             )}
 
             <div className="mt-8">
-              <h3 className="text-lg mb-4">Requirements</h3>
+              <h3 className="mb-4 text-lg">Requirements</h3>
               <ul className="text-muted-foreground text-sm">
                 {JSON.parse(task.requirementsJson).map(
                   (requirement: string) => (
@@ -188,7 +188,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
         <CardFooter>
           <Button asChild={true} variant="outline">
             <Link
-              className="text-sm text-primary hover:underline"
+              className="text-primary text-sm hover:underline"
               to={`/plans/${planId}/tasks/${task.id}/edit`}
             >
               Edit task

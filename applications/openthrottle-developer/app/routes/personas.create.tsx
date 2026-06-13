@@ -54,7 +54,7 @@ export default function Component(
           icon={BookOpenIcon}
           title="PersonasCreate"
         />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,
           architecto ea?
         </p>

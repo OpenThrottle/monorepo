@@ -23,7 +23,7 @@ export const NotificationPermissionDenied = (
 
   return (
     <p
-      className="text-xs text-muted-foreground"
+      className="text-muted-foreground text-xs"
       data-testid="NotificationPermissionDenied"
     >
       Desktop notifications are blocked. You can re-enable them in your

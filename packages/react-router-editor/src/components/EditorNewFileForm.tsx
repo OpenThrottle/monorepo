@@ -113,15 +113,15 @@ export const EditorNewFileForm = (
   return (
     <div
       className={classnames(
-        'p-4 border-b border-gray-700 bg-gray-800',
+        'border-b border-gray-700 bg-gray-800 p-4',
         className,
       )}
       data-testid="EditorNewFileForm"
     >
       <div className="mb-2">
-        <label className="block text-sm font-medium mb-1" htmlFor="filename">
+        <label className="mb-1 block text-sm font-medium" htmlFor="filename">
           Filename (with extension)
-          <span className="text-xs text-gray-500 ml-2">
+          <span className="ml-2 text-xs text-gray-500">
             Enter to create, Esc to cancel
           </span>
         </label>
@@ -132,9 +132,9 @@ export const EditorNewFileForm = (
           <input
             autoFocus={true}
             className={classnames(
-              'w-full px-3 py-2 text-sm rounded-md',
-              'bg-gray-900 border border-gray-700',
-              'focus:outline-none focus:border-blue-500',
+              'w-full rounded-md px-3 py-2 text-sm',
+              'border border-gray-700 bg-gray-900',
+              'focus:border-blue-500 focus:outline-none',
               'placeholder:text-gray-500',
               {
                 'border-red-500': error,
@@ -158,9 +158,9 @@ export const EditorNewFileForm = (
 
         <select
           className={classnames(
-            'px-3 py-2 text-sm rounded-md',
-            'bg-gray-900 border border-gray-700',
-            'focus:outline-none focus:border-blue-500',
+            'rounded-md px-3 py-2 text-sm',
+            'border border-gray-700 bg-gray-900',
+            'focus:border-blue-500 focus:outline-none',
           )}
           onChange={handleTypeChange}
           value={promptType}
@@ -175,8 +175,8 @@ export const EditorNewFileForm = (
         <div className="flex gap-2">
           <button
             className={classnames(
-              'px-3 py-2 text-sm rounded-md',
-              'bg-gray-700 hover:bg-gray-600 transition-colors',
+              'rounded-md px-3 py-2 text-sm',
+              'bg-gray-700 transition-colors hover:bg-gray-600',
             )}
             onClick={handleCancel}
             type="button"
@@ -185,9 +185,9 @@ export const EditorNewFileForm = (
           </button>
           <button
             className={classnames(
-              'px-3 py-2 text-sm rounded-md',
-              'bg-blue-600 hover:bg-blue-700 transition-colors',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
+              'rounded-md px-3 py-2 text-sm',
+              'bg-blue-600 transition-colors hover:bg-blue-700',
+              'disabled:cursor-not-allowed disabled:opacity-50',
             )}
             disabled={isDisabled}
             onClick={handleCreateFile}

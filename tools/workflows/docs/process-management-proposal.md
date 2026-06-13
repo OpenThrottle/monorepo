@@ -6,12 +6,12 @@ This document proposes how to evolve Ralph workflow process management so a loca
 
 ## 1. Recommendation: spawn vs spawnSync
 
-| Call site              | Current     | Proposed | Rationale |
-|------------------------|------------|----------|-----------|
-| **child-job.ts** (Ralph) | `spawnSync` | **`spawn`** + Promise | Long-running; need streaming, timeout, cancel. |
-| **ralph.ts** (cursor-agent) | `spawnSync` | **`spawn`** + Promise (optional) | Enables streaming and per-iteration timeout; CLI can stay sync for simplicity. |
-| **parent-job.ts** (git) | `spawnSync` | **Keep `spawnSync`** | Short, fast calls; no need for streaming or cancel. |
-| **parent-job.ts** (nx checks) | `spawnSync` | **`spawn`** + Promise (optional) | Long-running; enables progress and cancel. |
+| Call site                     | Current     | Proposed                         | Rationale                                                                      |
+| ----------------------------- | ----------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| **child-job.ts** (Ralph)      | `spawnSync` | **`spawn`** + Promise            | Long-running; need streaming, timeout, cancel.                                 |
+| **ralph.ts** (cursor-agent)   | `spawnSync` | **`spawn`** + Promise (optional) | Enables streaming and per-iteration timeout; CLI can stay sync for simplicity. |
+| **parent-job.ts** (git)       | `spawnSync` | **Keep `spawnSync`**             | Short, fast calls; no need for streaming or cancel.                            |
+| **parent-job.ts** (nx checks) | `spawnSync` | **`spawn`** + Promise (optional) | Long-running; enables progress and cancel.                                     |
 
 - **Default path:** Migrate **child-job** to `spawn` first so the coordinator (BullMQ worker) can stream output and support timeout/cancel. That gives the API immediate value without changing the CLI.
 - **ralph.ts:** Can stay `spawnSync` when run interactively; when run as a child of child-job, the parent (child-job) is the one that benefits from async spawn. Optionally migrate ralph.ts to `spawn` for cursor-agent so the CLI can stream or respect a per-iteration timeout.
@@ -87,11 +87,11 @@ Goals: API (or Cortex) can show progress without waiting for the child to exit; 
 
 ## 8. Summary table (proposed)
 
-| Component           | Spawns                    | Method   | Blocking? | Output / progress                    |
-|---------------------|---------------------------|----------|-----------|--------------------------------------|
-| ralph.ts            | cursor-agent              | spawnSync today; optional spawn | Yes today | Buffered; optional stream later      |
-| child-job.ts        | git (keep), pnpm Ralph    | spawn (Ralph), spawnSync (git) | No (Ralph async) | Stream → callback / plan_output_stream |
-| parent-job.ts       | git, pnpm nx              | spawnSync (git); optional spawn (nx) | No for nx if spawn | Optional stream for nx               |
-| runWorktreeWorkflow | (orchestrates above)      | N/A      | Loop async, steps async when spawn used | Result + optional live stream        |
+| Component           | Spawns                 | Method                               | Blocking?                               | Output / progress                      |
+| ------------------- | ---------------------- | ------------------------------------ | --------------------------------------- | -------------------------------------- |
+| ralph.ts            | cursor-agent           | spawnSync today; optional spawn      | Yes today                               | Buffered; optional stream later        |
+| child-job.ts        | git (keep), pnpm Ralph | spawn (Ralph), spawnSync (git)       | No (Ralph async)                        | Stream → callback / plan_output_stream |
+| parent-job.ts       | git, pnpm nx           | spawnSync (git); optional spawn (nx) | No for nx if spawn                      | Optional stream for nx                 |
+| runWorktreeWorkflow | (orchestrates above)   | N/A                                  | Loop async, steps async when spawn used | Result + optional live stream          |
 
 This proposal enables the local API to trigger runs, stream progress (via Cortex or job progress), enforce timeouts, and cancel runs without introducing new worker processes.

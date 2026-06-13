@@ -29,7 +29,7 @@ export const NotesIntroduction = (
         icon={NotebookTextIcon}
         title="Notes"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Notes are a collection of unstructured thoughts and ideas.
       </p>
     </div>

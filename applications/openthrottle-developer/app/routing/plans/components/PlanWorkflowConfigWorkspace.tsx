@@ -86,14 +86,14 @@ export const PlanWorkflowConfigWorkspace = (
           <div className="relative flex-1">
             <FolderOpen
               aria-hidden={true}
-              className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
             />
             <Input
               aria-describedby="workflow-run-workspace-path-hint"
               aria-invalid={validationError != null}
               aria-label="Absolute path to workspace directory"
               autoComplete="off"
-              className="pl-9 pr-9 font-mono text-xs"
+              className="pr-9 pl-9 font-mono text-xs"
               data-testid="workflow-run-workspace-path-input"
               id="workflow-run-workspace-path"
               onChange={(e) => onChange(e.target.value)}
@@ -104,7 +104,7 @@ export const PlanWorkflowConfigWorkspace = (
             {hasValue && (
               <Button
                 aria-label="Clear workspace path"
-                className="absolute right-1 top-1/2 -translate-y-1/2 size-7"
+                className="absolute top-1/2 right-1 size-7 -translate-y-1/2"
                 onClick={handleClear}
                 size="icon"
                 type="button"
@@ -130,7 +130,7 @@ export const PlanWorkflowConfigWorkspace = (
             </PopoverTrigger>
             <PopoverContent align="end" className="w-96 max-w-[90vw] p-0">
               {recentPaths.length === 0 ? (
-                <p className="p-3 text-center text-muted-foreground text-xs">
+                <p className="text-muted-foreground p-3 text-center text-xs">
                   No recent workspace paths
                 </p>
               ) : (
@@ -139,7 +139,7 @@ export const PlanWorkflowConfigWorkspace = (
                     <li
                       aria-selected={path === value.trim()}
                       className={classnames(
-                        'flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer hover:bg-accent',
+                        'hover:bg-accent flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs',
                         path === value.trim() && 'bg-accent/50',
                       )}
                       key={path}
@@ -148,7 +148,7 @@ export const PlanWorkflowConfigWorkspace = (
                     >
                       <FolderOpen
                         aria-hidden={true}
-                        className="size-3.5 shrink-0 text-muted-foreground"
+                        className="text-muted-foreground size-3.5 shrink-0"
                       />
                       <span className="flex-1 truncate font-mono">{path}</span>
                       <Button

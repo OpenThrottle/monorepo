@@ -33,7 +33,7 @@ export const UsageAnalyticsGaps = (
         </p>
       </div>
 
-      <div className="text-xs text-muted-foreground mt-4 md:mt-8">
+      <div className="text-muted-foreground mt-4 text-xs md:mt-8">
         <ul className="list-disc space-y-1 pl-5">
           <li>No per-prompt, per-skill, or per-command invocation counts.</li>
           <li>No model token, cost, or latency metrics.</li>

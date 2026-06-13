@@ -30,7 +30,7 @@ export const PlanTabsMetadata = (
 
   return (
     <TabsContent
-      className="bg-card rounded-lg border border-card-border"
+      className="bg-card border-card-border rounded-lg border"
       value="metadata"
     >
       <div

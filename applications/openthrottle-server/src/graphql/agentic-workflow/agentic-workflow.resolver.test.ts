@@ -5,7 +5,10 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { AGENTIC_TEST_JOB_NAME, AGENTIC_TEST_QUEUE_NAME } from '../../queues/agentic-test/agentic-test.constants';
+import {
+  AGENTIC_TEST_JOB_NAME,
+  AGENTIC_TEST_QUEUE_NAME,
+} from '../../queues/agentic-test/agentic-test.constants';
 import { AgenticWorkflowResolver } from './agentic-workflow.resolver';
 import { AgenticWorkflowService } from './agentic-workflow.service';
 
@@ -34,19 +37,19 @@ describe('AgenticWorkflowResolver', () => {
 
   describe('enqueueAgenticWorkflowMock', () => {
     test('returns success and job metadata when service enqueues mock payload', async () => {
-      vi.mocked(mockAgenticWorkflowService.enqueueMockAgenticTest).mockResolvedValueOnce(
-        {
-          jobId: 'agentic-workflow-mock-job-id',
-          jobName: AGENTIC_TEST_JOB_NAME,
-          queueName: AGENTIC_TEST_QUEUE_NAME,
-        },
-      );
+      vi.mocked(
+        mockAgenticWorkflowService.enqueueMockAgenticTest,
+      ).mockResolvedValueOnce({
+        jobId: 'agentic-workflow-mock-job-id',
+        jobName: AGENTIC_TEST_JOB_NAME,
+        queueName: AGENTIC_TEST_QUEUE_NAME,
+      });
 
       const result = await resolver.enqueueAgenticWorkflowMock();
 
-      expect(mockAgenticWorkflowService.enqueueMockAgenticTest).toHaveBeenCalledTimes(
-        1,
-      );
+      expect(
+        mockAgenticWorkflowService.enqueueMockAgenticTest,
+      ).toHaveBeenCalledTimes(1);
       expect(result.success).toBe(true);
       expect(result.jobId).toBe('agentic-workflow-mock-job-id');
       expect(result.jobName).toBe(AGENTIC_TEST_JOB_NAME);
@@ -55,9 +58,9 @@ describe('AgenticWorkflowResolver', () => {
     });
 
     test('returns failure when service reports enqueue error', async () => {
-      vi.mocked(mockAgenticWorkflowService.enqueueMockAgenticTest).mockResolvedValueOnce(
-        { error: 'queue unavailable' },
-      );
+      vi.mocked(
+        mockAgenticWorkflowService.enqueueMockAgenticTest,
+      ).mockResolvedValueOnce({ error: 'queue unavailable' });
 
       const result = await resolver.enqueueAgenticWorkflowMock();
 

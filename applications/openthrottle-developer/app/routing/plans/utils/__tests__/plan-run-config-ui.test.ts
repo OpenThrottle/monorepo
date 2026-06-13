@@ -76,7 +76,9 @@ describe('serializePlanRunConfigUiState', () => {
     expect(hydrated.workflowInput.project).toBe(
       'applications/openthrottle-server',
     );
-    expect(hydrated.workingDirectory).toBe('/Users/matt/Development/openthrottle');
+    expect(hydrated.workingDirectory).toBe(
+      '/Users/matt/Development/openthrottle',
+    );
     expect(hydrated.iterationTimeoutText).toBe('90');
   });
 });

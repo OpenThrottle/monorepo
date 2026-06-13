@@ -37,7 +37,7 @@ export const PlanTabRequirements = (
 
   return (
     <TabsContent
-      className="bg-card rounded-lg border border-card-border text-sm text-muted-foreground"
+      className="bg-card border-card-border text-muted-foreground rounded-lg border text-sm"
       value="requirements"
     >
       <div className={classnames('p-4', className)}>

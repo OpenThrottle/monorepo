@@ -103,7 +103,7 @@ export const PlanTabDetails = (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
         <PlanToolbar
-          className="bg-card rounded-lg border border-card-border p-4"
+          className="bg-card border-card-border rounded-lg border p-4"
           // className="p-4"
           jobRunHooksJson={jobRunHooksJson}
           planId={plan.id}

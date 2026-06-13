@@ -27,7 +27,7 @@ export const PromptsIntroduction = (
         icon={BrainIcon}
         title="Prompts"
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Open a prompt for Prompt versioning and debug: IDs, content
         fingerprints, repo <code className="text-xs">filePath</code>, and a JSON
         snapshot for tickets.

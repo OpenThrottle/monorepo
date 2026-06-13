@@ -37,18 +37,18 @@ export const QueueForm = (props: QueueFormProps): React.ReactElement => {
             required={true}
             type="text"
           />
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-xs">
             Letters, numbers, hyphens, and underscores only. Max 128 characters.
           </p>
         </div>
 
         {error ? (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-destructive text-sm" role="alert">
             {error}
           </p>
         ) : null}
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex justify-end gap-3">
           <Button asChild={true} type="submit" variant="outline">
             <Link to="/queues">Cancel</Link>
           </Button>

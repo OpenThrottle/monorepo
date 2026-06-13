@@ -29,7 +29,7 @@ export const UsageOverview = (
   return (
     <div className={classnames(className)}>
       <GlobalHeading className="mb-4" title="Agents &amp; OpenThrottle usage" />
-      <div className="text-sm text-muted-foreground space-y-4 md:space-y-8">
+      <div className="text-muted-foreground space-y-4 text-sm md:space-y-8">
         <p>
           Plan and task counts come from OpenThrottle daily stats (last{' '}
           {rangeDays} days). They approximate automation load from Ralph,
@@ -51,7 +51,7 @@ export const UsageOverview = (
         </p> */}
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 md:mt-8">
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 md:mt-8">
         <Badge color="yellow" size="xs">
           <Link to="/prompts?type=AGENTS">Agents-type prompts</Link>
         </Badge>

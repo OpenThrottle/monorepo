@@ -42,14 +42,14 @@ export const IdeSearchResultRow = (
   return (
     <button
       className={cn(
-        'flex w-full flex-col items-start gap-1 rounded-md px-3 py-2 text-left hover:bg-muted focus-visible:bg-muted',
+        'hover:bg-muted focus-visible:bg-muted flex w-full flex-col items-start gap-1 rounded-md px-3 py-2 text-left',
         className,
       )}
       data-testid="IdeSearchResultRow"
       onClick={() => onSelect?.(match)}
       type="button"
     >
-      <span className="flex items-center gap-2 text-xs text-muted-foreground">
+      <span className="text-muted-foreground flex items-center gap-2 text-xs">
         <span className="truncate font-medium">{match.path}</span>
         <Badge size="xs">
           {match.line}:{match.column}

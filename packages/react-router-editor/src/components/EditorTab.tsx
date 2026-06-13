@@ -73,12 +73,12 @@ export const EditorTab = (props: EditorTabProps): React.ReactElement => {
   return (
     <Link
       className={classnames(
-        'group text-xs p-2 pl-4 cursor-pointer',
+        'group cursor-pointer p-2 pl-4 text-xs',
         'flex items-center justify-between gap-1',
         'hover:bg-gray-100/15',
         {
           'bg-gray-100/20': isActive,
-          'border-t border-color-primary': isActive,
+          'border-color-primary border-t': isActive,
           'opacity-50': isDragging,
         },
         className,
@@ -95,7 +95,7 @@ export const EditorTab = (props: EditorTabProps): React.ReactElement => {
       {filename}
       <button
         className={classnames(
-          'p-1 cursor-pointer hover:bg-white/10 rounded-md',
+          'cursor-pointer rounded-md p-1 hover:bg-white/10',
           'border border-transparent',
           'group-hover:ui-border-dark',
         )}

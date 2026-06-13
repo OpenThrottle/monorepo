@@ -43,15 +43,15 @@ export const AgentsSectionQuickLinks = (
         <ul className="grid gap-4 text-sm sm:grid-cols-3">
           <li>
             <Link
-              className="flex items-center gap-2 font-medium text-foreground"
+              className="text-foreground flex items-center gap-2 font-medium"
               to="/prompts"
             >
               <BrainIcon aria-hidden={true} className="h-4 w-4 shrink-0" />
               Prompts
             </Link>
-            <p className="mt-1 text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               Open a prompt for{' '}
-              <span className="font-medium text-foreground">Prompt</span>{' '}
+              <span className="text-foreground font-medium">Prompt</span>{' '}
               versioning and debug: IDs, content fingerprints, repo{' '}
               <code className="text-xs">filePath</code>, and a JSON snapshot for
               tickets.
@@ -59,7 +59,7 @@ export const AgentsSectionQuickLinks = (
           </li>
           <li>
             <Link
-              className="flex items-center gap-2 font-medium text-foreground"
+              className="text-foreground flex items-center gap-2 font-medium"
               to="/skills"
             >
               <BrainCircuitIcon
@@ -68,7 +68,7 @@ export const AgentsSectionQuickLinks = (
               />
               Skills
             </Link>
-            <p className="mt-1 text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               In-repo paths under{' '}
               <code className="text-xs">.agents/skills</code> and{' '}
               <code className="text-xs">.cursor/skills</code>—match slugs to
@@ -77,7 +77,7 @@ export const AgentsSectionQuickLinks = (
           </li>
           <li>
             <Link
-              className="flex items-center gap-2 font-medium text-foreground"
+              className="text-foreground flex items-center gap-2 font-medium"
               to="/usage"
             >
               <FileChartColumn
@@ -86,7 +86,7 @@ export const AgentsSectionQuickLinks = (
               />
               Usage
             </Link>
-            <p className="mt-1 text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               Coarse daily OpenThrottle activity only—no per-prompt or token
               metrics. Copy the JSON snapshot to compare environments on a
               support thread.

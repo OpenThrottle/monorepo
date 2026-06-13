@@ -74,13 +74,13 @@ export const QueueCorrelationAndSupport = (
       legend="Correlation & Support"
     >
       <div className="space-y-2 text-sm">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Use these values when matching logs, workers, or support tickets. Job
           id is the BullMQ id for this queue.
         </p>
         <p>
           <span className="text-muted-foreground">Queue</span>{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+          <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
             {queueName}
           </code>
         </p>
@@ -89,7 +89,7 @@ export const QueueCorrelationAndSupport = (
             <span className="text-muted-foreground">Runner</span>{' '}
             <span className="text-foreground text-xs">
               {formatWorkflowRalphExecutionBackendLabel(job.executionBackend)}{' '}
-              <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.65rem]">
+              <code className="bg-muted rounded px-1 py-0.5 font-mono text-[0.65rem]">
                 {job.executionBackend}
               </code>
             </span>
@@ -98,7 +98,7 @@ export const QueueCorrelationAndSupport = (
         <p>
           <span className="text-muted-foreground">Job id</span>{' '}
           <code
-            className="break-all rounded bg-muted px-1.5 py-0.5 text-xs"
+            className="bg-muted rounded px-1.5 py-0.5 text-xs break-all"
             data-testid="queue-job-correlation-id"
           >
             {job.id}
@@ -107,7 +107,7 @@ export const QueueCorrelationAndSupport = (
         {parsed.correlationId != null && parsed.correlationId !== '' && (
           <p>
             <span className="text-muted-foreground">Payload correlation</span>{' '}
-            <code className="break-all rounded bg-muted px-1.5 py-0.5 text-xs">
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs break-all">
               {parsed.correlationId}
             </code>
           </p>
@@ -116,7 +116,7 @@ export const QueueCorrelationAndSupport = (
           <p>
             <span className="text-muted-foreground">Plan</span>{' '}
             <Link
-              className="font-mono text-xs text-primary underline-offset-4 hover:underline"
+              className="text-primary font-mono text-xs underline-offset-4 hover:underline"
               to={`/plans/${parsed.planId}`}
             >
               {parsed.planId}
@@ -130,7 +130,7 @@ export const QueueCorrelationAndSupport = (
             <p>
               <span className="text-muted-foreground">Task</span>{' '}
               <Link
-                className="font-mono text-xs text-primary underline-offset-4 hover:underline"
+                className="text-primary font-mono text-xs underline-offset-4 hover:underline"
                 to={`/plans/${parsed.planId}/tasks/${parsed.taskId}`}
               >
                 {parsed.taskId}
