@@ -4,7 +4,6 @@ import type {
   WorkspaceLocalRepository,
 } from '@openthrottle/nestjs-repositories';
 import {
-  ProjectsService,
   RolesService,
   UserWorkspaceSettingsService,
   WorkspaceEditorConfigService,
@@ -21,6 +20,7 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 import type { UpdateWorkspaceProfileInput } from './workspace-settings.input';
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
 
 describe('WorkspaceSettingsResolver', () => {
@@ -66,9 +66,10 @@ describe('WorkspaceSettingsResolver', () => {
       updateProfile: vi.fn(),
     });
 
-  const mockProjectsService = createMock<ProjectsService>({
-    findById: vi.fn(),
-  });
+  const mockProjectLoad = vi.fn().mockResolvedValue(null);
+  const mockLoaders: WorkspaceSettingsLoaders = {
+    projectLoader: { load: mockProjectLoad },
+  } as unknown as WorkspaceSettingsLoaders;
 
   const mockWorkspaceEditorConfigService =
     createMock<WorkspaceEditorConfigService>({
@@ -99,8 +100,8 @@ describe('WorkspaceSettingsResolver', () => {
           useValue: mockWorkspaceLocalRepositoriesService,
         },
         {
-          provide: ProjectsService,
-          useValue: mockProjectsService,
+          provide: WorkspaceSettingsLoaders,
+          useValue: mockLoaders,
         },
         {
           provide: WorkspaceEditorConfigService,
@@ -353,15 +354,16 @@ describe('WorkspaceSettingsResolver', () => {
       expect(result).toBeNull();
     });
 
-    test('loads project when projectId is set', async () => {
+    test('loads project through projectLoader when projectId is set', async () => {
       const project = { id: 'p1', name: 'openthrottle' } as Project;
-      vi.mocked(mockProjectsService.findById).mockResolvedValue(project);
+      mockProjectLoad.mockResolvedValueOnce(project);
 
       const result = await resolver.project({
         ...mockRepo,
         projectId: project.id,
       });
 
+      expect(mockProjectLoad).toHaveBeenCalledWith(project.id);
       expect(result).toBe(project);
     });
   });

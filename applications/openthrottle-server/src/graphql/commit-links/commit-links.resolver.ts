@@ -3,13 +3,10 @@
  */
 
 import type { CommitLink, Plan, Task } from '@openthrottle/nestjs-repositories';
-import {
-  CommitLinksService,
-  PlansService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { CommitLinksService } from '@openthrottle/nestjs-repositories';
 import {
   Args,
+  Int,
   Mutation,
   Parent,
   Query,
@@ -25,13 +22,18 @@ import {
   LinkCommitInput,
 } from './commit-link.input';
 import { CommitLinkObject } from './commit-link.object';
+import { CommitLinksLoaders } from './commit-links-loaders';
+
+/** Default cap for the unpaginated commitLinks() list query so it never full-table-scans. */
+const DEFAULT_COMMIT_LINKS_LIMIT = 100;
+/** Hard ceiling for commitLinks() even when an explicit limit is supplied. */
+const MAX_COMMIT_LINKS_LIMIT = 500;
 
 @Resolver(() => CommitLinkObject)
 export class CommitLinksResolver {
   constructor(
     private readonly commitLinksService: CommitLinksService,
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
+    private readonly loaders: CommitLinksLoaders,
   ) {}
 
   @ResolveField(() => PlanObject, {
@@ -41,11 +43,7 @@ export class CommitLinksResolver {
   async plan(@Parent() parent: CommitLinkObject): Promise<Plan | null> {
     if (!parent.planId) return null;
 
-    const plan = await this.plansService
-      .getRepository()
-      .findOne({ where: { id: parent.planId } });
-
-    return plan;
+    return this.loaders.planLoader.load(parent.planId);
   }
 
   @ResolveField(() => TaskObject, {
@@ -55,11 +53,7 @@ export class CommitLinksResolver {
   async task(@Parent() parent: CommitLinkObject): Promise<Task | null> {
     if (!parent.taskId) return null;
 
-    const task = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: parent.taskId } });
-
-    return task;
+    return this.loaders.taskLoader.load(parent.taskId);
   }
 
   @Query(() => CommitLinkObject, {
@@ -78,11 +72,19 @@ export class CommitLinksResolver {
   }
 
   @Query(() => [CommitLinkObject], {
-    description: `List all commit links, ordered by createdAt descending`,
+    description: `List commit links, ordered by createdAt descending. Capped at ${DEFAULT_COMMIT_LINKS_LIMIT} by default (max ${MAX_COMMIT_LINKS_LIMIT}); pass limit to override. Use commitLinksByPlanId/commitLinksByTaskId for scoped lists.`,
   })
-  async commitLinks(): Promise<CommitLink[]> {
+  async commitLinks(
+    @Args('limit', { nullable: true, type: () => Int })
+    limit?: number | null,
+  ): Promise<CommitLink[]> {
+    const effectiveLimit = Math.min(
+      Math.max(1, limit ?? DEFAULT_COMMIT_LINKS_LIMIT),
+      MAX_COMMIT_LINKS_LIMIT,
+    );
     const entities = await this.commitLinksService.getRepository().find({
       order: { createdAt: 'DESC' },
+      take: effectiveLimit,
     });
 
     return entities;

@@ -1,23 +1,23 @@
 import type { TaskEmbedding } from '@openthrottle/nestjs-repositories';
 import {
   TaskEmbeddingsService,
-  TasksService,
   tasksFactory,
 } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 import { TaskEmbeddingsResolver } from './task-embeddings.resolver';
 
 const taskEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
-const tasksRepo = { findOne: vi.fn() };
 
 const mockTaskEmbeddingsService = createMock<TaskEmbeddingsService>({
   getRepository: vi.fn().mockReturnValue(taskEmbeddingsRepo),
 });
-const mockTasksService = createMock<TasksService>({
-  getRepository: vi.fn().mockReturnValue(tasksRepo),
-});
+const mockTaskLoad = vi.fn().mockResolvedValue(null);
+const mockLoaders: TaskEmbeddingsLoaders = {
+  taskLoader: { load: mockTaskLoad },
+} as unknown as TaskEmbeddingsLoaders;
 
 describe('TaskEmbeddingsResolver', () => {
   let resolver: TaskEmbeddingsResolver;
@@ -94,7 +94,7 @@ describe('TaskEmbeddingsResolver', () => {
       providers: [
         TaskEmbeddingsResolver,
         { provide: TaskEmbeddingsService, useValue: mockTaskEmbeddingsService },
-        { provide: TasksService, useValue: mockTasksService },
+        { provide: TaskEmbeddingsLoaders, useValue: mockLoaders },
       ],
     }).compile();
 
@@ -102,7 +102,7 @@ describe('TaskEmbeddingsResolver', () => {
   });
 
   describe('task (ResolveField)', () => {
-    test('returns TaskObject when task exists', async () => {
+    test('resolves the task through taskLoader when taskId is set', async () => {
       const parent = {
         content: 'chunk',
         createdAt: new Date(),
@@ -115,16 +115,17 @@ describe('TaskEmbeddingsResolver', () => {
         id: 'b366d480-6a4f-498b-8755-23ade25d2b24',
         title: 'Task title',
       });
-      vi.mocked(tasksRepo.findOne).mockResolvedValue(mockTask);
+      mockTaskLoad.mockResolvedValueOnce(mockTask);
 
       const result = await resolver.task(parent);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(mockTask.id);
-      expect(result?.title).toBe(mockTask.title);
+      expect(mockTaskLoad).toHaveBeenCalledWith(parent.taskId);
+      expect(result).toBe(mockTask);
     });
 
-    test('returns null when taskId is missing', async () => {
+    test('returns null without hitting the loader when taskId is missing', async () => {
+      mockTaskLoad.mockClear();
+
       const parent = {
         content: 'chunk',
         createdAt: new Date(),
@@ -137,9 +138,10 @@ describe('TaskEmbeddingsResolver', () => {
       const result = await resolver.task(parent);
 
       expect(result).toBeNull();
+      expect(mockTaskLoad).not.toHaveBeenCalled();
     });
 
-    test('returns null when task not found', async () => {
+    test('returns null when taskLoader resolves null', async () => {
       const parent = {
         content: 'chunk',
         createdAt: new Date(),
@@ -148,7 +150,7 @@ describe('TaskEmbeddingsResolver', () => {
         task: null,
         taskId: 'non-existent-task-id',
       };
-      vi.mocked(tasksRepo.findOne).mockResolvedValue(null);
+      mockTaskLoad.mockResolvedValueOnce(null);
 
       const result = await resolver.task(parent);
 

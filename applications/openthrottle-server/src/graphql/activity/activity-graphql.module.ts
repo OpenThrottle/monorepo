@@ -1,9 +1,10 @@
 /**
- * @description GraphQL module for activity-by-date-range. Imports NestjsRepositoriesModule for PlansService and TasksService (used for raw SQL and ResolveField).
+ * @description GraphQL module for activity-by-date-range. Imports NestjsRepositoriesModule for PlansService (raw SQL) and registers request-scoped ActivityLoaders for batched plan/task resolution across the activity row resolvers.
  */
 
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
+import { ActivityLoaders } from './activity-loaders';
 import {
   ActivityCommitRowResolver,
   ActivityOutputChunkRowResolver,
@@ -15,6 +16,7 @@ import {
   imports: [NestjsRepositoriesModule],
   providers: [
     ActivityCommitRowResolver,
+    ActivityLoaders,
     ActivityOutputChunkRowResolver,
     ActivityResolver,
     ActivityTaskUpdatedRowResolver,

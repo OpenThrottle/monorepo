@@ -3,10 +3,7 @@
  */
 
 import type { Task, TaskEmbedding } from '@openthrottle/nestjs-repositories';
-import {
-  TaskEmbeddingsService,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { TaskEmbeddingsService } from '@openthrottle/nestjs-repositories';
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { TaskObject } from '../tasks/task.object';
 import {
@@ -14,12 +11,13 @@ import {
   TaskEmbeddingsByTaskInput,
 } from './task-embedding.input';
 import { TaskEmbeddingObject } from './task-embedding.object';
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 
 @Resolver(() => TaskEmbeddingObject)
 export class TaskEmbeddingsResolver {
   constructor(
+    private readonly loaders: TaskEmbeddingsLoaders,
     private readonly taskEmbeddingsService: TaskEmbeddingsService,
-    private readonly tasksService: TasksService,
   ) {}
 
   @ResolveField(() => TaskObject, {
@@ -29,11 +27,7 @@ export class TaskEmbeddingsResolver {
   async task(@Parent() parent: TaskEmbeddingObject): Promise<Task | null> {
     if (!parent.taskId) return null;
 
-    const taskEntity = await this.tasksService
-      .getRepository()
-      .findOne({ where: { id: parent.taskId } });
-
-    return taskEntity;
+    return this.loaders.taskLoader.load(parent.taskId);
   }
 
   @Query(() => TaskEmbeddingObject, {

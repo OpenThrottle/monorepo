@@ -6,6 +6,7 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import {
   Args,
   ID,
+  Int,
   Mutation,
   Parent,
   Query,
@@ -37,6 +38,11 @@ import {
 } from './task.input';
 import { TaskObject, TasksByProjectIdResultObject } from './task.object';
 import { TasksLoaders } from './tasks-loaders';
+
+/** Default cap for the unpaginated tasks() list query so it never full-table-scans. */
+const DEFAULT_TASKS_LIMIT = 100;
+/** Hard ceiling for tasks() even when an explicit limit is supplied. */
+const MAX_TASKS_LIMIT = 500;
 
 const SORT_ORDER_UNIQUE_VIOLATION_MESSAGE =
   'A task with this sortOrder already exists for the plan';
@@ -97,11 +103,19 @@ export class TasksResolver {
   }
 
   @Query(() => [TaskObject], {
-    description: `List all tasks, ordered by planId then sortOrder then createdAt ascending`,
+    description: `List tasks, ordered by planId then sortOrder then createdAt ascending. Capped at ${DEFAULT_TASKS_LIMIT} by default (max ${MAX_TASKS_LIMIT}); pass limit to override. Use tasksByPlanId/tasksByProjectId for scoped lists.`,
   })
-  async tasks(): Promise<Task[]> {
+  async tasks(
+    @Args('limit', { nullable: true, type: () => Int })
+    limit?: number | null,
+  ): Promise<Task[]> {
+    const effectiveLimit = Math.min(
+      Math.max(1, limit ?? DEFAULT_TASKS_LIMIT),
+      MAX_TASKS_LIMIT,
+    );
     const entities = await this.tasksService.getRepository().find({
       order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+      take: effectiveLimit,
     });
 
     return entities;
