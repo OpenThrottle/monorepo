@@ -8,6 +8,8 @@ claude mcp list
 docker compose build --no-cache openthrottle-postgres
 
 pnpm run database:start
+
+docker compose --profile dev watch
 ```
 
 ```<bash></bash>
