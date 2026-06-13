@@ -1,4 +1,4 @@
-import { getDirname } from './vite-config.js';
+import { getDirname } from './vite-config.ts';
 // import { importX } from 'eslint-plugin-import-x';
 import js from '@eslint/js';
 import pluginImport from 'eslint-plugin-import';
@@ -20,7 +20,7 @@ import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
 /** @publicApi */
 export type { Config as EslintFlatConfig } from 'eslint/config';
 /** @publicApi */
-export { prettierConfig } from './prettier-config.js';
+export { prettierConfig } from './prettier-config.ts';
 /** @publicApi */
 export {
   createViteConfig,
@@ -28,7 +28,7 @@ export {
   getDirname,
   type CreateViteConfigOptions,
   type PackageType,
-} from './vite-config.js';
+} from './vite-config.ts';
 /** @publicApi */
 export {
   createVitestConfig,
@@ -37,7 +37,7 @@ export {
   createVitestConfigNode,
   type CreateVitestConfigOptions,
   type TestEnvironment,
-} from './vitest-config.js';
+} from './vitest-config.ts';
 
 /**
  * ESLint and the new "flat config" system

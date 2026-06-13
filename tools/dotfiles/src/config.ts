@@ -7,7 +7,7 @@ export {
   getDirname,
   type CreateViteConfigOptions,
   type PackageType,
-} from './vite-config.js';
+} from './vite-config.ts';
 
 /** @publicApi */
 export {
@@ -17,4 +17,4 @@ export {
   createVitestConfigNode,
   type CreateVitestConfigOptions,
   type TestEnvironment,
-} from './vitest-config.js';
+} from './vitest-config.ts';

@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import swc from 'unplugin-swc';
 import type { UserConfig } from 'vite';
 
-export { getDirname } from './vite-config.js';
+export { getDirname } from './vite-config.ts';
 
 /**
  * @description Test environment type
