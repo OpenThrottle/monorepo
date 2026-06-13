@@ -15,7 +15,6 @@ import {
   isSortOrder,
   isView,
 } from '~/routing/projects/utils/projects';
-import { MOCK_PROJECTS } from '~/routing/projects/data/mock.projects';
 import {
   parseProjectsBySearch,
   parseProjectWithStats,
@@ -43,10 +42,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     GetProjectsDocument,
   );
 
-  const isEmpty = projects.length === 0;
-  const projectsToShow: ProjectWithStats[] = isEmpty
-    ? MOCK_PROJECTS
-    : projects.map(parseProjectWithStats);
+  const projectsToShow: ProjectWithStats[] = projects.map(
+    parseProjectWithStats,
+  );
 
   const url = new URL(args.request.url);
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);

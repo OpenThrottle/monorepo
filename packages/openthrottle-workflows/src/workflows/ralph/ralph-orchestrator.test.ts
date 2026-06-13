@@ -1,16 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { MockedFunction } from 'vitest';
 import {
+  createWorkflowRalphOrchestrator,
   GetPlanDocument,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
+} from '@openthrottle/openthrottle-agentic-ralph';
+import type {
   GetPlanQuery,
   GetTaskQuery,
   GetTasksByPlanIdQuery,
-} from '../../__generated__/graphql.js';
+} from '@openthrottle/openthrottle-agentic-ralph';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -23,7 +26,6 @@ import type {
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
 } from './contract/ralph-orchestrator-deps.js';
-import { createWorkflowRalphOrchestrator } from '@openthrottle/openthrottle-agentic-ralph';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';
@@ -72,7 +74,7 @@ const baseTask = (
   project: null,
   projectId: null,
   requirementsJson: '[]',
-  // sortOrder: 1000,
+  sortOrder: 1000,
   status,
   summary: null,
   title: 'Task',
@@ -164,7 +166,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'unhandled',
+      reason: 'workflow_unhandled',
       status: 'failed',
     });
     expect(executeGraphqlV2).toHaveBeenCalledTimes(1);
@@ -184,7 +186,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'unhandled',
+      reason: 'workflow_unhandled',
       status: 'failed',
     });
   });
@@ -210,7 +212,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'unhandled',
+      reason: 'workflow_unhandled',
       status: 'failed',
     });
   });
@@ -231,7 +233,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'unhandled',
+      reason: 'workflow_unhandled',
       status: 'failed',
     });
   });
@@ -252,7 +254,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'plan_already_terminal',
+      reason: 'workflow_plan_already_terminal',
       status: 'finished',
     });
   });
@@ -273,7 +275,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'tasks_exhausted',
+      reason: 'workflow_tasks_exhausted',
       status: 'finished',
     });
   });
@@ -300,7 +302,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'cancelled',
+      reason: 'workflow_cancelled',
       status: 'finished',
     });
     expect(run).not.toHaveBeenCalled();
@@ -396,7 +398,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'agent_complete',
+      reason: 'workflow_complete',
       status: 'finished',
     });
   });
@@ -419,7 +421,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'agent_error',
+      reason: 'workflow_agent_error',
       status: 'failed',
     });
   });
@@ -442,7 +444,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'input_required',
+      reason: 'workflow_input_required',
       status: 'failed',
     });
   });
@@ -467,7 +469,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 1,
-      reason: 'unhandled',
+      reason: 'workflow_unhandled',
       status: 'failed',
     });
   });
@@ -496,7 +498,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'max_iterations',
+      reason: 'workflow_max_iterations',
       status: 'finished',
     });
   });
@@ -528,7 +530,7 @@ describe('createWorkflowRalphOrchestrator', () => {
     expect(result.status).toBe('finished');
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'agent_complete',
+      reason: 'workflow_complete',
       status: 'finished',
     });
 
@@ -578,7 +580,7 @@ describe('createWorkflowRalphOrchestrator', () => {
 
     expect(result).toEqual({
       exitCode: 0,
-      reason: 'agent_complete',
+      reason: 'workflow_complete',
       status: 'finished',
     });
     expect(

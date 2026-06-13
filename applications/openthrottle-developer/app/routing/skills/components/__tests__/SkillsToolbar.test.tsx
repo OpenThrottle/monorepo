@@ -1,14 +1,12 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsToolbar } from '../SkillsToolbar';
 
 describe('SkillsToolbar Component', () => {
   test('renders search input with placeholder and search button', () => {
-    const Component = () => <SkillsToolbar />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    renderRoutesStub(<SkillsToolbar />);
 
     expect(
       screen.getByPlaceholderText('Filter by slug, path, or summary'),

@@ -10,8 +10,8 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/legal.privacy-policy';
 import { Link } from 'react-router';
 import {
-  OPEN_THROTTLE_CONTACT_PORTFOLIO,
-  OPEN_THROTTLE_CONTACT_PORTFOLIO_REF,
+  OPENTHROTTLE_CONTACT_PORTFOLIO,
+  OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
 } from '@openthrottle/react-router-utils';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -147,9 +147,9 @@ export default function Component(
             <Link
               className="underline underline-offset-4 hover:text-foreground transition-colors"
               target="_blank"
-              to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}
+              to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}
             >
-              {OPEN_THROTTLE_CONTACT_PORTFOLIO}
+              {OPENTHROTTLE_CONTACT_PORTFOLIO}
             </Link>
             .
           </p>

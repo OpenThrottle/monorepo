@@ -19,20 +19,15 @@ describe('GlobalFooter Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('renders brand, tagline, and legal links', () => {
+  test('renders brand and tagline', () => {
     expect(component.getByTestId('GlobalFooter')).toBeInTheDocument();
     expect(component.getByRole('contentinfo')).toBeInTheDocument();
     expect(component.getByText('OpenThrottle')).toBeInTheDocument();
     expect(
-      component.getByText('Context-driven AI for developers.'),
+      component.getByText(
+        'Context-driven AI tools and workflows for the Agentic Developer.',
+      ),
     ).toBeInTheDocument();
-    expect(component.getByRole('link', { name: 'Privacy' })).toHaveAttribute(
-      'href',
-      '/legal/privacy-policy',
-    );
-    expect(component.getByRole('link', { name: 'Terms' })).toHaveAttribute(
-      'href',
-      '/legal/terms-of-use',
-    );
+    expect(component.getByText('Open source')).toBeInTheDocument();
   });
 });

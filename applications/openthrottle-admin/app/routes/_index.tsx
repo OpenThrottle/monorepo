@@ -50,7 +50,7 @@ export default function Component(
     <div className="mx-auto flex-1 max-w-xl w-full flex flex-col justify-center p-4 md:p-8 lg:p-12">
       <div className="flex flex-col justify-center gap-8 flex-1 h-full items-center">
         <OpenThrottleLogo className="text-2xl mx-auto" name={SITE_SUBDOMAIN} />
-        <OpenThrottleAuthForm action="/" title="Sign in" />
+        <OpenThrottleAuthForm action="/" />
       </div>
     </div>
   );

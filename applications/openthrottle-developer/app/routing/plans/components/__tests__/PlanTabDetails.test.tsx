@@ -44,7 +44,7 @@ const defaultPlanRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'] =
   [];
 
 describe('PlanTabDetails Component', () => {
-  test('renders overview tab with plan toolbar and workflow transparency', () => {
+  test('renders overview tab with plan toolbar and workflow transparency', async () => {
     const setFullscreen = vi.fn() as PlanTabDetailsProps['setFullscreen'];
     const props: PlanTabDetailsProps = {
       fullscreen: false,
@@ -65,11 +65,14 @@ describe('PlanTabDetails Component', () => {
       </TooltipProvider>
     );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByTestId, getAllByText, getByText } = render(<RoutesStub />);
+    const { findAllByText, getByTestId, getByText } = render(<RoutesStub />);
 
     expect(getByTestId('PlanToolbar')).toBeInTheDocument();
     expect(getByTestId('PlanWorkflowRunTransparency')).toBeInTheDocument();
-    expect(getAllByText('Plan description').length).toBeGreaterThanOrEqual(1);
+    // MarkdownRenderer compiles the description asynchronously, so await it.
+    expect(
+      (await findAllByText('Plan description')).length,
+    ).toBeGreaterThanOrEqual(1);
     expect(getByText('Full Screen')).toBeInTheDocument();
   });
 });

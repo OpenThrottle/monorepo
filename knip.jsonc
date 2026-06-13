@@ -85,6 +85,7 @@
     "packages/react-router-shadcn/vitest.setup.ts",
     // @openthrottle/react-router-*: vitest setup referenced from vitest.config.ts (knip vitest: false)
     "packages/react-router-chat/vitest.setup.ts",
+    "packages/react-router-ide/vitest.setup.ts",
     "packages/react-router-notifications/vitest.setup.ts",
     "packages/react-router-profiling/vitest.setup.ts",
     "packages/react-router-ui/vitest.setup.ts",

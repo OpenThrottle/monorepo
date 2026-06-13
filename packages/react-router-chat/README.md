@@ -4,7 +4,7 @@ Reusable modal chat UI for React Router apps: dialog or sheet shell, scrollable 
 
 ## Installation
 
-**In this monorepo:** add `"@openthrottle/react-router-chat": "workspace:*"` to the consuming package’s `package.json`, then run `pnpm install` from the repository root.
+**In this monorepo:** add `"@openthrottle/react-router-chat": "workspace:^"` to the consuming package’s `package.json`, then run `pnpm install` from the repository root.
 
 > [!Tip]
 > This package is **private** to the workspace and is not published to a public registry.

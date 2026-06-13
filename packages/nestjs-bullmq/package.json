@@ -8,11 +8,11 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/bullmq": "^11.0.4",
-    "@nestjs/common": "^11.1.18",
-    "@nestjs/config": "^4.0.2",
-    "bullmq": "^5.73.0",
-    "joi": "^18.1.2"
+    "@nestjs/bullmq": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "bullmq": "catalog:",
+    "joi": "catalog:"
   },
   "exports": {
     ".": {

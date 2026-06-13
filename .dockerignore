@@ -4,6 +4,15 @@
 *.log
 *.tsbuildinfo
 
+# Never bake env files into images. Runtime config comes from compose
+# `environment`/`env_file` (or the deploy platform); a copied dev .env would
+# otherwise leak secrets and override runtime vars (e.g. POSTGRES_URL=localhost),
+# breaking the container in compose/production.
+.env
+.env.*
+**/.env
+**/.env.*
+
 #############################################################################
 # Folders
 #############################################################################

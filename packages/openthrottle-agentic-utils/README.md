@@ -148,7 +148,7 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Installation
 
-**In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:*"` (already on root `package.json`).
+**In this monorepo:** `"@openthrottle/openthrottle-agentic-utils": "workspace:^"` (already on root `package.json`).
 
 **pnpm:**
 

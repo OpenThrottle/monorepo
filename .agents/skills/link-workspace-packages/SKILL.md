@@ -42,7 +42,7 @@ pnpm add @org/ui --filter @org/app --workspace
 Result in `package.json`:
 
 ```json
-{ "dependencies": { "@org/ui": "workspace:*" } }
+{ "dependencies": { "@org/ui": "workspace:^" } }
 ```
 
 ---
@@ -92,7 +92,7 @@ cd packages/app && bun add @org/ui
 Result in `package.json`:
 
 ```json
-{ "dependencies": { "@org/ui": "workspace:*" } }
+{ "dependencies": { "@org/ui": "workspace:^" } }
 ```
 
 ---

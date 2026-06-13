@@ -74,7 +74,10 @@ jobs:
     #   matrix:
     #     jobIndex: [1] # must be in sync with "jobCount"
     #     target: ["lint", "typecheck"] # the test suite is just disabled right now
-    timeout-minutes: 15
+
+    # 30 instead of 15: openthrottle-developer:test alone needs ~12 CPU-minutes
+    # (264 jsdom test files), which exceeds the old budget on 4-vCPU runners.
+    timeout-minutes: 30
 
     steps:
       - name: '📦 Checkout the code'
@@ -109,7 +112,7 @@ jobs:
           git diff --exit-code
 
       - name: '🧠 NX ${{ matrix.target }} affected'
-        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel --verbose
+        run: pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,test,typecheck,typecheck-tests --parallel --verbose
 
       # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.

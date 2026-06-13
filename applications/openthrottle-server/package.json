@@ -37,14 +37,15 @@
       "docker-build": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "docker build -f Dockerfile.NestJS.v3 --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg NX_VERSION=$NX_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-server:local .",
+          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg NX_VERSION=$NX_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-server:local .",
           "cwd": "{workspaceRoot}",
           "env": {
             "APP_VERSION": "1.3.0",
-            "NX_VERSION": "22.6.4"
+            "NX_VERSION": "22.6.4",
+            "PNPM_VERSION": "10.33.4"
           }
         },
-        "description": "Build openthrottle-server image from root Dockerfile.NestJS.v3 (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
+        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
       },
       "dev": {
         "continuous": true,
@@ -93,6 +94,56 @@
   "sideEffects": false,
   "type": "commonjs",
   "dependencies": {
-    "@openthrottle/openthrottle-agentic-utils": "workspace:*"
+    "@graphql-typed-document-node/core": "catalog:",
+    "@langchain/core": "catalog:",
+    "@langchain/ollama": "catalog:",
+    "@langchain/openai": "catalog:",
+    "@nestjs/bullmq": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@nestjs/core": "catalog:",
+    "@nestjs/graphql": "catalog:",
+    "@nestjs/jwt": "catalog:",
+    "@nestjs/passport": "catalog:",
+    "@nestjs/platform-express": "catalog:",
+    "@openthrottle/ai-mcp": "workspace:^",
+    "@openthrottle/nestjs-agentic-workflow": "workspace:^",
+    "@openthrottle/nestjs-auth": "workspace:^",
+    "@openthrottle/nestjs-bullmq": "workspace:^",
+    "@openthrottle/nestjs-bullmq-board": "workspace:^",
+    "@openthrottle/nestjs-github": "workspace:^",
+    "@openthrottle/nestjs-graphql": "workspace:^",
+    "@openthrottle/nestjs-logging": "workspace:^",
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/nestjs-openthrottle-mcp": "workspace:^",
+    "@openthrottle/nestjs-profiling": "workspace:^",
+    "@openthrottle/nestjs-rbac": "workspace:^",
+    "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/nestjs-stripe": "workspace:^",
+    "@openthrottle/nestjs-utils": "workspace:^",
+    "@openthrottle/nestjs-vector-search": "workspace:^",
+    "@openthrottle/nestjs-websockets": "workspace:^",
+    "@openthrottle/nestjs-worktrees": "workspace:^",
+    "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "@openthrottle/openthrottle-notifications": "workspace:^",
+    "@openthrottle/openthrottle-workflows": "workspace:^",
+    "@tools/workflows": "workspace:^",
+    "@vscode/ripgrep": "catalog:",
+    "bullmq": "catalog:",
+    "chokidar": "catalog:",
+    "dataloader": "catalog:",
+    "dotenv": "catalog:",
+    "graphql": "catalog:",
+    "ignore": "catalog:",
+    "passport-local": "catalog:",
+    "pg": "catalog:",
+    "reflect-metadata": "catalog:",
+    "rxjs": "catalog:",
+    "ts-morph": "catalog:",
+    "typeorm": "catalog:",
+    "zod": "catalog:"
   }
 }

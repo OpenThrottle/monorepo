@@ -1,0 +1,135 @@
+#############################################################################
+#
+#     🚀 Verified run | from the repo root:
+#
+#       - Docker Hub: https://hub.docker.com/u/openthrottle
+#       - GitHub: https://github.com/OpenThrottle
+#
+#############################################################################
+x-common: &common
+  GITHUB_TOKEN: ${GITHUB_TOKEN}
+  NODE_ENV: ${NODE_ENV}
+  NODE_VERSION: ${NODE_VERSION}
+  NX_KEY: ${NX_KEY}
+  NX_VERSION: ${NX_VERSION}
+  PNPM_VERSION: ${PNPM_VERSION}
+
+x-developer: &developer
+  <<: *common
+  API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
+  API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
+  APP_ENV: ${OPENTHROTTLE_DEVELOPER_APP_ENV}
+  APP_NAME: ${OPENTHROTTLE_DEVELOPER_APP_NAME}
+  APP_NAME_SHORT: ${OPENTHROTTLE_DEVELOPER_APP_NAME_SHORT}
+  APP_URL: ${OPENTHROTTLE_DEVELOPER_APP_URL}
+  APP_URL_ADMIN: ${OPENTHROTTLE_DEVELOPER_APP_URL_ADMIN}
+  APP_URL_CMS: ${OPENTHROTTLE_DEVELOPER_APP_URL_CMS}
+  APP_URL_DEVELOPER: ${OPENTHROTTLE_DEVELOPER_APP_URL_DEVELOPER}
+  APP_URL_EMAIL: ${OPENTHROTTLE_DEVELOPER_APP_URL_EMAIL}
+  APP_URL_SERVER: ${OPENTHROTTLE_DEVELOPER_APP_URL_SERVER}
+  APP_URL_WEBSITE: ${OPENTHROTTLE_DEVELOPER_APP_URL_WEBSITE}
+  APP_VERSION: ${OPENTHROTTLE_DEVELOPER_APP_VERSION}
+  PORT: ${OPENTHROTTLE_DEVELOPER_PORT}
+
+x-server: &server
+  <<: *common
+  API_URL_INTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}
+  API_URL_EXTERNAL: ${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}
+  APP_ENV: ${OPENTHROTTLE_SERVER_APP_ENV}
+  APP_NAME: ${OPENTHROTTLE_SERVER_APP_NAME}
+  APP_NAME_SHORT: ${OPENTHROTTLE_SERVER_APP_NAME_SHORT}
+  APP_URL: ${OPENTHROTTLE_SERVER_APP_URL}
+  APP_URL_INTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
+  APP_URL_EXTERNAL: ${OPENTHROTTLE_SERVER_APP_URL}
+  APP_VERSION: ${OPENTHROTTLE_SERVER_APP_VERSION}
+  BULLMQ_BOARD_ADMIN_PASSWORD: 'admin'
+  BULLMQ_BOARD_ADMIN_USERNAME: 'admin'
+  CORS_CREDENTIALS: ${OPENTHROTTLE_SERVER_CORS_CREDENTIALS}
+  CORS_ORIGINS: ${OPENTHROTTLE_SERVER_CORS_ORIGINS}
+  JWT_SECRET: ${OPENTHROTTLE_DEVELOPER_JWT_SECRET}
+  PORT: ${OPENTHROTTLE_SERVER_PORT}
+
+name: 'OpenThrottle'
+
+services:
+  developer:
+    container_name: developer
+    depends_on:
+      server:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      <<: *developer
+    image: openthrottle/developer:latest
+    ports:
+      - '${OPENTHROTTLE_DEVELOPER_PORT}:${OPENTHROTTLE_DEVELOPER_PORT}'
+    restart: always
+    # No `user:` override: the distroless `nonroot` image (Dockerfile.ReactRouter production)
+    # already runs as uid 65532; `user: appuser` would fail ("no matching entries in passwd").
+
+  postgres:
+    container_name: postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_VERSION: ${POSTGRES_VERSION}
+    healthcheck:
+      interval: 1s
+      retries: 10
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      timeout: 5s
+    image: pgvector/pgvector:0.8.2-pg${POSTGRES_VERSION}-trixie
+    ports:
+      - ${POSTGRES_PORT}:5432
+    restart: always
+    shm_size: 128mb # set shared memory limit when using docker compose (required for pgvector)
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  redis:
+    container_name: redis
+    healthcheck:
+      interval: 10s
+      retries: 3
+      test: ['CMD', 'redis-cli', 'ping']
+      timeout: 5s
+    image: redis:${REDIS_VERSION}-alpine
+    ports:
+      - ${REDIS_PORT}:6379
+    restart: always
+
+  server:
+    container_name: server
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      <<: *server
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_VERSION: ${POSTGRES_VERSION}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+
+    # Healthcheck is provided by the image
+    image: openthrottle/server:latest
+    ports:
+      - '${OPENTHROTTLE_SERVER_PORT}:${OPENTHROTTLE_SERVER_PORT}'
+    restart: always
+    # No `user:` override: the distroless `nonroot` image already runs as uid 65532, and the pruned
+    # tree is COPYed with --chown=65532. `user: appuser` would fail ("no matching entries in passwd").
+
+volumes:
+  postgres_data:

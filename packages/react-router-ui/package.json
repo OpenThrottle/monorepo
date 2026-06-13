@@ -8,10 +8,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/openthrottle-notifications": "workspace:*",
-    "@openthrottle/react-router-shadcn": "workspace:*",
-    "class-variance-authority": "^0.7.1",
-    "framer-motion": "^12.26.2"
+    "@openthrottle/openthrottle-notifications": "workspace:^",
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "class-variance-authority": "catalog:",
+    "framer-motion": "catalog:"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",

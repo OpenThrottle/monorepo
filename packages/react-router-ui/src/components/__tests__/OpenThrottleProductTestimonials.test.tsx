@@ -18,9 +18,14 @@ describe('OpenThrottleProductTestimonials Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render the component name', () => {
+  test('should render the testimonial quote', () => {
     expect(
-      component.getByTestId('OpenThrottleProductTestimonials'),
+      component.getByText(/OpenThrottle is a game-changer/),
     ).toBeInTheDocument();
+  });
+
+  test('should render the attribution', () => {
+    expect(component.getByText('~ Matthew Scholta')).toBeInTheDocument();
+    expect(component.getByText('Creator of OpenThrottle')).toBeInTheDocument();
   });
 });

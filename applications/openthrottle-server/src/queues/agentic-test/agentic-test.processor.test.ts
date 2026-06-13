@@ -36,10 +36,10 @@ describe('AgenticTestProcessor', () => {
       .spyOn(agenticTestEcho, 'runAgenticTestEchoLoop')
       .mockResolvedValue(echoResult);
 
-    const job = {
+    const job = createMock<AgenticTestJob>({
       data: { label: 'smoke' },
       id: 'job-1',
-    } as AgenticTestJob;
+    });
 
     const result = await processor.process(job);
 

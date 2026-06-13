@@ -1,0 +1,88 @@
+{
+  "name": "@openthrottle/nestjs-vector-search",
+  "description": "Server-side code semantic search: pgvector VectorStore + index/search orchestration over the @openthrottle/openthrottle-ide engine, backing the /ide Semantic tab.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@nestjs/typeorm": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/openthrottle-ide": "workspace:^",
+    "typeorm": "catalog:"
+  },
+  "devDependencies": {},
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [],
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-vector-search",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "__build-package": {
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {},
+      "typecheck-tests": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "commonjs",
+  "types": "./src/index.ts"
+}

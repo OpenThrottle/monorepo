@@ -144,6 +144,6 @@ Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a pl
 ## Cross-links
 
 - **nx-generate:** `.agents/skills/nx-generate/SKILL.md`
-- **nx-workspace:** `.agents/skills/nx-workspace/SKILL.md`
+- \*_nx-workspace:^_ `.agents/skills/nx-workspace/SKILL.md`
 - **nx-run-tasks:** `.agents/skills/nx-run-tasks/SKILL.md`
 - **ot-plans:** `.agents/skills/ot-plans/SKILL.md`

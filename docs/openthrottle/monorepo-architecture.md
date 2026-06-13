@@ -95,7 +95,7 @@ sequenceDiagram
 | **openthrottle-email**     | Email-related services.                                                                                                                                      |
 | **openthrottle-website**   | Marketing website.                                                                                                                                           |
 
-Shared infra used by the server: **Postgres** (Cortex schema in `databases/`), **Redis** (BullMQ, sessions, etc.). Docker Compose for the core stack: `applications/openthrottle/docker-compose.yml` (run from monorepo root).
+Shared infra used by the server: **Postgres** (Cortex schema in `databases/`), **Redis** (BullMQ, sessions, etc.). Docker Compose for the core stack: the repo-root `docker-compose.yml` (run `docker compose up --build` from the monorepo root).
 
 ---
 

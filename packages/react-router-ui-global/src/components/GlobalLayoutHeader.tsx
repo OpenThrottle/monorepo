@@ -18,7 +18,7 @@ import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { NotificationBell } from '@openthrottle/react-router-notifications';
-import { OPEN_THROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 
 /**
  * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.
@@ -183,7 +183,7 @@ export const GlobalLayoutHeader = (
       <Link
         className="text-foreground"
         target="_blank"
-        to={OPEN_THROTTLE_GITHUB_URL}
+        to={OPENTHROTTLE_GITHUB_URL}
       >
         <Button
           className="relative size-6 shrink-0 rounded-full"

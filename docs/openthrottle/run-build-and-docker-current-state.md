@@ -2,7 +2,7 @@
 
 This document captures how **openthrottle-server** and **openthrottle-developer** are built and run today, and where Docker or container usage already exists. It supports the plan: _Docker build and deploy for OpenThrottle apps on single box_.
 
-For **running the full stack with Docker Compose** (Postgres, Redis, server, developer), use `applications/openthrottle/docker-compose.yml` from the monorepo root and see **applications/openthrottle/README.md** § Docker Compose and **docs/openthrottle/docker-image-build-strategy.md** § Docker Compose.
+For **running the full stack with Docker Compose** (Postgres, Redis, server, developer), use the repo-root **`docker-compose.yml`** (`docker compose up --build` from the repo root) and see **docs/openthrottle/docker-image-build-strategy.md** § Docker Compose.
 
 ---
 
@@ -111,22 +111,20 @@ For **running the full stack with Docker Compose** (Postgres, Redis, server, dev
 
 ### 3.1 Dockerfiles in the monorepo
 
-- **Root**
-  - **`Dockerfile.NestJS`** — Commented-out; multi-stage (base → dependencies → builder → production), pnpm, Nx; expects `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`; production `CMD ["pnpm", "start:docker"]`. Could be adapted for openthrottle-server.
-  - **`Dockerfile.ReactRouter`** — Multi-stage (base → dependencies → builder → production), pnpm, Nx; `RUN pnpm dlx nx@${NX_VERSION} run ${APP_NAME}:build` then `pnpm --filter=${APP_NAME} --prod deploy pruned`; `CMD ["pnpm", "start:docker"]`. Suited for React Router apps; **openthrottle-developer** defines `start:docker` in `applications/openthrottle-developer/package.json`.
-  - **`Dockerfile.Cortex`**, **`Dockerfile.PostgreSQL`** — Other uses (Cortex/Postgres).
-- **applications/openthrottle/**
-  - **`Dockerfile.Postgres`** — Postgres image with pgvector; used by local docker-compose for the OpenThrottle Postgres service only (no server/developer images).
+- **Root (canonical, one per app)**
+  - **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless `nodejs22-debian12:nonroot`), pnpm, Nx; build args `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, `NX_VERSION`, `NX_KEY`, `PNPM_VERSION`; `pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy`; in-image `/health` probe; `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
+  - **`Dockerfile.ReactRouter.v3`** — openthrottle-developer. Same stage shape; distroless production + optional `production-debian` target; `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
+  - The old `Dockerfile.NestJS`, `Dockerfile.ReactRouter`, and the `.v2` variants have been **deleted** (v3 is the single source of truth).
+  - **`Dockerfile.Cortex`**, **`Dockerfile.PostgreSQL`**, **`Dockerfile.Postgres`** — Other uses (Cortex/Postgres); `Dockerfile.Postgres` builds the compose `openthrottle-postgres` service.
 
 ### 3.2 Docker Compose
 
-- **`applications/openthrottle/docker-compose.yml`** — Defines **openthrottle-postgres** (build from `Dockerfile.Postgres`) and **openthrottle-redis** (official Redis image). Used for local Cortex/Redis. **No** openthrottle-server or openthrottle-developer services.
-- Root `docker-compose*.yml` — Other apps/databases; no OpenThrottle server/developer.
+- **Repo-root `docker-compose.yml`** — defines **openthrottle-postgres** (build from `Dockerfile.Postgres`), **openthrottle-redis** (official Redis image), **openthrottle-server** (build from `Dockerfile.NestJS.v3`), and **openthrottle-developer** (build from `Dockerfile.ReactRouter.v3`). Run with `docker compose up --build` from the repo root.
 
 ### 3.3 Summary
 
-- **openthrottle-server:** Dedicated Dockerfile at `Dockerfile.NestJS` (multi-stage, build from monorepo root). Run in container uses `start:docker` (node + dotenv). See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
-- **openthrottle-developer:** Dedicated Dockerfile at `Dockerfile.ReactRouter` (same pattern as root `Dockerfile.ReactRouter`). App has `start:docker` script: `react-router-serve ./build/server/index.js`. See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
+- **openthrottle-server:** Built from root `Dockerfile.NestJS.v3` (multi-stage, monorepo-root context). Distroless `CMD` runs Node directly; `start:docker` (`node -r dotenv/config ./build/src/main.js`) is the equivalent for non-distroless runs. See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
+- **openthrottle-developer:** Built from root `Dockerfile.ReactRouter.v3`. Distroless `CMD` runs `@react-router/serve`; `start:docker` is `react-router-serve ./build/server/index.js`. See [docker-image-build-strategy.md](./docker-image-build-strategy.md).
 
 ---
 

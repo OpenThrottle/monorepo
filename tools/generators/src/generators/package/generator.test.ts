@@ -46,7 +46,7 @@ describe('package generator', () => {
       await packageGenerator(tree, { name, organization: org, type });
       const packageJson = readJson(tree, 'package.json');
 
-      expect(packageJson.dependencies[`${org}/${name}`]).toBe('workspace:*');
+      expect(packageJson.dependencies[`${org}/${name}`]).toBe('workspace:^');
     });
 
     test('should not generate a TODO.md', async () => {
@@ -109,7 +109,7 @@ describe('package generator', () => {
       await packageGenerator(tree, { name, organization: org, type });
       const packageJson = readJson(tree, 'package.json');
 
-      expect(packageJson.dependencies[`${org}/${name}`]).toBe('workspace:*');
+      expect(packageJson.dependencies[`${org}/${name}`]).toBe('workspace:^');
     });
 
     test('should not generate a TODO.md', async () => {

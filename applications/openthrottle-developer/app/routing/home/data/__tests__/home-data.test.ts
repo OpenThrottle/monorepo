@@ -1,17 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { HOME_FEATURES, HOME_FEATURES_DOC_URL } from '~/routing/home/data';
+import { technologies } from '~/routing/home/data/technology';
 
 describe('routing/home data', () => {
-  test('HOME_FEATURES_DOC_URL points at features doc on GitHub', () => {
-    expect(HOME_FEATURES_DOC_URL).toMatch(/features\.md$/);
-    expect(HOME_FEATURES_DOC_URL).toContain('github.com');
-  });
-
-  test('HOME_FEATURES lists expected capability titles', () => {
-    const titles = HOME_FEATURES.map((f) => f.title);
-    expect(titles).toContain('Plans and tasks');
-    expect(titles).toContain('Semantic search');
-    expect(titles).toContain('Dashboard');
-    expect(HOME_FEATURES.length).toBeGreaterThanOrEqual(6);
+  test('technologies is an array of technology entries', () => {
+    expect(Array.isArray(technologies)).toBe(true);
+    for (const technology of technologies) {
+      expect(typeof technology.image).toBe('string');
+      expect(typeof technology.name).toBe('string');
+      expect(typeof technology.url).toBe('string');
+    }
   });
 });

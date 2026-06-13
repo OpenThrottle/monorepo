@@ -16,9 +16,9 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { opensource } from '~/routing/legal/data/data.opensource';
 import {
-  OPEN_THROTTLE_CONTACT_EMAIL,
-  OPEN_THROTTLE_CONTACT_PORTFOLIO,
-  OPEN_THROTTLE_CONTACT_PORTFOLIO_REF,
+  OPENTHROTTLE_CONTACT_EMAIL,
+  OPENTHROTTLE_CONTACT_PORTFOLIO,
+  OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
 } from '@openthrottle/react-router-utils';
 import type { Route } from '@/app/routes/+types/about';
 
@@ -99,7 +99,7 @@ export default function Component(
           <p className="text-sm text-muted-foreground">
             Created by{' '}
             <strong>
-              <Link target="_blank" to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}>
+              <Link target="_blank" to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}>
                 Matthew Scholta
               </Link>
             </strong>
@@ -120,13 +120,13 @@ export default function Component(
           <h2 className="text-xl font-bold mb-4">Matthew Scholta</h2>
           <h3 className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
             <OpenThrottleClipboard
-              label={OPEN_THROTTLE_CONTACT_EMAIL}
-              text={OPEN_THROTTLE_CONTACT_EMAIL}
+              label={OPENTHROTTLE_CONTACT_EMAIL}
+              text={OPENTHROTTLE_CONTACT_EMAIL}
             />
           </h3>
           <div className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-            <Link target="_blank" to={OPEN_THROTTLE_CONTACT_PORTFOLIO_REF}>
-              {OPEN_THROTTLE_CONTACT_PORTFOLIO}
+            <Link target="_blank" to={OPENTHROTTLE_CONTACT_PORTFOLIO_REF}>
+              {OPENTHROTTLE_CONTACT_PORTFOLIO}
             </Link>
           </div>
         </div>

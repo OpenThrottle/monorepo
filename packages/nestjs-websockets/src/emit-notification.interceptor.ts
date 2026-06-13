@@ -62,8 +62,10 @@ export class EmitNotificationInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap((result: unknown): void => {
         for (const { event, payload: payloadMapper } of entries) {
-          const isNull = payloadMapper === null;
-          const payload = !isNull ? payloadMapper(result) : (result as unknown);
+          const hasMapper = typeof payloadMapper === 'function';
+          const payload = hasMapper
+            ? payloadMapper(result)
+            : (result as unknown);
 
           if (payload != null) {
             this.emitter.emit(event, payload);
