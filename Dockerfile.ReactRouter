@@ -8,6 +8,11 @@
 # Or via Nx: pnpm nx run openthrottle-developer:docker-build
 # See docs/openthrottle/docker-image-build-strategy.md.
 #
+# Targets: `production` (default — distroless, pruned), `production-debian` (shell-capable
+# production), and `development` (builder-based, shell + full workspace, runs
+# `pnpm nx run ${APP_NAME}:dev` with NX_DAEMON=false; used by the compose `dev` profile
+# with `develop.watch`). See docs/openthrottle/docker-dev-workflow-and-host-bridge.md.
+#
 # Pruning: each app declares its real runtime deps (see applications/*/package.json), and
 # `pnpm --filter <app> --prod deploy` produces the production tree. No manual
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
@@ -69,6 +74,25 @@ COPY ./packages ./packages
 COPY ./tools ./tools
 
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+################################################################################
+#
+#   DEVELOPMENT - Shell-capable dev image running the Nx dev target (hot reload)
+#
+################################################################################
+# Not distroless, no pruning: full workspace install retained so the React Router/Vite
+# dev server can HMR on source changes synced in by `docker compose watch`. `production`
+# (last stage) remains the default target, so builds without --target are unaffected.
+FROM builder AS development
+
+ENV NODE_ENV="development"
+ENV NX_DAEMON="false"
+
+COPY . .
+
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
+
+CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
 
 ################################################################################
 #

@@ -61,6 +61,8 @@ This document records the chosen **image build strategy** and **registry** for *
 - **`Dockerfile.NestJS.v3`** — openthrottle-server. Multi-stage (base → builder → build → distroless production), `APP_NAME=openthrottle-server`, in-image `/health` probe, `CMD ["-r", "dotenv/config", "build/src/main.js"]`.
 - **`Dockerfile.ReactRouter.v3`** — openthrottle-developer. Same stage shape; distroless production plus an optional `production-debian` target (debian-slim + shell for curl healthchecks). `CMD ["node_modules/@react-router/serve/bin.js", "build/server/index.js"]`.
 
+Both Dockerfiles also expose a **`development` target** (based on the `builder` stage: node:22-bookworm-slim with a shell, full workspace install, no pruning/distroless) whose `CMD` runs the app's Nx dev target (`pnpm nx run ${APP_NAME}:dev`, `NX_DAEMON=false`). It exists for the compose `dev` profile / `docker compose watch` hot-reload workflow and is never published; `production` (the last stage) remains the default target. See [docker-dev-workflow-and-host-bridge.md](./docker-dev-workflow-and-host-bridge.md).
+
 The old `Dockerfile.NestJS`, `Dockerfile.ReactRouter`, and both `.v2` variants have been deleted.
 
 ### 5.1. Nx `docker-build` targets
