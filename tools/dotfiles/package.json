@@ -37,24 +37,6 @@
       "import": "./dist/src/index.js",
       "require": "./dist/src/index.js",
       "default": "./dist/src/index.js"
-    },
-    "./config": {
-      "types": "./src/config.ts",
-      "import": "./dist/src/config.js",
-      "require": "./dist/src/config.js",
-      "default": "./dist/src/config.js"
-    },
-    "./vite-config": {
-      "types": "./src/vite-config.ts",
-      "import": "./dist/src/vite-config.js",
-      "require": "./dist/src/vite-config.js",
-      "default": "./dist/src/vite-config.js"
-    },
-    "./vitest-config": {
-      "types": "./src/vitest-config.ts",
-      "import": "./dist/src/vitest-config.js",
-      "require": "./dist/src/vitest-config.js",
-      "default": "./dist/src/vitest-config.js"
     }
   },
   "nx": {
