@@ -4,8 +4,8 @@
  */
 
 import { Injectable, Scope } from '@nestjs/common';
-import DataLoader from 'dataloader';
-import { In } from 'typeorm';
+import type DataLoader from 'dataloader';
+import { createCollectionByColumnLoader } from './common/entity-loaders';
 import { PlansService } from './modules/plans/plans.service';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
@@ -20,74 +20,19 @@ import type { Task } from './modules/tasks/task.entity';
  */
 @Injectable({ scope: Scope.REQUEST })
 export class ProjectsLoaders {
+  /** Plans grouped by projectId, each ordered by createdAt DESC. */
   readonly plansByProjectIdLoader: DataLoader<string, Plan[]>;
+  /** Tasks grouped by projectId, each ordered by planId then sortOrder then createdAt ASC. */
   readonly tasksByProjectIdLoader: DataLoader<string, Task[]>;
 
-  constructor(
-    private readonly plansService: PlansService,
-    private readonly tasksService: TasksService,
-  ) {
-    this.plansByProjectIdLoader = new DataLoader<string, Plan[]>(
-      this.batchPlansByProjectId.bind(this),
-    );
-    this.tasksByProjectIdLoader = new DataLoader<string, Task[]>(
-      this.batchTasksByProjectId.bind(this),
-    );
-  }
-
-  /**
-   * @description Loads plans for many projectIds in one query; returns arrays
-   * in key order, each ordered by createdAt DESC.
-   */
-  private async batchPlansByProjectId(
-    projectIds: readonly string[],
-  ): Promise<Plan[][]> {
-    if (projectIds.length === 0) return [];
-
-    const ids = [...new Set(projectIds)];
-    const plans = await this.plansService.getRepository().find({
+  constructor(plansService: PlansService, tasksService: TasksService) {
+    this.plansByProjectIdLoader = createCollectionByColumnLoader(plansService, {
+      column: 'projectId',
       order: { createdAt: 'DESC' },
-      where: { projectId: In(ids) },
     });
-
-    const byProjectId = new Map<string, Plan[]>();
-    for (const plan of plans) {
-      const pid = plan.projectId;
-      if (pid != null) {
-        const list = byProjectId.get(pid) ?? [];
-        list.push(plan);
-        byProjectId.set(pid, list);
-      }
-    }
-
-    return projectIds.map((id) => byProjectId.get(id) ?? []);
-  }
-
-  /**
-   * @description Loads tasks for many projectIds in one query; returns arrays
-   * in key order, each ordered by planId then sortOrder then createdAt ASC.
-   */
-  private async batchTasksByProjectId(
-    projectIds: readonly string[],
-  ): Promise<Task[][]> {
-    if (projectIds.length === 0) return [];
-
-    const ids = [...new Set(projectIds)];
-    const tasks = await this.tasksService.getRepository().find({
+    this.tasksByProjectIdLoader = createCollectionByColumnLoader(tasksService, {
+      column: 'projectId',
       order: { ...CROSS_PLAN_TASK_LIST_ORDER },
-      where: { projectId: In(ids) },
     });
-
-    const byProjectId = new Map<string, Task[]>();
-    for (const task of tasks) {
-      const pid = task.projectId;
-      if (pid != null) {
-        const list = byProjectId.get(pid) ?? [];
-        list.push(task);
-        byProjectId.set(pid, list);
-      }
-    }
-
-    return projectIds.map((id) => byProjectId.get(id) ?? []);
   }
 }
