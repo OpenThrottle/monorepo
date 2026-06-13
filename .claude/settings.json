@@ -1,44 +1,34 @@
 {
+  "enabledMcpjsonServers": [],
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "command": "./scripts/create_worktree.sh",
+            "statusMessage": "🌳 Creating worktree...",
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
-    "allow": [
-      "mcp__openthrottle-mcp__agent_conversation_get",
-      "mcp__openthrottle-mcp__agent_conversation_get_messages",
-      "mcp__openthrottle-mcp__agent_conversation_list",
-      "mcp__openthrottle-mcp__append_plan_output",
-      "mcp__openthrottle-mcp__create_note",
-      "mcp__openthrottle-mcp__create_plan",
-      "mcp__openthrottle-mcp__create_task",
-      "mcp__openthrottle-mcp__create_tasks",
-      "mcp__openthrottle-mcp__get_activity_by_date",
-      "mcp__openthrottle-mcp__get_document",
-      "mcp__openthrottle-mcp__get_last_activity",
-      "mcp__openthrottle-mcp__get_note",
-      "mcp__openthrottle-mcp__get_plan",
-      "mcp__openthrottle-mcp__get_plan_output",
-      "mcp__openthrottle-mcp__get_remaining_tasks_for_plan",
-      "mcp__openthrottle-mcp__get_task",
-      "mcp__openthrottle-mcp__get_tasks_by_plan_id",
-      "mcp__openthrottle-mcp__health",
-      "mcp__openthrottle-mcp__link_commit",
-      "mcp__openthrottle-mcp__list_notes",
-      "mcp__openthrottle-mcp__list_plans_by_status",
-      "mcp__openthrottle-mcp__list_sources",
-      "mcp__openthrottle-mcp__list_tasks_by_category",
-      "mcp__openthrottle-mcp__reorder_plan_tasks",
-      "mcp__openthrottle-mcp__semantic_search",
-      "mcp__openthrottle-mcp__update_note",
-      "mcp__openthrottle-mcp__update_plan",
-      "mcp__openthrottle-mcp__update_task"
-    ],
     "additionalDirectories": [],
-    "ask": [
-      "mcp__openthrottle-mcp__delete_note",
-      "mcp__openthrottle-mcp__delete_plan",
-      "mcp__openthrottle-mcp__delete_project",
-      "mcp__openthrottle-mcp__delete_task"
+    "allow": [
+      "mcp__openthrottle-mcp__*",
+      "Bash(gh issue *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr view *)",
+      "Bash(git branch *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git status *)",
+      "Bash(pnpm nx *)"
     ],
+    "ask": [],
     "deny": []
   },
-  "enabledMcpjsonServers": [],
   "skillOverrides": {}
 }
