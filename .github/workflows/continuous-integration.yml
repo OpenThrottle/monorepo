@@ -35,11 +35,7 @@ env:
 
   # FIXME: Currently we're only making use of the staging project and resources
   GOOGLE_CREDENTIALS: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && secrets.GOOGLE_CREDENTIALS_STAGING || secrets.GOOGLE_CREDENTIALS_STAGING }}
-
-  # FIXME: Currently we're only making use of the staging project and resources
   GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_STAGING || vars.GOOGLE_PROJECT_ID_STAGING }}
-
-  # FIXME: Currently we're only making use of the staging project and resources
   NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
 
   NX_KEY: ${{ vars.NX_KEY }}
@@ -70,11 +66,11 @@ jobs:
       jobCount: 1 # must be in sync with "jobIndex"
     runs-on: ubuntu-latest
 
-    # FIXME: 💰 Re-enable when we want to spend more
+    # FIXME: 💰 Increase as needed - balance with cost and time to completion
     strategy:
       matrix:
         jobIndex: [1] # must be in sync with "jobCount"
-        target: ['lint', 'typecheck', 'typecheck-tests', 'test']
+        target: ['lint,typecheck,typecheck-tests', 'test'] # One box for each item in the matrix
 
     # 30 instead of 15: openthrottle-developer:test alone needs ~12 CPU-minutes
     # (264 jsdom test files), which exceeds the old budget on 4-vCPU runners.
@@ -115,7 +111,7 @@ jobs:
 
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
-          pnpm dlx nx@${{ env.NX_VERSION }} affected --target=${{ matrix.target }} --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm dlx nx@${{ env.NX_VERSION }} affected --target="${{ matrix.target }}" --parallel ${{ env.OUTPUT_DEBUG }}
         # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=lint,typecheck,typecheck-tests --parallel ${{ env.OUTPUT_DEBUG }}
         # pnpm dlx nx@${{ env.NX_VERSION }} affected --target=test --parallel ${{ env.OUTPUT_DEBUG }}
 
