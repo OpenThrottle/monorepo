@@ -1,9 +1,5 @@
 {
   "extends": "../../tsconfig.esm.json",
-  "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true
-  },
   "files": [],
   "include": [],
   "references": [{ "path": "./tsconfig.lib.json" }]
