@@ -25,6 +25,7 @@ import {
   updatePlanStatus,
 } from './openthrottle-ralph';
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.js';
+import { createPlanOutputStreamer } from './plan-output-streamer';
 import { ralphDebugLogger } from './ralph-debug-logger';
 import { resolveRalphWorktreeName } from './ralph-worktree-cli';
 import { buildWorkflowRalphRunTuningArgv } from './workflow-ralph-nested-argv';
@@ -340,24 +341,31 @@ export async function runChildJob(
     }),
   ];
 
+  // Serialize plan-output appends so chunks land in order, retry transient append
+  // failures, and track ultimate losses (see plan-output-streamer). Previously these
+  // were fire-and-forget and unordered, so output could land out of order or vanish
+  // silently on a transient GraphQL/network error.
+  const streamConfig = streamToCortex ? config : undefined;
+  const planOutputStreamer = streamConfig
+    ? createPlanOutputStreamer({
+        append: (content) =>
+          appendPlanOutput(
+            streamConfig,
+            planId,
+            content,
+            streamIteration ?? undefined,
+          ),
+      })
+    : undefined;
+
   const effectiveOnChunk: ((chunk: ChildJobStreamChunk) => void) | undefined =
     streamToCortex || onChunk
       ? (chunk): void => {
           onChunk?.(chunk);
-          if (streamToCortex && config) {
+          if (planOutputStreamer) {
             const prefix =
               chunk.stream === 'stdout' ? '[stdout] ' : '[stderr] ';
-            appendPlanOutput(
-              config,
-              planId,
-              prefix + chunk.data,
-              streamIteration ?? undefined,
-            ).catch((err: unknown) => {
-              const msg = err instanceof Error ? err.message : String(err);
-              console.error(
-                `[child-job] streamToCortex append_plan_output failed: ${msg}`,
-              );
-            });
+            planOutputStreamer.enqueue(prefix + chunk.data);
           }
         }
       : undefined;
@@ -376,6 +384,12 @@ export async function runChildJob(
     signal,
     timeoutMs,
   });
+
+  // Drain queued appends before returning so no plan output is dropped on the floor
+  // when the child process exits, and so the summary reflects every chunk.
+  const planOutputStreamSummary = planOutputStreamer
+    ? await planOutputStreamer.drain()
+    : undefined;
 
   const endTimestamp = Date.now();
   const cpuAtEnd = process.cpuUsage();
@@ -452,5 +466,12 @@ export async function runChildJob(
     ok: true,
     planCompleted: allDone,
     wallClockMetrics,
+    ...(planOutputStreamSummary && planOutputStreamSummary.failed > 0
+      ? {
+          planOutputStreamFailureReason:
+            planOutputStreamSummary.firstFailureMessage,
+          planOutputStreamFailures: planOutputStreamSummary.failed,
+        }
+      : {}),
   };
 }
